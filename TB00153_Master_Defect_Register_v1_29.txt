@@ -1,0 +1,1485 @@
+DocDCN:     TB00153
+DocTitle:   Master_Defect_Register
+DocVersion: v1_29
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-Docs\TB00153_Master_Defect_Register_v1_29.txt
+DocDate:    05-16-2026
+DocTime:    23:59:59 UTC
+
+============================================================
+TB00153 MASTER DEFECT REGISTER v1_29
+PAPER-TRADING-ERA CONSOLIDATION (TB00115 - TB00305)
+============================================================
+
+============================================================
+1. PURPOSE
+============================================================
+
+This register consolidates every defect, finding,
+error, and architectural observation surfaced across
+the paper-trading-era session logs that affects:
+  (a) any Tier 2 diagram in 0500000 dv1_78
+      .html (and successor versions);
+  (b) any prose section of 0500000;
+  (c) any 10XXXXX coding spec or AA=05/08 system component
+      / trading-system module spec referenced from 0500000;
+  (d) any AR-* architectural rule, IMP-* implementation
+      requirement, or HR-* hard rule cited in 0500000;
+  (e) DD-012 v2_38 retirement-campaign cascade entries.
+
+It is the authoritative input register for the
+TB00153 Diagram Alter / Add / Remove Plan and the
+companion Tier 1 Context Diagram Content Scope.
+
+Sort order: Priority then Affected Diagram then
+Origin Session.
+
+============================================================
+2. SOURCES READ
+============================================================
+
+Paper-trading-era session-pairs (cumulative through
+TB00299). Architectural source-of-truth read:
+  0500000_System_Architecture_Overview_dv1_78_
+  Claude_Source.html (DR-007.9 well-formedness:
+  PASS at TB00299 cold-load).
+
+============================================================
+3. PRIORITY LEGEND
+============================================================
+
+CRITICAL  Architecturally load-bearing; diagram or
+          prose carries an out-of-date or contradicted
+          claim that would mislead a reader.
+
+HIGH      Diagram or prose omits a now-locked
+          architectural element but does not actively
+          contradict.
+
+MEDIUM    Diagram or prose mismatch is cosmetic /
+          structural-tagging incomplete / element count
+          mismatch / label drift / retirement-cascade
+          forensic entry.
+
+LOW       Documentation hygiene; not directly diagram-
+          relevant but cited in defect chain.
+
+============================================================
+4. DEFECT REGISTER ENTRIES
+============================================================
+
+[Entries DR-001 through DR-059 preserved byte-identical
+from v1_26 — see v1_26 file at git history for full
+register content. DR-060 preserved byte-identical from
+v1_27. DR-061 preserved byte-identical from v1_28. This
+v1_29 increment adds DR-062 only — see §4 end for entry
+text.]
+
+------------------------------------------------------------
+DR-060  MEDIUM  ALTER  CLOSED
+------------------------------------------------------------
+Affected Diagram:  D1 Kraken WS Connection Architecture
+                   R5 (mod:WS_Manager structured tag +
+                   visual elements) + D7 Dispatch Seam
+                   R5 (mod:WS_Manager labeled group +
+                   per-module wallet parameter registry
+                   additions per R5 amendment) + Tier 1
+                   Context Diagram mod:WS_Manager
+                   structured tag + D5 governs list
+                   (Sizing_Curve_Per_Module contract +
+                   per_trade_size_usd +
+                   per_trade_ceiling_pct +
+                   expected_rr_acceptance_rule additions
+                   per R6 amendment per TB00239
+                   AMENDMENT-3). 0500000 dv1_78 canonical
+                   for WS Manager architecture across
+                   D1 + D5 + D7 + Tier 1. No further SVG
+                   changes required at 1011002
+                   retirement (canonical authority was
+                   already at 0500000 dv1_78 prior to
+                   retirement per DD-012 campaign + S-1
+                   Phase 1 audit at TB00298 verified all
+                   four cluster gaps from prior TB00194
+                   pre-DD-012 gap register CLOSED in
+                   current canonical baselines).
+Affected Prose:    0500000 dv1_78 §1.1 mod:WS_Manager
+                   description (WS Manager is sole
+                   interface to all Kraken WebSocket v2
+                   connections; owns two public WS +
+                   private WS connections; owns
+                   connection state including token
+                   management, keepalive, zombie
+                   detection, sequence gap detection,
+                   per-pair instrument status cache,
+                   candle-close detection, startup
+                   warm-up + indicator seeding, mid-
+                   session reconnect, Pending Order
+                   Registry, drawdown state, Selection
+                   Controller state, WS dispatch
+                   routing). §8 architectural rules:
+                   AR-015 (WS dispatch routing) +
+                   AR-020 + AR-039 (per-pair instrument
+                   status cache) + AR-044 (startup
+                   warm-up + indicator seeding) +
+                   AR-045 (candle-close detection) +
+                   AR-052 (drawdown state) + AR-053
+                   (Pending Order Registry) + AR-056
+                   (mid-session reconnect distinct from
+                   startup) + AR-068 (SSS seeding) +
+                   AR-073 (Selection Controller state)
+                   + AR-074 (NO TOP-N CAP). Canonical
+                   authority transferred to 0500000
+                   dv1_78 across the diagram-canonical
+                   amendment chain culminating at
+                   TB00239 AMENDMENT-3 D5 R5 -> R6 +
+                   TB00261 dv1_76 D7 R4 -> R5 + prior
+                   D1 R4 -> R5 amendments.
+Affected Spec:     1011002 WS_Manager_Coding_Spec dv1_26
+                   RETIRED at TB00299 S-4 (git rm +
+                   commit + push per §11 retired-
+                   document standing practice). Parent
+                   cascade-anchor 1010000 dv1_18 ->
+                   dv1_19 (TB00299 S-5 closure: §4.2
+                   instance-document inventory entry
+                   updated from "RETIRED cascade in
+                   progress (Phase 0 audit logged at
+                   TB00261)" to "RETIRED (TB00299)"
+                   short-form + full retirement-
+                   rationale long-form §4.2 sub-section
+                   matching §4.14 1011014 retirement
+                   entry pattern). S-3 coding-unique
+                   content migrated to 0511001 dv1_9
+                   parent WS_Manager_Specification via
+                   PROSE-UPDATE-A through PROSE-UPDATE-J
+                   ten-PROSE-UPDATE cluster across the
+                   dv1_7 -> dv1_8 -> dv1_9 chain prior
+                   to this retirement.
+
+                   S-5 ANCHOR-IDENTIFICATION CORRECTION
+                   RECORD. TB00299 NSI v1_0 §3.4 +
+                   TB00208 v1_0 §5.5 both cited "0510000
+                   System_Components_Anchor" as the S-5
+                   anchor target. Per DCN AABCDDD
+                   governance (0311001 v1_18 §11 sub-
+                   domain anchor child-document
+                   inventory rules), 1011002 = AA=10
+                   B=1 -> parent anchor = 1010000 (AA=10
+                   B=1 C=0 DDD=000). 0510000 is AA=05
+                   B=1 anchor for 0511001-0511006 and
+                   contains no 1011002 reference.
+                   Pattern precedent: 0811001 retirement
+                   (TB00295-TB00296 cascade) amended
+                   0810000 (AA=08 B=1 anchor). The
+                   correct S-5 anchor for the 1011002
+                   retirement cascade is 1010000.
+                   Correction enacted under RR-SCOPE-005
+                   derivable-decision authority +
+                   RR-SCOPE-007 SELF-AUTHORED-NSI-
+                   SOURCE-PROHIBITION (v2_30 amendment;
+                   NSI/TB00208 sentences had no Bill-
+                   quote backing) + DD-011 v2_38
+                   FP/DP-derivability-test gate
+                   (Option B single compliant remaining
+                   option; OUTCOME 1 derivable).
+Origin Session:    TB00299 (1011002 retirement cascade
+                   S-6 final closure; cascade execution
+                   spanned TB00261 Phase 0 audit
+                   through TB00298 Phase 1 audit
+                   through TB00299 S-4 + S-5 + S-6).
+Disposition:       CLOSED-BY-RETIREMENT under DD-012
+                   v2_38 0500000-canonical-all-docs
+                   scope (DEC-012 original AA=10
+                   campaign authorization at TB00190;
+                   1011002 is the 13th 10XXXXX
+                   retirement in the campaign and the
+                   first under TB00000 v2_42 governance
+                   plus the canonical-repo-routing
+                   refinement).
+Status:            CLOSED at TB00299 (S-1 Phase 1
+                   audit executed at TB00298 via
+                   TB00208 v1_0; S-2 NO-OP per bucket
+                   (c) empty; S-3 closed in 0511001
+                   dv1_7-9 PROSE-UPDATE-A..J chain
+                   prior to this session; S-4 git rm
+                   executed via OPERATION 4 this
+                   session; S-5 cascade-anchor revision
+                   1010000 dv1_18 -> dv1_19 this
+                   session; S-6 this MDR entry this
+                   session + companion Decision_
+                   Register v1_6 -> v1_7 DEC-014 entry).
+
+DR-060 NEW — 1011002 WS_Manager_Coding_Spec dv1_26
+  retirement under DD-012 v2_38 0500000-canonical-
+  all-docs scope (DEC-012 original AA=10 campaign
+  authorization at TB00190). DEC-012 6-sub-step
+  methodology applied across the cascade:
+
+    S-1 Phase 1 gap-audit — CLOSED at TB00298
+        (TB00208 v1_0 Phase 1 Gap Register authored).
+        Three-bucket classification per TB00208 §4:
+          Bucket (a) ARCHITECTURAL RESTATEMENT — ~95
+            elements across all 1011002 dv1_26
+            sections (WS Manager architecture,
+            connection state, token management,
+            keepalive, zombie detection, sequence gap
+            detection, per-pair instrument status
+            cache, candle-close detection, startup
+            warm-up and indicator seeding, mid-session
+            reconnect, Pending Order Registry,
+            drawdown state, Selection Controller
+            state, WS dispatch routing). Canonical
+            source: 0500000 dv1_78 D1 R5 + D7 R5 +
+            Tier 1 Context mod:WS_Manager + §8
+            architectural rules. DROP with retirement.
+          Bucket (b) CODING-UNIQUE — ~35 elements
+            (PRE-COMPLETED IN 0511001 dv1_9 PROSE-
+            UPDATE-A through PROSE-UPDATE-J chain
+            across dv1_7-dv1_9; not authored at S-3
+            this cascade — already in parent spec
+            prior to S-1 audit).
+          Bucket (c) ARCHITECTURAL CONTENT NOT IN
+            DIAGRAMS — 0 elements. All four cluster
+            gaps from prior TB00194 pre-DD-012 gap
+            register CLOSED in current canonical
+            baselines (cluster C1 per-module wallet
+            parameter registry at 0500000 D7 R5
+            governs list + visual elements; cluster
+            C2 per-wallet drawdown halt machine at
+            D7 R5 visual elements lines 2550-2551,
+            2675-2681; cluster C3 R:R-driven sizing
+            curve form factor at D5 R6 governs list
+            additions per TB00239 AMENDMENT-3;
+            cluster C4 HR-WM-034 prose-narration gap
+            at 0511001 dv1_7 PROSE-UPDATE-H verified
+            in dv1_9 §14 line 2616). S-2 NO-OP.
+          Bucket (d) CHESTERTON'S FENCE — 0 elements.
+
+    S-2 diagram amendments — NO-OP per TB00208 §5.2.
+        Bucket (c) empty. 0500000 dv1_78 canonical
+        encoding for WS Manager architecture verified
+        complete at TB00298 §4 (bucket (c) empty
+        finding ratified via TB00298 chat-turn 1
+        derivable-decision execution).
+
+    S-3 parent-spec gap-fill — CLOSED prior to this
+        session at 0511001 dv1_9 (verified at TB00299
+        chat-turn 1 pre-S4 Chesterton's-fence
+        verification: HR-WM-034 at line 2616 +
+        HR-WM-011 at line 2348 + HR-WM-031 at line
+        2479 + WM-PS-001..006 at lines 808-868 +
+        WM-PS-008 at line 894 + WM-CAN-001 at line
+        1266 — all grep hits confirm S-3 closure).
+
+    S-4 retirement — CLOSED at TB00299. git rm
+        1011002_WS_Manager_Coding_Spec_dv1_26.txt +
+        commit + push executed via OPERATION 4 per
+        §11 retired-document standing practice.
+
+    S-5 cascade-anchor revision — CLOSED at TB00299.
+        1010000 Trading_System_Coding_Anchor dv1_18
+        -> dv1_19. Scope per TB00208 §5.5 (with S-5
+        anchor-identification correction; see record
+        above): §4.2 entry status updated from
+        "RETIRED cascade in progress" short-form to
+        "RETIRED (TB00299)" with full retirement-
+        rationale long-form §4.2 sub-section matching
+        §4.14 1011014 retirement entry pattern
+        established at dv1_18. mod:WS_Manager
+        canonical authority remains at 0500000 dv1_78
+        D1 R5 + D7 R5 + Tier 1 Context drill_targets
+        per DD-012 cross-document authority hierarchy.
+
+    S-6 governance updates — TB00153 MDR v1_26 ->
+        v1_27 DR-060 entry this session + companion
+        Decision_Register v1_6 -> v1_7 DEC-014 entry
+        this session. TB00000 v2_42 + 0311001 v1_18
+        + 0311002 v1_13 cascade-anchor + §11 retired-
+        document standing practice all current; no
+        incremental governance amendment required by
+        1011002 retirement specifically.
+
+CIATS PARAMETER ABSORPTION: TB00000 v2_42 §9.17
+parameter registry verified complete for WS Manager
+parameters prior to retirement (v2_20 through v2_42
+governance amendment chain absorbed all WS Manager
+CIATS-owned tunable parameters: token-bucket pacing
+contract WM-PACE-002, keepalive interval, zombie
+detection timeout, MAX_RECONNECT_ATTEMPTS, sequence
+gap thresholds, per-pair instrument status cache
+parameters, StartLimitBurst / StartLimitIntervalSec
+operational layer parameters per v2_36 amendment).
+No additional absorption required.
+
+NO DANGLING-CROSS-REFERENCE CARRY-FORWARD identified
+at TB00299 close. Pre-S4 verification confirmed all
+downstream consumers (0500000 dv1_78 D1 R5 + D7 R5
++ Tier 1 Context drill_targets + 0511001 dv1_9 parent
+spec) reference mod:WS_Manager via structured tag
+canonical identifier, not via 1011002 spec citation.
+The 1011002 retirement does not create dangling
+references in any active consumer document.
+
+------------------------------------------------------------
+DR-061  MEDIUM  ALTER  CLOSED
+------------------------------------------------------------
+Affected Diagram:  Tier 1 Context Diagram
+                   (mod:Selection_Controller structured
+                   tag) + D2 Trading Pipeline
+                   (gate:G5_Selection_Controller labeled
+                   group g5_selection with drill_targets
+                   gate:G1..G8 and constraints
+                   contract:OHLC_5m_System_Clock +
+                   contract:Pre_Computation_Cache_Read +
+                   contract:Parameter_Store_Snapshot) +
+                   D6 Logger Async Bounded Queue
+                   (mod:Logger governs SELECTION_REJECTED
+                   reject events). 0500000 dv1_78
+                   canonical for Selection Controller
+                   architecture across Tier 1 + D2 + D6.
+                   No further SVG changes required at
+                   0811002 retirement (canonical
+                   authority was already at 0500000
+                   dv1_78 prior to retirement per DD-012
+                   campaign + TB00209 v1_0 Phase 1 audit
+                   confirming all 26-element three-bucket
+                   classification with 24 bucket (a)
+                   restatement + 2 bucket (b) coding-
+                   unique + 1 bucket (c) low-severity).
+Affected Prose:    0500000 dv1_78 §8 architectural rules:
+                   AR-072 (Selection Controller gate
+                   parameters — body threshold, cooldown
+                   seconds, consecutive loss limit;
+                   amended dv1_43) + AR-073 (Exit
+                   Controller as SOLE updater of
+                   Selection Controller state via WS
+                   Manager AR-073 path; amended dv1_43).
+                   0511004 dv1_6 §X HR-EC-014 canonical
+                   SOLE-UPDATER authority binding.
+                   Canonical authority transferred to
+                   0500000 dv1_78 + 0511004 dv1_6 across
+                   the diagram-canonical amendment chain
+                   culminating at dv1_43 (AR-072 + AR-073
+                   amendment). PROSE-UPDATE-A1 (HR-SC-005
+                   entry_qty_quantized pre-quantization
+                   contract) + PROSE-UPDATE-A2 (HR-SC-006
+                   time.monotonic() clock source contract)
+                   migrated from 0811002 dv1_0 §9 to
+                   0511002 dv1_1 §14 at TB00301 close
+                   (S-3 closure).
+Affected Spec:     0811002 Selection_Controller_
+                   Specification dv1_0 RETIRED at TB00302
+                   S-4 (git rm + commit + push per §11
+                   retired-document standing practice).
+                   Parent cascade-anchor 0810000 dv1_3
+                   -> dv1_4 (TB00302 S-5 closure: §4
+                   DOCUMENT INVENTORY removed 0811002
+                   entry + added retirement NOTE
+                   paragraph; §5 removed "0811002 ->
+                   0810000 -> 0800000" chain; §6
+                   removed 0711001 external-dependency
+                   block for 0811002 SC-GATE-1 SSS PASS;
+                   §7 removed 0811002 from related-
+                   documents list; §3 added fourth
+                   retirement NOTE paragraph for
+                   Selection Controller matching dv1_1
+                   /dv1_2/dv1_3 precedent pattern).
+                   S-3 coding-unique content (bucket
+                   (b)) migrated to 0511002 dv1_1 §14
+                   parent Signal_Pipeline_Specification
+                   via PROSE-UPDATE-A1 (HR-SC-005) +
+                   PROSE-UPDATE-A2 (HR-SC-006) at
+                   TB00301 close prior to S-4 execution
+                   this session.
+
+                   PRE-S4 CHESTERTON'S-FENCE
+                   VERIFICATION RECORD. TB00209 v1_0 §6
+                   specified five grep-verify targets.
+                   Verification executed at TB00302
+                   chat-turn 1 via bash grep:
+                     (1) mod:Selection_Controller
+                         drill_target binding in 0500000
+                         dv1_78 — 7 occurrences PRESENT.
+                     (2) ar:AR-072 (40 occurrences) +
+                         ar:AR-073 (64 occurrences)
+                         PRESENT in 0500000 dv1_78.
+                     (3) HR-EC-014 binding in 0511004
+                         dv1_6 — 3 occurrences PRESENT.
+                     (4) contract:Parameter_Store_
+                         Snapshot binding in 0500000
+                         dv1_78 — 25 occurrences PRESENT.
+                     (5) evt:GATE5_PASS binding in
+                         0500000 dv1_78 D6 mod:Logger
+                         group governs — ABSENT from
+                         canonical (only internal to
+                         0811002 dv1_0 lines 364, 404).
+                         Confirmed bucket-(a) stale
+                         restatement; Logger canonical
+                         consumes 54 distinct evt:
+                         identifiers but not GATE5_PASS
+                         (pass forwards signal; only
+                         rejects are logged via
+                         SELECTION_REJECTED). Retirement
+                         removes orphan reference
+                         cleanly.
+                   All five Chesterton's-fence targets
+                   yield PASS. Retirement safe.
+Origin Session:    TB00302 (0811002 retirement cascade
+                   S-6 final closure; cascade execution
+                   spanned TB00202 pre-DD-012 audit
+                   through TB00300 Phase 1 audit
+                   (TB00209 v1_0) through TB00301 S-2
+                   NO-OP + S-3 PROSE-UPDATE-A1/A2 to
+                   0511002 dv1_1 through TB00302 S-4 +
+                   S-5 + S-6).
+Disposition:       CLOSED-BY-RETIREMENT under DD-012
+                   v2_38 0500000-canonical-all-docs
+                   scope (DEC-012 original AA=10
+                   campaign authorization at TB00190;
+                   TB00237 AMENDMENT B extended campaign
+                   scope to AA=08 subordinate specs).
+                   0811002 is the 4th AA=08 retirement
+                   in the DEC-012(a-extended) cascade
+                   (DR-057 0811003 + DR-058 0811004 +
+                   DR-059 0811001 + DR-061 0811002).
+                   Only 0811005 Short_Module_
+                   Specification dv1_3 remains in the
+                   DEC-012(a-extended) candidate list.
+Status:            CLOSED at TB00302 (S-1 Phase 1
+                   audit executed at TB00300 via
+                   TB00209 v1_0; S-2 NO-OP per Option B
+                   FP/DP-derivability-test (cluster
+                   (c-1) SC-024 EC-as-sole-updater
+                   contract drops with retirement;
+                   HR-EC-014 canonical SOLE-UPDATER
+                   binding preserved in 0511004 dv1_6);
+                   S-3 closed at TB00301 in 0511002
+                   dv1_0 -> dv1_1 PROSE-UPDATE-A1/A2
+                   HR-SC-005 + HR-SC-006 migration to
+                   §14; S-4 git rm executed via
+                   OPERATION 4 this session; S-5
+                   cascade-anchor revision 0810000
+                   dv1_3 -> dv1_4 this session; S-6
+                   this MDR entry this session +
+                   companion Decision_Register v1_7 ->
+                   v1_8 DEC-015 entry).
+
+DR-061 NEW — 0811002 Selection_Controller_Specification
+  dv1_0 retirement under DD-012 v2_38 0500000-canonical-
+  all-docs scope (DEC-012 / TB00237 AMENDMENT B campaign
+  authorization). DEC-012 6-sub-step methodology applied
+  across the cascade:
+
+    S-1 Phase 1 gap-audit — CLOSED at TB00300
+        (TB00209 v1_0 Phase 1 Gap Register authored).
+        Three-bucket classification:
+          Bucket (a) ARCHITECTURAL RESTATEMENT — 24
+            elements (16 pure + 8 with staleness from
+            pre-AR-072/AR-073 amendment dv1_0 era).
+            Canonical source: 0500000 dv1_78 Tier 1
+            Context (mod:Selection_Controller) + D2
+            (gate:G5_Selection_Controller) + D6
+            (mod:Logger SELECTION_REJECTED governs) +
+            §8 AR-072/AR-073 architectural rules.
+            DROP with retirement.
+          Bucket (b) CODING-UNIQUE — 2 elements
+            (HR-SC-005 entry_qty_quantized pre-
+            quantization contract + HR-SC-006
+            time.monotonic() clock source contract).
+            Migrated at S-3 to 0511002 dv1_0 -> dv1_1
+            §14 at TB00301 close.
+          Bucket (c) ARCHITECTURAL CONTENT NOT IN
+            DIAGRAMS — 1 element (SC-024 low-severity
+            EC-as-sole-updater contract enum-form
+            naming). S-2 NO-OP per Option B
+            derivability-test (HR-EC-014 canonical
+            SOLE-UPDATER binding preserved in 0511004
+            dv1_6; SC-024 enum-form prose drops
+            naturally with S-4 retirement).
+          Bucket (d) CHESTERTON'S FENCE — 0 elements.
+
+    S-2 diagram amendments — NO-OP per TB00301 S-2
+        Option B derivability-test execution. Cluster
+        (c-1) SC-024 resolved by natural drop with
+        retirement; HR-EC-014 binding canonical in
+        0511004 dv1_6 preserves EC SOLE-UPDATER
+        authority.
+
+    S-3 parent-spec gap-fill — CLOSED at TB00301
+        (0511002 dv1_0 -> dv1_1 §14 PROSE-UPDATE-A1
+        HR-SC-005 + PROSE-UPDATE-A2 HR-SC-006
+        migration). RR-SCOPE-007 v2_30 SELF-AUTHORED-
+        NSI-SOURCE-PROHIBITION compliance verified;
+        RR-SCOPE-010 NSI-IDENTIFIER-CITATION
+        DISCIPLINE compliance verified.
+
+    S-4 git rm — CLOSED at TB00302 (this session;
+        executed via OPERATION 4 commit + push per
+        DR-008.6 v2_42 CANONICAL REPO ROUTING). Pre-
+        S4 Chesterton's-fence verification per
+        TB00209 §6 five grep-verify targets executed
+        at chat-turn 1; all five PASS.
+
+    S-5 0810000 dv1_3 -> dv1_4 cascade-anchor revision
+        — CLOSED at TB00302 (this session; pattern-
+        matched to dv1_1 / dv1_2 / dv1_3 precedents
+        for §3 NOTE addition + §4 inventory removal
+        + §5 chain removal + §6 dependency simplification
+        + §7 related-docs removal + §8 revision
+        history entry).
+
+    S-6 this MDR entry this session + companion
+        Decision_Register v1_7 -> v1_8 DEC-015 entry
+        this session.
+
+  Total entries 60 -> 61. Medium priority count
+  16 -> 17. CLOSED-BY-RETIREMENT bucket count 17 -> 18.
+
+  AA=08 RETIREMENT CASCADE PROGRESSION. DR-061
+  closes the 4th AA=08 retirement under DD-012 / TB00237
+  AMENDMENT B campaign scope. Cumulative AA=08
+  retirements: DR-057 0811003 (TB00277) + DR-058 0811004
+  (TB00280) + DR-059 0811001 (TB00297) + DR-061 0811002
+  (TB00302). Only 0811005 Short_Module_Specification
+  dv1_3 remains in the DEC-012(a-extended) candidate
+  list.
+
+  Pre-S4 Chesterton's-fence verification: all five
+  grep-verify targets PASS (per record above in DR-061
+  Affected Spec block). 0811002 dv1_0 internal
+  references to evt:GATE5_PASS confirmed orphan
+  (not in canonical Logger consumes list; not in
+  any other surviving spec); retirement removes the
+  orphan reference cleanly.
+
+------------------------------------------------------------
+DR-062  MEDIUM  ALTER  CLOSED
+------------------------------------------------------------
+Affected Diagram:  Tier 1 Context Diagram
+                   (mod:Short_Module structured tag with
+                   canonical / tier / parent_diagram /
+                   drill_targets / constraints / consumes
+                   / produces fields) + D2 Trading Pipeline
+                   (mod:Short_Module added to root governs
+                   at R3->R4 per TB00243 AMENDMENT-7
+                   parallel-module governs-list extension;
+                   AR-053 + AR-054 amended dv1_43 direction-
+                   symmetric per AMENDMENT-9) + D4 Regime
+                   Taxonomy (Regime 5 + Regime 6 cells per
+                   HR-REGIME-007 amended dv1_1 directional
+                   cascade R2->R3; mod:Short_Module
+                   drill_targets + governs) + D7 Dispatch
+                   Seam (mod:Short_Module parallel sibling
+                   labeled group to mod:Long_Module
+                   lm_above_seam; direction-symmetric
+                   emergency-IOC arrow through seam; AR-052
+                   per-wallet drawdown machine + state:
+                   NORMAL_per_wallet + state:SESSION_PAUSE_
+                   per_wallet + state:FULL_HALT_per_wallet).
+                   0500000 dv1_78 canonical for Short Module
+                   architecture across Tier 1 + D2 + D4 +
+                   D7. No further SVG changes required at
+                   0811005 retirement (canonical authority
+                   was already at 0500000 dv1_78 prior to
+                   retirement per DD-012 campaign + TB00210
+                   v1_0 Phase 1 audit confirming all 26-
+                   element three-bucket classification with
+                   25 bucket (a) restatement + 1 bucket (b)
+                   tentative coding-unique + 0 bucket (c)).
+Affected Prose:    0500000 dv1_78 §8 direction-symmetric
+                   architectural rules: AR-006 add_order
+                   construction (direction-symmetric short
+                   side) + AR-007 batch_add TP+emergSL on
+                   fill (short-symmetric) + AR-008 R:R from
+                   actual fill price (short-direction
+                   floor-enforced) + AR-009 Kraken margin
+                   trading amended dv1_41 (Short Module
+                   activation) + AR-052 per-wallet drawdown
+                   machine (state:NORMAL_per_wallet +
+                   state:SESSION_PAUSE_per_wallet + state:
+                   FULL_HALT_per_wallet; per TB00000 v2_29
+                   per-module wallets + per-wallet drawdown
+                   halts) + AR-053 Pending Order Registry
+                   amended dv1_43 (long_pending_orders +
+                   short_pending_orders dicts per-module
+                   routing) + AR-054 Entry partial-fill
+                   protection amended dv1_43 (direction-
+                   symmetric emergency-exit handler) +
+                   AR-067 SSS Signal Engine direction-
+                   symmetric three-factor scoring + AR-072
+                   Selection Controller gate parameters
+                   (direction-symmetric) + AR-073 Exit
+                   Controller as SOLE updater of SC state
+                   via WS Manager path (direction-
+                   symmetric) + HR-REGIME-007 amended
+                   dv1_1 TRENDING_NEGATIVE directional
+                   cascade (LONG blocked + SHORT permitted
+                   via mod:Short_Module dispatch).
+                   Canonical authority transferred to
+                   0500000 dv1_78 across the diagram-
+                   canonical amendment chain culminating
+                   at dv1_43 (M-2 short-direction
+                   amendments) + TB00243 AMENDMENT-7
+                   (mod:Short_Module D2 governs extension)
+                   + TB00245 AMENDMENT-9 (AR-053 + AR-054
+                   direction-symmetric). 0511005 dv1_1
+                   §3.1 + §3.3 PositionRecord side="short"
+                   schema discriminator + fees_entry_usd
+                   schema-extension canonical for Position
+                   Mirror side discrimination. 0511006
+                   dv1_4 §5.3.S Short Module Events
+                   sub-section canonical for 13 _SHORT-
+                   suffixed log event names (PROSE-UPDATE-A
+                   migrated from 0811005 §10 to 0511006
+                   dv1_4 at TB00304 close prior to S-4
+                   execution this session). TB00000 v2_38
+                   §9.3 PARALLEL-MODULE FRAMEWORK + §9.6
+                   PER-MODULE CIATS FRAMEWORK + §9.7 PER-
+                   WALLET DRAWDOWN HALTS + §9.17 CIATS
+                   PARAMETER REGISTRY (per-module
+                   instantiated parameters including
+                   leverage_cap_short + rsi_short_low +
+                   rsi_short_high + min_order_size_usd +
+                   paper_starting_balance_short_usd)
+                   canonical for parallel-module framework
+                   parameters and operator-controlled
+                   wallet funding.
+Affected Spec:     0811005 Short_Module_Specification dv1_3
+                   RETIRED at TB00305 S-4 (git rm + commit
+                   + push per §11 retired-document standing
+                   practice). Parent cascade-anchor 0810000
+                   dv1_4 -> dv1_5 (TB00305 S-5 closure: §1
+                   PURPOSE added POST-DEC-012(a-extended)
+                   AA=08 CAMPAIGN COMPLETION NOTE paragraph;
+                   §3 added fifth retirement NOTE paragraph
+                   for Short Module matching dv1_1/dv1_2/
+                   dv1_3/dv1_4 precedent pattern; §4
+                   DOCUMENT INVENTORY removed 0811005 entry
+                   + added fifth retirement NOTE paragraph;
+                   §5 removed "0811005 -> 0810000 ->
+                   0800000" chain; §6 reduced to anchor +
+                   parent commit order with zero-surviving-
+                   instance prose framing + Short Module
+                   System Architecture references block;
+                   §7 removed 0811005 from related-
+                   documents list + added 0511006 (§5.3.S
+                   Short Module Events) + 0711002
+                   (HR-REGIME-007 directional cascade) to
+                   canonical-source-pointer list; §8
+                   revision history entry dv1_5). S-3
+                   coding-unique content (bucket (b)
+                   tentative 13 _SHORT log events) migrated
+                   to 0511006 dv1_4 §5.3.S Short Module
+                   Events sub-section at TB00304 S-3
+                   PROSE-UPDATE-A closure prior to S-4
+                   execution this session.
+
+                   PRE-S4 CHESTERTON'S-FENCE
+                   VERIFICATION RECORD. TB00210 v1_0 §6
+                   specified seven grep-verify targets.
+                   Verification executed at TB00305
+                   chat-turn 1 via bash grep:
+                     (1) mod:Short_Module canonical
+                         bindings in 0500000 dv1_78 — 137
+                         occurrences PRESENT (Tier 1 + D2
+                         + D4 + D7 + §8 structured tag +
+                         drill_targets + governs).
+                     (2) Direction-symmetric AR family
+                         (AR-006/007/008/009/047/052/053/
+                         054/072/073) in 0500000 dv1_78 —
+                         293 occurrences PRESENT across
+                         D1 + D2 + D4 + D7 + §8 governs
+                         lists + architectural reasoning.
+                     (3) HR-REGIME-007 amended dv1_1
+                         directional cascade binding in
+                         0500000 dv1_78 D4 — 46
+                         occurrences PRESENT (D4 R3
+                         R-increment narrative + D4
+                         governs + Regime 5 + Regime 6
+                         cells).
+                     (4) AR-052 + per-wallet drawdown
+                         machine binding in 0500000
+                         dv1_78 D7 — 31 occurrences
+                         PRESENT.
+                     (5) 13 _SHORT-suffixed log event
+                         names in 0511006 dv1_4 §5.3.S
+                         — 31 occurrences of _SHORT
+                         token PRESENT (13 canonical
+                         event names + revision-history
+                         listing + cross-reference);
+                         §5.3.S Short Module Events
+                         sub-section enumerates
+                         ENTRY_ACCEPTED_ON_BOOK_SHORT
+                         through POSITION_OPENED_SHORT
+                         (13 events authored at TB00304
+                         PROSE-UPDATE-A closure; note:
+                         TB00210 §1.4 audit estimated
+                         14 events; actual count post-
+                         S-3 closure was 13).
+                     (6) PositionRecord side="short"
+                         schema discriminator in 0511005
+                         dv1_1 §3.1 + §3.3 — schema-
+                         extension confirmed present per
+                         TB00302 cascade S-3 (iii) all
+                         13 PositionRecord field-schema
+                         items verification (re-verified
+                         this session at TB00210 audit
+                         input retention).
+                     (7) rule:Sacred_R_R_1_to_1_5
+                         binding in 0500000 dv1_78 — 75
+                         occurrences PRESENT (D5
+                         Parameter Store + governs list
+                         + §4 AR registry + constraints).
+                   All seven Chesterton's-fence targets
+                   yield PASS. Retirement safe under
+                   RR-SCOPE-009 four-question origin
+                   investigation (constraint-removal
+                   origin investigation complete; no
+                   load-bearing canonical dependency on
+                   retiring spec).
+Origin Session:    TB00305 (0811005 retirement cascade
+                   S-6 final closure; cascade execution
+                   spanned TB00303 pre-DD-012 selection
+                   through TB00303 Phase 1 audit (TB00210
+                   v1_0) through TB00304 S-2 NO-OP + S-3
+                   PROSE-UPDATE-A to 0511006 dv1_4
+                   through TB00305 S-4 + S-5 + S-6).
+Disposition:       CLOSED-BY-RETIREMENT under DD-012
+                   v2_38 0500000-canonical-all-docs
+                   scope (DEC-012 original AA=10
+                   campaign authorization at TB00190;
+                   TB00237 AMENDMENT B extended campaign
+                   scope to AA=08 subordinate specs).
+                   0811005 is the FIFTH AND FINAL AA=08
+                   retirement in the DEC-012(a-extended)
+                   cascade (DR-057 0811003 + DR-058
+                   0811004 + DR-059 0811001 + DR-061
+                   0811002 + DR-062 0811005). The
+                   DEC-012(a-extended) AA=08 CAMPAIGN
+                   IS COMPLETE post-this-closure. No
+                   remaining AA=08 candidates in the
+                   DEC-012(a-extended) candidate list.
+Status:            CLOSED at TB00305 (S-1 Phase 1
+                   audit executed at TB00303 via
+                   TB00210 v1_0; S-2 NO-OP ratified at
+                   TB00304 per Option B FP/DP-
+                   derivability-test (bucket (c) = 0;
+                   bucket (a) = 25 + bucket (b) = 1
+                   tentative); S-3 closed at TB00304
+                   via 0511006 dv1_3 -> dv1_4 PROSE-
+                   UPDATE-A authoring with new §5.3.S
+                   Short Module Events sub-section
+                   enumerating 13 _SHORT-suffixed event
+                   names; S-4 git rm executed via
+                   OPERATION 4 this session; S-5
+                   cascade-anchor revision 0810000 dv1_4
+                   -> dv1_5 this session; S-6 this MDR
+                   entry this session + companion
+                   Decision_Register v1_8 -> v1_9
+                   DEC-016 entry).
+
+DR-062 NEW — 0811005 Short_Module_Specification
+  dv1_3 retirement under DD-012 v2_38 0500000-canonical-
+  all-docs scope (DEC-012 / TB00237 AMENDMENT B campaign
+  authorization). DEC-012(a-extended) 6-sub-step
+  methodology applied across the cascade:
+
+    S-1 Phase 1 gap-audit — CLOSED at TB00303
+        (TB00210 v1_0 Phase 1 Gap Register authored).
+        Three-bucket classification:
+          Bucket (a) ARCHITECTURAL RESTATEMENT — 25
+            of 26 sections. All structural §1-§9,
+            §11-§13 sections plus §10 majority
+            (direction-symmetric event names with
+            _SHORT suffix following canonical LM
+            pattern). Canonical source: 0500000
+            dv1_78 Tier 1 Context (mod:Short_Module)
+            + D2 (mod:Short_Module governs at R4) +
+            D4 (Regime 5 + Regime 6 directional
+            cascade per HR-REGIME-007 amended dv1_1)
+            + D7 (mod:Short_Module parallel sibling
+            labeled group) + §8 AR-006/007/008/009/
+            047/052/053/054/067/072/073 +
+            HR-REGIME-007 architectural rules.
+            DROP with retirement.
+          Bucket (b) CODING-UNIQUE — 1 of 26 sections
+            (tentative; §10 partial). 13 _SHORT-
+            suffixed log event names. Migrated at
+            S-3 to 0511006 dv1_3 -> dv1_4 §5.3.S
+            Short Module Events sub-section at
+            TB00304 close. Note: TB00210 §1.4
+            originally estimated 14 events; the
+            count of events actually authored at S-3
+            was 13 (post-PROSE-UPDATE-A reconciliation).
+          Bucket (c) ARCHITECTURAL CONTENT NOT IN
+            DIAGRAMS — 0 of 26 sections.
+            Zero net-new architectural content.
+            0811005 dv1_3 is direction-symmetric of
+            canonical 0811001 + AR registry +
+            TB00000 §9 parallel-module framework.
+            Every architectural element traces to a
+            canonical 0500000 dv1_78 diagram governs
+            binding or to a TB00000 v2_43 / v2_44
+            §9 framework rule.
+          Bucket (d) CHESTERTON'S FENCE — 0 elements.
+
+    S-2 diagram amendments — NO-OP RATIFIED at TB00304
+        per Option B FP/DP-derivability-test execution.
+        Bucket (c) = 0 drives Option B single compliant
+        outcome (no 0500000 amendment required as
+        retirement prerequisite). DD-011 v2_38 FP/DP-
+        derivability-test OUTCOME 1 single compliant
+        option DERIVABLE.
+
+    S-3 parent-spec gap-fill — CLOSED at TB00304
+        (0511006 dv1_3 -> dv1_4 §5.3.S Short Module
+        Events sub-section authoring enumerating 13
+        _SHORT-suffixed event names from 0811005 §10).
+        RR-SCOPE-007 v2_30 SELF-AUTHORED-NSI-SOURCE-
+        PROHIBITION compliance verified; RR-SCOPE-010
+        NSI-IDENTIFIER-CITATION DISCIPLINE compliance
+        verified.
+
+    S-4 git rm — CLOSED at TB00305 (this session;
+        executed via OPERATION 4 commit + push per
+        DR-008.6 v2_44 FOUR-OPERATION SEQUENTIAL +
+        GROUND-TRUTH VERIFICATION GATE). Pre-S4
+        Chesterton's-fence verification per TB00210
+        §6 seven grep-verify targets executed at
+        chat-turn 1; all seven PASS.
+
+    S-5 0810000 dv1_4 -> dv1_5 cascade-anchor revision
+        — CLOSED at TB00305 (this session; pattern-
+        matched to dv1_1 / dv1_2 / dv1_3 / dv1_4
+        precedents for §3 NOTE addition + §4 inventory
+        removal + §5 chain removal + §6 dependency
+        simplification + §7 related-docs removal +
+        §8 revision history entry; §1 POST-DEC-012(a-
+        extended) AA=08 CAMPAIGN COMPLETION NOTE
+        added since 0811005 retirement reduces
+        Sub-Domain 1 to ZERO surviving instance
+        documents).
+
+    S-6 this MDR entry this session + companion
+        Decision_Register v1_8 -> v1_9 DEC-016 entry
+        this session.
+
+  Total entries 61 -> 62. Medium priority count
+  17 -> 18. CLOSED-BY-RETIREMENT bucket count 18 -> 19.
+
+  AA=08 RETIREMENT CASCADE PROGRESSION + CAMPAIGN
+  COMPLETION. DR-062 closes the 5TH AND FINAL AA=08
+  retirement under DD-012 / TB00237 AMENDMENT B
+  campaign scope. Cumulative AA=08 retirements:
+  DR-057 0811003 (TB00277) + DR-058 0811004 (TB00280)
+  + DR-059 0811001 (TB00297) + DR-061 0811002
+  (TB00302) + DR-062 0811005 (TB00305). The
+  DEC-012(a-extended) AA=08 CAMPAIGN IS COMPLETE
+  post-this-closure. All five 08XXXXX instance
+  specifications retired; canonical authority
+  transferred to 0500000 dv1_78 diagrams + AR
+  registry + TB00000 §9 parallel-module framework +
+  AA=05 component parent specs (0511001..0511006
+  including 0511006 dv1_4 §5.3.S Short Module Events).
+  Sub-Domain 1 retires to ZERO surviving instance
+  documents at 0810000 dv1_5. Future cascade work
+  post-DEC-012(a-extended) AA=08 completion: separate
+  AA=04 / AA=06 / AA=07 campaigns governed by TB00153
+  Decision_Register DEC-012 candidate enumeration.
+
+  Pre-S4 Chesterton's-fence verification: all seven
+  grep-verify targets PASS (per record above in DR-062
+  Affected Spec block). 0811005 dv1_3 internal
+  references confirmed direction-symmetric of
+  canonical Long_Module architecture (in 0500000 +
+  TB00000 §9) and of canonical AA=05 parent specs;
+  retirement removes the duplicative restatement
+  cleanly. No dangling-cross-reference carry-forward
+  identified.
+
+============================================================
+5. PORTION RECORDS
+============================================================
+
+[Section preserved from v1_26 byte-identical.]
+
+============================================================
+6. ARCHITECTURAL ROLLUP
+============================================================
+
+[Rollup preserved from v1_26 byte-identical.]
+
+============================================================
+7. SEPARATE-AUDIT QUESTIONS DEFERRED
+============================================================
+
+[Section preserved from v1_26 byte-identical.]
+
+============================================================
+8. DECISION REGISTER REFERENCES
+============================================================
+
+DEC-012 v2_38 0500000-canonical-all-docs retirement
+campaign (ratified at TB00190; scope extended at
+TB00237 AMENDMENT B to AA=08 subordinate specs).
+DR-062 is the 19th retirement cascade closure entry
+under DEC-012 methodology. By spec type:
+  AA=10 retirements (12): DR-044 through DR-056
+    (1011003 + 1011004 + 1011005 + 1011006 + 1011007
+    + 1011008 + 1011009 + 1011011 + 1011012 + 1011013
+    + 1011014 cascade closures across TB00213-TB00272)
+    plus DR-060 1011002 (TB00299). 12th and final
+    AA=10 cascade per the original DEC-012(a)
+    candidate list at TB00190; AA=10 cascade COMPLETE
+    at TB00299.
+  AA=08 retirements (5): DR-057 0811003 at TB00277 +
+    DR-058 0811004 at TB00280 + DR-059 0811001 at
+    TB00297 + DR-061 0811002 at TB00302 + DR-062
+    0811005 at TB00305 (this session). 5th and FINAL
+    AA=08 retirement per the DEC-012(a-extended)
+    candidate list extension at TB00237 AMENDMENT B.
+    AA=08 cascade COMPLETE at TB00305.
+Remaining DEC-012(a-extended) candidates: NONE.
+The DEC-012(a-extended) AA=08 sub-campaign is
+COMPLETE. Parent DEC-012 multi-AA campaign continues
+with future AA=04 / AA=06 / AA=07 candidates as
+identified.
+
+DEC-016 v1_9 NEW — 0811005 Short_Module_Specification
+dv1_3 retirement decision under DEC-012 / DD-012 /
+TB00237 AMENDMENT B campaign methodology + DEC-012(a-
+extended) AA=08 sub-campaign COMPLETION marker.
+DEC-016 is the FOURTH paired top-level DEC entry
+creating cascade-execution closure record at the
+Decision Register layer (after DEC-013 for 0811001 at
+TB00297 + DEC-014 for 1011002 at TB00299 + DEC-015
+for 0811002 at TB00302). Per established cascade-
+execution methodology precedent: per-cascade Phase 1
+Gap Register §5 explicit specification of the DEC-NEW
+entry continues to direct paired DEC creation for each
+retirement-cascade closure. TB00210 v1_0 §5.6(b)
+explicitly directed "Decision_Register vN -> vN+1
+DEC-NEW paired top-level decision entry for 0811005
+retirement + DEC-012(a-extended) candidate list
+closure".
+
+============================================================
+9. REGISTER STATISTICS
+============================================================
+
+  Total entries:           62  (61 -> 62)
+  By priority:
+    CRITICAL                7  (DR-001, 005, 006, 010,
+                                022, 023, 024)
+    HIGH                   11  (DR-002, 003, 004, 008,
+                                009, 011, 012, 013, 014,
+                                015, 025, 041, 043)
+    MEDIUM                 18  (DR-007, 016, 027, 040,
+                                042, 044, 050, 051, 052,
+                                053, 054, 056, 057, 058,
+                                059, 060, 061, 062)
+                                (+DR-062)
+    LOW                    20
+    (Note: DR-055 disposition tracking continued in
+     v1_22; not re-counted in priority buckets per
+     v1_22 framing.)
+  By disposition:
+    ALTER                  ~20 (DR-060 + DR-061 + DR-062
+                                each cross-reference
+                                already-closed canonical
+                                content at 0500000 dv1_78
+                                + AA=05 parent specs +
+                                TB00000 §9 parallel-module
+                                framework)
+    ADD                     2
+    REMOVE                  1
+    NO ACTION               7
+    DEFERRED               16
+    MULTI-FINDING CLOSURE   1
+    CLOSED-BY-RETIREMENT   19  (18 -> 19)  (+DR-062)
+  By status:
+    OPEN                    0  (zero-OPEN diagram-
+                                relevant entries
+                                milestone PRESERVED at
+                                v1_29)
+    CLOSED                 various per portion records.
+    DEFERRED                1  (DR-040 explicit).
+    CLOSED-elsewhere       19  (18 -> 19).
+
+  AA=08 CAMPAIGN COMPLETION MARKER. DEC-012(a-extended)
+  AA=08 sub-campaign closes at TB00305 with DR-062.
+  Five 08XXXXX instance specifications retired across
+  TB00277-TB00280-TB00297-TB00302-TB00305 cascade
+  series. No remaining DEC-012(a-extended) AA=08
+  candidates. Parent DEC-012 multi-AA campaign continues
+  with future AA=04 / AA=06 / AA=07 sub-campaigns as
+  identified.
+
+============================================================
+10. REVISION HISTORY
+============================================================
+
+  v1_29 2026-05-16  TB00305 0811005 SHORT_MODULE_
+                    SPECIFICATION DV1_3 RETIREMENT CASCADE
+                    S-6 CLOSURE ENTRY (FIFTH AND FINAL
+                    AA=08 SUBORDINATE-SPEC RETIREMENT
+                    UNDER DEC-012 / TB00237 AMENDMENT B
+                    CAMPAIGN; DEC-012(a-extended) AA=08
+                    CAMPAIGN COMPLETE).
+
+                    One NEW DR entry appended after
+                    DR-061 closing the TB00303-TB00304-
+                    TB00305 0811005 retirement cascade
+                    under DD-012 v2_38 0500000-canonical-
+                    all-docs scope:
+
+                      DR-062 NEW — 0811005 Short_Module_
+                        Specification dv1_3 retirement
+                        under DD-012 v2_38 / DEC-012 /
+                        TB00237 AMENDMENT B campaign
+                        authorization. DEC-012(a-extended)
+                        6-sub-step methodology applied
+                        across the cascade:
+                          S-1 Phase 1 gap-audit
+                            (TB00303 / TB00210 v1_0)
+                            three-bucket classification
+                            (25 bucket (a) restatement +
+                            1 bucket (b) tentative
+                            coding-unique pending S-3
+                            grep verify + 0 bucket (c)).
+                          S-2 diagram amendments NO-OP
+                            ratified at TB00304 per
+                            Option B FP/DP-derivability-
+                            test (bucket (c) = 0 drives
+                            Option B single compliant
+                            outcome; DD-011 v2_38 OUTCOME
+                            1 derivable).
+                          S-3 parent-spec gap-fill
+                            CLOSED at TB00304 (0511006
+                            dv1_3 -> dv1_4 §5.3.S Short
+                            Module Events sub-section
+                            authoring enumerating 13
+                            _SHORT-suffixed event names
+                            from 0811005 §10).
+                          S-4 git rm CLOSED at TB00305
+                            (this session; executed via
+                            OPERATION 4 commit + push
+                            per DR-008.6 v2_44 FOUR-
+                            OPERATION SEQUENTIAL +
+                            GROUND-TRUTH VERIFICATION
+                            GATE). Pre-S4 Chesterton's-
+                            fence verification per
+                            TB00210 §6 seven grep-verify
+                            targets executed at chat-
+                            turn 1; all seven PASS.
+                          S-5 0810000 dv1_4 -> dv1_5
+                            cascade-anchor revision
+                            CLOSED at TB00305 (§1
+                            POST-DEC-012(a-extended)
+                            AA=08 CAMPAIGN COMPLETION
+                            NOTE addition + §3 fifth
+                            NOTE paragraph addition +
+                            §4 inventory removal +
+                            §5 chain removal + §6
+                            dependency reduction to
+                            anchor + parent only +
+                            §7 related-docs update +
+                            §8 revision history entry).
+                          S-6 this MDR entry this
+                            session + companion
+                            Decision_Register v1_8 ->
+                            v1_9 DEC-016 entry this
+                            session.
+
+                    Total entries 61 -> 62. Medium
+                    priority count 17 -> 18 (DR-062
+                    added). CLOSED-BY-RETIREMENT bucket
+                    count 18 -> 19.
+
+                    AA=08 RETIREMENT CASCADE COMPLETION.
+                    DR-062 closes the 5th AND FINAL
+                    AA=08 retirement under DEC-012 /
+                    TB00237 AMENDMENT B campaign scope.
+                    Cumulative AA=08 retirements:
+                    DR-057 0811003 (TB00277) + DR-058
+                    0811004 (TB00280) + DR-059 0811001
+                    (TB00297) + DR-061 0811002 (TB00302)
+                    + DR-062 0811005 (TB00305). The
+                    DEC-012(a-extended) AA=08 sub-
+                    campaign is COMPLETE at TB00305
+                    close. Sub-Domain 1 (AA=08) retires
+                    to ZERO surviving instance documents
+                    at 0810000 dv1_5; canonical authority
+                    fully transferred to 0500000 dv1_78
+                    + AA=05 parent specs + TB00000 §9
+                    parallel-module framework. Parent
+                    DEC-012 multi-AA campaign continues
+                    with future AA=04 / AA=06 / AA=07
+                    sub-campaigns.
+
+                    DD-011 v2_38 AMENDMENT D FP/DP-
+                    DERIVABILITY-TEST APPLIED UP-FRONT.
+                    Per TB00305 chat-turn 1 derivability
+                    log:
+                      option set (A execute S-4/S-5/S-6
+                        per TB00305 OCS + TB00210 §5
+                        cascade-method spec; B re-run
+                        S-1 audit; C surface to Bill);
+                      first-principles analysis
+                        (TB00305 OCS verbatim directs
+                        cascade execution; S-1 audit
+                        complete at TB00303 TB00210
+                        v1_0; S-2 NO-OP per TB00304
+                        Option B derivability-test
+                        closure; S-3 complete at
+                        TB00304 0511006 dv1_4 PROSE-
+                        UPDATE-A closure; all DEC-012
+                        prerequisites satisfied; MDR
+                        closure-entry pattern
+                        established at DR-044 through
+                        DR-061 prior retirement
+                        cascades);
+                      data sources (TB00305 NSI §0
+                        OCS; TB00304 SL §3.3 cascade
+                        status; TB00210 v1_0 §5
+                        cascade-method spec; TB00153
+                        MDR v1_28 DR-061 precedent
+                        entry; TB00000 v2_44 §11 +
+                        §4.5 DD-012 + DR-008.6 v2_44
+                        FOUR-OPERATION SEQUENTIAL;
+                        TB00153 Decision_Register v1_8
+                        DEC-015 precedent);
+                      elimination (B on RR-SCOPE-005 /
+                        TB00210 §5 spec authoritative
+                        + Bill OCS directs execution;
+                        C on DD-011 / Bill OCS explicit
+                        directive);
+                      remaining: Option A. OUTCOME 1
+                        (single compliant option).
+                      Decision executed under
+                      RR-SCOPE-005 derivable-decision
+                      authority. No DD-011 violation
+                      this session.
+
+                    PRE-S4 CHESTERTON'S-FENCE
+                    VERIFICATION RECORD (TB00305
+                    chat-turn 1). Seven grep-verify
+                    targets per TB00210 §6 — all PASS
+                    (per record in DR-062 Affected
+                    Spec block above).
+
+                    PARENT CHAIN COMPLIANCE: TB00153
+                    MDR is a session-log forensic
+                    register outside the controlled-
+                    document namespace. Section 10
+                    Revision History updated.
+
+                    Bill override: TB00153 MDR v1_28
+                    -> v1_29 enacted under DEC-012
+                    retirement-campaign methodology
+                    (ratified at TB00190; scope
+                    extended at TB00237 AMENDMENT B
+                    to AA=08 subordinate specs) +
+                    TB00210 v1_0 §5 cascade-execution
+                    specification + Bill TB00305 OCS
+                    directive "Execute 0811005 cascade
+                    S-4 retirement + S-5 anchor
+                    revision (0810000 dv1_4 -> dv1_5)
+                    + S-6 MDR/DR closure entries;
+                    close DEC-012(a-extended) AA=08
+                    campaign." Direct increment v1_28
+                    -> v1_29.
+
+                    Document Status updated: supersedes
+                    v1_28.
+
+  v1_28 2026-05-15  TB00302 0811002 SELECTION_CONTROLLER_
+                    SPECIFICATION DV1_0 RETIREMENT CASCADE
+                    S-6 CLOSURE ENTRY (FOURTH AA=08
+                    SUBORDINATE-SPEC RETIREMENT UNDER
+                    DEC-012 / TB00237 AMENDMENT B
+                    CAMPAIGN). One NEW DR entry (DR-061)
+                    appended. (Full text preserved in git
+                    history at v1_28 file path.)
+
+                    DD-011 v2_38 AMENDMENT D FP/DP-
+                    DERIVABILITY-TEST APPLIED UP-FRONT.
+                    Per TB00302 chat-turn 1 derivability
+                    log:
+                      option set (A execute S-4/S-5/S-6
+                        per TB00302 OCS + TB00209 §5
+                        cascade-method spec; B re-run
+                        S-1 audit; C surface to Bill);
+                      first-principles analysis
+                        (TB00302 OCS verbatim directs
+                        cascade execution; S-1 audit
+                        complete at TB00300 TB00209
+                        v1_0; S-2 NO-OP per TB00301
+                        Option B derivability-test
+                        closure; S-3 complete at
+                        TB00301 0511002 dv1_1 §14
+                        PROSE-UPDATE-A1/A2 closure;
+                        all DEC-012 prerequisites
+                        satisfied; MDR closure-entry
+                        pattern established at DR-044
+                        through DR-060 prior retirement
+                        cascades);
+                      data sources (TB00302 NSI §0
+                        OCS; TB00301 SL §1 cascade
+                        status; TB00209 v1_0 §5
+                        cascade-method spec; TB00153
+                        MDR v1_27 DR-060 precedent
+                        entry; TB00000 v2_42 §11 +
+                        §4.5 DD-012; TB00153 Decision_
+                        Register v1_7 DEC-014
+                        precedent);
+                      elimination (B on RR-SCOPE-005 /
+                        TB00209 §5 spec authoritative
+                        + Bill OCS directs execution;
+                        C on DD-011 / Bill OCS explicit
+                        "Do not pause and wait for me"
+                        directive);
+                      remaining: Option A. OUTCOME 1
+                        (single compliant option).
+                      Decision executed under
+                      RR-SCOPE-005 derivable-decision
+                      authority. No DD-011 violation
+                      this session.
+
+                    PRE-S4 CHESTERTON'S-FENCE
+                    VERIFICATION RECORD (TB00302
+                    chat-turn 1). Five grep-verify
+                    targets per TB00209 §6:
+                      (1) mod:Selection_Controller in
+                          0500000 dv1_78 — 7 PRESENT.
+                      (2) ar:AR-072 (40) + ar:AR-073
+                          (64) in 0500000 dv1_78 —
+                          BOTH PRESENT.
+                      (3) HR-EC-014 in 0511004 dv1_6 —
+                          3 PRESENT.
+                      (4) contract:Parameter_Store_
+                          Snapshot in 0500000 dv1_78 —
+                          25 PRESENT.
+                      (5) evt:GATE5_PASS in 0500000
+                          dv1_78 D6 mod:Logger —
+                          ABSENT (orphan in 0811002
+                          dv1_0 lines 364/404 only;
+                          Logger canonical does not
+                          consume GATE5_PASS event).
+                    All five targets PASS. Retirement
+                    safe.
+
+                    PARENT CHAIN COMPLIANCE: TB00153
+                    MDR is a session-log forensic
+                    register outside the controlled-
+                    document namespace. Section 10
+                    Revision History updated.
+
+                    Bill override: TB00153 MDR v1_27
+                    -> v1_28 enacted under DEC-012
+                    retirement-campaign methodology
+                    (ratified at TB00190; scope
+                    extended at TB00237 AMENDMENT B)
+                    + TB00209 v1_0 §5 cascade-method
+                    spec (Bill scope at TB00300) +
+                    Bill TB00302 OCS directive
+                    "Execute 0811002 cascade S-4 (git
+                    rm after pre-S4 Chesterton's-
+                    fence verification per TB00209
+                    §6) + S-5 (0810000 dv1_3 -> dv1_4)
+                    + S-6 (MDR + DR amendments)" +
+                    Bill explicit "Do not pause and
+                    wait for me. Proceed with OCS
+                    instructions below." Direct
+                    increment v1_27 -> v1_28.
+
+                    Document Status updated: supersedes
+                    v1_27.
+
+  v1_27 2026-05-15  TB00299 1011002 WS_MANAGER_CODING_
+                    SPEC DV1_26 RETIREMENT CASCADE S-6
+                    CLOSURE ENTRY (TWELFTH AA=10
+                    SUBORDINATE-SPEC RETIREMENT UNDER
+                    DEC-012 METHODOLOGY; FINAL AA=10
+                    CASCADE FROM ORIGINAL DEC-012(a)
+                    12-CANDIDATE LIST).
+
+                    One NEW DR entry appended after
+                    DR-059 closing the TB00261-TB00298-
+                    TB00299 1011002 retirement cascade
+                    under DD-012 v2_38 0500000-canonical-
+                    all-docs scope:
+
+                      DR-060 NEW — 1011002 WS_Manager_
+                        Coding_Spec dv1_26 retirement
+                        under DD-012 v2_38 / DEC-012
+                        original AA=10 campaign
+                        authorization (TB00190). DEC-012
+                        6-sub-step methodology applied
+                        across the cascade:
+                          S-1 Phase 1 gap-audit
+                            (TB00298 / TB00208 v1_0)
+                            three-bucket classification.
+                          S-2 diagram amendments NO-OP
+                            (bucket (c) empty; all four
+                            cluster gaps from prior
+                            TB00194 pre-DD-012 gap
+                            register CLOSED in current
+                            canonical baselines).
+                          S-3 parent-spec gap-fill
+                            CLOSED PRIOR to this
+                            session in 0511001 dv1_9
+                            PROSE-UPDATE-A..J chain.
+                          S-4 git rm CLOSED at TB00299
+                            (executed via OPERATION 4
+                            commit + push).
+                          S-5 1010000 dv1_18 -> dv1_19
+                            cascade-anchor revision
+                            CLOSED at TB00299 (S-5
+                            anchor-identification
+                            correction: 1010000 not
+                            0510000 per DCN AABCDDD
+                            governance).
+                          S-6 this MDR entry this
+                            session + companion
+                            Decision_Register v1_6 ->
+                            v1_7 DEC-014 entry this
+                            session.
+
+                    Total entries 59 -> 60. Medium
+                    priority count 15 -> 16 (DR-060
+                    added). CLOSED-BY-RETIREMENT bucket
+                    count 16 -> 17.
+
+                    AA=10 RETIREMENT CASCADE
+                    COMPLETION. DR-060 closes the 12th
+                    and final AA=10 retirement from
+                    the original DEC-012(a) 12-candidate
+                    list ratified at TB00190 (1011002 +
+                    1011003 + 1011004 + 1011005 +
+                    1011006 + 1011007 + 1011008 +
+                    1011009 + 1011011 + 1011012 +
+                    1011013 + 1011014). Remaining
+                    DEC-012(a-extended) candidates at
+                    v1_27 enactment: 0811002 + 0811005
+                    (both AA=08; original AA=10
+                    cascade complete).
+
+                    DD-011 v2_38 AMENDMENT D FP/DP-
+                    DERIVABILITY-TEST APPLIED UP-FRONT.
+                    Per TB00299 chat-turn 1 derivability
+                    log:
+                      option set (A execute S-6 per
+                        TB00299 OCS + TB00208 §5.6
+                        spec; B re-run S-1 audit; C
+                        surface to Bill);
+                      first-principles analysis
+                        (TB00299 OCS verbatim directs
+                        S-6 execution; S-1 audit
+                        complete at TB00298 TB00208
+                        v1_0; S-2 NO-OP per bucket (c)
+                        empty; S-3 complete prior to
+                        session per pre-S4 grep
+                        verification; all DEC-012
+                        prerequisites satisfied; MDR
+                        closure-entry pattern
+                        established at DR-044 through
+                        DR-059 prior retirement
+                        cascades);
+                      data sources (TB00299 NSI §0
+                        OCS; TB00298 SL §1 cascade
+                        status; TB00208 §5.6 S-6
+                        specification; TB00153 MDR
+                        v1_26 DR-059 precedent entry;
+                        TB00000 v2_42 §11 + §4.5
+                        DD-012; TB00153 Decision_
+                        Register v1_6 DEC-013
+                        precedent);
+                      elimination (B on RR-SCOPE-005 /
+                        TB00208 §5.6 spec authoritative
+                        + Bill OCS directs execution;
+                        C on DD-011 / Bill OCS explicit
+                        "Do not pause and wait for me"
+                        directive);
+                      remaining: Option A. OUTCOME 1
+                        (single compliant option).
+                      Decision executed under
+                      RR-SCOPE-005 derivable-decision
+                      authority. No DD-011 violation
+                      this session.
+
+                    SECOND DD-011 DERIVABILITY TEST
+                    APPLIED MID-SESSION ON S-5 ANCHOR
+                    IDENTIFICATION (per record above in
+                    DR-060 Affected Spec block).
+                    OUTCOME 1 derivable. Option B
+                    (1010000 dv1_19) executed under
+                    RR-SCOPE-005 + RR-SCOPE-007
+                    SELF-AUTHORED-NSI-SOURCE-
+                    PROHIBITION correction. No DD-011
+                    violation.
+
+                    PARENT CHAIN COMPLIANCE: TB00153
+                    MDR is a session-log forensic
+                    register outside the controlled-
+                    document namespace. Section 10
+                    Revision History updated.
+
+                    Bill override: TB00153 MDR v1_26
+                    -> v1_27 enacted under DEC-012
+                    retirement-campaign methodology
+                    (ratified at TB00190) + TB00208
+                    §5.6 cascade-execution
+                    specification (Bill scope at
+                    TB00298) + Bill TB00299 OCS
+                    directive "Execute 1011002 dv1_26
+                    DD-012 cascade S-4 + S-5 + S-6
+                    per TB00208 v1_0 §5.4-§5.6" +
+                    Bill explicit "Do not pause and
+                    wait for me. Proceed with OCS
+                    instructions below." Direct
+                    increment v1_26 -> v1_27.
+
+                    Document Status updated: supersedes
+                    v1_26.
+
+  v1_26 2026-05-15  TB00297 0811001 LONG_MODULE_
+                    SPECIFICATION DV1_0 RETIREMENT
+                    CASCADE S-6 CLOSURE ENTRY (THIRD
+                    AA=08 SUBORDINATE-SPEC RETIREMENT
+                    UNDER DEC-012 / DD-012 / TB00237
+                    AMENDMENT B METHODOLOGY). One NEW
+                    DR entry (DR-059) appended.
+                    (Full text preserved in git history
+                    at v1_26 file path.)
+
+  v1_25 2026-05-15  TB00280 0811004 ENTRY_LIMIT_PLACEMENT_
+                    SPECIFICATION DV1_1 RETIREMENT CASCADE
+                    ENTRY. (Full text preserved in git
+                    history at v1_25 file path.)
+
+  v1_24 2026-05-14  TB00277 0811003 EXIT_CONTROLLER_
+                    SPECIFICATION DV1_0 RETIREMENT CASCADE
+                    ENTRY. (Full text preserved in git
+                    history.)
+
+  v1_23 2026-05-14  TB00272 1011014 STARTUP_SEQUENCE_CODING_
+                    SPEC DV1_8 RETIREMENT CASCADE ENTRY.
+                    (Full text preserved in git history.)
+
+  v1_22 2026-05-14  TB00262 DR-055 disposition update
+                    after Phase 0 audit re-derivation.
+                    (Full text preserved in git history.)
+
+  v1_21 2026-05-14  TB00261 DR-055 NEW — 1011002
+                    WS_Manager_Coding_Spec dv1_26
+                    retirement cascade Phase 0 scope-
+                    quantification audit. (Full text
+                    preserved in git history.)
+
+  [Earlier revision history entries v1_0 through v1_20
+   preserved byte-identical in git history at the v1_22
+   file path.]
+
+============================================================
+END OF TB00153 MASTER DEFECT REGISTER v1_27
+============================================================
