@@ -1,8 +1,8 @@
 DocDCN:     TB00000
 DocTitle:   TothBot_V2_Project_Instructions_for_Claude
-DocVersion: v2_44
+DocVersion: v2_45
 DocOwner:   Bill
-DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00000_TothBot_V2_Project_Instructions_for_Claude_v2_44.txt
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00000_TothBot_V2_Project_Instructions_for_Claude_v2_45.txt
 DocDate:    05-16-2026
 DocTime:    23:59:59 UTC
 
@@ -34,8 +34,8 @@ ways:
   - The current version is the sole authoritative version.
   - Prior versions are retained by Bill for reference.
 
-This document supersedes and retires TB00000 v2_43 and all
-prior versions. TB00000 v2_44 is the sole authoritative
+This document supersedes and retires TB00000 v2_44 and all
+prior versions. TB00000 v2_45 is the sole authoritative
 document governing how Claude operates in every TothBot V2
 project session.
 
@@ -6172,6 +6172,23 @@ single VPS process; not per-module):
                              pacing token bucket
                              contract:WM-PACE-002)
 
+Liquidity cache (universal — same value applies to the
+single REST Ticker refresh cycle; not per-module):
+  liquidity_refresh_hours  = 4 hours starting
+                             (CIATS-adjustable per
+                             0411002 REST-TKR-007
+                             implementation contract;
+                             governs the cache TTL on
+                             channel:kraken_rest_Ticker
+                             liquidity probe at
+                             universe load + refresh
+                             cycle; cross-references
+                             0511001 dv1_9 line 2671
+                             + 0711003 dv1_3 line 227;
+                             closes TB00212 §6.3
+                             bucket (c) finding per
+                             DR-065 PHASE 7 amendment)
+
 Acceptance rule:
   expected_rr_acceptance_rule = A1 (reject at point-
                                 estimate below 1:1.5).
@@ -6467,6 +6484,219 @@ Storage locations:
 ============================================================
 12. REVISION HISTORY
 ============================================================
+
+  v2_45 2026-05-16  TB00311 PHASE 7 EDGE-CASE-CLOSURE
+                    AMENDMENT (PART 2 OF 2; companion =
+                    0500000 dv1_78 -> dv1_79 same session).
+
+                    §9.17 CIATS PARAMETER REGISTRY
+                    EXTENSION — liquidity_refresh_hours
+                    ABSORPTION CLOSING TB00212 §6.3
+                    BUCKET (c) FINDING.
+
+                    One amendment in §9.17 CIATS-OWNED
+                    PER-MODULE INSTANTIATED block: new
+                    "Liquidity cache:" subsection added
+                    between the existing VPS deployment
+                    subsection and the Acceptance rule
+                    subsection. One parameter absorbed:
+
+                      liquidity_refresh_hours  = 4 hours
+                                                 starting
+
+                    Subsection-header annotation clarifies
+                    that liquidity_refresh_hours is
+                    UNIVERSAL — same value applies to the
+                    single REST Ticker refresh cycle, not
+                    per-module. Mirrors the v2_36 VPS
+                    deployment subsection precedent
+                    (StartLimitBurst + StartLimitIntervalSec
+                    absorbed with UNIVERSAL annotation).
+                    Cross-references 0411002 REST-TKR-007 +
+                    0511001 dv1_9 line 2671 + 0711003 dv1_3
+                    line 227.
+
+                    All other §9.17 content byte-identical
+                    preserved. Existing column-alignment /
+                    "starting" suffix / descriptor pattern
+                    preserved.
+
+                    HEADER REFRESH.
+                    DocVersion: v2_44 -> v2_45.
+                    DocPath: ...v2_44.txt -> ...v2_45.txt.
+                    Document Status block: "supersedes
+                    v2_43" -> "supersedes v2_44"; "v2_44 is
+                    the sole authoritative" -> "v2_45 is
+                    the sole authoritative".
+
+                    SOURCE.
+                    0411002 Kraken_REST_API_Specification
+                    dv1_1 REST-TKR-007 implementation
+                    contract designates liquidity_refresh_
+                    hours as CIATS-owned 4 hours starting.
+                    Cross-references in 0511001 dv1_9
+                    (line 2671) and 0711003 dv1_3 (line
+                    227). TB00212 v1_0 §6.3 identified the
+                    canonical-registry-tracking gap as
+                    bucket (c) ARCHITECTURAL CONTENT NOT
+                    IN DIAGRAMS. TB00310 PHASE 2 grep-
+                    verify confirmed OUTCOME I (param
+                    absent from both 0500000 dv1_78 + this
+                    document v2_44 §9.17 canonical
+                    registries).
+
+                    REASON FOR CHANGE.
+                    PHASE 7 EDGE-CASE-CLOSURE amendment
+                    carried forward from TB00310 per
+                    DD-011 v2_38 derivability-test OUTCOME
+                    1 (token-budget-exhaustion-risk
+                    elimination of same-session authoring
+                    at TB00310). Per DD-001/DD-002
+                    diagrams-canonical principle, all
+                    CIATS-owned parameters belong in the
+                    canonical TB00000 §9.17 registry and
+                    in the canonical 0500000 §9 Complete
+                    CIATS Parameter Registry (mirror
+                    diagram). The companion 0500000 dv1_79
+                    amendment (PART 1 of 2 same session)
+                    adds the param to the 0500000 §9
+                    mirror registry; this amendment adds
+                    it to the §9.17 canonical registry.
+
+                    FP/DP ANALYSIS — PARAMETER
+                    CLASSIFICATION.
+                    Option A (classify as CIATS-OWNED
+                      PER-MODULE INSTANTIATED with UNIVERSAL
+                      annotation per VPS deployment
+                      precedent) — ACCEPTED. liquidity_
+                      refresh_hours governs the single REST
+                      Ticker refresh cycle (not per-module
+                      because both Long_Module and Short_
+                      Module share the same Kraken REST
+                      API endpoint and the same universe
+                      population pipeline). Mirrors the
+                      VPS deployment subsection
+                      classification pattern enacted at
+                      v2_36 (TB00228).
+                    Option B (classify as SACRED or
+                      OPERATOR-CONTROLLED) — REJECTED.
+                      Param IS CIATS-adjustable per
+                      0411002 REST-TKR-007 (CIATS can
+                      propose adjustments based on
+                      universe stability + Kraken
+                      rate-limit pressure observations);
+                      not a hardcoded floor and not a
+                      Bill-controlled wallet-funding
+                      parameter.
+                    Option C (defer to a future session)
+                      — REJECTED. TB00311 NSI §1.1
+                      explicit this-session directive
+                      bundled with PHASE 7 0500000 dv1_79
+                      authoring same session. Deferral
+                      conflicts with NSI directive +
+                      Bill chat-turn 1 "Proceed"
+                      ratification.
+
+                    Decision: Option A.
+
+                    FP/DP ANALYSIS — SUBSECTION PLACEMENT.
+                    Option A (Liquidity cache subsection
+                      after VPS deployment, before
+                      Acceptance rule) — ACCEPTED. Both
+                      VPS deployment and Liquidity cache
+                      are UNIVERSAL-annotated subsections
+                      within CIATS-OWNED block;
+                      co-locating UNIVERSAL items minimizes
+                      reader-context-switch cost. Liquidity
+                      cache logically follows VPS
+                      deployment (both are operational-
+                      layer subsections).
+                    Option B (Liquidity cache before VPS
+                      deployment) — REJECTED. Breaks the
+                      chronological ordering of subsection
+                      addition (VPS deployment was added
+                      at v2_36; Liquidity cache at v2_45
+                      — later addition appended after the
+                      earlier one).
+
+                    Decision: Option A.
+
+                    PARENT CHAIN COMPLIANCE.
+                    TB00000 is a controlled document
+                    outside the TothBot V2 DCN namespace
+                    per Section 1 Document Status. No DCN
+                    chain dependencies. Section 12
+                    Revision History updated. Section 1
+                    Document Status block updated:
+                    supersedes v2_44.
+
+                    COMPANION DELIVERABLES THIS SESSION
+                    (TB00311 PHASE 7 + SESSION-CLOSE
+                    FOUR-OPERATION SEQUENTIAL):
+                      0500000 dv1_78 -> dv1_79.html
+                        (PART 1 of 2; commits to
+                        TothBot_V2-Docs/05XXXXX_System_
+                        Architecture/ per §11 STORAGE +
+                        §4.1.2 DR-008.6 OPERATION 4
+                        canonical repo routing (ii)).
+                      TB00000 v2_44 -> v2_45.txt (this
+                        document; PART 2 of 2; commits to
+                        TothBot_V2-SessionLogs per §11
+                        STORAGE TB-prefix filing rule
+                        v2_44 AMENDMENT 1).
+                      TB00311 Session_Log v1_0 (OPERATION
+                        3 trio member 1; commits to
+                        TothBot_V2-SessionLogs).
+                      TB00312 Next_Session_Instructions
+                        v1_0 (OPERATION 3 trio member 2;
+                        commits to
+                        TothBot_V2-SessionLogs).
+                      OCS chat-response copy box
+                        (OPERATION 1 byte-identical to
+                        TB00312 NSI §0).
+                      GitHub upload copy box (OPERATION
+                        4 - targets BOTH TothBot_V2-Docs
+                        (0500000 dv1_79) AND TothBot_V2-
+                        SessionLogs (TB00000 v2_45 +
+                        TB00311 SL + TB00312 NSI) via
+                        sequential cd-scoped blocks per
+                        RR-SHELL-007 (b); under v2_44
+                        AMENDMENT 2 GROUND-TRUTH
+                        VERIFICATION GATE).
+
+                    OPEN ITEMS UPDATED.
+                    TB00310 SL §11 PHASE 7 carry-forward
+                      CLOSED at governance layer via this
+                      amendment + companion 0500000
+                      dv1_79.
+                    DR-065 PHASE 7 remediation: EXECUTED
+                      via both amendments. Bucket (c) edge
+                      cases 1 + 2 + 3 (channel:kraken_
+                      rest_Ticker + channel:kraken_rest_
+                      QueryOrdersInfo + param:liquidity_
+                      refresh_hours) closed at canonical
+                      registries.
+                    AA=04 sub-campaign SECOND audit
+                      (0411002) closure: edge-case-closure
+                      complete. AA=04 sub-campaign third
+                      audit (0411003) remains pending
+                      per TB00312 NSI scope.
+
+                    Bill override: TB00000 v2_44 -> v2_45
+                    is enacted under Bill's standing
+                    document-control override continuing
+                    the scope established in TB00115
+                    (v2_10 -> v2_11) through TB00304
+                    (v2_43 -> v2_44). Direct increment
+                    v2_44 -> v2_45; no rv state. Per
+                    Bill's TB00311 chat-turn 1 "Proceed"
+                    ratification under RR-SCOPE-005 +
+                    DD-011 v2_38 derivable-decision
+                    authority (NSI default Option A
+                    recommendation applied).
+
+                    Document Status updated: supersedes
+                    v2_44.
 
   v2_44 2026-05-16  TB00304 PHASE 3 GOVERNANCE AMENDMENT
                     BUNDLE - TB-PREFIX FILING RULE
