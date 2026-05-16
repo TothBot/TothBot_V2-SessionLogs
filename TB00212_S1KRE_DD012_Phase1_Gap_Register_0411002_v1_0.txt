@@ -1,0 +1,1112 @@
+DocDCN:     TB00212
+DocTitle:   S1KRE_DD012_Phase1_Gap_Register_0411002
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00212_S1KRE_DD012_Phase1_Gap_Register_0411002_v1_0.txt
+DocDate:    05-16-2026
+DocTime:    23:59:59 UTC
+
+============================================================
+TOTHBOT V2 PHASE 1 GAP REGISTER - 0411002 KRAKEN REST API
+SPECIFICATION DV1_1 UNDER DEC-012(a-extended) DD-012
+V2_38 CROSS-DOCUMENT 0500000-CANONICAL-ALL-DOCS
+RETIREMENT-CANDIDACY AUDIT
+============================================================
+
+============================================================
+1. SESSION SCOPE
+============================================================
+
+1.1 PURPOSE.
+Phase 1 (S-1) coding-readiness gap audit of 0411002
+Kraken_REST_API_Specification dv1_1 under DEC-012 6-sub-step
+retirement-cascade methodology with DEC-012(a-extended)
+AA=04 EXPANSION CANDIDATES (FUTURE) scope (TB00237
+AMENDMENT B) and DD-012 v2_38 0500000-canonical-all-docs
+cross-document authority hierarchy (TB00000 v2_38 / v2_44).
+
+Per the DEC-012(c) three-bucket classification methodology
++ TB00207 §4 + TB00208 §4 + TB00209 §4 + TB00210 §4 +
+TB00211 §4 precedent:
+  Bucket (a) ARCHITECTURAL RESTATEMENT - content encoded
+    in canonical 0500000 dv1_78 diagrams. Drop with
+    retirement.
+  Bucket (b) CODING-UNIQUE / EXTERNAL-FACT CONTRACT -
+    content with no architectural meaning in 0500000;
+    pure code-authoring contract OR external-constraint
+    fact (e.g., exchange-defined wire protocol). Migrate
+    to a preserved AA=10 spec, retain in a parent AA spec,
+    OR PRESERVE the source spec if external-constraint
+    domain.
+  Bucket (c) ARCHITECTURAL CONTENT NOT IN DIAGRAMS -
+    requires 0500000 amendment FIRST (S-2 diagram
+    amendment) before retirement (S-4) per DD-002
+    prose-follows-diagram.
+
+THIS AUDIT IS THE SECOND AA=04 DOMAIN GAP REGISTER under
+DEC-012(a-extended), following TB00211 v1_0 first AA=04
+audit (0411001 PRESERVE closure at TB00308 via DEC-018
++ DR-064). 0411002 selected as the second AA=04 audit
+target at TB00309 cold-load under RR-SCOPE-005
+derivable-decision execution authority per TB00309 NSI
+v1_0 §1.1 mission directive (AA=04 sub-campaign
+continuation; second audit of three; DEC-018 + DR-064
+TB00308 establishment of AA=04 audit precedent).
+
+1.2 DOCUMENT UNDER AUDIT.
+0411002_Kraken_REST_API_Specification_dv1_1.txt
+  Authored: dv1_0 (04-04-2026) era. Cumulative dv1_1
+    at 04-13-2026 added §4.8 Ticker for DEFECT-SS-006
+    closure (instrument channel cannot provide volume;
+    REST Ticker is SOLE correct source).
+  Status at TB00309 cold-load: AS-AUTHORED through dv1_1
+    amendment.
+  Section count: 8 (§1 Purpose through §8 Revision
+    History).
+  Identifier sets:
+    ~50 REST-* rule identifiers across §3-§5 (REST-AUTH,
+      REST-HTTP, REST-KEY, REST-WST, REST-OHLC, REST-OO,
+      REST-BAL, REST-CAO, REST-STAT, REST-QOI, REST-TKR,
+      REST-ERR).
+    Cross-references: ~10 distinct ar:AR-NNN citations
+      to canonical 0500000 architectural rules (AR-017,
+      AR-021, AR-025, AR-031, AR-035, AR-036, AR-037,
+      AR-038, plus indirect AR-069).
+    Cross-references: forensic anchors to TB00006
+      through TB00019 FP/DP validation sessions (430+
+      sources cited in document header).
+    Cross-references: GAP-03, HR-EI-004, DEFECT-SS-006,
+      A-14, A-22, FLAG-2, PL-014, IMP-06 forensic
+      anchors.
+
+1.3 OUT-OF-SCOPE THIS SESSION.
+  - No diagram amendment authoring (S-2 sub-step).
+  - No 0411002 prose update authoring (S-3 sub-step).
+  - No 0411002 retirement authoring (S-4 sub-step).
+  - No code changes.
+  - No 0411001 (already closed at TB00308) or 0411003
+    Kraken_Fee_Rate_Limit_Specification pair audits
+    (0411003 audit deferred to TB00311 or later).
+
+============================================================
+2. CANONICAL SOURCE COVERAGE
+============================================================
+
+2.1 NATURE OF 0411002 - WIRE-CONTRACT SPECIFICATION.
+0411002 is structurally identical to 0411001 (PRESERVED
+at TB00308): an AUTHORITATIVE WIRE CONTRACT between
+TothBot and the Kraken REST API interface. Its content
+is overwhelmingly KRAKEN-DEFINED EXTERNAL FACTS that
+TothBot must conform to:
+  - REST endpoint URLs (Kraken-defined: https://
+    api.kraken.com/0/private/* + /0/public/* +
+    https://status.kraken.com/api/v2/*).
+  - HMAC-SHA512 authentication protocol (Kraken-defined
+    signature formula + nonce window).
+  - JSON request/response schemas for all 8 endpoints
+    (Kraken-defined wire format).
+  - Critical wire-protocol pitfalls (Kraken-imposed:
+    GetOHLCData response[-1] is uncommitted candle that
+    MUST be excluded; instrument channel does NOT
+    provide 24h volume data; Spot REST authentication
+    UNCHANGED by Oct 2025 Kraken Futures breaking
+    change).
+  - Rate limit numerics (Kraken-imposed: 1 call/sec
+    public OHLC per IP+pair; 50 pairs x 1.1s stagger).
+  - Python library configuration (aiohttp.ClientSession
+    + ClientTimeout + TCPConnector parameter values).
+  - Error prefix taxonomy (EGeneral / EAPI / EOrder /
+    ETrade / EQuery / EService — Kraken-defined).
+
+These facts are NOT TothBot architectural decisions.
+They are external constraints. 0500000 diagrams encode
+TothBot architecture and do NOT encode (and should not
+encode) Kraken's REST wire protocol surface. The
+relationship between 0411002 and 0500000 mirrors the
+0411001-to-0500000 relationship:
+  - 0500000 dv1_78 §4 AR registry defines TothBot
+    architectural rules (AR-017 daily regime via
+    OHLC, AR-021 executions gap reconciliation,
+    AR-025 aiohttp mandate, AR-031 QueryOrdersInfo
+    targeted recon, AR-035 aiohttp config, AR-036
+    1.1s stagger, AR-037 IP whitelisting, AR-038
+    Status API).
+  - 0411002 dv1_1 implements those ARs as REST
+    wire-contract rules and CITES the AR authorities
+    via "(AR-NNN)" inline references.
+
+2.2 CROSS-REFERENCES FROM 0411002 TO 0500000.
+0411002 dv1_1 cites approximately 10 canonical 0500000
+ARs:
+  AR-017 (REST-OHLC-004 response[-1] exclusion CRITICAL)
+  AR-021 (REST-OO-001 + REST-OO-004 executions gap
+    recovery)
+  AR-025 (REST-HTTP-001 aiohttp mandate + IMP-06)
+  AR-031 (REST-QOI-001 targeted single-order recon)
+  AR-035 (REST-HTTP-002 ClientTimeout + TCPConnector
+    config)
+  AR-036 (REST-OHLC-006 + REST-OHLC-007 1.1s stagger)
+  AR-037 (REST-KEY-002 IP whitelisting requirement)
+  AR-038 (REST-STAT-001 + REST-STAT-004 Status API
+    proactive maintenance check)
+  AR-009 indirect (via REST-OO-001 reconciliation
+    fallback)
+  HR-EI-004 (REST-OHLC-004 CRITICAL response[-1]
+    exclusion rule reference; HR rule rather than AR)
+
+These citations follow the form "(AR-NNN)" appended to
+specific REST-NNN rules. Citation pattern is CORRECT
+under DD-002 prose-follows-diagram - 0411002 defers to
+0500000 architectural authority rather than duplicating
+it.
+
+2.3 CANONICAL 0500000 DV1_78 BINDINGS FOR REST-LAYER
+ARCHITECTURE.
+Per 0500000 dv1_78 D1 + container:Kraken_REST_API +
+Tier 1 Context governs + §4 AR registry, the REST-layer
+architectural elements canonically encoded:
+  container:Kraken_REST_API (Tier 2, lines 1503-1534
+    + 4338+; constraints ar:AR-035, ar:AR-038;
+    drill_targets enumerate 6 of 8 endpoints).
+  ar:AR-017 daily regime via REST GetOHLCData at
+    00:00 UTC; response[-1] CRITICAL exclusion (§4
+    AR registry line 4817).
+  ar:AR-021 executions gap detection -> REST
+    GetOpenOrders (§4 line 4822).
+  ar:AR-025 aiohttp mandatory; asyncio TaskManager
+    pattern (§4 line 4830).
+  ar:AR-031 subscription ACK warnings + QueryOrdersInfo
+    REST endpoint for targeted single-order
+    reconciliation (§4 lines 4841-4842).
+  ar:AR-035 aiohttp ClientSession MUST configure
+    explicit timeout + connector (§4 line 4858).
+  ar:AR-036 Regime Engine REST calls MUST be staggered
+    at 1.1s intervals (§4 line 4864).
+  ar:AR-037 Both DATA and TRADE API keys MUST be
+    IP-whitelisted to VPS IP (§4 line 4869).
+  ar:AR-038 Kraken Status API used at startup for
+    proactive maintenance detection (§4 line 4873).
+  channel:kraken_rest_GetWebSocketsToken,
+    channel:kraken_rest_GetOHLCData,
+    channel:kraken_rest_GetOpenOrders,
+    channel:kraken_rest_GetAccountBalance,
+    channel:kraken_rest_CancelAllOrders,
+    channel:kraken_rest_StatusAPI (6 drill_targets in
+    container:Kraken_REST_API line 1509).
+  arrow:Kraken_REST_Snapshot_And_Reconcile (line 574).
+
+These are the architectural rules that 0411002 implements
+via REST-NNN wire-contract rules. The architectural rules
+live in 0500000 dv1_78. The wire-contract implementation
+lives in 0411002 dv1_1.
+
+============================================================
+3. SECTION-BY-SECTION CLASSIFICATION
+============================================================
+
+3.1 §1 PURPOSE AND SCOPE.
+Restates 0411002 as wire contract for Kraken REST; lists
+all 8 endpoints used by TothBot V2 (GetWebSocketsToken,
+GetOHLCData, GetOpenOrders, GetAccountBalance,
+CancelAllOrders, Status API, QueryOrdersInfo, Ticker);
+cites 0411001 (WS v2), 0411003 (fees/rate limits), and
+1011002 (implementation architecture) as scope siblings.
+Authoritative-wire-contract framing is structural; not
+in 0500000 diagrams (0500000 doesn't define what 0411002
+is - it defers to 0411002 for wire-protocol authority).
+BUCKET: (b) CODING-UNIQUE / EXTERNAL-FACT CONTRACT
+(structural framing for wire-contract spec).
+
+3.2 §2 PARENT CHAIN.
+Restates 0400000 -> 0410000 -> 0411002 namespace
+hierarchy per 0311001 v1_18 governance.
+BUCKET: (a) ARCHITECTURAL RESTATEMENT (namespace
+governance restatement).
+
+3.3 §3 AUTHENTICATION (§3.1 + §3.2 + §3.3 + §3.4).
+Content elements:
+  REST-AUTH-001..003: HMAC-SHA512 signature formula
+    (Kraken-defined wire fact); required headers
+    (Kraken-required). A-14 / PL-014 Oct 2025
+    Futures-only breaking change record.
+  REST-AUTH-004..005: Nonce mechanism (Kraken-defined
+    integer increment + 10,000ms window). VPS NTP
+    requirement.
+  REST-HTTP-001..007: Python aiohttp library import +
+    ClientSession + ClientTimeout + TCPConnector
+    configuration template (AR-025 + AR-035 forensic
+    anchors). Base URL definitions (Kraken-defined).
+  REST-KEY-001..004: Two-key DATA + TRADE separation
+    (TothBot architectural choice but trivially mapped
+    to Kraken permission scopes); IP whitelisting
+    requirement (AR-037 architectural).
+
+All four sub-sections are Kraken-defined wire facts and
+Python library implementation contracts. REST-HTTP-001
+through REST-HTTP-007 cross-reference AR-025 / AR-035 -
+the AR authority is in 0500000 but the specific Python
+library parameter NAMES and VALUES are coding-contract
+content (not architectural decisions). REST-AUTH protocol
+is Kraken-defined HMAC-SHA512 mechanism with no TothBot
+architectural choice involved.
+
+BUCKET: (b) CODING-UNIQUE / EXTERNAL-FACT CONTRACT
+(majority - wire facts + library contract + nonce
+mechanism). Bucket (a) cross-references via AR-025 +
+AR-035 + AR-037 are acknowledged via inline AR citations;
+the rules themselves are bucket (b) implementation
+contract.
+
+3.4 §4 ENDPOINT SPECIFICATIONS (§4.1 through §4.8).
+Content elements per endpoint:
+  §4.1 GetWebSocketsToken (REST-WST-001..006):
+    Kraken POST /0/private/GetWebSocketsToken endpoint;
+    response JSON schema (token + expires); 15-minute
+    token TTL (Kraken-defined); call timing at startup
+    + every WS reconnect; retry policy.
+  §4.2 GetOHLCData (REST-OHLC-001..009):
+    Kraken GET /0/public/OHLC endpoint; response JSON
+    schema (time/open/high/low/close/vwap/volume/count
+    arrays); CRITICAL response[-1] exclusion rule
+    (GAP-03 / AR-017 / HR-EI-004); 1.1s stagger rule
+    (AR-036); 720-entry max return; startup warm-up
+    seeding (interval=5/60/1440); daily 00:00 UTC
+    regime computation trigger; retry + fallback
+    policy.
+  §4.3 GetOpenOrders (REST-OO-001..006):
+    Kraken POST /0/private/OpenOrders endpoint; response
+    JSON schema (open dict with order_id keys + descr
+    + vol + price + fee + ...); executions sequence gap
+    reconciliation trigger (AR-021); restart fallback;
+    DEGRADED state on retry failure.
+  §4.4 GetAccountBalance (REST-BAL-001..007):
+    Kraken POST /0/private/Balance endpoint; response
+    JSON schema (asset code -> balance string); CRITICAL
+    spot wallet only (no futures/staking); balances
+    sequence gap reconciliation trigger; restart
+    fallback; DEGRADED state on retry failure.
+  §4.5 CancelAllOrders (REST-CAO-001..006):
+    Kraken POST /0/private/CancelAll endpoint; response
+    JSON schema (count); USE RESTRICTION emergency only
+    (Bill manual or explicit EMERGENCY_HALT code path);
+    explicit prohibition on routine operation;
+    PRIORITY_CRITICAL alert + HALT state on activation.
+  §4.6 Status API (REST-STAT-001..006):
+    Kraken status.kraken.com/api/v2/scheduled-
+    maintenances/upcoming.json endpoint (public, no
+    auth); response JSON schema (scheduled_for /
+    scheduled_until / status / name); 2-hour proximity
+    threshold for alert (AR-038); informational only,
+    non-blocking; failure does not halt startup.
+  §4.7 QueryOrdersInfo (REST-QOI-001..005):
+    Kraken POST /0/private/QueryOrders endpoint;
+    txid request parameter (comma-separated order_id
+    list); response same shape as GetOpenOrders; use
+    cases (specific order_id state ambiguity, manual
+    reconciliation, TP/emergSL verification) (AR-031);
+    fallback to GetOpenOrders on error.
+  §4.8 Ticker (REST-TKR-001..010 - NEW dv1_1 per
+    DEFECT-SS-006):
+    Kraken GET /0/public/Ticker endpoint; comma-
+    separated pair query parameter (classic Kraken
+    pair names, not WS v2 symbols); response JSON
+    schema (a/b/c/v/p/t/l/h/o arrays); USD volume
+    calculation (v[1] x p[1] = usd_volume_24h);
+    response key mapping (classic pair -> WS v2
+    symbol); call triggers (startup _warm_up_all_
+    pairs() + periodic liquidity_refresh_hours = 4
+    hours CIATS-owned starting); rate limit (1
+    request for up to 50 pairs); error handling
+    (LIQUIDITY_SEED_FAILED + LIQUIDITY_REFRESH_FAILED
+    + LIQUIDITY_PAIR_NOT_FOUND log events); HARD
+    RULE REST-TKR-010 instrument channel does NOT
+    provide volume (DEFECT-SS-006 root cause
+    correction).
+
+Bulk content across §4.1-§4.8 is Kraken-defined wire
+facts (endpoint URLs, JSON schemas, parameter names,
+field semantics, error response shapes). The TothBot-
+decided architectural elements (daily regime per
+AR-017, executions gap recon per AR-021, aiohttp
+mandate per AR-025/035, QueryOrdersInfo for targeted
+recon per AR-031, 1.1s stagger per AR-036, IP
+whitelisting per AR-037, Status API maintenance check
+per AR-038) are CITED via AR forms but the REST-NNN
+rules themselves are implementation-contract content
+for the WS Manager + Startup Sequence to consume Kraken
+wire data correctly.
+
+BUCKET: (b) CODING-UNIQUE / EXTERNAL-FACT CONTRACT
+(majority - 8 endpoint specs are Kraken wire contracts).
+Bucket (a) cross-references throughout section (AR-017,
+AR-021, AR-025, AR-031, AR-035, AR-036, AR-037, AR-038).
+
+CANDIDATE BUCKET (c) EDGE CASES - GREP-VERIFY REQUIRED:
+
+  EDGE CASE 1: channel:kraken_rest_Ticker NOT IN
+    container:Kraken_REST_API drill_targets.
+    0500000 dv1_78 line 1509 enumerates 6 drill_targets:
+      channel:kraken_rest_GetWebSocketsToken
+      channel:kraken_rest_GetOHLCData
+      channel:kraken_rest_GetOpenOrders
+      channel:kraken_rest_GetAccountBalance
+      channel:kraken_rest_CancelAllOrders
+      channel:kraken_rest_StatusAPI
+    Ticker added in 0411002 dv1_1 (04-13-2026) but
+    container drill_targets list never updated. The
+    Ticker concept exists in 0500000 narrative prose
+    at line 2173 ("Enforced from REST GetTicker
+    liquidity probe at universe load") but is NOT a
+    structured drill_target / channel binding.
+    Confirmed via grep at TB00309 chat-turn (zero
+    matches for "kraken_rest_Ticker" or "REST_Ticker"
+    structured tokens in 0500000 dv1_78).
+
+  EDGE CASE 2: channel:kraken_rest_QueryOrdersInfo
+    NOT IN container:Kraken_REST_API drill_targets.
+    Same container drill_targets list omits
+    QueryOrdersInfo. The QueryOrdersInfo concept
+    exists in 0500000 prose at line 4842 (AR-031 prose
+    extension: "QueryOrdersInfo REST endpoint for
+    targeted single-order reconciliation"). Container
+    drill_targets did not pick it up when AR-031 prose
+    was extended.
+
+  EDGE CASE 3: param:liquidity_refresh_hours NOT IN
+    EITHER 0500000 DV1_78 OR TB00000 §9.17 CIATS
+    PARAMETER REGISTRY.
+    0411002 REST-TKR-007 specifies liquidity_refresh_
+    hours = 4 hours (CIATS-owned starting value).
+    Confirmed via grep at TB00309 chat-turn (zero
+    matches in 0500000 dv1_78; param not enumerated
+    in TB00000 v2_44 §9.17 either). This is a CIATS-
+    owned parameter that should be registered per
+    DD-001/DD-002 + §9.16 PARAMETER PHILOSOPHY.
+
+  EDGE CASE 4 (DOCUMENTATION DEFECT, NOT BUCKET (c)):
+    §7 Related Documents stale citations.
+    0411002 dv1_1 §7 cites:
+      1011002 WS_Manager_Coding_Spec dv1_15 - RETIRED
+        TB00299 cascade (DEC-014).
+      1011003 Signal_Pipeline_Coding_Spec dv1_0 -
+        RETIRED in 10XXXXX cascade (TB00224 era).
+      1011012 Regime_Engine_Coding_Spec dv1_4 -
+        RETIRED TB00227.
+      1011013 VPS_Deployment_Coding_Spec dv1_4 -
+        RETIRED TB00228.
+      1011014 Startup_Sequence_Coding_Spec dv1_4 -
+        RETIRED in 10XXXXX cascade.
+      0500000 System_Architecture_Overview dv1_19 -
+        STALE; current is dv1_78.
+    These are stale cross-reference citations from
+    pre-cascade era. Documentation defect — not a
+    bucket reclassification. Surgical edit candidate
+    at future 0411002 dv1_2 amendment session if
+    Bill selects.
+
+3.5 §5 ERROR HANDLING - GENERAL RULES.
+Content elements:
+  REST-ERR-001..006: Empty/non-empty error[] array
+    success/fail semantics (Kraken-defined response
+    convention); 6 known Kraken error prefixes
+    (EGeneral / EAPI / EOrder / ETrade / EQuery /
+    EService - Kraken-defined taxonomy); EAPI:Invalid
+    key handling (CRITICAL log + alert + no retry);
+    EService:Unavailable handling (5s retry up to 3
+    attempts); rate limit handling (5s backoff +
+    escalate after 3 hits per session); all REST
+    errors logged with endpoint + params + error[] +
+    timestamp; never silent drops.
+
+Bulk content is Kraken-defined error response taxonomy
++ TothBot implementation contract for retry policies +
+log content requirements.
+
+BUCKET: (b) CODING-UNIQUE / EXTERNAL-FACT CONTRACT
+(Kraken-defined error prefixes + implementation contract
+for retry and logging).
+
+3.6 §6 FIVE CODING-READINESS QUESTIONS.
+Direct restatement of TB00000 §3.2 five-question coding-
+readiness checklist applied to 0411002 REST wire-
+contract content (Q1 component definition, Q2 interfaces
+to other components, Q3 hard rules, Q4 triggers, Q5 log
+events). Canonical via TB00000 §3.2 governance.
+BUCKET: (a) ARCHITECTURAL RESTATEMENT.
+
+3.7 §7 RELATED DOCUMENTS.
+Restates parent chain (0400000 + 0410000) + cross-
+references to 0411001 + 0411003 + 0500000 + 0711003 +
+1011001 + 1011002 + 1011003 + 1011012 + 1011013 +
+1011014. Canonical via 0311001 v1_18 §11 namespace
+governance. Stale citations enumerated under §3.4 EDGE
+CASE 4 above (documentation defect not bucket
+reclassification).
+BUCKET: (a) ARCHITECTURAL RESTATEMENT.
+
+3.8 §8 REVISION HISTORY.
+Standard revision-history block per 0311003 v1_2
+versioning procedure. dv1_0 (04-04-2026 initial) +
+dv1_1 (04-13-2026 §4.8 Ticker added for DEFECT-SS-006).
+Preserved at retirement per CI-006 revision-history
+completeness.
+BUCKET: (a) ARCHITECTURAL RESTATEMENT.
+
+============================================================
+4. CLASSIFICATION SUMMARY
+============================================================
+
+4.1 BUCKET TOTALS (across 8 classified §1-§8 sections
+    covering ~50 REST-NNN identifiers + ~10 AR cross-
+    references + multiple forensic anchors):
+
+  Bucket (a) ARCHITECTURAL RESTATEMENT:
+    4 of 8 sections fully.
+    §2 PARENT CHAIN (namespace restatement).
+    §6 FIVE CODING-READINESS QUESTIONS (TB00000 §3.2
+      restatement).
+    §7 RELATED DOCUMENTS (0311001 §11 restatement;
+      stale citations noted under §3.4 EDGE CASE 4).
+    §8 REVISION HISTORY (0311003 restatement).
+
+  Bucket (b) CODING-UNIQUE / EXTERNAL-FACT CONTRACT:
+    4 of 8 sections fully.
+    §1 PURPOSE AND SCOPE (wire-contract framing).
+    §3 AUTHENTICATION (Kraken HMAC-SHA512 + nonce +
+      aiohttp config + IP whitelisting).
+    §4 ENDPOINT SPECIFICATIONS (Kraken-defined wire
+      facts + JSON schemas + behavior rules for all 8
+      endpoints).
+    §5 ERROR HANDLING (Kraken-defined error prefix
+      taxonomy + retry/log implementation contract).
+
+  Bucket (c) ARCHITECTURAL CONTENT NOT IN DIAGRAMS:
+    3 candidate edge cases requiring grep-verify at
+    S-3 / potential 0500000 amendment at S-2:
+      EDGE CASE 1: channel:kraken_rest_Ticker NOT in
+        container:Kraken_REST_API drill_targets
+        despite §4.8 Ticker added in dv1_1.
+      EDGE CASE 2: channel:kraken_rest_QueryOrdersInfo
+        NOT in container drill_targets despite AR-031
+        prose reference at 0500000 line 4842.
+      EDGE CASE 3: param:liquidity_refresh_hours
+        (CIATS-owned 4 hours starting) NOT in 0500000
+        dv1_78 AND NOT in TB00000 §9.17 CIATS PARAMETER
+        REGISTRY.
+
+    If grep-verify CONFIRMS absence (as initial
+    TB00309 cold-load grep evidence shows): bucket (c)
+    edge cases are real. 0500000 dv1_78 -> dv1_79
+    amendment authoring at S-2 to:
+      (a) Append channel:kraken_rest_Ticker and
+        channel:kraken_rest_QueryOrdersInfo to
+        container:Kraken_REST_API drill_targets list
+        (line 1509).
+      (b) Add channel:kraken_rest_Ticker and
+        channel:kraken_rest_QueryOrdersInfo as
+        registered channel entries in §4 channel
+        registry if formal channel registry exists.
+      (c) Register param:liquidity_refresh_hours in
+        0500000 §4 param registry.
+    AND TB00000 v2_44 -> v2_45 amendment authoring at
+    S-2-bis to register liquidity_refresh_hours in
+    §9.17 CIATS-OWNED block.
+
+    If grep-verify REVERSES (e.g., the tokens are
+    encoded in a structured location not found at
+    TB00309 cold-load): 0 candidate edge cases; all
+    content traces to canonical authority.
+
+  Bucket (d) UNCLEAR: 0 sections.
+
+4.2 STRUCTURAL FINDING - 0411002 IS NOT A DD-012
+    RETIREMENT CANDIDATE.
+
+Per DD-012 v2_38 retirement gate clauses (2) (3) (4):
+  Clause (2) DUPLICATIVE retirement applies when "the
+    subordinate spec contains the architectural element
+    fully encoded in the 0500000 diagram and adds no
+    further coding-unique content or coding-readiness
+    detail."
+
+0411002 dv1_1 does NOT meet clause (2) criteria.
+Approximately 50%+ of section content (4 of 8 sections
+fully bucket b) is coding-unique external-fact-contract
+content that 0500000 diagrams do NOT encode and SHOULD
+NOT encode:
+  - Kraken REST endpoint URLs (api.kraken.com paths +
+    status.kraken.com paths).
+  - Kraken JSON request/response schemas (8 endpoints
+    each with full field-level schemas).
+  - Kraken authentication protocol (HMAC-SHA512 +
+    nonce mechanism + 10,000ms window).
+  - Kraken-imposed wire-protocol pitfalls (response[-1]
+    exclusion CRITICAL, instrument channel cannot
+    provide volume per DEFECT-SS-006, Spot REST
+    UNCHANGED Oct 2025 per A-14).
+  - Kraken-imposed rate-limit numerics (1 call/sec
+    public OHLC per IP+pair).
+  - Kraken-defined error prefix taxonomy (EGeneral /
+    EAPI / EOrder / ETrade / EQuery / EService).
+  - Python `aiohttp` library import + ClientSession +
+    ClientTimeout + TCPConnector parameter VALUES.
+
+These facts are EXTERNAL CONSTRAINTS imposed by Kraken's
+API surface. They are not TothBot architectural decisions.
+Encoding them in 0500000 diagrams would be:
+  (i) Conceptually inappropriate - 0500000 encodes
+      TothBot architecture, not external API surfaces.
+  (ii) Operationally fragile - Kraken-side wire
+       protocol changes would require 0500000 diagram
+       amendments, contradicting the diagram-as-stable-
+       architectural-anchor principle.
+  (iii) Cross-domain pollution - mixing TothBot
+        architectural decisions and Kraken wire facts
+        in the same canonical document defeats the
+        separation-of-concerns principle.
+
+The structural relationship between 0411002 and 0500000
+is BIDIRECTIONAL CITATION, not duplicative hierarchy
+(identical to 0411001 structural finding at TB00211):
+  - 0500000 dv1_78 §4 AR registry defines TothBot
+    architectural rules (AR-017 / AR-021 / AR-025 /
+    AR-031 / AR-035 / AR-036 / AR-037 / AR-038 for
+    REST-layer architecture).
+  - 0411002 dv1_1 implements those ARs as REST wire-
+    contract rules and CITES the AR authorities via
+    "(AR-NNN)" inline references.
+
+This is the CORRECT relationship per DD-002 prose-
+follows-diagram. Architectural authority canonical in
+0500000; wire-contract implementation in 0411002; no
+duplication.
+
+4.3 RECOMMENDED DISPOSITION - PRESERVE 0411002.
+
+DD-011 v2_38 FP/DP-derivability-test outcome (four-item
+log per AMENDMENT D requirement):
+
+  (1) Option-set under consideration:
+    Option A: RETIRE 0411002 + migrate wire-contract
+      facts to 0500000 architectural diagrams.
+    Option B: RETIRE 0411002 + migrate wire-contract
+      facts to a residual AA=10 spec.
+    Option C: RETIRE 0411002 + migrate wire-contract
+      facts to 0410000 Kraken_Anchor (the AA=04 sub-
+      domain anchor).
+    Option D: PRESERVE 0411002 + author DEC-012(a-
+      extended) v1_NN AA=04 SECOND-AUDIT amendment
+      extending the AA=04 SCOPE-DETERMINATION
+      enumeration with 0411002 PRESERVE finding.
+
+  (2) First-principles analysis applied to each
+    option:
+    Option A: violates DD-012 clause (2) DUPLICATIVE
+      criteria (content is NOT architectural
+      restatement). Violates cross-domain pollution
+      constraint per §4.2(iii) above. Forces
+      inappropriate expansion of 0500000 scope to
+      include external API surfaces.
+    Option B: 1011002 WS_Manager_Coding_Spec already
+      retired (TB00299 cascade per DEC-014). 1011001
+      Engineering_Best_Practices is the residual AA=10
+      candidate but is not subject-matter-aligned with
+      Kraken REST wire contract.
+    Option C: 0410000 Kraken_Anchor is the AA=04 sub-
+      domain anchor; promoting wire-contract content
+      to anchor level inverts the namespace hierarchy
+      (anchor is supposed to be high-level governance,
+      not detailed wire-contract content).
+    Option D: matches TB00211 / TB00308 precedent
+      (0411001 PRESERVE via DEC-018 + DR-064). Wire-
+      contract spec stays where it belongs (under
+      0410000 sub-domain anchor as instance document).
+      Bidirectional citation pattern preserved.
+
+  (3) Data sources consulted:
+    0411002 dv1_1 full document content (872 lines,
+      8 endpoints, ~50 REST-* rule identifiers).
+    0500000 dv1_78 grep evidence (container:Kraken_
+      REST_API at lines 1503-1534 and 4338+; AR-017/
+      021/025/031/035/036/037/038 registered in §4 AR
+      registry at lines 4817-4873; arrow:Kraken_REST_
+      Snapshot_And_Reconcile at line 574).
+    TB00000 v2_44 §4.5 DD-012 + §9.17 CIATS PARAMETER
+      REGISTRY.
+    TB00211 v1_0 precedent (first AA=04 audit).
+    TB00308 SL precedent (0411001 PRESERVE closure
+      via DEC-018 + DR-064).
+
+  (4) Elimination outcomes:
+    Option A: ELIMINATED on DD-012 clause (2)
+      violation + cross-domain pollution.
+    Option B: ELIMINATED on no subject-matter-aligned
+      AA=10 target available.
+    Option C: ELIMINATED on namespace hierarchy
+      inversion.
+    Option D: SINGLE COMPLIANT OPTION.
+
+  (5) Remaining options: Option D — DERIVABLE.
+
+Per DD-002 prose-follows-diagram, the current
+0411002-to-0500000 citation pattern (AR-NNN inline
+references) is the correct relationship. PRESERVE
+0411002 in DEC-012(a-extended) candidate scope.
+
+Edge cases at §3.4 (channel:kraken_rest_Ticker +
+channel:kraken_rest_QueryOrdersInfo + param:liquidity_
+refresh_hours) are NOT retirement candidates - they
+are 0500000 dv1_78 amendment candidates at S-2 (and
+TB00000 v2_44 -> v2_45 §9.17 registry amendment
+candidate for the param). These amendments would
+strengthen the bidirectional citation pattern by
+adding missing structured tokens to canonical
+0500000 + TB00000 §9.17, without retiring 0411002
+itself.
+
+============================================================
+5. RECOMMENDED NEXT-SESSION EXECUTION SEQUENCE
+============================================================
+
+5.1 S-1 (THIS SESSION) - PHASE 1 AUDIT COMPLETE.
+This deliverable. Classification finalized:
+4 sections fully bucket (a) + 4 sections fully bucket
+(b) + 3 candidate bucket (c) edge cases pending
+grep-verify confirmation at S-3.
+
+5.2 S-2 DIAGRAM AMENDMENT - CONDITIONAL.
+
+If §3.4 EDGE CASES grep-verify CONFIRMS the three
+absences (channel:kraken_rest_Ticker absent from
+container drill_targets, channel:kraken_rest_QueryOrders
+Info absent from container drill_targets, param:
+liquidity_refresh_hours absent from 0500000):
+
+  S-2 = 0500000 dv1_78 -> dv1_79 amendment authoring:
+    (a) Append channel:kraken_rest_Ticker and
+        channel:kraken_rest_QueryOrdersInfo to
+        container:Kraken_REST_API drill_targets list
+        (line 1509).
+    (b) If 0500000 maintains a formal §4 channel
+        registry: append both channel entries with
+        appropriate metadata (parent_container =
+        container:Kraken_REST_API; constraints
+        appropriate ARs).
+    (c) Append param:liquidity_refresh_hours to 0500000
+        §4 param registry with CIATS-owned 4 hours
+        starting value annotation.
+
+  S-2-BIS = TB00000 v2_44 -> v2_45 amendment authoring:
+    Append liquidity_refresh_hours to §9.17 CIATS-OWNED
+    PER-MODULE INSTANTIATED block (under a "Liquidity
+    cache:" subsection or appended to existing block
+    appropriately). 4 hours starting value.
+
+If §3.4 EDGE CASES grep-verify REVERSES (unlikely given
+TB00309 cold-load evidence; included as completeness):
+
+  S-2 NO-OP. All 0411002 content traces to canonical
+  authority.
+
+5.3 S-3 PARENT-SPEC GAP-FILL - NO-OP.
+
+No coding-unique content migration required. 0411002
+dv1_1 is the AUTHORITATIVE REST WIRE CONTRACT - it is
+itself the migration target for any REST-layer
+external-fact content. Wire-contract content STAYS in
+0411002.
+
+S-3 = NO-OP for the 0411002 retirement-candidacy audit.
+
+OPTIONAL S-3-BIS at separate future session (Bill
+selection): 0411002 dv1_1 -> dv1_2 surgical edit to
+correct §7 Related Documents stale citations enumerated
+under §3.4 EDGE CASE 4 (1011002 dv1_15 -> RETIRED,
+1011003/1011012/1011013/1011014 RETIRED, 0500000 dv1_19
+-> dv1_78). Documentation defect; not blocking 0411002
+PRESERVE closure.
+
+5.4 S-4 RETIREMENT - NOT APPLICABLE.
+
+Per §4.3 disposition recommendation, 0411002 is
+PRESERVED. S-4 retirement git rm operation is NOT
+APPLICABLE for this audit.
+
+5.5 S-5 CASCADE-ANCHOR REVISION - NOT APPLICABLE.
+
+0410000 Exchange_Interface_Kraken_Anchor dv1_0 retains
+0411002 as child document. No anchor revision required.
+
+5.6 S-6 GOVERNANCE ENTRIES - SCOPE-DETERMINATION
+    AUTHORING.
+
+(a) TB00153 Decision_Register vN -> vN+1: Append new
+    DEC entry (DEC-019 anticipated, sequential from
+    DEC-018 at TB00308) DOCUMENTING the AA=04 sub-
+    campaign 0411002 PRESERVE disposition. This entry
+    structurally identical to DEC-018 (0411001 PRESERVE)
+    pattern - it is a PRESERVE decision, second under
+    AA=04 sub-campaign.
+
+(b) DEC-012(a-extended) v1_X AA=04 ENUMERATION
+    AMENDMENT: Append to existing AA=04 enumeration
+    text (updated at TB00308 to include 0411001 PRESERVE
+    finding). Second AA=04 scope determination:
+      0411001 Kraken_WS_v2_Specification - PRESERVED
+        per DEC-018 at TB00308 (wire contract, not
+        duplicative).
+      0411002 Kraken_REST_API_Specification - PRESERVED
+        per DEC-019 at TB00310 (wire contract, not
+        duplicative).
+      0411003 Kraken_Fee_Rate_Limit_Specification -
+        AUDIT DEFERRED to subsequent session (TB00311
+        or later).
+    Note: 0411003 likely follows the same wire-contract
+    / external-fact-contract pattern as 0411001 +
+    0411002 - expected PRESERVE outcome pending Phase 1
+    audit.
+
+(c) TB00153 Master_Defect_Register vN -> vN+1: Append
+    DR-NEW entry (DR-065 anticipated, sequential from
+    DR-064 at TB00308) recording 0411002 PRESERVE
+    determination + §3.4 edge-case grep-verify outcome.
+    This DR entry structurally identical to DR-064
+    (0411001 PRESERVE) pattern.
+
+(d) IF §3.4 EDGE CASES GREP-VERIFY CONFIRMS BUCKET
+    (c) FINDING: 0500000 dv1_78 -> dv1_79 amendment +
+    TB00000 v2_44 -> v2_45 §9.17 amendment authoring
+    bundled into S-6 closure session OR carry-forward
+    to subsequent session per session-scope budget.
+
+5.7 SUMMARY - AA=04 SECOND-AUDIT OUTCOME.
+
+This audit is the SECOND AA=04 application of DEC-012
+(a-extended) methodology. The outcome MATCHES the
+0411001 first-audit outcome (PRESERVE) confirming the
+domain-level pattern:
+  - AA=04 (exchange interface): wire-contract +
+    external-fact specification - PRESERVE.
+
+The bucket (c) edge cases (Ticker + QueryOrdersInfo
+channel-binding gaps + liquidity_refresh_hours param-
+registry gap) are NEW findings for AA=04 — they did
+not surface at 0411001 (which had its own §7 numerics
+edge case that closed at TB00308 PHASE 2 grep-verify
+OUTCOME I per DR-064 audit-finding entry). 0411002's
+edge cases relate to dv1_1 amendment (Ticker addition
+for DEFECT-SS-006 closure) where the canonical
+0500000 / TB00000 §9.17 registries were not updated
+to track the new channel + param.
+
+This finding has implications for 0411003 Kraken_Fee_
+Rate_Limit_Specification subsequent audit (which may
+have similar canonical-registry-tracking gaps if recent
+fee-table or rate-limit amendments were authored
+without 0500000 / TB00000 §9.17 updates).
+
+============================================================
+6. PRE-DISPOSITION GREP-VERIFY RECOMMENDATIONS
+============================================================
+
+Per TB00000 v2_44 §4.3.1 RR-SCOPE-009 (Chesterton's-
+fence rule on constraint removal) + TB00207 / TB00208
+/ TB00209 / TB00210 / TB00211 §6 precedent: before
+finalizing the PRESERVE disposition at session-close,
+verify each canonical-authority transfer claim with
+grep-verification against current 0500000 dv1_78 + TB00000
+v2_44.
+
+6.1 GREP-VERIFY channel:kraken_rest_Ticker binding in
+    0500000 dv1_78.
+  Expected sites: container:Kraken_REST_API
+    drill_targets list (line 1509 area) + §4 channel
+    registry if formal one exists.
+  TB00309 cold-load grep evidence: ZERO matches for
+    "kraken_rest_Ticker" or "REST_Ticker" structured
+    tokens. Concept present in narrative prose at
+    line 2173 ("Enforced from REST GetTicker
+    liquidity probe at universe load") but NOT as
+    structured drill_target.
+  Verification at S-6 governance-update session
+    (TB00310) via grep on 0500000_System_Architecture_
+    Overview_dv1_78_Claude_Source.html.
+  OUTCOME I (binding ABSENT, expected): bucket (c)
+    edge case confirmed; 0500000 dv1_78 -> dv1_79
+    amendment adding channel:kraken_rest_Ticker to
+    container drill_targets.
+  OUTCOME II (binding present in unexpected location):
+    bucket (c) edge case retracted; all content
+    traces to canonical authority.
+
+6.2 GREP-VERIFY channel:kraken_rest_QueryOrdersInfo
+    binding in 0500000 dv1_78.
+  Expected sites: container:Kraken_REST_API
+    drill_targets list (line 1509 area) + §4 channel
+    registry.
+  TB00309 cold-load grep evidence: AR-031 narrative
+    references QueryOrdersInfo at lines 4842 and
+    22010, but ZERO structured channel binding
+    matches.
+  OUTCOME I (binding ABSENT, expected): bucket (c)
+    edge case confirmed; 0500000 dv1_78 -> dv1_79
+    amendment adding channel:kraken_rest_QueryOrders
+    Info to container drill_targets.
+  OUTCOME II (binding present in unexpected location):
+    bucket (c) edge case retracted.
+
+6.3 GREP-VERIFY param:liquidity_refresh_hours binding
+    in 0500000 dv1_78 AND TB00000 v2_44 §9.17.
+  Expected sites: 0500000 dv1_78 §4 param registry +
+    TB00000 v2_44 §9.17 CIATS-OWNED PER-MODULE
+    INSTANTIATED block.
+  TB00309 cold-load grep evidence: ZERO matches in
+    0500000 dv1_78 + ZERO matches in TB00000 v2_44
+    §9.17. Param is documented in 0411002 dv1_1
+    (REST-TKR-007), 0511001 dv1_9 (line 2671), and
+    0711003 dv1_3 (line 227) as CIATS-owned 4 hours
+    starting, but the canonical registries do not
+    track it.
+  OUTCOME I (both ABSENT, expected): bucket (c)
+    edge case confirmed; 0500000 dv1_78 -> dv1_79
+    amendment + TB00000 v2_44 -> v2_45 §9.17
+    amendment.
+  OUTCOME II (binding present in unexpected location):
+    bucket (c) edge case retracted.
+
+6.4 GREP-VERIFY AR-017/021/025/031/035/036/037/038
+    binding presence in 0500000 dv1_78.
+  Expected sites: §4 AR registry. Each of the 8 ARs
+    cited in 0411002 dv1_1 should resolve to a
+    registered AR entry.
+  TB00309 cold-load grep evidence: ALL 8 AR
+    registrations confirmed present in 0500000 dv1_78
+    §4 AR registry at lines 4817 (AR-017), 4822
+    (AR-021), 4830 (AR-025), 4841 (AR-031), 4858
+    (AR-035), 4864 (AR-036), 4869 (AR-037), 4873
+    (AR-038). Verification COMPLETE at audit time.
+
+6.5 GREP-VERIFY container:Kraken_REST_API binding in
+    0500000 dv1_78.
+  Expected sites: D1 + Tier 1 Context drill_targets +
+    Tier 2 visual binding.
+  TB00309 cold-load grep evidence: container:Kraken_
+    REST_API binding confirmed at lines 1503-1534
+    (Tier 2 visual rendering with desc block) and
+    4338+ (drill-down target). 6 of 8 endpoints
+    enumerated in drill_targets (missing: Ticker +
+    QueryOrdersInfo per §6.1 + §6.2 above).
+    Verification COMPLETE at audit time with the two
+    enumerated gap findings.
+
+============================================================
+7. NEXT-SESSION EXECUTION PLAN
+============================================================
+
+7.1 TB00310 (receiving session) recommended path -
+    S-6 SCOPE-DETERMINATION CLOSURE.
+
+PHASE 1 - Session-open cleanup list per DR-009.
+
+PHASE 2 - Grep-verify §6.1 + §6.2 + §6.3 (three bucket
+  (c) edge case confirmations). Two outcomes:
+    OUTCOME I (all three confirmed absent, expected):
+      §3.4 edge cases real. S-2 + S-2-BIS amendment
+      authoring required EITHER in TB00310 closure
+      bundle OR carry-forward to TB00311 per session-
+      scope budget.
+    OUTCOME II (any binding present in unexpected
+      location): bucket (c) finding partially or fully
+      retracted. S-2 NO-OP or reduced scope.
+
+PHASE 3 - DD-011 v2_38 derivability-test gate
+  ratification on PRESERVE disposition per §4.3.
+  Single compliant option DERIVABLE = Option D
+  PRESERVE. Execute under RR-SCOPE-005 derivable-
+  decision authority.
+
+PHASE 4 - S-6 (a) TB00153 Decision_Register v1_11 ->
+  v1_12: Append DEC-019 PRESERVE-disposition entry
+  for 0411002 (structurally matches DEC-018 0411001
+  precedent).
+
+PHASE 5 - S-6 (b) DEC-012(a-extended) v1_11 -> v1_12
+  AA=04 ENUMERATION AMENDMENT: Append 0411002 PRESERVE
+  finding per §5.6(b) above. Second AA=04 scope
+  determination.
+
+PHASE 6 - S-6 (c) TB00153 Master_Defect_Register v1_31
+  -> v1_32: Append DR-065 0411002 PRESERVE determination
+  + edge-case audit-finding record.
+
+PHASE 7 - IF PHASE 2 OUTCOME I confirmed AND session-
+  scope budget permits: 0500000 dv1_78 -> dv1_79
+  amendment + TB00000 v2_44 -> v2_45 §9.17 amendment
+  authoring. ELSE carry-forward to TB00311 or later.
+
+PHASE 8 - Session-close 4-operation delivery per
+  TB00000 v2_44 §4.1.2 DR-008.6 FOUR-OPERATION
+  SEQUENTIAL.
+
+7.2 SUBSEQUENT SESSION - 0411003 AUDIT.
+
+After TB00310 closes 0411002 PRESERVE determination
+(+ optional 0500000 dv1_79 + TB00000 v2_45 amendments),
+subsequent AA=04 audit:
+  TB00211+N (third AA=04 audit): 0411003 Kraken_Fee_
+    Rate_Limit_Specification dv1_0 Phase 1 audit.
+    Expected PRESERVE outcome per same wire-contract
+    / external-fact-contract structural character.
+    Watch for similar canonical-registry-tracking
+    edge cases if fee table or rate-limit amendments
+    were authored without 0500000 / TB00000 §9.17
+    updates.
+
+After AA=04 sub-campaign closes (all 3 specs
+PRESERVED), proceed to AA=07 sub-campaign per Bill
+selection. AA=07 character mixed: 0711001 SSS_Signal_
+Model + 0711002 Regime_Taxonomy + 0711003 Asset_
+Selection are strategy-layer specs with mixed
+architectural-restatement / coding-readiness
+character - audit outcomes likely include both
+RETIRE and PRESERVE dispositions per-spec.
+
+============================================================
+8. CAMPAIGN-LEVEL FORECAST
+============================================================
+
+8.1 DEC-012(a-extended) DOMAIN-LEVEL PROGRESS POST-
+    TB00309 EXPECTED OUTCOME.
+
+  AA=10 sub-campaign - COMPLETE (TB00299 close;
+    12 specs retired).
+  AA=08 sub-campaign - COMPLETE (TB00305 close;
+    5 specs retired).
+  AA=04 sub-campaign - SECOND AUDIT at TB00309 (this
+    audit). 0411001 PRESERVED at TB00308 via DEC-018
+    + DR-064. 0411002 PRESERVE candidate (this audit).
+    0411003 audit pending TB00311 or later.
+  AA=06 sub-campaign - METHODOLOGY MISMATCH per
+    TB00307 NSI §1.1(c) (0611001 doesn't exist;
+    greenfield authoring required first).
+  AA=07 sub-campaign - PENDING Bill selection after
+    AA=04 closure.
+
+8.2 STRUCTURAL FINDING IMPLICATIONS.
+
+The 0411002 PRESERVE outcome (matching 0411001 PRESERVE)
+establishes a domain-level pattern: AA=04 specs are
+wire-contract specifications with PRESERVE disposition
+under DD-012 v2_38 methodology. The pattern is
+predictive for 0411003 third-audit.
+
+The bucket (c) edge cases at §3.4 are a NEW finding
+class for the DEC-012 cascade campaign: canonical-
+registry-tracking gaps where subordinate-spec amendments
+add new structured tokens (channels, params) without
+corresponding 0500000 / TB00000 §9.17 registry updates.
+This finding informs future audit methodology - subsequent
+AA=04 / AA=07 audits should explicitly grep-verify
+recently-added structured tokens against canonical
+registries.
+
+============================================================
+9. RELATED DOCUMENTS
+============================================================
+
+  TB00000 v2_44 - §4.5 DD-012 + §9.17 CIATS PARAMETER
+    REGISTRY + §11 STORAGE TB-PREFIX FILING CONVENTION.
+  0311001 v1_18 - §11 namespace governance + §15.14
+    V-038 cross-document validation.
+  0500000 dv1_78 - canonical 0500000-canonical-all-
+    docs architectural anchor.
+  0411002 dv1_1 - document under audit (this gap
+    register's subject).
+  0411001 dv1_12 - sibling AA=04 spec (PRESERVED at
+    TB00308 via DEC-018 + DR-064).
+  0411003 dv1_0 - sibling AA=04 spec (audit deferred
+    to TB00311 or later).
+  TB00153 Decision_Register v1_11 - DEC-012(a-
+    extended) campaign authorization + DEC-018
+    0411001 PRESERVE precedent (subject to DEC-019
+    PRESERVE + AA=04 second-audit amendment at S-6
+    closure).
+  TB00153 Master_Defect_Register v1_31 - DR-064
+    0411001 PRESERVE audit-finding precedent (subject
+    to DR-065 PRESERVE + audit-finding amendment at
+    S-6 closure).
+  TB00207 - precedent Phase 1 gap register for
+    0811001.
+  TB00208 - precedent Phase 1 gap register for
+    1011002.
+  TB00209 - precedent Phase 1 gap register for
+    0811002.
+  TB00210 - precedent Phase 1 gap register for
+    0811005.
+  TB00211 - precedent Phase 1 gap register for
+    0411001 (most recent AA=04 audit; form-factor
+    template for this deliverable).
+
+============================================================
+10. REVISION HISTORY
+============================================================
+
+  v1_0  2026-05-16  Initial Phase 1 gap register for
+                    0411002 Kraken_REST_API_Specification
+                    dv1_1 under DEC-012(a-extended)
+                    DD-012 v2_38 methodology.
+
+                    Second AA=04 sub-campaign audit
+                    deliverable, following TB00211
+                    v1_0 0411001 first AA=04 audit +
+                    TB00308 SL DEC-018 + DR-064
+                    closure. Structural finding:
+                    0411002 is wire-contract /
+                    external-fact-contract spec, NOT
+                    architectural restatement
+                    (identical structural character
+                    to 0411001).
+
+                    Recommended disposition: PRESERVE
+                    0411002 + author DEC-019 PRESERVE
+                    entry + DEC-012(a-extended) v1_12
+                    AA=04 SECOND-AUDIT amendment +
+                    DR-065 PRESERVE + audit-finding
+                    entry at S-6 closure session
+                    (TB00310).
+
+                    Three candidate bucket (c) edge
+                    cases identified for grep-verify
+                    confirmation at S-3 + potential
+                    0500000 dv1_78 -> dv1_79 + TB00000
+                    v2_44 -> v2_45 amendments:
+                    (1) channel:kraken_rest_Ticker
+                    absent from container drill_targets;
+                    (2) channel:kraken_rest_QueryOrders
+                    Info absent from container
+                    drill_targets;
+                    (3) param:liquidity_refresh_hours
+                    absent from both 0500000 + TB00000
+                    §9.17.
+
+                    DD-011 v2_38 FP/DP-derivability-
+                    test logged at §4.3 (four-item log
+                    per AMENDMENT D requirement).
+                    OUTCOME 1 single compliant option
+                    DERIVABLE = Option D PRESERVE.
+
+                    Bill override: TB00212 v1_0 enacted
+                    under Bill's standing document-
+                    control override continuing the
+                    scope established in TB00115
+                    through TB00308. Per Bill's TB00309
+                    OCS directive authorizing Phase 1
+                    audit execution under RR-SCOPE-005
+                    derivable-decision execution
+                    authority (AA=04 sub-campaign
+                    continuation per DEC-018 + DR-064
+                    precedent).
+
+============================================================
+END OF PHASE 1 GAP REGISTER
+============================================================
