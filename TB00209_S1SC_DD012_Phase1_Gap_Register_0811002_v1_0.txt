@@ -1,0 +1,858 @@
+DocDCN:     TB00209
+DocTitle:   S1SC_DD012_Phase1_Gap_Register_0811002
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-Docs\08XXXXX_Trading_System\TB00209_S1SC_DD012_Phase1_Gap_Register_0811002_v1_0.txt
+DocDate:    05-15-2026
+DocTime:    23:59:59 UTC
+
+============================================================
+TOTHBOT V2 PHASE 1 GAP REGISTER - 0811002 SELECTION
+CONTROLLER SPECIFICATION DV1_0 UNDER DEC-012(a-extended)
+DD-012 V2_38 CROSS-DOCUMENT 0500000-CANONICAL-ALL-DOCS
+RETIREMENT CASCADE
+============================================================
+
+============================================================
+1. SESSION SCOPE
+============================================================
+
+1.1 PURPOSE.
+Phase 1 (S-1) coding-readiness gap audit of 0811002
+Selection_Controller_Specification dv1_0 under DEC-012
+6-sub-step retirement-cascade methodology with DEC-012
+(a-extended) AA=08 scope (TB00237 AMENDMENT B) and
+DD-012 v2_38 0500000-canonical-all-docs cross-document
+authority hierarchy (TB00000 v2_38).
+
+Per the DEC-012(c) three-bucket classification
+methodology + TB00207 §4 + TB00208 §4 precedent:
+  Bucket (a) ARCHITECTURAL RESTATEMENT — content
+    encoded in canonical 0500000 diagrams. Drop with
+    retirement.
+  Bucket (b) CODING-UNIQUE — content with no
+    architectural meaning; pure code-authoring
+    contract. Migrate to a preserved AA=10 spec or
+    retain in 0811002 if no migration target exists.
+  Bucket (c) ARCHITECTURAL CONTENT NOT IN DIAGRAMS —
+    requires 0500000 amendment FIRST (S-2 diagram
+    amendment) before retirement (S-4) per DD-002
+    prose-follows-diagram.
+
+1.2 CASCADE-TARGET CANDIDATE SELECTION.
+0811002 selected at TB00300 chat-turn 1 under DD-011
+v2_38 FP/DP-derivability-test gate + RR-SCOPE-005
+derivable-decision execution authority. Option-set
+A/B converged on 0811002; Option C (surface to Bill)
+eliminated under Bill OCS "Do not pause and wait for
+me. Proceed with OCS instructions below." OUTCOME 1
+single compliant option. DERIVABLE.
+
+Gate-complexity ranking comparison versus remaining
+DEC-012(a-extended) candidate 0811005:
+  - Gate count + state mgmt: 0811002 (6 SC gates +
+    exit_cooldown_log + consecutive_loss_count + 7
+    HR-SC rules) > 0811005 (direction-symmetric to
+    0811001 via parallel-pattern compliance; most
+    elements inherit LM precedent).
+  - Downstream consumers: 0811002 (Long Module
+    dispatch + future Short Module dispatch +
+    Exit Controller HR-EC-014 sole-state-updater +
+    Position Mirror Gate 3 lookup = 3-4 consumers)
+    > 0811005 (Short-Module-internal; 0-1 active
+    consumers).
+  - Prior audit history: 0811002 (TB00202 substantial
+    pre-DD-012 audit with 6 clusters C1-C6 of
+    findings) > 0811005 (no pre-existing gap
+    register).
+
+1.3 PRIOR PRE-DD-012 AUDIT CONTEXT.
+TB00202_S1SC_Gap_Register_Selection_Controller_v1_0
+authored prior to DD-012 enactment (v2_38). The
+TB00202 audit compared 0811002 dv1_0 against 1011009
+Selection_Controller_Coding_Spec dv1_1 under the
+pre-DD-012 AA=08-vs-AA=10 paired-spec governance
+framework. 1011009 was retired at TB00226 (per
+0500000 dv1_54 retirement-annotation cascade; per
+TB00226 Turn 2 Phase 3 git rm). The TB00202 findings
+remain ARCHITECTURALLY VALID input to this DD-012
+audit but the audit FRAME has shifted: this audit
+compares 0811002 dv1_0 against 0500000 dv1_78
+canonical (AR-072 + AR-073 + D2 R2 + D6 R4 + D4 R3
+encodings). Cluster C6 (HR-SC-003..007 identifier-
+binding mismatch versus 1011009) is resolved-by-
+retirement of 1011009; no carry-forward required.
+
+1.4 DOCUMENT UNDER AUDIT.
+0811002_Selection_Controller_Specification_dv1_0.txt
+  Authored: 04-05-2026.
+  Status at TB00300 cold-load: AS-AUTHORED. No
+  amendments since dv1_0 initial document.
+  Section count: 14 (§1 Purpose through §14 Revision
+  History).
+  Identifier sets:
+    SC-001 through SC-030 (30 SC-NNN structural
+      identifiers across §5 + §6 + §7).
+    HR-SC-001 through HR-SC-007 (7 hard rules in §9).
+    Reject codes (6): SSS_SIGNAL_FAIL, WEAK_CANDLE_
+      BODY, POSITION_ALREADY_OPEN, PAIR_IN_COOLDOWN,
+      POSITION_TOO_SMALL, CONSECUTIVE_LOSSES_EXCEEDED.
+    Logged events (7): GATE5_PASS + 6 reject events.
+    CIATS parameters (3): sc_body_threshold,
+      sc_cooldown_seconds, sc_consecutive_limit.
+    State dicts (2): exit_cooldown_log,
+      consecutive_loss_count.
+
+1.5 OUT-OF-SCOPE THIS SESSION.
+  - No diagram amendment authoring (S-2 sub-step).
+  - No 0811002 prose update authoring (S-3 sub-step).
+  - No 0811002 retirement authoring (S-4 sub-step).
+  - No code changes.
+  - No Risk_Engine / Regime_Engine / VPS_Deployment /
+    Startup_Sequence pair audits.
+  - No 0811005 audit (sequenced to a later session).
+
+============================================================
+2. CANONICAL DIAGRAM COVERAGE
+============================================================
+
+2.1 PRIMARY DIAGRAM — D2 TRADING PIPELINE.
+0500000 dv1_78 D2 R-state current.
+  Cell: g5_selection labeled group.
+    canonical: gate:G5_Selection_Controller
+    constraints: ar:AR-072 (Selection Controller gate
+                 architecture), decision:D-08_Top_N_
+                 Cap_Retired
+    drill_targets: mod:Selection_Controller
+    consumes: indicator:SSS
+  D2 root governs cites ar:AR-072 + gate:G5_Selection_
+  Controller. No individual SC-001..030 or HR-SC-*
+  structural identifiers appear in D2 R2 governs.
+
+2.2 PRIMARY DIAGRAM — D6 COMPLETE SYSTEM.
+0500000 dv1_78 D6 R-state current.
+  Selection Controller state update authority via WS
+  Manager AR-073 path; HR-EC-014 (EC is SOLE updater
+  of SC state). Cooldown + consecutive_loss state-dict
+  update path cited inline in constraints of
+  mod:WS_Manager + mod:Exit_Controller groups.
+  ar:AR-073 cited inline at registry-gap note pending
+  §15.12.13 registration (per 0500000 dv1_78
+  registry_gap_note line - canonical authority
+  established via D6 root governs binding).
+
+2.3 PRIMARY DIAGRAM — D4 REGIME TAXONOMY.
+0500000 dv1_78 D4 R-state current.
+  Root-<desc> governs list includes ar:AR-072 (SC-
+  GATE-1 variant for short-direction per dv1_43
+  directional cascade) + ar:AR-073 (per-side
+  Selection Controller state management +
+  pair_cache margin_eligible_flag).
+  Regime 5 + Regime 6 cells cite ar:AR-072 (SC-GATE-1
+  variant for short-direction).
+
+2.4 PRIMARY DIAGRAM — D7 PAPER-MODE DISPATCH BOUNDARY.
+0500000 dv1_78 D7 R-state current.
+  Selection_Controller is upstream of the dispatch
+  seam; no SC-specific labeled groups in D7 visual.
+  D-06_Paper_Live_Parity cited in constraints.
+
+2.5 CANONICAL AR-072 (AMENDED DV1_43 DIRECTIONAL
+    CASCADE) — DIAGRAM-CANONICAL CONTENT.
+Per 0500000 dv1_78 §4 AR-072 amended dv1_43:
+  SC-GATE-1 (LONG variant): long-side SSS PASS;
+    Reject: SSS_SIGNAL_FAIL_LONG.
+  SC-GATE-1 (SHORT variant): short-side SSS PASS;
+    Reject: SSS_SIGNAL_FAIL_SHORT.
+  Plus SHORT-MODULE PRE-GATE before SC-GATE-1 short:
+    margin_eligible_flag[symbol] == True per
+    pair_cache (per AR-073 amended); Reject:
+    PAIR_NOT_MARGIN_ELIGIBLE.
+  SC-GATE-2 (direction-symmetric): same logic both
+    directions; param:body_threshold = 0.3 starting,
+    CIATS-owned per-module per TB00000 v2_29 §9.17.
+  SC-GATE-3 (per-module): Long_Module checks
+    long_position_mirror; Short_Module checks
+    short_position_mirror. A pair MAY be concurrently
+    held in opposite directions across modules.
+    Reject: POSITION_ALREADY_OPEN_THIS_MODULE.
+  SC-GATE-4 (per-module): long_exit_cooldown_log +
+    short_exit_cooldown_log. Reject:
+    PAIR_IN_COOLDOWN_THIS_MODULE.
+  SC-GATE-5 (direction-symmetric): qty_min + cost_min
+    from pair_cache (per AR-073 amended).
+    Reject: POSITION_TOO_SMALL.
+  SC-GATE-6 (per-module): long_consecutive_loss_count
+    + short_consecutive_loss_count. CIATS-owned per-
+    module. Reject: CONSECUTIVE_LOSSES_EXCEEDED_
+    THIS_MODULE.
+Assign: 0811002 SC-001 through -024 (long), 0811002
+SC-025 through -048 (short - pending 0811002
+amendment for direction-symmetric gates + margin-
+eligible pre-gate).
+
+2.6 CANONICAL AR-073 (AMENDED DV1_43 / DV1_15 BASE)
+    — DIAGRAM-CANONICAL CONTENT.
+Per-side Selection Controller state management +
+pair_cache margin_eligible_flag:
+  long_exit_cooldown_log, short_exit_cooldown_log
+  long_consecutive_loss_count, short_consecutive_
+    loss_count
+  pair_cache.margin_eligible_flag[symbol]
+HR-EC-014: Exit Controller is SOLE updater of SC
+state via WS Manager AR-073 path (per 0511004
+parent spec dv1_3+).
+
+2.7 CANONICAL PARALLEL-PATTERN — D-08 TOP-N CAP
+    RETIRED (DECISION).
+0500000 dv1_78 D2 g5_selection cell + AR-070 amended
+dv1_20 + D-08 decision binding. SC-UNI-001 universe-
+scope rule retired by 1011009 (CLOSED-BY-RETIREMENT
+at TB00226).
+
+============================================================
+3. ELEMENT-BY-ELEMENT CLASSIFICATION
+============================================================
+
+3.1 §1 PURPOSE prose.
+Restates Selection Controller as Gate 5 of 8-gate
+pipeline; converts SSS PASS into vetted dispatch
+authorization. Canonical via D2 g5_selection cell +
+ar:AR-072 + gate:G5_Selection_Controller binding.
+BUCKET: (a) ARCHITECTURAL RESTATEMENT.
+
+3.2 §2 GOVERNING DOCUMENTS list.
+Restates parent chain + cross-references. Canonical
+via 0311001 v1_18 §11 namespace governance + D2 + D6
+diagram drill_targets.
+BUCKET: (a) ARCHITECTURAL RESTATEMENT.
+
+3.3 §3 PARENT CHAIN (0811002 -> 0810000 -> 0800000).
+Canonical via 0311001 v1_18 namespace governance
+sub-domain-anchor inventory rules. 0810000 dv1_3
+verified child-document list includes 0811002.
+BUCKET: (a) ARCHITECTURAL RESTATEMENT.
+
+3.4 §4 WHAT THE SELECTION CONTROLLER DOES (Input/
+    Output specification).
+Canonical via D2 g5_selection visual + AR-072
+amended dv1_43 (directional input/output;
+direction-routed PASS to Long_Module or
+Short_Module dispatch).
+BUCKET: (a) ARCHITECTURAL RESTATEMENT WITH
+        STALENESS — 0811002 §4 says "Long Module
+        dispatch" only; canonical AR-072 amended
+        adds "Short_Module dispatch" via direction-
+        routing.
+
+3.5 §5.1 SC-GATE-1 (SC-001, SC-002).
+0811002: SSS PASS gate single-direction; reject
+SSS_SIGNAL_FAIL.
+CANONICAL (AR-072 amended dv1_43): direction-symmetric
+SC-GATE-1 LONG + SC-GATE-1 SHORT variants; rejects
+SSS_SIGNAL_FAIL_LONG / SSS_SIGNAL_FAIL_SHORT; plus
+SHORT-MODULE PRE-GATE (margin_eligible_flag) before
+short-variant evaluation; reject PAIR_NOT_MARGIN_
+ELIGIBLE.
+BUCKET: (a) ARCHITECTURAL RESTATEMENT WITH STALENESS.
+
+3.6 §5.2 SC-GATE-2 (SC-003, SC-004, SC-005).
+0811002: ATR-relative candle body > sc_body_threshold;
+reject WEAK_CANDLE_BODY.
+CANONICAL (AR-072 amended dv1_43): direction-symmetric
+(same logic both directions); param:body_threshold
+0.3 starting CIATS-owned per-module.
+BUCKET: (a) ARCHITECTURAL RESTATEMENT.
+
+3.7 §5.3 SC-GATE-3 (SC-006, SC-007, SC-008).
+0811002: symbol NOT in position_mirror; reject
+POSITION_ALREADY_OPEN.
+CANONICAL (AR-072 amended dv1_43): per-module —
+Long_Module checks long_position_mirror, Short_Module
+checks short_position_mirror; pair MAY be concurrently
+held in opposite directions across modules. Reject
+renamed POSITION_ALREADY_OPEN_THIS_MODULE.
+BUCKET: (a) ARCHITECTURAL RESTATEMENT WITH STALENESS.
+
+3.8 §5.4 SC-GATE-4 (SC-009, SC-010, SC-011).
+0811002: symbol NOT in exit_cooldown_log OR elapsed
+>= sc_cooldown_seconds; reject PAIR_IN_COOLDOWN.
+CANONICAL (AR-072 amended dv1_43 + AR-073 amended):
+per-module — long_exit_cooldown_log + short_exit_
+cooldown_log. Reject renamed PAIR_IN_COOLDOWN_
+THIS_MODULE.
+BUCKET: (a) ARCHITECTURAL RESTATEMENT WITH STALENESS.
+
+3.9 §5.5 SC-GATE-5 (SC-012, SC-013, SC-014).
+0811002: entry_qty_quantized >= qty_min AND notional
+>= cost_min; reject POSITION_TOO_SMALL.
+CANONICAL (AR-072 amended dv1_43): direction-symmetric;
+per-pair qty_min/cost_min from pair_cache (per AR-073
+amended).
+BUCKET: (a) ARCHITECTURAL RESTATEMENT.
+
+3.10 §5.6 SC-GATE-6 (SC-015, SC-016, SC-017, SC-018).
+0811002: consecutive_loss_count[symbol] <
+sc_consecutive_limit; reject CONSECUTIVE_LOSSES_
+EXCEEDED.
+CANONICAL (AR-072 amended dv1_43 + AR-073 amended):
+per-module — long_consecutive_loss_count +
+short_consecutive_loss_count. CIATS-owned per-module.
+Reject renamed CONSECUTIVE_LOSSES_EXCEEDED_THIS_MODULE.
+BUCKET: (a) ARCHITECTURAL RESTATEMENT WITH STALENESS.
+
+3.11 §6.1 exit_cooldown_log state dict (SC-019,
+     SC-020, SC-021, SC-022).
+0811002: single dict[str, float] keyed by symbol;
+preserved across WS reconnect per AR-073.
+CANONICAL (AR-073 amended dv1_43): per-module split
+into long_exit_cooldown_log + short_exit_cooldown_log
+preserved across WS reconnect per AR-056 + AR-073.
+BUCKET: (a) ARCHITECTURAL RESTATEMENT WITH STALENESS.
+
+3.12 §6.2 consecutive_loss_count state dict (SC-023,
+     SC-024, SC-025, SC-026).
+0811002: single dict[str, int] keyed by symbol;
+preserved across WS reconnect per AR-073.
+CANONICAL (AR-073 amended dv1_43): per-module split
+into long_consecutive_loss_count + short_consecutive_
+loss_count preserved across WS reconnect.
+BUCKET: (a) ARCHITECTURAL RESTATEMENT WITH STALENESS.
+
+3.13 SC-024 on_position_closed update rule
+     (exit_reason enum form).
+0811002: enumerated set of exit_reason values
+(MAE_THRESHOLD_BREACH, TIME_EXPIRY, HTF_REGIME_
+REVERSAL, DAILY_REGIME_DOWNGRADE, SIGNAL_DECAY,
+MOMENTUM_LOSS, TP_FILL, TP_PARTIAL_FILL_REMAINDER).
+SC inspects exit_reason and decides win/loss
+classification.
+CANONICAL (HR-EC-014 amended in 0511004 dv1_6 +
+0500000 D6 wire-up): Exit Controller is SOLE updater
+of SC state via WS Manager AR-073 path. Exit Controller
+performs win/loss classification and writes the
+updated state to SC state dicts (via WS Manager
+sole-writer per HR-PM-009 analog). The SC itself
+does NOT inspect exit_reason — that authority is
+upstream in Exit Controller.
+BUCKET: (c) ARCHITECTURAL CONTENT NOT IN DIAGRAMS —
+        the canonical division of authority (EC does
+        classification; SC consumes pre-classified
+        state update) is in D6 wire-up callout but
+        NOT explicitly enumerated as a structural-tag
+        identifier in any 0500000 root governs list.
+        Diagram-side amendment candidate: add
+        contract:SC_State_Update_Path or refine
+        existing HR-EC-014 binding for explicit
+        signature/payload encoding.
+
+3.14 §7 GATE FAILURE BEHAVIOR (SC-027, SC-028,
+     SC-029, SC-030).
+0811002: any gate FAIL = SKIP this pair; never halt;
+never alert; log reject code; CIATS EWMA Monitor
+tracks rejection_rate_by_regime.
+CANONICAL: gate:G5_Selection_Controller binding +
+rule:HR-SP-005 (pipeline-never-halt per Signal
+Pipeline Specification) + A-1 EWMA signals binding
+in 0500000 §6 CIATS data flows.
+BUCKET: (a) ARCHITECTURAL RESTATEMENT.
+
+3.15 §8.1-§8.7 INTERFACES.
+0811002: 7 interface sub-sections enumerating
+read/write contracts with Signal Engine + Pre-
+computation Cache + Position Mirror + Gate 8
+Position Sizer + Pipeline + WS Manager + Logger.
+CANONICAL: D6 wire-up callout + D2 g5_selection
+drill_targets + WS Manager AR-073 + HR-PM-009 + I-2
++ I-4 cache contracts.
+BUCKET: (a) ARCHITECTURAL RESTATEMENT.
+
+3.16 §9 HR-SC-001 Gates in strict sequence 1-6.
+0811002: gate-sequencing rule.
+CANONICAL: D2 g5_selection ar:AR-072 binding
+(governs gate sequencing).
+BUCKET: (a) ARCHITECTURAL RESTATEMENT.
+
+3.17 §9 HR-SC-002 Gate failure NEVER halts pipeline.
+0811002: pipeline-never-halt rule.
+CANONICAL: rule:HR-SP-005 (Signal Pipeline Spec) +
+D2 root governs.
+BUCKET: (a) ARCHITECTURAL RESTATEMENT.
+
+3.18 §9 HR-SC-003 state dicts preserved across WS
+     reconnect.
+0811002: in-memory state preservation rule.
+CANONICAL: ar:AR-056 (mid-session WS reconnect with
+pipeline-no-fire clause) + ar:AR-073 (per-side SC
+state management).
+BUCKET: (a) ARCHITECTURAL RESTATEMENT.
+
+3.19 §9 HR-SC-004 consecutive_loss_count reset
+     semantics.
+0811002: reset on TP_FILL + TP_PARTIAL_FILL_
+REMAINDER; increment on loss exits; TIME_EXPIRY
+counts as loss.
+CANONICAL: 0511004 dv1_6 Exit_Controller_
+Specification + HR-EC-014 authority binding +
+D6 wire-up callout.
+BUCKET: (a) ARCHITECTURAL RESTATEMENT — but note
+        the rule architecturally belongs to Exit
+        Controller (SOLE updater of SC state per
+        HR-EC-014). Canonical authority sits in
+        0511004 spec content + D6 wire-up.
+
+3.20 §9 HR-SC-005 SC-GATE-5 uses entry_qty_quantized.
+0811002: pre-quantization rule.
+CANONICAL: Gate 8 Position Sizer ROUND_DOWN quantize
+contract per 0500000 §6 sizing-curve binding +
+gate:G8_Position_Sizer encoded in D2.
+BUCKET: (b) CODING-UNIQUE — implementation contract
+        on pre-quantization order; preserves
+        architectural intent encoded in Gate 8 +
+        SC-GATE-5 sequence binding.
+        Migration target: 1011001 Engineering_Best_
+        Practices (preserved AA=10 spec) §implementation
+        contracts section, OR retain in 0511002
+        Signal_Pipeline_Specification §gates section.
+
+3.21 §9 HR-SC-006 cooldown MUST use time.monotonic().
+0811002: implementation contract on clock source.
+CANONICAL: 1011001 Engineering_Best_Practices
+preserves time.monotonic() vs time.time()
+contract as engineering-best-practice rule.
+BUCKET: (b) CODING-UNIQUE.
+        Migration target: 1011001 Engineering_Best_
+        Practices §clock-source contracts.
+
+3.22 §9 HR-SC-007 CIATS params from frozen Parameter
+     Store snapshot.
+0811002: implementation contract on parameter-read
+ordering.
+CANONICAL: contract:Parameter_Store_Snapshot
+encoded in D2 + D6 root governs lists.
+BUCKET: (a) ARCHITECTURAL RESTATEMENT.
+
+3.23 §10 CIATS PARAMETERS list.
+0811002: sc_body_threshold (0.3), sc_cooldown_
+seconds (300), sc_consecutive_limit (3); all
+CIATS-owned starting values.
+CANONICAL: TB00000 v2_42 §9.17 CIATS PARAMETER
+REGISTRY (sc_body_threshold = 0.3 starting,
+sc_cooldown_seconds = 300 starting,
+sc_consecutive_limit = 3 starting; all per-module
+instantiated per TB00000 v2_29 §9.6).
+BUCKET: (a) ARCHITECTURAL RESTATEMENT.
+
+3.24 §11 WHAT IT LOGS event enumeration.
+0811002: 7 logged events (GATE5_PASS + 6 reject
+events).
+CANONICAL: 0511006 Logger_Specification dv1_3 +
+evt:GATE5_PASS + per-reject-code evt:* identifiers
+encoded in D6 mod:Logger group governs.
+BUCKET: (a) ARCHITECTURAL RESTATEMENT WITH
+        STALENESS — reject-code renamings (per-module
+        _THIS_MODULE suffix per AR-072 amended) need
+        propagation; canonical authority for renamed
+        codes is in 0500000 D2 + D4 + D7 governs.
+
+3.25 §12 FIVE CODING-READINESS QUESTIONS (Q1-Q5).
+0811002: standard 5-question summary.
+CANONICAL: TB00000 v2_42 §3.2 five-question coding-
+readiness rule + cross-references to §1, §4, §7-§11
+above.
+BUCKET: (a) ARCHITECTURAL RESTATEMENT.
+
+3.26 §13 RELATED DOCUMENTS list.
+0811002: cross-reference list to 8 governing/peer
+documents.
+CANONICAL: 0311001 v1_18 namespace governance +
+D2 + D6 drill_target binding.
+BUCKET: (a) ARCHITECTURAL RESTATEMENT.
+
+============================================================
+4. ROLL-UP BY BUCKET
+============================================================
+
+4.1 BUCKET (a) ARCHITECTURAL RESTATEMENT — 24 of 26
+elements.
+
+Sub-classifications within (a):
+  (a) Pure restatement: §1, §2, §3, §5.2, §5.5, §7
+      (SC-027..030), §8 (8.1-8.7), §9 HR-SC-001/002/
+      003/007, §12 (Q1-Q5), §13. 16 elements.
+
+  (a) Restatement with STALENESS — 0811002 dv1_0
+      content predates AR-072 + AR-073 dv1_43
+      directional cascade and reflects single-
+      direction Long-Module-only era:
+        §4 input/output (missing Short_Module
+            dispatch routing).
+        §5.1 SC-GATE-1 (missing direction-symmetric
+            LONG/SHORT variants + SHORT-MODULE
+            PRE-GATE margin_eligible_flag).
+        §5.3 SC-GATE-3 (missing per-module state +
+            renamed reject _THIS_MODULE).
+        §5.4 SC-GATE-4 (missing per-module
+            cooldown_log + renamed reject).
+        §5.6 SC-GATE-6 (missing per-module
+            consecutive_loss_count + renamed reject).
+        §6.1 exit_cooldown_log (missing per-module
+            long_/short_ split).
+        §6.2 consecutive_loss_count (missing per-
+            module long_/short_ split).
+        §9 HR-SC-004 (architectural authority sits in
+            Exit Controller per HR-EC-014).
+        §11 logged events (reject-code renaming
+            stale).
+      8 elements with staleness.
+
+4.2 BUCKET (b) CODING-UNIQUE — 2 elements.
+  §9 HR-SC-005 (entry_qty_quantized pre-quantization
+    contract).
+  §9 HR-SC-006 (time.monotonic() clock source
+    contract).
+
+  Migration targets:
+    1011001 Engineering_Best_Practices dv1_7
+      (preserved AA=10 engineering-contracts spec).
+    OR 0511002 Signal_Pipeline_Specification dv1_0
+      §gates section (parent spec with gate-by-gate
+      content).
+
+4.3 BUCKET (c) ARCHITECTURAL CONTENT NOT IN DIAGRAMS
+    — 1 element (minor).
+  §6.2 SC-024 on_position_closed signature/payload
+    (exit_reason enum form versus EC-as-sole-updater
+    division of authority encoded only in D6 wire-up
+    callout text).
+  Diagram-side amendment candidate (S-2 sequencing):
+    Add contract:SC_State_Update_Path to D6 root
+    governs as registered ar: + contract: + register
+    in 0311001 v1_18 §15.12.13 (analog to ar:AR-073
+    pending registration).
+  Severity: LOW. The wire-up text in D6 already
+    canonically establishes EC as sole updater per
+    HR-EC-014; the SC-024 enum-form prose in 0811002
+    is architectural restatement of a deprecated
+    SC-self-classifies-exit-reason model. Resolution
+    path is more efficient via S-3 prose update
+    (defer to retirement — the architectural authority
+    is already canonical at D6 + HR-EC-014; the
+    0811002 SC-024 prose is informational/historical).
+
+4.4 SUMMARY.
+  Bucket (a) restatement (pure or stale): 24 of 26
+    elements (92%).
+  Bucket (b) coding-unique: 2 of 26 elements (8%).
+  Bucket (c) architectural not in diagrams: 1 minor
+    element (resolvable via S-3 with caveat).
+
+The audit confirms 0811002 dv1_0 is ARCHITECTURALLY
+REDUNDANT against 0500000 dv1_78 canonical content
+plus 1011001 Engineering_Best_Practices for the 2
+coding-unique implementation contracts. The spec
+qualifies for DD-012 retirement under DEC-012(a-
+extended) AA=08 campaign scope.
+
+============================================================
+5. DOWNSTREAM QUEUE (S-2 THROUGH S-6)
+============================================================
+
+5.1 S-2 DIAGRAM AMENDMENTS — bucket (c) cluster
+    closure.
+
+(c-1) SC-024 EC-as-sole-updater contract registration.
+
+  Option A — Author S-2 amendment registering
+    contract:SC_State_Update_Path in 0500000 D6 root
+    governs + 0311001 v1_18 §15.12.13 registry. Adds
+    explicit diagram-canonical encoding of the EC
+    sole-updater-of-SC-state architectural authority.
+    Allows S-3 propagation of EC-owned win/loss
+    classification rule to 0511004 spec content +
+    drop SC-024 enum-form from 0811002 prose.
+
+  Option B — Skip S-2 diagram amendment. Treat (c-1)
+    as low-severity bucket (a) restatement: the EC
+    sole-updater authority is already canonical via
+    HR-EC-014 binding + D6 wire-up callout. The
+    SC-024 enum-form prose in 0811002 is a historical/
+    informational restatement; retirement drops it
+    naturally.
+
+  Recommendation: Option B. The cluster (c-1) severity
+  is LOW (architectural authority already encoded
+  through HR-EC-014 + D6 wire-up; the SC-024 prose is
+  not a new architectural assertion). Adding a new
+  contract: token + §15.12.13 registry entry expands
+  governance overhead without proportionate
+  architectural benefit. Defer cluster (c-1) to S-3
+  natural drop with retirement.
+
+  Surfaced for ratification at TB00301 cold-load
+  derivability-test gate (DD-011 v2_38). If derivable
+  to Option B, S-2 NO-OP for the 0811002 cascade.
+
+5.2 S-3 PROSE UPDATES — parent-spec gap-fill from
+    coding-unique bucket (b).
+
+(b-1) HR-SC-005 entry_qty_quantized pre-quantization
+contract migration.
+
+  Migration target candidate: 1011001 Engineering_
+  Best_Practices dv1_7 §implementation contracts
+  section. PROSE-UPDATE-A1 sequenced after S-2 NO-OP
+  (B) ratification.
+
+(b-2) HR-SC-006 time.monotonic() clock source
+contract migration.
+
+  Migration target candidate: 1011001 Engineering_
+  Best_Practices dv1_7 §clock-source contracts.
+  PROSE-UPDATE-A2 sequenced after PROSE-UPDATE-A1.
+
+  Combined: 1011001 dv1_7 -> dv1_8 amendment in a
+  single S-3 sub-step.
+
+  Alternative: retain HR-SC-005 + HR-SC-006 in
+  0511002 Signal_Pipeline_Specification dv1_0
+  §gates section (parent spec with gate-by-gate
+  content). This is the structurally-cleaner home
+  per DD-001/DD-002 architectural-hierarchy
+  reasoning (1011001 is engineering best practices
+  not gate-by-gate spec). To be ratified at S-3
+  authoring session.
+
+5.3 S-4 RETIREMENT — 0811002 dv1_0 git rm.
+
+After S-2 NO-OP (B option) + S-3 PROSE-UPDATE-A1/A2
+complete, execute:
+  cd C:\Users\wstot\GitHub\TothBot\TothBot_V2-Docs\
+    08XXXXX_Trading_System\
+  git rm 0811002_Selection_Controller_Specification_
+    dv1_0.txt
+  git commit -m '0811002 dv1_0 retirement per
+    DEC-012 cascade S-4 - TBNNNNN'
+  git push
+
+Per TB00000 v2_42 §4.3.3 RR-SHELL-005/006/007.
+
+5.4 S-5 CASCADE-ANCHOR REVISION — 0810000.
+
+0810000 Trading_System_Modules_Anchor dv1_3 -> dv1_4.
+Remove 0811002 from child-document list per 0311001
+v1_18 §11 sub-domain anchor child-document inventory
+rules. Verify mod:Selection_Controller canonical
+authority remains transferred to 0500000 D2 R5
+g5_selection drill_target + D6 R-state wire-up
+callout + Tier 1 Context drill_targets per DD-012
+cross-document authority hierarchy.
+
+5.5 S-6 GOVERNANCE ENTRIES.
+
+(a) TB00153 Master_Defect_Register vN -> vN+1.
+    Add DR-NEW 0811002 retirement entry (analog to
+    DR-060 for 1011002 + DR-059 for 0811001).
+
+(b) TB00153 Decision_Register vN -> vN+1. Add
+    DEC-NEW paired top-level decision entry for
+    0811002 retirement (analog to DEC-014 for 1011002
+    + DEC-013 for 0811001). Update DEC-012(a-extended)
+    candidate list: remove 0811002 from remaining-
+    candidates enumeration.
+
+============================================================
+6. PRE-S4 CHESTERTON'S-FENCE VERIFICATION
+   RECOMMENDATIONS
+============================================================
+
+Per TB00000 v2_42 §4.3.1 RR-SCOPE-009 (Chesterton's-
+fence rule on constraint removal) + TB00207 / TB00208
+§6.2 precedent: before executing S-4 (git rm), verify
+each canonical-authority transfer claim with grep-
+verification against current 0500000 dv1_78 + parent
+specs.
+
+6.1 GREP-VERIFY mod:Selection_Controller drill_target
+binding in 0500000 dv1_78.
+  Expected sites: D2 g5_selection drill_targets;
+    D6 R-state wire-up callout; Tier 1 Context
+    drill_targets.
+  Verification at S-3/S-4 execution session via
+    bash grep on 0500000_System_Architecture_Overview_
+    dv1_78_Claude_Source.html.
+
+6.2 GREP-VERIFY ar:AR-072 + ar:AR-073 binding in
+0500000 dv1_78.
+  Expected sites: D2 root governs (AR-072);
+    D4 root governs (AR-072 + AR-073);
+    D6 root governs / wire-up callout (AR-073 via
+    HR-EC-014); 0500000 §4 AR registry (AR-072
+    amended dv1_43, AR-073 amended dv1_43).
+  Verification at S-3/S-4 execution session.
+
+6.3 GREP-VERIFY HR-EC-014 binding in 0511004 dv1_6
+parent spec.
+  Expected: HR-EC-014 "Exit Controller is SOLE updater
+    of SC state via WS Manager AR-073 path" in
+    0511004 dv1_6.
+  Verification at S-3 execution session.
+
+6.4 GREP-VERIFY contract:Parameter_Store_Snapshot
+binding in 0500000 dv1_78.
+  Expected sites: D2 + D6 root governs lists.
+  Verification at S-3/S-4 execution session.
+
+6.5 GREP-VERIFY evt:GATE5_PASS binding in 0500000
+dv1_78 D6 mod:Logger group governs.
+  Expected: evt:GATE5_PASS + 6 reject-event identifiers
+    in mod:Logger group constraints or governs.
+  Verification at S-3/S-4 execution session.
+
+OI-NEW-0811002-CASCADE-S3-VERIFICATION-PRE-S4:
+Track pre-S4 Chesterton's-fence verification
+deliverable in the receiving session's NSI as a
+S-3 sub-task. Analog to TB00208 §6.2 OI-NEW-1011002-
+CASCADE-S3-VERIFICATION-PRE-S4 (closed at TB00299
+via grep-verified HR-WM-* binding in 0511001 dv1_9).
+
+============================================================
+7. PRIOR TB00202 AUDIT CARRY-FORWARDS
+============================================================
+
+7.1 RESOLVED-BY-RETIREMENT CLUSTERS.
+
+Cluster C6 (HR-SC-003..007 identifier-binding mismatch
+versus 1011009): RESOLVED. 1011009 retired at TB00226.
+No carry-forward.
+
+Cluster C5 (cooldown_registry vs exit_cooldown_log
+naming): RESOLVED. 1011009 retired at TB00226. The
+0811002 "exit_cooldown_log" form prevails. Aligns
+with 0500000 D6 wire-up + 0511004 HR-EC-014. No
+carry-forward.
+
+Cluster C4 (on_position_closed signature mismatch
+was_win bool vs exit_reason enum): SUPERSEDED by
+DD-012 cross-document authority. SC-024 enum-form
+prose in 0811002 is bucket (c-1) low-severity
+restatement; resolution path per §5.1 Option B
+(natural drop with retirement). No active
+carry-forward required.
+
+7.2 CARRY-FORWARDS ACTIVE.
+
+Cluster C2 (stale single-direction state versus
+canonical per-module long_/short_ split): ACTIVE.
+Captured in §3.5, §3.7, §3.8, §3.10, §3.11, §3.12
+above as bucket (a) restatement-with-staleness.
+Resolution path: natural drop with S-4 retirement
+(0811002 prose is informational; canonical authority
+is in 0500000 dv1_78 AR-072 + AR-073 amended dv1_43
+forms).
+
+Cluster C1 (missing SHORT-MODULE PRE-GATE in 0811002
+§5.1): ACTIVE. Captured in §3.5 above. Resolution
+path: natural drop with S-4 retirement; canonical
+authority is in 0500000 dv1_78 AR-072 amended dv1_43.
+
+7.3 NO NEW DD-012 CLUSTERS BEYOND PRIOR TB00202
+FINDINGS.
+The DD-012 cross-document re-frame (versus 0500000
+canonical rather than versus 1011009) reduces the
+audit complexity. Pre-DD-012 paired-spec conflicts
+(C5 + C6 + C4) resolve-by-retirement of 1011009.
+Remaining staleness findings (C1 + C2) resolve via
+natural drop with 0811002 retirement (canonical
+authority already in 0500000 dv1_78).
+
+============================================================
+8. NEXT-SESSION EXECUTION PLAN
+============================================================
+
+8.1 TB00301 (receiving session) execution sequence:
+
+PHASE 1 - Session-open cleanup list per DR-009.
+PHASE 2 - Deliverable + git-state verification.
+PHASE 3 - DD-011 v2_38 derivability-test gate on
+  §5.1 (c-1) cluster: ratify Option B (S-2 NO-OP)
+  or Option A (S-2 amendment authoring).
+PHASE 4 - S-2 execution (likely NO-OP per Option B
+  ratification).
+PHASE 5 - S-3 PROSE-UPDATE-A1/A2 authoring (1011001
+  dv1_7 -> dv1_8 OR 0511002 dv1_0 -> dv1_1
+  amendment).
+PHASE 6 - Session-close 4-operation delivery.
+
+8.2 TBNNNNN+1 (subsequent session) execution
+sequence:
+
+PHASE 1 - Pre-S4 Chesterton's-fence verification
+  per §6 above (grep-verify mod:Selection_Controller
+  + ar:AR-072 + ar:AR-073 + HR-EC-014 + contract:
+  Parameter_Store_Snapshot + evt:GATE5_PASS bindings).
+PHASE 2 - S-4 git rm 0811002 dv1_0.
+PHASE 3 - S-5 0810000 dv1_3 -> dv1_4 cascade-anchor
+  revision.
+PHASE 4 - S-6 (a) TB00153 MDR vN -> vN+1 DR-NEW
+  0811002 retirement entry.
+PHASE 5 - S-6 (b) TB00153 Decision_Register vN ->
+  vN+1 DEC-NEW paired entry + DEC-012(a-extended)
+  candidate list update (remove 0811002; remaining
+  candidate: 0811005 only).
+PHASE 6 - Session-close 4-operation delivery.
+
+============================================================
+9. REVISION HISTORY
+============================================================
+
+  v1_0  2026-05-15  TB00300 initial Phase 1 Gap
+                    Register for 0811002 Selection_
+                    Controller_Specification dv1_0
+                    under DEC-012(a-extended) DD-012
+                    v2_38 0500000-canonical-all-docs
+                    retirement cascade. Audit
+                    classification: 24 of 26 elements
+                    bucket (a) architectural
+                    restatement (16 pure + 8 with
+                    staleness); 2 elements bucket (b)
+                    coding-unique with 1011001 or
+                    0511002 migration targets; 1
+                    element bucket (c) low-severity
+                    architectural-not-in-diagrams
+                    (SC-024 EC-as-sole-updater
+                    contract registration; resolution
+                    via natural drop recommended).
+                    Prior TB00202 pre-DD-012 audit
+                    cluster C6 + C5 + C4 RESOLVED-BY-
+                    RETIREMENT of 1011009 at TB00226;
+                    C1 + C2 staleness ACTIVE but
+                    resolve via natural drop with
+                    0811002 retirement (canonical
+                    authority in 0500000 dv1_78
+                    AR-072 + AR-073 amended dv1_43).
+                    Pre-S4 Chesterton's-fence
+                    verification recommendations
+                    enumerated for grep-verify of 5
+                    canonical-authority transfer
+                    sites. Authored under RR-SCOPE-005
+                    derivable-decision execution
+                    authority + DD-011 v2_38 FP/DP-
+                    derivability-test gate compliance
+                    + RR-SCOPE-007 v2_30 SELF-
+                    AUTHORED-NSI-SOURCE-PROHIBITION
+                    + RR-SCOPE-010 verbatim-MDR-
+                    citation discipline.
+
+                    PARENT CHAIN COMPLIANCE.
+                    TB00209 is a work-product
+                    document under TB00 series gap-
+                    register precedent (TB00207 +
+                    TB00208 form-factor). No DCN
+                    namespace chain dependencies.
+                    Section 9 Revision History
+                    established at v1_0.
+
+============================================================
+END OF TB00209 PHASE 1 GAP REGISTER v1_0
+============================================================
