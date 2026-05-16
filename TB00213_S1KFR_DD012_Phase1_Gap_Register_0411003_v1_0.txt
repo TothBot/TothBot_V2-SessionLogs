@@ -1,0 +1,828 @@
+DocDCN:     TB00213
+DocTitle:   S1KFR_DD012_Phase1_Gap_Register_0411003
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00213_S1KFR_DD012_Phase1_Gap_Register_0411003_v1_0.txt
+DocDate:    05-16-2026
+DocTime:    23:59:59 UTC
+
+============================================================
+TOTHBOT V2 PHASE 1 GAP REGISTER - 0411003 KRAKEN FEE
+RATE LIMIT SPECIFICATION DV1_0 UNDER DEC-012(a-EXTENDED)
+DD-012 V2_38 CROSS-DOCUMENT 0500000-CANONICAL-ALL-DOCS
+THIRD AA=04 AUDIT
+============================================================
+
+============================================================
+1. SESSION SCOPE
+============================================================
+
+1.1 PURPOSE.
+Phase 1 (S-1) coding-readiness gap audit of 0411003
+Kraken_Fee_Rate_Limit_Specification dv1_0 under DEC-012
+6-sub-step retirement-cascade methodology with DEC-012(a-
+extended) AA=04 scope (TB00308 first audit + TB00310
+second audit + this session third audit) and DD-012
+v2_38 0500000-canonical-all-docs cross-document
+authority hierarchy (TB00000 v2_38 through v2_45).
+
+Per the DEC-012(c) three-bucket classification
+methodology + TB00207 + TB00210 + TB00211 + TB00212
+precedent:
+  Bucket (a) ARCHITECTURAL RESTATEMENT - content
+    encoded in canonical 0500000 dv1_79 diagrams. Drop
+    with retirement.
+  Bucket (b) CODING-UNIQUE - content with no
+    architectural meaning; pure code-authoring
+    contract. Migrate to a preserved AA=10 spec or
+    retain in parent AA=04 spec.
+  Bucket (c) ARCHITECTURAL CONTENT NOT IN DIAGRAMS -
+    requires 0500000 amendment FIRST (S-2 diagram
+    amendment) before retirement (S-4) per DD-002
+    prose-follows-diagram.
+
+1.2 CASCADE-TARGET CANDIDATE SELECTION.
+0411003 is the THIRD and FINAL AA=04 sub-campaign
+candidate under DEC-012(a-extended). Per the
+DEC-012(a-extended) AA=04 enumeration:
+  0411001 Kraken_WS_v2_Specification - CLOSED via
+    DEC-018 PRESERVE (TB00308 first audit; TB00211
+    gap register).
+  0411002 Kraken_REST_API_Specification - CLOSED via
+    DEC-019 PRESERVE (TB00310 second audit; TB00212
+    gap register + TB00311 PHASE 7 edge-case-closure).
+  0411003 Kraken_Fee_Rate_Limit_Specification - THIS
+    AUDIT (sole remaining).
+
+1.3 DOCUMENT UNDER AUDIT.
+0411003_Kraken_Fee_Rate_Limit_Specification_dv1_0.txt
+  Authored: dv1_0 at 04-04-2026.
+  Status at TB00312 cold-load: AS-AUTHORED. No
+    surgical amendments since dv1_0. 505 lines.
+  Section count: 9 (§1 Purpose through §9 Revision
+    History).
+  Identifier sets:
+    FEE-TIER-001..002 (2 identifiers, §3.1).
+    FEE-BASE-001..006 (6 identifiers, §3.2).
+    FEE-CALC-001..006 (6 identifiers, §3.3).
+    RL-ARCH-001..005 (5 identifiers, §4.1).
+    RL-COST-001..007 (7 identifiers, §4.2).
+    RL-MON-001..004 (4 identifiers, §4.3).
+    KEY-CFG-001..006 (6 identifiers, §5).
+    CIATS-FEE-001..004 (4 identifiers, §6.1).
+    CIATS-RL-001..003 (3 identifiers, §6.2).
+    CIATS-REJ-001..003 (3 identifiers, §6.3).
+    Total: 46 spec-internal identifiers.
+  AR references cited:
+    AR-012 (FEE-BASE-001 maker/taker baseline).
+    AR-013 (FEE-TIER-001 + RL-ARCH-002 Intermediate
+      C-2 tier).
+    AR-018 (RL-COST-003 edit_order PROHIBITED).
+    AR-030 (RL-ARCH-004 maxratecount from ACK).
+    AR-037 (KEY-CFG-002 IP whitelist requirement).
+    AR-065 (FEE-BASE-002 + FEE-BASE-005 Kelly net P/L).
+    A-1 (RL-MON-001 rate counter monitoring).
+    A-19 + IMP-11 (RL-ARCH-004 maxratecount).
+    AR-004 implicit (KEY-CFG-001 two key pairs).
+
+1.4 EXPECTED DISPOSITION OUTCOME.
+PRESERVE under DEC-012(a-extended) AA=04 sub-campaign
+THIRD AUDIT. Same wire-contract / external-fact-
+contract structural character that drove DEC-018
+(0411001 PRESERVE) + DEC-019 (0411002 PRESERVE). 0411003
+documents Kraken-defined external facts (fee tier
+schedule, rate cost schedule, API key permissions, IP
+whitelisting requirements, Cloudflare reconnect limits)
+that do NOT constitute architectural-restatement of
+internal TothBot V2 structures encoded in 0500000.
+
+============================================================
+2. SPEC CONTENT INVENTORY
+============================================================
+
+2.1 §1 PURPOSE AND SCOPE.
+Document boundary statement. Out-of-scope cross-
+references: 0411001 (WS v2), 0411002 (REST), 0611001
+(position sizing), 0211001 (CIATS). Definitional
+content; not architectural restatement.
+
+2.2 §2 PARENT CHAIN.
+0400000 -> 0410000 -> 0411003. Hierarchy assertion;
+not architectural restatement.
+
+2.3 §3 FEE STRUCTURE.
+
+  §3.1 Kraken Fee Tier (2 identifiers).
+    FEE-TIER-001: Pro Intermediate C-2. External fact.
+      Anchored to AR-013.
+    FEE-TIER-002: Maker/taker fee model + 30-day
+      volume tier determination. External Kraken
+      protocol fact.
+
+  §3.2 Fee Baseline Starting Values (6 identifiers).
+    FEE-BASE-001: Maker 0.16% / Taker 0.26% starting.
+      CIATS-monitored. Anchored to AR-012.
+    FEE-BASE-002: Round-trip fee baselines (0.32%
+      maker-maker; 0.42% maker-taker worst case).
+      Anchored to AR-065.
+    FEE-BASE-003: post_only=TRUE entry classification.
+    FEE-BASE-004: Exit order classification (TP =
+      maker; emergSL = taker).
+    FEE-BASE-005: Net R:R after fees calculation
+      anchored to AR-065 Kelly net-P/L requirement.
+    FEE-BASE-006: Fee tier advancement auto-detection
+      via CIATS EWMA divergence.
+
+  §3.3 Fee Calculation (6 identifiers).
+    FEE-CALC-001 through FEE-CALC-005: Decimal fee
+      arithmetic formulas (entry, TP exit, emergSL
+      exit, net P/L TP, net P/L emergSL).
+    FEE-CALC-006: Logger actual-fee authority
+      precedence over calculated values.
+
+2.4 §4 API RATE LIMITS.
+
+  §4.1 Rate Limit Architecture (5 identifiers).
+    RL-ARCH-001: Shared rate budget across REST/WS/FIX.
+      External Kraken protocol fact. Anchored to
+      0400000 §5.
+    RL-ARCH-002: Intermediate C-2 tier. External fact.
+      Anchored to AR-013.
+    RL-ARCH-003: Threshold + decay rate + max open
+      orders per pair (maxratecount / 2.34/s / 80).
+    RL-ARCH-004: MANDATORY maxratecount from
+      executions ACK. Anchored to AR-030 / A-19 /
+      IMP-11.
+    RL-ARCH-005: Decay formula (per pair, per second).
+
+  §4.2 Rate Cost Schedule (7 identifiers).
+    RL-COST-001 through RL-COST-007: Kraken-defined
+      per-operation rate costs (add_order, amend_order,
+      edit_order PROHIBITED per AR-018, batch_add,
+      cancel_order, batch_cancel, typical TothBot
+      cycle reference).
+
+  §4.3 Rate Limit Monitoring and Protection (4
+    identifiers).
+    RL-MON-001: CIATS EWMA Monitor tracks
+      rate_counter_by_pair. Anchored to A-1.
+    RL-MON-002: Warning threshold 80% (CIATS
+      starting).
+    RL-MON-003: Critical threshold 95% + suppression
+      logic.
+    RL-MON-004: Cloudflare 150 reconnects per 10-min
+      window per IP.
+
+2.5 §5 API KEY CONFIGURATION.
+
+  §5.1 Key Pair Requirements (4 identifiers).
+    KEY-CFG-001: Two separate API key pairs (DATA +
+      TRADE).
+    KEY-CFG-002: MANDATORY IP whitelist to VPS IP
+      87.99.141.44. Anchored to AR-037.
+    KEY-CFG-003: API keys never in source code.
+    KEY-CFG-004: 10,000ms nonce window. Anchored to
+      REST-AUTH-004/005 in 0411002.
+
+  §5.2 Key Pair Separation Rationale (2 identifiers).
+    KEY-CFG-005: Least-privilege separation rationale.
+    KEY-CFG-006: IP whitelist as independent security
+      layer.
+
+2.6 §6 CIATS MONITORING HOOKS.
+
+  §6.1 Fee Monitoring (4 identifiers).
+    CIATS-FEE-001: Logger executions-channel fee
+      field capture (Decimal conversion).
+    CIATS-FEE-002: Per-trade fee monitoring signal
+      formulas.
+    CIATS-FEE-003: Fee tier change detection via
+      EWMA divergence (>0.0002 sustained over 50
+      trades).
+    CIATS-FEE-004: CIATS Trade Outcome Bus uses net
+      P/L exclusively (AR-065 binding).
+
+  §6.2 Rate Counter Monitoring (3 identifiers).
+    CIATS-RL-001: rate_counter_by_pair EWMA signal.
+    CIATS-RL-002: EWMA lambda=0.2 signal semantics.
+    CIATS-RL-003: CIATS does NOT autonomously adjust
+      rate-limit parameters (exchange-defined).
+
+  §6.3 Rejection Rate Monitoring (3 identifiers).
+    CIATS-REJ-001: rejection_rate_by_regime tracking.
+      Source: executions exec_type=expired on GTD
+      entries.
+    CIATS-REJ-002: EWMA Monitor Stream 1 signal F6.
+    CIATS-REJ-003: 30% per regime over 50 evals
+      threshold (CIATS starting value).
+
+2.7 §7 FIVE CODING-READINESS QUESTIONS.
+Standard coding-readiness conformance section per
+TB00000 §3.2. Inputs, interfaces, hard rules,
+triggers, logging enumerated. Not architectural
+restatement.
+
+2.8 §8 RELATED DOCUMENTS.
+Cross-reference list (0400000, 0410000, 0411001,
+0411002, 0500000 dv1_17 STALE, 0611001, 0211001,
+1011002, 1011010, 1011011). Note: 0500000 dv1_17
+citation is STALE (current 0500000 dv1_79 at TB00312
+cold-load). Drift-induced citation defect carry-
+forward candidate (see §6.4 below).
+
+2.9 §9 REVISION HISTORY.
+dv1_0 initial-version single entry.
+
+============================================================
+3. THREE-BUCKET GAP CLASSIFICATION
+============================================================
+
+3.1 BUCKET (a) ARCHITECTURAL RESTATEMENT.
+
+Content sections encoded in 0500000 dv1_79 canonical
+diagrams/registry. If 0411003 were retired, these
+items would be NOT LOST because the canonical
+representation lives in 0500000.
+
+  (a-1) FEE-TIER-001 (Pro Intermediate C-2) - encoded
+        in 0500000 dv1_79 §4 AR-013 line 4813.
+  (a-2) FEE-BASE-001 (Maker 0.16% / Taker 0.26%) -
+        encoded in 0500000 dv1_79 §4 AR-012 line 4812.
+  (a-3) RL-ARCH-002 (Intermediate C-2 tier) - encoded
+        in 0500000 dv1_79 §4 AR-013 line 4813 (shared
+        with FEE-TIER-001).
+  (a-4) RL-ARCH-003 sub-components - encoded in 0500000
+        dv1_79 §2.4 A-1 + §10 Rate Counter Decay 2.34
+        line 848 + Diagram 6 Rate Limits panel line
+        1559-1561 (125 / 2.34/s / 80 max open).
+  (a-5) RL-ARCH-004 (maxratecount from executions
+        ACK) - encoded in 0500000 dv1_79 §2.4 A-19 +
+        IMP-11 line 1101 + §4 AR-030 line 4839.
+  (a-6) RL-COST-003 (edit_order PROHIBITED;
+        amend_order PRIMARY) - encoded in 0500000
+        dv1_79 §4 AR-018 line 4819 + D1 R5 governs
+        block.
+  (a-7) RL-MON-001 (rate_counter_by_pair via
+        executions channel) - encoded in 0500000
+        dv1_79 §2.4 A-1 line 867 + D5 CIATS three-
+        signal architecture line 3925.
+  (a-8) KEY-CFG-001 (Two API key pairs DATA + TRADE)
+        - encoded in 0500000 dv1_79 §4 AR-004 line
+        4760.
+  (a-9) KEY-CFG-002 (IP whitelist to VPS IP) -
+        encoded in 0500000 dv1_79 §4 AR-037 line
+        4869.
+  (a-10) CIATS-FEE-004 (Kelly uses net P/L) - encoded
+         in 0500000 dv1_79 §4 AR-065 line 5361.
+  (a-11) CIATS-RL-001 + CIATS-RL-002 (rate counter
+         EWMA monitoring) - encoded in 0500000 dv1_79
+         §2.4 A-1 + D5 architecture line 3925.
+  (a-12) CIATS-REJ-001 + CIATS-REJ-002 (rejection_
+         rate_by_regime EWMA Monitor signal F6) -
+         encoded in 0500000 dv1_79 D5 line 1777 +
+         line 3925 + line 4522 + line 4529.
+
+Bucket (a) count: 12 spec-internal identifier groups.
+These restate 0500000 dv1_79 canonical content.
+
+3.2 BUCKET (b) CODING-UNIQUE.
+
+Content sections with no architectural-element
+meaning; pure code-authoring contracts. Migrate-
+candidates to a preserved AA=10 spec or retain in
+parent AA=04 spec if no AA=10 migration target.
+
+  (b-1) FEE-CALC-001 through FEE-CALC-005: Decimal
+        arithmetic formulas for entry/TP/emergSL fee
+        amounts and net-P/L calculation. Code-
+        authoring contract.
+  (b-2) FEE-CALC-006: Authority precedence (actual
+        fees > calculated fees). Code-authoring
+        contract.
+  (b-3) FEE-BASE-003 + FEE-BASE-004: Order
+        classification rules (entry = maker; TP =
+        maker; emergSL = taker). Code-authoring
+        contract derivable from FEE-BASE-001 + AR-012.
+  (b-4) FEE-BASE-005: Net R:R after-fees calculation
+        worked example. Code-authoring reference.
+  (b-5) FEE-BASE-006: Fee tier advancement auto-
+        detection mechanism. Code-authoring contract
+        implementing CIATS-FEE-003 EWMA divergence
+        rule.
+  (b-6) RL-ARCH-001: Shared rate budget across
+        REST/WS/FIX. External Kraken protocol fact
+        documented in 0400000 §5. Code-authoring
+        binding.
+  (b-7) RL-ARCH-005: Decay formula implementation
+        detail (max(0, counter - 2.34)). Code-
+        authoring contract.
+  (b-8) RL-COST-001 + RL-COST-002 + RL-COST-004 +
+        RL-COST-005 + RL-COST-006 + RL-COST-007:
+        Kraken-defined per-operation rate cost table.
+        External protocol facts forming a wire-
+        contract reference table. Coding-essential.
+        No 0500000 architectural-element binding
+        (these are external facts, not internal
+        architecture).
+  (b-9) RL-MON-002 + RL-MON-003: 80% warning + 95%
+        critical thresholds (CIATS starting values).
+        CIATS-owned coding contract.
+  (b-10) RL-MON-004: Cloudflare 150 reconnects per
+         10-min limit. External Kraken/Cloudflare
+         protocol fact. Code-authoring binding.
+  (b-11) KEY-CFG-003: API keys never in source code.
+         Coding discipline rule.
+  (b-12) KEY-CFG-004: 10,000ms nonce window. Anchored
+         to 0411002 REST-AUTH-004/005. Code-authoring
+         binding.
+  (b-13) KEY-CFG-005 + KEY-CFG-006: Key separation
+         rationale and IP whitelist as independent
+         security layer. Coding context.
+  (b-14) CIATS-FEE-001: Logger fee field Decimal
+         conversion. Code-authoring contract.
+  (b-15) CIATS-FEE-002: Per-trade fee monitoring
+         signal formulas. Code-authoring contract.
+  (b-16) CIATS-FEE-003: Fee tier change EWMA
+         detection (>0.0002 / 50 trades). CIATS-owned
+         coding contract.
+  (b-17) CIATS-RL-003: CIATS does NOT adjust rate-
+         limit parameters. CIATS scope rule.
+  (b-18) CIATS-REJ-003: 30% per regime / 50 evals
+         rejection threshold (CIATS starting value).
+         CIATS-owned coding contract.
+
+Bucket (b) count: 18 coding-unique identifier groups.
+These are code-authoring contracts and external-fact
+protocol references that have no internal-architecture
+encoding in 0500000.
+
+3.3 BUCKET (c) ARCHITECTURAL CONTENT NOT IN DIAGRAMS.
+
+Content sections that ARE architectural-element class
+but NOT currently encoded in 0500000 dv1_79 canonical
+registry or diagrams. Require 0500000 amendment FIRST
+per DD-002 prose-follows-diagram.
+
+  (c-1) param:FEE_MAKER_PCT - CIATS-owned 0.0016
+        starting value (0.16%). Referenced narratively
+        in 0500000 dv1_79 at lines 6390, 6617, 6624,
+        6633, 7099. NOT registered as param: tag in
+        any 0500000 dv1_79 governs block. NOT
+        enumerated in TB00000 v2_45 §9.17 CIATS
+        Parameter Registry. NOT mirrored in 0500000
+        §9 Complete CIATS Parameter Registry.
+        ARCHITECTURAL CHARACTER: this is a CIATS-
+        owned starting value subject to PDCA-driven
+        adjustment per FEE-BASE-006 + CIATS-FEE-003
+        tier-change auto-detection. Same defect class
+        as the param:liquidity_refresh_hours bucket
+        (c) finding closed at TB00311 PHASE 7.
+
+  (c-2) param:FEE_TAKER_PCT - CIATS-owned 0.0026
+        starting value (0.26%). Same gap pattern as
+        (c-1). Referenced narratively in 0500000
+        dv1_79 at lines 6390, 6624-6625, 6633, 7099.
+        NOT registered as param: tag. NOT in TB00000
+        v2_45 §9.17. NOT in 0500000 §9 mirror
+        registry.
+
+  (c-3) param:rl_warning_threshold_pct - CIATS-owned
+        0.80 (80%) starting value per RL-MON-002.
+        NOT registered as param: tag in 0500000
+        dv1_79 or TB00000 v2_45 §9.17. RL-MON-002
+        is the only canonical source. Lower-severity
+        gap (the value drives only logging cadence
+        not capital-bearing decisions).
+
+  (c-4) param:rl_critical_threshold_pct - CIATS-owned
+        0.95 (95%) starting value per RL-MON-003.
+        Same gap pattern as (c-3). RL-MON-003 is the
+        only canonical source. Triggers entry-order
+        suppression (loss-prevention adjacent).
+
+  (c-5) param:fee_tier_divergence_threshold - CIATS-
+        owned 0.0002 (2 basis points) starting value
+        per CIATS-FEE-003. NOT registered as param:
+        tag. Lower-severity gap (drives only tier-
+        change detection latency).
+
+  (c-6) param:fee_tier_divergence_sustained_trades -
+        CIATS-owned 50 trades starting value per
+        CIATS-FEE-003. Same gap pattern as (c-5).
+
+  (c-7) param:rejection_rate_regime_threshold_pct -
+        CIATS-owned 0.30 (30%) starting value per
+        CIATS-REJ-003. NOT registered as param: tag
+        in 0500000 dv1_79 or TB00000 v2_45 §9.17.
+        rejection_rate_by_regime IS encoded as the
+        EWMA Monitor Stream 1 signal F6 in 0500000
+        D5; the THRESHOLD value is the unregistered
+        param.
+
+  (c-8) param:rejection_rate_eval_window_count -
+        CIATS-owned 50 evaluations starting value
+        per CIATS-REJ-003. Same gap pattern as
+        (c-7).
+
+  (c-9) param:cloudflare_reconnect_limit_per_window -
+        Kraken/Cloudflare external fact = 150
+        reconnects per 10-min window per IP per
+        RL-MON-004. External fact; not CIATS-owned.
+        Documented in 0500000 dv1_79 §2.4 narrative
+        (Cloudflare idle / 10-min reference) but NOT
+        bound to an explicit external-fact identifier
+        in registry. CONSIDERATION: this is an
+        external-fact-contract item (parallels
+        Kraken-defined values which exist as ARs in
+        0500000 §4 like AR-030). May not require
+        param: tag — instead may warrant an AR
+        registration. Lower-priority edge case.
+
+Bucket (c) count: 9 candidate findings (7 CIATS-owned
+params + 2 thresholds / 1 external-fact registration
+candidate).
+
+CANONICAL-REGISTRY-MIRROR-GAP CLASSIFICATION.
+Edge cases (c-1) and (c-2) FEE_MAKER_PCT + FEE_TAKER_PCT
+are HIGH-priority because:
+  - They are CIATS-owned values directly anchored to
+    AR-012 + AR-065 + FEE-CALC-001 through FEE-CALC-006
+    governing every Kelly-formula sizing decision and
+    every net-P/L Trade Outcome Bus record.
+  - They are loss-prevention adjacent (under-stated
+    fee values produce optimistic Kelly sizing leading
+    to capital over-commitment).
+  - They mirror the TB00212 §6.3 liquidity_refresh_hours
+    gap pattern that was closed at TB00311 PHASE 7.
+
+Edge cases (c-3) through (c-8) are MEDIUM-priority
+CIATS-owned-threshold gaps that affect monitoring-
+cadence and detection-latency behavior.
+
+Edge case (c-9) is a LOW-priority external-fact-
+registration candidate (alternate path: AR-style
+registration rather than param: registration).
+
+============================================================
+4. FP/DP-DERIVABILITY-TEST LOG
+============================================================
+
+Per TB00000 v2_45 §4.5 DD-011 v2_38 AMENDMENT D FP/DP-
+DERIVABILITY-TEST LOGGING GATE. Four-item log for the
+0411003 disposition decision:
+
+(1) OPTION-SET UNDER CONSIDERATION.
+  Option A: PRESERVE 0411003 at HEAD without retirement.
+  Option B: RETIRE 0411003 with bucket (a) drop + bucket
+    (b) migrate.
+  Option C: RETIRE 0411003 with bucket (a) drop + bucket
+    (b) migrate + bucket (c) PHASE 7 edge-case-closure
+    pre-retirement.
+  Option D: AUDIT-ONLY no-disposition (defer decision
+    indefinitely).
+
+(2) FIRST-PRINCIPLES ANALYSIS.
+
+  GOVERNANCE RULES APPLIED:
+    §4.5 DD-001/DD-002/DD-012 diagrams-canonical and
+      cross-document authority.
+    §4.5 DD-011 v2_38 AMENDMENT D FP/DP-derivability-
+      test gate.
+    §4.3.1 RR-SCOPE-005 derivable-decision execution.
+    §4.3.1 RR-SCOPE-007 self-authored-NSI-source-
+      prohibition.
+    §4.3.1 RR-SCOPE-009 four-question origin
+      investigation for any constraint-removal.
+    §4.3.1 RR-SCOPE-010 verbatim-MDR-citation
+      discipline.
+    §9.10 sacred R:R floor (1:1.5 net minimum) -
+      0411003 §3 fee semantics directly affect Kelly
+      net-P/L compliance.
+    §9.16 parameter philosophy (all values CIATS-owned
+      starting values).
+
+  DEC-012(a-EXTENDED) PRECEDENT:
+    DEC-018 0411001 PRESERVE (TB00308) - wire-contract
+      / external-fact-contract structural character.
+    DEC-019 0411002 PRESERVE (TB00310) - same
+      structural character.
+
+  STRUCTURAL CHARACTER ANALYSIS OF 0411003:
+    0411003 documents Kraken-defined external facts:
+      - Fee tier schedule (Intermediate C-2 / Maker
+        0.16% / Taker 0.26%) — Kraken-defined.
+      - Rate cost schedule (RL-COST-001 to RL-COST-007
+        per-operation rate costs) — Kraken-defined.
+      - Rate counter mechanics (maxratecount / decay
+        2.34/s / 80 max open per pair) — Kraken-
+        defined.
+      - API key permissions and 10000ms nonce window —
+        Kraken-defined.
+      - Cloudflare 150/10min reconnect limit — Kraken/
+        Cloudflare-defined.
+      - Round-trip fee arithmetic and net-P/L
+        formulas — CIATS-internal but derived from
+        Kraken-defined fee schedule.
+
+    The architectural character is WIRE-CONTRACT /
+    EXTERNAL-FACT-CONTRACT — same as 0411001
+    (WS v2 protocol facts) and 0411002 (REST API
+    protocol facts). 0411003 is a SISTER specification
+    in the AA=04 wire-contract family.
+
+    The §3.3 + §6 content does include TothBot-
+    internal CIATS hook contracts, but these are
+    THIN COUPLING LAYERS over the Kraken-defined
+    external facts (CIATS observes Kraken-emitted
+    fee values; CIATS observes Kraken-emitted rate
+    counter values). The architectural-restatement
+    of internal TothBot structures lives in 0500000
+    (AR-012 / AR-013 / AR-030 / AR-037 / AR-065 /
+    A-1 / A-19 / D5 CIATS architecture / D7 paper-
+    mode dispatch boundary). 0411003 itself is the
+    Kraken-side companion that the internal
+    architecture binds to.
+
+  DATA SOURCES CONSULTED:
+    0411003 dv1_0 baseline content (505 lines).
+    0500000 dv1_79 grep-verify for FEE-/RL-/KEY-CFG-/
+      AR-012/AR-013/AR-018/AR-030/AR-037/AR-065/A-1/
+      A-19 references.
+    TB00000 v2_45 §9.17 CIATS Parameter Registry
+      enumeration check for FEE_MAKER_PCT /
+      FEE_TAKER_PCT / RL-* / CIATS-* params.
+    DEC-018 + DEC-019 TB00153 Decision_Register v1_12
+      precedent.
+    TB00207 + TB00210 + TB00211 + TB00212 audit
+      pattern precedents.
+
+(3) ELIMINATION OUTCOMES.
+
+  Option B REJECTED. Retiring 0411003 with bucket (a)
+    drop + bucket (b) migrate would propose to retire
+    a wire-contract / external-fact-contract
+    specification. The same structural character drove
+    DEC-018 and DEC-019 PRESERVE decisions. Retiring
+    0411003 would create asymmetry within the AA=04
+    sub-campaign (two preserves + one retire on
+    structurally-identical specifications). First-
+    principles elimination on structural-character
+    parity.
+
+  Option C REJECTED. Adding bucket (c) PHASE 7 edge-
+    case-closure to a retirement does not change the
+    fundamental REJECT reason for retirement (wire-
+    contract preservation rationale). Bucket (c)
+    findings are independently actionable as canonical-
+    registry mirror amendments REGARDLESS of 0411003
+    disposition. The bucket (c) FEE_MAKER_PCT +
+    FEE_TAKER_PCT gap closure is desirable
+    independently of whether 0411003 is retired or
+    preserved.
+
+  Option D REJECTED. AUDIT-ONLY no-disposition defers
+    the campaign-completion. DEC-012(a-extended) AA=04
+    sub-campaign requires all three audits to reach
+    disposition (DEC-018 PRESERVE + DEC-019 PRESERVE
+    + 0411003 disposition). No-disposition leaves the
+    sub-campaign permanently OPEN.
+
+  Option A ACCEPTED. PRESERVE 0411003 at HEAD per
+    same structural-character pattern that drove
+    DEC-018 + DEC-019. Wire-contract / external-fact-
+    contract specifications are preservation-class
+    under DD-012 cross-document authority hierarchy.
+
+(4) REMAINING OPTIONS.
+
+  Option A (PRESERVE). Single compliant option.
+  DERIVABLE.
+
+DD-011 v2_38 FP/DP-DERIVABILITY-TEST OUTCOME: OUTCOME 1
+- test eliminates down to one compliant option. Decision
+is DERIVABLE. Exception (b) does NOT apply. Disposition
+recommendation EXECUTED under RR-SCOPE-005 derivable-
+decision authority at S-6 closure session (TB00313 or
+subsequent).
+
+============================================================
+5. DISPOSITION SUMMARY
+============================================================
+
+5.1 PRELIMINARY DISPOSITION (S-1 PHASE 1 OUTCOME).
+
+0411003 Kraken_Fee_Rate_Limit_Specification dv1_0:
+  PRESERVE at HEAD.
+
+5.2 CAMPAIGN COMPLETION PROJECTION.
+
+DEC-012(a-extended) AA=04 sub-campaign final
+enumeration at S-6 closure (TB00313 or subsequent):
+  0411001 Kraken_WS_v2_Specification - PRESERVED via
+    DEC-018 (TB00308).
+  0411002 Kraken_REST_API_Specification - PRESERVED
+    via DEC-019 (TB00310).
+  0411003 Kraken_Fee_Rate_Limit_Specification -
+    PRESERVED via DEC-020 (anticipated TB00313 or
+    subsequent).
+
+AA=04 sub-campaign result: 3 of 3 audits complete; 3
+of 3 PRESERVE. AA=04 sub-campaign COMPLETE.
+
+5.3 GOVERNANCE ENTRIES REQUIRED AT S-6 SESSION.
+
+  TB00153 Master_Defect_Register vN -> vN+1:
+    DR-NEW entry documenting 0411003 PRESERVE
+    disposition record + bucket (c) edge-case-closure
+    carry-forward record (parallel to DR-065
+    structure at TB00310).
+
+  TB00153 Decision_Register vN -> vN+1:
+    DEC-NEW entry (anticipated DEC-020 sequential
+    from DEC-019) documenting AA=04 sub-campaign
+    THIRD AUDIT PRESERVE disposition. AA=04
+    enumeration extended from 2-of-3 PRESERVED
+    (DEC-019) to 3-of-3 PRESERVED (DEC-020).
+
+  Bucket (c) PHASE 7 edge-case-closure: AMENDMENT
+    CANDIDATE for next session if Bill selects PHASE
+    7 scope (parallel to TB00311 PHASE 7 closure of
+    TB00212 §6.3 liquidity_refresh_hours).
+
+============================================================
+6. PRE-DISPOSITION GREP-VERIFY RECOMMENDATIONS
+============================================================
+
+The following bucket (c) candidate findings require
+PHASE 2 grep-verify at S-6 closure to confirm OUTCOME I
+(canonical registry gap CONFIRMED) before any 0500000
+amendment is authored.
+
+6.1 BUCKET (c-1) param:FEE_MAKER_PCT.
+  Grep target 1: 0500000 dv1_79 governs blocks (look
+    for "param:FEE_MAKER_PCT" or "param:fee_maker_pct"
+    in any <desc> governs: entry).
+  Grep target 2: 0500000 dv1_79 §9 Complete CIATS
+    Parameter Registry mirror block (look for
+    "FEE_MAKER_PCT" or "fee_maker_pct" inside the
+    §9 prose section).
+  Grep target 3: TB00000 v2_45 §9.17 CIATS Parameter
+    Registry (look for any subsection enumerating fee
+    parameters).
+  Expected outcome: OUTCOME I - ZERO matches on all
+    three targets. Confirms canonical-registry-mirror
+    gap.
+
+6.2 BUCKET (c-2) param:FEE_TAKER_PCT.
+  Same grep targets as 6.1 with "FEE_TAKER_PCT" /
+    "fee_taker_pct" pattern.
+  Expected outcome: OUTCOME I - ZERO matches.
+
+6.3 BUCKET (c-3) through (c-8) CIATS-OWNED THRESHOLDS.
+  Grep targets: TB00000 v2_45 §9.17 + 0500000 dv1_79
+    §9 mirror registry for: rl_warning_threshold_pct,
+    rl_critical_threshold_pct, fee_tier_divergence_
+    threshold, fee_tier_divergence_sustained_trades,
+    rejection_rate_regime_threshold_pct, rejection_
+    rate_eval_window_count (or equivalent
+    canonicalized names).
+  Expected outcome: OUTCOME I - ZERO matches on all
+    six targets.
+
+6.4 BUCKET (c-9) cloudflare_reconnect_limit external-
+    fact.
+  Grep target: 0500000 dv1_79 §4 AR registry for any
+    AR identifier governing Cloudflare 150/10min
+    constraint. Likely registered narratively at line
+    929 or referenced by AR-037 / StartLimitBurst
+    (VPS deployment governance defense pattern).
+  Expected outcome: Likely OUTCOME II - narrative-
+    only coverage exists but no explicit external-
+    fact AR registration. Lower-priority finding.
+
+6.5 NON-BUCKET-(c) STALE CITATION CARRY-FORWARD.
+  0411003 §8 RELATED DOCUMENTS cites "0500000
+    System_Architecture_Overview dv1_17". Current
+    canonical is dv1_79. Surgical-edit candidate at
+    a future 0411003 dv1_0 -> dv1_1 amendment session
+    (Bill discretion; non-blocking on PRESERVE
+    disposition). Parallel to the TB00309 SL §6.7
+    0411002 §7 stale-citation documentation defect
+    that remains a carry-forward through TB00311 SL
+    §10.4.
+
+============================================================
+7. NEXT-SESSION EXECUTION PLAN
+============================================================
+
+7.1 S-6 CLOSURE ACTIONS (TB00313 OR SUBSEQUENT).
+
+The following S-6 governance-closure actions execute at
+the subsequent session (TB00313 or later) per the
+established TB00210/TB00211/TB00212 two-session pattern:
+
+  (a) TB00153 Master_Defect_Register vN -> vN+1:
+      Append DR-NEW entry (anticipated DR-066
+      sequential from DR-065 at TB00310) documenting
+      0411003 PRESERVE disposition + bucket (c) edge-
+      case-closure carry-forward record. Pattern
+      identical to DR-065 (0411002 PRESERVE) structure.
+
+  (b) TB00153 Decision_Register vN -> vN+1:
+      Append DEC-NEW entry (anticipated DEC-020
+      sequential from DEC-019 at TB00310) documenting
+      AA=04 sub-campaign THIRD AUDIT PRESERVE
+      disposition + AA=04 enumeration extension from
+      2-of-3 PRESERVED to 3-of-3 PRESERVED + AA=04
+      sub-campaign COMPLETE notation. Pattern
+      identical to DEC-019 structure.
+
+  (c) PHASE 7 EDGE-CASE-CLOSURE AMENDMENT (optional
+      per Bill direction):
+      0500000 dv1_79 -> dv1_80 + TB00000 v2_46 (or
+      successor) §9.17 amendment authoring per the
+      same pattern as TB00311 PHASE 7 (which closed
+      the TB00212 bucket (c) liquidity_refresh_hours
+      finding). Scope: bucket (c-1) FEE_MAKER_PCT +
+      bucket (c-2) FEE_TAKER_PCT minimum closure;
+      optionally bucket (c-3) through (c-8) CIATS-
+      owned threshold registrations + bucket (c-9)
+      external-fact AR registration.
+
+  (d) ROLLING-WINDOW NSI CARRY-FORWARDS continue per
+      established pattern.
+
+7.2 EXPECTED PROJECT-FOLDER STATE AT TB00313 COLD-LOAD.
+
+  + TB00213 Phase 1 gap register (this deliverable).
+  + TB00000 v2_46 (mid-session amendment at TB00312;
+    adds "do not pause and wait" response rule per
+    Bill TB00312 chat-turn directive).
+  + TB00312 Session_Log v1_0.
+  + TB00313 Next_Session_Instructions v1_0.
+  - TB00310 Session_Log v1_0 (rolling-window expiry).
+  - TB00311 Next_Session_Instructions v1_0 (consumed
+    at TB00312 cold-load).
+  - TB00000 v2_44 (superseded by v2_45 at TB00311 +
+    by v2_46 at TB00312).
+
+7.3 POST-AA=04 SUB-CAMPAIGN NEXT DOMAIN.
+
+DEC-012(a-extended) candidate ordering at TB00313
+close: AA=04 sub-campaign COMPLETE; Bill direction
+required for next sub-campaign target. Candidate
+sub-domains: AA=06 Risk, AA=07 Strategy, AA=11
+Compliance. AA=10 Coding_Specification candidates
+remain for downstream cleanup (parallel campaign).
+
+============================================================
+8. REVISION HISTORY
+============================================================
+
+  v1_0  2026-05-16  Initial Phase 1 gap register for
+                    0411003 Kraken_Fee_Rate_Limit_
+                    Specification dv1_0 under DEC-012
+                    (a-extended) AA=04 sub-campaign
+                    THIRD AUDIT.
+
+                    Authored at TB00312 per TB00312
+                    NSI §1.1 directive + Bill TB00312
+                    chat-turn directive "Proceed with
+                    OCS instructions". Methodology
+                    follows TB00207 + TB00210 + TB00211
+                    + TB00212 pattern precedent for
+                    Phase 1 gap-register authoring.
+
+                    Three-bucket classification result:
+                      Bucket (a) ARCHITECTURAL
+                        RESTATEMENT: 12 spec-internal
+                        identifier groups.
+                      Bucket (b) CODING-UNIQUE: 18
+                        spec-internal identifier
+                        groups.
+                      Bucket (c) ARCHITECTURAL CONTENT
+                        NOT IN DIAGRAMS: 9 candidate
+                        findings (7 CIATS-owned params
+                        + 1 external-fact registration
+                        candidate + 1 stale-citation
+                        non-bucket-(c) carry-forward).
+
+                    Preliminary disposition: PRESERVE
+                    per DD-011 v2_38 FP/DP-derivability-
+                    test OUTCOME 1 single compliant
+                    option. Same structural character
+                    that drove DEC-018 (0411001) +
+                    DEC-019 (0411002) PRESERVE
+                    decisions: wire-contract / external-
+                    fact-contract specification class.
+
+                    S-6 governance entries (DR-NEW +
+                    DEC-NEW anticipated DEC-020) and
+                    PHASE 7 edge-case-closure carry-
+                    forward to TB00313 or subsequent
+                    session per TB00210/TB00211/TB00212
+                    two-session pattern.
+
+============================================================
+END OF GAP REGISTER
+============================================================
