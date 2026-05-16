@@ -1,0 +1,1059 @@
+DocDCN:     TB00210
+DocTitle:   S1SM_DD012_Phase1_Gap_Register_0811005
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00210_S1SM_DD012_Phase1_Gap_Register_0811005_v1_0.txt
+DocDate:    05-15-2026
+DocTime:    23:59:59 UTC
+
+============================================================
+TOTHBOT V2 PHASE 1 GAP REGISTER - 0811005 SHORT MODULE
+SPECIFICATION DV1_3 UNDER DEC-012(a-extended) DD-012 V2_38
+CROSS-DOCUMENT 0500000-CANONICAL-ALL-DOCS RETIREMENT
+CASCADE
+============================================================
+
+============================================================
+1. SESSION SCOPE
+============================================================
+
+1.1 PURPOSE.
+Phase 1 (S-1) coding-readiness gap audit of 0811005
+Short_Module_Specification dv1_3 under DEC-012 6-sub-step
+retirement-cascade methodology with DEC-012(a-extended)
+AA=08 scope (TB00237 AMENDMENT B) and DD-012 v2_38
+0500000-canonical-all-docs cross-document authority
+hierarchy (TB00000 v2_38 / v2_43).
+
+Per the DEC-012(c) three-bucket classification methodology
++ TB00207 §4 + TB00208 §4 + TB00209 §4 precedent:
+  Bucket (a) ARCHITECTURAL RESTATEMENT - content encoded
+    in canonical 0500000 dv1_78 diagrams. Drop with
+    retirement.
+  Bucket (b) CODING-UNIQUE - content with no architectural
+    meaning; pure code-authoring contract. Migrate to a
+    preserved AA=10 spec or retain in a parent AA spec
+    if no AA=10 migration target exists.
+  Bucket (c) ARCHITECTURAL CONTENT NOT IN DIAGRAMS -
+    requires 0500000 amendment FIRST (S-2 diagram
+    amendment) before retirement (S-4) per DD-002
+    prose-follows-diagram.
+
+1.2 CASCADE-TARGET CANDIDATE SELECTION.
+0811005 selected at TB00303 chat-turn 1 under DD-011
+v2_38 FP/DP-derivability-test gate + RR-SCOPE-005
+derivable-decision execution authority. Sole remaining
+DEC-012(a-extended) AA=08 candidate after TB00302
+closure of 0811002. OUTCOME 1 single compliant option.
+DERIVABLE.
+
+DEC-012(a-extended) AA=08 cascade campaign progression
+at TB00210 authoring:
+  0811001 Long_Module_Specification - CLOSED (TB00277
+    cascade; DEC-013).
+  0811002 Selection_Controller_Specification - CLOSED
+    (TB00302 cascade; DEC-015).
+  0811003 Exit_Controller_Specification - CLOSED
+    (TB00277 era).
+  0811004 Entry_Limit_Placement_Specification - CLOSED
+    (TB00280 cascade).
+  0811005 Short_Module_Specification - THIS AUDIT
+    (sole remaining).
+
+1.3 PRIOR PRE-DD-012 AUDIT CONTEXT.
+No prior TB002NN gap register exists for 0811005. The
+TB00200-series Phase 1 gap registers covered the
+0511001/0511002/0511003/0511004/0511005/0511006 AA=05
+parent specs + 0811001 + 0811002 + Risk_Engine + Regime_
+Engine + VPS_Deployment + Long_Module. 0811005 was
+authored at TB00179 (Stage M-2) as a parallel sibling
+to 0811001 under TB00000 v2_29 §9.3 parallel-module
+framework; the document was authored after the bulk of
+the TB00200-series pre-DD-012 audits and was not
+included in that audit wave. This audit is the first
+gap register for 0811005.
+
+1.4 DOCUMENT UNDER AUDIT.
+0811005_Short_Module_Specification_dv1_3.txt
+  Authored: dv1_0 at 05-10-2026 (TB00179); dv1_1 at
+    TB00281 (§7.5 dangling reference resolution);
+    dv1_2 at TB00282 (§7.5 Exit Controller redirect);
+    dv1_3 at TB00282 (§7.5 citation correction
+    dv1_6 -> dv1_7).
+  Status at TB00303 cold-load: AS-AUTHORED through
+    dv1_3 surgical amendments. No structural changes
+    since dv1_0; surgical amendments confined to §7.5
+    cross-reference reconciliation.
+  Section count: 13 (§1 Purpose through §13 Revision
+    History).
+  Identifier sets:
+    SM-001 through SM-030 (30 SM-NNN structural
+      identifiers across §5 Phase 1 + §6 Phase 2).
+    HR-SM-001 through HR-SM-014 (14 hard rules in §8:
+      8 direction-symmetric to HR-LM-001..008 + 6
+      short-specific additions HR-SM-009..014).
+    Log events (14): all short-tagged events in §10.
+    CIATS parameters (11): entry_timeout_sec,
+      mae_mult, emergency_sl_mult, per_trade_size_usd,
+      per_trade_ceiling_pct, leverage_cap_short,
+      rsi_short_low, rsi_short_high,
+      min_order_size_usd, session_pause_drawdown_pct,
+      full_halt_drawdown_pct.
+    Operator-controlled (1): paper_starting_balance_
+      short_usd.
+    Sacred (1): rr_minimum_net (= Long-side; one
+      universal sacred value).
+
+1.5 OUT-OF-SCOPE THIS SESSION.
+  - No diagram amendment authoring (S-2 sub-step).
+  - No 0811005 prose update authoring (S-3 sub-step).
+  - No 0811005 retirement authoring (S-4 sub-step).
+  - No code changes.
+  - No Risk_Engine / Regime_Engine / VPS_Deployment /
+    Startup_Sequence pair audits.
+
+============================================================
+2. CANONICAL DIAGRAM COVERAGE
+============================================================
+
+2.1 PRIMARY DIAGRAM - D2 TRADING PIPELINE.
+0500000 dv1_78 D2 R5 current.
+  Root governs list contains: mod:Short_Module (added
+    R3->R4 per TB00243 AMENDMENT-7 - mod:Short_Module
+    PARALLEL-MODULE GOVERNS-LIST EXTENSION per
+    TB00000 v2_38 §4.5 + §9.3 parallel-module
+    framework).
+  ar:AR-053 (Pending Order Registry; per-module
+    routing - long_pending_orders + short_pending_
+    orders) and ar:AR-054 (Entry partial-fill
+    protection; direction-symmetric emergency-exit
+    handler) added R4->R5 per TB00245 AMENDMENT-9.
+  D2 is the canonical encoding site for the 8-gate
+  TothBot Trading Pipeline. mod:Short_Module is a
+  sibling parallel module to mod:Long_Module per
+  TB00000 v2_38 §9.3.
+
+2.2 PRIMARY DIAGRAM - D4 REGIME TAXONOMY.
+0500000 dv1_78 D4 R3 current.
+  Root governs list contains: rule:HR-REGIME-007
+    amended dv1_1 directional cascade (LONG blocked +
+    SHORT permitted via mod:Short_Module dispatch);
+    ar:AR-009 amended dv1_41 Kraken margin trading;
+    ar:AR-072 SC-GATE-1 variant for short-direction;
+    ar:AR-073 per-side Selection Controller state
+    management.
+  Regime 5 (TRENDING_NEG_NORMAL) + Regime 6
+    (TRENDING_NEG_ELEVATED) cells cite "SHORT
+    permitted via mod:Short_Module" with drill_targets
+    to mod:Short_Module.
+  D4 is the canonical encoding site for the
+  directional-cascade short-side entry trigger.
+
+2.3 PRIMARY DIAGRAM - D7 PAPER-MODE DISPATCH BOUNDARY.
+0500000 dv1_78 D7 R5 current.
+  mod:Short_Module labeled group present as parallel
+    sibling to mod:Long_Module above the seam, with
+    drill_targets cite 0811005_dv1_0_Short_Module_
+    Specification (slated for update at retirement
+    cascade close to remove drill_target reference).
+  Constraints cited inline on mod:Short_Module group:
+    ar:PA-005 (byte-identical above-seam outside
+    PA-004 divergence); ar:AR-009 amended dv1_41
+    (Kraken margin); ar:AR-072 (SC-GATE-1 variant);
+    ar:AR-073 (per-side state); rule:HR-REGIME-007
+    (directional cascade); rule:HR-EE-013 (SM
+    emergency-IOC margin-position close MUST
+    traverse seam); ar:AR-052 (per-wallet drawdown
+    formula + state machine - Short_Module wallet
+    evaluated independently); param:paper_starting_
+    balance_short_usd ($5,000 starting per TB00000
+    v2_38 §9.17); state:NORMAL_per_wallet, state:
+    SESSION_PAUSE_per_wallet, state:FULL_HALT_per_
+    wallet.
+  D7 root governs added rule:HR-EE-014 (NO DIRECT
+    PRIVATE-WS ACCESS) + rule:HR-EE-015 (MODE-OPAQUE
+    CALLER CONTRACT) per TB00247 AMENDMENT-11
+    forming triadic HR-EE-013/014/015 paper-as-master
+    parity family. These rules apply to both mod:Long_
+    Module and mod:Short_Module dispatch paths.
+  R3->R4 R-increment-prior narrative encodes per-
+    wallet drawdown machine encoding per TB00000
+    v2_38 §9.7; mod:Long_Module + mod:Short_Module
+    labeled-group desc bodies extended with per-
+    wallet drawdown constraints.
+
+2.4 PRIMARY DIAGRAM - D5 CIATS DATA FLOW.
+0500000 dv1_78 D5 current.
+  Per-module CIATS framework: Long_Module CIATS owns
+    f_long; Short_Module CIATS owns f_short.
+    contract:Sizing_Curve_Per_Module (CIATS-OWNED
+    PER-MODULE INSTANTIATED function form factor
+    mapping expected R:R to per-trade allocation;
+    Long_Module curve and Short_Module curve held
+    independently per TB00000 v2_38 §9.6 PER-MODULE
+    CIATS FRAMEWORK).
+  rule:HR-CI-002 sole CIATS write destination;
+    rule:HR-CI-009 Half-Kelly applied_pct normalized
+    by max_concurrent before Parameter Store write;
+    rule:HR-CI-011 Bill approval required for all
+    parameter changes.
+  rule:Sacred_R_R_1_to_1_5 (the floor - CIATS MAY
+    NEVER propose curve form factor below the floor)
+    cited in Parameter Store constraints; the floor
+    is universal across all modules per TB00000 v2_38
+    §9.10.
+
+2.5 CANONICAL AR-006 / AR-007 / AR-008 / AR-009 / AR-047
+    / AR-048 / AR-069 (AMENDED DV1_43 - M-2 SHORT-
+    DIRECTION) - DIAGRAM-CANONICAL CONTENT.
+Per 0500000 dv1_78 §4 AR registry:
+  AR-006 amended dv1_43: add_order direction-symmetric
+    (long buy; short sell with margin:true).
+  AR-007 amended dv1_43: TP placement direction-
+    symmetric (long ABOVE entry; short BELOW entry;
+    reduce_only:true on short batch_add).
+  AR-008 amended dv1_43: emergency SL placement
+    direction-symmetric (long BELOW entry; short
+    ABOVE entry; reduce_only:true on short batch_
+    add).
+  AR-009 amended dv1_41: Kraken margin trading
+    capability enabled; AR-013 Kraken Pro
+    Intermediate tier confirmed.
+  AR-047 amended dv1_43: rounding direction-symmetric
+    (long ROUND_DOWN; short ROUND_UP - conservative
+    post_only fill side).
+  AR-048 amended dv1_43: MAE formula direction-
+    symmetric (long: entry - bid; short: ask -
+    entry).
+  AR-069 amended dv1_42 M-2 short-direction: entry-
+    limit-price formula canonical authority - long
+    ROUND_DOWN keeps BUY limit below ask; short
+    ROUND_UP keeps SELL limit above bid.
+
+2.6 CANONICAL AR-072 + AR-073 (AMENDED DV1_43) -
+    DIAGRAM-CANONICAL CONTENT.
+AR-072 amended dv1_43 directional cascade: SC-GATE-1
+  long variant (long SSS PASS) + SC-GATE-1 short
+  variant (short SSS PASS) + SHORT-MODULE PRE-GATE
+  before SC-GATE-1 short: margin_eligible_flag
+  [symbol] == True per pair_cache; Reject:
+  PAIR_NOT_MARGIN_ELIGIBLE.
+AR-073 amended dv1_43 per-side Selection Controller
+  state management + pair_cache margin_eligible_flag:
+    long_exit_cooldown_log, short_exit_cooldown_log
+    long_consecutive_loss_count,
+      short_consecutive_loss_count
+    pair_cache.margin_eligible_flag[symbol]
+
+2.7 CANONICAL AR-052 + AR-053 + AR-054 + HR-EE-013/014/015
+    + HR-REGIME-007 - DIAGRAM-CANONICAL CONTENT.
+AR-052 amended (per-wallet drawdown formula): Long
+  wallet + Short wallet evaluated independently
+  against session_pause_drawdown_pct (5% starting) +
+  full_halt_drawdown_pct (10% starting) per TB00000
+  v2_38 §9.7. A Long_Module halt does NOT halt
+  Short_Module and vice versa.
+AR-053 (per-module Pending Order Registry): tracks
+  per-module capital commitments for dispatched-but-
+  unfilled orders; consumed by Gate 7 USD check.
+  long_pending_orders + short_pending_orders dicts
+  per parallel-module framework.
+AR-054 (Entry partial-fill protection direction-
+  symmetric): exec_type=expired/canceled with
+  cum_qty>0 triggers immediate emergency-exit
+  handler - Long_Module market SELL + Short_Module
+  market BUY reduce_only=true.
+HR-EE-013 paper-live behavioral parity (both modules
+  emergency-IOC traverses WS Manager seam).
+HR-EE-014 NO DIRECT PRIVATE-WS ACCESS (both modules
+  bound).
+HR-EE-015 MODE-OPAQUE CALLER CONTRACT (both modules
+  bound).
+HR-REGIME-007 amended dv1_1 directional cascade
+  (Regime 5 + Regime 6 - LONG blocked + SHORT
+  permitted via mod:Short_Module dispatch).
+
+2.8 CANONICAL §9.17 PARAMETER REGISTRY - PER-MODULE
+    INSTANTIATED.
+TB00000 v2_43 §9.17 (carries forward from v2_29
+enactment + v2_36 + v2_38 expansions) is the
+authoritative parameter registry for all CIATS-owned
+starting values. Per-module instantiation explicit:
+  per_trade_size_usd - Long_Module + Short_Module
+    each get own value.
+  per_trade_ceiling_pct - Long_Module + Short_Module
+    each get own value.
+  rsi_long_low/high + rsi_short_low/high explicitly
+    enumerated per direction.
+  leverage_cap_short = 3x starting Short_Module-only.
+  paper_starting_balance_short_usd = $5,000
+    OPERATOR-CONTROLLED.
+  session_pause_drawdown_pct + full_halt_drawdown_pct
+    per-wallet starting.
+  rr_minimum_net = 1:1.5 SACRED MINIMUM floor
+    universal across all modules.
+
+2.9 PARALLEL-PATTERN CANONICAL ENCODING.
+Per TB00000 v2_38 §9.3 parallel-module framework +
+0500000 dv1_78 §1.3 prose + D7 R3->R4 mod:Short_
+Module + D2 R3->R4 mod:Short_Module + D4 R2->R3
+HR-REGIME-007 directional cascade: Short Module is
+the direction-symmetric parallel sibling of Long
+Module. Most of 0811005 dv1_3 SM-NNN rules restate
+direction-symmetric versions of canonical 0500000
+ARs already encoded in diagram governs lists.
+
+============================================================
+3. ELEMENT-BY-ELEMENT CLASSIFICATION
+============================================================
+
+3.1 §1 PURPOSE prose.
+Restates Short Module as short-side parallel sibling
+of Long Module; direction-symmetric two-phase pattern;
+parallel-module framework reference. Canonical via D2
++ D4 + D7 mod:Short_Module labeled groups + TB00000
+v2_38 §9.3 + 0500000 dv1_78 §1.3.
+BUCKET: (a) ARCHITECTURAL RESTATEMENT.
+
+3.2 §2 GOVERNING DOCUMENTS list.
+Restates parent chain + cross-references including
+0811001 parallel sibling. Canonical via 0311001 v1_18
+§11 namespace governance + D7 drill_targets.
+BUCKET: (a) ARCHITECTURAL RESTATEMENT.
+
+3.3 §3 PARENT CHAIN (0811005 -> 0810000 -> 0800000).
+Canonical via 0311001 v1_18 namespace governance
+sub-domain-anchor inventory rules. 0810000 dv1_4
+verified child-document list includes 0811005.
+BUCKET: (a) ARCHITECTURAL RESTATEMENT.
+
+3.4 §4 WHAT THE SHORT MODULE DOES (Input/Output +
+    direction-symmetric mapping table).
+Canonical via D2 + D7 mod:Short_Module visual + AR-006
+/007/008/047/048/069 amended dv1_43 (direction-
+symmetric formulas) + AR-009 amended dv1_41 (Kraken
+margin) + TB00000 v2_38 §9.3/§9.6/§9.7/§9.10 +
+0500000 dv1_78 §8 AR-069 entry-limit canonical
+authority. The direction-symmetric mapping table is
+informational restatement of canonical AR-006..AR-069
+diagram-governed semantics.
+BUCKET: (a) ARCHITECTURAL RESTATEMENT.
+
+3.5 §5.1 cl_ord_id Assignment (SM-001, SM-002, SM-003,
+    SM-004).
+0811005: cl_ord_id MUST be assigned before add_order
+dispatch; written to Position Mirror at dispatch with
+side="short" tag; "S" suffix for short-side
+disambiguation. Direction-symmetric to LM-001..004.
+Canonical via 0500000 dv1_78 D2 + D7 mod:Short_Module
+governs (cl_ord_id at dispatch is HR-EE-006-class
+constraint) + parallel-module framework v2_38 §9.3.
+BUCKET: (a) ARCHITECTURAL RESTATEMENT (direction-
+symmetric of canonical LM rule).
+
+3.6 §5.2 add_order Construction (SM-005, SM-006,
+    SM-007, SM-008, SM-009, SM-010, SM-011).
+SM-005: short add_order format with side="sell" +
+  margin:true. Direction-symmetric to LM-005 +
+  AR-006 amended dv1_43.
+SM-006: stp_type "cancel_newest" underscore.
+  Identical to HR-LM-002.
+SM-007: deadline now+5s. Identical to LM-007.
+SM-008: post_only true with direction-appropriate
+  cross-the-spread reject condition. Direction-
+  symmetric to LM-008.
+SM-009: time_in_force "gtd"; expire_time = now +
+  entry_timeout_sec (CIATS-owned starting 30-60s).
+SM-010: Decimal(str()) throughout, strings on wire.
+  Identical to LM-010.
+SM-011: Entry limit price formula DEFERS TO AR-069
+  CANONICAL in 0500000 dv1_78 §8 per DD-001/DD-002 +
+  DD-012. Explicit deferral; inline ROUND_UP formula
+  retired at dv1_1 per DD-012.
+
+All seven rules canonical via 0500000 dv1_78 D2 + D7
+governs (AR-006/AR-013/AR-069 amended dv1_43) +
+HR-EE-006 cl_ord_id timing + AR-070 universe scope
+(via Selection Controller upstream).
+BUCKET: (a) ARCHITECTURAL RESTATEMENT (direction-
+symmetric of canonical AR-006/007/047/069 + HR-LM
+rules).
+
+3.7 §5.3 Pending Order Registry (SM-012, SM-013).
+SM-012: margin_required computation with leverage
+  divisor (entry_qty * entry_limit_price * (1 +
+  maker_fee_rate)) / leverage_cap_short. Canonical
+  via AR-053 amended dv1_43 short_pending_orders +
+  AR-073 leverage_cap_short.
+SM-013: WS Manager maintains registry; Short Module
+  populates at dispatch with side="short" tag;
+  shared singleton with side-tag isolation.
+  Canonical via D2 + D6 AR-053 per-module routing.
+BUCKET: (a) ARCHITECTURAL RESTATEMENT (direction-
+symmetric of canonical AR-053 per-module routing).
+
+3.8 §5.4 Entry Order Outcomes (SM-014, SM-015, SM-016,
+    SM-017, SM-018, SM-019).
+All six entry-outcome handlers (filled, partial trade,
+expired/canceled no-fill, expired/canceled partial-
+fill, post_only rejected, accepted on book) are
+direction-symmetric to LM-013..018 with short-tagged
+log events. Canonical via D2 governs + 0500000 dv1_78
+§4 AR registry + parallel-module framework.
+BUCKET: (a) ARCHITECTURAL RESTATEMENT.
+
+3.9 §5.5 Partial Fill Protection (SM-020).
+Emergency cover-buy on exec_type=expired/canceled
+with cum_qty>0 + qty_min/cost_min eligibility check;
+batch_add dispatch on eligible; market BUY (close-
+short cover) on ineligible; Short CIATS Trade
+Outcome Bus fire on PARTIAL_FILL_BELOW_MINIMUM_SHORT.
+Canonical via AR-054 amended dv1_43 direction-
+symmetric emergency-exit handler.
+BUCKET: (a) ARCHITECTURAL RESTATEMENT.
+
+3.10 §6.1 Trigger Condition (SM-021).
+Phase 2 triggers on exec_type=filled ONLY. Identical
+direction-symmetric to LM-020. Canonical via D2 governs.
+BUCKET: (a) ARCHITECTURAL RESTATEMENT.
+
+3.11 §6.2 R:R Computation (SM-022, SM-023, SM-024).
+SM-022: actual fill price (avg_price) for R:R; never
+  limit_price; identical to HR-LM-004.
+SM-023: short R:R formula with sacred 1:1.5 MINIMUM
+  floor (CIATS-exempt at floor; CIATS owns sizing
+  curve above floor per TB00000 v2_38 §9.10 sacred
+  constraint). Inline computation with mae_dist,
+  emergSL_dist, net_loss, net_gain, gross_tp, tp_price
+  (ROUND_DOWN), emergSL_trigger (ROUND_UP).
+SM-024: Decimal arithmetic throughout.
+
+Canonical via rule:Sacred_R_R_1_to_1_5 in D5 governs
++ AR-008/AR-011 amended dv1_43 direction-symmetric +
+AR-047 amended dv1_43 rounding direction-symmetric.
+BUCKET: (a) ARCHITECTURAL RESTATEMENT with inline
+formula content. The formula expansion is restatement;
+canonical authority is AR-008 + AR-011 + AR-047 in
+0500000 §4 + D5/D6 governs.
+
+3.12 §6.3 batch_add Construction (SM-025, SM-026,
+     SM-027, SM-028).
+SM-025: atomic TP + emergSL; no sequential placement.
+SM-026: short batch_add format with side="buy" on
+  both legs + margin:true + reduce_only:true on both
+  legs.
+SM-027: triggers.reference "last" on emergSL leg
+  (never "index" / "mark") per AR-046. Identical to
+  HR-LM-026 + HR-SM-006.
+SM-028: batch_add rate cost = +(n/2) rounded up.
+
+Canonical via AR-007 amended dv1_43 + AR-046 + D2
+governs.
+BUCKET: (a) ARCHITECTURAL RESTATEMENT.
+
+3.13 §6.4 Position Mirror Write (SM-029, SM-030).
+SM-029: PositionRecord structure with side="short"
+  tag + leverage_used + standard fields. Identical
+  schema-wise to LM-028 (per 0511005 dv1_1 §3.3
+  schema-extension) with short-side discriminator
+  side="short".
+SM-030: tp_order_id + emgsl_order_id populated from
+  batch_add ACK. Identical to LM-029.
+
+Canonical via 0511005 dv1_1 Position Mirror parent
+spec field-schema (per TB00302 cascade S-3 (iii)
+verification - all 13 PositionRecord fields verified)
++ AR-002 + AR-052 direction-symmetric.
+BUCKET: (a) ARCHITECTURAL RESTATEMENT (the side="short"
+tag is the discriminator; Position Mirror is shared
+state per AR-052 + 0511005 dv1_1 canonical authority).
+
+3.14 §7.1 INTERFACE - From Risk Engine.
+Receives Gate 8 authorization with short-side params
+including leverage_cap_short + margin_eligible_flag;
+receives Gate 7 SHORT_WALLET_FULL_HALT signal per-
+wallet drawdown halt per TB00000 v2_38 §9.7.
+Canonical via D7 mod:Short_Module constraints +
+AR-052 per-wallet drawdown.
+BUCKET: (a) ARCHITECTURAL RESTATEMENT.
+
+3.15 §7.2 INTERFACE - From WS Manager.
+Receives executions channel events routed by exec_type
++ side tag; pre-computation cache reads (entry_atr_14,
+price_increment, qty_min, cost_min); margin_eligible_
+flag from pair_cache per AR-073.
+Canonical via D6 wire-up + AR-073 amended dv1_43.
+BUCKET: (a) ARCHITECTURAL RESTATEMENT.
+
+3.16 §7.3 INTERFACE - To WS Manager.
+Sends short add_order with margin:true; short batch_
+add with reduce_only:true on both legs; Pending
+Order Registry populate/clear with side="short" tag.
+Canonical via D2 + D6 governs + AR-053 per-module
+routing + AR-007/008 direction-symmetric.
+BUCKET: (a) ARCHITECTURAL RESTATEMENT.
+
+3.17 §7.4 INTERFACE - To Position Mirror.
+Writes side="short"-tagged PositionRecord at dispatch
+and on fill. Canonical via D6 wire-up + 0511005 dv1_1
+parent spec + AR-002.
+BUCKET: (a) ARCHITECTURAL RESTATEMENT.
+
+3.18 §7.5 INTERFACE - To Exit Controller (0511004 +
+     0500000 D5/D6 canonical).
+Position Mirror is shared state; Exit Controller reads
+short positions via side="short" filter and applies
+direction-symmetric exit formulas (Layer 1 signal-
+based, Layer 1 TP, Layer 2 MAE = ask - entry, Layer 3
+emergency SL). No direct inter-module call. Cites
+0511004 dv1_7 (current parent spec) + 0500000 dv1_78
+D5 + D6 (canonical architectural source).
+Canonical via D5 + D6 Exit Controller flow + 0511004
+dv1_7 parent + AR-048 MAE direction-symmetric.
+BUCKET: (a) ARCHITECTURAL RESTATEMENT.
+
+3.19 §7.6 INTERFACE - To Logger.
+All log events including Short CIATS Trade Outcome Bus
+data; Logger routes short trade outcomes to Short
+CIATS pool per TB00000 v2_38 §9.6 per-module CIATS
+framework; cross-module data contamination prohibited.
+Canonical via D5 contract:Sizing_Curve_Per_Module +
+HR-CI-002 + per-module CIATS framework.
+BUCKET: (a) ARCHITECTURAL RESTATEMENT.
+
+3.20 §8 HARD RULES HR-SM-001 through HR-SM-008.
+HR-SM-001: cl_ord_id at dispatch with side tag.
+  Direction-symmetric to HR-LM-001. Canonical via
+  HR-EE-006.
+HR-SM-002: stp_type "cancel_newest" underscore.
+  Identical to HR-LM-002.
+HR-SM-003: batch_add on exec_type=filled only (except
+  AR-054 partial-fill protection). Identical to HR-LM-
+  003.
+HR-SM-004: actual fill price for R:R; never limit_
+  price. Identical to HR-LM-004.
+HR-SM-005: net_gain = net_loss x 1.5 SACRED MINIMUM
+  floor (CIATS may exceed; never below). Identical to
+  HR-LM-005. Canonical via rule:Sacred_R_R_1_to_1_5
+  in D5 governs + TB00000 v2_43 §9.10.
+HR-SM-006: triggers.reference "last" on emergSL.
+  Identical to HR-LM-006. Canonical via AR-046.
+HR-SM-007: Decimal arithmetic throughout. Identical
+  to HR-LM-007.
+HR-SM-008: No Dead Man's Switch. Identical to HR-LM-
+  008. Canonical via AR-055.
+
+All 8 hard rules canonical via D2 governs HR-EE-*
+family + AR-006/007/008/046/055 + Sacred_R_R floor.
+BUCKET: (a) ARCHITECTURAL RESTATEMENT (direction-
+symmetric of canonical HR-LM hard rules + universal
+AR-046/055 + Sacred_R_R floor).
+
+3.21 §8 HARD RULES HR-SM-009 through HR-SM-014
+     (short-specific additions).
+HR-SM-009: margin:true on every short order. Canonical
+  via AR-009 amended dv1_41 Kraken margin trading.
+HR-SM-010: reduce_only:true on both legs of short
+  batch_add. Canonical via AR-007 amended dv1_43
+  (short TP buy and short emergSL buy both close
+  existing short).
+HR-SM-011: margin_eligible_flag gate at Gate 8.
+  Canonical via AR-072 SHORT-MODULE PRE-GATE +
+  AR-073 pair_cache.margin_eligible_flag.
+HR-SM-012: wallet isolation (short_wallet only).
+  Canonical via TB00000 v2_43 §9.3/§9.4 per-module
+  wallets + ar:PA-005 D7 governs.
+HR-SM-013: CIATS instance isolation (Short pool only).
+  Canonical via TB00000 v2_43 §9.6 per-module CIATS
+  framework + D5 contract:Sizing_Curve_Per_Module
+  per-module instantiation.
+HR-SM-014: drawdown halt evaluated against short_
+  wallet only. Canonical via AR-052 per-wallet
+  drawdown + TB00000 v2_43 §9.7 + D7 state:NORMAL/
+  SESSION_PAUSE/FULL_HALT_per_wallet.
+
+All 6 short-specific hard rules canonical via 0500000
+dv1_78 D2 + D7 governs + AR-009/052/072/073 +
+TB00000 v2_43 §9.3/§9.4/§9.6/§9.7.
+BUCKET: (a) ARCHITECTURAL RESTATEMENT (canonical
+authority is 0500000 dv1_78 diagrams + AR registry +
+TB00000 §9 parallel-module framework).
+
+3.22 §9 CIATS PARAMETERS.
+All 11 CIATS-owned starting values + 1 operator-
+controlled + 1 sacred enumerated. Canonical via
+TB00000 v2_43 §9.17 CIATS PARAMETER REGISTRY (per-
+module instantiation explicit).
+BUCKET: (a) ARCHITECTURAL RESTATEMENT. The §9
+enumeration is a restatement of TB00000 §9.17 per-
+module short-side parameter set.
+
+3.23 §10 LOG EVENTS.
+14 short-tagged log events enumerated:
+  ENTRY_ACCEPTED_ON_BOOK_SHORT, ENTRY_FILLED_SHORT,
+  ENTRY_PARTIAL_TRADE_SHORT, ENTRY_EXPIRED_NO_FILL_
+  SHORT, ENTRY_CANCELED_NO_FILL_SHORT, ENTRY_EXPIRED_
+  PARTIAL_FILL_SHORT, ENTRY_CANCELED_PARTIAL_FILL_
+  SHORT, ENTRY_POST_ONLY_REJECTED_SHORT, ENTRY_
+  PARTIAL_FILL_PROTECTED_SHORT, PARTIAL_FILL_BELOW_
+  MINIMUM_SHORT, TP_PLACED_SHORT, EMGSL_PLACED_SHORT,
+  POSITION_OPENED_SHORT.
+
+Per-event semantics direction-symmetric to LM event
+list. Canonical via 0511006 Logger_Specification dv1_3
+event-emission contracts + per-module routing per
+TB00000 v2_43 §9.6.
+
+CLASSIFICATION SPLIT:
+  Direction-symmetric event names with "_SHORT" suffix
+  are restatement of canonical Logger event-emission
+  contract pattern (each event matches a parallel
+  LM_* event with _SHORT suffix and short-tagged
+  routing).
+  BUCKET (a) ARCHITECTURAL RESTATEMENT (majority).
+
+  Architectural question: are the _SHORT-suffixed
+  event names individually registered in 0500000
+  dv1_78 governs lists? Grep verification at S-3 may
+  surface a partial cluster of un-registered _SHORT
+  event identifiers paralleling the long-side cluster
+  C7 in TB00199. If un-registered, those event names
+  fall to BUCKET (b) CODING-UNIQUE - log-event
+  enumeration migrates to 0511006 Logger_Specification
+  dv1_3 §events section OR retains in a residual AA=10
+  spec if no AA=05 migration target exists.
+  TENTATIVE BUCKET: (b) CODING-UNIQUE for
+  un-registered _SHORT event names; carry-forward
+  to S-3 grep-verify resolution.
+
+3.24 §11 FIVE CODING-READINESS QUESTIONS.
+Direct restatement of TB00000 §3.2 five-question
+coding-readiness checklist applied to Short Module
+content. Canonical via TB00000 §3.2 governance.
+BUCKET: (a) ARCHITECTURAL RESTATEMENT.
+
+3.25 §12 RELATED DOCUMENTS.
+Restates parent chain + cross-references including
+0811001 parallel sibling + 0500000 dv1_78 canonical +
+0511003/0511005 + 0411001 + 0611001 + 0711002 +
+TB00000 v2_38 cross-references. Canonical via
+0311001 v1_18 §11 namespace governance.
+BUCKET: (a) ARCHITECTURAL RESTATEMENT.
+
+3.26 §13 REVISION HISTORY.
+Standard revision-history block per 0311003 v1_2
+versioning procedure. Preserved at retirement per
+CI-006 revision-history completeness; retirement-
+history entry added at S-4.
+BUCKET: (a) ARCHITECTURAL RESTATEMENT (retained at
+retirement per 0311003 standing practice).
+
+============================================================
+4. CLASSIFICATION SUMMARY
+============================================================
+
+4.1 BUCKET TOTALS (across 26 classified §1-§13
+    sections covering 30 SM-NNN + 14 HR-SM-NNN
+    identifiers + 14 log events + 12 CIATS params + 1
+    operator + 1 sacred):
+
+  Bucket (a) ARCHITECTURAL RESTATEMENT:
+    25 of 26 sections.
+    All structural §1-§9, §11-§13 sections plus the
+    §10 majority (direction-symmetric event names
+    with _SHORT suffix following canonical LM
+    pattern).
+
+  Bucket (b) CODING-UNIQUE:
+    1 of 26 sections (tentative; §10 partial).
+    §10 _SHORT-suffixed event names un-registered in
+    0500000 dv1_78 governs (grep-verify required at
+    S-3 to confirm cluster scope). Tentative
+    migration target candidate: 0511006 Logger_
+    Specification dv1_3 §events section. If 0511006
+    grep-verify shows the _SHORT events are already
+    enumerated there, this falls back to bucket (a)
+    restatement.
+
+  Bucket (c) ARCHITECTURAL CONTENT NOT IN DIAGRAMS:
+    0 of 26 sections.
+    Zero net-new architectural content. 0811005
+    dv1_3 is direction-symmetric of canonical 0811001
+    + AR registry + TB00000 §9 parallel-module
+    framework. Every architectural element traces to
+    a canonical 0500000 dv1_78 diagram governs
+    binding or to a TB00000 v2_43 §9 framework rule.
+
+4.2 IMPLICATIONS FOR RETIREMENT CASCADE.
+
+(a) Direction-symmetric parallel-pattern architecture
+    means the cascade is structurally simpler than
+    0811001 + 0811002 cascades because Short_Module
+    is encoded as the direction-symmetric sibling of
+    canonical Long_Module content. No net-new
+    architectural authority requires diagram
+    amendment (S-2 NO-OP candidate).
+
+(b) Single tentative coding-unique cluster (§10
+    _SHORT event names) requires grep-verify at S-3
+    to determine final disposition. If 0511006 already
+    enumerates these, S-3 collapses to NO-OP. If not,
+    S-3 PROSE-UPDATE migrates the event list to
+    0511006 dv1_3 -> dv1_4.
+
+(c) Zero bucket (c) findings means no 0500000 dv1_78
+    diagram amendment is required as a retirement
+    pre-requisite. The Short Module architecture is
+    already fully encoded in D2 + D4 + D5 + D6 + D7
+    governs lists and visual elements.
+
+(d) Retirement cascade for 0811005 follows the same
+    6-step methodology applied to 0811001 (TB00277)
+    + 0811002 (TB00302) + 0811003 (TB00277-era) +
+    0811004 (TB00280) precedents:
+      S-1 audit (THIS DELIVERABLE).
+      S-2 diagram amendments (likely NO-OP).
+      S-3 parent-spec gap-fill (likely NO-OP or
+          0511006 dv1_3 -> dv1_4 if cluster
+          confirmed).
+      S-4 0811005 git rm.
+      S-5 0810000 dv1_4 -> dv1_5 anchor revision
+          (remove 0811005 from child-document list).
+      S-6 MDR + DR amendments (DR-NEW retirement
+          entry + DEC-NEW paired top-level entry +
+          DEC-012(a-extended) candidate list closure
+          - 0811005 is sole remaining; cascade
+          campaign complete after this).
+
+============================================================
+5. RECOMMENDED RETIREMENT-CASCADE EXECUTION SEQUENCE
+============================================================
+
+5.1 S-1 (THIS SESSION) - PHASE 1 AUDIT COMPLETE.
+This deliverable. Classification finalized: 25 of 26
+sections bucket (a) + 1 tentative bucket (b) pending
+S-3 grep-verify + 0 bucket (c).
+
+5.2 S-2 DIAGRAM AMENDMENT - NO-OP CANDIDATE.
+Per §4.1.1 bucket (c) = 0, no 0500000 dv1_78 diagram
+amendment is required as retirement pre-requisite.
+
+  DD-011 v2_38 FP/DP-derivability-test outcome:
+  OUTCOME 1 single compliant option DERIVABLE =
+  Option B (NO-OP). Multiple compliant options NOT
+  surviving FP/DP analysis = Option A (amend 0500000)
+  REJECTED because no bucket (c) gap drives an
+  amendment requirement. The amendment would be
+  ungoverned scope creep.
+
+  Recommended S-2 outcome: NO-OP. Surfaced at TB00211
+  (receiving session) chat-turn 1 under DD-011 v2_38
+  derivability-test gate ratification.
+
+5.3 S-3 PARENT-SPEC GAP-FILL - PROSE-UPDATE-A
+    CANDIDATE.
+PROSE-UPDATE-A: §10 _SHORT-suffixed log events
+register at 0511006 Logger_Specification dv1_3
+§events section.
+
+  Pre-condition for PROSE-UPDATE-A authoring:
+  grep-verify 0511006 dv1_3 against the 14 _SHORT
+  event names enumerated in 0811005 §10. Two
+  outcomes:
+
+    OUTCOME I: 0511006 already enumerates these 14
+    events. S-3 collapses to NO-OP. 0811005 §10
+    falls back to bucket (a) restatement.
+
+    OUTCOME II: 0511006 does NOT enumerate one or
+    more _SHORT events. PROSE-UPDATE-A authors
+    0511006 dv1_3 -> dv1_4 §events section addition
+    for the missing event identifiers.
+
+  Recommended sequencing: TB00211 chat-turn 2
+  grep-verify against 0511006 dv1_3 followed by
+  PROSE-UPDATE-A authoring conditional on OUTCOME II.
+
+5.4 S-4 RETIREMENT - 0811005 dv1_3 git rm.
+
+After S-2 NO-OP (Option B) + S-3 NO-OP or PROSE-UPDATE-A
+close, execute:
+  cd C:\Users\wstot\GitHub\TothBot\TothBot_V2-Docs\
+    08XXXXX_Trading_System\
+  git rm 0811005_Short_Module_Specification_dv1_3.txt
+  git commit -m '0811005 dv1_3 retirement per
+    DEC-012 cascade S-4 - TBNNNNN'
+  git push
+
+Per TB00000 v2_43 §4.3.3 RR-SHELL-005/006/007.
+
+5.5 S-5 CASCADE-ANCHOR REVISION - 0810000.
+
+0810000 Trading_System_Modules_Anchor dv1_4 -> dv1_5.
+Remove 0811005 from child-document list per 0311001
+v1_18 §11 sub-domain anchor child-document inventory
+rules. Verify mod:Short_Module canonical authority
+remains transferred to 0500000 D2 + D4 + D7
+mod:Short_Module drill_targets + governs bindings
+per DD-012 cross-document authority hierarchy.
+
+5.6 S-6 GOVERNANCE ENTRIES.
+
+(a) TB00153 Master_Defect_Register vN -> vN+1.
+    Add DR-NEW 0811005 retirement entry (analog to
+    DR-060 for 1011002 + DR-059 for 0811001 + DR
+    for 0811002 added at TB00302).
+
+(b) TB00153 Decision_Register vN -> vN+1. Add
+    DEC-NEW paired top-level decision entry for
+    0811005 retirement (analog to DEC-014 for
+    1011002 + DEC-013 for 0811001 + DEC-015 for
+    0811002 added at TB00302). Update DEC-012(a-
+    extended) candidate list: remove 0811005 from
+    remaining-candidates enumeration. DEC-012(a-
+    extended) AA=08 campaign COMPLETE after this
+    closure.
+
+============================================================
+6. PRE-S4 CHESTERTON'S-FENCE VERIFICATION
+   RECOMMENDATIONS
+============================================================
+
+Per TB00000 v2_43 §4.3.1 RR-SCOPE-009 (Chesterton's-
+fence rule on constraint removal) + TB00207 / TB00208
+/ TB00209 §6 precedent: before executing S-4 (git rm),
+verify each canonical-authority transfer claim with
+grep-verification against current 0500000 dv1_78 +
+parent specs.
+
+6.1 GREP-VERIFY mod:Short_Module drill_target +
+canonical: + governs binding in 0500000 dv1_78.
+  Expected sites:
+    Tier 1 Context drill_targets list (mod:Short_
+      Module + 0811005 reference);
+    D2 R5 root governs (mod:Short_Module token);
+    D4 R3 Regime 5 + Regime 6 drill_targets +
+      Signal Pipeline cell drill_targets;
+    D7 R5 root governs (mod:Short_Module token) +
+      mod:Short_Module labeled group canonical: +
+      drill_targets (0811005_dv1_0_Short_Module_
+      Specification reference - to be removed at
+      retirement cascade close).
+  Verification at S-3/S-4 execution session via
+    bash grep on 0500000_System_Architecture_Overview_
+    dv1_78_Claude_Source.html.
+
+6.2 GREP-VERIFY direction-symmetric AR family binding
+in 0500000 dv1_78:
+  Expected sites: D2 root governs (AR-006/007/008/
+    047/053/054 amended dv1_43); D4 root governs
+    (AR-009/072/073 amended); D7 governs (AR-009/
+    072/073 + HR-EE-013/014/015); 0500000 §4 AR
+    registry entries.
+  Each AR amended dv1_43 form verified as containing
+    direction-symmetric short-side semantics.
+  Verification at S-3/S-4 execution session.
+
+6.3 GREP-VERIFY HR-REGIME-007 amended dv1_1
+directional cascade binding in 0500000 dv1_78 D4 +
+0711002 dv1_1 parent spec.
+  Expected: D4 R2->R3 R-increment narrative + D4
+    root governs (rule:HR-REGIME-007) + 0711002
+    dv1_1 §3 RE-003/004 + §10.
+  Verification at S-3/S-4 execution session.
+
+6.4 GREP-VERIFY AR-052 + per-wallet drawdown machine
+binding in 0500000 dv1_78 D7 (and D5 if applicable).
+  Expected: D7 R3->R4 R-increment narrative + D7 root
+    governs (ar:AR-052 + state:NORMAL_per_wallet +
+    state:SESSION_PAUSE_per_wallet + state:FULL_HALT_
+    per_wallet) + mod:Short_Module + mod:Long_Module
+    labeled-group constraints citing ar:AR-052 per-
+    wallet decomposition.
+  Verification at S-3/S-4 execution session.
+
+6.5 GREP-VERIFY 14 _SHORT-suffixed log event names
+in 0511006 dv1_3 §events section.
+  Expected (per §3.23 + §5.3 PROSE-UPDATE-A
+    conditional): 14 event names enumerated OR a
+    subset enumerated requiring 0511006 dv1_3 ->
+    dv1_4 amendment.
+  Verification at S-3 execution session - drives
+    S-3 NO-OP vs PROSE-UPDATE-A outcome.
+
+6.6 GREP-VERIFY PositionRecord side="short" schema
+support in 0511005 dv1_1 §3.1 / §3.3.
+  Expected: 0511005 dv1_1 §3.3 fees_entry_usd schema-
+    extension + side discriminator field documented
+    + per TB00302 cascade S-3 (iii) verification all
+    13 PositionRecord field-schema items confirmed
+    present.
+  Verification at S-3/S-4 execution session.
+
+6.7 GREP-VERIFY rule:Sacred_R_R_1_to_1_5 binding in
+0500000 dv1_78 D5 governs.
+  Expected: D5 root governs + Parameter Store group
+    constraints citing rule:Sacred_R_R_1_to_1_5 floor.
+  Verification at S-3/S-4 execution session.
+
+OI-NEW-0811005-CASCADE-S3-VERIFICATION-PRE-S4:
+Track pre-S4 Chesterton's-fence verification deliverable
+in the receiving session's NSI as a S-3 sub-task.
+Analog to TB00208 §6.2 OI-NEW-1011002-CASCADE-S3-
+VERIFICATION-PRE-S4 (closed at TB00299 via grep-
+verified HR-WM-* binding) + TB00209 §6 OI-NEW-0811002-
+CASCADE-S3-VERIFICATION-PRE-S4 (closed at TB00301-
+TB00302 via grep-verified per-module SC state-machine
+bindings).
+
+============================================================
+7. NEXT-SESSION EXECUTION PLAN
+============================================================
+
+7.1 TB00211 (receiving session) execution sequence
+- Recommended path A (S-2 NO-OP + S-3 NO-OP):
+
+PHASE 1 - Session-open cleanup list per DR-009.
+PHASE 2 - Deliverable + git-state verification.
+PHASE 3 - DD-011 v2_38 derivability-test gate on S-2:
+  ratify Option B (S-2 NO-OP) per §5.2 single
+  compliant option.
+PHASE 4 - S-2 execution = NO-OP.
+PHASE 5 - 0511006 dv1_3 §events grep-verify for 14
+  _SHORT event names. Two outcomes drive PHASE 6:
+    OUTCOME I (all enumerated): S-3 = NO-OP.
+    OUTCOME II (missing one+): S-3 = PROSE-UPDATE-A
+      authoring (0511006 dv1_3 -> dv1_4).
+PHASE 6 - S-3 execution (NO-OP or PROSE-UPDATE-A).
+PHASE 7 - Session-close 4-operation delivery.
+
+7.2 TB00211+N (subsequent session) execution
+sequence - cascade closure:
+
+PHASE 1 - Pre-S4 Chesterton's-fence verification per
+  §6 above (grep-verify mod:Short_Module + AR family
+  + HR-REGIME-007 + AR-052 + Sacred_R_R + Position
+  Mirror side discriminator bindings).
+PHASE 2 - S-4 git rm 0811005 dv1_3.
+PHASE 3 - S-5 0810000 dv1_4 -> dv1_5 cascade-anchor
+  revision.
+PHASE 4 - S-6 (a) TB00153 MDR vN -> vN+1 DR-NEW
+  0811005 retirement entry.
+PHASE 5 - S-6 (b) TB00153 Decision_Register vN ->
+  vN+1 DEC-NEW paired entry + DEC-012(a-extended)
+  candidate list closure (0811005 was sole remaining;
+  campaign COMPLETE).
+PHASE 6 - Session-close 4-operation delivery.
+
+============================================================
+8. CAMPAIGN-LEVEL FORECAST
+============================================================
+
+DEC-012(a-extended) AA=08 RETIREMENT CASCADE CAMPAIGN
+status at TB00210 authoring:
+
+  0811001 Long_Module_Specification - CLOSED.
+  0811002 Selection_Controller_Specification - CLOSED.
+  0811003 Exit_Controller_Specification - CLOSED.
+  0811004 Entry_Limit_Placement_Specification - CLOSED.
+  0811005 Short_Module_Specification - IN-PROGRESS
+    (this Phase 1 audit; cascade closure projected
+    TB00212 or TB00213 depending on S-3 outcome).
+
+Post-0811005-retirement: DEC-012(a-extended) AA=08
+campaign COMPLETE. All five 08XXXXX instance
+specifications retired; canonical authority transferred
+to 0500000 dv1_78 diagrams + AR registry + TB00000
+§9 parallel-module framework + AA=05 component
+parent specs (0511001..0511006).
+
+Future cascade work post-DEC-012(a-extended)
+completion: separate AA=04 / AA=06 / AA=07 / AA=10
+campaigns governed by TB00153 Decision_Register
+DEC-012 candidate enumeration. AA=10 layer is in
+progress under existing TB00219+ cascade work
+(1011005 / 1011008 / 1011009 / 1011010 / 1011012 /
+1011013 retirements closed; additional candidates
+pending per TB00228 NSI carry-forward).
+
+============================================================
+9. REVISION HISTORY
+============================================================
+
+  v1_0  2026-05-15  TB00303 initial Phase 1 Gap
+                    Register for 0811005 Short_Module_
+                    Specification dv1_3 under DEC-012
+                    (a-extended) DD-012 v2_38 0500000-
+                    canonical-all-docs retirement
+                    cascade.
+
+                    Audit classification: 25 of 26
+                    elements bucket (a) architectural
+                    restatement (direction-symmetric
+                    parallel-pattern of canonical
+                    0811001 + AR-006/007/008/009/047/
+                    048/052/053/054/069/072/073 + HR-
+                    REGIME-007 + HR-EE-013/014/015 +
+                    Sacred_R_R_1_to_1_5 floor + per-
+                    module CIATS framework + per-
+                    wallet drawdown machine); 1
+                    tentative bucket (b) coding-unique
+                    (§10 _SHORT-suffixed log event
+                    names; grep-verify against 0511006
+                    dv1_3 §events section drives S-3
+                    NO-OP vs PROSE-UPDATE-A outcome);
+                    0 bucket (c) architectural-not-in-
+                    diagrams (zero net-new
+                    architectural content; Short_Module
+                    is direction-symmetric sibling of
+                    canonical Long_Module already
+                    encoded in 0500000 dv1_78 D2 + D4
+                    + D5 + D6 + D7 governs).
+
+                    S-2 disposition: NO-OP candidate
+                    (no bucket (c) gap drives diagram
+                    amendment). DD-011 v2_38 FP/DP-
+                    derivability-test outcome: OUTCOME
+                    1 single compliant option =
+                    Option B NO-OP.
+
+                    S-3 disposition: conditional
+                    PROSE-UPDATE-A (0511006 dv1_3 ->
+                    dv1_4 §events section addition)
+                    or NO-OP per grep-verify outcome.
+
+                    Pre-S4 Chesterton's-fence
+                    verification recommendations
+                    enumerated for grep-verify of 7
+                    canonical-authority transfer
+                    sites.
+
+                    DEC-012(a-extended) AA=08
+                    campaign closure projection:
+                    cascade completes at TB00212 or
+                    TB00213 depending on S-3 outcome.
+                    Post-closure: DEC-012(a-extended)
+                    AA=08 campaign COMPLETE; 0811005
+                    is sole remaining candidate.
+
+                    Authored under RR-SCOPE-005
+                    derivable-decision execution
+                    authority + DD-011 v2_38 FP/DP-
+                    derivability-test gate compliance
+                    + RR-SCOPE-007 v2_30 SELF-
+                    AUTHORED-NSI-SOURCE-PROHIBITION
+                    + RR-SCOPE-010 verbatim-MDR-
+                    citation discipline.
+
+                    PARENT CHAIN COMPLIANCE.
+                    TB00210 is a work-product
+                    document under TB00 series gap-
+                    register precedent (TB00207 +
+                    TB00208 + TB00209 form-factor).
+                    No DCN namespace chain
+                    dependencies. Section 9 Revision
+                    History established at v1_0.
+
+============================================================
+END OF TB00210 PHASE 1 GAP REGISTER v1_0
+============================================================
