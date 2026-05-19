@@ -1,0 +1,108 @@
+================================================================================
+TB00362 — Next Session Instructions
+Date: 2026-05-19
+Version: v1_0
+Author: Predecessor session TB00361
+================================================================================
+
+SESSION ID (next): TB00362
+SESSION TYPE: V-041 / V-042 cross-diagram integration validation (sweep-1)
+PREDECESSOR: TB00361 (closed the per-diagram V-040 sweep — 10/10 design-complete)
+
+================================================================================
+1. SESSION OPEN — COLD-LOAD MANIFEST
+================================================================================
+
+Cold-load (read in full, not from memory):
+  - TB00000_TothBot_V2_v2_58 (governance constitution)
+  - 0311001_Diagram_Coding_Discipline_v1_24 (V-041 + V-042 specifications)
+  - 0311002_Diagram_Coding_Workflow_v1_13
+  - 0500000_System_Architecture_Overview_dv1_93_Claude_Source.html (CURRENT — 10/10
+    V-040 design-complete; this is the canonical input for V-041/V-042 validation)
+  - TB00362_Next_Session_Instructions_v1_0.txt (this file)
+  - TB00361_TothBot_V2_Session_Log_2026-05-19_v1_0.txt (predecessor log)
+
+================================================================================
+2. SCOPE — V-041 / V-042 CROSS-DIAGRAM INTEGRATION VALIDATION
+================================================================================
+
+V-040 PER-DIAGRAM SWEEP COMPLETE at TB00361 close. TB00362 advances to:
+
+  V-041 — Cross-diagram consumes/produces binding closure:
+          For each tier-3 component's `consumes:` field across all 10 diagrams,
+          verify that some upstream tier-3 component (in this or another diagram)
+          has the consumed token in its `produces:` field. Conversely for each
+          `produces:` field, verify at least one downstream consumer exists.
+          FAIL closure: any unbound consume/produce pair flagged for amendment.
+
+  V-042 — Event-stream cross-diagram coherence:
+          For each q5_logs `evt:` token, verify the event is emitted exactly once
+          in the canonical pipeline and that its downstream consumers (logger,
+          telemetry, halt logic) are bound in some tier-3 component elsewhere.
+
+================================================================================
+3. EXECUTION PLAN — SUGGESTED SEQUENCING
+================================================================================
+
+Path A (DEC-003 cadence): one validation pass per session.
+
+  TB00362  -> V-041 sweep across 10 diagrams; FAIL list emitted with proposed
+              ADD-only amendments for each.
+  TB00363  -> V-042 sweep; FAIL list emitted.
+  TB00364+ -> Execute amendments per FAIL list (one diagram per session per Path A),
+              or batch into a single dv1_94 amendment if utilization budget permits.
+
+================================================================================
+4. CHAT-TURN-1 GATE (DD-011 v2_56) — PRE-FLIGHT
+================================================================================
+
+Predicted OUTCOME enumeration at TB00362 chat-turn 1:
+  - 1 compliant option = run V-041 sweep across all 10 diagrams (read-only audit,
+    no source amendment; produces FAIL list as session deliverable).
+  - 0 ambiguous alternatives.
+
+Cumulative DD-011 violation count at TB00361 close: 17 (no increment expected at
+TB00362 open).
+
+================================================================================
+5. DR-009 SESSION-OPEN CLEANUP-LIST (TO EMIT AT TB00362 CHAT-TURN 1)
+================================================================================
+
+Mandatory:
+  - TB00361_Next_Session_Instructions_v1_0.txt (this file — consumed at TB00362 open)
+    [Note: filename above is TB00362 because this IS the TB00362 NSI; the file to
+     remove at TB00362 open is the predecessor NSI which would be this very file
+     once TB00362 begins. Predecessor session TB00361 consumed TB00361_NSI_v1_0.txt
+     at its own open.]
+
+Optional (visible-stack 3-deep + stale-source hygiene):
+  - 0500000_System_Architecture_Overview_dv1_92_Claude_Source.html (stale; superseded
+    by dv1_93)
+  - TB00358_TothBot_V2_Session_Log_2026-05-19_v1_0.txt (outside 3-deep rolling window
+    after TB00361 close)
+  - TB00359_TothBot_V2_Session_Log_2026-05-19_v1_0.txt (outside 3-deep rolling window
+    after TB00361 close)
+
+================================================================================
+6. GOVERNANCE FRAME (carried forward unchanged)
+================================================================================
+
+TB00000 v2_58 §4.5 DD-014 + 0311001 v1_24 §15.16 V-040 (design-complete) + §15.17
+V-041 (cross-diagram bindings) + §15.18 V-042 (event coherence) + DD-011 v2_56
+CHAT-TURN-1 GATE + CI-005 + CI-006 visible-stack 3-deep rolling + RR-SCOPE-001..010
+ADD-only + RR-SHELL-005..010 + DR-007.9 well-formedness + DR-008.6 four-operation
+session-close + DR-009 session-open cleanup-list execution + DEC-003 Path A.
+
+================================================================================
+7. SUCCESS CRITERIA AT TB00362 CLOSE
+================================================================================
+
+  [REQ]  V-041 FAIL list produced and saved as TB00362 deliverable.
+  [REQ]  For each FAIL, proposed ADD-only amendment specified (target diagram,
+         target component, exact token to ADD, source binding).
+  [REQ]  Zero modifications to 0500000 source document (audit-only session).
+  [REQ]  DR-008.6 four-operation session close emitted in single terminal response.
+
+================================================================================
+END TB00362 NEXT SESSION INSTRUCTIONS v1_0
+================================================================================
