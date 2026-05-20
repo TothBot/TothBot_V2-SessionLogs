@@ -1,0 +1,207 @@
+================================================================================
+TB00370 V-041 P-CP10 AMENDMENT LOG
+Session: TB00370
+Date: 2026-05-20
+Mission: V-041 P-CP10 PRODUCES-FIELD MOD-TOKEN-TYPE-MISMATCH FIX
+Target: 0500000 D6 Complete System (R11 → R12)
+File: 0500000_System_Architecture_Overview_dv1_98 → dv1_99
+================================================================================
+
+§1. SOURCE AUTHORITY
+--------------------
+TB00362 V-041 FAIL List v1_0 §4 P-CP10 (Bill-ratified audit register).
+TB00000 v2_58 §4.5 governance (Bill-ratified).
+Bill TB00370 OCS preamble (Bill-direct).
+Bill TB00370 chat-turn ratifications (Bill-direct):
+  - Option B extended scope (10-token full-closure).
+  - Option 1 minimum scope R-state markers (figcaption deferred to TB00371).
+
+§2. FP/DP-DERIVABILITY-TEST (chat-turn 1)
+-----------------------------------------
+Per DD-011 v2_56 CHAT-TURN-1 GATE.
+
+Option-set enumerated:
+  A: Strict-FAIL-list 6-token partial-closure (only the mod: tokens
+     explicitly enumerated on TB00362 §4 P-CP10 FAIL list).
+  B: Extended 10-token full-closure of 3 D6 producer-site produces
+     fields (remove ALL mod: tokens at the 3 amended sites).
+
+Discriminating criterion:
+  "Least errors and rework toward diagrams-canonical-authoritative-complete
+   with prose-driven-error-class elimination."
+
+Discriminator analysis:
+  Option A leaves residual mod: tokens at the 3 amended sites that would
+  require a follow-up amendment in a future session (rework cost) and
+  enshrines the schema-type-mismatch class partially. Option B closes the
+  entire class at the 3 amended sites in one pass, eliminating the
+  prose-driven error class per Bill TB00364 close-turn directive.
+
+OUTCOME: OUTCOME 1 single-compliant-option Option B.
+
+Bill TB00370 chat-turn ratification: Option B confirmed.
+
+§3. AMENDMENT SITES (3 sites; 10 mod: token-instances removed)
+---------------------------------------------------------------
+
+SITE 1 — L4907 mod:Position_Mirror.produces
+  Producer node: mod:Position_Mirror (D6 sole-writer per rule:HR-PM-009).
+  Schema field:  .produces (data-flow-token field per 0311001 v1_24 §15.12).
+
+  BEFORE:
+    produces: position state for mod:Exit_Controller, mod:Signal_Pipeline,
+              mod:Risk_Engine, mod:Logger consumption (READ-ONLY via
+              WSManager helper methods)
+
+  AFTER:
+    produces: position state (READ-ONLY via WSManager helper methods per
+              rule:HR-PM-009 sole-writer contract; consumers see consumer-
+              side consumes fields)
+
+  REMOVED mod: token-instances (4): mod:Exit_Controller, mod:Signal_Pipeline,
+                                    mod:Risk_Engine, mod:Logger.
+
+  PRESERVED: data-descriptor "position state" + READ-ONLY access pattern +
+             WSManager-helper-method reference + rule:HR-PM-009 sole-writer
+             contract reference.
+
+  CONSUMER-BINDING TRACE PRESERVED at D6 consumer sites:
+    - mod:Exit_Controller.consumes — references position state via
+      mod:Position_Mirror per HR-PM-009.
+    - mod:Signal_Pipeline.consumes — references position state via
+      WSManager helper methods per HR-PM-009.
+    - mod:Risk_Engine.consumes — references position state via
+      mod:Position_Mirror per HR-PM-009.
+    - mod:Logger.consumes — comprehensive evt:* delivery system trace.
+
+SITE 2 — L4992 contract:Parameter_Store_Snapshot.produces
+  Producer node: contract:Parameter_Store_Snapshot (D6 contract node).
+  Schema field:  .produces (data-flow-token field per 0311001 v1_24 §15.12).
+
+  BEFORE:
+    produces: parameter values consumed by mod:Signal_Pipeline (gate logic),
+              mod:Risk_Engine, mod:Exit_Controller
+
+  AFTER:
+    produces: parameter values (per-tick snapshot read via
+              contract:Parameter_Store_Snapshot; consumers see consumer-
+              side consumes fields)
+
+  REMOVED mod: token-instances (3): mod:Signal_Pipeline, mod:Risk_Engine,
+                                    mod:Exit_Controller.
+
+  PRESERVED: data-descriptor "parameter values" + per-tick snapshot access
+             pattern + contract:Parameter_Store_Snapshot self-reference.
+
+  CONSUMER-BINDING TRACE PRESERVED at D6 consumer sites:
+    - mod:Signal_Pipeline.consumes — references contract:Parameter_Store_
+      Snapshot for gate logic.
+    - mod:Risk_Engine.consumes — references parameter values.
+    - mod:Exit_Controller.consumes — references Parameter_Store_Snapshot read.
+
+SITE 3 — L5038 contract:CIATS_Trade_Outcome_Bus.produces
+  Producer node: contract:CIATS_Trade_Outcome_Bus (D6 contract node).
+  Schema field:  .produces (data-flow-token field per 0311001 v1_24 §15.12).
+
+  BEFORE:
+    produces: trade outcome records consumed by mod:CIATS_Statistical_Engine,
+              mod:CIATS_PDCA_Engine, mod:CIATS_Regime_Library
+
+  AFTER:
+    produces: trade outcome records (23-field canonical schema per
+              schema_fields below; consumers see consumer-side consumes fields)
+
+  REMOVED mod: token-instances (3): mod:CIATS_Statistical_Engine,
+                                    mod:CIATS_PDCA_Engine,
+                                    mod:CIATS_Regime_Library.
+
+  PRESERVED: data-descriptor "trade outcome records" + 23-field canonical
+             schema cross-reference.
+
+  CONSUMER-BINDING TRACE PRESERVED at D6 consumer sites:
+    - mod:CIATS_Statistical_Engine.consumes — references contract:CIATS_
+      Trade_Outcome_Bus.
+    - mod:CIATS_PDCA_Engine.consumes — references statistical summaries
+      from Statistical_Engine via Bus.q4_triggers.
+    - mod:CIATS_Regime_Library.consumes — references contract:CIATS_
+      Trade_Outcome_Bus.
+
+§4. TOTAL AMENDMENT FOOTPRINT
+-----------------------------
+  Sites amended:                3
+  mod: token-instances removed: 10
+  New tokens introduced:        0
+  Tokens added at producer side: 0
+  Data-descriptors preserved:   3 (at field head, byte-identical)
+  Access-rule references preserved: 3 (HR-PM-009 + Parameter_Store_Snapshot
+                                       + 23-field canonical schema)
+  SVG geometry change:          0 (BYTE-IDENTICAL)
+  viewBox change:               0 (1500x1500 preserved)
+  Other figures touched:        0 (D6 only; 9 other figures BYTE-IDENTICAL)
+
+§5. V-040 DESIGN-COMPLETENESS IMPACT
+-------------------------------------
+V-040 design-completeness 10/10 PRESERVED across all 10 figures — no per-
+component q1/q2/q3/q4/q5 cell regression.
+
+Specifically on the 3 amended D6 sites:
+  Q1 (.produces): PASS (data-descriptor head + access-rule reference remain
+                  as canonical Q1 data-flow-token-field-equivalent for
+                  contract/sole-writer producer nodes).
+  Q2 (.consumes): N/A (producer-side amendment; .consumes unchanged).
+  Q3 (.constraints): PASS (byte-identical).
+  Q4 (.q4_triggers): PASS (byte-identical).
+  Q5 (.q5_logs): PASS (byte-identical).
+
+REMOVE-only .produces type-mismatch edit cannot regress design-completeness.
+
+§6. R-STATE BUMP (Option 1 minimum-scope per Bill ratification)
+---------------------------------------------------------------
+D6 R-state bumped R11 → R12 at:
+  L4654 SVG <title>:               Image6_T2_R11 → Image6_T2_R12
+  L4656 diagram_canonical (head):  Image6_T2_R11 → Image6_T2_R12
+  L4734 diagram_canonical body:    Image6_T2_R11 → Image6_T2_R12 + amendment
+                                   summary appended
+  L4661 root <desc> R-increment chain: NEW R11 → R12 inserted; chain rotated
+                                   per CI-005 + CI-006 visible-stack 3-deep.
+
+D6 R-state NOT bumped (Option 1 minimum-scope; carry-forward to TB00371):
+  L5266 figcaption visible header text "Diagram 6 — Complete System (R9)"
+        remains at displayed "R9" per Bill TB00370 chat-turn ratification.
+
+§7. FILE REV BUMP
+-----------------
+dv1_98 → dv1_99 at:
+  L6    HTML <title>:        dv1_98 → dv1_99
+  L135  dc-meta DocVersion:  dv1_98 → dv1_99
+  L137  dc-meta DocPath:     dv1_98 → dv1_99
+  L139  dc-meta DocTime:     14:30:00 UTC → 15:30:00 UTC
+  L8428 §14 Revision History: NEW dv1_99 entry inserted above dv1_98 entry.
+
+§8. GOVERNANCE BINDINGS APPLIED
+-------------------------------
+TB00000 v2_58 §4.5 DD-001 + DD-002 + DD-014; RR-SCOPE-001 (absolute-scope
+— Bill Option 1 ratification); RR-SCOPE-005 (derivable-decision execution
+authority); RR-SCOPE-007 v2_30; RR-SCOPE-011 (single-primary-mission);
+RR-SHELL-001..010 v2_58; DR-008.6 v2_41 (four-operation session-close);
+DD-011 v2_56 CHAT-TURN-1 GATE + OUTCOME 1 EXECUTION MANDATORY clause;
+CI-005/CI-006 (visible-stack 3-deep R-chain rolling policy); 0311001 v1_24
+§15.12 (schema field semantics).
+
+§9. VERIFICATION
+----------------
+Post-amendment grep verification:
+  grep "produces:.*mod:.*,.*mod:" 0500000_dv1_99 returns:
+    - L4426 D5 prose-form "fed to mod:..." parenthetical (OUT OF SCOPE —
+      D5 prose-form, different class).
+    - L5154 D6 mod:CIATS_Parameter_Store standalone slash-separated mod-
+      token class (OUT OF SCOPE per TB00362 §4 P-CP10 FAIL list; flagged
+      as TB00371 forward-review candidate per same schema-type-mismatch
+      class but different delimiter).
+
+All 3 P-CP10 FAIL-list-enumerated sites confirmed amended per Option B
+extended scope. No residual mod: tokens at the 3 amended produces fields.
+
+================================================================================
+END TB00370 V-041 P-CP10 AMENDMENT LOG
+================================================================================
