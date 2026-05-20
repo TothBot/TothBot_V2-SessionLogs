@@ -1,0 +1,381 @@
+DocDCN:     TB00373
+DocTitle:   TothBot_V2_Session_Log
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00373_TothBot_V2_Session_Log_2026-05-20_v1_0.txt
+DocDate:    05-20-2026
+DocTime:    23:59:00 UTC
+
+============================================================
+TB00373 TOTHBOT V2 SESSION LOG 2026-05-20
+============================================================
+
+============================================================
+1. SESSION IDENTIFICATION
+============================================================
+
+Session number:    TB00373
+Project:           TothBot_V2
+Date:              05-20-2026
+Prior session:     TB00372 (decision-capture + close;
+                            no 0500000 amendment)
+Next session:      TB00374 (FP/DP analysis to determine
+                            correct path forward per
+                            Bill explicit close directive)
+
+Session type:      Stuck-point session. Mission pivoted
+                   from D6 V-041 + V-042 Class A
+                   amendment execution to documentation-
+                   and-close after Bill explicit
+                   directive following scope-
+                   clarification stuck point + QB-001
+                   violation correction.
+
+============================================================
+2. PRIMARY MISSION (ATTEMPTED)
+============================================================
+
+ATTEMPTED: D6 V-041 + V-042 Class A Token-Canonicalization
+amendment cycle on 0500000 dv1_100 -> dv1_101 (D6 R12 ->
+R13).
+
+OUTCOME: NOT EXECUTED. Session ended per Bill explicit
+directive before any 0500000 amendment was authored.
+
+Bill verbatim close directive (final chat-turn):
+"End the session documenting everything you have done so
+far so it is not lost and produce end of session documents.
+In the next session do a FP/DP analysis to determine the
+correct path forward that will produce the least errors
+and rework, and move us towards our mission, even if it
+is not one of the options listed... It seems like we are
+stuck. Take smaller bites and don't run the sessions so
+long. You get stupid and begin making numerous mistakes.
+Do whatever is necessary to fix the problem, move the
+project forward to the next phase, and successfully meet
+the mission."
+
+Bill verbatim mission reminder (same chat-turn):
+"REMEMBER THE MISSION: Produce 0500000 diagrams that show
+all interfaces, gates, and information flows, etc. so
+coding can proceed coherently without drift. The diagrams
+ARE the design source. The 0500000 diagrams ARE canonical
+and authoritative. The prose FOLLOW the diagrams.
+Eliminate the prose-driven error class."
+
+============================================================
+3. WORK PRODUCT — TB00373 CHAT-TURN-1 D6 IMAGE6
+   CLASS A SITE ENUMERATION (PRESERVED)
+============================================================
+
+Chat-turn 1 produced a live-document audit identifying
+all D6 Image6 V-041 + V-042 Class A sites. Captured here
+so the audit work is not lost.
+
+3.1 V-042 CLASS A — 1 SITE
+
+[A-P] Image6 :: mod:Exit_Controller .produces — embedded
+      evt:TRADE_CLOSE
+      Prose fragment: "cancel_order + batch_cancel + market
+      sell add_order instructions to mod:WS_Manager (per
+      0511004 dv1_3 §7.2); position clear instructions
+      executed via WSManager..."
+      Source: TB00363 V-042 FAIL List v1_0 §8(iii).
+
+3.2 V-041 CLASS A FAIL-C-A — 7 dv1_93-BASELINE D6
+    CONSUMER SITES
+
+[A-C-1] Image6::mod:CIATS_Proposal_Engine.consumes
+        "PDCA recommendations from mod:CIATS_PDCA_Engine;
+        statistical summaries from
+        mod:CIATS_Statistical_Engine"
+[A-C-2] Image6::mod:CIATS_Parameter_Store.consumes
+        "approved proposals from mod:CIATS_Proposal_Engine"
+[A-C-3] Image6::mod:Logger.consumes
+        "every event/decision from every TothBot module"
+        — LIVE-VERIFIED ALREADY CANONICAL AT dv1_100
+        (canonical CSV: evt:ENTRY_SUBMITTED,
+        evt:ENTRY_FILLED, evt:TRADE_CLOSE,
+        evt:PAPER_LEDGER_UPDATED, evt:PAPER_DISPATCH_
+        BLOCKED, evt:WS_RECONNECT, evt:SUBSCRIBE_PACE_WAIT,
+        evt:SUBSCRIBE_PACE_BATCH_COMPLETE, evt:PAIR_DATA_
+        PENDING, evt:PAIR_DATA_READY_RECOVERED).
+        STATUS: NOT A REWRITE TARGET.
+[A-C-4] Image6::rule:Sacred_R_R_1_to_1_5.consumes "none"
+[A-C-5] Image6::contract:Parameter_Store_Snapshot.consumes
+        "parameter values from CIATS-side
+        mod:CIATS_Parameter_Store"
+[A-C-6a] Image6::mod:Exit_Controller.consumes
+         "position state"
+[A-C-6b] Image6::mod:Risk_Engine.consumes "position state"
+[A-C-7] Image6::mod:CIATS_PDCA_Engine.consumes
+        "statistical summaries from
+        mod:CIATS_Statistical_Engine"
+
+3.3 V-041 CLASS A FAIL-P-A — 12 dv1_93-BASELINE D6
+    PRODUCER SITES
+
+[A-P-1]  Image6::mod:WS_Manager.produces
+         "Position Mirror state writes"
+[A-P-2]  Image6::mod:WS_Manager.produces
+         "Selection Controller exit_cooldown_log +
+         consecutive_loss_count updates"
+[A-P-3]  Image6::mod:Exit_Controller.produces
+         (=V-042 [A-P] above; counted once)
+[A-P-4]  Image6::contract:Parameter_Store_Snapshot.produces
+         "parameter values consumed by
+         mod:Signal_Pipeline"
+[A-P-5]  Image6::mod:CIATS_Parameter_Store.produces
+         "parameter values readable via
+         contract:Parameter_Store_Snapshot by
+         TothBot-side mod:Signal_Pipeline /
+         mod:Risk_Engine / mod:Exit_Controller"
+[A-P-6]  Image6::mod:CIATS_Proposal_Engine.produces
+         "parameter-change proposals queued for
+         mod:CIATS_Parameter_Store write at inter-trade
+         boundary"
+[A-P-7]  Image6::mod:CIATS_Regime_Library.produces
+         "per-regime parameter optimizations consumed
+         by mod:CIATS_Proposal_Engine"
+[A-P-8]  Image6::mod:Position_Mirror.produces
+         "position state for mod:Exit_Controller"
+[A-P-9]  Image6::mod:CIATS_EWMA_Monitor.produces
+         "rejection_rate / rate_counter /
+         ws_roundtrip_latency monitoring signals"
+[A-P-10] Image6::mod:Risk_Engine.produces
+         "sizer outputs to mod:Signal_Pipeline gate:G8;
+         halt signals to mod:Signal_Pipeline gate:G7"
+[A-P-11] Image6::mod:CIATS_Statistical_Engine.produces
+         "statistical summaries consumed by
+         mod:CIATS_PDCA_Engine + mod:CIATS_Proposal_Engine"
+[A-P-12] Image6::contract:CIATS_Trade_Outcome_Bus.produces
+         "trade outcome records consumed by
+         mod:CIATS_Statistical_Engine"
+
+3.4 LIVE-DOCUMENT DRIFT CAVEAT
+
+TB00362 v1_1 baseline = dv1_93. Current 0500000 source =
+dv1_100. 7 amendment sessions (TB00364-TB00370) closed
+multiple Class A sites that were on the dv1_93 audit
+list. P-CP10 D6 v1_0 sites CLOSED at TB00370
+(Position_Mirror L4907 + contract:Parameter_Store_Snapshot
+L4992 + contract:CIATS_Trade_Outcome_Bus L5038 -- 10 mod:
+tokens removed). [A-C-3] mod:Logger.consumes is confirmed
+already canonical at dv1_100. Other 18 enumerated sites
+require per-site live-content verification at TB00374
+authoring time before any REWRITE is applied; the dv1_93
+prose fragments may have been amended in interim sessions.
+
+3.5 TOTAL FIELD-EDIT SITE COUNT AT dv1_93 BASELINE
+
+Unique D6 components: 13.
+Total field-edit sites: ~19 (live-verified count will be
+lower per §3.4 drift caveat).
+
+============================================================
+4. SCOPE-CLARIFICATION STUCK POINT
+============================================================
+
+After §3 enumeration, Claude surfaced two scope questions
+to Bill (TB00373 chat-turn 2):
+
+  Q1 -- TB00373 D6 amendment scope:
+        (a) Full D6 subset (~19 sites, live-verified)
+        (b) V-042 Class A only (1 site)
+        (c) V-042 Class A + confirmed-prose V-041 subset
+        (d) Defer -- Claude FP/DP decides
+  Q2 -- Output delivery method:
+        (a) Surgical str_replace pairs (pre->post per site)
+        (b) Per-component <desc> block replacements
+        (c) Single consolidated amendment instruction set
+        (d) Defer -- Claude decides
+
+REASON QUESTIONS POSED (PER COMPACTION-PERSISTED
+REASONING):
+  (1) TB00371 precedent = 1 component / 1 field / 2
+      tokens. TB00373 OCS scope potentially 13 components
+      / ~19 fields -- order-of-magnitude expansion vs
+      validated precedent.
+  (2) dv1_93 -> dv1_100 drift = substantial; some sites
+      already closed.
+  (3) Per-edit failure risk is independent; 19 edits has
+      materially higher cumulative failure risk.
+  (4) OCS unambiguous: "count TBD; derive from TB00362
+      v1_1 §5". RR-SCOPE-005 + DD-011 v2_56 OUTCOME 1
+      EXECUTION MANDATORY does not authorize Claude to
+      scope-narrow on loss-prevention grounds without
+      Bill input.
+
+Bill chat-turn 3 correction: "do not use the question
+box. put the questions in the chat." Claude re-posed
+the same questions in chat prose (correct format per
+§4.7 QB-005 single permitted pattern: prose option list
++ prose closing prompt). See §8 below for the QB-001
+recurrence-count increment.
+
+Bill chat-turn 4 final directive: end session and produce
+documents; next-session primary mission = FP/DP analysis
+to determine correct path forward.
+
+NEITHER Q1 NOR Q2 WAS RATIFIED. Both questions are
+SUPERSEDED by the Bill end-session directive directing
+next-session FP/DP analysis to choose the path forward
+"even if it is not one of the options listed."
+
+============================================================
+5. DELIVERABLES THIS SESSION
+============================================================
+
+  TB00373 Session Log v1_0 (this document).
+  TB00374 Next Session Instructions v1_0.
+
+NOT AUTHORED THIS SESSION:
+  - 0500000 dv1_100 unchanged. D6 R12 unchanged.
+  - No MDR amendment.
+  - No DR amendment.
+  - No TB00362 / TB00363 amendment.
+  - No 0311001 / 0311002 / TB00000 amendment.
+
+============================================================
+6. DECISIONS THIS SESSION
+============================================================
+
+None ratified.
+
+Bill explicit directive captured (next-session primary
+mission) per §2 above and §3.1 of TB00374 NSI.
+
+============================================================
+7. STATE — 0500000 R-STATE UNCHANGED
+============================================================
+
+D1 R10. D2 R12. D3 R5. D4 R9. D5 R12. D6 R12. D7 R10.
+D8 R11. D9 R6. T1 R23. T3 R6 (and per-zoom).
+
+0500000 source-of-truth: dv1_100. Unchanged at TB00373
+close.
+
+V-040 design-completeness: 10/10 PRESERVED.
+
+============================================================
+8. CLAUDE ERRORS THIS SESSION
+============================================================
+
+8.1 QB-001 VIOLATION
+
+Rule cited: §4.7 QB-001 ASK_USER_INPUT_V0 AND ANY
+QUESTION-BOX-RENDERING TOOL IS PROHIBITED.
+
+Defect described verbatim: At TB00373 chat-turn 2 after
+rendering the D6 Image6 Class A site enumeration, Claude
+invoked the ask_user_input_v0 tool to surface Q1 (scope)
++ Q2 (delivery method) to Bill as tappable single-select
+options instead of rendering the options as chat prose
+per §4.7 QB-005 single permitted pattern. Bill chat-turn
+3 verbatim correction: "do not use the question box. put
+the questions in the chat."
+
+Corrective taken: Claude re-posed Q1 + Q2 in chat prose
+in the following turn per §4.7 QB-005 single permitted
+pattern.
+
+Pre-emit-scan gate (§4.7 QB-003) failed to fire prior to
+emission. Self-catch signal (§4.7 QB-004
+"QB-PROHIBITION self-caught -- redrafting in chat prose")
+was NOT emitted prior to violation; emitted only post-
+correction.
+
+Cumulative §4.7 QB-* violation count post-TB00373
+enactment = 2 (1 originating TB00317 ERROR-TB00317-CHAT-01
+per §4.7 QB-007 v2_50 enactment baseline + 1 TB00373
+this session). Counter carried forward to TB00374 NSI §1.
+
+8.2 OTHER
+
+None this session beyond §8.1.
+
+DD-011 v2_56 CHAT-TURN-1 GATE FP/DP-derivability-test
+EXECUTED at chat-turn 1 per compaction-persisted record.
+OUTCOME 1 identified. No DD-011 violation this session.
+
+RR-SCOPE-008 tools-exhaustion: no tools-exhaustion
+assertion attempted this session. Cumulative count
+unchanged at 18.
+
+============================================================
+9. CARRY-FORWARDS TO TB00374
+============================================================
+
+9.1 PRIMARY MISSION: FP/DP analysis to determine correct
+    path forward for 0500000 diagrams-canonical mission.
+    Per Bill explicit directive: "even if it is not one
+    of the options listed."
+
+9.2 D6 V-041 + V-042 Class A amendment campaign --
+    PAUSED. Whether to resume per current cadence,
+    restructure, defer, or replace is the subject of
+    TB00374 §3 FP/DP analysis.
+
+9.3 §3.2-§3.3 D6 Image6 Class A site enumeration -- 18
+    unverified sites (excluding [A-C-3] confirmed-closed)
+    captured in §3 above. Each site requires live-content
+    verification at any future authoring action.
+
+9.4 D5 V-041 Class A subset -- carry-forward.
+
+9.5 V-041 P-CP8 (LOW external-boundary exception) --
+    carry-forward.
+
+9.6 V-041 P-CC6 (V-042 Class B overlap) -- carry-forward.
+
+9.7 V-042 Class B 30+ entries -- carry-forward.
+
+9.8 §14 Revision History positioning structural defect
+    (5-session-old) -- carry-forward.
+
+9.9 0311001 v1_24 -> v1_25 evt:G8_A1_ACCEPT amendment
+    (ratified at TB00372 Q1) -- carry-forward.
+
+9.10 0500000 D5 cleanup cycle (L5154 P-CP10 fix per
+     TB00362 v1_1 P-CP10 v1_1 EXTENSION) -- carry-forward.
+
+9.11 D9 Image9 V-042 Class A evt:G8_A1_REJECT amendment
+     (blocked until 0311001 v1_25 registers
+     evt:G8_A1_ACCEPT) -- carry-forward.
+
+9.12 QB-001 recurrence-count tracking carried forward to
+     TB00374 NSI per §8.1.
+
+============================================================
+10. MISSION REMINDER (BILL VERBATIM)
+============================================================
+
+"REMEMBER THE MISSION: Produce 0500000 diagrams that
+show all interfaces, gates, and information flows, etc.
+so coding can proceed coherently without drift. The
+diagrams ARE the design source. The 0500000 diagrams ARE
+canonical and authoritative. The prose FOLLOW the
+diagrams. Eliminate the prose-driven error class."
+
+============================================================
+11. ATTESTATIONS
+============================================================
+
+[ATTEST] Zero modifications to 0500000_System_
+         Architecture_Overview_dv1_100_Claude_Source.html
+         this session.
+[ATTEST] V-040 design-completeness 10/10 PRESERVED.
+[ATTEST] §3 D6 Image6 Class A site enumeration captured
+         here so the chat-turn-1 audit work is not lost
+         per Bill explicit "documenting everything you
+         have done so far" directive.
+[ATTEST] §8.1 QB-001 violation logged per §4.7 QB-007
+         recurrence tracking; cumulative count = 2 post-
+         enactment.
+[ATTEST] No 0500000 / 0311001 / 0311002 / TB00000 /
+         TB00153 / TB00362 / TB00363 amendments this
+         session.
+
+================================================================================
+END TB00373 TothBot_V2 Session Log v1_0
+================================================================================
