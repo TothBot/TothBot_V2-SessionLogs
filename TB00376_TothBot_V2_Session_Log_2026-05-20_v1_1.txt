@@ -1,0 +1,263 @@
+DocDCN:     TB00376
+DocTitle:   TothBot_V2_Session_Log
+DocVersion: v1_1
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00376_TothBot_V2_Session_Log_2026-05-20_v1_1.txt
+DocDate:    05-20-2026
+DocTime:    23:59:59 UTC
+
+============================================================
+TB00376 TOTHBOT V2 SESSION LOG 2026-05-20
+============================================================
+
+============================================================
+1. SESSION IDENTIFICATION
+============================================================
+
+Session number:    TB00376
+Project:           TothBot_V2
+Date:              05-20-2026
+Prior session:     TB00375 (T1 V-040 independently verified dv1_101; all 75
+                            cells PASS; D1 established as next target)
+Next session:      TB00377 (D2 V-040 independent verification)
+
+Session type:      V-040 per-diagram independent verification audit per
+                   0311001 v1_24 §15.16.5(b) campaign cadence.
+                   PRIMARY MISSION: D1 Kraken_API_Connection_Architecture
+                   Q1-Q5 independent verification.
+
+============================================================
+2. DOCUMENTS READ THIS SESSION
+============================================================
+
+  TB00000 v2_58             (in context — project instructions)
+  TB00376 NSI v1_0          (project knowledge — this session's instructions)
+  TB00375 SL v1_0           (project knowledge — prior session log)
+  0500000 dv1_101           (direct file read — source of truth for D1 audit)
+  0311001 v1_24             (project knowledge — namespace specification)
+
+  0311002 v1_NN — NOT PRESENT in project folder (carry-forward per NSI §1.1).
+  Proceeded under TB00000 §4 "Do not pause and wait" override per OCS
+  authorization signal.
+
+============================================================
+3. CLEANUP LIST (DR-009 SESSION OPEN)
+============================================================
+
+Files removed from project folder this session per NSI §2:
+  TB00373_TothBot_V2_Session_Log_2026-05-20_v1_0.txt
+  TB00373_Next_Session_Instructions_v1_0.txt
+  TB00374_TothBot_V2_Session_Log_2026-05-20_v1_0.txt
+  TB00375_Next_Session_Instructions_v1_0.txt
+
+============================================================
+4. DD-011 v2_56 CHAT-TURN-1 INDEPENDENT FP/DP-DERIVABILITY TEST
+============================================================
+
+Per DD-011 v2_56 CHAT-TURN-1 GATE — independent four-item test executed
+BEFORE any surfacing to Bill.
+
+4.1 OPTION SET (beyond NSI candidates per Bill verbatim "even if not
+    one of the options listed")
+
+  A. Execute D1 V-040 independent audit per §15.16.5(b) (NSI primary mission).
+  B. Execute a different diagram (skip D1).
+  C. Defer V-040 campaign; execute V-041/V-042 or other work.
+  D. Bundle D1 + D2 audits in one session (violates RR-SCOPE-011).
+
+4.2 FIRST-PRINCIPLES DIMENSIONS APPLIED
+
+  - D1 is the established next step per §15.16.5(b) dependency-ordered
+    sequence (T1 → D1) confirmed at TB00375 SL §8.1.
+  - Bill OCS explicitly directs D1 audit.
+  - RR-SCOPE-011 mandates single primary mission.
+  - DD-014 mandates: if any cell fails, amend in same session per P3 cadence.
+  - Least-errors-and-rework: D1 has established V-040 attestation at R7/dv1_85
+    with 65 PASS cells; independent verification applies same methodology
+    as T1 (75 PASS cells verified at TB00375).
+
+4.3 DATA SOURCES
+
+  NSI §3 methodology spec; TB00375 SL §5.4 + §8.1; OCS; 0500000 dv1_101
+  D1 SVG + governs descs + figcaption.
+
+4.4 ELIMINATION OUTCOMES
+
+  B: REJECTED — violates campaign cadence and OCS directive.
+  C: REJECTED — violates OCS directive.
+  D: REJECTED — violates RR-SCOPE-011.
+  A: SURVIVES — single compliant option.
+
+4.5 OUTCOME
+
+  OUTCOME 1 — DERIVABLE. Option A executed under RR-SCOPE-005 derivable-
+  decision execution authority. NOT surfaced to Bill as ratification question.
+
+============================================================
+5. PRIMARY MISSION EXECUTION — D1 V-040 INDEPENDENT VERIFICATION
+============================================================
+
+5.1 METHODOLOGY (per TB00375 SL §5.1 + NSI §3.2)
+
+  Source: 0500000 dv1_101 D1 Kraken_API_Connection_Architecture figure.
+  Scope: SVG visual + governs descs + figcaption ONLY per §15.16.3(c).
+  No prose §1-§12, no subordinate specs, no TB00000 outside §3.2, no outside docs.
+
+5.2 D1 COMPONENTS ENUMERATED FROM SVG (13 total)
+
+  Kraken-side (4):
+    container:Public_WS_v2
+    container:Private_WS_v2
+    container:Kraken_REST_API
+    container:Matching_Engine
+  TothBot-side (7):
+    mod:WS_Manager
+    mod:Signal_Pipeline
+    mod:Position_Mirror
+    mod:Exit_Controller
+    mod:Regime_Engine
+    mod:Risk_Engine
+    mod:Logger
+  CIATS-side (2):
+    contract:CIATS_Trade_Outcome_Bus
+    rule:Sacred_R_R_1_to_1_5
+
+5.3 Q1-Q5 AUDIT RESULTS (per-component, from diagram alone)
+
+  [1] container:Public_WS_v2
+      Q1 PASS: q1_do = "Kraken-edge WebSocket v2 public endpoint serving
+               4 channels (instrument, status, ohlc_5m, ticker)..."
+      Q2 PASS: drill_targets (4 channels); constraints (ar:AR-001/002/038/039,
+               decision:D-03, rule:HR-WM-028/029); consumes: none; produces:
+               evt:WS_RECONNECT, evt:WS_SUBSCRIBE_RATE_LIMIT,
+               ws_subscribe:public_v2 (R9).
+      Q3 PASS: constraints field present with AR and rule tokens.
+      Q4 PASS: q4_triggers present with TCP/WSS connection open details.
+      Q5 PASS: q5_logs present (TothBot-side wire-capture via WS_Manager).
+
+  [2] container:Private_WS_v2 — all Q1-Q5 PASS.
+  [3] container:Kraken_REST_API — all Q1-Q5 PASS.
+  [4] container:Matching_Engine — all Q1-Q5 PASS.
+  [5] mod:WS_Manager — all Q1-Q5 PASS.
+  [6] mod:Signal_Pipeline — all Q1-Q5 PASS.
+  [7] mod:Position_Mirror — all Q1-Q5 PASS.
+  [8] mod:Exit_Controller — all Q1-Q5 PASS.
+  [9] mod:Regime_Engine — all Q1-Q5 PASS.
+  [10] mod:Risk_Engine — all Q1-Q5 PASS.
+  [11] mod:Logger — all Q1-Q5 PASS.
+  [12] contract:CIATS_Trade_Outcome_Bus — all Q1-Q5 PASS.
+  [13] rule:Sacred_R_R_1_to_1_5 — all Q1-Q5 PASS.
+
+5.4 AUDIT RESULT SUMMARY
+
+  13 components × 5 questions = 65 cells. ALL 65 CELLS PASS.
+  D1 is independently V-040-VERIFIED at 0500000 dv1_102.
+
+  Figcaption-only amendment: visible header corrected "(R8)" → "(R9)"
+  (stale text catch-up). Attestation (a), (d), Q1-Q5 source text,
+  OPTION R iii updated per §15.16.5(b) methodology.
+
+5.5 D1 R-STATE NOTE
+
+  SVG title/diagram_canonical: R9 (correct; TB00368 housekeeping).
+  Figcaption visible header at dv1_101: "(R8)" — stale by 1 R-state.
+  Root desc R-increment: R8→R9 (correct).
+  TB00375 SL §7 stated "D1 R10" — appears to be a tracking error;
+  actual D1 R-state per SVG is R9. No amendments to D1 were found
+  between dv1_97 (TB00368, R9 correction) and dv1_101 (TB00375).
+
+============================================================
+6. DELIVERABLES THIS SESSION
+============================================================
+
+PRIMARY MISSION DELIVERABLE:
+  0500000 dv1_101 → dv1_102 (D1 V-040 independent verification attestation
+    update; figcaption (a) updated to cite dv1_102 TB00376 V-040 INDEPENDENT
+    VERIFICATION; Q1-Q5 source text updated to "confirmed from"; (d) updated
+    to record V-040 INDEPENDENT VERIFICATION COMPLETE per §15.16.5(b);
+    figcaption visible header catch-up "(R8)" → "(R9)"; OPTION R iii updated
+    to TB00377 D2 target; CI-005+CI-006 reference updated; §14 dv1_102
+    revision history entry added; SVG geometry preserved BYTE-IDENTICAL;
+    V-040 10/10 PRESERVED).
+
+SESSION-CLOSE QUARTET:
+  TB00376 Session Log v1_1 (this document — OPERATION 3 member 1)
+  TB00377 Next Session Instructions v1_0 (OPERATION 3 member 2)
+  OCS copy box (OPERATION 1)
+  GitHub upload copy box (OPERATION 4)
+
+============================================================
+7. STATE — 0500000 R-STATE AT TB00376 CLOSE
+============================================================
+
+T1 R23 (V-040 independently verified dv1_101 TB00375).
+D1 R9  (V-040 independently verified dv1_102 TB00376).
+D2 R8 (estimated). D3 R7 (estimated). D4 R9. D5 R12. D6 R12.
+D7 R10. D8 R2. D9 R2. T3 R6.
+
+0500000 source-of-truth: dv1_102.
+
+V-040 INDEPENDENT VERIFICATION CAMPAIGN STATUS:
+  T1 — INDEPENDENTLY V-040-VERIFIED dv1_101 TB00375. ALL 75 CELLS PASS.
+  D1 — INDEPENDENTLY V-040-VERIFIED dv1_102 TB00376. ALL 65 CELLS PASS.
+  D2 through D9 — PENDING (TB00377 through TB00384 per cadence projection).
+
+============================================================
+8. CARRY-FORWARDS TO TB00377
+============================================================
+
+8.1 PRIMARY MISSION: D2 Trading_Pipeline V-040 independent verification
+    per §15.16.5(b) campaign cadence.
+
+8.2 0311002 v1_NN MISSING from project folder (per NSI §1.1).
+
+8.3 §14 Revision History positioning structural defect (8-session-old
+    at TB00376 close). CARRY-FORWARD; not in primary mission scope.
+
+8.4 QB-001 recurrence-count tracking: cumulative count = 2 (unchanged).
+
+8.5 RR-SCOPE-008 cumulative violation count unchanged at 18.
+
+8.6 V-041/V-042 campaign PAUSED per TB00374 SL §4.
+
+============================================================
+9. CLAUDE ERRORS THIS SESSION
+============================================================
+
+ERROR 1 — DR-009 VIOLATION (cleanup list omitted from session-open response).
+  Rule: DR-009.5 — cleanup list rendered immediately after read-confirmation
+  line, before any other session work.
+  Defect: Claude proceeded directly to the DD-011 FP/DP derivability test and
+  mission execution without rendering the DR-009 cleanup list. Bill had to
+  prompt for it after session-close deliveries were provided.
+  Corrective: Cleanup list provided in a follow-up response after Bill's
+  correction prompt. SL v1_1 documents the violation.
+  Bill verbatim: "You did not give me the list of documents I can safely
+  remove from the project folder. Do I need to tell you this every chat?"
+
+ERROR 2 — DR-008.6 VIOLATION (OCS not at OPERATION 1; buried in prose).
+  Rule: DR-008.6 FOUR-OPERATION SEQUENTIAL — OPERATION 1 is the OCS copy box,
+  rendered FIRST before any other content in the session-close response.
+  Defect: Claude delivered the OCS embedded in the session-close prose
+  mid-response rather than as the first distinct fenced code block. The
+  four-operation order was not followed. Bill had to prompt for the OCS
+  after deliveries were presented.
+  Corrective: OCS provided as a standalone fenced code block in a follow-up
+  response after Bill's correction prompt. SL v1_1 documents the violation.
+  Bill verbatim: "And where is my OCS?"
+
+Cumulative DR-009 violation count: incremented (prior count not tracked
+  in TB00375 SL; establishing baseline at TB00376 = 1 post-correction).
+Cumulative DR-008.6 OPERATION-ORDER violation count: incremented.
+
+DR-005.1H PRE-EMIT SCAN: 0500000_System_Architecture_Overview_dv1_102_Claude_Source.html
+— filename pattern verified COMPLIANT.
+
+DD-013 REPO-ROUTING PRE-EMIT SCAN:
+  0500000 dv1_102 -> TothBot_V2-Docs/05XXXXX_System_Architecture/ COMPLIANT.
+  TB00376 SL v1_1 -> TothBot_V2-SessionLogs/ COMPLIANT.
+  TB00377 NSI -> TothBot_V2-SessionLogs/ COMPLIANT.
+
+================================================================================
+END TB00376 TothBot_V2_Session_Log_2026-05-20_v1_1
+================================================================================
