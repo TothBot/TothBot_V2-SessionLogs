@@ -1,0 +1,395 @@
+DocDCN:     TB00376
+DocTitle:   TothBot_V2_Session_Log
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00376_TothBot_V2_Session_Log_2026-05-20_v1_0.txt
+DocDate:    05-20-2026
+DocTime:    23:59:59 UTC
+
+============================================================
+TB00376 TOTHBOT V2 SESSION LOG 2026-05-20
+============================================================
+
+============================================================
+1. SESSION IDENTIFICATION
+============================================================
+
+Session number:    TB00376
+Project:           TothBot_V2
+Date:              05-20-2026
+Prior session:     TB00375 (T1 V-040 independently verified dv1_101; all 75
+                            cells PASS; D1 established as next target)
+Next session:      TB00377 (D2 V-040 independent verification)
+
+Session type:      V-040 per-diagram independent verification audit per
+                   0311001 v1_24 §15.16.5(b) campaign cadence.
+                   PRIMARY MISSION: D1 Kraken_API_Connection_Architecture
+                   Q1-Q5 independent verification.
+
+============================================================
+2. DOCUMENTS READ THIS SESSION
+============================================================
+
+  TB00000 v2_58             (in context — project instructions)
+  TB00376 NSI v1_0          (project knowledge — this session's instructions)
+  TB00375 SL v1_0           (project knowledge — prior session log)
+  0500000 dv1_101           (direct file read — source of truth for D1 audit)
+  0311001 v1_24             (project knowledge — namespace specification)
+
+  0311002 v1_NN — NOT PRESENT in project folder (carry-forward per NSI §1.1).
+  Proceeded under TB00000 §4 "Do not pause and wait" override per OCS
+  authorization signal.
+
+============================================================
+3. CLEANUP LIST (DR-009 SESSION OPEN)
+============================================================
+
+Files removed from project folder this session per NSI §2:
+  TB00373_TothBot_V2_Session_Log_2026-05-20_v1_0.txt
+  TB00373_Next_Session_Instructions_v1_0.txt
+  TB00374_TothBot_V2_Session_Log_2026-05-20_v1_0.txt
+  TB00375_Next_Session_Instructions_v1_0.txt
+
+============================================================
+4. DD-011 v2_56 CHAT-TURN-1 INDEPENDENT FP/DP-DERIVABILITY TEST
+============================================================
+
+Per DD-011 v2_56 CHAT-TURN-1 GATE — independent four-item test executed
+BEFORE any surfacing to Bill.
+
+4.1 OPTION SET (beyond NSI candidates per Bill verbatim "even if not
+    one of the options listed")
+
+  A. Execute D1 V-040 independent audit per §15.16.5(b) (NSI primary mission).
+  B. Execute a different diagram (skip D1).
+  C. Defer V-040 campaign; execute V-041/V-042 or other work.
+  D. Bundle D1 + D2 audits in one session (violates RR-SCOPE-011).
+
+4.2 FIRST-PRINCIPLES DIMENSIONS APPLIED
+
+  - D1 is the established next step per §15.16.5(b) dependency-ordered
+    sequence (T1 → D1) confirmed at TB00375 SL §8.1.
+  - Bill OCS explicitly directs D1 audit.
+  - RR-SCOPE-011 mandates single primary mission.
+  - DD-014 mandates: if any cell fails, amend in same session per P3 cadence.
+  - Least-errors-and-rework: D1 has established V-040 attestation at R7/dv1_85
+    with 65 PASS cells; independent verification applies the same
+    §15.16.5(b) methodology as T1 (75 PASS cells verified at TB00375).
+
+4.3 DATA SOURCES
+
+  NSI §3 methodology spec; TB00375 SL §5.4 + §8.1; OCS; 0500000 dv1_101
+  D1 SVG + governs descs + figcaption.
+
+4.4 ELIMINATION OUTCOMES
+
+  B: REJECTED — violates campaign cadence and OCS directive.
+  C: REJECTED — violates OCS directive.
+  D: REJECTED — violates RR-SCOPE-011.
+  A: SURVIVES — single compliant option.
+
+4.5 OUTCOME
+
+  OUTCOME 1 — DERIVABLE. Option A (D1 V-040 independent audit) executed under
+  RR-SCOPE-005 derivable-decision execution authority + DD-011 v2_56 OUTCOME 1
+  EXECUTION MANDATORY clause. NOT surfaced to Bill as ratification question.
+
+============================================================
+5. PRIMARY MISSION EXECUTION — D1 V-040 INDEPENDENT VERIFICATION
+============================================================
+
+5.1 METHODOLOGY (per TB00375 SL §5.1 + NSI §3.2)
+
+  Source: 0500000 dv1_101 D1 Kraken_API_Connection_Architecture figure.
+  Scope: SVG visual + governs descs + figcaption ONLY per §15.16.3(c).
+  No prose §1-§12, no subordinate specs, no TB00000 outside §3.2, no outside docs.
+
+5.2 D1 COMPONENTS ENUMERATED FROM SVG (13 total)
+
+  Kraken-side (4):
+    container:Public_WS_v2
+    container:Private_WS_v2
+    container:Kraken_REST_API
+    container:Matching_Engine
+  TothBot-side (7):
+    mod:WS_Manager
+    mod:Signal_Pipeline
+    mod:Position_Mirror
+    mod:Exit_Controller
+    mod:Regime_Engine
+    mod:Risk_Engine
+    mod:Logger
+  CIATS-side (2):
+    contract:CIATS_Trade_Outcome_Bus
+    rule:Sacred_R_R_1_to_1_5
+
+5.3 Q1-Q5 AUDIT RESULTS (per-component, from diagram alone)
+
+  [1] container:Public_WS_v2
+      Q1 PASS: q1_do = "Kraken-edge WebSocket v2 public endpoint serving
+               4 channels (instrument, status, ohlc_5m, ticker); accepts
+               subscribe/unsubscribe RPC from mod:WS_Manager..."
+      Q2 PASS: drill_targets (4 channels); constraints (ar:AR-001/002/038/039,
+               decision:D-03, rule:HR-WM-028/029); consumes: none; produces:
+               evt:WS_RECONNECT, evt:WS_SUBSCRIBE_RATE_LIMIT,
+               ws_subscribe:public_v2 (R9).
+      Q3 PASS: constraints field present with AR and rule tokens.
+      Q4 PASS: q4_triggers = "TCP/WSS connection open by mod:WS_Manager
+               (cold-start + mid-session reconnect per ar:AR-056)..."
+      Q5 PASS: q5_logs = "External (Kraken-owned); logging at TothBot side
+               via mod:WS_Manager wire-level capture..."
+
+  [2] container:Private_WS_v2
+      Q1 PASS: q1_do = "Kraken-edge authenticated WebSocket v2 private
+               endpoint for executions + balances streams + order-dispatch
+               RPCs (add_order, amend_order per ar:AR-018, cancel_order,
+               cancel_all)..."
+      Q2 PASS: drill_targets, constraints (ar:AR-018/055/008, pt_mode:PT_MODE_004),
+               consumes, produces including ws_subscribe:private_v2 (R9).
+      Q3 PASS: constraints field present.
+      Q4 PASS: q4_triggers present with cold-start/reconnect/dispatch details.
+      Q5 PASS: q5_logs present (TothBot-side wire-capture via WS_Manager).
+
+  [3] container:Kraken_REST_API
+      Q1 PASS: q1_do = "Kraken REST/HTTPS API surface for 8 channels..."
+      Q2 PASS: drill_targets (8 channels); constraints; consumes; produces.
+      Q3 PASS: constraints field present.
+      Q4 PASS: q4_triggers = "Triggered by mod:WS_Manager startup sequence
+               (GetWebSocketsToken; cold-start GetOHLCData indicator seeding)..."
+      Q5 PASS: q5_logs = "External (Kraken-owned); logging at TothBot side via
+               mod:WS_Manager + mod:Regime_Engine call-site capture..."
+
+  [4] container:Matching_Engine
+      Q1 PASS: q1_do = "Kraken matching engine — processes resting orders
+               including Layer 3 emergSL crash protection (sole position
+               protection per ar:AR-001 if Layers 1a/1b/2 unavailable)..."
+      Q2 PASS: constraints (ar:AR-001/008); consumes; produces (fill/cancel events).
+      Q3 PASS: constraints field present with ar:AR-001 (crash protection) and
+               ar:AR-008 (OTO REJECTED).
+      Q4 PASS: q4_triggers = "Triggered by order RPC arrival from
+               container:Private_WS_v2..."
+      Q5 PASS: q5_logs = "External (Kraken-owned); logging at TothBot side via
+               container:Private_WS_v2 executions wire-capture..."
+
+  [5] mod:WS_Manager
+      Q1 PASS: q1_do = "PATH 2 multi-shard owner: maintains N_conns shards
+               (N=ceil(universe/SYMBOLS_PER_CONN_SAFE=500) per contract:WM-SHARD-001
+               + rule:HR-WM-028)..."
+      Q2 PASS: consumes (11+ tokens including kraken_ws channels + params);
+               produces (7 events: WS_RECONNECT, WS_SUBSCRIBE_RATE_LIMIT,
+               PAPER_DISPATCH_BLOCKED, SUBSCRIBE_PACE_WAIT,
+               SUBSCRIBE_PACE_BATCH_COMPLETE, PAIR_DATA_PENDING,
+               PAIR_DATA_READY_RECOVERED); constraints (7+ rules/ARs/contracts);
+               drill_targets.
+      Q3 PASS: constraints field present with rule:HR-WM-028/029/030/032/033,
+               contract:WM-PACE-001/002/WM-SHARD-001/010/WM-RECONNECT-016,
+               ar:AR-056.
+      Q4 PASS: q4_triggers = "Triggered by startup (cold-start sequence —
+               token acquisition, indicator seeding, shard fan-out, channel
+               subscribe pacing)..."
+      Q5 PASS: q5_logs = "All 7 emitted events routed to mod:Logger via
+               channel:logger_async_queue..."
+
+  [6] mod:Signal_Pipeline
+      Q1 PASS: q1_do = "8-gate evaluation pipeline keyed off OHLC 5m close
+               events (contract:OHLC_5m_System_Clock); evaluates
+               Pre-Gate-1 per-pair-status → G1..G8..."
+      Q2 PASS: consumes (OHLC+param snapshots); produces (indicator: tokens at R8
+               + evt:ENTRY_SUBMITTED); constraints; drill_targets.
+      Q3 PASS: constraints field present with gate rules and decision:D-04.
+      Q4 PASS: q4_triggers = "Triggered every 5m candle-close event per pair..."
+      Q5 PASS: q5_logs = "Per-gate evaluation telemetry routed to mod:Logger
+               via channel:logger_async_queue..."
+
+  [7] mod:Position_Mirror
+      Q1 PASS: q1_do = "Symbol-keyed dict mirror of all open positions; sole-writer
+               authority per rule:HR-PM-009; sources differ by mode — live = ...
+               paper = ... per PA-004 divergence point #4..."
+      Q2 PASS: consumes; produces; constraints (rule:HR-PM-009, ar:AR-072,
+               decision:D-06_Paper_Live_Parity, pt_mode:PT_MODE_002); drill_targets.
+      Q3 PASS: constraints field with HR-PM-009 and Paper_Live_Parity.
+      Q4 PASS: q4_triggers = "Triggered by evt:ENTRY_FILLED arrival; partial-fill
+               executions; cancellation events..."
+      Q5 PASS: q5_logs = "Position state-change snapshots logged at every entry/exit
+               transition via mod:Logger..."
+
+  [8] mod:Exit_Controller
+      Q1 PASS: q1_do = "4-layer exit controller — Layer 1a signal-exit (TothBot-emitted),
+               Layer 1b TP-fill, Layer 2 MAE-threshold, Layer 3 emergSL (crash protection
+               per ar:AR-001); enforces Sacred 1:1.5 R:R floor per
+               rule:Sacred_R_R_1_to_1_5..."
+      Q2 PASS: constraints (rule:Sacred_R_R_1_to_1_5, ar:AR-001, rule:HR-WM-033);
+               consumes; produces (evt:TRADE_CLOSE).
+      Q3 PASS: constraints field with Sacred_R_R_1_to_1_5 rule binding.
+      Q4 PASS: q4_triggers = "Triggered every ticker price tick from
+               channel:kraken_ws_ticker for Layer 1a + Layer 2..."
+      Q5 PASS: q5_logs = "evt:TRADE_CLOSE logged to mod:Logger via
+               channel:logger_async_queue..."
+
+  [9] mod:Regime_Engine
+      Q1 PASS: q1_do = "Daily regime computation at 00:00 UTC per 0711002 RE-003;
+               produces asset_regime (per-pair) + market_regime (BTC/USD anchor)
+               tags; 6-regime 3x2 grid (3 directional x 2 volatility)..."
+      Q2 PASS: consumes (channel:kraken_rest_GetOHLCData + indicator: tokens);
+               produces (indicator: tokens at R8); constraints; drill_targets.
+      Q3 PASS: constraints field present.
+      Q4 PASS: q4_triggers = "Triggered by 00:00 UTC daily schedule; cold-start
+               seeding at startup; 1.1s-staggered REST GetOHLCData calls per
+               ar:AR-036..."
+      Q5 PASS: q5_logs = "Per-pair regime tag transitions logged to mod:Logger..."
+
+  [10] mod:Risk_Engine
+       Q1 PASS: q1_do = "Sizer + guard module owning Gate 7 risk-guard (USD check
+                + drawdown gates full_halt_drawdown + session_pause_drawdown
+                + concurrency cap param:max_concurrent) + Gate 8 position-sizer
+                (qty_min/cost_min validation per ar:AR-028 + ATR-adaptive sizing)..."
+       Q2 PASS: consumes (indicator:ATR_14 + position state + wallet balance + params);
+                produces (gate pass/fail outputs); constraints (ar:AR-028/072,
+                decision:D-06, pt_mode:PT_MODE_003); drill_targets.
+       Q3 PASS: constraints field present with ar:AR-028 + ar:AR-072 bindings.
+       Q4 PASS: q4_triggers = "Invoked by mod:Signal_Pipeline at G7 + G8 evaluation
+                per pipeline tick..."
+       Q5 PASS: q5_logs = "G7 reject reasons logged to mod:Logger (USD-shortfall,
+                drawdown-breach, concurrency-exceeded with current values)..."
+
+  [11] mod:Logger
+       Q1 PASS: q1_do = "Async bounded-queue logger with 10000 entry capacity per
+                ar:AR-014 — never blocks hot path; sole CIATS data source per
+                CI-IF-001; routes all module-emitted events through
+                channel:logger_async_queue to structured JSONL log records..."
+       Q2 PASS: consumes (10 evt: tokens); produces (channel:logger_async_queue);
+                constraints (ar:AR-014, decision:D-06_Paper_Live_Parity,
+                pt_mode:PT_MODE_001/006); drill_targets.
+       Q3 PASS: constraints field with AR-014 and paper-live parity bindings.
+       Q4 PASS: q4_triggers = "Triggered whenever any TothBot module emits a
+                logger event (ENTRY_SUBMITTED, ENTRY_FILLED, TRADE_CLOSE, ...)"
+       Q5 PASS: q5_logs = "Self — logs all received events with structured
+                timestamp + module + event-type + payload..."
+
+  [12] contract:CIATS_Trade_Outcome_Bus
+       Q1 PASS: q1_do = "23-field per-close record schema (canonical encoding site
+                = D5 + D6 per DD-001/DD-002); consumes evt:TRADE_CLOSE from
+                mod:Logger; feeds Statistical Engine (Mann-Whitney U, Sharpe,
+                Spearman, EWMA, CUSUM, Half-Kelly), PDCA, Proposal Engine,
+                Regime Library..."
+       Q2 PASS: consumes (evt:TRADE_CLOSE); produces (3 param tokens);
+                constraints (decision:D-06_Paper_Live_Parity, ar:AR-072);
+                drill_targets: none.
+       Q3 PASS: constraints field with D-06 and ar:AR-072 bindings.
+       Q4 PASS: q4_triggers = "Triggered by every evt:TRADE_CLOSE record arrival
+                from mod:Logger; emits parameter updates at inter-trade boundaries
+                only per rule:HR-CI-003..."
+       Q5 PASS: q5_logs = "Schema-fingerprint mismatch detection logged; per-record
+                acceptance/rejection logged; parameter-update events logged..."
+
+  [13] rule:Sacred_R_R_1_to_1_5
+       Q1 PASS: q1_do = "Hardcoded Net 1:1.5 R:R floor per TB00000 §9.10 + 0500000
+                §8 sacred-constraint registry; the ONLY parameter CIATS does NOT own;
+                enforced at mod:Exit_Controller TP-target setting at every entry-fill;
+                declarative constraint with no inputs or outputs."
+       Q2 PASS: consumes: none; produces: none; constraints: rule:Sacred_R_R_1_to_1_5
+                (self-referential declarative invariant); drill_targets: none.
+       Q3 PASS: constraints field present.
+       Q4 PASS: q4_triggers = "Triggered at every TP-target computation by
+                mod:Exit_Controller at every entry-fill event; emits no events
+                (declarative invariant)..."
+       Q5 PASS: q5_logs = "Sacred-floor violation attempts logged defensively (never
+                expected to fire under normal flow); enforcement-confirm marker logged
+                at every TP-target setting..."
+
+5.4 AUDIT RESULT SUMMARY
+
+  13 components × 5 questions = 65 cells.
+  ALL 65 CELLS PASS.
+  D1 is independently V-040-VERIFIED at 0500000 dv1_102.
+
+  No amendment to component descs required (all q1_do/q4_triggers/q5_logs fields
+  present and correct; ADD-only scope not triggered).
+
+  Figcaption-only amendment: visible header corrected from "(R8)" → "(R9)"
+  (stale text catch-up; TB00368 housekeeping updated SVG title/diagram_canonical
+  to R9 but missed figcaption visible text). Attestation (a), (d), Q1-Q5 source
+  text, OPTION R iii updated per §15.16.5(b) independent verification methodology.
+
+5.5 D1 R-STATE NOTE
+
+  SVG title/diagram_canonical: R9 (correct; TB00368 housekeeping).
+  Figcaption visible header at dv1_101: "(R8)" — stale by 1 R-state.
+  Root desc R-increment: R8→R9 (correct).
+  TB00375 SL §7 stated "D1 R10" — this appears to be a tracking error;
+  the actual D1 R-state per SVG is R9. No amendments to D1 were found
+  between dv1_97 (TB00368, R9 correction) and dv1_101 (TB00375, T1 only).
+
+============================================================
+6. DELIVERABLES THIS SESSION
+============================================================
+
+PRIMARY MISSION DELIVERABLE:
+  0500000 dv1_101 → dv1_102 (D1 V-040 independent verification attestation
+    update; figcaption (a) updated to cite dv1_102 TB00376 V-040 INDEPENDENT
+    VERIFICATION; Q1-Q5 source text updated to "confirmed from"; (d) updated
+    to record V-040 INDEPENDENT VERIFICATION COMPLETE per §15.16.5(b);
+    figcaption visible header catch-up "(R8)" → "(R9)"; OPTION R iii updated
+    to TB00377 D2 target; CI-005+CI-006 reference updated; §14 dv1_102
+    revision history entry added; SVG geometry preserved BYTE-IDENTICAL;
+    V-040 10/10 PRESERVED).
+
+SESSION-CLOSE QUARTET:
+  TB00376 Session Log v1_0 (this document — OPERATION 3 member 1)
+  TB00377 Next Session Instructions v1_0 (OPERATION 3 member 2)
+  OCS copy box (OPERATION 1)
+  GitHub upload copy box (OPERATION 4)
+
+============================================================
+7. STATE — 0500000 R-STATE AT TB00376 CLOSE
+============================================================
+
+T1 R23 (V-040 independently verified dv1_101 TB00375).
+D1 R9  (V-040 independently verified dv1_102 TB00376).
+D2 R12. D3 R7 (estimated; per amendment history). D4 R9. D5 R12. D6 R12.
+D7 R10. D8 R2. D9 R2. T3 R6.
+
+0500000 source-of-truth: dv1_102.
+
+V-040 INDEPENDENT VERIFICATION CAMPAIGN STATUS:
+  T1 — INDEPENDENTLY V-040-VERIFIED dv1_101 TB00375. ALL 75 CELLS PASS.
+  D1 — INDEPENDENTLY V-040-VERIFIED dv1_102 TB00376. ALL 65 CELLS PASS.
+  D2 through D9 — PENDING (TB00377 through TB00384 per cadence projection).
+
+============================================================
+8. CARRY-FORWARDS TO TB00377
+============================================================
+
+8.1 PRIMARY MISSION: D2 Trading_Pipeline V-040 independent verification
+    per §15.16.5(b) campaign cadence.
+
+8.2 0311002 v1_NN MISSING from project folder (per NSI §1.1).
+
+8.3 §14 Revision History positioning structural defect (8-session-old
+    at TB00376 close). CARRY-FORWARD; not in primary mission scope.
+
+8.4 QB-001 recurrence-count tracking: cumulative count = 2 (unchanged).
+
+8.5 RR-SCOPE-008 cumulative violation count unchanged at 18.
+
+8.6 V-041/V-042 campaign PAUSED per TB00374 SL §4. All V-041/V-042
+    carry-forwards deferred per P12 cadence.
+
+============================================================
+9. CLAUDE ERRORS THIS SESSION
+============================================================
+
+None.
+
+DR-005.1H PRE-EMIT SCAN: 0500000_System_Architecture_Overview_dv1_102_Claude_Source.html
+— filename pattern verified: [DCN]_[DocTitle]_[DocVersion]_Claude_Source.html COMPLIANT.
+
+DD-013 REPO-ROUTING PRE-EMIT SCAN:
+  0500000 dv1_102 -> TothBot_V2-Docs/05XXXXX_System_Architecture/ (rule ii: DCN-numbered).
+  COMPLIANT.
+  TB00376 SL -> TothBot_V2-SessionLogs/ (rule i: TB-prefix). COMPLIANT.
+  TB00377 NSI -> TothBot_V2-SessionLogs/ (rule i: TB-prefix). COMPLIANT.
+
+================================================================================
+END TB00376 TothBot_V2_Session_Log_2026-05-20_v1_0
+================================================================================
