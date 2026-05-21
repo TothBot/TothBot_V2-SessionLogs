@@ -1,0 +1,400 @@
+DocDCN:     TB00031
+DocTitle:   TothBot_V2_Session_Log_2026-04-05_Part3
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\OneDrive\TothBot\TB00031_TothBot_V2_Session_Log_2026-04-05_Part3_v1_0.txt
+DocDate:    04-05-2026
+DocTime:    23:59:59 UTC
+
+============================================================
+TOTHBOT V2 -- SESSION LOG 2026-04-05 PART 3
+============================================================
+
+Read TB00001 through TB00030 first.
+
+This session: Phase 4 complete. Six Risk domain documents
+written and committed. Gate 1 script residual cleanup
+finally resolved. All six Phase 4 commits confirmed on
+GitHub.
+
+============================================================
+1. SESSION IDENTITY
+============================================================
+
+Session date:     April 5, 2026 (Part 3)
+Session type:     Phase 4 -- AA=06 Risk document writing
+                  + GitHub commit + Gate 1 cleanup
+Prior session:    TB00030 (2026-04-05 Part 2)
+
+Documents read:   TB00000 v2_7 (governing)
+                  TB00030 v1_0 (most recent session log)
+                  TB00029 v1_0 (prior session log)
+                  0311001 v1_0
+                  0311002 v1_0
+                  0500000 dv1_18 (Claude Source -- primary)
+                  0200000 v1_0
+                  0610000 dv1_0 (written this session,
+                                  used for anchor format ref)
+                  1011011 dv1_2 (Risk Engine WD coding spec)
+                  Multiple session logs searched for
+                  AR-011, AR-043, AR-051, AR-052, AR-053
+
+============================================================
+2. WHAT HAPPENED -- COMPLETE RECORD
+============================================================
+
+------------------------------------------------------------
+2.1 Six Phase 4 Documents Written -- Steps 4.1 through 4.6
+------------------------------------------------------------
+
+All six documents derived from 0500000 dv1_18 Section 9
+and relevant ARs as primary content sources. All locked
+architectural decisions applied throughout.
+
+  0600000  Risk                             dv1_0
+  0610000  Risk_Rules_Anchor               dv1_0
+  0611001  Position_Sizing_Rules           dv1_0
+  0611002  Drawdown_and_Halt_Rules         dv1_0
+  0611003  Concentration_and_Exposure_Rules dv1_0
+  0611004  Safety_Parameter_Framework      dv1_0
+
+Each document passed two-criteria review before proceeding:
+  (1) Every decision FP/DP analyzed — YES for all six
+  (2) Everything automatable automated — YES for all six
+
+------------------------------------------------------------
+2.2 Two-Criteria Review Findings (summary)
+------------------------------------------------------------
+
+No defects found across all six documents. Key validations:
+
+  0600000: No new decisions introduced. All content traces
+           to validated ARs. Full halt no-auto-close is
+           correct human-in-the-loop.
+
+  0610000: Structural anchor only. No decisions introduced.
+
+  0611001: Cash-only sizing basis (AR-051). Half-Kelly at
+           200 trades validated (SE(win_rate)~3.5%). K_full
+           <= 0 stops entries -- correct loss-prevention.
+           Rounding directions (ROUND_DOWN qty/emergSL,
+           ROUND_UP TP) all first-principles correct.
+
+  0611002: Session-based baseline (AR-052, TB00016 C-12).
+           bid price for MTM (AR-048). batch_cancel for
+           FULL_HALT (AR-041). No auto-resume from FULL_HALT
+           -- correct: 10% drawdown may be systemic.
+           SESSION_PAUSE auto-resumes -- correct: 5% is
+           recoverable without human intervention.
+
+  0611003: BoundedSemaphore acquire at dispatch (not Gate 7)
+           -- closes race window. Release after Position
+           Mirror cleared -- prevents double-count window.
+           POR holds on exec_type=trade (AR-053) -- prevents
+           available_USD inflation on partial fills.
+           Gate 7 check sequence fixed: drawdown first,
+           concentration second, exposure third.
+
+  0611004: 1:1.5 R:R hardcoded -- code literal, not
+           Parameter Store. Mann-Whitney p<0.01 for
+           Risk-domain changes (higher bar than general
+           parameters -- asymmetric loss consequences).
+           PL-004 resolved -- 0511005 retired.
+
+------------------------------------------------------------
+2.3 Gate 1 Script Residual Cleanup -- FINALLY RESOLVED
+------------------------------------------------------------
+
+When running Phase4_Risk_Commit.bat, git status revealed
+stray files in the repo from the Gate 1 script accident
+(TB00025). These had persisted unresolved across multiple
+sessions. This was an error on Claude's part -- the cleanup
+should have been scripted and delivered sessions ago.
+
+Stray files found and removed:
+  03XXXXX_Governance\Phase4_Risk_Commit.bat
+  06XXXXX_Risk\Phase4_Risk_Commit.bat
+  Phase2_AA04_Commit.bat  (repo root)
+  Phase2_Step26_0500000_Commit.bat  (repo root)
+  05XXXXX_System_Architecture\0500000_Previous Versions\
+    0511004_Exit_Controller_Specification_dv1_0.txt
+
+Phase4_Cleanup_and_Commit.bat was written to:
+  (1) Remove all stray .bat files from repo folders
+  (2) Remove misplaced 0511004 file
+  (3) Show clean git status for verification
+  (4) Execute all 6 Phase 4 commits sequentially
+
+NOTE: .bat files must NEVER be placed inside the repo.
+They belong in C:\Users\wstot\OneDrive\TothBot\ only.
+This is now a standing rule (see Section 10).
+
+------------------------------------------------------------
+2.4 PL-004 Resolved
+------------------------------------------------------------
+
+Old 0511005 Safety_Parameter_Review_Procedure formally
+retired in 0611004. Content absorbed into 0611004
+(parameter registry and change framework) and 0211001
+(PDCA and statistical thresholds). 0511005 committed to
+_Archive as read-only reference. PL-004 CLOSED.
+
+============================================================
+3. DECISIONS MADE THIS SESSION
+============================================================
+
+  D-001   net 1:1.5 R:R confirmed as code literal.
+          NOT in Parameter Store. Enforced in Gate 8
+          code as a hardcoded Decimal multiplier.
+          CIATS cannot touch it. Bill cannot change it.
+
+  D-002   Mann-Whitney p<0.01 (one-sided) required for
+          ALL Risk-domain parameter changes. Higher bar
+          than general parameters (p<0.05) because
+          financial risk parameters carry asymmetric
+          consequences. False positive on a risk
+          parameter increases loss exposure. 99%
+          confidence is the correct standard.
+
+  D-003   Circuit breaker thresholds read from LIVE
+          Parameter Store, not frozen pipeline snapshot.
+          A CIATS update between evaluations must take
+          effect immediately for circuit breakers.
+          Stale thresholds could allow over-exposure.
+
+  D-004   entry_timeout_sec initialized to 45 seconds
+          (midpoint of 30-60s validated range). CIATS
+          adjusts from first paper trade. Explicit
+          initialization -- no ambiguity.
+
+  D-005   .bat scripts must never be placed inside the
+          repo folder tree. Store in OneDrive only.
+          New standing rule (RULE 13).
+
+============================================================
+4. DOCUMENTS PRODUCED THIS SESSION
+============================================================
+
+  0600000  Risk                             dv1_0  ★
+  0610000  Risk_Rules_Anchor               dv1_0  ★
+  0611001  Position_Sizing_Rules           dv1_0  ★
+  0611002  Drawdown_and_Halt_Rules         dv1_0  ★
+  0611003  Concentration_and_Exposure_Rules dv1_0  ★
+  0611004  Safety_Parameter_Framework      dv1_0  ★
+  Phase4_Cleanup_and_Commit.bat                   ★
+  TB00031  This session log                v1_0   ★
+
+★ = Produced this session
+
+============================================================
+5. GITHUB COMMITS -- PHASE 4
+============================================================
+
+All 6 Phase 4 documents committed and pushed.
+Folder: 06XXXXX_Risk/
+
+  043bd82  Phase 4 Step 4.1: 0600000 Risk Domain Document dv1_0
+  11fa145  Phase 4 Step 4.2: 0610000 Risk_Rules_Anchor dv1_0
+  cbaa410  Phase 4 Step 4.3: 0611001 Position_Sizing_Rules dv1_0
+  5066629  Phase 4 Step 4.4: 0611002 Drawdown_and_Halt_Rules dv1_0
+  0380568  Phase 4 Step 4.5: 0611003 Concentration_and_Exposure_Rules dv1_0
+  acf3886  Phase 4 Step 4.6: 0611004 Safety_Parameter_Framework dv1_0
+
+PHASE 4: COMPLETE.
+
+============================================================
+6. COMPLETE DOCUMENT INVENTORY -- CURRENT STATE
+============================================================
+
+PHASE 1 DOCUMENTS -- APPROVED AND ON GITHUB (all v1_0):
+  0000000  Ethics_and_Safety                   v1_0  +
+  0100000  Management                          v1_0  +
+  0200000  Operations                          v1_0  +
+  0300000  Governance                          v1_0  +
+  0310000  Governance_Procedures_Anchor        v1_0  +
+  0311001  Namespace_Specification             v1_0  +
+  0311002  Document_Creation_Workflow          v1_0  +
+  0311003  Versioning_Procedure                v1_0  +
+  0311004  Document_Creation_and_Approval      v1_0  +
+  0311005  System_Definitions_and_Terminology  v1_0  +
+
+PHASE 2 AA=04 DOCUMENTS -- ON GITHUB (all dv):
+  0400000  Exchange_Interface                  dv1_0  +
+  0410000  Exchange_Interface_Kraken_Anchor    dv1_0  +
+  0411001  Kraken_WS_v2_Specification          dv1_11 +
+  0411002  Kraken_REST_API_Specification       dv1_0  +
+  0411003  Kraken_Fee_Rate_Limit_Specification dv1_0  +
+
+PHASE 2 AA=05 DOCUMENTS -- ON GITHUB (all dv):
+  0500000  System_Architecture_Overview        dv1_18 +
+           Three formats (docx, pdf, Claude_Source.txt)
+  0510000  System_Components_Anchor            dv1_0  +
+  0511001  WS_Manager_Specification            dv1_0  +
+  0511002  Signal_Pipeline_Specification       dv1_0  +
+  0511003  Execution_Engine_Specification      dv1_0  +
+  0511004  Exit_Controller_Specification       dv1_2  +
+  0511005  Position_Mirror_Specification       dv1_0  +
+  0511006  Logger_Specification                dv1_0  +
+
+PHASE 3 AA=02 DOCUMENTS -- ON GITHUB (all dv):
+  0210000  Operations_CIATS_Anchor             dv1_0  +
+  0211001  CIATS_Specification                 dv1_0  +
+  0211002  Operations_Infrastructure_Spec      dv1_0  +
+  0211003  Startup_Shutdown_Procedure          dv1_0  +
+  0211004  Incident_Response_Procedure         dv1_0  +
+  0211005  Paper_Trading_Operations_Procedure  dv1_0  +
+
+PHASE 4 AA=06 DOCUMENTS -- ON GITHUB (all dv):
+  0600000  Risk                                dv1_0  + NEW
+  0610000  Risk_Rules_Anchor                   dv1_0  + NEW
+  0611001  Position_Sizing_Rules               dv1_0  + NEW
+  0611002  Drawdown_and_Halt_Rules             dv1_0  + NEW
+  0611003  Concentration_and_Exposure_Rules    dv1_0  + NEW
+  0611004  Safety_Parameter_Framework          dv1_0  + NEW
+
+WORKING DRAFT CODING SPECS (on GitHub -- WD, premature):
+  1011001  Engineering_Best_Practices          dv1_5
+  1011002  WS_Manager_Coding_Spec              dv1_11
+  1011005  Exit_Controller_Coding_Spec         dv1_1
+  1011007  Logger_Coding_Spec                  dv1_1
+  1011010  CIATS_Coding_Spec                   dv1_5
+  1011011  Risk_Engine_Coding_Spec             dv1_2
+  1011012  Regime_Engine_Coding_Spec           dv1_3
+  1011013  VPS_Deployment_Coding_Spec          dv1_3
+  1011014  Startup_Sequence_Coding_Spec        dv1_2
+
++ = On GitHub
+NEW = Added this session
+
+============================================================
+7. OPEN ITEMS -- CURRENT STATE
+============================================================
+
+  OI-003  Exit Controller full specification -- Phase 5-6.
+          cancel_timeout_window and mpp_retry_count
+          require FP/DP analysis before 0811003 written.
+
+  OI-008  All AA=10 coding specs -- Phase 8 document
+          writing.
+
+  All other OIs closed in prior sessions.
+
+============================================================
+8. PARKING LOT -- CURRENT STATE
+============================================================
+
+  PL-003     TRACKING: Pathway 1 GitHub automation.
+             After Pathway 2 reaches paper trading readiness.
+
+  PL-004     CLOSED this session. 0511005 retired.
+             Content absorbed into 0611004 and 0211001.
+
+  PL-NEW-001 WD documents prematurely on GitHub.
+             Accepted as-is. Future updates commit correctly.
+
+  PL-NEW-002 git add . prohibited. Standing rule.
+
+  PL-NEW-003 Multi-line commit -m breaks Windows batch.
+
+  PL-NEW-004 cd to repo root must be first command in all
+             git sequences. Standing rule.
+
+============================================================
+9. BILL ACTIONS REQUIRED
+============================================================
+
+  (a) Upload TB00031 (this log) to Claude project.
+
+  (b) Upload all 6 Phase 4 documents to Claude project:
+        0600000_Risk_dv1_0.txt
+        0610000_Risk_Rules_Anchor_dv1_0.txt
+        0611001_Position_Sizing_Rules_dv1_0.txt
+        0611002_Drawdown_and_Halt_Rules_dv1_0.txt
+        0611003_Concentration_and_Exposure_Rules_dv1_0.txt
+        0611004_Safety_Parameter_Framework_dv1_0.txt
+
+  (c) Tell Claude: "Phase 4 complete. Begin Phase 5."
+
+============================================================
+10. NEXT SESSION -- WHERE WE PICK UP
+============================================================
+
+Phase 5 per 0311002 Document_Creation_Workflow v1_0:
+
+  STEP 5.1  0700000  Strategy
+            Tier: Domain Document
+            Depends on: Phase 1-4 complete (CONFIRMED)
+
+  STEP 5.2  0710000  Strategy_Signals_Anchor
+            Tier: Sub-Domain Anchor
+            Depends on: 0700000
+
+  STEP 5.3  0711001  SSS_Signal_Model_Specification
+            Tier: Instance Document
+            Depends on: 0710000
+            Content: RSI(14) 50-70 + EMA(9)>EMA(21) on 5m
+            + volume>MA(20)x1.0x (AR-067). RSI uses Wilder's
+            SMMA (AR-076) -- CRITICAL. All thresholds
+            CIATS-owned starting values.
+
+  STEP 5.4  0711002  Regime_Taxonomy_Specification
+            Tier: Instance Document
+            Depends on: 0710000
+            Content: 6-regime grid. ADX(14)+EMA(20/50) daily
+            directional state. ATR(14) 67th percentile
+            volatility state. GetOHLCData response[:-1]
+            exclusion (AR-076 GAP-03 -- CRITICAL).
+
+  STEP 5.5  0711003  Asset_Selection_Specification
+            Tier: Instance Document
+            Depends on: 0710000, 0411003
+            Content: Top 50 USD/USDC pairs by 24h volume.
+            BTC/USD always included (AR-070, AR-074).
+
+============================================================
+11. STANDING RULES -- ALL ACTIVE
+============================================================
+
+RULE 1  -- 0500000 must be built with docx-js (Node.js).
+RULE 2  -- 0500000 three-file protocol (txt + docx + pdf).
+RULE 3  -- Diagrams placed immediately after section headings.
+RULE 4  -- DocPath correction = change = version increment.
+RULE 5  -- Never go from memory. Always read project files.
+RULE 6  -- git add . is prohibited. Explicit git add per file.
+RULE 7  -- Multi-line git commit -m breaks Windows batch.
+RULE 8  -- dv -> v is valid (direct promotion).
+RULE 9  -- After any accidental commit, immediately run
+           git rm --cached on each affected file and push.
+           Never defer.
+RULE 10 -- Before running any commit script, Bill runs
+           git status first. If unexpected files appear:
+           stop, do not run the script, tell Claude.
+RULE 11 -- All commit scripts include git status as the
+           first command before any git add.
+RULE 12 -- docx-js ImageRun transformation uses pixels at
+           96dpi. US Letter 1-inch margins: content width
+           = 624px. Never use EMU in ImageRun transformation.
+RULE 13 -- .bat commit scripts must never be saved inside
+           the repo folder tree. Save to OneDrive or
+           Desktop only.
+
+============================================================
+12. REVISION HISTORY
+============================================================
+
+  v1_0  04-05-2026  Initial session log. Phase 4 complete.
+                    Six AA=06 Risk documents written and
+                    committed (Steps 4.1-4.6). Two-criteria
+                    review passed for all six. Gate 1 script
+                    residual cleanup resolved (stray .bat
+                    files and misplaced 0511004 removed).
+                    Phase4_Cleanup_and_Commit.bat delivered
+                    and executed. All 6 commits confirmed
+                    on GitHub (043bd82 through acf3886).
+                    PL-004 closed (0511005 retired).
+                    New RULE 13 added (.bat files out of
+                    repo). Five decisions recorded.
+
+============================================================
+END OF SESSION LOG
+============================================================

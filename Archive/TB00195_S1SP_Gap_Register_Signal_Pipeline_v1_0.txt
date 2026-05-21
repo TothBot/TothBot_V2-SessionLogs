@@ -1,0 +1,1333 @@
+DocDCN:     TB00195
+DocTitle:   S1SP_Gap_Register_Signal_Pipeline
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TBXXXXX_Session_Logs\TB00195_S1SP_Gap_Register_Signal_Pipeline_v1_0.txt
+DocDate:    05-11-2026
+DocTime:    21:30:00 UTC
+
+============================================================
+STEP 3 SUB-STEP S-1 GAP REGISTER — SIGNAL_PIPELINE PAIR
+1011003 dv1_0  vs  0511002 dv1_0  vs  0500000 dv1_46
+TB00195 — E-S1SP-03 THROUGH E-S1SP-07
+============================================================
+
+============================================================
+1. SCOPE AND METHODOLOGY
+============================================================
+
+1.1 TARGET PAIR.
+  AA=10 side: 1011003 Signal_Pipeline_Coding_Spec dv1_0
+              (16 sections / 10 HR-SP-* / 27 SP-* contracts /
+              6 SC-GATE-* / 3 SC-SSS-*)
+  AA=05 side: 0511002 Signal_Pipeline_Specification dv1_0
+              (18 sections / 10 HR-SP-* / 6 SC-GATE-* /
+              3 SC-SSS-*)
+  Architecture canonical: 0500000 dv1_46
+              (8 diagrams; D2 TothBot Trading Pipeline governs
+              the 8-gate sequence; D4 Regime Taxonomy governs
+              regime classification + AR-072/AR-073;
+              D7 Paper-Mode Dispatch Boundary references
+              mod:Signal_Pipeline above-seam; D1/D5/D6
+              intersect via cross-cutting ARs)
+
+1.2 METHODOLOGY (TB00195 NSI §4; unchanged from TB00194).
+  Three-bucket classification per element of 1011003:
+    (a) ARCHITECTURAL RESTATEMENT — duplicates content in
+        0500000 / 0511002 prose or 0500000 diagrams; drop
+        at 10XXXXX retirement (S-4).
+    (b) CODING-UNIQUE — implementation-level content
+        (function signatures, types, dict layouts, log
+        format strings, decimal-rounding mechanics);
+        migrate to 0511002 prose at S-3.
+    (c) ARCHITECTURAL CONTENT NOT IN DIAGRAMS — must be
+        encoded in 0500000 diagram FIRST per DD-003
+        4-step workflow; then 0511002 prose update;
+        then 10XXXXX retirement.
+    (d) UNCLEAR ORIGIN — per NSI §7.4 + RR-SCOPE-009;
+        Chesterton's-fence investigation required before
+        disposition.
+
+1.3 DIAGRAM SOURCE OF TRUTH.
+  Per TB00000 v2_29 §4.5 DD-001/002 diagrams-as-canonical:
+  0500000 dv1_46 inline SVG content + root-<desc> governs
+  list is the authoritative source for "what IS encoded in
+  the diagrams." Prose in 0500000 §3 + §4 AR registry is
+  V-038.3 prose-follows-diagram narration. AR-067 +
+  AR-068 + AR-056 absent from any diagram root governs list
+  (each is referenced only in §4 AR registry prose) is a
+  separate 0500000 internal V-038.3 finding — flagged in
+  §7.1 below, NOT a Signal_Pipeline-pair gap proper.
+
+============================================================
+2. DIAGRAM COVERAGE BASELINE
+   (What 0500000 dv1_46 diagrams ENCODE for Signal_Pipeline)
+============================================================
+
+2.1 D2 TOTHBOT TRADING PIPELINE (R2; viewBox 1500x1700;
+    line 1995-2466).
+  Root-<desc> governs list (line 2007-2017):
+    ar: AR-005 (WS v2 only), AR-016 (ATR(14) incremental
+        O(1)), AR-069 (entry limit price formula),
+        AR-070_Universe_Scope_Retired (amended ->
+        decision:D-03_Universe_Scope), AR-072 (Selection
+        Controller direction-symmetric 6 gates), AR-074
+        (BTC/USD as market_regime proxy), AR-076 (RSI
+        Wilder SMMA)
+    rule: HR-EE-013, HR-SP-001, HR-SP-002, HR-SP-003,
+          HR-SP-004, HR-SP-005, HR-SP-006, HR-WM-024,
+          Sacred_R_R_1_to_1_5
+    decision: D-03_Universe_Scope, D-04_Liquidity_Floor,
+              D-06_Paper_Live_Parity,
+              D-08_Top_N_Cap_Retired
+    contract: WSManager_Dispatch_Seam, OHLC_5m_System_Clock,
+              Pre_Computation_Cache_Read,
+              Parameter_Store_Snapshot
+    gate: Pre_Gate_1_Per_Pair_Status, G1_State_Machine,
+          G2_Liquidity, G3_Regime_Filter,
+          G4_HTF_Confirmation, G5_Selection_Controller,
+          G6_Regime_Sizer, G7_Risk_Guard, G8_Position_Sizer
+    pt_mode: PT_MODE_001, PT_MODE_002, PT_MODE_003
+    mod: Long_Module, Signal_Pipeline, Execution_Engine
+    sacred_constraints: Net 1:1.5 R:R hardcoded (rule:
+      Sacred_R_R_1_to_1_5)
+  Visual elements (text labels):
+    - "TRIGGER: Kraken OHLC 5-min candle close event (WS v2
+      push)" with universe label "USD + USDC + USDT
+      (decision:D-03 <- ar:AR-070 amended)"
+    - SYSTEM CLOCK box: channel:kraken_ws_ohlc_5m
+    - PRE-STEP 1: Parameter Store Snapshot Frozen (contract:
+      Parameter_Store_Snapshot + rule:HR-SP-001)
+    - PRE-STEP 2: Pre-Computation Cache Read (contract:
+      Pre_Computation_Cache_Read + ar:AR-016 + rule:
+      HR-SP-002)
+    - PER-PAIR INSTRUMENT STATUS CHECK box (gate:
+      Pre_Gate_1_Per_Pair_Status; SKIP -> STATUS_BLOCKED)
+    - Gate 1 State Machine box (gate:G1_State_Machine;
+      WAIT path)
+    - Gate 2 Liquidity Gate box (gate:G2_Liquidity +
+      param:min_volume_usd_daily + decision:D-04;
+      SKIP -> LIQUIDITY_REJECTED)
+    - Gate 3 Regime Pre-Filter box (gate:G3_Regime_Filter
+      + ar:AR-074; STOP -> REGIME_BLOCKED)
+    - Gate 4 1H HTF Confirmation box (gate:
+      G4_HTF_Confirmation; SKIP -> HTF_GATE_REJECTED)
+    - SSS Signal Engine band (<title>mod:Signal_Pipeline;
+      constraints ar:AR-005, ar:AR-016)
+    - Gate 5 Selection Controller box (gate:
+      G5_Selection_Controller + ar:AR-072 + decision:
+      D-08_Top_N_Cap_Retired; SKIP -> SELECTION_REJECTED)
+    - Gate 6 Regime Gate/Sizer box (gate:G6_Regime_Sizer +
+      ar:AR-074; SIZED -> REGIME_50PCT)
+    - Gate 7 Risk Guard box (gate:G7_Risk_Guard;
+      HALT -> RISK_GUARD)
+    - Gate 8 Position Sizer box (gate:G8_Position_Sizer +
+      rule:HR-SP-006; "MAE = ATR(14) x 1.5x | emergSL =
+      ATR(14) x 3.0x | TP = R:R formula"; SACRED 1:1.5
+      banner)
+    - WSManager_Dispatch_Seam PA-004(2) boundary (paper
+      LEFT column / live RIGHT column)
+    - mod:Execution_Engine batch_add fill
+    - Legend footer: PA-001 paper-master + D-08 retired +
+      D-03 universe + D-04 liquidity floor
+
+2.2 D4 REGIME TAXONOMY (R3; line 2812-3260).
+  Root-<desc> governs list extended at R3 (line 2874):
+    mod:Signal_Pipeline listed under governs:mod (Signal
+    Pipeline's regime consumer role)
+    ar:AR-072, ar:AR-073, ar:AR-074 — direction-symmetric
+    Selection Controller + per-side state management +
+    BTC/USD anchor (all in D4 governs)
+    rule:HR-REGIME-007 — directional-cascade entry trigger
+    (amended dv1_1 for short-side per Stage M-3+)
+    regime:TRENDING_POS_NORMAL through
+    regime:TRENDING_NEG_ELEVATED (6-regime 3x2 grid)
+    indicator:ADX_14, indicator:ATR_14, indicator:
+    EMA20_daily, indicator:EMA50_daily
+    decision:D-08_Top_N_Cap_Retired, decision:DEC-011
+  Visual elements include direction-symmetric long+short
+  SSS Gate 1 variants encoded in §4 AR-067 amended dv1_43
+  prose (line 4941-4993) and referenced from D4 cells
+  Regime 5 + Regime 6 prose text per HR-REGIME-007
+  directional cascade.
+
+2.3 D7 PAPER-MODE DISPATCH BOUNDARY (R3; line 5985-6422).
+  Root-<desc> governs list (line 5999) includes mod:
+  Signal_Pipeline as above-seam labeled group (mode-blind).
+  Also: ar:AR-072, ar:AR-073, rule:HR-REGIME-007 —
+  direction-symmetric Selection Controller + per-side state
+  + short-side regime routing. PA-005 byte-identical
+  pre-dispatch (Gates 1-8 byte-identical paper vs live).
+
+2.4 D1 KRAKEN API CONNECTION ARCHITECTURE (R2; line 1353).
+  Root-<desc> governs list (per TB00194 §2.1) includes
+  ar:AR-047 (Decimal arithmetic, system-wide) +
+  contract:WM-RECONNECT-016 (transient WS catch +
+  per-shard reconnect). Signal_Pipeline reads OHLC events
+  from D1's WS_Manager output via channel:
+  kraken_ws_ohlc_5m. The per-pair status (pair_status[])
+  consumed by SP-PRE-003 is sourced from D1's instrument
+  channel cache.
+
+2.5 D5 CIATS ARCHITECTURE (R3; line 3260-3700+).
+  Root-<desc> governs list (line 3332) lists Signal_Pipeline
+  CIATS-touched params: param:min_volume_usd_daily +
+  param:atr_percentile_thresh + param:adx_threshold +
+  param:htf_ema_periods. Stale params also in D5 governs:
+  param:tradeable_pct, param:per_trade_pct,
+  param:half_kelly_applied_pct, param:max_concurrent —
+  ALL RETIRED at TB00000 v2_29 §9.17 (cluster C1 cascade
+  per §4 below — overlaps TB00194 C1).
+  D5 governs list MISSING (per TB00000 v2_29 §9.17):
+  param:per_trade_size_usd, param:per_trade_ceiling_pct,
+  param:rsi_long_low, param:rsi_long_high,
+  param:rsi_short_low, param:rsi_short_high,
+  param:volume_sss_threshold, param:sc_body_threshold,
+  param:sc_cooldown_seconds, param:sc_consecutive_limit,
+  param:leverage_cap_short.
+
+2.6 D3 + D6 + TIER 1.
+  D3 Exit Architecture intersects Signal_Pipeline only at
+  Gate 7 drawdown delegation -> Risk Engine -> Exit
+  Controller chain. D6 Complete System Organism shows
+  mod:Signal_Pipeline as one of the parallel-module
+  framework siblings. Tier 1 Context shows TothBot_Zone
+  with Signal_Pipeline as a module within.
+
+============================================================
+3. ELEMENT-BY-ELEMENT GAP REGISTER
+   (Organized by 1011003 dv1_0 section structure)
+============================================================
+
+------------------------------------------------------------
+§1-§3 PURPOSE / PARENT CHAIN / FIVE CODING-READINESS
+------------------------------------------------------------
+
+3.1 §1 Purpose statement.
+    Restates the module purpose (8-gate pipeline fires on
+    every 5-min OHLC candle close). Counterpart: 0511002
+    §1 + 0500000 §3 (Tothbot Trading Pipeline §3.1
+    Gate Summary).
+    Classification: (a) ARCHITECTURAL RESTATEMENT.
+    Retirement: S-4 drop entirely; 0500000 §3 prose + D2
+    figcaption encode module purpose.
+
+3.2 §2 Parent chain citations.
+    Cites 1000000 + 1010000 + parent specs 0511002 + 0711001.
+    Boilerplate doc-control content.
+    Classification: (a) ARCHITECTURAL RESTATEMENT.
+    Retirement: S-4 drop; parent chain is namespace-spec
+    mandate per 0311001, not module-spec content.
+
+3.3 §3 Five coding-readiness questions.
+    Answers TB00000 §3.2 governance-mandated five questions.
+    Restates 0511002 §2/§13/§14/§15/§16 content +
+    0500000 §3 + diagram-encoded gate sequence.
+    Classification: (a) ARCHITECTURAL RESTATEMENT.
+    Retirement: S-4 drop; governance-spec mandate.
+
+------------------------------------------------------------
+§4 PRE-PIPELINE STEPS (3 elements)
+------------------------------------------------------------
+
+3.4 SP-PRE-001 PARAMETER STORE SNAPSHOT FREEZE.
+    Restates I-4 design intent. D2 encodes via visual
+    "PRE-STEP 1: Parameter Store Snapshot Frozen" labeled
+    group <title>contract:Parameter_Store_Snapshot</title>
+    + rule:HR-SP-001 in D2 root governs.
+    Classification: (a) ARCHITECTURAL RESTATEMENT.
+    Retirement: S-4 drop; D2 governs is canonical.
+
+3.5 SP-PRE-002 PRE-COMPUTATION CACHE READ.
+    Restates I-2 design intent. D2 encodes via visual
+    "PRE-STEP 2: Pre-Computation Cache Read" labeled
+    group <title>contract:Pre_Computation_Cache_Read</title>
+    + rule:HR-SP-002 + ar:AR-016 (ATR incremental) in D2
+    root governs.
+    Specific cache contents enumeration (regime_cache,
+    htf_ema_20, atr_14, etc.) is (b) coding-unique cache
+    field inventory.
+    Classification: (a) for architectural fact;
+                    (b) for cache field inventory.
+    Retirement: S-4 drop architectural fact;
+                migrate (b) inventory to 0511002 §3.2
+                cache contents list (already present).
+
+3.6 SP-PRE-003 PER-PAIR STATUS CHECK.
+    Restates dv1_6 instrument-channel status pre-filter.
+    D2 encodes via visual "PER-PAIR INSTRUMENT STATUS
+    CHECK" labeled group <title>gate:
+    Pre_Gate_1_Per_Pair_Status</title>. Specific blocked-
+    status list (reduce_only/work_in_progress/delisted/
+    limit_only/cancel_only/maintenance) canonical via
+    ar:AR-039 in D1 root governs.
+    Classification: (a) ARCHITECTURAL RESTATEMENT.
+    Retirement: S-4 drop.
+
+------------------------------------------------------------
+§5 GATE 1 — STATE MACHINE
+------------------------------------------------------------
+
+3.7 SP-G1-001 Kraken engine state pre-check.
+    Restates: PASS if engine "online", FAIL/WAIT if
+    "maintenance" or "cancel_only". D2 encodes via
+    visual "Gate 1: State Machine" labeled group
+    <title>gate:G1_State_Machine</title>.
+    Classification: (a) ARCHITECTURAL RESTATEMENT.
+    Retirement: S-4 drop.
+
+------------------------------------------------------------
+§6 GATE 2 — LIQUIDITY GATE
+------------------------------------------------------------
+
+3.8 SP-G2-001 24h USD volume >= $500k threshold.
+    D2 encodes via visual "Gate 2: Liquidity Gate"
+    labeled group <title>gate:G2_Liquidity</title>
+    with consumes:param:min_volume_usd_daily + decision:
+    D-04_Liquidity_Floor. Reject code LIQUIDITY_REJECTED
+    visible in D2 SVG.
+    Classification: (a) ARCHITECTURAL RESTATEMENT.
+    Retirement: S-4 drop.
+
+------------------------------------------------------------
+§7 GATE 3 — REGIME PRE-FILTER
+------------------------------------------------------------
+
+3.9 SP-G3-001 Regime pre-filter logic.
+    Specifies STOP regimes (TRENDING_NEG any vol,
+    NON_DIR+ELEVATED) and PASS regimes (TRENDING_POS
+    any vol, NON_DIR+NORMAL). D2 encodes via visual
+    "Gate 3: Regime Pre-Filter" labeled group <title>
+    gate:G3_Regime_Filter</title> with constraints
+    rule:HR-SP-005 + ar:AR-074 + ar:AR-016. D4 Regime
+    Taxonomy diagram canonically encodes the 6 regimes
+    via labeled groups regime:TRENDING_POS_NORMAL through
+    regime:TRENDING_NEG_ELEVATED.
+    Classification: (a) ARCHITECTURAL RESTATEMENT.
+    Retirement: S-4 drop; D2 + D4 govern. Note:
+    HR-REGIME-007 amended dv1_1 directional cascade
+    (TRENDING_NEG -> SHORT permitted) is canonical via
+    D4 + D7 root governs. 1011003 dv1_0 §7 prose is
+    pre-amendment (long-only blocking) and is cluster
+    C2-cascaded — see §4.C2 below.
+
+------------------------------------------------------------
+§8 GATE 4 — 1H HTF CONFIRMATION
+------------------------------------------------------------
+
+3.10 SP-G4-001 / SP-G4-002 HTF EMA(20) > EMA(50) gate.
+     D2 encodes via visual "Gate 4: 1H HTF Confirmation"
+     labeled group <title>gate:G4_HTF_Confirmation</title>.
+     NON_DIR+NORMAL SKIP Gate 4 branch and TRENDING_POS
+     mandatory Gate 4 branch both visible in D2 visual
+     text.
+     Classification: (a) ARCHITECTURAL RESTATEMENT.
+     Retirement: S-4 drop.
+
+------------------------------------------------------------
+§9 SSS SIGNAL ENGINE (6 elements)
+------------------------------------------------------------
+
+3.11 SP-SSS-001 SSS fires ONLY after Gate 4 pass.
+     D2 encodes via rule:HR-SP-005 in D2 root governs +
+     visual SSS Signal Engine band positioned after
+     Gate 4. ar:AR-067 amended dv1_43 in 0500000 §4 AR
+     registry prose canonically defines three-factor
+     scoring.
+     Classification: (a) ARCHITECTURAL RESTATEMENT.
+     Note: AR-067 is NOT in any diagram root governs
+     list — flagged as separate finding §7.1 below
+     (0500000 internal V-038.3 diagram-encoding gap).
+
+3.12 SP-SSS-002 CONDITION 1 — RSI(14).
+     1011003 dv1_0 PROSE: "rsi_entry_low (50) < RSI(14)
+     < rsi_entry_high (70)" + Wilder's SMMA formula.
+     CANONICAL (0500000 dv1_46 §4 AR-067 amended dv1_43
+     line 4941-4993 + AR-076 + TB00000 v2_29 §9.17):
+       SC-SSS-1 (long): rsi_long_low (30) < RSI < rsi_long_high (50)
+       SC-SSS-1 (short): rsi_short_high (50) < RSI < rsi_short_low (70)
+     Long-side parameter names AND values both renamed and
+     revalued per Path 2 reconciliation (TB00180 SL §5).
+     Wilder's SMMA formula canonical via ar:AR-076 in D2
+     root governs — formula UNCHANGED. Staleness is
+     PARAMETER NAMING + VALUES, not RSI formula itself.
+     Classification: (a) ARCHITECTURAL RESTATEMENT WITH
+                     STALENESS — cluster C1 cascade
+                     (see §4 below). Retirement: S-4 +
+                     prerequisite S-3 prose update to
+                     0511002.
+
+3.13 SP-SSS-003 CONDITION 2 — EMA(9) > EMA(21).
+     1011003 dv1_0 PROSE: single-direction "ema_9 > ema_21"
+     with standard EMA alpha formulas.
+     CANONICAL (AR-067 amended dv1_43 line 4954-4960 +
+     4984-4988):
+       SC-SSS-2 (long): EMA(9) > EMA(21)
+       SC-SSS-2 (short): EMA(9) < EMA(21)  (inequality reversed)
+     Direction-symmetric EMA crossover.
+     Classification: (a) ARCHITECTURAL RESTATEMENT WITH
+                     STALENESS — cluster C1 cascade.
+                     EMA alpha formulas are CIATS-owned
+                     starting per TB00000 v2_29 §9.17.
+
+3.14 SP-SSS-004 CONDITION 3 — Volume confirmation.
+     1011003 dv1_0 PROSE: "current_volume > volume_ma_20 *
+     volume_sss_threshold (1.0x)". CIATS-owned starting.
+     CANONICAL (AR-067 amended dv1_43 line 4961-4964 +
+     4989-4993): same volume threshold (1.0x) for both
+     long and short directions.
+     Classification: (a) ARCHITECTURAL RESTATEMENT.
+     Note: param:volume_sss_threshold NOT in any diagram
+     governs (cluster C1 cascade — missing parameter
+     diagram-side encoding per §4 below).
+
+3.15 SP-SSS-005 SSS output dict.
+     1011003 dv1_0 PROSE: signal_params = {rsi_14, ema_9,
+     ema_21, volume_ratio, sss_pass}.
+     CANONICAL (AR-067 amended dv1_43 line 5000-5003):
+     {rsi_14, ema_9, ema_21, volume_ratio, sss_pass,
+     side} with side in {"long", "short"} for per-module
+     routing.
+     Classification: (b) CODING-UNIQUE (dict structure
+                     with per-module routing field) +
+                     (a) for the per-module routing
+                     architectural fact (governed by
+                     AR-067 amended). Migration: S-3
+                     amend 0511002 §8 to add "side" field.
+
+3.16 SP-SSS-006 SSS FAIL -> SKIP; SSS PASS -> Gate 5.
+     Classification: (a) ARCHITECTURAL RESTATEMENT —
+                     rule:HR-SP-005 in D2 governs.
+     Retirement: S-4 drop.
+
+------------------------------------------------------------
+§10 GATE 5 — SELECTION CONTROLLER (8 elements)
+------------------------------------------------------------
+
+3.17 SP-G5-001 Six sequential quality gates; FAIL = SKIP
+     + log GATE_5_RESULT.
+     D2 encodes via visual "Gate 5: Selection Controller"
+     labeled group <title>gate:G5_Selection_Controller</title>
+     with constraints ar:AR-072 + decision:D-08.
+     Classification: (a) ARCHITECTURAL RESTATEMENT.
+     Retirement: S-4 drop.
+
+3.18 SC-GATE-1 SSS three-condition pass.
+     1011003 dv1_0 PROSE: "SSS all three conditions true
+     (already confirmed — pass)".
+     CANONICAL (0500000 §4 AR-072 amended dv1_43 line
+     5084-5091):
+       SC-GATE-1 (LONG variant): long-side SSS PASS;
+                                 Reject: SSS_SIGNAL_FAIL_LONG
+       SC-GATE-1 (SHORT variant): short-side SSS PASS;
+                                  Reject: SSS_SIGNAL_FAIL_SHORT
+     Plus SHORT-MODULE PRE-GATE before SC-GATE-1 short:
+       margin_eligible_flag[symbol] == True per pair_cache
+       (per AR-073 amended); Reject:
+       PAIR_NOT_MARGIN_ELIGIBLE.
+     AR-072 + AR-073 ARE in D2/D4/D7 root governs.
+     Classification: (a) ARCHITECTURAL RESTATEMENT WITH
+                     STALENESS + (a) MISSING SHORT-MODULE
+                     PRE-GATE — cluster C2 (see §4 below).
+                     Closure path: S-3 prose update to
+                     0511002 §9 (no S-2 diagram amendment
+                     needed; parents AR-072/AR-073 already
+                     in diagram governs).
+
+3.19 SC-GATE-2 Candle body strength.
+     1011003 dv1_0 PROSE: "abs(close - open) > ATR(14) *
+     sc_body_threshold (0.3 CIATS starting)".
+     CANONICAL (AR-072 amended dv1_43 line 5092-5097):
+     direction-symmetric (same logic both directions);
+     param:body_threshold = 0.3 starting, CIATS-owned
+     per-module per TB00000 v2_29 §9.17.
+     Reject: WEAK_CANDLE_BODY (unchanged).
+     Classification: (a) ARCHITECTURAL RESTATEMENT.
+     Retirement: S-4 drop. Note: param:body_threshold not
+     in any diagram governs — cluster C1 cascade for
+     parameter diagram-side encoding.
+
+3.20 SC-GATE-3 No open position on symbol.
+     1011003 dv1_0 PROSE: "symbol NOT in position_mirror".
+     CANONICAL (AR-072 amended dv1_43 line 5098-5108):
+     per-module — Long_Module checks long_position_mirror,
+     Short_Module checks short_position_mirror. A pair
+     MAY be concurrently held in opposite directions
+     across modules.
+     Reject (renamed): POSITION_ALREADY_OPEN_THIS_MODULE.
+     Per-module state per AR-073 amended dv1_43.
+     Classification: (a) ARCHITECTURAL RESTATEMENT WITH
+                     STALENESS — cluster C2 cascade.
+
+3.21 SC-GATE-4 Post-exit cooldown.
+     1011003 dv1_0 PROSE: "symbol NOT in cooldown_registry
+     OR elapsed >= sc_cooldown_seconds (300s starting)".
+     CANONICAL (AR-072 amended dv1_43 line 5109-5115 +
+     AR-073 amended dv1_43): per-module —
+     long_exit_cooldown_log + short_exit_cooldown_log.
+     Reject (renamed): PAIR_IN_COOLDOWN_THIS_MODULE.
+     Classification: (a) ARCHITECTURAL RESTATEMENT WITH
+                     STALENESS — cluster C2 cascade.
+
+3.22 SC-GATE-5 Minimum size pre-validation.
+     1011003 dv1_0 PROSE: "entry_qty_est >= qty_min AND
+     entry_qty_est * entry_limit_price >= cost_min".
+     CANONICAL (AR-072 amended dv1_43 line 5116-5122):
+     direction-symmetric; per-pair qty_min/cost_min from
+     pair_cache (AR-073 amended).
+     Reject: POSITION_TOO_SMALL (unchanged).
+     Classification: (a) ARCHITECTURAL RESTATEMENT.
+     Retirement: S-4 drop.
+
+3.23 SC-GATE-6 Consecutive loss limit.
+     1011003 dv1_0 PROSE: "consecutive_loss_count[symbol]
+     < sc_consecutive_limit (3 starting)".
+     CANONICAL (AR-072 amended dv1_43 line 5123-5131 +
+     AR-073 amended): per-module —
+     long_consecutive_loss_count +
+     short_consecutive_loss_count. CIATS-owned
+     per-module.
+     Reject (renamed): CONSECUTIVE_LOSSES_EXCEEDED_THIS_MODULE.
+     Classification: (a) ARCHITECTURAL RESTATEMENT WITH
+                     STALENESS — cluster C2 cascade.
+
+3.24 SP-G5-002 Cooldown registry write/clear semantics.
+     1011003 dv1_0 PROSE: "On SC-GATE-4 exit: write
+     cooldown_registry[symbol] = time.monotonic(). On
+     subsequent win: clear cooldown + consecutive_loss
+     = 0."
+     CANONICAL (AR-073 amended dv1_43): per-module write
+     to long_exit_cooldown_log or short_exit_cooldown_log;
+     per-module reset of long_consecutive_loss_count or
+     short_consecutive_loss_count.
+     Classification: (a) ARCHITECTURAL RESTATEMENT WITH
+                     STALENESS — cluster C2 cascade.
+
+------------------------------------------------------------
+§11 GATE 6 — REGIME GATE (SIZING MODIFIER)
+------------------------------------------------------------
+
+3.25 SP-G6-001 Gate 6 sizing modifier.
+     1011003 dv1_0 PROSE: TRENDING_POS = 1.0x;
+     NON_DIR+NORMAL = 0.5x. Gate 6 never blocks.
+     D2 encodes via visual "Gate 6: Regime Gate / Sizer"
+     labeled group <title>gate:G6_Regime_Sizer</title>.
+     Specific modifier values (1.0 / 0.5) are CIATS-owned
+     starting per TB00000 v2_29 §9.17.
+     Classification: (a) ARCHITECTURAL RESTATEMENT.
+     Retirement: S-4 drop.
+
+------------------------------------------------------------
+§12 GATE 7 — RISK GUARD
+------------------------------------------------------------
+
+3.26 SP-G7-001 Delegates to Risk Engine.
+     Returns: PASS | BLOCK | SESSION_PAUSE | FULL_HALT.
+     D2 encodes via visual "Gate 7: Risk Guard" labeled
+     group <title>gate:G7_Risk_Guard</title>. Underlying
+     Risk Engine architecture canonical in D6 + 1011011
+     spec.
+     Classification: (a) ARCHITECTURAL RESTATEMENT
+                     (delegation pattern).
+     Retirement: S-4 drop.
+
+------------------------------------------------------------
+§13 GATE 8 — POSITION SIZER (3 elements)
+------------------------------------------------------------
+
+3.27 SP-G8-001 Gate 8 never blocks; delegates to Risk
+     Engine sizer.
+     D2 encodes via visual "Gate 8: Position Sizer (never
+     blocks, only sizes)" + rule:HR-SP-006 in D2 governs.
+     Classification: (a) ARCHITECTURAL RESTATEMENT.
+     Retirement: S-4 drop.
+
+3.28 SP-G8-002 Output: entry_qty / tp_price / emergsl_price
+     / net_RR.
+     D2 encodes Gate 8 output via visual "MAE = ATR(14) x
+     1.5x | emergSL = ATR(14) x 3.0x | TP = R:R formula"
+     + SACRED banner "rule:Sacred_R_R_1_to_1_5". Specific
+     output dict structure (entry_qty quantized DOWN,
+     tp_price quantized UP, emergsl_price quantized DOWN)
+     is (b) coding-unique quantization mechanics.
+     net_RR = Decimal("1.5") hardcoded — sacred per
+     rule:Sacred_R_R_1_to_1_5 in D2 governs.
+     Classification: (a) for architectural facts;
+                     (b) for quantization direction
+                     mechanics. Note: ar:AR-069 (entry
+                     limit price formula amended dv1_42
+                     direction-symmetric) IS in D2 root
+                     governs — direction-symmetric
+                     quantization is canonically encoded.
+
+3.29 SP-G8-003 PIPELINE_PASS log + handoff to Execution
+     Engine.
+     D2 encodes via dispatch arrows visible in D2 SVG
+     (Gate 8 -> Execution_Engine band -> WSManager
+     dispatch seam).
+     Classification: (a) ARCHITECTURAL RESTATEMENT.
+     Retirement: S-4 drop.
+
+------------------------------------------------------------
+§14 SSS INDICATOR SEEDING (2 elements)
+------------------------------------------------------------
+
+3.30 SP-SEED-001 At startup REST GetOHLCData seeding.
+     1011003 dv1_0 PROSE: "Per AR-068 — SSS seeding uses
+     same GetOHLCData call as ATR seeding. Zero
+     additional REST calls." Lists per-indicator seed
+     algorithms (first 14 closes -> RSI seed; first
+     9/21 closes -> EMA SMA seeds; first 20 volumes ->
+     volume_ma_20 SMA seed).
+     CANONICAL (0500000 §4 AR-068 line 5024-5034):
+     identical content.
+     PROBLEM: AR-068 IS in §4 AR registry but NOT in any
+     diagram root governs list. Verified at TB00195 chat-
+     turn cold-load — AR-068 absent from D1/D2/D3/D4/D5/
+     D6/D7/Tier-1 root governs.
+     Classification: (c) ARCHITECTURAL CONTENT NOT IN
+                     DIAGRAMS — cluster C3 (see §4
+                     below). S-2 amendment: add ar:AR-068
+                     to D1 root governs (WS_Manager owns
+                     startup REST GetOHLCData seeding
+                     orchestration per 1011014 SS-WARMUP
+                     contracts).
+
+3.31 SP-SEED-002 sss_state dict + WARM_UP -> READY
+     transition.
+     1011003 dv1_0 PROSE: "All seed values in sss_state
+     [symbol]: avg_gain, avg_loss, rsi_14, ema_9, ema_21,
+     volume_ma_20. Pair transitions WARM_UP -> READY only
+     after SSS indicators seeded (in addition to ATR and
+     EMA)."
+     CANONICAL (AR-068 same line 5024-5034): WARM_UP ->
+     READY transition requires ALL FIVE indicators
+     seeded.
+     Classification: (b) CODING-UNIQUE dict structure
+                     for sss_state +
+                     (c) for the WARM_UP -> READY
+                     architectural transition (gated by
+                     AR-068 which is the cluster C3
+                     diagram-encoding gap).
+
+------------------------------------------------------------
+§15 HARD RULES (10 elements)
+------------------------------------------------------------
+
+3.32 HR-SP-001 Parameter Store snapshot frozen.
+     D2 root governs ✓. Visual: PRE-STEP 1 label cites
+     HR-SP-001. constraints ar:AR-076 + rule:HR-SP-001.
+     Classification: (a) ARCHITECTURAL RESTATEMENT.
+
+3.33 HR-SP-002 Pre-computation cache read-only.
+     D2 root governs ✓. Visual: PRE-STEP 2 label.
+     constraints ar:AR-076 + ar:AR-016 + rule:HR-SP-002.
+     Classification: (a) ARCHITECTURAL RESTATEMENT.
+
+3.34 HR-SP-003 Gates strictly sequential 1 -> 8.
+     D2 root governs ✓. Visual: sequential layout of
+     gate boxes top-to-bottom. constraints rule:HR-SP-003
+     at multiple gate labeled groups (line 2115, 2139).
+     Classification: (a) ARCHITECTURAL RESTATEMENT.
+
+3.35 HR-SP-004 RSI Wilder SMMA — Standard EMA prohibited.
+     D2 root governs ✓. Direct rule listing. AR-076 also
+     in D2 governs encodes the Wilder formula
+     architecturally.
+     Classification: (a) ARCHITECTURAL RESTATEMENT.
+
+3.36 HR-SP-005 SSS runs ONLY when Gate 3 passes.
+     D2 root governs ✓. Visual: SSS Signal Engine band
+     positioned AFTER Gate 3 -> Gate 4 sequence.
+     constraints rule:HR-SP-005 + ar:AR-074 at gate:
+     G3_Regime_Filter labeled group.
+     Classification: (a) ARCHITECTURAL RESTATEMENT.
+
+3.37 HR-SP-006 Gate 8 never blocks — only sizes.
+     D2 root governs ✓. Visual: "Gate 8: Position Sizer
+     (never blocks, only sizes)" label. constraints
+     rule:HR-SP-006 at gate:G8_Position_Sizer labeled
+     group.
+     Classification: (a) ARCHITECTURAL RESTATEMENT.
+
+3.38 HR-SP-007 Net 1:1.5 R:R hardcoded — never CIATS-owned.
+     rule:Sacred_R_R_1_to_1_5 in D2 root governs ✓.
+     Visual: SACRED banner at Gate 8.
+     sacred_constraints field cited in D2 <desc>.
+     Classification: (a) ARCHITECTURAL RESTATEMENT.
+
+3.39 HR-SP-008 Decimal arithmetic; no float; no math.floor
+     /ceil.
+     1011003 dv1_0 PROSE: Signal_Pipeline-specific rule.
+     CANONICAL (AR-047 in D1 root governs): "Decimal
+     arithmetic — system-wide rule." HR-SP-008 is the
+     Signal_Pipeline projection of system-wide AR-047.
+     Classification: (a) ARCHITECTURAL RESTATEMENT.
+     Retirement: S-4 drop; AR-047 in D1 governs is
+     canonical.
+
+3.40 HR-SP-009 GetOHLCData response[-1] excluded.
+     1011003 dv1_0 PROSE: Signal_Pipeline-specific rule.
+     CANONICAL (ar:AR-017 in D4 root governs + multiple
+     constraints at D4 cells line 3074 + 3095 +
+     additional system-wide encoding). HR-SP-009 is the
+     Signal_Pipeline projection of system-wide AR-017.
+     Classification: (a) ARCHITECTURAL RESTATEMENT.
+
+3.41 HR-SP-010 Pipeline does not fire during WS reconnect.
+     1011003 dv1_0 PROSE: "Candle events queued during
+     reconnect discarded after reconnect completes."
+     CANONICAL (AR-056 in §4 AR registry line 4775-4776):
+     "Pipeline evaluations: PROHIBITED during reconnect.
+     Candle events queued during reconnect are DISCARDED
+     after completion."
+     PROBLEM: AR-056 IS in §4 AR registry but NOT in any
+     diagram root governs list. Verified at TB00195 chat-
+     turn cold-load — AR-056 absent from D1/D2/D3/D4/D5/
+     D6/D7/Tier-1 root governs. D1 has contract:
+     WM-RECONNECT-016 (transient WS catch + per-shard
+     reconnect) — that contract handles WS-Manager-side
+     reconnect mechanics but does NOT encode the pipeline-
+     coordination rule "Signal_Pipeline does not fire
+     during reconnect."
+     Classification: (c) ARCHITECTURAL CONTENT NOT IN
+                     DIAGRAMS — cluster C4 (see §4
+                     below). S-2 amendment: add ar:AR-056
+                     to D1 root governs (or add explicit
+                     rule:HR-SP-010 to D2 root governs as
+                     pipeline-side coordination rule —
+                     diagram-target decision deferred to
+                     S-2 author per RR-SCOPE-009
+                     Chesterton-fence prudence; both
+                     options preserve loss-prevention
+                     intent).
+
+------------------------------------------------------------
+§16 REVISION HISTORY
+------------------------------------------------------------
+
+3.42 §16 Revision history.
+     dv1_0 04-05-2026 entry. Phase 8 new spec authoring
+     record.
+     Classification: (a) ARCHITECTURAL RESTATEMENT.
+     Retirement: §16 retains as historical record in the
+     retired 1011003 document; not migrated (each retired
+     document keeps its own revision history per 0311001
+     §11 retirement-archive convention).
+
+============================================================
+4. ROLL-UP TOTALS
+============================================================
+
+Bucket counts across 10 HR-SP-* + 27 SP-* contracts +
+6 SC-GATE-* + 3 SC-SSS-* + §1-§3 / §16 metadata:
+
+  (a) ARCHITECTURAL RESTATEMENT (drop with retirement):
+      ~42 elements
+      - All HR-SP-001 through HR-SP-009 (8 of 10 hard
+        rules; HR-SP-010 is (c))
+      - All SP-PRE-001/002/003 pre-pipeline steps
+        (architectural facts; cache field inventories
+        split (b))
+      - SP-G1-001 (D2 visual + gate:G1)
+      - SP-G2-001 (D2 visual + gate:G2 + param:
+        min_volume_usd_daily + decision:D-04)
+      - SP-G3-001 (D2 visual + gate:G3 + ar:AR-074 +
+        D4 6-regime grid)
+      - SP-G4-001/002 (D2 visual + gate:G4)
+      - SP-SSS-001/006 (rule:HR-SP-005 + D2 visual)
+      - SP-SSS-002/003/004 (architectural facts —
+        formulas canonical via AR-076 + AR-067; staleness
+        is parameter-naming/values per cluster C1)
+      - SP-G5-001 (D2 visual + gate:G5 + ar:AR-072)
+      - SC-GATE-1/3/4/6 (direction-symmetric per-module
+        architectural facts canonical via AR-072 +
+        AR-073; staleness per cluster C2)
+      - SC-GATE-2/5 (direction-symmetric facts,
+        unchanged)
+      - SP-G5-002 cooldown semantics (per-module per
+        AR-073; staleness per cluster C2)
+      - SP-G6-001 (D2 visual + gate:G6 + ar:AR-074)
+      - SP-G7-001 (D2 visual + gate:G7; delegation
+        pattern)
+      - SP-G8-001/002/003 (D2 visual + gate:G8 +
+        rule:HR-SP-006 + Sacred_R_R_1_to_1_5 +
+        ar:AR-069)
+      - §1 / §2 / §3 / §16 metadata
+
+  (b) CODING-UNIQUE (migrate to 0511002 at S-3):
+      ~8 elements
+      - SP-PRE-002 cache field inventory (regime_cache,
+        htf_ema_20, atr_14, etc.) — specific dict keys
+      - SP-SSS-002 RSI per-symbol state dict structure
+        ({avg_gain, avg_loss, rsi_14})
+      - SP-SSS-003 EMA per-symbol state dict structure
+        ({ema_9, ema_21})
+      - SP-SSS-004 volume_ma_20 per-symbol state dict
+        ({volume_ma_20})
+      - SP-SSS-005 signal_params dict structure
+        (+ "side" field per AR-067 amended dv1_43 —
+        partly (a) for routing fact)
+      - SP-G8-002 quantization direction mechanics
+        (ROUND_DOWN entry_qty, ROUND_UP tp_price,
+        ROUND_DOWN emergsl_price) — implementation-
+        level quantization
+      - SP-SEED-002 sss_state composite dict
+        (avg_gain, avg_loss, rsi_14, ema_9, ema_21,
+        volume_ma_20) — implementation-level dict
+        layout
+      - Sub-pseudocode for snapshot-freeze ordering,
+        cache-write timing, and inter-trade-boundary
+        write queuing — all implementation-level
+
+  (c) ARCHITECTURAL CONTENT NOT IN DIAGRAMS:
+      4 distinct gap-clusters (impact-counted, not
+      element-counted):
+      C1. STALE SSS PARAMETER NAMING + STALE PARAMETER
+          STORE SNAPSHOT REGISTRY in 0511002 + 1011003.
+          The SSS engine in 0511002 §3.1 / §8 and
+          1011003 §9 uses retired single-direction
+          parameter names (rsi_entry_low=50,
+          rsi_entry_high=70). Canonical per 0500000 §4
+          AR-067 amended dv1_43: direction-symmetric
+          rsi_long_low=30 / rsi_long_high=50 /
+          rsi_short_low=70 / rsi_short_high=50 +
+          per-module CIATS instances own per-direction
+          thresholds.
+          Additionally, 0511002 §3.1 lists retired
+          parameters in Parameter Store Snapshot:
+          tradeable_pct (0.50), per_trade_pct (0.05),
+          per_trade_pct -> Half-Kelly at 200 trades,
+          max_concurrent (20), full_halt_drawdown
+          (0.10, per-portfolio), session_pause_drawdown
+          (0.05, per-portfolio). All RETIRED at
+          TB00000 v2_29 §9.17 (per-portfolio drawdowns
+          REDEFINED as per-wallet; first three
+          retired). 0511002 §12.1 Gate 8 sizing
+          formula uses same retired parameters.
+          Diagram-side encoding status: D5 root governs
+          (line 3332) lists ALL FIVE retired parameters
+          (cluster C1-cascade root cause — overlap with
+          TB00194 §7.1 separate finding) and MISSING
+          the new canonical params (per_trade_size_usd,
+          per_trade_ceiling_pct, rsi_long_low/high,
+          rsi_short_low/high, volume_sss_threshold,
+          sc_body_threshold, sc_cooldown_seconds,
+          sc_consecutive_limit, leverage_cap_short,
+          per-wallet drawdown variants).
+          Cascaded affected elements: SP-SSS-002,
+          SP-SSS-003, SP-SSS-004, SC-GATE-2, SC-GATE-4,
+          SC-GATE-6, SP-G6-001 modifier values,
+          SP-G8-002 R:R-driven sizing curve,
+          0511002 §3.1 entire snapshot list,
+          0511002 §12.1 entire sizing formula.
+
+      C2. STALE SELECTION CONTROLLER GENERIC SINGLE-MODULE
+          STATE + MISSING SHORT-MODULE PRE-GATE in
+          0511002 + 1011003.
+          0511002 §9 + 1011003 §10 use generic single-
+          module state (position_mirror,
+          exit_cooldown_log, consecutive_loss_count).
+          Canonical per 0500000 §4 AR-072 amended
+          dv1_43 + AR-073 amended dv1_43: per-module
+          long_*/short_* prefixed state. Reject codes
+          should be "_THIS_MODULE" suffixed
+          (POSITION_ALREADY_OPEN_THIS_MODULE,
+          PAIR_IN_COOLDOWN_THIS_MODULE,
+          CONSECUTIVE_LOSSES_EXCEEDED_THIS_MODULE).
+          Additionally MISSING from 0511002 + 1011003:
+          SHORT-MODULE PRE-GATE (margin_eligible_flag
+          [symbol] == True from pair_cache per AR-073
+          amended; Reject: PAIR_NOT_MARGIN_ELIGIBLE)
+          required before SC-GATE-1 short variant.
+          Diagram-side encoding status: AR-072 +
+          AR-073 ARE in D2/D4/D7 root governs ✓ —
+          NO S-2 diagram amendment needed for this
+          cluster. Closure path is S-3 prose update
+          to 0511002 §9 only.
+          Cascaded affected elements: SC-GATE-1,
+          SC-GATE-3, SC-GATE-4, SC-GATE-6, SP-G5-002,
+          plus the missing SHORT-MODULE PRE-GATE.
+
+      C3. AR-068 (SSS INDICATOR SEEDING AT STARTUP)
+          NOT IN ANY DIAGRAM ROOT GOVERNS LIST.
+          AR-068 (0500000 §4 AR registry line 5024-
+          5034) defines startup REST GetOHLCData
+          seeding of all five per-pair indicators
+          (ATR/RSI/EMA9/EMA21/VolumeMA20) with
+          WARM_UP -> READY transition gating. AR-068
+          is referenced in 1011002 WM-STARTUP-009
+          through -014 + 1011014 SS-WARMUP-011
+          through -016 assignments. AR-068 itself is
+          NOT in any diagram root governs list.
+          Per DD-001/DD-002 diagrams-as-canonical:
+          diagram-side encoding is required for
+          canonical status. AR-068 in §4 AR registry
+          prose is V-038.3 prose narration only.
+          Diagram-target candidate: D1 Kraken API
+          Connection Architecture (WS_Manager owns
+          startup orchestration including REST seeding
+          calls). Single S-2 amendment: add ar:AR-068
+          to D1 root governs.
+          Affected: SP-SEED-001, SP-SEED-002
+          (Signal_Pipeline), plus WM-STARTUP-009..014
+          (WS_Manager — likely already gap from
+          TB00194 audit if AR-068 encoding-gap was
+          surfaced; verify at S-2 author session).
+
+      C4. AR-056 (MID-SESSION WS RECONNECT WITH
+          PIPELINE-NO-FIRE-CLAUSE) NOT IN ANY DIAGRAM
+          ROOT GOVERNS LIST.
+          AR-056 (0500000 §4 AR registry line 4764-
+          4781) defines the 11-step mid-session WS
+          reconnect sequence including the explicit
+          clause "Pipeline evaluations: PROHIBITED
+          during reconnect. Candle events queued
+          during reconnect are DISCARDED after
+          completion." This is the architectural
+          source for HR-SP-010. AR-056 is referenced
+          in 1011002 WM-RECONNECT-001..015 + 1011014
+          SS-RECON-001..016 assignments. AR-056 itself
+          is NOT in any diagram root governs list.
+          D1 governs list contains contract:WM-
+          RECONNECT-016 (transient WS catch + per-
+          shard reconnect) — that contract handles
+          WS-Manager-side reconnect mechanics but
+          does NOT encode the pipeline-coordination
+          rule.
+          Per DD-001/DD-002: diagram-side encoding
+          required.
+          Diagram-target candidates (RR-SCOPE-009
+          Chesterton-fence prudence applied — deferred
+          to S-2 author):
+            (i) D1 root governs (WS_Manager owns
+                reconnect; HR-SP-010 derivable from
+                AR-056 if AR-056 added to D1 governs).
+            (ii) D2 root governs (Signal_Pipeline
+                 coordination rule; could add ar:AR-056
+                 or rule:HR-SP-010 directly).
+          Both options preserve loss-prevention
+          intent. Single S-2 amendment.
+          Affected: HR-SP-010 (Signal_Pipeline) + likely
+          WM-RECONNECT-* elements (WS_Manager). Per-
+          domain coordination rule.
+
+  (d) UNCLEAR ORIGIN (RR-SCOPE-009 Chesterton's-fence
+      gate): 0 elements. All inspected elements have
+      clear origin rationale in their respective
+      diagram/AR/contract citations and predecessor
+      session derivations.
+
+============================================================
+5. DOWNSTREAM QUEUE
+============================================================
+
+5.1 S-2 DIAGRAM AMENDMENTS NEEDED.
+    Per DEC-003 Path A one-diagram-per-session cadence.
+    NEW S-2 amendments surfaced by this audit (in
+    addition to TB00194 inheritance AMENDMENT-1/-2/-3
+    already queued):
+
+    AMENDMENT-4 (NEW from TB00195). 0500000 D1 root
+      governs list ADD ar:AR-068 (SSS indicator seeding
+      at startup) + verify no other AR-068 dependencies
+      from WS_Manager startup pair_cache injection path.
+      No SVG byte change required if added only to root
+      <desc> governs list. Closes cluster C3.
+
+    AMENDMENT-5 (NEW from TB00195). 0500000 root governs
+      list amendment for AR-056 (mid-session WS
+      reconnect with pipeline-no-fire clause). Diagram
+      target between D1 (WS_Manager-owned reconnect)
+      and D2 (pipeline-coordination rule). RR-SCOPE-009
+      four-question origin investigation:
+        (1) Introduced: AR-056 from 0500000 dv1_13
+            (mid-session reconnect distinct from
+            startup).
+        (2) Problem: WS reconnect during open positions
+            requires distinct state preservation logic
+            vs cold-start.
+        (3) Evidence: 1011002 WM-RECONNECT-001..015
+            + 1011014 SS-RECON-001..016 implement
+            AR-056. Still load-bearing.
+        (4) Loss-prevention property: pipeline gating
+            during reconnect prevents trading decisions
+            on stale cache during connection
+            instability. MUST be preserved.
+      Recommended diagram target: D1 root governs
+      (WS_Manager owns reconnect orchestration; AR-056
+      is fundamentally a WS_Manager rule with cross-
+      cutting Signal_Pipeline implication). S-2 author
+      empowered to override to D2 if cross-cutting
+      analysis at S-2 time finds D2 stronger fit.
+      Closes cluster C4.
+
+    AMENDMENT-INHERIT-1 (TB00194 carry-forward, now
+      Signal_Pipeline-pair-confirmed). 0500000 §9 prose
+      reconciliation + verify D5/D6/D7 governs-list
+      parameter additions per TB00000 v2_29 §9.17:
+      ADD param:per_trade_size_usd, param:
+      per_trade_ceiling_pct, param:rsi_long_low,
+      param:rsi_long_high, param:rsi_short_low,
+      param:rsi_short_high, param:volume_sss_threshold,
+      param:sc_body_threshold, param:sc_cooldown_seconds,
+      param:sc_consecutive_limit, param:leverage_cap_short,
+      param:paper_starting_balance_long_usd,
+      param:paper_starting_balance_short_usd, per-wallet
+      drawdown variants. REMOVE param:tradeable_pct,
+      param:per_trade_pct, param:half_kelly_applied_pct,
+      param:max_concurrent from D5 root governs +
+      0500000 §9 prose. Closes cluster C1
+      (Signal_Pipeline contribution to TB00194 C1).
+
+    Total NEW from TB00195: 2 S-2 amendments
+    (AMENDMENT-4 + AMENDMENT-5). TB00194 AMENDMENT-1
+    carry-forward extended scope (more parameter
+    identifiers per Signal_Pipeline contribution).
+    Cumulative S-2 queue: 5 amendments (TB00194 -1/-2/
+    -3 + TB00195 -4/-5).
+
+5.2 S-3 AA-PROSE GAP-FILL (0511002 dv1_0 -> dv1_1).
+    Affected: bucket (b) migration + clusters C1 + C2
+    prose corrections.
+
+    PROSE-UPDATE-K (NEW). 0511002 §3.1 Parameter Store
+      Snapshot Freeze: replace retired-parameter list
+      (tradeable_pct, per_trade_pct, max_concurrent,
+      per-portfolio drawdowns) with canonical TB00000
+      v2_29 §9.17 per-module parameter set (per-module
+      wallets, per_trade_size_usd starting at Kraken
+      min, per_trade_ceiling_pct 25%, per-wallet
+      drawdowns, R:R-driven sizing curve parameters).
+      Add new SSS parameters (rsi_long_low/high,
+      rsi_short_low/high). Gated on S-2 AMENDMENT-INHERIT-1
+      closure per DD-003 4-step workflow.
+
+    PROSE-UPDATE-L (NEW). 0511002 §8 SSS Signal Engine:
+      replace single-direction SC-SSS-1/2/3 prose with
+      direction-symmetric long+short variants per
+      AR-067 amended dv1_43. Update parameter names
+      from rsi_entry_low/high to rsi_long_low/high +
+      rsi_short_low/high. Add "side" field to SSS
+      output dict structure.
+
+    PROSE-UPDATE-M (NEW). 0511002 §9 Gate 5 Selection
+      Controller: replace generic SC-GATE-1/3/4/6
+      prose with direction-symmetric per-module variants
+      per AR-072 amended dv1_43 + AR-073 amended dv1_43.
+      Update reject codes to "_THIS_MODULE" suffixed.
+      ADD SHORT-MODULE PRE-GATE (margin_eligible_flag
+      check before SC-GATE-1 short variant; Reject:
+      PAIR_NOT_MARGIN_ELIGIBLE).
+
+    PROSE-UPDATE-N (NEW). 0511002 §12.1 Position
+      Sizing: retire entire trade_capital / per_trade_USD
+      / Half-Kelly transition formula. Replace with
+      R:R-driven sizing curve form factor per TB00000
+      v2_29 §9.10 sacred-floor R:R + CIATS-owned
+      sizing curve above the floor + B2 25% per-trade
+      ceiling. Gated on S-2 AMENDMENT-INHERIT-3
+      (TB00194 carry-forward — D5 CIATS Architecture
+      sizing curve encoding) closure.
+
+    PROSE-UPDATE-O (NEW). 0511002 §14 Hard Rules:
+      verify HR-SP-001 through HR-SP-010 prose matches
+      diagram-canonical (most are already aligned;
+      HR-SP-010 prose may need amendment after
+      AMENDMENT-5 establishes diagram target).
+
+    Total NEW from TB00195: 5 prose updates to 0511002.
+    All five enable retirement of 1011003 dv1_0 at
+    S-4. PROSE-UPDATE-K and PROSE-UPDATE-N are gated
+    on S-2 AMENDMENT-INHERIT-1 / AMENDMENT-INHERIT-3
+    respectively (DD-003 4-step prereq).
+
+5.3 S-4 1011003 RETIREMENT.
+    Gated on S-2 AMENDMENT-4 + AMENDMENT-5 +
+    AMENDMENT-INHERIT-1 + S-3 PROSE-UPDATE-K through
+    PROSE-UPDATE-O closure. Retire 1011003 dv1_0 in
+    full once 0511002 dv1_1 (post-S-3) contains all
+    (b) migrated content + cluster C1/C2/C3/C4
+    diagram-side and prose-side closures complete.
+
+5.4 CROSS-PAIR DEPENDENCIES.
+    Cluster C3 (AR-068 SSS seeding) cross-cuts
+    WS_Manager (TB00194 audit). The TB00194 audit
+    did NOT explicitly surface AR-068 as a (c) gap
+    (TB00194 §7.1 surfaced 0500000 §9 prose staleness
+    as the primary 0500000 internal finding; AR-068
+    was not in WS_Manager audit scope). Verify at
+    AMENDMENT-4 author session whether AR-068
+    addition to D1 governs also impacts open
+    WS_Manager (b) migrations.
+    Cluster C4 (AR-056 mid-session reconnect)
+    cross-cuts WS_Manager. TB00194 cluster C-* did
+    not include AR-056 (WS_Manager-pair audit
+    treated WM-RECONNECT-019 paper-mode reconnect
+    as (a) via HR-WM-022 derivation; full AR-056
+    diagram-encoding gap was not surfaced). Verify
+    at AMENDMENT-5 author session whether AR-056
+    addition to D1 (or D2) closes additional
+    WS_Manager-pair items.
+
+============================================================
+6. AMBIGUITY-SURFACE FINDINGS (per NSI §7)
+============================================================
+
+6.1 §7.3 VOLUME-OF-(c)-GAPS HIGH FINDING — BELOW
+    THRESHOLD.
+    Four (c) gap clusters (C1, C2, C3, C4) surfaced
+    in Signal_Pipeline pair — below §7.3 "10+" high-
+    volume threshold. Cluster C1 + C2 overlap with
+    TB00194 cluster C1 cascade (parameter foundation
+    + per-module state) — confirming the per-module
+    framework + R:R-driven sizing transition initiated
+    at TB00179 STAGE M-2 is not yet fully propagated
+    through the diagram-canonical layer.
+    Cluster C3 + C4 are NEW gaps surfaced by this
+    audit (AR-068 + AR-056 diagram-encoding gaps were
+    not in TB00194 audit scope).
+    No surface to Bill required — derivable per
+    RR-SCOPE-005 + NSI §3.5 anti-cadence-misread.
+
+6.2 §7.4 RR-SCOPE-009 CHESTERTON'S-FENCE — NO TRIPS.
+    No (d) bucket elements identified. All retired-
+    parameter references (rsi_entry_low/high,
+    tradeable_pct, per_trade_pct, Half-Kelly transition)
+    have clear origin: TB00179 STAGE M-2 PARAMETER
+    FOUNDATION supersession (TB00000 v2_29 §12) +
+    Path 2 SSS reconciliation per TB00180 SL §5.
+    Single-direction SSS / Selection Controller in
+    1011003 dv1_0 (Apr 5 2026) pre-dates AR-067 /
+    AR-072 / AR-073 amended dv1_43 (May 2026 M-2/M-3
+    sequencing).
+    AMENDMENT-5 (AR-056 diagram target between D1
+    and D2) applied four-question origin investigation
+    per §5.1 above — load-bearing constraint preserved
+    via recommended D1 placement; S-2 author empowered
+    to override.
+
+6.3 §7.1 GAP CLASSIFICATION AMBIGUITY — ZERO ITEMS
+    AT SESSION CLOSE.
+    All 42 elements classified to clean (a)/(b)/(c)
+    buckets after diagram-side governs-list verification.
+    Boundary cases (SP-SSS-005 "side" field; SP-G8-002
+    quantization mechanics; SP-PRE-002 cache field
+    inventory) split between (a) architectural fact
+    and (b) implementation detail per element-level
+    diagnosis. No surface to Bill required.
+
+6.4 §7.5 FILESYSTEM-STATE ASSERTION WITHOUT BASH SWEEP
+    — NO RECURRENCE. TB00195 chat-turn 1 ran bash_tool
+    sweep FIRST per NSI §3.3.
+
+6.5 §7.2 TARGET-DIAGRAM IDENTIFICATION GAP — ZERO
+    AMBIGUITY POST-FP/DP.
+    All (c) cluster target diagrams identified:
+    C1 -> D5 (CIATS Architecture parameter governs
+    list — via TB00194 AMENDMENT-INHERIT-1 carry-
+    forward, scope extended for Signal_Pipeline
+    parameter additions).
+    C2 -> NO S-2 NEEDED (AR-072 + AR-073 already in
+    D2/D4/D7 governs; closure via S-3 PROSE-UPDATE
+    only).
+    C3 -> D1 (WS_Manager — startup orchestration owns
+    REST GetOHLCData seeding).
+    C4 -> D1 (recommended; S-2 author may override to
+    D2 per RR-SCOPE-009 four-question prudence).
+    No genuinely-new-diagram surfaces. No new Tier 2
+    diagram required.
+
+6.6 §7.6 STALE PARAMETER REFERENCE HANDLING (CARRIED
+    FORWARD FROM TB00193/TB00194).
+    The cascade pattern from TB00194 cluster C1
+    confirmed at Signal_Pipeline: 1011003 dv1_0
+    references retired parameters indirectly via
+    0511002 dv1_0 §3.1 + §12.1 (snapshot list +
+    sizing formula). The cascade extends with
+    Signal_Pipeline-specific stale params (rsi_entry_
+    low/high) NOT in TB00194's C1 scope. NSI §7.6
+    classification framework applied verbatim:
+    Per-module CIATS SSS parameters (rsi_long_*,
+    rsi_short_*) -> NOT yet encoded in 0500000 §9
+    prose OR D5 param governs list (cluster C1
+    cascade extension; same diagram-encoding gap
+    class as TB00194 C1).
+    Per-module wallet / per-trade-sizing parameters
+    -> Same C1 cluster (TB00194 inheritance).
+
+6.7 §7.7 DD-011 DERIVABLE-DECISION DISCIPLINE.
+    Pre-emit-scan applied at every classification
+    decision and every cluster surface. All four
+    (c) cluster classifications + all five PROSE-
+    UPDATE additions + both NEW S-2 amendments are
+    derivable from cold-load context per RR-SCOPE-005.
+    No items surfaced to Bill as ratification
+    questions. No DD-011 violation in this gap
+    register.
+
+============================================================
+7. SEPARATE 0500000 INTERNAL FINDINGS
+   (Surfaced during audit; NOT Signal_Pipeline-pair
+   gaps proper)
+============================================================
+
+7.1 AR-067 / AR-068 / AR-056 NOT IN ANY DIAGRAM ROOT
+    GOVERNS LIST.
+    Three system-level Architectural Reasoning entries
+    defined in 0500000 §4 AR registry but absent from
+    every diagram's root governs list:
+      AR-056 (Mid-session WS reconnect sequence;
+        contains the "Pipeline evaluations PROHIBITED
+        during reconnect" clause that HR-SP-010
+        sources)
+      AR-067 (SSS Signal Engine — direction-symmetric
+        three-factor momentum scoring; canonical source
+        for SC-SSS-1/2/3 long+short variants and the
+        SSS-output-dict "side" field)
+      AR-068 (SSS indicator seeding at startup —
+        extension of AR-044; defines WARM_UP -> READY
+        transition gated on all five per-pair
+        indicators seeded)
+    Per DD-001/DD-002 diagrams-as-canonical: AR
+    architectural reasoning entries in §4 prose
+    registry are V-038.3 prose narration; canonical
+    encoding requires inclusion in at least one
+    diagram's root governs list. The three ARs above
+    are referenced by Signal_Pipeline elements
+    (SP-SSS-001..006, SC-SSS-1/2/3, SC-GATE-1
+    direction-symmetric variants, SP-SEED-001/002,
+    HR-SP-010) and also by WS_Manager + Startup_Sequence
+    elements (WM-RECONNECT-001..015, WM-STARTUP-009..014,
+    SS-RECON-001..016, SS-WARMUP-011..016).
+    These three are the C3 + C4 cluster gaps + the
+    underlying canonical source for C2 cluster's
+    AR-067 prose-only encoding (note: AR-072 +
+    AR-073 ARE in diagram governs ✓ — only AR-067
+    is missing from the C2 cluster's parent-AR set).
+    Closure: S-2 AMENDMENT-4 (AR-068 -> D1 governs) +
+    S-2 AMENDMENT-5 (AR-056 -> D1 governs) +
+    NEW S-2 AMENDMENT-6 NEEDED (AR-067 -> D2 governs;
+    not currently in TB00195 §5.1 queue — see
+    paragraph below for new addition).
+
+    AMENDMENT-6 (NEW from TB00195 §7.1 finding).
+    Add ar:AR-067 (SSS Signal Engine — direction-
+    symmetric three-factor momentum scoring) to D2
+    root governs list. Single-line addition; no SVG
+    byte change required. Closes the AR-067 portion
+    of cluster C1 (parent canonical encoding) and
+    strengthens the diagram-side encoding of the
+    SSS box in D2 (currently constrained only by
+    ar:AR-005 + ar:AR-016).
+    Cumulative S-2 queue including this addition:
+    6 amendments (TB00194 -1/-2/-3 + TB00195 -4/-5/-6).
+
+    Per TB00194 §7.1 precedent, log this as separate
+    finding for tracking via S-2 queue without new
+    MDR DR entry. The S-2 queue IS the tracking
+    mechanism for prose-vs-diagram reconciliation
+    work.
+
+7.2 0500000 §9 CIATS PARAMETER REGISTRY PROSE-SIDE
+    V-038.3 STALENESS — UNCHANGED FROM TB00194 §7.1.
+    Confirmed at TB00195 cold-load: 0500000 dv1_46
+    §9 prose still lists retired tradeable_pct /
+    per_trade_pct / max_concurrent / per-portfolio
+    drawdowns. Same finding as TB00194 §7.1. Tracked
+    via S-2 AMENDMENT-INHERIT-1 queue position.
+    No new MDR DR-* entry required (S-2 queue IS the
+    audit trail).
+
+============================================================
+8. EXIT CRITERIA STATUS
+============================================================
+
+  E-S1SP-01   COMPLETE (TB00195 chat-turn 1 cold-load +
+              bash sweep + 0500000 dv1_46 presence
+              verified).
+  E-S1SP-02   COMPLETE (end-to-end read of 1011003
+              dv1_0 + 0511002 dv1_0 + D2 + D4 + D7
+              relevant regions of 0500000 dv1_46 +
+              AR-067/AR-068/AR-056/AR-072/AR-073/AR-076
+              §4 AR registry entries).
+  E-S1SP-03   COMPLETE — element-by-element gap
+              register authored above (§3.1-3.42
+              coverage of 1011003 dv1_0 §1-§16).
+  E-S1SP-04   COMPLETE — three-bucket classification
+              (a/b/c) applied to every element;
+              roll-up in §4 above. Zero (d) Chesterton-
+              fence trips.
+  E-S1SP-05   COMPLETE — (c) gap target-diagram
+              identified per §4 cluster C1-C4 + §5.1
+              S-2 AMENDMENT mapping + §7.1 separate
+              finding AR-067 closure path.
+  E-S1SP-06   COMPLETE — S-2 + S-3 + S-4 downstream
+              queue derived in §5. NEW from TB00195:
+              AMENDMENT-4, AMENDMENT-5, AMENDMENT-6 +
+              PROSE-UPDATE-K through PROSE-UPDATE-O.
+              Carry-forward from TB00194: AMENDMENT-
+              INHERIT-1/-2/-3 (scope extended for
+              Signal_Pipeline parameter additions).
+  E-S1SP-07   PENDING — Bill approval gate at TB00195
+              close.
+  E-S1SP-08   PENDING — TB00195 SL + TB00196 NSI +
+              OCS trio at session close (this turn).
+  E-S1SP-09   PENDING — S-1 next-module-pair
+              sequencing in TB00196 NSI §1
+              (Execution_Engine pair: 1011004 dv1_0 +
+              0511003 dv1_1).
+
+============================================================
+9. REVISION HISTORY
+============================================================
+
+  v1_0  2026-05-11  Initial S-1 gap register for
+                    Signal_Pipeline pair (1011003 dv1_0
+                    + 0511002 dv1_0 vs 0500000 dv1_46).
+                    Authored at TB00195 chat-turn 1 per
+                    NSI §2.1 form factor (discrete
+                    controlled-doc per TB00194 precedent
+                    Bill-ratified via "Proceed."). Three-
+                    bucket classification applied to ~42
+                    elements across 1011003 dv1_0 §1-§16
+                    (10 HR-SP-* + 27 SP-* contracts + 6
+                    SC-GATE-* + 3 SC-SSS-* + §1-§3 / §16
+                    metadata). Bucket counts: (a) ~42,
+                    (b) ~8, (c) 4 clusters (C1/C2/C3/C4),
+                    (d) 0. Cluster C1 (stale SSS parameter
+                    naming + stale Parameter Store
+                    Snapshot) overlaps TB00194 C1 cascade.
+                    Cluster C2 (stale Selection Controller
+                    single-module state + missing SHORT-
+                    MODULE PRE-GATE) closure via S-3
+                    prose-only (AR-072 + AR-073 already
+                    in D2/D4/D7 governs). Cluster C3
+                    (AR-068 SSS seeding not in diagram
+                    governs) NEW — single S-2 amendment.
+                    Cluster C4 (AR-056 mid-session
+                    reconnect with pipeline-no-fire
+                    clause not in diagram governs) NEW —
+                    single S-2 amendment with RR-SCOPE-009
+                    four-question origin investigation
+                    applied (load-bearing; D1 placement
+                    recommended). Separate §7.1 finding
+                    surfaced AR-067 also missing from
+                    diagram governs — NEW S-2
+                    AMENDMENT-6. Separate §7.2 finding
+                    reaffirmed TB00194 §7.1 0500000 §9
+                    prose staleness unchanged. Total S-2
+                    queue at TB00195 close: 6 amendments
+                    (TB00194 -1/-2/-3 + TB00195 -4/-5/-6).
+                    Total S-3 queue at TB00195 close: 10
+                    (TB00194) + 5 (TB00195) = 15 prose
+                    updates across 0511001 + 0511002.
+                    Pre-emit DD-011 derivable-decision
+                    discipline applied throughout per NSI
+                    §3.5 + §7.7 — zero items surfaced as
+                    ratification questions; all
+                    dispositions enacted.
+
+============================================================
+END OF TB00195 S-1 SIGNAL_PIPELINE GAP REGISTER v1_0
+============================================================

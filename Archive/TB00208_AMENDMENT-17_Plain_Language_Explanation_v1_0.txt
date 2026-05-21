@@ -1,0 +1,378 @@
+DocDCN:     TB00208
+DocTitle:   AMENDMENT-17_Plain_Language_Explanation
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TBXXXXX_Session_Logs\TB00208_AMENDMENT-17_Plain_Language_Explanation_v1_0.txt
+DocDate:    05-11-2026
+DocTime:    23:30:00 UTC
+
+============================================================
+AMENDMENT-17 — PLAIN-LANGUAGE EXPLANATION
+WHAT IS MISSING FROM 0211003 STARTUP/SHUTDOWN
+AND WHY IT MATTERS
+============================================================
+
+============================================================
+1. WHY THIS DOCUMENT EXISTS
+============================================================
+
+At TB00207 close-gate review, the preliminary package
+described AMENDMENT-17 as "0211003 Startup/Shutdown —
+75 token additions (LARGEST single-spec)." Bill correctly
+flagged that this was opaque. Bill read "75 tokens" and
+reasonably asked whether it referred to trading pairs,
+because TothBot V2 trades all USD/USDC/USDT pair tokens
+on Kraken.
+
+It did not. "75 tokens" was an internal count of
+governance-identifier references — short reference codes
+that document-control software uses to track individual
+rules inside a specification. It was a counting unit
+useful only for change-impact accounting. It told Bill
+nothing about what the spec actually needs.
+
+This document replaces that count with a plain-English
+description of what the Startup/Shutdown specification
+contains, what is missing from the architecture diagram,
+and why fixing it matters.
+
+============================================================
+2. THE TWO DOCUMENTS INVOLVED
+============================================================
+
+2.1 THE SPECIFICATION DOCUMENT.
+
+  0211003_Startup_Shutdown_Procedure_dv1_0.txt is the
+  governance document that describes how the trading bot
+  starts up, how it shuts down, how it recovers when its
+  WebSocket connection to Kraken drops mid-session, and
+  what the system is forbidden to do during these phases.
+  It is operational text — the kind of document an
+  operator would read to understand the boot and stop
+  procedures.
+
+  It contains 75 individual numbered rules. Examples of
+  what those rules cover:
+
+    "Before the system places a trade, the portfolio
+     baseline (the starting account balance against which
+     drawdown is measured) must be recorded exactly once
+     at startup and must never be reset on reconnection."
+
+    "Warm-up of indicator history (ATR, RSI, moving
+     averages) must complete before any trading-pair is
+     allowed into READY state."
+
+    "On startup in paper-trading mode, the private
+     WebSocket connection to Kraken (the channel used
+     for placing real orders) must NOT be opened."
+
+    "Daemon-managed-shutdown (an automatic cancel-all-
+     orders-on-disconnect feature Kraken offers) is
+     PROHIBITED. We manage our own order lifecycle."
+
+  All 75 rules are written out in the specification's
+  text. The specification is internally complete.
+
+2.2 THE ARCHITECTURE DIAGRAM.
+
+  0500000_System_Architecture_Overview_dv1_46_Claude_
+  Source.html is the master architecture diagram of
+  TothBot V2. Per TothBot V2 project rule §4.5
+  (Diagrams As Canonical Design Documents) and the
+  diagrams-as-canonical principle Bill established
+  before TB00149, the diagram is the AUTHORITATIVE
+  source. Specification prose narrates the diagram for
+  the reader; specification prose does NOT govern.
+
+  Inside the diagram, each module of TothBot V2
+  (WS Manager, Signal Pipeline, Execution Engine, Exit
+  Controller, Position Mirror, Logger, Long Module,
+  Selection Controller, CIATS, Risk Engine, Regime
+  Engine, VPS Deployment, and Startup Sequence) has a
+  labeled box. Inside each box, a hidden description
+  block lists the rules that module governs. This list
+  is the diagram's record of what that module is
+  responsible for.
+
+  The Startup_Sequence module box in the architecture
+  diagram lists ZERO of the 75 rules that 0211003
+  defines. The diagram does not currently say the
+  Startup_Sequence module governs any of them.
+
+============================================================
+3. THE GAP — WHAT AMENDMENT-17 FIXES
+============================================================
+
+The 75 rules exist in the specification. The architecture
+diagram is supposed to be the canonical source of what
+each module governs. The two are out of sync. The
+diagram does not currently list any of the 75 rules as
+belonging to the Startup_Sequence module.
+
+AMENDMENT-17 adds those 75 rule names to the
+Startup_Sequence module's "governs" list inside the
+architecture diagram, so the diagram is the canonical
+source for the full set of Startup/Shutdown rules.
+
+The diagram's visual layout does not change. The boxes,
+arrows, and on-screen labels look identical. The change
+is to the hidden description block inside the
+Startup_Sequence box.
+
+============================================================
+4. THE 75 RULES — WHAT THEY ACTUALLY COVER
+============================================================
+
+The 75 rules group into seven categories. Each category
+governs a distinct phase of the startup or shutdown
+lifecycle.
+
+4.1 PRE-STARTUP CONDITIONS (5 rules — SS-PRE-001..005).
+
+  What must be true before the bot is allowed to start.
+  Examples: Kraken API credentials must be present.
+  Trading-pair universe must be loaded. The trading-mode
+  flag (paper vs live) must be set.
+
+4.2 STARTUP SEQUENCE STEPS (28 rules — SS-STARTUP-001..028).
+
+  The actual 10-step boot sequence. What happens in
+  Step 1, Step 2, ..., Step 10. Examples: Subscribe to
+  Kraken public WebSocket channels. Snapshot existing
+  open orders. Restore positions from prior session.
+  Run REST API warm-up calls to pre-fill indicator
+  history. Set the portfolio baseline. Notify systemd
+  the service is READY.
+
+4.3 INDICATOR WARM-UP (8 rules — SS-WARMUP-001..008).
+
+  How the technical indicators get their historical
+  data before the bot is allowed to make trading
+  decisions. Examples: Pull 60 minutes of historical
+  high-timeframe data from Kraken REST. Compute ATR,
+  RSI, and moving averages from the historical data.
+  Hold each trading pair in WARM_UP state until its
+  indicators are populated. Move a pair to READY only
+  after warm-up succeeds.
+
+4.4 PAPER-TRADING-MODE BEHAVIORS (7 rules — SS-PAPER-001..007).
+
+  How paper-trading mode (which simulates orders against
+  real Kraken market data without placing real trades)
+  differs from live trading mode. Examples: In paper
+  mode, do not open the private WebSocket connection to
+  Kraken. In paper mode, do not transmit any orders to
+  Kraken. In paper mode, maintain a synthetic account
+  balance starting at $5,000 per module (long and
+  short). In paper mode, the first log entry after
+  startup MUST be PAPER_TRADING_MODE_ON for traceability.
+
+  These rules implement the §4.4 Paper-As-Master
+  principle (Bill's standing rule that paper trading is
+  the master configuration and live trading mimics paper
+  outside four physically-required divergence points).
+
+4.5 MID-SESSION RECONNECTION (16 rules — SS-RECON-001..016).
+
+  What happens when the WebSocket connection to Kraken
+  drops while the bot is running. This is NOT the same
+  as starting up — when the bot reconnects mid-session
+  it MUST NOT reset its portfolio baseline, MUST NOT
+  re-do indicator warm-up from scratch, and MUST close
+  any gap in candle data without trading on stale
+  information.
+
+4.6 WIRING CONSTRAINT (1 rule — SS-WIRE-001).
+
+  A single rule documenting that the startup code MUST
+  pass the live WS Manager universe reference into the
+  Regime Engine wrapper at both call sites (startup
+  seed and the midnight daily-regime refresh loop).
+  This closes a defect from a prior session in which
+  the universe was captured by reference incorrectly.
+
+4.7 HARD RULES (10 rules — HR-SS-001..010).
+
+  Ten mandatory rules that the system MUST follow on
+  every startup and shutdown without exception.
+  Examples: No trading-decision pipeline activity is
+  permitted before the first pair reaches READY state.
+  Portfolio baseline is set exactly once at Step 5 of
+  startup and is NEVER reset on reconnection. Kraken's
+  Daemon-Managed-Shutdown feature (which would auto-
+  cancel all orders if our connection drops) is
+  PROHIBITED — we own our shutdown logic. The full
+  10-step startup MUST execute on every restart; no
+  steps may be skipped.
+
+============================================================
+5. WHY THIS MATTERS
+============================================================
+
+5.1 LOSS-PREVENTION IS THE PRIMARY MISSION.
+
+  TothBot V2's primary mission is maximize profit,
+  minimize loss, with emphasis on minimizing loss.
+  Loss prevention takes priority over profit
+  generation.
+
+  Many of the 75 rules are loss-prevention rules.
+  Examples:
+
+    - The portfolio-baseline-set-exactly-once rule
+      protects the drawdown halt mechanism. Reset that
+      baseline accidentally on every reconnection and
+      the drawdown halt becomes blind to losses
+      accumulated before the reset.
+
+    - The no-pipeline-before-READY rule prevents
+      trading decisions on cold-cache indicators that
+      would compute false values.
+
+    - The DMS-prohibition rule prevents Kraken from
+      silently cancelling our open positions during a
+      transient network blip without our knowledge.
+
+    - The paper-as-master rules prevent live-trading
+      capital from being placed at risk during what is
+      supposed to be a paper-trading session.
+
+  If these rules are not in the canonical architecture
+  diagram, future code generation, future audits, and
+  future amendment work cannot verify that the system
+  actually implements them. The diagram is supposed to
+  be the single source of truth. Without these 75
+  rules in the diagram, the diagram lies about what
+  the Startup_Sequence module actually does.
+
+5.2 DIAGRAMS-AS-CANONICAL ARCHITECTURE.
+
+  Per §4.5 of the TothBot V2 Project Instructions
+  (Bill's standing rule), the architecture diagram is
+  the canonical design document. Code is generated
+  from the diagram. Specifications narrate the diagram.
+  Tests verify the diagram. Audits cross-check the
+  diagram against the prose specs.
+
+  When the prose spec contains rules that the diagram
+  does not list, the audit detects this as a defect.
+  Every cross-check from now until the system is coded
+  will surface this gap again until it is fixed.
+
+  Closing this gap once via AMENDMENT-17 prevents the
+  defect from being re-raised in every future audit
+  pass.
+
+5.3 THE STARTUP_SEQUENCE MODULE IS THE LARGEST SINGLE
+    UNCATALOGED MODULE IN THE SYSTEM.
+
+  Across all 12 modules audited in the S-1 audit
+  campaign (TB00194 through TB00206), Startup_Sequence
+  has the most rules that exist in prose but are not
+  listed in the diagram. The next-largest is Risk
+  Engine at 73 rules. Closing Startup_Sequence closes
+  the largest single uncataloged surface in the system.
+
+============================================================
+6. WHAT THE FIX LOOKS LIKE
+============================================================
+
+The actual change is small in physical scope:
+
+  - One labeled-group description block inside the
+    architecture diagram (the Startup_Sequence module's
+    "governs" list) gets 75 rule names appended.
+  - The visible diagram (boxes, arrows, on-screen text)
+    is unchanged.
+  - No other diagram changes.
+
+The 75 names that get appended are the rule identifiers
+themselves (SS-PRE-001 through SS-PRE-005, SS-STARTUP-001
+through SS-STARTUP-028, SS-WARMUP-001 through
+SS-WARMUP-008, SS-PAPER-001 through SS-PAPER-007,
+SS-RECON-001 through SS-RECON-016, SS-WIRE-001, and
+HR-SS-001 through HR-SS-010). Each of those names points
+to the corresponding rule body that already exists in
+0211003.
+
+A second pass adds approximately 45 additional cross-
+binding identifiers (which architectural-requirement
+rules govern which startup-sequence behaviors, which
+parameter values bind to which steps, which logged
+events come out of which steps, which paper-mode
+decisions bind to which steps). These cross-bindings
+make the diagram fully traceable in both directions —
+read a rule, find the architectural requirement that
+governs it; read an architectural requirement, find
+every rule that implements it.
+
+============================================================
+7. NO BEHAVIOR CHANGES
+============================================================
+
+AMENDMENT-17 does not change what the bot does. It does
+not change any startup step. It does not change any
+shutdown step. It does not add or remove rules from
+0211003. It does not change how warm-up works, how
+paper mode differs from live, how reconnection happens,
+or how shutdown is triggered.
+
+The amendment is a documentation-completeness fix. It
+records in the canonical architecture diagram what
+already exists in the specification prose, so the two
+sources of truth are no longer out of sync.
+
+After AMENDMENT-17, the next code-generation pass and
+the next audit pass will both be able to verify that
+the Startup_Sequence module's responsibilities are
+fully specified in the canonical source.
+
+============================================================
+8. WHAT BILL IS BEING ASKED TO RATIFY AT CLOSE-GATE
+============================================================
+
+Bill is being asked to approve adding the 75 rule
+names (plus the ~45 cross-bindings) to the
+Startup_Sequence module's "governs" list inside the
+architecture diagram, so the diagram becomes the
+canonical source for what Startup/Shutdown does.
+
+Bill is NOT being asked to:
+  - Change any startup or shutdown behavior.
+  - Add new rules.
+  - Remove existing rules.
+  - Approve any trading-mode change.
+  - Approve any code change.
+
+This is a documentation-completeness fix to bring the
+canonical architecture diagram into alignment with the
+existing specification prose.
+
+============================================================
+9. REVISION HISTORY
+============================================================
+
+  v1_0  2026-05-11  Initial. Replaces the opaque "75
+                    tokens" framing in the TB00207
+                    Step 3 Close-Gate Preliminary
+                    Package §2 AMENDMENT-17 entry
+                    with a plain-English description
+                    of what the 0211003 Startup/
+                    Shutdown specification contains,
+                    what is missing from the
+                    architecture diagram, and why the
+                    fix matters for the primary
+                    mission (loss prevention) and the
+                    diagrams-as-canonical
+                    architecture. Authored per
+                    TB00207 SL v1_1 §5.2 carry-
+                    forward and TB00208 NSI v1_1
+                    mission directive. Single-document
+                    deliverable per the one-document-
+                    per-turn rule established at
+                    TB00207 chat-turn 4.
+
+============================================================
+END OF DOCUMENT
+============================================================

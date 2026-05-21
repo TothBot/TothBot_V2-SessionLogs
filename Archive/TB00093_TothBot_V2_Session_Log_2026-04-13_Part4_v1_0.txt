@@ -1,0 +1,531 @@
+DocDCN:     TB00093
+DocTitle:   TothBot_V2_Session_Log_2026-04-13_Part4
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\My_TothBot_Stuff\TBXXXXX_Session_Logs\TB00093_TothBot_V2_Session_Log_2026-04-13_Part4_v1_0.txt
+DocDate:    04-13-2026
+DocTime:    23:59:59 UTC
+
+============================================================
+TOTHBOT V2 SESSION LOG — 2026-04-13 PART 4
+============================================================
+
+============================================================
+1. SESSION IDENTITY
+============================================================
+
+Session date:     April 13, 2026 (Part 4)
+Session number:   TB00093
+Session type:     DEFECT-SS-004 deployment + DEFECT-SS-005
+                  fix + DEFECT-SS-006 FP/DP analysis +
+                  spec corrections (in progress).
+Prior session:    TB00092 (2026-04-13 Part 3)
+
+Documents read this session:
+  TB00000  v2_8    Project Instructions             read
+  TB00092  v1_0    Prior session log                read
+  0411001  dv1_11  Kraken WS v2 Specification       read
+  0411002  dv1_0   Kraken REST API Specification     read
+  0711003  dv1_0   Asset Selection Specification     read
+
+============================================================
+2. WORK COMPLETED THIS SESSION
+============================================================
+
+------------------------------------------------------------
+2.1 DEFECT-SS-004 Deployment — INCOMPLETE INSTRUCTIONS
+------------------------------------------------------------
+
+Bill executed TB00092 Section 4 deployment steps.
+TB00092 Step 2 said "Bill commits to TothBot_V2-Code"
+but gave git add/commit/push commands WITHOUT a cd
+command to switch from TothBot_V2-Docs to TothBot_V2-Code.
+
+Bill ran git add tothbot/ws_manager.py while still in
+TothBot_V2-Docs directory. Git returned:
+  fatal: pathspec 'tothbot/ws_manager.py' did not match
+  any files
+
+Bill then SSH'd to VPS, ran git pull — got "Already up
+to date" because ws_manager.py was never pushed to
+TothBot_V2-Code. Service restarted with old dv1_13 code.
+Log grep returned empty output.
+
+ROOT CAUSE: Claude's incomplete instructions in TB00092.
+Missing cd command between repo switches. Claude's error.
+
+FIX: Corrected instructions provided. Bill committed
+ws_manager.py dv1_14 to TothBot_V2-Code from correct
+directory, pushed, pulled on VPS, restarted.
+
+RULE 17 ESTABLISHED: "Always give complete and correct
+instructions you Mother Fucking Moron. Include Command
+Prompt or Powershell in the Mother Fucking instructions
+you Fucking Moron. Include root file path in each
+instruction you Mother Fucking Moron. Claude will not
+be a Mother Fucking Moron and will follow always give
+complete and correct instructions!!!!!!"
+
+------------------------------------------------------------
+2.2 DEFECT-SS-004 — VERIFIED FIXED
+------------------------------------------------------------
+
+After correct deployment of ws_manager.py dv1_14:
+
+  Log output confirmed:
+    WARMUP_REST_STARTED          ✓
+    PAIR_READY (BTC/USD)         ✓
+    WARMUP_REST_COMPLETE (1/1)   ✓
+    SYSTEM_OPERATIONAL           ✓
+
+PT-ENTRY-008: DONE.
+OI-006: CLOSED.
+
+But two new failures appeared:
+  PIPELINE_FAIL gate=PRE rejection=SSS_NOT_SEEDED
+  (at 17:30:02 and 17:35:00)
+
+------------------------------------------------------------
+2.3 DEFECT-SS-005 — SSS_NOT_SEEDED
+------------------------------------------------------------
+
+ROOT CAUSE: seed_indicators_from_rest() in ws_manager.py
+calls _seed_5m_indicators() which seeds WSManager's own
+indicator caches (atr_14, ema_9, ema_21, etc.). But
+SignalPipeline has a SEPARATE _sss_state dict that
+requires pipeline.seed_indicators(symbol, ohlc_data) to
+set "seeded": True. Nobody calls pipeline.seed_indicators()
+— not ws_manager, not startup_sequence. Pipeline PRE gate
+checks _sss_state and rejects every candle.
+
+FIX (3 changes):
+  1. ws_manager.py dv1_14 → dv1_15:
+     Added self._signal_pipeline: Any = None in __init__.
+     Added pipeline.seed_indicators() call in
+     seed_indicators_from_rest() after _seed_5m_indicators().
+     Converts Kraken REST list format [time,o,h,l,c,vwap,v,cnt]
+     to dict format {"close": str(c[4]), "volume": str(c[6])}
+     for pipeline.seed_indicators() compatibility.
+
+  2. startup_sequence.py dv1_5 → dv1_6:
+     Added wm._signal_pipeline = sp wiring alongside
+     existing callback wiring.
+
+  3. No startup_sequence.py logic changes beyond wiring.
+
+DEPLOYED: Both files committed to TothBot_V2-Code,
+pushed, pulled on VPS, service restarted.
+
+VERIFIED: Log confirmed:
+  SSS_SEEDED (BTC/USD, rsi_14=53.10, ema_9=72257.65,
+    ema_21=72291.41, volume_ma_20=5.507)    ✓
+  PAIR_READY                                 ✓
+  WARMUP_REST_COMPLETE                       ✓
+  SYSTEM_OPERATIONAL                         ✓
+  PIPELINE_START (first candle after warmup)  ✓
+
+DEFECT-SS-005: CLOSED.
+
+But Gate 2 now rejects:
+  GATE_2_FAIL rejection=LIQUIDITY_REJECTED liquidity_24h=0
+
+------------------------------------------------------------
+2.4 DEFECT-SS-006 — LIQUIDITY_REJECTED
+------------------------------------------------------------
+
+ROOT CAUSE: liquidity_24h dict declared empty in
+WSManager.__init__ (line 298) and NEVER populated
+anywhere in ws_manager.py. No method writes to it.
+Every pair returns Decimal("0"). Gate 2 always rejects.
+
+SPEC DEFECT FOUND: 0711003 AS-005 claims "24h volume
+is obtained from the instrument channel snapshot at
+startup. The instrument channel provides volume_base
+(base currency) and volume_quote (quote currency)."
+
+This is WRONG. Verified against Kraken WS v2 documentation
+(3 sequential web searches, Kraken docs primary source):
+the instrument channel provides ONLY pair metadata
+(symbol, base, quote, status, qty_precision, qty_increment,
+price_precision, cost_precision, marginable, has_index,
+cost_min, margin_initial, position_limit_long,
+position_limit_short, tick_size, price_increment, qty_min).
+NO volume fields.
+
+ws_manager.py _handle_instrument() comment at line 1070
+already noted this: "Sort by volume (not available in
+instrument snapshot — use alphabetical as placeholder)."
+
+INITIAL ATTEMPT (WITHDRAWN): Coded an OHLC estimation
+hack in ws_manager.py dv1_16 — sum candle volume * vwap
+over last 288 five-minute candles. Bill correctly
+rejected this as a shortcut. "NO SHORTCUTS THAT WILL
+CAUSE PROBLEMS IN THE FUTURE. NO PATCHES."
+
+dv1_16 was NEVER committed to GitHub.
+dv1_16 was NEVER deployed to VPS.
+dv1_16 is WITHDRAWN.
+
+------------------------------------------------------------
+2.5 FP/DP ANALYSIS — Correct Data Source
+------------------------------------------------------------
+
+Full FP/DP analysis completed. Five candidate data
+sources evaluated:
+
+  Source A: Instrument channel — ELIMINATED.
+    No volume fields. Confirmed from Kraken docs.
+
+  Source B: REST Ticker endpoint — SELECTED.
+    GET /0/public/Ticker?pair=[list]
+    Returns v[1] (24h volume, base), p[1] (24h vwap).
+    USD volume = Decimal(v[1]) * Decimal(p[1]).
+    Single call for all pairs. Public endpoint.
+    Exact 24h rolling window. Can refresh periodically.
+    ONLY source that works for universe building
+    (available before OHLC data, breaks chicken-and-egg).
+
+  Source C: Ticker WS channel — REJECTED for this use.
+    Per-symbol subscription. Reserved for drawdown
+    monitoring (bbo on open positions). Wrong tool
+    for bulk volume data.
+
+  Source D: OHLC estimation — ELIMINATED.
+    Approximate. Chicken-and-egg: OHLC only available
+    AFTER universe built. Cannot serve universe building.
+
+  Source E: REST AssetPairs — ELIMINATED.
+    No volume fields.
+
+DECISION: REST Ticker is the sole correct source.
+
+CIATS-owned parameters:
+  min_volume_usd_daily:     $500,000 (existing)
+  monitored_universe_n:     50 (existing)
+  liquidity_refresh_hours:  4 (NEW — starting value)
+
+------------------------------------------------------------
+2.6 Spec Corrections — IN PROGRESS
+------------------------------------------------------------
+
+Document 1: 0411002 Kraken_REST_API_Specification
+  dv1_0 → dv1_1
+  STATUS: COMPLETE (in Claude working directory)
+  Changes:
+    - Section 4.8 Ticker added (REST-TKR-001 through
+      REST-TKR-010). Documents endpoint URL, request
+      format, response format (v, p fields), USD volume
+      calculation formula, startup and periodic refresh
+      triggers, error handling, fail-safe behavior,
+      hard rule that volume NOT from instrument channel.
+    - Endpoint count updated from 7 to 8.
+    - Section 6 Q1 updated (8 endpoints).
+    - Section 6 Q4 updated (Ticker trigger added).
+    - Section 6 Q5 updated (Ticker log events added).
+    - Related documents: 0711003 and 1011003 added.
+    - Revision history: dv1_1 entry added.
+
+Document 2: 0711003 Asset_Selection_Specification
+  dv1_0 → dv1_1
+  STATUS: PARTIALLY COMPLETE (in Claude working directory)
+  Changes completed:
+    - Header updated to dv1_1.
+    - AS-004 rewritten: 9-step procedure (was 7).
+      Step 2 corrected: instrument snapshot has NO volume.
+      Step 3 NEW: build raw candidate list from instrument.
+      Step 4 NEW: REST Ticker call for all candidates.
+      Step 9b corrected: ohlc(5) only, not ohlc(5)+ohlc(60)
+      per OI-NEW-001 fix / HR-WM-021.
+    - AS-005 completely rewritten: data source is REST
+      Ticker (0411002 REST-TKR-001), not instrument channel.
+      Documents USD volume formula, periodic refresh,
+      liquidity_refresh_hours CIATS parameter, fail-safe
+      behavior on volume drop.
+  Changes NOT yet completed:
+    - HR-AS-006: update volume_quote reference
+    - Section 9 Q1/Q2/Q4: update instrument channel refs
+    - Related documents section: add 0411002
+    - Revision history: add dv1_1 entry
+    - Remaining stale "instrument channel volume" refs
+
+Document 3: 1011002 WS_Manager_Coding_Spec
+  STATUS: NOT STARTED.
+  Needed: Add WM-LIQUIDITY section documenting REST
+  Ticker call, liquidity_24h cache population, periodic
+  refresh task, Kraken REST key name mapping.
+
+Document 4: 1011003 Signal_Pipeline_Coding_Spec
+  STATUS: NOT STARTED.
+  Needed: Verify Gate 2 references. May not need changes
+  (Gate 2 reads liquidity_24h from WM — source agnostic).
+
+------------------------------------------------------------
+2.7 Code Status
+------------------------------------------------------------
+
+ws_manager.py:
+  GitHub TothBot_V2-Code: dv1_15 (committed, pushed)
+  VPS ~/TothBot_V2-Code:  dv1_15 (deployed, running)
+  dv1_16 (OHLC hack):     WITHDRAWN. Never committed.
+                           Never deployed. Does not exist.
+
+startup_sequence.py:
+  GitHub TothBot_V2-Code: dv1_6 (committed, pushed)
+  VPS ~/TothBot_V2-Code:  dv1_6 (deployed, running)
+
+VPS CURRENT STATE:
+  System: OPERATIONAL
+  SSS: SEEDED
+  Gate 2: BLOCKING ALL ENTRIES (liquidity_24h = 0)
+  This is FAIL-SAFE. No bad trades can occur.
+  No action required until DEFECT-SS-006 is fully
+  resolved through proper spec → code path.
+
+============================================================
+3. OPEN ITEMS
+============================================================
+
+DEFECT-SS-004  CLOSED — Warm-up now triggered. Confirmed.
+
+DEFECT-SS-005  CLOSED — SSS_SEEDED confirmed.
+
+DEFECT-SS-006  OPEN — liquidity_24h never populated.
+               FP/DP analysis complete. REST Ticker is
+               the correct source. Spec corrections in
+               progress. Code changes after specs complete.
+
+PT-ENTRY-008   DONE — SYSTEM_OPERATIONAL confirmed.
+
+OI-006         CLOSED — same as PT-ENTRY-008.
+
+============================================================
+4. GITHUB COMMIT LOG — THIS SESSION
+============================================================
+
+TothBot_V2-Code commits:
+  [0c6d09d] DEFECT-SS-004 + OI-NEW-001: ws_manager.py dv1_14
+    1 file changed, 84 insertions(+), 12 deletions(-)
+    (ws_manager.py committed to correct repo after
+    initial failed attempt in wrong repo)
+
+  [fba6d41] DEFECT-SS-005: SSS_NOT_SEEDED fix —
+    ws_manager dv1_15, startup_sequence dv1_6
+    2 files changed, 32 insertions(+), 3 deletions()
+
+TothBot_V2-Docs commits:
+  [58d7035] DEFECT-SS-004 + OI-NEW-001: 1011014 dv1_4
+    and 1011002 dv1_14
+    (committed prior to this session by Bill per TB00092)
+
+NOTE: 1010000_Trading_System_Coding_Anchor_dv1_5.txt
+shows as deleted but unstaged in TothBot_V2-Docs
+(replaced by dv1_6). Separate issue — see PL-NEW-015.
+
+============================================================
+5. DOCUMENTS PRODUCED THIS SESSION (NOT YET DELIVERED)
+============================================================
+
+The following documents are in Claude's working directory
+but NOT yet delivered to Bill because they are either
+incomplete or awaiting completion of the full set:
+
+  0411002 dv1_1  Kraken_REST_API_Specification    COMPLETE
+  0711003 dv1_1  Asset_Selection_Specification     PARTIAL
+
+These will be delivered in the next session along with
+remaining spec updates and code, per DR-003 (all
+documents in ONE batch).
+
+============================================================
+6. PARKING LOT
+============================================================
+
+  PL-001      WSManager dual PM creation paths. Monitor.
+  PL-003      Pathway 1 GitHub automation. After paper trading.
+  PL-NEW-003  VPS migration to Hillsboro OR. After stable.
+  PL-NEW-004  EE ENTRY_TIMEOUT_SEC vs WM ENTRY_GTD_SEC. Monitor.
+  PL-NEW-005  requirements.txt — websockets version pin.
+  PL-NEW-006  tothbot_service.txt not updated in GitHub.
+  PL-NEW-007  LOG_FILE path mismatch.
+  PL-NEW-008  Heartbeat UNKNOWN_MESSAGE_TYPE log spam.
+  PL-NEW-010  status subscription "Symbol(s) not found".
+  PL-NEW-012  HTF EMA incremental updates lost (ohlc(60)
+              removed). REST-only for paper trading.
+  PL-NEW-013  EC ohlc(60) trigger removed.
+              _process_ohlc_60m() will never fire.
+  PL-NEW-014  Duplicate indicator stores. WSManager stores
+              ema_9, ema_21, rsi_avg_gain, rsi_avg_loss,
+              volume_ma_20 AND SignalPipeline has separate
+              _sss_state with same values. Both updated
+              independently on each candle. Future cleanup.
+  PL-NEW-015  1010000_Trading_System_Coding_Anchor_dv1_5.txt
+              shows as deleted but unstaged in TothBot_V2-Docs.
+              Replaced by dv1_6. Need to stage deletion
+              and commit.
+
+============================================================
+7. STANDING RULES — ALL ACTIVE
+============================================================
+
+  RULE 6  — git add . is prohibited. Explicit per file.
+  RULE 13 — .bat files go to Desktop only. Never in repo.
+  RULE 14 — git push origin master. NEVER origin main.
+  RULE 15 — ONE COMMAND PER COPY BOX. ALWAYS.
+  RULE 16 — .bat files run from cmd.exe only. Never PS.
+  RULE 17 — Always give complete and correct instructions.
+            Include Command Prompt or Powershell. Include
+            root file path in each instruction. Every step
+            must be executable without interpretation.
+
+  DELIVERY RULES — ALL ACTIVE:
+  DR-001 — All documents as .txt files.
+  DR-002 — 0500000 additionally as .docx and .pdf.
+  DR-003 — ALL documents in ONE BATCH. No piecemeal.
+
+============================================================
+8. BILL ACTIONS REQUIRED
+============================================================
+
+Step 1 — Save this session log:
+  C:\Users\wstot\My_TothBot_Stuff\TBXXXXX_Session_Logs\
+
+Step 2 — Upload TB00093 to Claude project folder.
+
+Step 3 — NO deployment actions. System is fail-safe.
+         Gate 2 blocks all entries. No trades at risk.
+         Wait for next session to complete spec corrections,
+         code, and deploy.
+
+============================================================
+9. NEXT SESSION — COMPLETE INSTRUCTIONS
+============================================================
+
+============================================================
+DOCUMENTS TO READ — IN THIS ORDER:
+1. TB00000 v2_8  — Project Instructions
+2. TB00093 v1_0  — This session log (most recent)
+
+STATE DOCUMENTS READ AND VERSIONS BEFORE ANY WORK.
+============================================================
+
+============================================================
+FIRST TASK — Complete DEFECT-SS-006 Spec Corrections
+
+Claude has partially completed spec corrections in the
+prior session. The following work remains. Claude must
+re-read all source documents fresh (do not rely on
+prior session context — Claude has no memory).
+
+STEP 1: Re-read these documents from project:
+  0411002  dv1_0   (current GitHub version)
+  0711003  dv1_0   (current GitHub version)
+  1011002  dv1_14  (current GitHub version — coding spec)
+  1011003  dv1_0   (current GitHub version — coding spec)
+
+STEP 2: Re-do ALL spec corrections from scratch.
+  Claude MUST NOT assume any prior session edits survived.
+  Claude has no persistent storage. All edits from the
+  prior session are gone. Start fresh.
+
+  The FP/DP analysis from TB00093 Section 2.5 is the
+  governing decision. REST Ticker is the correct source.
+  All specs must be corrected to reflect this.
+
+  Documents to produce (all as .txt per DR-001):
+    (a) 0411002 dv1_1 — Add Section 4.8 Ticker
+        (REST-TKR-001 through REST-TKR-010).
+        See TB00093 Section 2.6 Document 1 for
+        complete change description.
+
+    (b) 0711003 dv1_1 — Correct AS-004 and AS-005.
+        Rewrite AS-004 startup procedure (9 steps).
+        Rewrite AS-005 data source (REST Ticker).
+        Update HR-AS-006. Update Section 9 Q1/Q2/Q4.
+        Update related documents. Add revision history.
+        See TB00093 Section 2.6 Document 2 for
+        complete change description.
+
+    (c) 1011002 dv1_15 — Add WM-LIQUIDITY section.
+        NOTE: ws_manager.py on GitHub is dv1_15.
+        The coding spec (1011002) on GitHub is dv1_14.
+        The coding spec must be updated to dv1_15 to
+        add the WM-LIQUIDITY section documenting:
+          - REST Ticker call method
+          - liquidity_24h cache population
+          - Kraken REST key name mapping (XXBTZUSD→BTC/USD)
+          - Periodic refresh asyncio task
+          - liquidity_refresh_hours CIATS parameter
+          - Error handling and fail-safe behavior
+          - Log events (LIQUIDITY_SEEDED, LIQUIDITY_REFRESHED)
+
+    (d) 1011003 dv1_0 — Verify Gate 2 references.
+        Gate 2 reads liquidity_24h from WM cache.
+        The data source is WM's responsibility, not
+        the pipeline's. Gate 2 spec may not need changes.
+        If no changes needed, document this finding and
+        move on. Do not create unnecessary versions.
+
+STEP 3: Write code from corrected specs.
+  ws_manager.py dv1_15 → dv1_16:
+    IMPORTANT: Start from dv1_15 (GitHub version).
+    The prior dv1_16 (OHLC hack) is WITHDRAWN and
+    MUST NOT be used as a starting point.
+
+    Code changes needed:
+      - New method: _rest_get_ticker() — fetches REST
+        Ticker for a list of pairs. Parses response.
+        Computes USD volume per pair. Returns dict.
+      - Modify _build_monitored_universe(): call
+        _rest_get_ticker() after building raw candidates.
+        Filter by volume. Rank by volume. Populate
+        liquidity_24h cache.
+      - New asyncio task: _liquidity_refresh_loop() —
+        periodic REST Ticker refresh every
+        liquidity_refresh_hours. Updates liquidity_24h.
+      - Kraken REST key name mapping: handle XXBTZUSD
+        vs BTC/USD format mismatch.
+
+  startup_sequence.py — evaluate if changes needed.
+    May need to launch _liquidity_refresh_loop() task.
+
+STEP 4: DC compliance audit on all produced documents.
+  7-field headers. Version increments. DocPath matches
+  filename. Cross-document version references current.
+  Parent chain intact.
+
+STEP 5: Deliver ALL documents in ONE batch per DR-003.
+  Files to deliver:
+    0411002_Kraken_REST_API_Specification_dv1_1.txt
+    0711003_Asset_Selection_Specification_dv1_1.txt
+    1011002_WS_Manager_Coding_Spec_dv1_15.txt
+    ws_manager.py (dv1_16 — proper implementation)
+    startup_sequence.py (if changes needed)
+    TB00094 session log
+
+STEP 6: Provide COMPLETE deployment instructions per
+  RULE 17. Command Prompt. Full root paths. Every step
+  explicit and executable without interpretation.
+
+  Deployment order:
+    1. Bill downloads all files.
+    2. Bill saves spec .txt files to correct local paths.
+    3. Bill commits specs to TothBot_V2-Docs (Command Prompt).
+    4. Bill saves code .py files to correct local paths.
+    5. Bill commits code to TothBot_V2-Code (Command Prompt).
+    6. Bill SSH to VPS, pulls TothBot_V2-Code, restarts.
+    7. Bill runs log grep and pastes output.
+
+  Expected in log after successful deployment:
+    WARMUP_REST_STARTED
+    LIQUIDITY_SEEDED (per pair, with usd_volume_24h)
+    SSS_SEEDED (per pair)
+    PAIR_READY (per pair)
+    WARMUP_REST_COMPLETE
+    SYSTEM_OPERATIONAL
+    PIPELINE_START (on next candle — should pass Gate 2)
+    Either SSS_RESULT or deeper gate result (not GATE_2_FAIL)
+============================================================
+
+============================================================
+END OF SESSION LOG TB00093 v1_0
+============================================================

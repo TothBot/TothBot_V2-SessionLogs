@@ -1,0 +1,248 @@
+DocDCN:     TB00051
+DocTitle:   TothBot_V2_Session_Log_2026-04-07_Part4
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\My_TothBot_Stuff\TBXXXXX_Session_Logs\TB00051_TothBot_V2_Session_Log_2026-04-07_Part4_v1_0.txt
+DocDate:    04-07-2026
+DocTime:    23:59:59 UTC
+
+============================================================
+TOTHBOT V2 SESSION LOG -- 2026-04-07 PART 4
+============================================================
+
+============================================================
+1. SESSION START STATE
+============================================================
+
+Phase 10 Tier 2 integration tests. Continuation from
+TB00050. position_mirror.py now uploaded to project.
+
+Documents read at session start:
+  TB00000  v2_7    Project Instructions              checked
+  TB00050  v1_0    Prior session log                 checked
+
+============================================================
+2. WORK COMPLETED THIS SESSION
+============================================================
+
+------------------------------------------------------------
+2.1 Complete Source File Audit
+------------------------------------------------------------
+
+Full audit performed across all source files against
+startup_sequence.py constructor calls. Two bugs found
+in startup_sequence.py that were introduced in the
+TB00050 session and never caught.
+
+Audit results:
+
+  ws_manager.py
+    pm_* methods present (4 confirmed). CORRECT.
+
+  execution_engine.py
+    No self._pm. Calls self._wm.pm_*(). CORRECT.
+
+  exit_controller.py
+    __init__ takes: risk_engine, regime_engine, logger.
+    startup_sequence.py was passing: ws_manager, risk_engine,
+    position_mirror, logger. MISMATCH — startup was WRONG.
+    exit_controller.py is correct. EC accesses wm via
+    method parameter, not constructor injection.
+
+  long_module.py
+    __init__ takes: ws_manager, execution_engine,
+    risk_engine, position_mirror, logger.
+    startup_sequence.py was passing exec_engine=ee.
+    Correct keyword is execution_engine=ee.
+    MISMATCH — startup was WRONG.
+    long_module.py constructor is correct.
+    Additionally: line 607 had self._pm.clear_record(symbol)
+    — method does not exist. Actual method is
+    close_position(symbol, exit_reason). FIXED.
+
+  startup_sequence.py
+    TWO bugs. Both fixed. See Section 2.2.
+
+  position_mirror.py
+    close_position() confirmed present. CORRECT.
+
+  signal_pipeline.py
+    Constructor takes wm, re, pm, rge. Matches
+    startup_sequence.py. CORRECT.
+
+  risk_engine.py
+    Constructor takes logger, position_mirror, ws_manager,
+    param_store. Matches startup_sequence.py. CORRECT.
+
+  regime_engine.py
+    Constructor takes logger, data_api_key,
+    trading_universe, param_store. Matches. CORRECT.
+
+  selection_ctrl.py
+    Constructor takes signal_pipeline, logger. Matches. CORRECT.
+
+  ciats.py
+    Constructor takes param_store, log_file_path, logger.
+    Matches. CORRECT.
+
+------------------------------------------------------------
+2.2 Bug Fixes
+------------------------------------------------------------
+
+BUG 1 — startup_sequence.py: ExitController constructor
+  Was:  ExitController(ws_manager=wm, risk_engine=re,
+                       position_mirror=pm, logger=logger)
+  Fix:  ExitController(risk_engine=re, regime_engine=rge,
+                       logger=logger)
+  Root cause: TB00050 session error. Not caught at delivery.
+
+BUG 2 — startup_sequence.py: LongModule constructor keyword
+  Was:  LongModule(..., exec_engine=ee, ...)
+  Fix:  LongModule(..., execution_engine=ee, ...)
+  Root cause: TB00050 session error. Not caught at delivery.
+
+BUG 3 — long_module.py line 607: wrong PM method
+  Was:  self._pm.clear_record(symbol)
+  Fix:  self._pm.close_position(symbol,
+            "PARTIAL_FILL_BELOW_MINIMUM")
+  Root cause: position_mirror.py method name mismatch.
+  Context: _below_min_emergency_sell() — position never
+  fully opened, IOC sell dispatched, PM cleared.
+  Additionally fixed stale docstring/comment references
+  to clear_record() throughout long_module.py.
+
+------------------------------------------------------------
+2.3 TB00000 Updated — v2_7 → v2_8
+------------------------------------------------------------
+
+Changes:
+  Section 11 Storage: OneDrive retired. Removed all
+  OneDrive references. Session logs and TB00000 path
+  corrected to:
+    C:\Users\wstot\My_TothBot_Stuff\TBXXXXX_Session_Logs\
+  DocPath updated in header. Revision history updated.
+
+------------------------------------------------------------
+2.4 Process Failure Documented
+------------------------------------------------------------
+
+DR-003 was violated in the TB00050 session. Two modified
+files (startup_sequence.py with EC and LM constructor
+bugs) were delivered without complete cross-module
+consistency verification. This caused multiple sessions
+of wasted effort.
+
+Corrective action: Before delivering any session files,
+Claude MUST verify every constructor call in
+startup_sequence.py matches the __init__ signature of
+the corresponding module file. No exceptions.
+
+------------------------------------------------------------
+2.5 Status — test_integration.py
+------------------------------------------------------------
+
+All source file bugs are now fixed. All constructors
+are consistent. Ready to write test_integration.py.
+
+test_integration.py is NOT written yet — this session
+consumed by audit and bug fixes.
+
+============================================================
+3. PHASE 10 STATUS
+============================================================
+
+  Tier 1 Unit Tests:   COMPLETE -- 95/95 passing
+  Tier 2 Integration:  READY TO WRITE — all blockers resolved
+  Paper Trading:       Phase 11
+
+============================================================
+4. FILES DELIVERED THIS SESSION
+============================================================
+
+  startup_sequence.py                                 FIXED
+  long_module.py                                      FIXED
+  TB00000_TothBot_V2_Project_Instructions_for_Claude_v2_8.txt  UPDATED
+  TB00051 (this log)                                  NEW
+
+============================================================
+5. BILL ACTIONS REQUIRED
+============================================================
+
+Step 1 — Save session log:
+
+  Save TB00051 to:
+  C:\Users\wstot\My_TothBot_Stuff\TBXXXXX_Session_Logs\
+
+Step 2 — Save TB00000 v2_8:
+
+  Save TB00000_TothBot_V2_Project_Instructions_for_Claude_v2_8.txt to:
+  C:\Users\wstot\My_TothBot_Stuff\TBXXXXX_Session_Logs\
+
+Step 3 — Save source files to local repo:
+
+  Save startup_sequence.py and long_module.py to:
+  C:\Users\wstot\GitHub\TothBot\TothBot_V2-Code\tothbot\
+
+Step 4 — Commit and push startup_sequence.py:
+
+  cd C:\Users\wstot\GitHub\TothBot\TothBot_V2-Code
+
+  git add tothbot/startup_sequence.py
+
+  git commit -m "Phase 10: Fix startup_sequence EC and LM constructor bugs"
+
+  git push origin master
+
+Step 5 — Commit and push long_module.py:
+
+  cd C:\Users\wstot\GitHub\TothBot\TothBot_V2-Code
+
+  git add tothbot/long_module.py
+
+  git commit -m "Phase 10: Fix long_module clear_record -> close_position"
+
+  git push origin master
+
+Step 6 — Upload to Claude project:
+
+  Upload startup_sequence.py to Claude project.
+  Upload long_module.py to Claude project.
+  Upload TB00000_TothBot_V2_Project_Instructions_for_Claude_v2_8.txt
+    to Claude project.
+  Upload TB00051 to Claude project.
+
+Step 7 — Start next session with:
+
+  ============================================================
+  Read TB00000 v2_8 and TB00051. All source file bugs are
+  fixed. All constructors consistent. Write
+  tests/test_integration.py — 8 scenarios per 1021002 dv1_0.
+  RULE 14: git push origin master. Always.
+  RULE 15: One command per copy box. Always.
+  RULE 6:  git add . is prohibited. Always.
+  RULE 4:  cd to repo root first. Always.
+  ============================================================
+
+============================================================
+6. PARKING LOT
+============================================================
+
+  PL-001  WSManager.add_order() independently creates a
+          PositionRecord at line 1550. EE calls
+          self._wm.pm_create() after its own direct WS send.
+          Two separate code paths. add_order() PM creation
+          may need removal to avoid future confusion.
+          Do not chase until test_integration.py complete.
+
+============================================================
+7. REVISION HISTORY
+============================================================
+
+  v1_0  04-07-2026  Session log Part 4. Full source file
+                    audit. Three bugs fixed in startup_sequence.py
+                    and long_module.py. TB00000 v2_8 issued.
+                    test_integration.py not yet written.
+
+============================================================
+END OF SESSION LOG
+============================================================

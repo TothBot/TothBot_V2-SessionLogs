@@ -1,0 +1,1213 @@
+DocDCN:     TB00206
+DocTitle:   S1SS_Gap_Register_Startup_Sequence
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TBXXXXX_Session_Logs\TB00206_S1SS_Gap_Register_Startup_Sequence_v1_0.txt
+DocDate:    05-11-2026
+DocTime:    23:59:45 UTC
+
+============================================================
+TOTHBOT V2 STEP 3 SUB-STEP S-1 — STARTUP_SEQUENCE PAIR
+AUDIT GAP REGISTER — FINAL S-1 PAIR
+1011014 dv1_8 + 0211003 dv1_0 vs 0500000 dv1_46
+============================================================
+
+============================================================
+1. SCOPE + METHODOLOGY
+============================================================
+
+1.1 PAIR AUDITED.
+  AA=10 child:   1011014 Startup_Sequence_Coding_Spec dv1_8
+                 (1789 lines; 05-08-2026).
+  AA=02 parent:  0211003 Startup_Shutdown_Procedure dv1_0
+                 (501 lines; 04-05-2026).
+  Architecture
+  canonical:     0500000 dv1_46_Claude_Source.html
+                 (D7 R3 mod:Startup_Sequence labeled group
+                  line 6075-6093 + AR-049 prose line 4534 +
+                  AR-056 prose line 4764).
+
+1.2 METHODOLOGY.
+  Full cross-namespace 5-section TB00197 §1.4 form
+  applies. Two-parent scope (AA=02 + AA=10).
+  Hierarchical AA=02 (0211003) precedence over AA=10
+  (1011014) where they differ, EXCEPT where AA=10
+  carries a ratified post-AA=02 amendment (OI-019
+  plural-alert routing fix, OI-020 reconnect-attempt-
+  count revision, OI-NEW-001 ohlc(60) WS prohibition,
+  TB00151j paper-as-master SS-PAPER cascade) — in
+  which case PROSE-UPDATE-BV target is to bring
+  0211003 dv1_0 forward to the AA=10 ratified state.
+
+1.3 ELEMENT-BY-ELEMENT CLASSIFICATION.
+  Each 1011014 element mapped to one of four buckets:
+    (a) ARCHITECTURAL RESTATEMENT — element present
+        in 0500000 governs/AR/IMP and faithfully
+        restated.
+    (b) CODING-UNIQUE — boilerplate (parent chain,
+        five questions, revision history) and
+        implementation-detail content not
+        architectural.
+    (c) ARCHITECTURAL CONTENT NOT IN DIAGRAMS — real
+        architectural content not in any 0500000
+        governs list. Cluster C5 candidate.
+    (d) UNCLEAR ORIGIN — RR-SCOPE-009 four-question
+        gate required.
+
+============================================================
+2. DIAGRAM COVERAGE
+============================================================
+
+2.1 PRIMARY DIAGRAMS.
+  D7 R3 (Paper_Mode_Dispatch) PRIMARY — contains the
+    only mod:Startup_Sequence labeled group at line
+    6075-6093 with governs list scoped EXCLUSIVELY to
+    paper-mode-flag-injection role (rule:HR-WM-021 +
+    ar:PA-003 only).
+  D1 R2 (Kraken_Exchange_Interface) — contains AR-038
+    (Status API startup maintenance check) +
+    contract:WM-PACE-001..002 (subscribe pacing
+    governing startup subscribe burst).
+  D6 R4 (Complete_System) — no dedicated
+    Startup_Sequence labeled group; depicts mod:WS_
+    Manager + mod:Position_Mirror dispatch surfaces
+    only.
+  AR-049 (line 4534) — full prose enumeration of
+    10-step startup sequence with deferral to
+    "Complete specification in 1011014 Startup_
+    Sequence_Coding_Spec."
+  AR-056 (line 4764) — full prose enumeration of
+    11-step mid-session reconnect sequence with
+    deferral to "Complete specification in 1011014
+    Section 2."
+
+2.2 0500000 GOVERNS TOKEN GREP RESULTS.
+
+  D7 mod:Startup_Sequence labeled group (line 6075-
+  6093) governs list — VERBATIM CONTENTS:
+    rule:HR-WM-021 (paper_mode set once at __init__;
+                    immutable for process lifetime)
+    ar:PA-003
+
+  PRESENT IN 0500000 GOVERNS / PROSE (verified):
+    ar:AR-038         D1 R2 governs (Status API
+                      startup maintenance check;
+                      covers SS-STARTUP-001..003
+                      conceptual surface).
+    ar:AR-039         D1 R2 governs (per-pair
+                      instrument channel status
+                      check; covers SS-STARTUP-011..012
+                      conceptual surface).
+    ar:AR-044         AR prose at line 4441-4459
+                      (REST warm-up indicator
+                      seeding; covers SS-WARMUP-001..
+                      008 conceptual surface).
+    ar:AR-049         AR prose at line 4534-4545
+                      (startup framework deferral to
+                      1011014; covers SS-STARTUP-001
+                      through -028 conceptual surface).
+    ar:AR-050         AR prose at line 4546-4585
+                      (per-module wallet sourcing;
+                      covers SS-STARTUP-015 portfolio
+                      _baseline conceptual surface).
+    ar:AR-055         AR prose at line 4636 (DMS
+                      prohibition; covers SS-STOP-002
+                      AR-055 binding).
+    ar:AR-056         AR prose at line 4764-4781
+                      (reconnect framework deferral
+                      to 1011014; covers SS-RECON-001
+                      through -016 conceptual surface).
+    ar:AR-058         AR prose at line 4818 (max_queue
+                      =None mandatory; covers
+                      SS-STARTUP-006/013, SS-RECON-006).
+    ar:AR-059         AR prose at line 4825-4830
+                      (ping_interval=None mandatory).
+    ar:AR-060         AR prose at line 4830-4835
+                      (websockets.asyncio.client
+                      connect API mandatory).
+    rule:HR-WM-021    D7 governs (paper_mode
+                      immutability; binds SS-PAPER-001).
+    rule:HR-WM-022    D1 R2 governs (PT-MODE-003
+                      private WS skipped; binds
+                      SS-PAPER-002).
+    rule:HR-WM-032    D1 R2 governs (paper ledger
+                      update; binds SS-PAPER-003).
+    rule:HR-WM-033    D1 R2 governs (paper exits
+                      routed through Exit Controller;
+                      binds SS-PAPER-004).
+    ar:PA-001..010    D7 governs (PAPER-AS-MASTER
+                      principle; binds SS-PAPER-001..
+                      007 framing).
+    pt_mode:PT_MODE_001..004  D1 R2 + D7 governs
+                      (covers SS-PAPER-002/003/004).
+    decision:D-05     D7 governs (paper starting
+                      balance; binds SS-PAPER-003).
+    decision:D-06     D7 governs (paper-live parity;
+                      binds SS-PAPER-007 byte-
+                      identical contract).
+
+  CRITICAL ABSENCE FROM 0500000 GOVERNS LISTS:
+
+  ZERO occurrences in 0500000 dv1_46 of:
+    HR-SS-001..010      (0211003 §7 hard rules)
+    SS-PRE-001..005     (5 pre-conditions)
+    SS-STARTUP-001..028 (28 startup-step rules)
+    SS-WARMUP-001..008  (8 warm-up rules)
+    SS-PAPER-001..007   (7 paper-mode rules)
+    SS-RECON-001..016   (16 reconnect rules)
+    SS-WIRE-001         (DEFECT-SS-009 closure;
+                         _regime_wrapper universe
+                         capture)
+
+  All 5 occurrences of SS-* string in 0500000 dv1_46
+  are deferral pointers ("1011014 SS-WARMUP-001
+  through -010", "1011014 SS-RECON-001 through -016",
+  etc.) at AR-044, AR-049, AR-056 prose blocks —
+  NOT canonical governs-list registrations.
+
+============================================================
+3. ELEMENT-BY-ELEMENT CLASSIFICATION
+============================================================
+
+3.1 1011014 §1 PURPOSE.
+    Element: One-paragraph statement of two-section
+             coverage (10-step startup + 11-step
+             reconnect).
+    Bucket:  (b) CODING-UNIQUE boilerplate.
+    Cite:    n/a.
+
+3.2 1011014 §2 PARENT CHAIN.
+    Element: 1000000 → 1010000 → 1011014 chain;
+             0500000 cited as parent specification;
+             AR-049 + AR-056 cited as governing ARs.
+    Bucket:  (b) CODING-UNIQUE boilerplate.
+    Cite:    0500000 dv1_46 AR-049 + AR-056 prose
+             (lines 4534, 4764).
+
+3.3 1011014 §3 GOVERNING ARCHITECTURAL REQUIREMENTS.
+    Element: 21-AR enumeration (AR-003, AR-004,
+             AR-017, AR-020, AR-025, AR-029, AR-031,
+             AR-034, AR-035, AR-036, AR-037, AR-038,
+             AR-044, AR-045, AR-046, AR-047, AR-048,
+             AR-055, AR-058, AR-059, AR-060).
+    Bucket:  (a) ARCHITECTURAL RESTATEMENT.
+    Cite:    0500000 dv1_46 AR-003 (line 4286),
+             AR-038 (lines 4400, 1432, 1528), AR-044
+             (line 4441), AR-046, AR-047, AR-055
+             (line 4636), AR-058 (line 4818), AR-059,
+             AR-060.
+
+3.4 1011014 §4 PAIR STATES (WARM_UP / READY / BLOCKED).
+    Element: Three-state pair-state machine with
+             entry/exit criteria.
+    Bucket:  (a) ARCHITECTURAL RESTATEMENT.
+    Cite:    0500000 dv1_46 AR-044 prose (lines
+             4451-4459): "While ATR or EMA not seeded:
+             pair remains in WARM_UP state. WARM_UP
+             pairs are skipped at the pipeline pre-
+             check (no entries). Pair transitions
+             WARM_UP → READY when ATR, EMA, and
+             regime all" seeded; line 5032: "WARM_UP
+             → READY transition requires ALL FIVE
+             indicators seeded, not just ATR."
+             0211003 dv1_0 §3 PAIR STATES.
+
+3.5 1011014 §5 SS-PRE-001..005 PRE-CONDITIONS FOR
+    STARTUP.
+    Element: Python 3.12.3 / Ubuntu 24.04.4 / API key
+             pair setup / systemd WatchdogSec=120 /
+             aiohttp ClientSession config / uvloop
+             event loop.
+    Bucket:  (c) ARCHITECTURAL CONTENT NOT IN
+             DIAGRAMS — Cluster C5 candidate.
+    Notes:   AR-025 (line 4297-4302) covers the
+             aiohttp / asyncio TaskManager / systemd
+             watchdog conceptual surface but does NOT
+             encode the specific values WatchdogSec=
+             120, ClientTimeout(total=10, connect=5,
+             sock_read=8), TCPConnector(limit=10,
+             limit_per_host=5, force_close=False),
+             or uvloop. These specific configuration
+             values are architectural (they govern
+             VPS deploy + WS lifecycle behavior) but
+             absent from D1/D7 governs.
+    Cluster:
+      C5 entries: rule:SS-PRE-001..005.
+
+3.6 1011014 §6 SS-STARTUP-001..028 — 10-STEP STARTUP
+    SEQUENCE.
+    Element: 28 startup-step rules covering Steps 1
+             through 10 + continuous-operation
+             additions.
+    Bucket:  Mixed.
+      (a) ARCHITECTURAL RESTATEMENT subset (covered
+          by AR-049 + AR-038 + AR-044 + AR-050 prose
+          in 0500000):
+        SS-STARTUP-001..003 (Status API; AR-038).
+        SS-STARTUP-004..005 (Token; AR-004).
+        SS-STARTUP-006..009 (Public WS subscribe;
+          AR-029 + AR-058..060).
+        SS-STARTUP-010..012 (Instrument snapshot;
+          AR-020 + AR-039).
+        SS-STARTUP-013..016 (Private WS + executions
+          + balances; AR-050).
+        SS-STARTUP-017..019 (snap_orders / Position
+          Mirror reconciliation; AR-003).
+        SS-STARTUP-020..021 (Ticker per position
+          state; AR-034).
+        SS-STARTUP-022..023 (READY state OPERATIONAL).
+        SS-STARTUP-026 (sd_notify READY=1).
+        SS-STARTUP-027..028 (Continuous operation +
+          systemd watchdog ping).
+      (c) CLUSTER C5 — specific rule-text bindings
+          absent from 0500000 governs:
+        SS-STARTUP-001..028 individual rule
+          identifiers (28 tokens).
+        SS-STARTUP-024 (BLOCKED re-evaluation rule).
+        SS-STARTUP-025 (per-symbol pipeline post-
+          READY).
+        Specific implementation details:
+          ping task 30s + zombie detection 90s
+          (SS-STARTUP-009);
+          ohlc(5) snapshot=true single-message
+          subscribe (SS-STARTUP-007);
+          ohlc(60) WS subscription PROHIBITED per
+            OI-NEW-001 (SS-STARTUP-007 NOTE);
+          response[:-1] convention (cross-bound to
+            AR-017 — already in 0500000).
+    Cluster:
+      C5 entries: rule:SS-STARTUP-001..028 (28
+                  rule tokens; some subset (a)-bound
+                  to existing ARs via deferral but
+                  the SS-NNN rule-identifier-level
+                  binding is absent from D7 governs).
+
+3.7 1011014 §6 SS-WARMUP-001..008 — REST WARM-UP.
+    Element: REST GetOHLCData warm-up sequence
+             (interval=5 ATR seed + interval=60 HTF
+             EMA seed) with 1.1s stagger, Wilder's
+             ATR formula, EMA(20/50) seed, rate-
+             limit backoff, asyncio.gather across
+             pairs, WARM_UP → READY transition rule.
+    Bucket:  Mixed.
+      (a) ARCHITECTURAL RESTATEMENT subset:
+        General warm-up framework (AR-044 line 4441
+          + AR-017 response[:-1] convention).
+        asyncio.gather across pairs + 1.1s stagger
+          (AR-036).
+      (c) CLUSTER C5 — specific bindings absent:
+        SS-WARMUP-001..008 individual rule
+          identifiers (8 tokens).
+        Wilder's ATR formula encoded.
+        EMA(20) alpha_20 = 2/21; EMA(50) alpha_50 =
+          2/51 specific values.
+        ohlc(60) WS subscription removal per
+          OI-NEW-001 + Call C interval=1440 REMOVED
+          per OI-NEW-001 (Call C handled by Regime
+          Engine independently — currency-lag with
+          0500000 AR-049 prose line 4543 "REST
+          warm-up GetOHLCData (AR-044: interval=5,
+          60, 1440)" — see §7.3 currency-lag
+          finding).
+    Cluster:
+      C5 entries: rule:SS-WARMUP-001..008 (8 rule
+                  tokens).
+
+3.8 1011014 §6A SS-PAPER-001..007 — PAPER MODE
+    STARTUP BEHAVIOR (NEW dv1_8 PAPER-AS-MASTER
+    CASCADE).
+    Element: Seven paper-as-master architectural
+             sub-rules covering paper_trading_mode
+             flag READ-ONCE + WSManager injection
+             (PA-004 #2), Step 5 GATED + SKIPPED
+             (PA-004 #1), portfolio_baseline source
+             (PA-004 #3), Step 6 GATED + SKIPPED
+             (PA-004 #4), first Logger record
+             (PAPER_TRADING_MODE_ON/OFF), Section 2
+             reconnect private-WS-step gating, PA-005
+             byte-identical-elsewhere.
+    Bucket:  Mixed.
+      (a) ARCHITECTURAL RESTATEMENT subset (covered
+          by D7 mod:Startup_Sequence labeled group +
+          D7 PA-001..010 governs + HR-WM-021..033
+          governs):
+        SS-PAPER-001 paper_mode immutability (D7
+          governs rule:HR-WM-021 — direct match).
+        SS-PAPER-007 PA-005 byte-identical-elsewhere
+          framing (D7 PA-005 governs).
+      (c) CLUSTER C5 — specific bindings absent:
+        SS-PAPER-001..007 individual rule
+          identifiers (7 tokens).
+        SS-PAPER-002 Step 5 gating implementation
+          pattern (private WS + executions + balances
+          + ping/zombie tasks).
+        SS-PAPER-003 paper portfolio_baseline source
+          ($1,000 default per D-05 via WM-PAPER-
+          LEDGER-001 cross-bind).
+        SS-PAPER-004 Step 6 SKIPPED + paper Position
+          Mirror sourced from local simulated-fill
+          path only.
+        SS-PAPER-005 first Logger record assertion
+          (PAPER_TRADING_MODE_ON/OFF payload schema).
+        SS-PAPER-006 Section 2 reconnect private-
+          WS-step gating (R3, R4, R5, R6, R7
+          SKIPPED in paper; R1, R2, R8, R9, R10, R11
+          byte-identical per PA-005).
+    Cluster:
+      C5 entries: rule:SS-PAPER-001..007 (7 rule
+                  tokens).
+
+3.9 1011014 §7 SECTION 1 ERROR HANDLING MATRIX.
+    Element: 9-row matrix (token failure / WS connect
+             fail / instrument timeout / snap_orders
+             gap / GetOHLCData 429 / GetOHLCData fail
+             / incomplete position / Status API fail
+             / private WS connect fail) with action.
+    Bucket:  (b) CODING-UNIQUE.
+    Notes:   Implementation-detail consolidation of
+             error-handling actions across the 10
+             startup steps. Not architectural rule
+             material.
+
+3.10 1011014 §8 SECTION 1 TIMING EXPECTATIONS.
+    Element: Best-case vs worst-case timing budget;
+             "All pairs READY within 15 seconds"
+             target; asyncio.gather() MANDATORY.
+    Bucket:  (b) CODING-UNIQUE.
+    Notes:   Performance-target framing for
+             implementation. Not architectural rule
+             material.
+
+3.11 1011014 §9 SECTION 2 SS-RECON-001..016 —
+     MID-SESSION RECONNECT.
+    Element: 11-step mid-session reconnect sequence
+             (R1 close + R2 wait + R3 token + R4
+             private WS reconnect + R5 executions
+             resub + R6 Position Mirror reconcile +
+             R7 balances resub + R8 public channels
+             resub + R9 ticker restore + R10 cache
+             staleness check + R11 resume) with
+             invariants, pipeline prohibition during
+             reconnect, fatal reconnect failure
+             handling, invariant verification.
+    Bucket:  Mixed.
+      (a) ARCHITECTURAL RESTATEMENT subset:
+        General reconnect framework (AR-056 line
+          4764).
+        Invariants 1-5 (portfolio_baseline_USD never
+          reset; drawdown_pct preserved; system_state
+          preserved; gap-closed positions detected;
+          candles discarded) — covered by 0211003
+          dv1_0 §5 Invariants 1-5 + AR-056 prose.
+        DMS prohibition (AR-055 + AR-001).
+      (c) CLUSTER C5 — specific bindings absent:
+        SS-RECON-001..016 individual rule
+          identifiers (16 tokens).
+        Specific implementation details:
+          5-attempt retry-instantly + 5s-delay
+            backoff (SS-RECON-004).
+          20-attempt + ~481-second fatal threshold
+            (SS-RECON-015) — currency-lag with
+            0500000 AR-056 prose line 4779 "10
+            attempts over 120 seconds"; see §7.4.
+          Cache staleness 15-minute threshold
+            (SS-RECON-012).
+          POSITION_CLOSED_DURING_GAP event class
+            (SS-RECON-008) — CIATS Trade Outcome
+            Bus fire on gap-closed position
+            detection.
+          INVARIANT_BREACH event (SS-RECON-016)
+            for invariant verification failure.
+    Cluster:
+      C5 entries: rule:SS-RECON-001..016 (16 rule
+                  tokens).
+
+3.12 1011014 §10 FIVE CODING-READINESS QUESTIONS.
+    Element: Q1-Q5 (purpose, interfaces, hard rules,
+             triggers, logs).
+    Bucket:  (b) CODING-UNIQUE boilerplate.
+
+3.13 1011014 §11 RELATED DOCUMENTS.
+    Element: Cross-version reference list (governance
+             / architecture / exchange interface /
+             paper-as-master cascade / coding specs).
+    Bucket:  (b) CODING-UNIQUE boilerplate.
+    Notes:   §11 lists 0500000 dv1_24 (current
+             canonical is dv1_46) and 0311001 v1_6
+             (current v1_12) and 0311002 v1_10
+             (current is v1_10 — match) and TB00000
+             v2_20 (current v2_29). Currency-lag in
+             1011014 §11 vs current corpus — see
+             §7.5 cluster C7 finding.
+
+3.14 1011014 §12 SS-WIRE-001 COMPONENT WIRING RULES.
+    Element: _regime_wrapper closure MUST pass
+             wm.monitored_universe to
+             rge.run_daily_computation() — closure-
+             capture-by-reference rule + Guard.
+             DEFECT-SS-009 closure.
+    Bucket:  (c) ARCHITECTURAL CONTENT NOT IN
+             DIAGRAMS — Cluster C5 candidate.
+    Notes:   This is an architectural component-
+             wiring rule binding Startup_Sequence ↔
+             Regime_Engine. Defect-driven (DEFECT-SS-
+             009 caused regime computed for BTC/USD
+             only at startup; all 49 other monitored
+             pairs had NO_REGIME_DATA; Gate 3 blocked
+             all non-BTC entries for entire session
+             until 00:00 UTC). The rule binds
+             startup_sequence.py _regime_wrapper
+             closure to wm.monitored_universe at both
+             call sites (WM-WARMUP-004 startup seed +
+             midnight loop). Architectural binding to
+             D4 R3 + D6 R4 + D7 R3 (Regime_Engine ↔
+             WS_Manager ↔ Startup_Sequence
+             interface).
+    Cluster:
+      C5 entry: rule:SS-WIRE-001 (1 rule token).
+
+3.15 1011014 §13 REVISION HISTORY.
+    Element: dv1_0 through dv1_8 revision entries.
+    Bucket:  (b) CODING-UNIQUE boilerplate.
+
+3.16 0211003 dv1_0 §7 HR-SS-001..010 HARD RULES.
+    Element: 10 hard rules covering:
+             HR-SS-001 no pipeline before first READY.
+             HR-SS-002 portfolio_baseline_USD set ONCE
+                       at Step 5; never reset on
+                       reconnect.
+             HR-SS-003 snap_orders PREFERRED; REST
+                       fallback (AR-003).
+             HR-SS-004 order_status: true MANDATORY
+                       on executions subscription
+                       (AR-026).
+             HR-SS-005 response[:-1] MANDATORY for
+                       all GetOHLCData (AR-017).
+             HR-SS-006 cancel_all_orders_after (DMS)
+                       PROHIBITED (AR-001, AR-055).
+             HR-SS-007 No stop with unprotected open
+                       position.
+             HR-SS-008 INCOMPLETE_PROTECTION CRITICAL
+                       alert; no auto-repair.
+             HR-SS-009 sd_notify READY=1 only after
+                       Step 9.
+             HR-SS-010 Full 10-step startup mandatory
+                       on every restart (no skipping).
+    Bucket:  Mixed.
+      (a) ARCHITECTURAL RESTATEMENT subset:
+        HR-SS-003 (AR-003 in 0500000 line 4286).
+        HR-SS-004 (AR-026 covered by 0500000).
+        HR-SS-005 (AR-017 covered by 0500000 line
+          2941 "response[-1] EXCLUDED").
+        HR-SS-006 (AR-001 + AR-055 in 0500000).
+      (c) CLUSTER C5 — specific HR-SS-NNN identifier
+          bindings absent from 0500000:
+        HR-SS-001..010 individual rule identifiers
+          (10 tokens; SIXTH occurrence of HR-XX-NNN
+          systemic pattern — see §7.2 finding).
+
+============================================================
+4. ROLL-UP
+============================================================
+
+4.1 BUCKET TALLIES.
+
+  (a) ARCHITECTURAL RESTATEMENT:
+        §3.2 Parent chain.
+        §3.3 Governing ARs enumeration.
+        §3.4 Pair states (WARM_UP / READY / BLOCKED).
+        Subsets of §3.6 (Steps 1-9 framework via
+          AR-049), §3.7 (warm-up framework via
+          AR-044), §3.8 (SS-PAPER-001 + SS-PAPER-007
+          framing via D7 HR-WM-021 + PA-005), §3.11
+          (reconnect framework via AR-056), §3.16
+          (HR-SS-003/004/005/006 via AR-003/026/017/
+          001/055).
+
+  (b) CODING-UNIQUE BOILERPLATE:
+        §3.1 (Purpose).
+        §3.9 (Error Handling Matrix).
+        §3.10 (Timing Expectations).
+        §3.12 (Five questions).
+        §3.13 (Related Documents).
+        §3.15 (Revision History).
+
+  (c) ARCHITECTURAL CONTENT NOT IN DIAGRAMS
+      (CLUSTER C5):
+        §3.5  rule:SS-PRE-001..005             5
+        §3.6  rule:SS-STARTUP-001..028        28
+        §3.7  rule:SS-WARMUP-001..008          8
+        §3.8  rule:SS-PAPER-001..007           7
+        §3.11 rule:SS-RECON-001..016          16
+        §3.14 rule:SS-WIRE-001                 1
+        §3.16 rule:HR-SS-001..010             10
+        TOTAL CLUSTER C5 RULE TOKENS:         75
+
+  (d) UNCLEAR ORIGIN (RR-SCOPE-009 GATE):
+        Zero entries. Per pattern TB00194-205.
+
+4.2 CLUSTER C5 FINAL TOKEN COUNT.
+  75 rule: tokens to be added to D7 mod:Startup_
+  Sequence labeled group governs list (or partitioned
+  across D7 + D1 + D6 per AMENDMENT-17 scope).
+
+  This is the LARGEST single-spec cluster C5 surface
+  in any S-1 audit completed (prior largest:
+  AMENDMENT-14 Risk_Engine 73 tokens; AMENDMENT-15
+  Regime_Engine 40 tokens; AMENDMENT-16 VPS_Deployment
+  60 tokens).
+
+  AMENDMENT-17 SCOPE (TENTATIVE; FINAL APPROVAL AT
+  STEP 3 CLOSE-GATE):
+    D7 mod:Startup_Sequence labeled group <desc>
+      body governs-list extension. Per §15.14 binding,
+      <desc> body governs (DD-001/DD-002).
+      NO SVG byte change expected — <desc> block
+      extension only; visual rect/text unchanged.
+    Token list to ADD (75 rule: + ancillary):
+      75 cluster C5 rule: tokens enumerated §4.1(c).
+      Plus ancillary cross-bindings already present
+      in 0500000 (ar:AR-049, ar:AR-056, ar:AR-044,
+      ar:AR-050, ar:AR-038, ar:AR-058..060, ar:AR-055
+      cross-reference; contract:WM-PACE-001..002 +
+      contract:VD-WD-004 + contract:CIATS_Trade_
+      Outcome_Bus cross-pair bindings;
+      param:paper_trading_mode + param:paper_starting
+      _balance + param:portfolio_baseline_USD +
+      param:drawdown_pct; channel:kraken_ws_executions
+      + channel:kraken_ws_balances + channel:kraken_
+      ws_ohlc_5m + channel:kraken_ws_ticker +
+      channel:kraken_rest_GetOHLCData + channel:
+      kraken_rest_GetWebSocketsToken + channel:
+      kraken_rest_GetOpenOrders + channel:kraken_rest
+      _status_api; evt:SYSTEM_OPERATIONAL + evt:VPS_
+      STARTUP_COMPLETE + evt:PAIR_READY + evt:
+      RECONNECT_COMPLETE + evt:WS_DISCONNECT_DETECTED
+      + evt:FATAL_RECONNECT_FAILED + evt:INVARIANT_
+      BREACH + evt:POSITION_CLOSED_DURING_GAP + evt:
+      INCOMPLETE_PROTECTION + evt:PAPER_TRADING_MODE_
+      ON + evt:PAPER_TRADING_MODE_OFF + evt:STEP_5_
+      SKIPPED_PAPER + evt:STEP_6_SKIPPED_PAPER + evt:
+      PRIVATE_WS_RECONNECT_SKIPPED_PAPER).
+    Total AMENDMENT-17 token additions: ~120
+      (75 cluster C5 rule: + ~45 ancillary).
+
+  PARTITION DETERMINATION (S-2 author decision):
+    OPTION A (single-target D7): all 75 rule: tokens
+      added to D7 mod:Startup_Sequence governs.
+      Simplest authoring. D7 desc body grows largest.
+    OPTION B (multi-diagram): partition SS-PAPER-*
+      to D7 (paper-mode dispatch surface); SS-RECON-*
+      to D1 R2 (WS connection re-establishment
+      surface); SS-WARMUP-* to D4 R3 (warm-up flows
+      adjacent to regime classification); SS-STARTUP-
+      *, SS-PRE-*, SS-WIRE-001, HR-SS-* to D7
+      (startup framework canonical home).
+      More granular but requires multi-diagram desc
+      edits.
+    Recommendation: OPTION A pending S-2 author
+      review; OPTION B if desc body exceeds visual-
+      rendering practicality.
+
+============================================================
+5. AMENDMENT QUEUE + PROSE-UPDATE QUEUE + CROSS-PAIR
+============================================================
+
+5.1 AMENDMENT-17 NEW.
+    Target diagram:  D7 R3 mod:Startup_Sequence
+                     labeled group <desc> body
+                     governs-list extension (OPTION
+                     A) or multi-diagram partition
+                     (OPTION B per §4.2). Final
+                     partition decision at S-2 author
+                     cycle.
+    SVG byte change: NO (OPTION A) — <desc> body
+                     text extension only; visual
+                     rect (line 6089-6090 800x64)
+                     and text rendering unchanged.
+                     OPTION B may require partial
+                     SVG byte change if D4 R3 / D1
+                     R2 visual elements need
+                     repositioning to accommodate
+                     additional labeled-group
+                     boundaries.
+    Token list:      75 cluster C5 rule: tokens
+                     (per §4.1(c)) + ~45 ancillary
+                     cross-bindings (per §4.2).
+    Closes:          TB00206 cluster C5 (75
+                     tokens).
+    Status:          QUEUED for Step 3 close-gate
+                     ratification.
+
+5.2 PROSE-UPDATE QUEUE EXTENSIONS.
+
+  PROSE-UPDATE-BV — AUTHORABLE.
+    Target: 0211003 dv1_0 → dv1_1.
+    Scope: 4-part — (a) plural-alert routing
+      (alerts@tothbot.com in SS-START-001 and
+      INCOMPLETE_PROTECTION reference per OI-019);
+      (b) Call C interval=1440 removal in SS-START-
+      008 per OI-NEW-001 (Regime Engine handles
+      daily independently); (c) §8 Related Documents
+      version-citation refresh (0500000 dv1_18 →
+      dv1_46; 1011014 dv1_2 → dv1_8; 0511001 dv1_0 →
+      dv1_6; 0511005 dv1_0 → dv1_1); (d) add
+      0211005 Paper_Trading_Operations_Procedure
+      dv1_3 + TB00000 v2_29 + 0311006 dv1_2 to §8
+      Related Documents.
+    Type: Unambiguous OI-019 + OI-NEW-001 propagation
+      + citation refresh. All authorable without
+      Bill business judgment.
+
+  PROSE-UPDATE-BW — BLOCKED on §7.2.
+    Target: 0500000 dv1_46 D7 mod:Startup_Sequence
+      governs-list extension (per AMENDMENT-17).
+    Blocker: Awaits HR-SS-NNN systemic-pattern
+      resolution (§7.2; SIXTH occurrence;
+      universal-resolution-principle binding
+      proposal at Step 3 close-gate).
+
+  PROSE-UPDATE-BX — BLOCKED on §7.3.
+    Target: 0211003 dv1_0 + 1011014 dv1_8 + 0500000
+      dv1_46 paper-mode-dispatch-boundary
+      reconciliation.
+    Blocker: 0211003 dv1_0 (04-05-2026) PRE-DATES
+      the TB00151j paper-as-master SS-PAPER cascade
+      (1011014 dv1_8 05-08-2026 + 0500000 dv1_24+
+      §12 paper-mode dispatch boundary). 0211003
+      §3 + §4 + §5 + §6 + §7 + §8 are paper-mode-
+      unaware. Adding SS-PAPER-001..007 prose to
+      0211003 + binding §7 HR-SS-NNN to PA-001..010
+      requires Bill ratification at Step 3 close-
+      gate (largest single-spec currency-lag
+      surface).
+
+  PROSE-UPDATE-BY — BLOCKED on §7.4.
+    Target: 0500000 dv1_46 AR-056 prose line 4779
+      ("Fatal reconnect: 10 attempts over 120
+      seconds") + 1011014 §11 Related Documents +
+      0211003 §8 Related Documents.
+    Blocker: Reconnect-attempt-count currency-lag.
+      OI-020 ratified 20 attempts / ~481 seconds at
+      1011014 dv1_6 → dv1_8 + 1011002 dv1_20+
+      WM-RECONNECT-002/017. 0500000 dv1_46 AR-056
+      prose retains pre-OI-020 values. Joint
+      resolution at Step 3 close-gate.
+
+  PROSE-UPDATE-BZ — BLOCKED on §7.5.
+    Target: 0500000 dv1_46 AR-049 prose line 4543
+      ("REST warm-up GetOHLCData (AR-044: interval=
+      5, 60, 1440)").
+    Blocker: Call C interval=1440 removal currency-
+      lag. OI-NEW-001 + DEFECT-SS-004 (1011014
+      dv1_4) removed Call C from per-pair warm-up
+      (Regime Engine handles daily independently).
+      0500000 dv1_46 AR-049 prose retains "interval=
+      5, 60, 1440" three-call sequence. Joint
+      resolution at Step 3 close-gate.
+
+  PROSE-UPDATE-CA — BLOCKED on §7.6.
+    Target: 1011013 dv1_6 §7 VD-WD-004 (b) "all
+      pairs in READY state".
+    Blocker: VD-WD-004 (b) inconsistency vs 1011014
+      dv1_8 SS-STARTUP-022 + 0211003 dv1_0
+      SS-START-009 + 0500000 dv1_46 AR-049 (9)
+      "first READY pair → enter OPERATIONAL". The
+      "all pairs READY" criterion in VD-WD-004 (b)
+      is operationally infeasible (some pairs may
+      remain BLOCKED or fail warm-up). Requires
+      Bill business judgment at Step 3 close-gate
+      to confirm "at least one pair READY" as
+      canonical and amend 1011013 §7 VD-WD-004 (b)
+      accordingly.
+
+5.3 CUMULATIVE S-3 QUEUE AT TB00206 CLOSE.
+  Active:    60  (59 prior + 1 BV NEW this session).
+  Blocked:  15  (11 prior + 4 BW/BX/BY/BZ/CA NEW).
+  Total:    75 entries in S-3 queue.
+
+5.4 CROSS-PAIR VERIFICATIONS (REQUIRED PER NSI §4.3).
+
+  §5.4-1 Startup_Sequence ↔ WS_Manager.
+    PARTIAL DRIFT.
+    1011014 dv1_8 SS-STARTUP-007 single-message
+      subscribe (instrument + status + ohlc(5) all
+      in one subscribe call) — paged-subscribe
+      semantics governed by 1011002 dv1_26
+      WM-PACE-002 token bucket (SUBSCRIBE_RATE_PER_
+      SEC=10, BURST_CAPACITY=20). 0500000 dv1_46
+      D1 R2 governs contract:WM-PACE-001..002 and
+      contract:WM-SHARD-001 covering the rate-limit
+      compatibility. Startup subscribe burst at
+      Step 3 is COMPATIBLE: 1 subscribe message per
+      WS connection per shard at startup; well
+      below 10/sec and 20-burst caps.
+    snap_orders reconciliation at Step 6 (SS-STARTUP-
+      017..019) cross-bound to AR-003 in 0500000 +
+      HR-PM-009 in WS_Manager (sole writer to
+      Position Mirror) via WSManager helper methods.
+    READY=1 timing at Step 9 (SS-STARTUP-026) bound
+      to first-READY-pair criterion (matches 0500000
+      AR-049 (9) "First READY pair → enter
+      OPERATIONAL").
+    CARRY-FORWARD: WM-PACE-001..002 + WM-SHARD-001
+      should be cross-bound to mod:Startup_Sequence
+      governs at AMENDMENT-17 (cross-pair traceability
+      improvement).
+
+  §5.4-2 Startup_Sequence ↔ Position_Mirror.
+    RESOLVED.
+    1011014 dv1_8 SS-STARTUP-018 (Position Mirror
+      restore from snap_orders snapshot) cross-bound
+      to 0511005 dv1_1 §6A PM-PAPER-001..005 (paper
+      Position Mirror sourced exclusively from local
+      simulated-fill path) and to HR-PM-009 (WS
+      Manager sole writer).
+    INCOMPLETE_PROTECTION rule at SS-STARTUP-018
+      cross-bound to 0211003 dv1_0 §7 HR-SS-008
+      (CRITICAL alert; no auto-repair). Bound to
+      0500000 AR-003 prose at line 4286.
+    Indicator warm-up coordination (SS-WARMUP-001..
+      008) bound to Position_Mirror via WARM_UP →
+      READY transition (Position Mirror update
+      requires READY pair).
+    No new cross-pair finding.
+
+  §5.4-3 Startup_Sequence ↔ Logger.
+    RESOLVED.
+    1011014 dv1_8 startup event emission order:
+      Logger must be online before any startup event
+      can be emitted. Logger initialization is a
+      pre-condition implicit at SS-PRE-001..005 stage
+      (Python process initialization includes Logger
+      bootstrap). All SS-STARTUP-NNN log events
+      (KRAKEN_MAINTENANCE_SCHEDULED, FATAL_TOKEN_
+      ACQUISITION_FAILED, PAIR_WARM_UP_STARTED,
+      PAIR_READY, SYSTEM_OPERATIONAL, VPS_STARTUP_
+      COMPLETE) and SS-RECON-NNN log events
+      (WS_DISCONNECT_DETECTED, RECONNECT_COMPLETE,
+      etc.) and SS-PAPER-NNN log events
+      (PAPER_TRADING_MODE_ON/OFF, STEP_5_SKIPPED_
+      PAPER, STEP_6_SKIPPED_PAPER, PRIVATE_WS_
+      RECONNECT_SKIPPED_PAPER) reach Logger via
+      Logger's async bounded queue per AR-014 (0500000
+      D1 R2 governs).
+    SS-PAPER-005 first-Logger-record contract
+      (PAPER_TRADING_MODE_ON/OFF as first record
+      after startup) is bound to 0500000 dv1_24+ §12.2
+      LIFECYCLE LOGGING + §12.6 TELEMETRY EVENT
+      TAXONOMY (per 1011014 §6A.3 closure mapping).
+    No new cross-pair finding.
+
+  §5.4-4 Startup_Sequence ↔ CIATS.
+    RESOLVED with CARRY-FORWARD.
+    CIATS state restoration on startup governed by
+      0211001 CIATS_Specification + restore_window_
+      minutes parameter. 1011014 dv1_8 does NOT
+      explicitly cite restore_window_minutes — CIATS
+      state-restoration timing is opaque from the
+      startup_sequence perspective. CIATS startup
+      hooks fire AFTER Logger is online and BEFORE
+      first SYSTEM_OPERATIONAL emission. Cross-
+      contract binding implicit.
+    Gap-closed positions on reconnect (SS-RECON-008
+      Step R6) fire CIATS Trade Outcome Bus via
+      Logger (per 1011014 §10 Q5 logs). Cross-pair
+      contract clean.
+    CARRY-FORWARD: restore_window_minutes binding
+      timeline visualization improvement candidate
+      at AMENDMENT-17 or Step 3 close-gate.
+
+  §5.4-5 Startup_Sequence ↔ VPS_Deployment.
+    CRITICAL FINDING — see §7.6 below.
+    1011013 §7 VD-WD-004 READY=1 notification is
+      sent ONLY after (a) all WS channels subscribed,
+      (b) ALL pairs in READY state, (c) Position
+      Mirror reconciled, (d) Kraken Status API check
+      complete — per TB00205 §5.4-3 carry-forward.
+    Verification of 1011014 dv1_8 against (a)/(b)/
+    (c)/(d):
+      (a) All WS channels subscribed: COVERED by
+          Step 3 (public WS subscribe — instrument,
+          status, ohlc(5)) + Step 5 (private WS
+          subscribe — executions, balances) + Step
+          7 (ticker subscribe). MATCH.
+      (b) ALL pairs in READY state: NOT MATCHED.
+          1011014 dv1_8 SS-STARTUP-022 + SS-STARTUP-
+          026 say "at least one pair READY" → ENTER
+          OPERATIONAL → sd_notify READY=1. 0211003
+          dv1_0 SS-START-009 says "at least one pair
+          reaches READY state." 0500000 dv1_46
+          AR-049 (9) says "First READY pair → enter
+          OPERATIONAL." All three sources agree on
+          "at least one pair READY." Only 1011013
+          dv1_6 VD-WD-004 (b) says "all pairs in
+          READY state" — this is the OUTLIER.
+      (c) Position Mirror reconciled: COVERED by
+          Step 6 SS-STARTUP-017..019 (live mode);
+          SKIPPED in paper mode per SS-PAPER-004
+          (paper Position Mirror sourced from local
+          simulated-fill path; reconciliation
+          not applicable). MATCH for live mode.
+          PAPER MODE EXCEPTION: VD-WD-004 (c) does
+          not account for paper-mode Step 6 skip.
+      (d) Kraken Status API check complete: COVERED
+          by Step 1 SS-STARTUP-001..003. MATCH.
+    SURFACED FINDING: VD-WD-004 (b) "all pairs in
+      READY state" is INCONSISTENT with 1011014 +
+      0211003 + 0500000 canonical "at least one
+      pair READY." VD-WD-004 (b) requires correction.
+      PROSE-UPDATE-CA BLOCKED on §7.6 Bill business
+      judgment.
+    SURFACED FINDING: VD-WD-004 (c) "Position
+      Mirror reconciled" prose does not account for
+      paper-mode Step 6 skip. PROSE-UPDATE-CA
+      may need to be a 2-part: (CA-1) "all pairs"
+      → "at least one pair" + (CA-2) paper-mode
+      exception clause for (c).
+
+  §5.4-6 Startup_Sequence ↔ Regime_Engine.
+    RESOLVED.
+    Daily regime classification on startup bound to
+      SS-WIRE-001 (_regime_wrapper passes
+      wm.monitored_universe to rge.run_daily_
+      computation()) — closes DEFECT-SS-009. Bound
+      to 0500000 dv1_46 AR-074 (BTC/USD as market_
+      regime proxy) for Regime Engine constraint
+      surface.
+    Regime Engine runs independently at startup
+      AND at 00:00 UTC daily (SS-STARTUP-027); not
+      part of per-pair warm-up (SS-WARMUP-003 NOTE
+      "Call C interval=1440 is not part of per-pair
+      warm-up. Regime Engine runs independently.").
+    No new cross-pair finding.
+
+  §5.4-7 Startup_Sequence ↔ Selection_Controller.
+    RESOLVED.
+    Universe population at Step 4 (SS-STARTUP-010..
+      012) precedes selection-controller universe
+      ranking. Selection_Controller (per 0811002
+      dv1_0 + 1011009 dv1_1) operates on
+      wm.monitored_universe after Step 4 instrument
+      snapshot is processed and pair states set
+      (WARM_UP / BLOCKED). 1011014 dv1_8 does not
+      explicitly enumerate Selection_Controller
+      hook timing; cross-pair contract implicit via
+      WSManager.monitored_universe attribute access.
+    No new cross-pair finding.
+
+============================================================
+6. EXIT CRITERIA
+============================================================
+
+E-S1SS-01  GAP REGISTER AUTHORED.                     ✓
+           TB00206_S1SS_Gap_Register_Startup_Sequence_
+           v1_0.txt authored at /home/claude/ +
+           delivered via present_files.
+
+E-S1SS-02  ALL 1011014 ELEMENTS CLASSIFIED + 0211003  ✓
+           CROSS-VERIFIED.
+           16 element groups (§3.1-§3.16) classified
+           into 4 buckets. 0211003 cross-verification
+           complete per §3.16 + §7.3.
+
+E-S1SS-03  CLUSTER C5 ENUMERATED.                     ✓
+           75 rule: tokens — final count enumerated
+           in §4.1(c) + §4.2.
+
+E-S1SS-04  AMENDMENT-17 SCOPE DEFINED.                ✓
+           D7 R3 mod:Startup_Sequence labeled group
+           <desc> body governs-list extension (OPTION
+           A) OR multi-diagram partition (OPTION B).
+           Final partition decision at S-2 author
+           cycle. NO SVG byte change expected for
+           OPTION A. Per §5.1 token list.
+
+E-S1SS-05  PROSE-UPDATE QUEUE EXTENDED.               ✓
+           PROSE-UPDATE-BV AUTHORABLE (4-part:
+             plural-alert + Call C removal + 0211003
+             §8 citation refresh + paper-as-master
+             cascade reference additions).
+           PROSE-UPDATE-BW BLOCKED on §7.2 HR-SS-NNN
+             systemic-pattern resolution.
+           PROSE-UPDATE-BX BLOCKED on §7.3 0211003
+             paper-mode-unaware currency-lag.
+           PROSE-UPDATE-BY BLOCKED on §7.4 reconnect-
+             attempt-count currency-lag (0500000
+             AR-056 prose).
+           PROSE-UPDATE-BZ BLOCKED on §7.5 Call C
+             interval=1440 removal currency-lag
+             (0500000 AR-049 prose).
+           PROSE-UPDATE-CA BLOCKED on §7.6 VD-WD-004
+             (b) inconsistency.
+           Cumulative S-3 queue at TB00206 close:
+             60 active + 15 blocked = 75 entries.
+
+E-S1SS-06  CROSS-PAIR VERIFICATIONS COMPLETE.         ✓
+           §5.4-1..§5.4-7 all resolved with
+           carry-forwards as documented.
+           VD-WD-004 (a)/(b)/(c)/(d) cross-pair
+           verification per §3.6 NSI carry-forward:
+             (a) MATCH; (b) NOT MATCHED — see §7.6;
+             (c) MATCH (live mode); paper-mode
+             exception flagged; (d) MATCH.
+
+E-S1SS-07  BILL APPROVAL GATE STATUS.            PENDING
+           AMENDMENT-17 + new PROSE-UPDATE-BV
+           through CA queued for Step 3 close-gate
+           ratification (TB00207).
+
+E-S1SS-08  SESSION LOG AUTHORED.                      ✓
+           TB00206_TothBot_V2_Session_Log_2026-05-11
+           _v1_0.txt.
+
+E-S1SS-09  NSI AUTHORED.                              ✓
+           TB00207_Next_Session_Instructions_v1_0
+           .txt directs TB00207 Step 3 close-gate
+           preliminary package assembly + Bill
+           ratification (FIRST POST-S-1 SESSION).
+
+============================================================
+7. SEPARATE FINDINGS
+============================================================
+
+7.1 CLUSTER C5 — SS-SPECIFIC ARCHITECTURAL
+    IDENTIFIERS ABSENT FROM DIAGRAMS.
+    75 rule: tokens enumerated §4.1(c). Largest
+    single-spec cluster C5 in any S-1 audit. Closed
+    at AMENDMENT-17 ratification.
+
+7.2 CLUSTER C6 — HR-SS-NNN IDENTIFIER-BINDING
+    MISMATCH — SIXTH OCCURRENCE OF HR-XX-NNN
+    SYSTEMIC PATTERN.
+    Finding: 0211003 dv1_0 §7 defines 10 hard rules
+      HR-SS-001 through HR-SS-010 governing the
+      startup sequence at the AA=02 layer. 0500000
+      dv1_46 contains ZERO occurrences of HR-SS-001
+      through HR-SS-010 in any governs list, prose
+      block, or AR. The HR-SS-NNN identifier prefix
+      is COMPLETELY ABSENT from the architecture
+      canonical.
+    Pattern recurrence count:
+      1st: HR-LM-NNN (TB00201).
+      2nd: HR-SC-NNN (TB00202).
+      3rd: HR-RE-NNN (TB00203) — SYSTEMIC declared.
+      4th: HR-REGIME-NNN vs RE-* (TB00204) — further
+           reinforced.
+      5th: HR-IN-NNN vs VD-* (TB00205) — further
+           reinforced, third structural form.
+      6th: HR-SS-NNN (TB00206) — FURTHER REINFORCED
+           FOR FOURTH TIME.
+    Disposition: Universal-resolution-principle
+      binding proposal at Step 3 close-gate. Bill
+      ratification required.
+    Block: PROSE-UPDATE-BW.
+
+7.3 CLUSTER C7 — 0211003 PAPER-MODE-UNAWARE
+    CURRENCY-LAG — LARGEST SINGLE-SPEC LAG IN
+    PROJECT HISTORY.
+    Finding: 0211003 dv1_0 (04-05-2026) PRE-DATES
+      the entire TB00151j paper-as-master SS-PAPER
+      cascade (1011014 dv1_8 05-08-2026 + 0500000
+      dv1_24+ §12 paper-mode dispatch boundary +
+      TB00000 v2_18+ §4.4 PA-001..010 absolute
+      standing rule + 0211005 dv1_3 PT-MODE-001..
+      007). 0211003 §3 + §4 + §5 + §6 + §7 + §8
+      contain ZERO paper-mode prose. AA=02 parent
+      doc is paper-mode-unaware in entirety.
+    Magnitude: TENTH consecutive Cluster C7
+      currency-lag finding. Per NSI §3.4 + §6.3
+      pattern continuation from TB00197-TB00205
+      (9 prior consecutive). Pattern CONFIRMED
+      SYSTEMIC and FURTHER REINFORCED.
+    Lag enumeration in 0211003 dv1_0:
+      (1) §3 PAIR STATES — paper-mode-unaware.
+      (2) §4 SS-START-001..010 — Step 5 (private
+          WS) + Step 6 (snap_orders reconcile)
+          missing paper-mode gates per SS-PAPER-002
+          + SS-PAPER-004.
+      (3) §4 SS-START-005 — portfolio_baseline_USD
+          source missing paper-mode synthetic-
+          ledger branch per SS-PAPER-003.
+      (4) §5 MID-SESSION RECONNECTION — invariants
+          1-5 paper-mode-unaware (need SS-PAPER-006
+          private-WS-step-skip binding).
+      (5) §7 HR-SS-NNN hard rules — missing
+          HR-SS-011+ (or equivalent) paper-mode
+          binding to PA-001..010.
+      (6) §8 Related Documents — 0500000 dv1_18
+          (current dv1_46); 1011014 dv1_2 (current
+          dv1_8); 0511001 dv1_0 (current dv1_6);
+          0511005 dv1_0 (current dv1_1). Missing
+          0211005 + TB00000 + 0311006 references.
+      (7) §4 SS-START-001 + SS-START-006 alert
+          recipient: "alert@tothbot.com" singular —
+          OI-019 plural-alert fix not propagated.
+      (8) §4 SS-START-008 Call C interval=1440 —
+          OI-NEW-001 + DEFECT-SS-004 removal not
+          propagated.
+      (9) §4 SS-START-002 reconnect-attempt-count
+          deferral to 0511001 — pre-OI-020 (10/120)
+          values implicit.
+      (10) §4 SS-START-009 sd_notify READY=1
+           sequencing — VD-WD-004 (a)/(b)/(c)/(d)
+           criteria not enumerated.
+    Disposition: 10-class amendment cluster for
+      0211003 dv1_0 → dv1_1 + 0211003 → 0211003.X
+      framework amendment. Joint resolution at Step
+      3 close-gate per Bill ratification.
+    Block: PROSE-UPDATE-BX.
+
+7.4 CLUSTER C7 — 0500000 dv1_46 AR-056 RECONNECT-
+    ATTEMPT-COUNT CURRENCY-LAG.
+    Finding: 0500000 dv1_46 AR-056 prose at line
+      4779 retains pre-OI-020 values: "Fatal
+      reconnect: 10 attempts over 120 seconds →
+      log CRITICAL → systemd restart". 1011014
+      dv1_8 SS-RECON-015 (since dv1_6 per OI-020):
+      "20 total attempts spanning ~481 seconds
+      (~8 minutes)". 1011002 dv1_26 WM-RECONNECT-
+      002 / WM-RECONNECT-017: authoritative 20/481
+      values.
+    Disposition: 0500000 AR-056 prose amendment
+      bringing values forward to current 20/481.
+      Joint resolution at Step 3 close-gate.
+    Block: PROSE-UPDATE-BY.
+
+7.5 CLUSTER C7 — 0500000 dv1_46 AR-049 CALL C
+    INTERVAL=1440 CURRENCY-LAG.
+    Finding: 0500000 dv1_46 AR-049 prose at line
+      4543 retains pre-OI-NEW-001 / pre-DEFECT-SS-
+      004 three-call warm-up enumeration: "(8)
+      REST warm-up GetOHLCData (AR-044: interval=
+      5, 60, 1440)". 1011014 dv1_8 §6 Step 8
+      SS-WARMUP-003 NOTE: "Call C (interval=1440
+      regime) is not part of per-pair warm-up.
+      Regime Engine runs independently at startup
+      and at 00:00 UTC via daily refresh." Per-pair
+      warm-up is now only Call A (interval=5) +
+      Call B (interval=60). Call C is owned by
+      mod:Regime_Engine independently.
+    Disposition: 0500000 AR-049 prose amendment
+      removing "1440" from Step 8 warm-up
+      enumeration and adding deferral pointer to
+      mod:Regime_Engine for daily regime
+      classification timing. Joint resolution at
+      Step 3 close-gate.
+    Block: PROSE-UPDATE-BZ.
+
+7.6 CLUSTER C6 — 1011013 dv1_6 VD-WD-004 (b)
+    INCONSISTENCY WITH 1011014 + 0211003 + 0500000
+    CANONICAL READY=1 CRITERION.
+    Finding: 1011013 dv1_6 §7 VD-WD-004 specifies
+      READY=1 notification is sent ONLY after:
+        (a) All WS channels subscribed
+        (b) All pairs in READY state
+        (c) Position Mirror reconciled
+        (d) Kraken Status API check complete
+      Three canonical sources unanimously specify
+      "at least one pair READY" as the trigger
+      condition:
+        1011014 dv1_8 SS-STARTUP-022 + SS-STARTUP-
+          026: "System enters OPERATIONAL state
+          when at least one pair is in READY state.
+          ... Send sd_notify READY=1 to systemd."
+        0211003 dv1_0 SS-START-009: "TothBot V2
+          enters OPERATIONAL state when at least
+          one pair reaches READY state. Send
+          sd_notify READY=1 to systemd at this
+          moment."
+        0500000 dv1_46 AR-049 (9): "First READY
+          pair → enter OPERATIONAL."
+      VD-WD-004 (b) "all pairs in READY state" is
+      the OUTLIER. Additionally, VD-WD-004 (c)
+      "Position Mirror reconciled" prose does not
+      account for paper-mode Step 6 skip per
+      SS-PAPER-004 (paper Position Mirror sourced
+      exclusively from local simulated-fill path;
+      reconciliation N/A in paper).
+    Operational analysis: "all pairs READY" is
+      operationally INFEASIBLE — some pairs may
+      remain BLOCKED indefinitely (instrument
+      status reduce_only / delisted / etc.); some
+      pairs may fail REST warm-up (HTTP 429
+      exhausted) and remain WARM_UP indefinitely.
+      VD-WD-004 (b) wording defeats the entire
+      startup-sequence design where pipeline begins
+      at first READY pair to maximize tradeable
+      uptime.
+    Disposition: 1011013 dv1_6 §7 VD-WD-004
+      amendment:
+      (CA-1) VD-WD-004 (b) "all pairs in READY
+             state" → "at least one pair in READY
+             state."
+      (CA-2) VD-WD-004 (c) "Position Mirror
+             reconciled" → add paper-mode
+             exception clause: "Position Mirror
+             reconciled in live mode; SKIPPED in
+             paper mode per 1011014 dv1_8
+             SS-PAPER-004 (Position Mirror sourced
+             from local simulated-fill path)."
+      Bill business judgment required at Step 3
+      close-gate to ratify the (b) wording
+      correction and (c) paper-mode exception.
+    Block: PROSE-UPDATE-CA.
+
+============================================================
+8. EXIT CRITERIA STATUS
+============================================================
+
+E-S1SS-01  GAP REGISTER AUTHORED                      ✓
+E-S1SS-02  ALL 1011014 ELEMENTS CLASSIFIED            ✓
+E-S1SS-03  CLUSTER C5 ENUMERATED                      ✓
+E-S1SS-04  AMENDMENT-17 SCOPE DEFINED                 ✓
+E-S1SS-05  PROSE-UPDATE QUEUE EXTENDED                ✓
+E-S1SS-06  CROSS-PAIR VERIFICATIONS COMPLETE          ✓
+E-S1SS-07  BILL APPROVAL GATE STATUS              PENDING
+E-S1SS-08  SESSION LOG AUTHORED                       ✓
+E-S1SS-09  NSI AUTHORED                               ✓
+
+8 of 9 COMPLETE this session. E-S1SS-07 PENDING by
+design — Bill approval gate held to Step 3 close-gate
+(TB00207).
+
+S-1 SUB-STEP COMPLETE. 13 of 13 module pairs audited
+(WS_Manager + Signal_Pipeline + Execution_Engine +
+Exit_Controller + Position_Mirror + Logger + Long_
+Module + Selection_Controller + Risk_Engine + Regime_
+Engine + VPS_Deployment + Startup_Sequence). Step 3
+close-gate package ready for TB00207 ratification.
+
+============================================================
+9. REVISION HISTORY
+============================================================
+
+  v1_0  2026-05-11  Initial. TB00206 Step 3 sub-step
+                    S-1 final pair audit — Startup_
+                    Sequence (1011014 dv1_8 + 0211003
+                    dv1_0) vs 0500000 dv1_46.
+                    16-element classification; 75
+                    cluster C5 rule: tokens; 6 §7
+                    findings (75 C5; HR-SS-NNN SIXTH
+                    occurrence further reinforcing
+                    HR-XX-NNN systemic pattern;
+                    0211003 paper-mode-unaware
+                    largest-single-spec currency-lag;
+                    0500000 AR-056 reconnect-attempt-
+                    count currency-lag; 0500000
+                    AR-049 Call C interval=1440
+                    currency-lag; 1011013 VD-WD-004
+                    (b) READY criterion
+                    inconsistency).
+                    AMENDMENT-17 NEW (~120 token
+                    additions; NO SVG byte change
+                    OPTION A). 6 PROSE-UPDATE
+                    entries (BV authorable; BW/BX/
+                    BY/BZ/CA blocked on §7.2/3/4/
+                    5/6). Tenth consecutive
+                    currency-lag finding confirming
+                    Cluster C7 systemic pattern.
+
+============================================================
+END OF DOCUMENT
+============================================================

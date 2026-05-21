@@ -1,0 +1,220 @@
+DocDCN:     TB00045
+DocTitle:   TothBot_V2_Session_Log_2026-04-06_Part4
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\OneDrive\TothBot\TB00045_TothBot_V2_Session_Log_2026-04-06_Part4_v1_0.txt
+DocDate:    04-06-2026
+DocTime:    23:59:59 UTC
+
+============================================================
+TOTHBOT V2 SESSION LOG -- 2026-04-06 PART 4
+============================================================
+
+============================================================
+1. SESSION START STATE
+============================================================
+
+Phase 9 in progress. Modules 1-8 complete as of TB00044.
+Prior session log: TB00044 (Part 3).
+
+Documents read at session start:
+  TB00000  v2_7    Project Instructions          checked
+  TB00044  v1_0    Prior session log             checked
+  1011008  dv1_0   Long_Module_Coding_Spec       read in full
+  1011009  dv1_0   Selection_Controller_Spec     read in full
+  1011010  dv1_6   CIATS_Coding_Spec             read in full
+  1011013  dv1_4   VPS_Deployment_Coding_Spec    read in full
+  1011014  dv1_3   Startup_Sequence_Coding_Spec  read in full
+  1011001  dv1_6   Engineering_Best_Practices    confirmed
+
+============================================================
+2. WORK COMPLETED THIS SESSION
+============================================================
+
+Modules 9 through 12 coded and committed.
+Module 13 (startup_sequence.py) started but not completed
+-- session ended before file was committed.
+
+  Module 9   long_module.py       1011008 dv1_0  commit 641ea81
+  Module 10  selection_ctrl.py    1011009 dv1_0  commit 835b4a1
+  Module 11  ciats.py             1011010 dv1_6  commit 32ad0b4
+  Module 12  vps_deployment.py    1011013 dv1_4  commit d35a961
+             tothbot.service      1011013 dv1_4  commit d35a961
+             requirements.txt     1011013 dv1_4  commit d35a961
+
+  Module 13  startup_sequence.py  1011014 dv1_3  NOT COMMITTED
+             File creation started. Session ended mid-task.
+
+All committed files at:
+  C:\Users\wstot\GitHub\TothBot\TothBot_V2-Code\tothbot\
+
+============================================================
+3. PHASE 9 MODULE STATUS
+============================================================
+
+  COMPLETE AND COMMITTED:
+    Module 1   logger.py           Logger           1011007  5d7ed65
+    Module 2   ws_manager.py       WS Manager       1011002  3ce4603
+    Module 3   position_mirror.py  Position Mirror  1011006  033e8e6
+    Module 4   risk_engine.py      Risk Engine      1011011  e7caba9
+    Module 5   regime_engine.py    Regime Engine    1011012  2357fc6
+    Module 6   signal_pipeline.py  Signal Pipeline  1011003  0ddb91a
+    Module 7   execution_engine.py Execution Engine 1011004  (committed)
+    Module 8   exit_controller.py  Exit Controller  1011005  (committed)
+    Module 9   long_module.py      Long Module      1011008  641ea81
+    Module 10  selection_ctrl.py   Selection Ctrl   1011009  835b4a1
+    Module 11  ciats.py            CIATS            1011010  32ad0b4
+    Module 12  vps_deployment.py   VPS Deployment   1011013  d35a961
+               tothbot.service                      1011013  d35a961
+               requirements.txt                     1011013  d35a961
+
+  REMAINING:
+    Module 13  startup_sequence.py  Startup Sequence  1011014  NOT STARTED
+
+============================================================
+4. DECISIONS RECORDED THIS SESSION
+============================================================
+
+  D-LM-001  LongModule is the PRIMARY execution event router.
+            WS Manager routes executions channel events to
+            lm.on_execution_event() only. LM calls
+            ee.on_execution_event() for cases requiring EE
+            order construction. LM handles exec_type=new and
+            exec_type=trade exclusively (EE ignores both).
+
+  D-LM-002  Below-minimum partial fill (AR-054 CASE B):
+            LM pops ee._entry_orders[cl_ord_id] before
+            delegating, preventing EE from attempting invalid
+            batch_add on below-minimum qty. LM issues IOC
+            market sell, clears PM, releases semaphore.
+
+  D-LM-003  BoundedSemaphore acquired in on_gate8_output()
+            BEFORE calling EE. EE calls release_semaphore()
+            internally on size-below-min failure path.
+            LM on_position_closed() releases semaphore on
+            normal position close.
+
+  D-LM-004  Gate 8 context (signal_params, asset_regime,
+            market_regime) stored in _gate8_context[symbol]
+            at dispatch. EE does not carry this data.
+            POSITION_OPENED log uses this context on fill.
+
+  D-SC-001  SC-GATE-3 uses symbol in self._pm (dict protocol,
+            O(1)) -- consistent with how exit_controller.py
+            accesses wm.position_mirror.
+
+  D-CIATS-001  CIATS reads Logger files via poll/tail (30s
+               interval). Also exposes on_trade_close() for
+               same-cycle processing from Exit Controller.
+               Log file remains authoritative source.
+
+  D-VPS-001  tothbot.service delivered as tothbot_service.txt
+             to avoid Claude.ai rendering failure on .service
+             extension. Renamed on Windows via:
+             ren tothbot.service.txt tothbot.service
+
+============================================================
+5. OPEN ITEMS
+============================================================
+
+  No open items.
+
+============================================================
+6. PARKING LOT
+============================================================
+
+  PL-003     TRACKING: Pathway 1 GitHub automation specs.
+             After Pathway 2 reaches paper trading readiness.
+
+  PL-NEW-002 git add . prohibited. STANDING RULE 6.
+  PL-NEW-003 Multi-line commit -m breaks Windows batch.
+  PL-NEW-004 cd to repo root first.
+
+============================================================
+7. MODULE 8 GAPS -- CARRY FORWARD FROM TB00044
+============================================================
+
+These gaps were documented in exit_controller.py and
+are known mitigations. Both remain in effect.
+
+  GAP-EC-001  Cancel ACK not routed from ws_manager to
+              exit_ctrl_fn.
+              Mitigation: asyncio.sleep(5.0) + second retry.
+
+  GAP-EC-002  Daily regime downgrade not forwarded to EC
+              after regime_refresh.
+              Mitigation: EC polls regime_cache on every
+              ticker_bbo event.
+
+============================================================
+8. NOTES
+============================================================
+
+  - LF/CRLF warnings on git add are harmless on Windows.
+    No action required.
+
+  - .service file extension causes Claude.ai download
+    failure. Future delivery: use .txt suffix, rename
+    on Windows with ren command.
+
+  - requirements.txt already existed in repo (replaced).
+
+  - startup_sequence.py not started. Full fresh start
+    required in next session.
+
+============================================================
+9. NEXT SESSION -- WHERE WE PICK UP
+============================================================
+
+Phase 9 continues. One module remaining.
+
+  NEXT: Module 13 -- startup_sequence.py (1011014 dv1_3)
+
+This is the final Phase 9 module. After it is committed,
+Phase 9 is complete and Phase 10 (testing) begins.
+
+------------------------------------------------------------
+SESSION OPENING INSTRUCTION (copy/paste exactly):
+------------------------------------------------------------
+
+  ============================================================
+  Read the Project Instructions (TB00000 v2_7) and session
+  log TB00045. Phase 9 is in progress.
+
+  Phase 9 status:
+    COMPLETE: Modules 1-12 -- all committed.
+    NEXT: Module 13 -- startup_sequence.py (1011014 dv1_3).
+    This is the FINAL Phase 9 module.
+
+  Repository: TothBot_V2-Code (github.com/TothBot/TothBot_V2-Code)
+  Platform: Hetzner VPS 87.99.141.44, Python 3.12.3
+
+  Before coding: read 1011014 Startup_Sequence_Coding_Spec
+  dv1_3 in full. Also confirm 1011001 Engineering_Best_Practices
+  dv1_6 is loaded.
+
+  Module 8 gaps (documented in exit_controller.py):
+  - Cancel ACK not routed from ws_manager to exit_ctrl_fn.
+    Mitigated: asyncio.sleep(5.0) + second retry.
+  - Daily regime downgrade not forwarded to EC after regime_refresh.
+    Mitigated: EC polls regime_cache on every ticker_bbo event.
+
+  RULE 14: git push origin master. Always.
+  RULE 15: One command per copy box. Always.
+  RULE 6:  git add . is prohibited. Explicit git add per file.
+  RULE 4:  cd to repo root first. Always.
+
+  NOTE: .service files fail to download in Claude.ai.
+  Deliver as .txt and rename on Windows with ren command.
+  ============================================================
+
+============================================================
+10. REVISION HISTORY
+============================================================
+
+  v1_0  04-06-2026  Session log Part 4. Modules 9-12
+                    committed. Module 13 not started.
+
+============================================================
+END OF SESSION LOG
+============================================================

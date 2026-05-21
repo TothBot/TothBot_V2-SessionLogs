@@ -1,0 +1,483 @@
+DocDCN:     TB00145
+DocTitle:   Next_Session_Instructions
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TBXXXXX_Session_Logs\TB00145_Next_Session_Instructions_v1_0.txt
+DocDate:    05-03-2026
+DocTime:    22:30:00 UTC
+
+============================================================
+TOTHBOT V2 NEXT SESSION INSTRUCTIONS - TB00146
+============================================================
+
+PAPER TRADING ONLY. NO REAL MONEY.
+PAPER TRADING MUST MIMIC LIVE TRADING EXACTLY.
+NO PATCHES.
+UNIVERSE = TOKEN/USD + TOKEN/USDC + TOKEN/USDT (D-03).
+
+============================================================
+1. NEXT SESSION SCOPE
+============================================================
+
+------------------------------------------------------------
+PRIMARY: STREAM A - ws_manager.py dv1_25 -> dv1_26
+                    CLEAN-SLATE REWRITE + UNIT TESTS
+------------------------------------------------------------
+
+TB00145 closed STREAM 5 deploy preparation by halting
+deploy and pivoting to spec-layer remediation of
+OI-072 PAPER-LIVE PARITY DESIGN DEFECT. Four primary
+specs were rewritten:
+
+  0511001 dv1_4  -> dv1_5
+  1011002 dv1_25 -> dv1_26
+  0211005 dv1_1  -> dv1_2
+  1011014 dv1_7  -> dv1_8
+
+dv1_25 ws_manager.py code (committed fb5de32 on
+TothBot_V2-Code master) does NOT match the corrected
+dv1_26 contract. STREAM 5 deploy is HALTED until
+code is rewritten.
+
+TB00146 is a Claude Code session executing STREAM A:
+clean-slate rewrite of ws_manager.py from the
+deployed dv1_25 baseline (fb5de32) to the 1011002
+dv1_26 contract.
+
+Order of work for TB00146:
+
+  STEP 1  Cold-load mandatory reading per §3 below.
+  STEP 2  STEP A pre-flight (DC-PREFLIGHT-001..006)
+          per 0311002 v1_8 §8.2.5.
+  STEP 3  RR-SCOPE-009 four-question Chesterton's-
+          Fence investigation. The dv1_26 rewrite
+          REMOVES HR-WM-022 (private WS NEVER
+          connected in paper) and WM-RECONNECT-019
+          (paper-mode skip private steps). Both
+          removals must satisfy RR-SCOPE-009 origin
+          investigation. Origin: dv1_26 ADR §18 +
+          0511001 dv1_5 ADR §18 (TRUE PAPER-LIVE
+          PARITY) — fully documented; investigation
+          is complete and load-bearing-property is
+          preserved by the four-point divergence
+          set. Document the four-question response
+          in the TB00146 session log §4.
+  STEP 4  ws_manager.py dv1_26 clean-slate rewrite.
+          Implementation contract: 1011002 dv1_26
+          §4 (architecture), §5 (inbound dispatch),
+          §6.1-6.13 (outbound dispatch including
+          NEW §6.10 dispatch_market_sell, §6.11
+          _simulate_entry_fill, §6.12
+          _maybe_paper_fill, §6.13 paper P&L
+          application), §7 (health monitoring),
+          §11 (drawdown), §12 (Pending Order),
+          §13 (DMS prohibition), §14 (decimal
+          rounding), §15 (mid-session reconnect
+          including REWRITTEN WM-RECONNECT-019-NEW
+          mandating ALL 10 reconnect steps in BOTH
+          modes), §16 (ticker event_trigger), §17
+          (HR-WM-001..036 including NEW HR-WM-033/
+          034/035/036).
+
+          Critical implementation requirements:
+          (a) Six dispatch methods (add_order,
+              batch_add, cancel_order, amend_order,
+              batch_cancel, dispatch_market_sell)
+              gate on self.paper_mode at entry per
+              dv1_26 §6.4-§6.8 and §6.10 code
+              templates.
+          (b) PositionRecord adds entry_cost_usd:
+              Decimal field for paper P&L
+              computation.
+          (c) FEE_MAKER_PCT and FEE_TAKER_PCT
+              declared as module-level Decimals at
+              the top of ws_manager.py.
+          (d) _all_connections_healthy checks
+              private WS health UNCONDITIONALLY (no
+              paper_mode branch). private_connection
+              is always present.
+          (e) _ping_loop and _zombie_monitor run on
+              private WS UNCONDITIONALLY (no
+              paper_mode branch).
+          (f) _handle_executions logs snap_orders
+              in paper mode but does NOT populate
+              paper Mirror.
+          (g) _handle_balances logs balances events
+              in paper mode but does NOT overwrite
+              synthetic paper spot_usd_balance.
+          (h) _execute_reconnect_sequence runs ALL
+              10 steps in both modes; only Step 4
+              (snap_orders Mirror handling), Step 5
+              (gap-closed CIATS firing), Step 6
+              (Pending Order reconcile) diverge by
+              mode.
+          (i) HR-WM-035 grep audit: post-rewrite,
+              `grep -nE "self\.paper_mode|
+              self\._paper_mode" ws_manager.py`
+              must return only the bounded set
+              from §13.1 + §6.11/6.12/6.13
+              helpers. Document the grep output
+              in TB00146 session log §5.
+
+  STEP 5  Unit-test suite tests/unit/test_ws_manager_
+          dv1_26.py created. Coverage requirements
+          per 1011002 dv1_26 HR-WM-036:
+          - paper-mode startup completes all 11
+            steps (per 0511001 dv1_5 §4.2)
+          - paper-mode reconnect completes all 10
+            steps including private WS re-connect
+          - paper-mode receives and logs snap_orders,
+            balances, executions without altering
+            paper Mirror or paper capital ledger
+          - paper-mode sequence-gap detection fires
+            correctly on synthetic gap injection
+          - paper-mode P&L application produces
+            correct spot_usd_balance updates for
+            entry / TP / emergSL / market-sell
+          - drawdown_pct evaluates identically in
+            both modes given equivalent operands
+          - all 6 dispatch methods correctly gate
+            on paper_mode at entry
+          - HR-WM-035 grep audit passes
+          Existing dv1_25 test suite serves as
+          starting baseline; rewrite tests touching
+          paper-mode behavior; preserve tests
+          covering PATH 2 sharding / token bucket
+          / silent-pair handling / reconnect (those
+          areas unchanged in dv1_26).
+
+  STEP 6  py_compile + run unit-test suite.
+          Goal: 100% PASS. No deferred failures.
+
+  STEP 7  Commit ws_manager.py dv1_26 + tests on
+          TothBot_V2-Code master. Push to GitHub.
+
+  STEP 8  Author TB00146 session log + TB00146 NSI
+          for hand-off to TB00147 (deploy +
+          observation session).
+
+  STEP 9  STREAM B (deferred): downstream-spec
+          audit pass (1011005 dv1_2 -> dv1_3?,
+          1011010 dv1_6 -> dv1_7?, 0500000
+          dv1_21 -> dv1_22?). Bill discretion
+          whether to fold this into TB00146 or
+          defer to TB00147.
+
+DEPLOY IS A SEPARATE SESSION. TB00146 explicitly
+does NOT deploy to VPS. The earliest deploy session
+is TB00147 (or later, depending on TB00146
+completeness).
+
+------------------------------------------------------------
+ALTERNATIVES (Bill discretion):
+------------------------------------------------------------
+
+  Alt 1: Fold STREAM B (downstream spec audit) into
+         TB00146 alongside the code rewrite. This
+         increases TB00146 scope but completes the
+         OI-072 closure faster.
+
+  Alt 2: Defer STREAM B to TB00147 or later. Keeps
+         TB00146 scope narrow (code + tests only).
+         OI-072 closes incrementally.
+
+Default plan: STREAM A in TB00146, STREAM B in
+TB00147 alongside deploy preparation. Bill may
+override at TB00146 open.
+
+============================================================
+2. LOCKED DECISIONS
+============================================================
+
+  D-01  Burn window — empirical 2-hour clean.
+  D-02  REPAIR not rewrite (with named exceptions —
+        ws_manager.py rewrite this cycle is a named
+        exception per OI-072 closure).
+  D-03  USD + USDC + USDT, no top-N cap.
+  D-04  $500k/day liquidity floor.
+  D-05  $1,000 paper starting capital.
+  D-06  Paper-to-live parity EXACT (TRUE PAPER-
+        LIVE PARITY per 0511001 dv1_5 ADR §18).
+  D-07  NO PATCHES.
+  D-08  Top-N cap retired.
+
+ALL eight LOCKED. Carry forward unchanged.
+
+============================================================
+3. MANDATORY READING AT COLD-LOAD
+============================================================
+
+Read these in this order. State each version
+explicitly before any work.
+
+CORE GOVERNANCE (always):
+  TB00000  Project Instructions for Claude        v2_17
+  TB00145  Session Log 2026-05-03                v1_0
+  TB00145  Next Session Instructions             v1_0  (this doc)
+  0311001  Namespace Specification               v1_3
+  0311002  Document Creation Workflow            v1_8
+
+ARCHITECTURE / SPEC / CODING (this session's primary):
+  0500000  System Architecture Overview          dv1_21
+  0511001  WS Manager Specification              dv1_5
+                                                  (TRUE PAPER-LIVE
+                                                   PARITY ADR §18)
+  1011002  WS Manager Coding Spec                dv1_26
+                                                  (THE CONTRACT for
+                                                   ws_manager.py
+                                                   rewrite)
+  0211005  Paper Trading Operations Procedure    dv1_2
+  1011014  Startup Sequence Coding Spec          dv1_8
+
+CONTEXTUAL:
+  0411001  Kraken WS v2 Specification            dv1_11
+  0411002  Kraken REST API Specification         dv1_1
+  0411003  Kraken Fee Rate Limit Specification   dv1_0
+  0711003  Asset Selection Specification         dv1_3
+
+CODE BASELINE:
+  ws_manager.py at fb5de32 (dv1_25 deployed
+                            baseline — to be
+                            REPLACED with dv1_26
+                            clean-slate rewrite).
+  tests/unit/test_ws_manager_dv1_25.py
+                           (baseline test suite —
+                            to be REPLACED with
+                            dv1_26 test suite).
+
+============================================================
+4. EXPECTED PROJECT FOLDER STATE AT TB00146 OPEN
+============================================================
+
+Required spec versions in project knowledge folder:
+  0511001_WS_Manager_Specification_dv1_5.txt        ✓
+  1011002_WS_Manager_Coding_Spec_dv1_26.txt         ✓
+  0211005_Paper_Trading_Operations_Procedure_dv1_2.txt  ✓
+  1011014_Startup_Sequence_Coding_Spec_dv1_8.txt    ✓
+  TB00145_TothBot_V2_Session_Log_2026-05-03_v1_0.txt ✓
+  TB00145_Next_Session_Instructions_v1_0.txt        ✓
+
+Bill upload required at TB00145 close (before
+TB00146 open).
+
+GitHub TothBot_V2-Docs HEAD: 8426fe1 master
+GitHub TothBot_V2-Code HEAD: fb5de32 master
+                             (unchanged from TB00144)
+
+VPS: continues running working-tree-drift dv1_23.
+     Not touched.
+
+============================================================
+5. PARKING LOT - CARRIED FROM TB00144 + UPDATES
+============================================================
+
+TB00144 NSI Parking Lot items, updated for TB00146:
+
+  PL-001  Verify dv1_5 / dv1_26 / dv1_2 / dv1_8
+          spec set is internally consistent before
+          any code rewrite. Cross-reference check:
+          - dv1_5 §13.1 four divergence points
+            match dv1_26 §6.4-§6.8/§6.10 dispatch
+            methods + §6.13 P&L + dv1_26 HR-WM-033/
+            034/035 + dv1_2 PT-MODE-006/007 + dv1_8
+            §6 PARITY PREFIX.
+          - dv1_5 HR-WM-026 wording matches dv1_2
+            HR-PT-008 wording matches dv1_8 §6
+            PARITY PREFIX wording.
+          - PT-MODE-005 11-step enumeration matches
+            0511001 dv1_5 §4.2 11-step enumeration.
+
+  PL-002  HR-WM-035 grep audit must pass on
+          ws_manager.py dv1_26 post-rewrite:
+            grep -nE "self\.paper_mode|self\._paper_mode" \
+                ws_manager.py
+          Expected count: bounded by §13.1 four-
+          point list + §6.11/6.12/6.13 helper
+          methods. Document the output in TB00146
+          session log.
+
+  PL-003  Test for paper-mode private-WS connect
+          path. New unit test required: starts
+          WSManager in paper mode, asserts private
+          WS connects, asserts auth token acquired,
+          asserts executions and balances
+          subscribed, asserts ratecounter
+          monitored, asserts no _send_private call
+          for outbound orders.
+
+  PL-004  Test for paper-mode snap_orders logging
+          without Mirror population. Inject
+          synthetic snap_orders payload; assert
+          SNAP_ORDERS_RECEIVED_PAPER logged at
+          INFO; assert paper Position Mirror
+          unchanged.
+
+  PL-005  Test for paper-mode P&L application.
+          Simulate entry fill -> verify
+          spot_usd_balance decreased by
+          qty * fill_price * (1 + FEE_MAKER_PCT)
+          and entry_cost_usd populated on
+          PositionRecord. Simulate TP fill ->
+          verify spot_usd_balance increased by
+          qty * tp_price * (1 - FEE_MAKER_PCT)
+          and PAPER_TP_PNL logged with correct
+          pnl_usd.
+
+  PL-006  Test for paper-mode reconnect parity.
+          Inject reconnect; assert all 10
+          reconnect steps execute including
+          private WS re-connect; assert
+          snap_orders logged but paper Mirror
+          unchanged; assert capital ledger
+          preserved.
+
+  PL-007  Verify entry_cost_usd field added to
+          PositionRecord schema (in dv1_26 §6.13).
+          Update unit tests covering Position
+          Mirror to include this field.
+
+  PL-008  RR-SCOPE-005 cumulative count = 6
+          entering TB00146. Apply RR-SCOPE-005
+          STRICTLY. Do NOT emit confirm-prompts
+          on FP/DP-determined paths.
+
+  PL-009  Six-dispatch-method dv1_26 implementation
+          checklist (verify each before commit):
+          - add_order:               paper gate ✓ / live transmit ✓
+          - batch_add:               paper gate ✓ / live transmit ✓
+          - cancel_order:            paper gate ✓ / live transmit ✓
+          - amend_order:             paper gate ✓ / live transmit ✓
+          - batch_cancel:            paper gate ✓ / live transmit ✓
+          - dispatch_market_sell:    paper gate ✓ / live transmit ✓
+
+  PL-010  Five paper-helper methods dv1_26
+          implementation checklist:
+          - _simulate_entry_fill          (§6.11)
+          - _maybe_paper_fill              (§6.12)
+          - _apply_paper_pnl_entry         (§6.13)
+          - _apply_paper_pnl_tp            (§6.13)
+          - _apply_paper_pnl_emergsl       (§6.13)
+          - _apply_paper_pnl_market_sell   (§6.13)
+          (six methods total — five _apply +
+          two helpers; 7 if you count
+          _simulate_entry_fill separately from
+          the apply helpers.)
+
+  PL-011  WM-RECONNECT-019 retirement verification:
+          ws_manager.py dv1_26 must NOT contain any
+          code that skips a private-side reconnect
+          step in paper mode. The full
+          _execute_reconnect_sequence runs all 10
+          steps in both modes; only Step 4 / 5 /
+          6 internal logic diverges per
+          WM-RECONNECT-019-NEW.
+
+  PL-012  Downstream spec audit (1011005, 1011010,
+          0500000): verify or amend per OI-072
+          SUB-ITEM A. Bill discretion whether to
+          execute in TB00146 or TB00147.
+
+  PL-013  Test spec amendments (1021001 dv1_0 ->
+          dv1_1, 1021002 dv1_0 -> dv1_1) to
+          codify HR-WM-036 test coverage
+          requirements. Author alongside the test
+          suite update in TB00146.
+
+  PL-014  STREAM 5 deploy: HALTED. Earliest
+          deploy session is TB00147. Code rewrite
+          is the gating dependency.
+
+============================================================
+6. FIRST ACTIONS IN TB00146
+============================================================
+
+  1. Cold-load mandatory reading per §3.
+
+  2. State all documents read and their versions
+     before beginning any work. (Per TB00000 §2
+     Reading Rule.)
+
+  3. Execute STEP A pre-flight per 0311002 v1_8
+     §8.2.5 (DC-PREFLIGHT-001..006). Document
+     output in TB00146 session log §2.
+
+  4. Confirm GitHub state for both repos via:
+       cmd /c "cd C:\Users\wstot\GitHub\TothBot\TothBot_V2-Docs && git log -1 --oneline"
+       cmd /c "cd C:\Users\wstot\GitHub\TothBot\TothBot_V2-Code && git log -1 --oneline"
+     Expected:
+       TothBot_V2-Docs HEAD = 8426fe1
+       TothBot_V2-Code HEAD = fb5de32
+
+  5. Confirm D-01 through D-08 LOCKED per §2.
+
+  6. CONFIRM PAPER-MODE BEFORE DEPLOY. Per D-06
+     paper-trading-only constraint, the dv1_26
+     rewrite MUST preserve paper-mode behavior
+     under TRUE PAPER-LIVE PARITY. Read 0511001
+     dv1_5 §13.1 four divergence points and
+     1011002 dv1_26 HR-WM-035 before writing any
+     paper-mode-relevant code.
+
+  7. Execute RR-SCOPE-009 four-question
+     investigation per §1 STEP 3. Document in
+     TB00146 session log §4.
+
+  8. Begin ws_manager.py dv1_26 clean-slate
+     rewrite per §1 STEP 4. Implementation
+     contract is 1011002 dv1_26.
+
+  9. Apply RR-SCOPE-005 STRICTLY. Cumulative
+     count -> 6 entering this session. Do NOT
+     emit confirm-prompts on FP/DP-determined
+     paths.
+
+  10. Apply RR-SCOPE-001 STRICTLY across BOTH
+      chat and Claude Code. Stay focused on
+      Bill's stated scope. No "while we're at it"
+      additions.
+
+  11. Apply RR-SHELL-001..004 STRICTLY. PowerShell
+      is Bill's host shell on Windows; cmd /c
+      wrapper required for cmd-syntax commands.
+      SSH-to-VPS uses native bash directly.
+
+  12. NO DEPLOY in TB00146. Rewrite + tests +
+      commit + push only. STREAM 5 deploy is a
+      separate session (TB00147+).
+
+  13. NO PATCHES (D-07). The dv1_26 rewrite is
+      authorized as a named D-02 exception per
+      OI-072 closure. Within the rewrite, no
+      patch-style local fixes — implement the
+      contract cleanly.
+
+============================================================
+7. STANDING RULES (CARRY FORWARD)
+============================================================
+
+All TB00000 v2_17 §4.1 / §4.2 / §4.3 standing rules
+apply.
+
+All 0311002 v1_8 §8.2.5 DC-PREFLIGHT-001..006 apply
+at session-open.
+
+ONEDRIVE BAN active. No emissions of the prohibited
+string in any path / command / instruction / response /
+artifact (per TB00000 v2_17 §4.2 OP-001..009).
+
+RR-SCOPE-001..009 absolute standing rules with
+pre-emit scan + self-catch signals.
+
+RR-RULE-001..004 newly-authored rule self-application.
+
+RR-SHELL-001..004 shell-context completeness.
+
+RR-VIOL-001..002 violation handling and recurrence
+tracking.
+
+RR-SCOPE-005 cumulative count entering TB00146: 6.
+NSI for TB00147 must carry the count forward.
+
+============================================================
+END NSI v1_0 — TB00145 -> TB00146 HAND-OFF
+============================================================

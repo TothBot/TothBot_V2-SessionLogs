@@ -1,0 +1,1227 @@
+DocDCN:     TB00202
+DocTitle:   S1SC_Gap_Register_Selection_Controller
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TBXXXXX_Session_Logs\TB00202_S1SC_Gap_Register_Selection_Controller_v1_0.txt
+DocDate:    05-11-2026
+DocTime:    22:12:40 UTC
+
+============================================================
+TOTHBOT V2 STEP 3 SUB-STEP S-1 GAP REGISTER —
+SELECTION_CONTROLLER MODULE PAIR — CROSS-NAMESPACE
+AA=08 + AA=10 AUDIT
+============================================================
+
+============================================================
+1. SCOPE + METHODOLOGY
+============================================================
+
+1.1 PRIMARY MISSION.
+Element-by-element gap classification of the Selection_
+Controller module pair vs the 0500000 dv1_46 architecture
+canonical, with full cross-namespace verification against
+the AA=08 parent specification. Classifies every
+architectural element from the AA=10 coding spec into one
+of four buckets per TB00202 NSI §4 methodology:
+  (a) Architectural restatement (verified present in
+      EITHER 0500000 governs/prose OR 0811002 prose).
+  (b) Coding-unique.
+  (c) Architectural content not in diagrams.
+  (d) Unclear origin per RR-SCOPE-009 four-question gate.
+
+1.2 TARGET PAIR.
+  AA=10: 1011009 Selection_Controller_Coding_Spec dv1_1
+         (PRESENT at /mnt/project/, 25774 bytes, dated
+          04-24-2026).
+  AA=08: 0811002 Selection_Controller_Specification dv1_0
+         (PRESENT at /mnt/project/, 17499 bytes, dated
+          04-05-2026).
+
+1.3 CANONICAL SOURCE.
+  0500000 dv1_46_Claude_Source.html (8 diagrams):
+    D1 R2 — Kraken API Connection Architecture
+    D2 R2 — TothBot Trading Pipeline (8 Gates) — PRIMARY
+    D3 R3 — Exit Architecture (3 layers)
+    D4 R3 — Regime Taxonomy (6-regime 3x2 grid)
+    D5 R3 — CIATS Architecture
+    D6 R4 — Complete System
+    D7 R3 — Paper-Mode Dispatch Boundary
+
+1.4 FULL CROSS-NAMESPACE METHODOLOGY APPLIED.
+
+Both AA=08 + AA=10 parents present at TB00202 cold-load.
+Full TB00197 §1.4 5-section cross-namespace methodology
+applies (same pattern as TB00194-197 + TB00201 RE-AUDIT;
+unlike TB00198-200 single-AA-side variant forms).
+
+  Section 1 — Scope + cross-namespace methodology.
+  Section 2 — Diagram coverage + AA=08 cross-references.
+  Section 3 — Element-by-element classification verifying
+              each (a) bucket item against BOTH 0500000
+              canonical and 0811002 prose.
+  Section 4 — Roll-up by bucket.
+  Section 5 — Downstream queue (AMENDMENT-* + PROSE-
+              UPDATE-* + S-4 retirement gating + cross-
+              pair §5.4 forward-declarations).
+
+Hierarchical AR / rule / contract override per TB00202 NSI
+§4.1.3: AA=08 (0811002) takes precedence over AA=10
+(1011009) where they differ. Conflicts flagged as cluster
+C6 citation drift.
+
+1.5 OUT-OF-SCOPE THIS SESSION.
+  - No diagram amendment authoring (S-2 sub-step).
+  - No 0811002 prose update authoring (S-3 sub-step).
+  - No 1011009 retirement authoring (S-4 sub-step).
+  - No code changes (Step 3 is documentation-only).
+  - No Risk_Engine / Regime_Engine / VPS_Deployment /
+    Startup_Sequence pair audits (sequenced to TB00203+).
+
+============================================================
+2. DIAGRAM COVERAGE + AA=08 PROSE CROSS-REFERENCES
+============================================================
+
+2.1 PRIMARY DIAGRAMS.
+
+D2 R2 — Trading Pipeline (PRIMARY for Selection_Controller).
+  Cell: g5_selection labeled group (lines 2210-2249 of
+  0500000 dv1_46).
+    canonical: gate:G5_Selection_Controller
+    constraints: ar:AR-072, decision:D-08_Top_N_Cap_
+                 Retired
+    drill_targets: mod:Selection_Controller
+    consumes: indicator:SSS
+  D2 R2 root governs cites ar:AR-072 + gate:G5_Selection_
+  Controller. No individual SC-GATE-1..6 or HR-SC-*
+  identifiers appear in D2 R2 governs/constraints lists.
+
+D7 R3 — Paper-Mode Dispatch Boundary.
+  Selection_Controller is upstream of the dispatch seam;
+  no SC-specific labeled groups in D7. D-06_Paper_Live_
+  Parity cited in constraints; SC-UNI-004 (paper-mode
+  parity in 1011009) anchors here.
+
+D6 R4 — Complete System.
+  cooldown + consecutive_loss state-dict update path
+  cited at lines 3920 + 3976 + 3985 + 4258 in
+  constraints of mod:WS_Manager + mod:Exit_Controller
+  groups: "Selection Controller state update authority
+  via WS Manager AR-073; HR-EC-014".
+  ar:AR-073 cited inline (per registry-gap note at
+  line 3787 pending §15.12.13 registration).
+
+D4 R3 — Regime Taxonomy.
+  Regime 5 + Regime 6 cells cite ar:AR-072 (SC-GATE-1
+  variant for short-direction) per AR-072 amended
+  dv1_43 directional cascade. No individual SC-* token
+  references.
+
+2.2 AA=08 PROSE STRUCTURE (0811002 dv1_0).
+
+  §1   Purpose.
+  §2   Governing Documents.
+  §3   Parent Chain.
+  §4   What the Selection Controller Does (input/output).
+  §5   Six Quality Gates (§5.1 SC-GATE-1 through §5.6
+       SC-GATE-6; SC-001 through SC-018).
+  §6   State Management (§6.1 exit_cooldown_log SC-019..
+       SC-022; §6.2 consecutive_loss_count SC-023..
+       SC-026).
+  §7   Gate Failure Behavior (SC-027 through SC-030).
+  §8   Interfaces (8.1-8.7).
+  §9   Hard Rules (HR-SC-001 through HR-SC-007).
+  §10  CIATS Parameters.
+  §11  What It Logs.
+  §12  Five Coding-Readiness Questions.
+  §13  Related Documents.
+  §14  Revision History.
+
+2.3 AA=10 PROSE STRUCTURE (1011009 dv1_1).
+
+  §1   Purpose.
+  §2   Parent Chain (primary 0811002, secondary 0711003,
+       architectural authority 0500000 AR-070/072/074).
+  §3   Five Coding-Readiness Questions.
+  §4   In-Memory State (SC-STATE-001 through SC-STATE-
+       004).
+  §5   Six Quality Gates (SC-GATE-1 through SC-GATE-6 +
+       SC-PASS).
+  §6   Hard Rules (HR-SC-001 through HR-SC-008; HR-SC-008
+       added dv1_1).
+  §7   Universe Scope (SC-UNI-001 through SC-UNI-006;
+       new in dv1_1 fulfilling AR-070 assignment).
+  §8   Revision History.
+
+============================================================
+3. ELEMENT-BY-ELEMENT CLASSIFICATION
+============================================================
+
+Each 1011009 dv1_1 element cross-verified against (i)
+0500000 dv1_46 governs/constraints lists + prose AND (ii)
+0811002 dv1_0 prose. Bucket assignment per §1.1.
+
+------------------------------------------------------------
+3.1  §1 Purpose: "Gate 5 of 8-gate trading pipeline.
+     Applies 6 quality gates to every SSS PASS signal."
+     CITES: 0500000 D2 R2 gate:G5_Selection_Controller +
+     ar:AR-072. 0811002 §1 same architectural statement.
+     BUCKET: (a) ARCHITECTURAL RESTATEMENT.
+
+3.2  §2 Parent Chain — primary 0811002, secondary 0711003,
+     architectural authority 0500000 AR-070/AR-072/AR-074.
+     CITES: Documentation parent chain per 0311001 §15.
+     BUCKET: (a) ARCHITECTURAL RESTATEMENT.
+
+3.3  §3 Q(1) DO answer (applies 6 gates to SSS PASS;
+     returns PASS/FAIL; manages two state dicts; FAIL =
+     skip never halt; operates ONLY on tradeable_universe
+     members).
+     CITES: 0811002 §4 + §12 Q(1) same.
+     BUCKET: (a) ARCHITECTURAL RESTATEMENT.
+
+3.4  §3 Q(2) INTERFACES (SSS PASS + candle data; pre-
+     computation cache atr_14 + pair_cache; Position
+     Mirror; Parameter Store snapshot; Gate 8 quantized
+     qty preview; tradeable_universe membership handle;
+     OUT: Long Module dispatch + Logger).
+     CITES: 0811002 §8.1-8.7 + §12 Q(2) — semantically
+     equivalent.
+     BUCKET: (a) ARCHITECTURAL RESTATEMENT.
+
+3.5  §3 Q(3) HARD RULES summary (strict sequence;
+     FAIL=SKIP never HALT; sc_body_threshold to ATR(14);
+     monotonic clock; state preserved across reconnect;
+     CIATS params from snapshot; loss count resets on
+     win; universe-consumer role; BTC/USD default-
+     disabled).
+     CITES: 0811002 §9 + §12 Q(3) — partial coverage
+     (see §3.20-3.27 below for HR-SC numerical-slot
+     mismatch).
+     BUCKET: (a) ARCHITECTURAL RESTATEMENT (with §7.7
+     mismatch surfaced for ratification).
+
+3.6  §3 Q(4) TRIGGERS (SSS PASS from Signal Pipeline SSS
+     Engine on every 5-minute candle, scoped to
+     tradeable_universe pairs passing Gates 1-4).
+     CITES: 0500000 D2 R2 pipeline trigger; 0811002 §12
+     Q(4) same.
+     BUCKET: (a) ARCHITECTURAL RESTATEMENT.
+
+3.7  §3 Q(5) LOGS (7 events: GATE5_PASS + 6 reject
+     codes: WEAK_CANDLE_BODY, POSITION_ALREADY_OPEN,
+     PAIR_IN_COOLDOWN, POSITION_TOO_SMALL,
+     CONSECUTIVE_LOSSES_EXCEEDED, plus SSS_SIGNAL_FAIL
+     implicit per §5 SC-GATE-1).
+     CITES: 0811002 §11 same 7 events listed.
+     BUCKET: (a) ARCHITECTURAL RESTATEMENT.
+
+3.8  §4 SC-STATE-001 cooldown_registry: dict[str, float]
+     keyed by symbol; value = time.monotonic() of last
+     exit.
+     0811002 §6.1 SC-019 names this same dict
+     "exit_cooldown_log" (NAME MISMATCH — see §7.2
+     cluster C6 citation drift).
+     CITES: 0500000 D6 R4 line 4258 cites
+     "exit_cooldown_log" as the AR-073 path target.
+     BUCKET: (a) ARCHITECTURAL RESTATEMENT (semantics)
+     + Cluster C6 NAME MISMATCH (citation drift).
+
+3.9  §4 SC-STATE-002 consecutive_loss_count: dict[str,
+     int] keyed by symbol; default 0 if absent.
+     CITES: 0811002 §6.2 SC-023 same semantics + name.
+     0500000 D6 R4 line 4258 cites "consecutive_loss_
+     count".
+     BUCKET: (a) ARCHITECTURAL RESTATEMENT.
+
+3.10 §4 SC-STATE-003 both dicts preserved across WS
+     reconnect; never reset on reconnect or session
+     restart.
+     CITES: 0811002 §6.1 SC-022 + §6.2 SC-025 same;
+     0500000 ar:AR-073 path (per registry-gap note at
+     line 3787).
+     BUCKET: (a) ARCHITECTURAL RESTATEMENT.
+
+3.11 §4 SC-STATE-004 on_position_closed(symbol, was_win:
+     bool) callback from Exit Controller; updates
+     cooldown + loss count.
+     CITES: 0811002 §6.2 SC-024 — DIFFERENT INTERFACE
+     SIGNATURE. 0811002 SC-024 takes an exit_reason
+     enum (MAE_THRESHOLD_BREACH, TIME_EXPIRY, HTF_
+     REGIME_REVERSAL, DAILY_REGIME_DOWNGRADE, SIGNAL_
+     DECAY, MOMENTUM_LOSS, TP_FILL, TP_PARTIAL_FILL_
+     REMAINDER); 1011009 SC-STATE-004 takes a simplified
+     was_win boolean. SEMANTICALLY DIFFERENT contracts
+     at the same callback. See §7.3 below.
+     0500000 D6 R4 line 4258 + D3 R2 line 3976 cite
+     "AR-073 win/loss classification path per HR-EC-014"
+     (consistent with was_win boolean form).
+     BUCKET: (a) ARCHITECTURAL RESTATEMENT + Cluster C6
+     INTERFACE-SIGNATURE MISMATCH (citation drift).
+
+3.12 §5 SC-GATE-1 SSS Signal Pass (implicit; passes by
+     arrival at SC).
+     CITES: 0500000 D2 R2 g5_selection cell prose
+     "Signal fails any of 6 quality gates: SKIP";
+     0811002 §5.1 SC-001/SC-002 same.
+     BUCKET: (a) ARCHITECTURAL RESTATEMENT.
+
+3.13 §5 SC-GATE-2 candle body strength: abs(close - open)
+     > atr_14 × sc_body_threshold (0.3 starting, CIATS-
+     owned).
+     CITES: 0811002 §5.2 SC-003/004/005 same.
+     0500000 §10 CIATS parameters lists "sc_body_
+     threshold: 0.3" at line 5350.
+     BUCKET: (a) ARCHITECTURAL RESTATEMENT.
+
+3.14 §5 SC-GATE-3 one position per symbol: symbol NOT in
+     position_mirror.
+     CITES: 0811002 §5.3 SC-006/007/008 same; 0500000
+     D6 R4 mod:Position_Mirror + HR-PM-009 sole-writer
+     authority anchors the position_mirror handle.
+     §5.4-4 CROSS-PAIR FORWARD-DECLARATION verified —
+     see §5.4 below.
+     BUCKET: (a) ARCHITECTURAL RESTATEMENT.
+
+3.15 §5 SC-GATE-4 post-exit cooldown: monotonic elapsed
+     >= sc_cooldown_seconds (300s starting, CIATS-owned).
+     CITES: 0811002 §5.4 SC-009/010/011 same; 0500000
+     §10 CIATS parameters at line 5351.
+     BUCKET: (a) ARCHITECTURAL RESTATEMENT.
+
+3.16 §5 SC-GATE-5 minimum position size pre-validation:
+     quantized_qty >= qty_min AND quantized_qty ×
+     entry_limit_price >= cost_min.
+     CITES: 0811002 §5.5 SC-012/013/014 same; ties to
+     Kraken minimum-order arithmetic per 0411003 Kraken_
+     Fee_Rate_Limit_Specification.
+     BUCKET: (a) ARCHITECTURAL RESTATEMENT.
+
+3.17 §5 SC-GATE-6 consecutive loss limit: count <
+     sc_consecutive_limit (3 starting, CIATS-owned).
+     CITES: 0811002 §5.6 SC-015/016/017 same; 0500000
+     §10 CIATS parameters at line 5352.
+     BUCKET: (a) ARCHITECTURAL RESTATEMENT.
+
+3.18 §5 SC-PASS path: all 6 gates passed; log
+     GATE5_PASS; return PASS → Long Module dispatch.
+     CITES: 0811002 §4 (output PASS); §12 Q(2)
+     TO: pipeline + Long Module dispatch.
+     BUCKET: (a) ARCHITECTURAL RESTATEMENT.
+
+3.19 §5 SC-GATE-* implementation code blocks (Decimal
+     conversion, ROUND_DOWN quantize via pair_cache
+     qty_increment, dict get-with-default, snapshot
+     reads).
+     CITES: Python implementation mechanics — not
+     architectural per 0500000 + 0811002 prose.
+     BUCKET: (b) CODING-UNIQUE.
+
+3.20 §6 HR-SC-001 (1011009 dv1_1): "Gates in strict
+     sequence 1 → 6. No skipping."
+     0811002 HR-SC-001: "Gates MUST be applied in strict
+     sequence 1-6. First FAIL exits immediately."
+     CONTENT MATCH on identifier slot. CITES: 0500000
+     D2 R2 ar:AR-072 (governs gate sequencing).
+     BUCKET: (a) ARCHITECTURAL RESTATEMENT.
+
+3.21 §6 HR-SC-002 (1011009 dv1_1): "FAIL = SKIP. Never
+     HALT. Pipeline continues."
+     0811002 HR-SC-002: "Gate failure MUST NEVER halt
+     the pipeline. Always SKIP pair and continue for
+     other pairs."
+     CONTENT MATCH on identifier slot.
+     BUCKET: (a) ARCHITECTURAL RESTATEMENT.
+
+3.22 §6 HR-SC-003 (1011009 dv1_1): "sc_body_threshold
+     applied to ATR(14) — not raw candle range."
+     0811002 HR-SC-003: "exit_cooldown_log and
+     consecutive_loss_count MUST be preserved across WS
+     reconnect."
+     ⚠ CONTENT MISMATCH at SAME identifier slot — see
+     §7.4 below (cluster C6 / mirror of TB00201 §7.7
+     HR-LM-NNN identifier-binding mismatch class).
+     BUCKET: (a) ARCHITECTURAL RESTATEMENT (semantics
+     preserved on both sides — both rules ARE
+     architectural) + Cluster C6 IDENTIFIER-BINDING
+     MISMATCH surfaced for ratification.
+
+3.23 §6 HR-SC-004 (1011009 dv1_1): "Cooldown uses time.
+     monotonic(). Never time.time()."
+     0811002 HR-SC-004: "consecutive_loss_count MUST
+     reset to 0 on TP_FILL and TP_PARTIAL_FILL_
+     REMAINDER only. ... TIME_EXPIRY counts as a loss
+     for this purpose."
+     ⚠ CONTENT MISMATCH at SAME identifier slot — see
+     §7.4 cluster C6.
+     BUCKET: (a) ARCHITECTURAL RESTATEMENT + Cluster C6.
+
+3.24 §6 HR-SC-005 (1011009 dv1_1): "State dicts
+     preserved across reconnect."
+     0811002 HR-SC-005: "SC-GATE-5 MUST use
+     entry_qty_quantized (already ROUND_DOWN quantized
+     by Gate 8). Never use raw computed qty for minimum
+     size validation."
+     ⚠ CONTENT MISMATCH at SAME identifier slot — see
+     §7.4 cluster C6.
+     BUCKET: (a) ARCHITECTURAL RESTATEMENT + Cluster C6.
+
+3.25 §6 HR-SC-006 (1011009 dv1_1): "All CIATS params
+     from Parameter Store snapshot."
+     0811002 HR-SC-006: "Cooldown MUST use time.
+     monotonic() exclusively. Never time.time() for
+     cooldown interval."
+     ⚠ CONTENT MISMATCH at SAME identifier slot — see
+     §7.4 cluster C6.
+     BUCKET: (a) ARCHITECTURAL RESTATEMENT + Cluster C6.
+
+3.26 §6 HR-SC-007 (1011009 dv1_1): "Consecutive loss
+     count resets on win. Never auto-clears on loss."
+     0811002 HR-SC-007: "All numeric CIATS parameters
+     (sc_body_threshold, sc_cooldown_seconds, sc_
+     consecutive_limit) are read from the frozen
+     Parameter Store snapshot taken at pipeline start
+     (I-4). Never re-read mid-evaluation."
+     ⚠ CONTENT MISMATCH at SAME identifier slot — see
+     §7.4 cluster C6.
+     BUCKET: (a) ARCHITECTURAL RESTATEMENT + Cluster C6.
+
+3.27 §6 HR-SC-008 (1011009 dv1_1; NEW in dv1_1):
+     "Selection Controller operates ONLY on pairs that
+     are members of tradeable_universe per §7 SC-UNI-001
+     and satisfy 0711003 dv1_3 AS-001 criteria. ... Any
+     code path that invokes SC for a non-member pair is
+     a defect in the caller."
+     0811002: NOT PRESENT. 0811002 has HR-SC-001..007
+     only (7 hard rules).
+     CITES: 0500000 D2 R2 g5_selection cell + ar:AR-070
+     amended dv1_20 (universe scope) + AR-072 (gate
+     architecture); architectural in nature
+     (universe-consumer role per D-03 + D-08).
+     BUCKET: (c) ARCHITECTURAL CONTENT NOT IN DIAGRAMS
+     (and absent from 0811002 prose at the §9 hard
+     rules level; PROSE-UPDATE-BB candidate adding
+     HR-SC-008 to 0811002 §9).
+
+3.28 §7 SC-UNI-001 tradeable universe scope (USD/USDC/
+     USDT per 0711003 AS-001; no top-N cap per D-08).
+     CITES: 0500000 §8 AR-070 amended dv1_20 prose lines
+     5052-5068 + D1 R2 governs decision:D-03 + D-08;
+     0811002: NOT PRESENT (SC-UNI-* added in 1011009
+     dv1_1 only).
+     BUCKET: (c) ARCHITECTURAL CONTENT NOT IN DIAGRAMS
+     (and absent from 0811002 prose; PROSE-UPDATE-BC
+     candidate adding §6.3 Universe Scope section to
+     0811002).
+
+3.29 §7 SC-UNI-002 universe maintenance is upstream
+     (owned by 0711003 AS-004/AS-006 + 0511001 WS
+     Manager).
+     CITES: 0500000 D1 R2 governs rule:HR-WM-027;
+     0811002: NOT PRESENT.
+     BUCKET: (c) ARCHITECTURAL CONTENT NOT IN DIAGRAMS.
+
+3.30 §7 SC-UNI-003 BTC/USD handling (universe member;
+     pipeline evaluation CIATS-owned default-disabled
+     per AR-074 + HR-AS-009).
+     CITES: 0500000 §8 AR-074 prose; 0811002: NOT
+     PRESENT.
+     BUCKET: (c) ARCHITECTURAL CONTENT NOT IN DIAGRAMS.
+
+3.31 §7 SC-UNI-004 paper-mode parity (SC executes
+     identically in paper and live).
+     CITES: 0500000 D7 R3 ar:PA-005 + decision:D-06_
+     Paper_Live_Parity; 0500000 §4.4 PA-001..010
+     governs; 0811002: NOT PRESENT.
+     BUCKET: (c) ARCHITECTURAL CONTENT NOT IN DIAGRAMS
+     (per-SC paper-mode-parity formalization absent from
+     0811002).
+
+3.32 §7 SC-UNI-005 O(1) membership check (per 0711003
+     HR-AS-004).
+     CITES: 0711003 dv1_3 HR-AS-004; 0500000 D2 R2
+     gate:G5_Selection_Controller; 0811002 §5.3 SC-006
+     mentions "O(1) dict key lookup" for SC-GATE-3 but
+     not for tradeable_universe membership generally.
+     BUCKET: (c) ARCHITECTURAL CONTENT NOT IN DIAGRAMS.
+
+3.33 §7 SC-UNI-006 quote-currency enumeration is
+     architectural (NOT CIATS-owned) per D-03 + HR-AS-
+     007.
+     CITES: 0500000 decision:D-03_Universe_Scope; 0500000
+     §8 AR-070 prose; 0811002: NOT PRESENT.
+     BUCKET: (c) ARCHITECTURAL CONTENT NOT IN DIAGRAMS.
+
+3.34 SC-GATE-1..6 as INDIVIDUAL gate: identifiers in
+     0500000 §15.12 gate: registry (analogous to gate:
+     G1_State_Machine through gate:G8_Position_Sizer).
+     CITES: 0500000 D2 R2 root governs cites gate:G5_
+     Selection_Controller (the parent gate token) but
+     NOT individual SC-GATE-1..6 as registered gate:
+     tokens. 0811002 §5 enumerates all six in prose.
+     BUCKET: (c) ARCHITECTURAL CONTENT NOT IN DIAGRAMS
+     (6 tokens for AMENDMENT-13 candidate).
+
+3.35 Reject-code event tokens (evt:GATE5_PASS, evt:WEAK_
+     CANDLE_BODY, evt:POSITION_ALREADY_OPEN, evt:PAIR_
+     IN_COOLDOWN, evt:POSITION_TOO_SMALL, evt:
+     CONSECUTIVE_LOSSES_EXCEEDED, evt:SSS_SIGNAL_FAIL).
+     CITES: 0500000 §AR-072 prose lines 5108/5115/5122/
+     5131 enumerates the reject codes as TEXT but they
+     are NOT registered as evt: tokens in any governs/
+     constraints list. 0811002 §11 What It Logs lists
+     all seven.
+     BUCKET: (c) ARCHITECTURAL CONTENT NOT IN DIAGRAMS
+     (7 tokens for AMENDMENT-13 candidate).
+
+3.36 State-dict contracts (contract:exit_cooldown_log,
+     contract:consecutive_loss_count).
+     CITES: 0500000 D6 R4 lines 3920/3922/3976/3978/
+     4258 reference the dicts in mod:WS_Manager +
+     mod:Exit_Controller constraint annotations but
+     NOT as registered contract: tokens. 0811002 §6
+     names both dicts but no AA=08 contract:
+     registration. AR-073 itself is the parent contract
+     per 0500000 §15.12.13 (pending registration per
+     registry-gap note at D6 line 3787).
+     BUCKET: (c) ARCHITECTURAL CONTENT NOT IN DIAGRAMS
+     (2 tokens for AMENDMENT-13 candidate; bundle with
+     §15.12.13 AR-073 registration housekeeping).
+
+3.37 Parameter tokens (param:sc_body_threshold, param:
+     sc_cooldown_seconds, param:sc_consecutive_limit).
+     CITES: 0500000 §10 CIATS Parameters lines 5350-
+     5352 enumerate all three values; NOT registered as
+     param: tokens in any §15.12.5 / governs list.
+     BUCKET: (c) ARCHITECTURAL CONTENT NOT IN DIAGRAMS
+     (3 tokens for AMENDMENT-13 candidate).
+
+3.38 contract:on_position_closed_callback (cross-module
+     callback interface from Exit Controller to
+     Selection Controller).
+     CITES: 0500000 D6 R4 line 4258 cites "exit_
+     cooldown_log + consecutive_loss_count updates via
+     WS Manager AR-073 path (HR-EC-014)"; 0811002 §6.2
+     SC-024 + §8.6 describe the update rule and
+     interface ownership. The callback itself is not
+     registered as a contract: token in §15.12.3.
+     BUCKET: (c) ARCHITECTURAL CONTENT NOT IN DIAGRAMS
+     (1 token for AMENDMENT-13 candidate).
+
+============================================================
+4. ROLL-UP — BUCKET TALLIES
+============================================================
+
+  (a) ARCHITECTURAL RESTATEMENT:     19 elements
+      §3.1, §3.2, §3.3, §3.4, §3.5, §3.6, §3.7, §3.8,
+      §3.9, §3.10, §3.11, §3.12, §3.13, §3.14, §3.15,
+      §3.16, §3.17, §3.18, §3.20, §3.21
+      (note: §3.22-3.26 are (a) on semantics but
+      tagged with Cluster C6 binding mismatch).
+
+  (b) CODING-UNIQUE:                  1 element
+      §3.19 (implementation code blocks).
+
+  (c) ARCHITECTURAL CONTENT NOT IN DIAGRAMS:  11 elements
+      §3.27, §3.28, §3.29, §3.30, §3.31, §3.32, §3.33,
+      §3.34, §3.35, §3.36, §3.37, §3.38
+      (Cluster C5 — 11 element groups expanding to
+      multiple individual tokens enumerated in §7.1
+      below).
+
+  (d) UNCLEAR ORIGIN:                  0 elements
+      No element required RR-SCOPE-009 four-question
+      gate evaluation. All elements traceable to either
+      0500000 prose / governs lists, 0811002 prose,
+      0711003 prose, or Decision Register entries.
+
+  TOTAL ELEMENTS CLASSIFIED:         38 elements
+  (Note: §3.22-3.26 counted in (a) bucket primary
+  classification; their C6 binding-mismatch findings
+  surface separately in §7.4 without changing primary
+  bucket.)
+
+============================================================
+5. DOWNSTREAM QUEUE
+============================================================
+
+5.1 AMENDMENT-13 SCOPE — NEW (cluster C5 closure).
+
+Target diagrams: D2 R2 (PRIMARY) + D6 R4 + D7 R3 + D4 R3
+ancillary. Token additions to root governs lists per
+V-038 diagram-prose parity rule.
+
+Cluster C5 tokens for AMENDMENT-13 (per §3.27-3.38):
+
+  Gates (6):
+    gate:SC-GATE-1
+    gate:SC-GATE-2
+    gate:SC-GATE-3
+    gate:SC-GATE-4
+    gate:SC-GATE-5
+    gate:SC-GATE-6
+
+  Hard rules (1, dv1_1 addition):
+    rule:HR-SC-008
+    (HR-SC-001..007 are present in 0811002 §9 at
+    matching numerical-slot positions per AA=08 prose
+    — see §7.4 for C6 mismatch on slots 003..007;
+    HR-SC-008 is the only NEW hard rule absent from
+    0811002.)
+
+  Universe rules (6, dv1_1 additions):
+    rule:SC-UNI-001
+    rule:SC-UNI-002
+    rule:SC-UNI-003
+    rule:SC-UNI-004
+    rule:SC-UNI-005
+    rule:SC-UNI-006
+
+  State-dict contracts (2):
+    contract:exit_cooldown_log
+    contract:consecutive_loss_count
+
+  Cross-module callback contract (1):
+    contract:on_position_closed_callback
+
+  Event tokens (7):
+    evt:GATE5_PASS
+    evt:WEAK_CANDLE_BODY
+    evt:POSITION_ALREADY_OPEN
+    evt:PAIR_IN_COOLDOWN
+    evt:POSITION_TOO_SMALL
+    evt:CONSECUTIVE_LOSSES_EXCEEDED
+    evt:SSS_SIGNAL_FAIL
+
+  Parameters (3):
+    param:sc_body_threshold
+    param:sc_cooldown_seconds
+    param:sc_consecutive_limit
+
+  Total: 26 tokens for AMENDMENT-13.
+
+SVG-byte-change determination: SAME CLOSURE PATTERN as
+AMENDMENT-9/10/11/12 (root governs list extension +
+labeled-group desc-block constraint additions). NO SVG
+visual-content byte change required. Diagram amendment
+adds identifier tokens to governs lists and labeled-
+group constraint annotations only.
+
+5.2 PROSE-UPDATE QUEUE — EXTENDED.
+
+  PROSE-UPDATE-BA  AUTHORABLE.  0811002 §6.3 add new
+                                "Universe Scope"
+                                section binding SC-UNI-
+                                001..006 to 0811002
+                                prose (currently SC-UNI-
+                                * exists only in
+                                1011009 §7).
+
+  PROSE-UPDATE-BB  AUTHORABLE.  0811002 §9 add HR-SC-008
+                                (universe-consumer
+                                role; defect ownership
+                                for non-member-pair
+                                invocations).
+
+  PROSE-UPDATE-BC  BLOCKED      0811002 §6.1 SC-019 rename
+                   on §7.7.    "exit_cooldown_log" to
+                                "cooldown_registry" to
+                                align with 1011009
+                                SC-STATE-001 (OR vice
+                                versa — see §7.2
+                                cluster C6 NAME
+                                MISMATCH). Resolution
+                                direction required at
+                                Step 3 close-gate per
+                                Bill ratification.
+
+  PROSE-UPDATE-BD  BLOCKED      0811002 §6.2 SC-024 +
+                   on §7.3.    1011009 SC-STATE-004
+                                on_position_closed
+                                signature reconciliation.
+                                Resolution required at
+                                Step 3 close-gate per
+                                Bill ratification.
+
+  PROSE-UPDATE-BE  BLOCKED      HR-SC-003..007
+                   on §7.4.    numerical-slot binding
+                                reconciliation (mirror
+                                of TB00201 §7.7
+                                HR-LM-NNN mismatch
+                                class). Resolution
+                                required at Step 3
+                                close-gate per Bill
+                                ratification.
+
+  Cumulative S-3 prose-update queue at TB00202 close:
+    51 prior active (TB00201)
+   + 2 newly AUTHORABLE (BA + BB)
+   + 3 newly BLOCKED (BC + BD + BE)
+   - 1 prior blocked carried (AX BLOCKED on §7.6)
+   = 56 total entries:
+        53 active (51 prior + 2 new = 53 of these
+        are unblocked; AX remains blocked)
+        Actually:
+          - 50 prior active (excluding AX BLOCKED)
+          - 1 prior blocked (AX on TB00201 §7.6)
+          - 2 newly AUTHORABLE (BA + BB)
+          - 3 newly BLOCKED (BC + BD + BE)
+          = 52 active + 4 blocked = 56 total
+
+5.3 S-4 RETIREMENT GATING — UPDATED.
+
+  1011009 retirement gated on:
+    - AMENDMENT-13 diagram closure (26-token addition).
+    - PROSE-UPDATE-BA + BB authoring (0811002 §6.3
+      universe scope + §9 HR-SC-008).
+    - PROSE-UPDATE-BC + BD + BE resolution (Step 3
+      close-gate Bill ratifications for state-dict
+      naming + on_position_closed signature + HR-SC
+      numerical-slot binding).
+    - 0811002 prose currency reconciliation (cluster C7
+      finding §7.5).
+
+  Existing retirement gating (carried forward unchanged):
+    1011002 retirement gated on AMENDMENT-1..7.
+    1011003 retirement gated on TB00194 C5 cascade.
+    1011004 retirement gated on AMENDMENT-7.
+    1011005 retirement gated on AMENDMENT-9.
+    1011006 retirement gated on AMENDMENT-10.
+    1011007 retirement gated on AMENDMENT-11.
+    1011008 retirement gated on AMENDMENT-12 +
+            PROSE-UPDATE-AU..AZ closure + §7.6 + §7.7
+            resolution + 0811001 prose verification.
+
+5.4 CROSS-PAIR FORWARD-DECLARATIONS.
+
+5.4-1 TRADE_CLOSE schema (cluster C1 carry).
+      Selection_Controller does NOT produce TRADE_CLOSE
+      records (Exit Controller produces; Selection_
+      Controller consumes via on_position_closed
+      callback). No SC-side contribution to TRADE_CLOSE
+      schema verification.
+
+5.4-2 Logger event consumer obligation.
+      0811002 §11 + 1011009 §3 Q(5) enumerate the 7 SC
+      event types Logger must consume. Per-module CIATS
+      routing (TB00199 §5.4-2 finding) applies if
+      cluster C7 reconciliation introduces per-module
+      log targets. Currently SC events go to single
+      Logger instance (mode-blind). Carry-forward.
+
+5.4-3 No Long/Short module-pair cross-applicability.
+      Selection_Controller is direction-symmetric per
+      AR-072 amended dv1_43 — same SC-GATE-1..6 gates
+      apply to both long and short signals with per-
+      module state per AR-073 amended dv1_43. 1011009
+      dv1_1 + 0811002 dv1_0 currently document the
+      long-only baseline (pre-AR-072 dv1_43 amendment).
+      Cluster C7 currency-lag finding §7.5 captures the
+      direction-symmetric short-side expansion gap.
+
+5.4-4 Long_Module ↔ Selection_Controller SC-GATE-3
+      ENFORCEMENT CONTRACT — RESOLVED at TB00202.
+
+      Cross-pair verification per TB00200 §5.4-4
+      forward-declaration + TB00201 §5.4-4 carry-forward
+      + TB00202 NSI §4.3:
+
+      SC-side (1011009 + 0811002):
+        - 1011009 §5 SC-GATE-3: `if symbol in
+          position_mirror: log("POSITION_ALREADY_OPEN");
+          return FAIL`. ENFORCED upstream of LM dispatch.
+        - 0811002 §5.3 SC-006/007/008: "symbol NOT in
+          position_mirror"; rationale "no pyramiding;
+          one position per pair"; reject code
+          POSITION_ALREADY_OPEN.
+        - 0500000 D2 R2 g5_selection cell constraints:
+          ar:AR-072; cell prose "Signal fails any of 6
+          quality gates: SKIP" (SC-GATE-3 is one of
+          the six).
+
+      LM-side (1011008 + 0811001):
+        - 0811001 dv1_0 does NOT reference SC-GATE-3
+          explicitly (grep result: zero hits for SC-
+          GATE / Selection / Gate 5 in 0811001).
+        - 1011008 dv1_0 does NOT reference SC-GATE-3
+          explicitly (consistent with TB00200/TB00201
+          audit).
+        - Long_Module consumer obligation is implicit:
+          LM receives SC PASS authorizations as
+          dispatch input; SC-GATE-3 blocks duplicate-
+          entry signals BEFORE they reach LM. No
+          additional LM-side "duplicate dispatch
+          prevention" wording needed because the
+          contract is satisfied entirely on the SC
+          side.
+
+      VERIFICATION:
+      Both SC-side spec pair (1011009 §5 SC-GATE-3 +
+      0811002 §5.3 SC-006..008) and 0500000 D2 R2
+      g5_selection cell encode the "one position per
+      symbol" rule via position_mirror dict key check.
+      The Long_Module consumer obligation is upstream-
+      enforcement-satisfied. No new PROSE-UPDATE-* on
+      LM side required.
+
+      §5.4-4 CROSS-PAIR FORWARD-DECLARATION CLOSED.
+
+5.4-5 Position_Mirror SC-GATE-3 read-only access.
+      mod:Position_Mirror serves the SC-GATE-3 O(1)
+      dict lookup via HR-PM-009 sole-writer + helper-
+      method read interface (per 0500000 D6 R4 line
+      3920 + 0511005 dv1_1 HR-PM-009 verbatim). SC-side
+      uses WSManager helper method for position_mirror
+      access; never direct dict mutation. CARRY-FORWARD
+      with TB00198 §5.4 Position_Mirror cross-pair.
+
+5.4-6 Exit_Controller on_position_closed callback.
+      mod:Exit_Controller is SOLE updater of SC state
+      (exit_cooldown_log + consecutive_loss_count) via
+      WS Manager AR-073 path per HR-EC-014 (per 0500000
+      D3 R2 line 3976 + D6 R4 line 4258). §3.11 above
+      flags signature mismatch between 1011009 SC-STATE-
+      004 (was_win boolean) and 0811002 §6.2 SC-024
+      (exit_reason enum). §7.3 surfaces for Bill
+      ratification at Step 3 close-gate.
+
+============================================================
+6. EXIT CRITERIA STATUS
+============================================================
+
+E-S1SC-01  GAP REGISTER AUTHORED.                COMPLETE.
+E-S1SC-02  ALL 1011009 ELEMENTS CLASSIFIED +
+           0811002 CROSS-VERIFIED.                COMPLETE.
+E-S1SC-03  CLUSTER C5 ENUMERATED (26 tokens).    COMPLETE.
+E-S1SC-04  AMENDMENT-13 SCOPE DEFINED.           COMPLETE.
+E-S1SC-05  PROSE-UPDATE QUEUE EXTENDED (+5).     COMPLETE.
+E-S1SC-06  CROSS-PAIR §5.4-4 RESOLVED.           COMPLETE.
+E-S1SC-07  BILL APPROVAL GATE.                    PENDING
+                                                  (Step 3
+                                                   close-
+                                                   gate;
+                                                   §7.2,
+                                                   §7.3,
+                                                   §7.4
+                                                   require
+                                                   ratifi-
+                                                   cation).
+E-S1SC-08  SESSION LOG AUTHORED.                  COMPLETE
+                                                  (this
+                                                   session).
+E-S1SC-09  NSI AUTHORED.                          COMPLETE
+                                                  (this
+                                                   session).
+
+============================================================
+7. SEPARATE FINDINGS
+============================================================
+
+7.1 CLUSTER C5 ENUMERATION (26 TOKENS — AMENDMENT-13).
+
+Per §5.1 above:
+  6 gates (SC-GATE-1..6).
+  1 hard rule (HR-SC-008 new in dv1_1; HR-SC-001..007
+    present in 0811002 §9 at matching slot positions
+    semantically — see §7.4).
+  6 universe rules (SC-UNI-001..006 new in dv1_1).
+  2 state-dict contracts (exit_cooldown_log +
+    consecutive_loss_count).
+  1 cross-module callback contract (on_position_
+    closed_callback).
+  7 event tokens (GATE5_PASS + 5 reject codes +
+    SSS_SIGNAL_FAIL).
+  3 parameter tokens (sc_body_threshold + sc_cooldown_
+    seconds + sc_consecutive_limit).
+
+7.2 CLUSTER C6 FINDING — STATE-DICT NAME MISMATCH.
+
+0811002 dv1_0 §6.1 SC-019 names the cooldown dict
+"exit_cooldown_log". 1011009 dv1_1 §4 SC-STATE-001
+names it "cooldown_registry". 0500000 D6 R4 + D3 R2
+prose use "exit_cooldown_log" (consistent with the
+0811002 AA=08 parent naming).
+
+Hierarchical override per TB00202 NSI §4.1.3 (AA=08
+takes precedence over AA=10 where they differ) WOULD
+direct resolution toward "exit_cooldown_log" (the
+0811002 / 0500000 form). However, the 1011009 form is
+the form coding will use unless explicitly
+reconciled.
+
+Resolution direction:
+  Option X — Rename 1011009 SC-STATE-001 from
+             "cooldown_registry" to "exit_cooldown_log"
+             aligning AA=10 to AA=08 + 0500000 (AA=08
+             precedence per §4.1.3).
+  Option Y — Rename 0811002 SC-019 + 0500000 D6 R4
+             prose from "exit_cooldown_log" to
+             "cooldown_registry" aligning AA=08 +
+             diagrams to 1011009 (inverts AA=08
+             precedence).
+
+NOT DERIVABLE per RR-SCOPE-005 — Bill business judgment
+required. SURFACED FOR RATIFICATION at Step 3 close-
+gate. PROSE-UPDATE-BC BLOCKED until resolved.
+
+7.3 CLUSTER C6 FINDING — on_position_closed SIGNATURE
+    MISMATCH.
+
+1011009 SC-STATE-004 signature: on_position_closed(
+symbol, was_win: bool).
+
+0811002 §6.2 SC-024 signature: on_position_closed(
+symbol, exit_reason) where exit_reason is one of an
+enumerated set: MAE_THRESHOLD_BREACH, TIME_EXPIRY,
+HTF_REGIME_REVERSAL, DAILY_REGIME_DOWNGRADE, SIGNAL_
+DECAY, MOMENTUM_LOSS, TP_FILL, TP_PARTIAL_FILL_
+REMAINDER (and the win/loss classification depends on
+which exit_reason fires).
+
+0500000 D6 R4 line 4258 + D3 R2 line 3976 cite
+"win/loss classification path" which is consistent
+with either signature (the classification logic is
+upstream-of-callback or in-callback depending on
+interpretation).
+
+Semantic difference:
+  was_win boolean form: classification logic lives in
+    Exit Controller (caller decides; SC trusts the
+    flag).
+  exit_reason enum form: classification logic lives in
+    Selection Controller (SC inspects reason and
+    decides win/loss).
+
+Both forms preserve §3.11 architectural intent (cooldown
++ loss-count update). The implementation contract
+differs.
+
+Resolution direction:
+  Option X — Standardize on was_win boolean (1011009
+             form). Updates 0811002 SC-024 to take
+             boolean. Pushes classification to Exit
+             Controller (cleaner SC; matches HR-EC-014
+             "Exit Controller is SOLE updater of SC
+             state").
+  Option Y — Standardize on exit_reason enum (0811002
+             form). Updates 1011009 SC-STATE-004 to
+             take enum. Preserves richer audit trail
+             (SC logs exit_reason for downstream CIATS
+             segmentation).
+
+NOT DERIVABLE per RR-SCOPE-005 — Bill business judgment
+required. SURFACED FOR RATIFICATION at Step 3 close-
+gate. PROSE-UPDATE-BD BLOCKED until resolved.
+
+7.4 CLUSTER C6 FINDING — HR-SC-003..007 NUMERICAL-SLOT
+    IDENTIFIER-BINDING MISMATCH (MIRROR OF TB00201 §7.7).
+
+Cross-tabulation of HR-SC-NNN content at each numerical
+slot:
+
+  HR-SC-001:  0811002 — "strict sequence 1-6"
+              1011009 — "strict sequence 1 → 6"
+              MATCH on content.
+
+  HR-SC-002:  0811002 — "FAIL never halt pipeline"
+              1011009 — "FAIL = SKIP. Never HALT"
+              MATCH on content.
+
+  HR-SC-003:  0811002 — "state dicts preserved across
+                         reconnect"
+              1011009 — "sc_body_threshold applied to
+                         ATR(14)"
+              ⚠ CONTENT MISMATCH.
+
+  HR-SC-004:  0811002 — "consecutive_loss_count resets
+                         on TP_FILL"
+              1011009 — "Cooldown uses time.monotonic()"
+              ⚠ CONTENT MISMATCH.
+
+  HR-SC-005:  0811002 — "SC-GATE-5 uses entry_qty_
+                         quantized"
+              1011009 — "State dicts preserved across
+                         reconnect"
+              ⚠ CONTENT MISMATCH.
+
+  HR-SC-006:  0811002 — "Cooldown uses time.monotonic"
+              1011009 — "CIATS params from snapshot"
+              ⚠ CONTENT MISMATCH.
+
+  HR-SC-007:  0811002 — "CIATS params from snapshot"
+              1011009 — "Loss count resets on win"
+              ⚠ CONTENT MISMATCH.
+
+  HR-SC-008:  0811002 — NOT PRESENT.
+              1011009 — "universe-consumer role"
+              dv1_1 ADDITION; absent from 0811002.
+
+Every architectural rule covered by 0811002 HR-SC-001..
+007 is ALSO covered by 1011009 HR-SC-001..007 at
+DIFFERENT numerical slots. The set of rules is the same;
+the binding of rule-content to numerical-identifier is
+DIFFERENT.
+
+This is IDENTICAL DEFECT CLASS to TB00201 §7.7 HR-LM-NNN
+identifier-binding mismatch (Long_Module). The same
+audit pattern produces the same finding class on a
+different module pair, reinforcing systemic finding.
+
+Resolution direction:
+  Option X — Renumber 1011009 HR-SC-001..007 to match
+             0811002 HR-SC-001..007 binding (AA=08
+             precedence per TB00202 NSI §4.1.3).
+             Renumbering preserves all rule content;
+             changes only identifier-to-rule mapping
+             in 1011009.
+  Option Y — Renumber 0811002 HR-SC-001..007 to match
+             1011009 HR-SC-001..007 binding (inverts
+             AA=08 precedence).
+  Option Z — Treat 1011009 numbering as a coding-spec
+             implementation-ordering convenience and
+             leave both forms in place with a citation
+             cross-reference table in 0811002 §9
+             pointing to 1011009 §6.
+
+NOT DERIVABLE per RR-SCOPE-005 — Bill business judgment
+required. SURFACED FOR RATIFICATION at Step 3 close-
+gate (joint resolution with TB00201 §7.7 HR-LM-NNN
+mismatch — same defect class; common resolution
+direction preferred). PROSE-UPDATE-BE BLOCKED until
+resolved.
+
+7.5 CLUSTER C7 SIXTH CONSECUTIVE CURRENCY-LAG FINDING —
+    SYSTEMIC PATTERN FURTHER REINFORCED.
+
+0811002 dv1_0 dated 04-05-2026 — pre-dates v2_29
+(05-10-2026) by 35 days. 1011009 dv1_1 dated 04-24-2026
+— pre-dates v2_29 by 16 days. Both lack v2_29
+architectural amendments:
+
+  (a) §9.3 PARALLEL-MODULE FRAMEWORK.
+      Neither 0811002 nor 1011009 reference parallel-
+      module framework. SC is direction-symmetric per
+      AR-072 amended dv1_43; both specs document long-
+      only baseline.
+
+  (b) §9.6 PER-MODULE CIATS FRAMEWORK.
+      0811002 §10 references "CIATS-owned" singular;
+      no per-module CIATS distinction. 1011009 same.
+      Per-module CIATS routing absent.
+
+  (c) §9.7 PER-WALLET DRAWDOWN HALTS.
+      Not directly applicable to SC (drawdown halts
+      live in Risk_Engine). SC consumes the halt-state
+      via Parameter Store snapshot per HR-SC-006.
+
+  (d) §9.10 SACRED-FLOOR R:R + R:R-DRIVEN SIZING
+      CURVE.
+      SC-GATE-5 (minimum position size) consumes Gate
+      8's quantized_qty preview. Gate 8 itself is
+      governed by §9.10. SC unchanged in semantics.
+
+  (e) AR-072 amended dv1_43 SHORT-DIRECTION VARIANTS.
+      0500000 §8 AR-072 (dv1_15; amended dv1_43)
+      specifies direction-symmetric SC-GATE-1..6 with
+      long + short variants. Both 0811002 dv1_0 (long-
+      only) and 1011009 dv1_1 (long-only) pre-date
+      this amendment. Direction-symmetric expansion
+      gap.
+
+  (f) AR-073 amended dv1_43 PAIR_CACHE
+      margin_eligible_flag.
+      0500000 §8 AR-073 (dv1_15; amended dv1_43)
+      specifies pair_cache margin_eligible_flag for
+      Short_Module SC-GATE-1 short pre-gate. Both
+      0811002 + 1011009 pre-date this amendment. SC-
+      level margin-eligibility filter gap.
+
+SIXTH consecutive cluster C7 finding (TB00197 + TB00198
++ TB00199 + TB00200/201 + TB00202). Systemic pattern
+FURTHER REINFORCED. Magnitude of Step 3 close-gate
+currency-lag reconciliation expanded to ≥10 specs
+(8 from TB00201 + 0811002 + 1011009).
+
+7.6 §7.6 PARTIAL_FILL_BELOW_MINIMUM CIATS-FIRING
+    CONTRADICTION CARRY-FORWARD.
+
+TB00201 §7.6 surfaced a Long_Module-specific contradiction
+between 0811001 (FIRE CIATS) and 1011008 (NO CIATS) for
+PARTIAL_FILL_BELOW_MINIMUM marginal-trade class.
+
+Selection_Controller analog check: 1011009 + 0811002
+do NOT contain analogous CIATS-firing contradictions
+on marginal-trade classification (SC-GATE-5 rejects
+POSITION_TOO_SMALL pre-dispatch; no partial-fill state
+ever materializes on the SC side). No SC analog finding.
+
+Resolution required at Step 3 close-gate per Bill
+ratification (Long_Module-specific finding from
+TB00201 carried forward — not a new TB00202 finding).
+
+7.7 §7.7 LONG_MODULE HR-LM-NNN MISMATCH CARRY-FORWARD —
+    SELECTION_CONTROLLER ANALOG SURFACED IN §7.4 ABOVE.
+
+TB00201 §7.7 surfaced HR-LM-NNN identifier-binding
+mismatch between 0811001 §8 and 1011008 §11.
+
+TB00202 SC analog (§7.4 above): HR-SC-003..007
+numerical-slot identifier-binding mismatch between
+0811002 §9 and 1011009 §6. SAME DEFECT CLASS on a
+different module pair.
+
+Joint resolution direction preferred — same Bill
+ratification at Step 3 close-gate handles both findings
+(common resolution principle: either AA=08 precedence
+universally, AA=10 coding-spec implementation-ordering
+universally, or cross-reference-table approach
+universally).
+
+7.8 ZERO DD-011 / FM-001 / RR-SCOPE RECURRENCES THIS
+    SESSION.
+
+Nine consecutive post-v2_27 clean sessions: TB00194 +
+195 + 196 + 197 + 198 + 199 + 200 + 201 + 202.
+
+============================================================
+8. ELEMENT-CLASSIFICATION SUMMARY TABLE
+============================================================
+
+  Section in     Element                  Bucket   Cluster
+  1011009 dv1_1                                    Mark
+  -------------  -----------------------  ------  --------
+  §1             Purpose                  (a)
+  §2             Parent Chain             (a)
+  §3 Q(1)        DO answer                (a)
+  §3 Q(2)        INTERFACES               (a)
+  §3 Q(3)        HARD RULES summary       (a)      C6/§7.4
+  §3 Q(4)        TRIGGERS                 (a)
+  §3 Q(5)        LOGS (7 events)          (a)
+  §4 SC-STATE-1  cooldown_registry        (a)      C6/§7.2
+  §4 SC-STATE-2  consecutive_loss_count   (a)
+  §4 SC-STATE-3  preservation             (a)
+  §4 SC-STATE-4  on_position_closed       (a)      C6/§7.3
+  §5 SC-GATE-1   SSS Pass                 (a)
+  §5 SC-GATE-2   Candle body              (a)
+  §5 SC-GATE-3   One position per symbol  (a)      §5.4-4
+                                                   resolved
+  §5 SC-GATE-4   Cooldown                 (a)
+  §5 SC-GATE-5   Size pre-validation      (a)
+  §5 SC-GATE-6   Consecutive loss limit   (a)
+  §5 SC-PASS     PASS path                (a)
+  §5             Implementation code      (b)
+  §6 HR-SC-001   Strict sequence          (a)
+  §6 HR-SC-002   FAIL=SKIP                (a)
+  §6 HR-SC-003   sc_body_threshold        (a)      C6/§7.4
+  §6 HR-SC-004   time.monotonic           (a)      C6/§7.4
+  §6 HR-SC-005   State preserved          (a)      C6/§7.4
+  §6 HR-SC-006   CIATS from snapshot      (a)      C6/§7.4
+  §6 HR-SC-007   Loss resets on win       (a)      C6/§7.4
+  §6 HR-SC-008   Universe-consumer        (c)      C5
+  §7 SC-UNI-001  Universe scope           (c)      C5
+  §7 SC-UNI-002  Maintenance upstream     (c)      C5
+  §7 SC-UNI-003  BTC/USD handling         (c)      C5
+  §7 SC-UNI-004  Paper-mode parity        (c)      C5
+  §7 SC-UNI-005  O(1) membership          (c)      C5
+  §7 SC-UNI-006  Quote-currency arch      (c)      C5
+  (cross-cut)    SC-GATE-1..6 as gate:    (c)      C5
+                 tokens
+  (cross-cut)    7 evt: tokens            (c)      C5
+  (cross-cut)    2 state-dict contracts   (c)      C5
+  (cross-cut)    on_position_closed       (c)      C5
+                 callback contract
+  (cross-cut)    3 param: tokens          (c)      C5
+
+============================================================
+9. REVISION HISTORY
+============================================================
+
+  v1_0  2026-05-11  Initial. Step 3 sub-step S-1
+                    Selection_Controller module pair
+                    audit (1011009 dv1_1 + 0811002 dv1_0
+                    vs 0500000 dv1_46) under full cross-
+                    namespace AA=08 + AA=10 methodology
+                    per TB00197 §1.4 5-section pattern.
+
+                    Element-by-element classification of
+                    38 elements:
+                      (a) ARCHITECTURAL RESTATEMENT: 19
+                          primary + 5 (a) with C6 binding
+                          mismatch.
+                      (b) CODING-UNIQUE: 1.
+                      (c) ARCHITECTURAL CONTENT NOT IN
+                          DIAGRAMS: 11 element groups
+                          (cluster C5, 26 individual
+                          tokens for AMENDMENT-13).
+                      (d) UNCLEAR ORIGIN: 0.
+
+                    AMENDMENT-13 SCOPE DEFINED:
+                    26 tokens (6 gates + 1 hard rule +
+                    6 universe rules + 2 state-dict
+                    contracts + 1 callback contract +
+                    7 event tokens + 3 parameters).
+                    Target diagrams D2 R2 PRIMARY + D6
+                    R4 + D7 R3 + D4 R3 ancillary.
+                    NO SVG byte change (governs list
+                    extension + labeled-group desc-block
+                    constraint additions only — same
+                    closure pattern as AMENDMENT-9/10/11
+                    /12).
+
+                    PROSE-UPDATE QUEUE EXTENDED:
+                    BA + BB authorable (0811002 §6.3
+                    universe scope + §9 HR-SC-008).
+                    BC + BD + BE blocked on §7.2 / §7.3
+                    / §7.4 resolution.
+
+                    CROSS-PAIR §5.4-4 LONG_MODULE ↔
+                    SELECTION_CONTROLLER SC-GATE-3
+                    ENFORCEMENT CONTRACT — RESOLVED:
+                    SC side enforces "one position per
+                    symbol" via position_mirror dict
+                    check at SC-GATE-3 (1011009 §5 +
+                    0811002 §5.3 SC-006..008 + 0500000
+                    D2 R2 g5_selection cell). LM
+                    consumer obligation upstream-
+                    enforcement-satisfied; no LM-side
+                    duplicate-dispatch prevention
+                    wording required. Forward-
+                    declaration CLOSED.
+
+                    THREE FINDINGS SURFACED FOR BILL
+                    RATIFICATION AT STEP 3 CLOSE-GATE:
+                      §7.2 State-dict NAME MISMATCH
+                            (exit_cooldown_log vs
+                            cooldown_registry).
+                      §7.3 on_position_closed SIGNATURE
+                            MISMATCH (was_win boolean
+                            vs exit_reason enum).
+                      §7.4 HR-SC-003..007 NUMERICAL-
+                            SLOT IDENTIFIER-BINDING
+                            MISMATCH (mirror of TB00201
+                            §7.7 HR-LM-NNN class —
+                            joint resolution preferred).
+
+                    CLUSTER C7 SIXTH CONSECUTIVE
+                    CURRENCY-LAG FINDING — SYSTEMIC
+                    PATTERN FURTHER REINFORCED:
+                    Both 0811002 dv1_0 (04-05-2026; 35d
+                    pre-v2_29) and 1011009 dv1_1
+                    (04-24-2026; 16d pre-v2_29) lack
+                    v2_29 architectural amendments
+                    (parallel-module framework, per-
+                    module CIATS, AR-072 dv1_43
+                    direction-symmetric, AR-073 dv1_43
+                    margin_eligible_flag). Magnitude of
+                    Step 3 close-gate currency-lag
+                    reconciliation expanded to ≥10
+                    specs.
+
+                    Nine consecutive post-v2_27 clean
+                    sessions: TB00194 + 195 + 196 + 197
+                    + 198 + 199 + 200 + 201 + 202.
+                    Zero DD-011 / FM-001 / RR-SCOPE
+                    recurrences this session.
+
+============================================================
+END OF TB00202 S1SC GAP REGISTER v1_0
+============================================================

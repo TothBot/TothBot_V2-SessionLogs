@@ -1,0 +1,807 @@
+DocDCN:     TB00117_NSI
+DocTitle:   Next_Session_Instructions_for_TB00118
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TBXXXXX_Session_Logs\TB00117_Next_Session_Instructions_v1_0.txt
+DocDate:    04-23-2026
+DocTime:    04:00:00 UTC
+
+============================================================
+NEXT SESSION INSTRUCTIONS - TB00118
+PART 2 COMPLETION: DC PACKAGE FOR OI-028 / OI-029 / OI-030
+OI-039 FORMAL CLOSE AT PRE-FLIGHT
+POST-TB00117 CONTEXT - DIAGNOSIS 80% COMPLETE
+============================================================
+
+PAPER TRADING ONLY. NO REAL MONEY.
+
+============================================================
+SECTION 1 - WHAT THIS SESSION DOES
+============================================================
+
+TB00118 is the Part 2 change session, originally planned
+in TB00114 NSI and deferred through TB00115, TB00116,
+and TB00117. TB00117 completed the diagnosis work that
+TB00116 NSI scoped for TB00117 STEPS B/C but was cut
+short by Claude Chat errors before the DC package could
+be assembled. All diagnostic state is preserved in
+TB00117 Session Log §2.
+
+TB00118 scope, in this order:
+
+  STEP A  Pre-flight. Cold-load verification of TB00000
+          v2_12 presence; 11 mandatory session log / NSI
+          files present (now + TB00117 Session Log and
+          NSI = 13); active-governance prohibited-string
+          count = 0. FORMALLY CLOSE OI-039 in this step.
+          Execute VPS extended sweep (see §5) to
+          capture current state AND the final OI-028
+          confirming data (per-attempt error strings).
+
+  STEP B  Lock OI-028 fix direction. Based on per-attempt
+          error strings captured in STEP A:
+            - If all 20 errors are auth/private-WS
+              related -> Candidate (A) confirmed.
+              Fix: gate _execute_reconnect_sequence
+              Step 2 private-WS connect on paper_mode.
+            - If all 20 errors are network-timeout -
+              related with varying endpoints ->
+              Candidate (B) confirmed. No code fix;
+              extend observation period.
+            - If errors are mixed/unexpected ->
+              Candidate (C). Deeper code dive required.
+          Present FP/DP analysis to Bill, await
+          approval before coding.
+
+  STEP C  Assemble FULL DC package for approved fixes.
+          NO PATCHES. Full files only. Complete parent-
+          chain version increments.
+
+  STEP D  Commit to TothBot_V2-Code (code fixes +
+          operations/tothbot_sweep.sh) and TothBot_V2-
+          Docs (spec updates). Push to origin/master.
+          Deploy on VPS via git pull. Restart service.
+          Verify with sweep.
+
+  STEP E  Open new 48-hour observation window.
+
+  STEP F  TB00118 Session Log and TB00118 NSI.
+
+OPTIONAL SCOPE (Bill decides at open):
+
+  - OI-036 / OI-037 / OI-038 remediation via TB00000
+    v2_12 -> v2_13. OI-037 now has four-session
+    recurrence (TB00114 / TB00115 / TB00116 / TB00117).
+    Escalation strongly warranted.
+  - OI-031 observation-window semantic clarification
+    formal close.
+
+============================================================
+SECTION 2 - MANDATORY READING (MUST BE FIRST)
+============================================================
+
+TB00118 reads every document below and states the
+version read before doing any work. Re-query
+project_knowledge_search or view file headers
+directly - memory and NSI text are not fresh data.
+
+  TB00000                       v2_12
+    Project Instructions. Always first. §4.2 ABSOLUTE
+    STANDING RULE governs all prohibited-string
+    handling. §3.4.2 / §3.4.3 / §11 define operational
+    scripts scope. Cold-load verify presence.
+
+  TB00117 Session Log           v1_0
+    THIS SESSION'S PRIOR CHAT. Contains all diagnostic
+    state for OI-028 / OI-029 / OI-030. §2.5 is the
+    OI-028 root cause analysis. §2.6 is the OI-029
+    LOCKED fix vector. §2.4 is the OI-030 expanded
+    defect analysis.
+
+  TB00117 NSI                   v1_0
+    THIS document.
+
+  TB00116 Session Log           v1_0
+    TB00116 OI-039 remediation at commit b5ca306.
+
+  TB00116 NSI                   v1_0
+    Original TB00117 plan (now superseded by TB00117
+    execution and this NSI).
+
+  TB00115 Session Log + NSI     v1_0
+    Prohibited-string contamination elimination;
+    TB00000 v2_11 §4.2 rule enactment.
+
+  TB00114 Session Log + NSI     v1_0
+    Part 1 cleanup outcome. OI-036 / OI-037 / OI-038
+    origination.
+
+  TB00113 Session Log + NSI     v1_0
+    15-step plan discrepancy audit.
+
+  TB00112 Session Log           v1_0
+    OI-032 discovery; Claude operational errors.
+
+  TB00111 Session Log + NSI     v1_0
+    dv1_22 observation-window abort forensic timeline;
+    4 WS_MGR_FATAL tracebacks.
+
+  0311001                       v1_3
+    Namespace. §3.1 HR-PATH rules. operations/
+    subfolder authoritative.
+
+  0311002                       v1_3
+    Workflow. STEP 8.2.3 DC-SYNC rules.
+
+  0311003                       v1_1
+    Versioning Procedure. VP-010 SUPERSEDED DOCUMENTS.
+
+  0311004                       v1_2
+    Document Creation and Approval.
+
+  ws_manager.py                 dv1_21
+    Primary source for OI-028 fix. Focus: lines
+    3392-3482 (_initiate_reconnect) and 3484+
+    (_execute_reconnect_sequence). Determine whether
+    paper_mode gating is needed on private-WS connect.
+
+  logger.py                     dv1_4
+    Primary source for OI-029 fix. Focus: lines 166
+    (ALERT_SMTP_TIMEOUT_SEC) and 296-336 (SMTP send
+    + except block).
+
+  1011002                       dv1_20
+    WS Manager Coding Spec. Parent-chain version to
+    increment with ws_manager.py update.
+
+  1011007                       dv1_3
+    Logger Coding Spec. Parent-chain version to
+    increment with logger.py update.
+
+  1010000                       dv1_12
+    Trading System Coding Anchor. Parent-chain version
+    to increment. §5.7 operational-script registry
+    receives first entry (tothbot_sweep.sh dv1_0).
+
+  0511001                       dv1_1
+    WS Manager Specification. Increment only if
+    OI-028 fix is architecture-level.
+
+  0511006                       dv1_1
+    Logger Specification. Increment if ALERT_SMTP_*
+    constants are specification-level.
+
+Fresh-data discipline: every version claim in TB00118
+session log must be from direct file read this session,
+not from this NSI's text.
+
+============================================================
+SECTION 3 - OI-028 FIX DIRECTION (LOCK AT STEP B)
+============================================================
+
+TB00117 §2.5 identified the architectural root cause:
+20 consecutive reconnect attempts in _initiate_reconnect
+(ws_manager.py:3434) all fail, triggering the FATAL
+exit path at lines 3462-3476. The dv1_21 budget
+extension from 10 to 20 attempts did not help because
+the failure class is not transient.
+
+CANDIDATE (A) - HIGH probability, fix-ready:
+
+  Hypothesis: _execute_reconnect_sequence (ws_manager.py
+  line 3484+) connects private WS unconditionally at
+  Step 2 (line 3494: self._ws_private = await
+  self._ws_connect(PRIVATE_WS_URI)).
+
+  In paper mode, _startup_connect_and_subscribe (line
+  1046) skips private WS entirely:
+
+    if self.paper_mode:
+        # Paper mode: private WS not needed - order
+        # dispatch suppressed.
+        paper_balance = Decimal(...)
+        ...
+        return  # or equivalent paper-mode exit
+
+  The reconnect path does NOT honor this skip. Every
+  paper-mode reconnect attempts private WS, which has no
+  valid trade-auth context, and fails deterministically.
+
+  FIX (if confirmed):
+
+    async def _execute_reconnect_sequence(self) -> None:
+        # Step 1: Acquire new WS token
+        self._ws_token = await self._rest_get_ws_token()
+
+        # Step 2a: Public WS (always)
+        self._ws_public = await self._ws_connect(
+            PUBLIC_WS_URI
+        )
+
+        # Step 2b: Private WS ONLY if not paper mode
+        # (FIX-WM-RECONNECT-019 / OI-028)
+        if not self.paper_mode:
+            self._ws_private = await self._ws_connect(
+                PRIVATE_WS_URI
+            )
+
+        # Step 3: Subscribe public (always)
+        await self._subscribe_public()
+
+        # Step 3b: Subscribe private ONLY if not paper
+        if not self.paper_mode:
+            await self._subscribe_private()
+
+        # Steps 4-10 unchanged (resume as per dv1_21)
+
+CANDIDATE (B) - MEDIUM probability:
+
+  Hypothesis: Kraken was genuinely unavailable for the
+  full 8-minute budget window on each of the 8 observed
+  incidents. The 20-attempt budget is adequate; this
+  event class is outside fix scope.
+
+  FIX (if confirmed): none. Document observation only.
+
+CANDIDATE (C) - LOW probability:
+
+  Hypothesis: _execute_reconnect_sequence has an
+  unrelated bug causing deterministic failure.
+
+  FIX (if confirmed): diagnosis-dependent.
+
+The STEP A extended sweep command in §5 pulls the 20
+error strings. Candidate selection is deterministic
+from the data.
+
+============================================================
+SECTION 4 - OI-029 FIX DIRECTION (LOCKED)
+============================================================
+
+TB00117 §2.6 LOCKED this. Deliver in TB00118 DC package
+without additional Bill approval (already approved via
+TB00116 NSI scope).
+
+CHANGES to logger.py:
+
+  CHANGE 1 - Raise timeout. Line 166:
+
+    BEFORE:  ALERT_SMTP_TIMEOUT_SEC: int = 5
+    AFTER:   ALERT_SMTP_TIMEOUT_SEC: int = 20
+
+    Rationale: 5 sec covers four network round-trips
+    (connect, starttls, login, sendmail) on a single
+    budget, any one of which can block >5 sec on
+    transient server load. 20 sec absorbs realistic
+    transient without blocking excessively.
+
+  CHANGE 2 - Wrap SMTP conversation in a 2-attempt
+             retry with 1-sec backoff between attempts.
+             Lines 296-316 (approximate; reverify in
+             fresh read).
+
+    New structure:
+
+      ALERT_SMTP_MAX_ATTEMPTS: int = 2
+      ALERT_SMTP_RETRY_BACKOFF_SEC: int = 1
+
+      sent = False
+      last_exc = None
+      for attempt in range(1, ALERT_SMTP_MAX_ATTEMPTS + 1):
+          try:
+              with smtplib.SMTP(
+                  smtp_host, smtp_port,
+                  timeout=ALERT_SMTP_TIMEOUT_SEC,
+              ) as server:
+                  server.starttls()
+                  server.login(smtp_user, smtp_pass)
+                  server.sendmail(
+                      smtp_user,
+                      [ALERT_EMAIL],
+                      msg.as_string(),
+                  )
+              sent = True
+              break
+          except Exception as exc:
+              last_exc = exc
+              if attempt < ALERT_SMTP_MAX_ATTEMPTS:
+                  time.sleep(
+                      ALERT_SMTP_RETRY_BACKOFF_SEC
+                  )
+
+      if sent:
+          # existing ALERT_SENT emission path
+          ...
+      else:
+          # existing stderr + ALERT_SMTP_FAILED path
+          # raise last_exc-bound logging
+          ...
+
+  CHANGE 3 - ALERT_SMTP_FAILED emits only when ALL
+             attempts fail (same as current behavior
+             after the loop completes).
+
+  CHANGE 4 - Worst-case wall-time bound: 20 + 1 + 20
+             = 41 sec. Still off the hot path per
+             line 391 docstring. No regression.
+
+Files in DC package for OI-029:
+
+  logger.py                 dv1_4  -> dv1_5
+  1011007 Logger Coding Spec dv1_3 -> dv1_4
+  0511006 Logger Spec       dv1_1  -> dv1_2
+          (if constants are spec-level)
+  1010000 Coding Anchor     dv1_12 -> dv1_13
+          (registry update)
+
+============================================================
+SECTION 5 - OI-030 FIX DIRECTION (LOCKED)
+============================================================
+
+TB00117 §2.4 LOCKED this. Deliver in TB00118 DC package.
+
+SCOPE: full rewrite of sweep script. Script is promoted
+to first-class controlled document per TB00000 v2_12
+§3.4.2 / §3.4.3 HR-TP004 and 0311001 v1_3 HR-DC-001.
+
+Commit to:  TothBot_V2-Code/operations/tothbot_sweep.sh
+Version:    dv1_0 (first controlled version - promotion
+            from uncontrolled /root/tothbot_sweep.sh)
+Registry:   1010000 dv1_13 §5.7 first entry
+Deploy:     git pull on VPS
+            Update /root/tothbot_sweep.sh path OR symlink
+              /root/tothbot_sweep.sh ->
+              /root/TothBot_V2-Code/operations/tothbot_sweep.sh
+            (preserve existing cron / manual execution
+            path at /root/tothbot_sweep.sh)
+
+PATTERN CORRECTIONS:
+
+  DEFECT 1 - FATAL level counter.
+    Old: grep -c '"level":"FATAL"' "$LOG"
+    New: grep -c '"level":"CRITICAL"' "$LOG"
+    Label: "CRITICAL events (was FATAL tripwire):"
+
+  DEFECT 2 - Reconnect exhaustion counter.
+    Old: grep -c '"event":"MAX_RECONNECT_ATTEMPTS_EXCEEDED"' "$LOG"
+    New: grep -c '"event":"FATAL_RECONNECT_FAILURE"' "$LOG"
+    Label: "FATAL_RECONNECT_FAILURE (OI-020):"
+
+BEFORE writing the new patterns, TB00118 MUST grep the
+codebase for event names actually emitted. Derive
+patterns from code, not from NSI text (per TB00111 NSI
+§6 discipline and OI-037 lesson). Example:
+
+  cd /mnt/project && grep -rhoE '"event"\s*:\s*"[A-Z_]+"' \
+    *.py | sort -u > /tmp/emitted_events.txt
+  grep -oE '"event":"[A-Z_]+"' /home/tothbot/logs/tothbot.log \
+    | sort -u > /tmp/logged_events.txt
+
+Compare both lists to the sweep patterns. Align.
+
+7-FIELD HEADER for bash script (shebang first per
+0311001 v1_3 §5 CODE FILE DOCUMENT CONTROL HEADER
+FORMAT):
+
+  #!/bin/bash
+  # ============================================================
+  # DocDCN:     1011001
+  # DocTitle:   TothBot_Sweep
+  # DocVersion: dv1_0
+  # DocOwner:   Bill
+  # DocPath:    github.com/TothBot/TothBot_V2-Code/operations/tothbot_sweep.sh
+  # DocDate:    MM-DD-2026
+  # DocTime:    HH:MM:SS UTC
+  # ============================================================
+
+(DCN assignment: tothbot_sweep.sh belongs to Engineering
+Best Practices sub-domain 1011001, per 1010000 dv1_12
+§5.6 existing pattern for .gitkeep placeholders. Verify
+at TB00118 STEP C by reading 1010000 dv1_12 §5.7
+registry rules.)
+
+REVISION HISTORY section in comment form:
+
+  # ============================================================
+  # REVISION HISTORY
+  # ============================================================
+  # dv1_0  MM-DD-2026  OI-030 remediation. First
+  #                    controlled version. Promoted from
+  #                    uncontrolled /root/tothbot_sweep.sh
+  #                    per TB00000 v2_12 §3.4.2 / §3.4.3
+  #                    HR-TP004 and 0311001 v1_3 HR-DC-001.
+  #                    Pattern defects corrected:
+  #                    (1) "level":"FATAL" -> "level":"CRITICAL"
+  #                    (2) MAX_RECONNECT_ATTEMPTS_EXCEEDED
+  #                        -> FATAL_RECONNECT_FAILURE
+
+============================================================
+SECTION 6 - TB00118 STEP A EXTENDED SWEEP COMMAND
+============================================================
+
+Execute this at STEP A. One copy box. Run from Windows
+cmd.exe. Paste full output.
+
+  ssh root@87.99.141.44 "LOG=/home/tothbot/logs/tothbot.log; echo '===SERVICE==='; systemctl status tothbot --no-pager | head -10; echo; echo '===EVENT COUNTS==='; for evt in RECONNECT_INITIATED RECONNECT_COMPLETE RECONNECT_ATTEMPT_FAILED RECONNECT_TRIGGERED FATAL_RECONNECT_FAILURE WS_MGR_FATAL ALERT_SMTP_FAILED PAPER_BALANCE_SET; do printf '%-35s %s\n' \"\$evt:\" \"\$(grep -c '\"event\":\"'\$evt'\"' \$LOG)\"; done; echo; echo '===LAST 3 FATAL_RECONNECT_FAILURE=='; grep '\"event\":\"FATAL_RECONNECT_FAILURE\"' \$LOG | tail -3; echo; echo '===LAST 20 RECONNECT_ATTEMPT_FAILED ERRORS==='; grep '\"event\":\"RECONNECT_ATTEMPT_FAILED\"' \$LOG | tail -20 | grep -oE '\"error\":\"[^\"]*\"'; echo; echo '===LAST 3 RECONNECT_COMPLETE (if any)==='; grep '\"event\":\"RECONNECT_COMPLETE\"' \$LOG | tail -3; echo; echo '===PAPER MODE CONFIRM==='; grep '\"event\":\"PAPER_BALANCE_SET\"' \$LOG | tail -2"
+
+Interpretation rules:
+
+  - If ALL 20 RECONNECT_ATTEMPT_FAILED errors mention
+    "private" / "auth" / "token" / "401" / "403" /
+    "forbidden" -> Candidate (A) confirmed.
+
+  - If errors mention "timeout" / "connection refused"
+    / "DNS" / varying endpoints -> Candidate (B)
+    confirmed.
+
+  - If errors are mixed or point to code-path issues
+    (TypeError, AttributeError, NameError) -> Candidate
+    (C) - deeper dive required.
+
+============================================================
+SECTION 7 - TB00118 DC PACKAGE FILE LIST
+============================================================
+
+If Candidate (A) confirmed (expected):
+
+  Code files:
+    ws_manager.py                 dv1_21 -> dv1_22
+    logger.py                     dv1_4  -> dv1_5
+    operations/tothbot_sweep.sh   dv1_0  (NEW)
+
+  Coding specs:
+    1011002 WS_Manager_Coding_Spec   dv1_20 -> dv1_21
+    1011007 Logger_Coding_Spec       dv1_3  -> dv1_4
+
+  System specs (only if arch-level change):
+    0511001 WS_Manager_Specification dv1_1  -> dv1_2
+    0511006 Logger_Specification     dv1_1  -> dv1_2
+
+  Parent anchor:
+    1010000 Trading_System_Coding_Anchor dv1_12 -> dv1_13
+
+If Candidate (B) confirmed:
+
+  Same list minus ws_manager.py and 1011002/0511001.
+
+All files .txt per DR-001. One batch per DR-003. Full
+7-field headers per 0311001 v1_3. All versions
+incremented per 0311003 v1_1. Post-commit upload to
+Claude.ai project folder per 0311002 v1_3 DC-SYNC-002.
+
+============================================================
+SECTION 8 - DEPLOY PATTERN
+============================================================
+
+Standard TB00108 / TB00110 pattern. Individual copy
+boxes. Shell-context-complete per OI-038 (lead with
+`cd /D <abs_path> && ...` when directory matters).
+
+Docs repo commit (from Windows cmd.exe at
+C:\Users\wstot\GitHub\TothBot\TothBot_V2-Docs):
+
+  git add (explicit per-file per DC-GIT rules)
+  git commit -m "OI-028 / OI-029 / OI-030 remediation"
+  git push origin master
+
+Code repo commit (from Windows cmd.exe at
+C:\Users\wstot\GitHub\TothBot\TothBot_V2-Code):
+
+  git add tothbot/ws_manager.py
+  git add tothbot/logger.py
+  git add operations/tothbot_sweep.sh
+  git commit -m "OI-028 / OI-029 / OI-030 code + ops script"
+  git push origin master
+
+VPS deploy:
+
+  ssh root@87.99.141.44 "cd /root/TothBot_V2-Code && git fetch"
+  ssh root@87.99.141.44 "cd /root/TothBot_V2-Code && git log HEAD..origin/master --oneline"
+  ssh root@87.99.141.44 "cd /root/TothBot_V2-Code && git pull"
+  ssh root@87.99.141.44 "head -20 /root/TothBot_V2-Code/tothbot/ws_manager.py"
+  ssh root@87.99.141.44 "head -20 /root/TothBot_V2-Code/tothbot/logger.py"
+  ssh root@87.99.141.44 "head -20 /root/TothBot_V2-Code/operations/tothbot_sweep.sh"
+
+Sweep-script activation (choose one):
+
+  Option 1 (symlink):
+    ssh root@87.99.141.44 "mv /root/tothbot_sweep.sh /root/tothbot_sweep.sh.pre-dv1_0 && ln -s /root/TothBot_V2-Code/operations/tothbot_sweep.sh /root/tothbot_sweep.sh && chmod +x /root/TothBot_V2-Code/operations/tothbot_sweep.sh"
+
+  Option 2 (direct path):
+    ssh root@87.99.141.44 "chmod +x /root/TothBot_V2-Code/operations/tothbot_sweep.sh"
+    (and update any cron / manual invocation to the new path)
+
+Service restart:
+
+  ssh root@87.99.141.44 "systemctl restart tothbot"
+  ssh root@87.99.141.44 "systemctl status tothbot --no-pager | head -5"
+
+Post-restart sweep:
+
+  ssh root@87.99.141.44 /root/tothbot_sweep.sh
+
+Expected new sweep output:
+  - Tripwire CRITICAL line should now reflect real count.
+  - FATAL_RECONNECT_FAILURE line should now reflect real count.
+  - Current tripwire baseline may be non-zero
+    (historical events). Record baseline. Window starts
+    when NEW events match baseline.
+
+============================================================
+SECTION 9 - OBSERVATION WINDOW
+============================================================
+
+Start: first sweep after restart showing expected
+       baseline with corrected patterns.
+Min duration: 48 hours.
+
+Closure criteria:
+
+  OI-018 closeable at T+48h if clean.
+  OI-019 closeable only after a real CRITICAL/HIGH
+    alert routes successfully (no SMTP timeout in the
+    window). TB00118 may need a manual test alert
+    trigger to confirm the retry logic absorbs a
+    simulated transient.
+  OI-020 closeable at T+48h with OI-018 absent
+    regression.
+  OI-028 closeable at T+48h with zero
+    FATAL_RECONNECT_FAILURE events.
+  OI-029 closeable at T+48h with zero
+    ALERT_SMTP_FAILED events AND at least one
+    successful ALERT_SENT during the window.
+  OI-030 closeable immediately once new sweep script
+    deploys and reports real counts.
+
+============================================================
+SECTION 10 - SCOPE GUARD
+============================================================
+
+TB00118 is a CHANGE session. Permitted:
+
+  - Reading code and specs on VPS and in project folder
+  - STEP A extended sweep + OI-028 confirming data pull
+  - FP/DP analysis of OI-028 per-attempt errors to lock
+    Candidate (A) / (B) / (C)
+  - Delivery of full DC package for approved code fixes
+  - Delivery of first controlled operations/
+    tothbot_sweep.sh dv1_0
+  - Git commits to TothBot_V2-Code and TothBot_V2-Docs
+  - Deploy to VPS using TB00108 / TB00110 standard
+    pattern
+  - Opening a new 48-hour observation window
+  - OI-039 formal close in STEP A
+  - OI-020 close when OI-028 fix is verified
+
+NOT permitted without Bill's explicit approval:
+
+  - Any change to TB00000 standing rules (OI-036 /
+    OI-037 / OI-038 remediation via v2_13 requires
+    Bill approval at TB00118 open)
+  - Any new Domain Document or Sub-Domain Anchor
+  - Retiring any existing document
+  - Touching the archive repos
+  - OI-028 code change if Candidate (B) is confirmed
+    instead of Candidate (A) - requires re-scoping
+
+Forbidden:
+
+  - Patches (must be full files)
+  - Skipping DC package components
+  - Changing code without coding-spec update
+  - Emitting the §4.2-prohibited string per TB00000
+    v2_12 §4.2 OP-001 through OP-009
+  - Using ANY Windows file path not in the authoritative
+    tree from TB00000 §11
+  - Any real-money trading
+  - Asking Bill decision questions when the next step
+    is deterministic from FP/DP analysis (per TB00117
+    §3.1 Claude error lesson)
+
+============================================================
+SECTION 11 - DELIVERABLES EXPECTED FROM TB00118
+============================================================
+
+Minimum (pre-flight + session close only):
+
+  TB00118_TothBot_V2_Session_Log_<DATE>_v1_0.txt
+  TB00118_Next_Session_Instructions_v1_0.txt
+
+If Candidate (A) or (B) produces approved code fixes
+(expected):
+
+  Updated ws_manager.py                     (file)
+  Updated 1011002 WS_Manager_Coding_Spec    (file)
+  Updated logger.py                         (file)
+  Updated 1011007 Logger_Coding_Spec        (file)
+  operations/tothbot_sweep.sh dv1_0         (file, NEW)
+  Any updated system specs (0511001 / 0511006)
+    if architecture-level changes
+  Updated 1010000 dv1_12 -> dv1_13          (file)
+
+If Bill approves OI-036 / OI-037 / OI-038 remediation:
+
+  Updated TB00000 v2_12 -> v2_13            (file)
+
+All .txt per DR-001. One batch per DR-003. Full 7-field
+headers per 0311001 v1_3. All version increments per
+0311003 v1_1. Post-commit upload to Claude.ai project
+folder per 0311002 v1_3 DC-SYNC-002.
+
+============================================================
+SECTION 12 - CURRENT STATE AT TB00118 OPEN
+============================================================
+
+------------------------------------------------------------
+12.1 VPS state (from TB00117 §7.1)
+------------------------------------------------------------
+
+  Service:     active (running) since 2026-04-23 03:04:35
+               UTC (systemd auto-restart, counter=8 at
+               TB00117 close)
+  Deploy:      dv1_22 (commit 7e744a3)
+  PID:         236766 at TB00117 close - verify fresh in
+               STEP A
+  Mode:        paper trading (NO REAL MONEY)
+               paper_balance: 10000 USD
+  Positions:   none open
+
+------------------------------------------------------------
+12.2 Repo state
+------------------------------------------------------------
+
+  Docs repo (TothBot_V2-Docs):  master @ b5ca306
+                                (unchanged since TB00116)
+  Code repo (TothBot_V2-Code):  master @ 7e744a3
+                                (unchanged since TB00113;
+                                operations/ subfolder
+                                exists locally, empty,
+                                not yet committed)
+
+------------------------------------------------------------
+12.3 Project folder state
+------------------------------------------------------------
+
+TB00000 v2_12 present. 0311001 v1_3 / 0311003 v1_1 /
+1010000 dv1_12 present. 11 mandatory TB session log /
+NSI files present. TB00117 Session Log v1_0 and TB00117
+NSI v1_0 uploaded by Bill post-TB00117 close.
+
+Mandatory session-log / NSI retention at TB00118 open:
+  TB00111 Session Log v1_0
+  TB00111 NSI v1_0
+  TB00112 Session Log v1_0
+  TB00113 Session Log v1_0
+  TB00113 NSI v1_0
+  TB00114 Session Log v1_0
+  TB00114 NSI v1_0
+  TB00115 Session Log v1_0
+  TB00115 NSI v1_0
+  TB00116 Session Log v1_0
+  TB00116 NSI v1_0
+  TB00117 Session Log v1_0
+  TB00117 NSI v1_0
+
+Total: 13 TB files + TB00000 = 14.
+
+------------------------------------------------------------
+12.4 Parking Lot carried forward
+------------------------------------------------------------
+
+Full Parking Lot in TB00117 §5. Relevant to TB00118:
+
+  OI-018 (HIGH)   - closes with OI-028 fix verification
+  OI-019 (MED)    - closes with OI-029 fix verification
+  OI-020 (MED)    - closes with OI-028 fix verification
+  OI-028 (HIGH)   - LOCK FIX DIRECTION AT STEP B
+  OI-029 (MED)    - FIX VECTOR LOCKED - deliver in
+                    DC package
+  OI-030 (LOW)    - FIX VECTOR LOCKED - deliver in
+                    DC package
+  OI-031 (LOW)    - optional close
+  OI-036 (LOW)    - v2_13 optional remediation
+  OI-037 (MED)    - four-session recurrence.
+                    v2_13 rule addition strongly
+                    recommended.
+  OI-038 (LOW)    - v2_13 optional remediation
+  OI-039 (READY)  - FORMALLY CLOSE IN STEP A
+
+============================================================
+SECTION 13 - CRITICAL LESSONS CARRIED FORWARD
+============================================================
+
+NO PATCHES RULE:
+  All code changes delivered as complete files. No
+  unified diffs. No partial files. No "just this block"
+  deliveries.
+
+FRESH DATA:
+  Every version claim in TB00118 session log from direct
+  file read this session. Memory and NSI text are stale
+  by definition.
+
+FP/DP DISCIPLINE:
+  When Bill states scope, Claude produces exactly that
+  scope. No invented pre-flight checks. No invented
+  error handling. No invented completeness-beyond-request.
+  "Simple" means simple.
+
+NEXT-LOGICAL-STEP EXECUTION (OI-037 recurrence mitigation):
+  When the next logical step follows deterministically
+  from first principles, Claude executes. Claude does
+  NOT ask Bill A/B/C/D/E decision questions when the
+  choice can be derived from data.
+
+CODE EMISSION AUDIT (OI-030 lesson):
+  Derive sweep patterns, grep patterns, and event-name
+  lists by reading code emission points. NEVER paraphrase
+  from NSI text - NSI text may itself carry the pattern
+  defect that originated the OI.
+
+FORENSIC PULL DISCIPLINE (TB00117 lesson):
+  Before crafting journalctl priority filters or log
+  greps, verify the emission path (stream handler vs
+  file handler) to know which sink the target events
+  land in.
+
+SHELL-CONTEXT COMPLETENESS (OI-038):
+  Every copy box contains every shell-state element
+  required to execute it - including working directory.
+  No "cd first, then paste" separations. Lead commands
+  with `cd /D <abs_path> && ...` when directory matters.
+
+NO DECISION BLOCKS:
+  User preference: plain-text lettered questions only
+  where genuinely needed. ask_user_input_v0 prohibited
+  in this project.
+
+NEW-RULE SELF-APPLICATION (OI-036):
+  After authoring a governance update, Claude re-reads
+  the new rule before issuing any subsequent operational
+  command that could be governed by it.
+
+SINGLE-LINE REINFORCEMENT (TB00000 v2_12 §4.2 OP-007):
+  Bill may paste this line at the top of any session
+  message:
+
+    ONEDRIVE BAN ACTIVE per TB00000 §4.2: do not emit
+    the string in any path, command, or response.
+    Self-catch before emit.
+
+============================================================
+REVISION HISTORY
+============================================================
+
+  v1_0  2026-04-23  Initial. Next-session instructions
+                    for TB00118 CHANGE session executing
+                    the Part 2 plan four-times-deferred
+                    through TB00115/116/117. TB00117
+                    completed the OI-028/029/030
+                    diagnosis work scoped for TB00117
+                    STEPS B/C but was cut short by
+                    Claude Chat errors before DC package
+                    assembly. All diagnostic state
+                    preserved in TB00117 Session Log §2.
+                    OI-028 root cause architecturally
+                    identified; Candidate (A) paper-mode
+                    reconnect-path private-WS skip is
+                    HIGH-probability; one data pull at
+                    STEP A locks the fix direction.
+                    OI-029 fix vector LOCKED (timeout
+                    5 -> 20 + 2-attempt retry with 1s
+                    backoff). OI-030 scope expanded to
+                    two broken grep patterns; full
+                    rewrite delivered as first-class
+                    controlled operations/
+                    tothbot_sweep.sh dv1_0 per TB00000
+                    v2_12 §3.4.2 / §3.4.3 HR-TP004 and
+                    0311001 v1_3 HR-DC-001. OI-039
+                    ready to formally close in TB00118
+                    STEP A. OI-037 has four-session
+                    recurrence; TB00000 v2_13 rule
+                    addition strongly recommended.
+                    Paper trading only. No real money.
+
+============================================================
+END - TB00117 NEXT SESSION INSTRUCTIONS v1_0
+============================================================

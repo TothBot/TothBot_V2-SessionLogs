@@ -1,0 +1,312 @@
+DocDCN:     TB00027
+DocTitle:   TothBot_V2_Session_Log_2026-04-04_Part4
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\OneDrive\TothBot\TB00027_TothBot_V2_Session_Log_2026-04-04_Part4_v1_0.txt
+DocDate:    04-04-2026
+DocTime:    23:59:59 UTC
+
+============================================================
+TOTHBOT V2 — SESSION LOG 2026-04-04 PART 4
+============================================================
+
+Read TB00001 through TB00026 first.
+
+============================================================
+1. SESSION IDENTITY
+============================================================
+
+Session date:     April 4, 2026 (Part 4)
+Session type:     GitHub commit — Phase 2 AA=04 execution
+                  and issue resolution
+Prior session:    TB00026 (2026-04-04 Part 3)
+
+============================================================
+2. WHAT HAPPENED — COMPLETE RECORD
+============================================================
+
+------------------------------------------------------------
+2.1 Root Cause — Gate 1 Script Used git add .
+------------------------------------------------------------
+
+The Gate 1 commit script (Gate1_Commit.bat, TB00025)
+used `git add .` instead of explicit per-file git add.
+This caused ALL files already in the local repo folders
+to be committed to GitHub, including:
+
+  - 0411001 dv1_10 (WD, premature — no parent chain)
+  - All other WD coding specs
+  - Multiple 0500000 prior versions (docx, pdf, svg)
+
+Decision at the time (TB00025 Section 2.5): leave as-is.
+Files clearly marked dv. No functional harm. No action.
+
+This decision was wrong. It created a technical debt that
+surfaced immediately in the Phase 2 AA=04 commit.
+
+------------------------------------------------------------
+2.2 Phase 2 AA=04 Commit — What Went Wrong
+------------------------------------------------------------
+
+When Phase 2 AA=04 documents were placed in the local
+repo folder and git add was run for each file, git
+reported nothing to stage. Reason: the 5 AA=04 files
+(0400000, 0410000, 0411001 dv1_11, 0411002, 0411003)
+were already on GitHub from the premature Gate 1 commit.
+
+Git considered them already tracked and up to date.
+The only change git saw was the deletion of the old
+0411001 dv1_10 file (replaced by dv1_11 locally).
+
+This wasted significant time and caused Bill justified
+frustration. The Phase 2 commit script (Phase2_AA04_
+Commit.bat) failed silently because all files were
+already tracked.
+
+------------------------------------------------------------
+2.3 Resolution Applied
+------------------------------------------------------------
+
+STEP 1: Staged the deletion of the premature dv1_10:
+  git add -u 04XXXXX_Exchange_Interface\
+
+STEP 2: Committed the deletion:
+  git commit -m "Phase 2 AA=04: Remove premature dv1_10,
+  dv1_11 and all AA=04 docs already on GitHub from prior
+  accidental commit"
+  Commit: a046260
+  Result: 1 file changed, 402 deletions (dv1_10 removed)
+
+STEP 3: Pushed with upstream set (first push from this
+  local clone required --set-upstream):
+  git push --set-upstream origin master
+  Result: pushed to origin/master successfully
+  Upstream now set — future pushes use git push only
+
+STEP 4: Verified GitHub — all 5 AA=04 files confirmed:
+  0400000_Exchange_Interface_dv1_0.txt          ✓
+  0410000_Exchange_Interface_Kraken_Anchor_dv1_0.txt ✓
+  0411001_Kraken_WS_v2_Specification_dv1_11.txt ✓
+  0411002_Kraken_REST_API_Specification_dv1_0.txt ✓
+  0411003_Kraken_Fee_Rate_Limit_Specification_dv1_0.txt ✓
+  All showing commit message from 44 minutes prior
+  (the original premature commit that had these files).
+
+------------------------------------------------------------
+2.4 Why the Premature WD Files Are Not a Future Problem
+------------------------------------------------------------
+
+The remaining premature WD files on GitHub (1011001,
+1011002, 1011005, 1011007, 1011010, 1011011, 1011012,
+1011013, 1011014, and prior 0500000 versions) do NOT
+create the same commit problem because:
+
+  - They are already committed and tracked by git
+  - Future commits ADD new files or UPDATE existing ones
+  - git add [filename] on an already-tracked file that
+    has changed WILL stage the change correctly
+  - The Phase 2 problem occurred because the files were
+    already committed AT THE SAME VERSION as the local
+    files — git correctly saw no difference
+  - Future updates to WD coding specs (new versions)
+    will be detected by git as changes and will stage
+    correctly
+
+The only scenario that creates future problems is if
+a new file is accidentally committed before its parent
+chain exists on GitHub — a document control violation,
+not a git mechanics problem. Standing Rule 6 (no git
+add .) prevents this.
+
+------------------------------------------------------------
+2.5 upstream Now Set — Future Push Syntax
+------------------------------------------------------------
+
+The `git push --set-upstream origin master` command set
+the tracking relationship between local master and
+origin/master. All future pushes from this local clone
+use simply:
+
+  git push
+
+No --set-upstream needed again unless the repo is
+re-cloned or a new branch is created.
+
+============================================================
+3. DECISIONS MADE THIS SESSION
+============================================================
+
+------------------------------------------------------------
+3.1 TB00025 Decision Reversed — git add . Was Wrong Call
+------------------------------------------------------------
+
+The TB00025 decision to "leave as-is" the premature WD
+files was incorrect. The correct action at the time was
+to run `git rm --cached` on each premature file to remove
+it from GitHub tracking without deleting the local files.
+This would have prevented the Phase 2 commit confusion.
+
+This reversal is documented for the record. The premature
+files cannot be practically un-committed at this stage
+without significant git history rewriting. The current
+state is accepted as-is. The lesson is captured below.
+
+------------------------------------------------------------
+3.2 Corrected Lessons — Commit Script Standards
+------------------------------------------------------------
+
+CORRECTED RULE 6: Never use `git add .` in commit scripts.
+  Use explicit `git add [filepath]` per file. Always.
+  This rule existed but was not applied to Gate 1 script.
+  Root cause: Claude wrote Gate 1 script with git add .
+  and Bill ran it without review. Both share responsibility.
+
+NEW RULE 9: After any accidental commit, immediately run
+  `git rm --cached [file]` on each accidentally committed
+  file and push the correction before the next session.
+  Do not defer. Deferral creates compounding problems.
+
+NEW RULE 10: Before running any commit script, Bill runs
+  `git status` first to verify what will be committed.
+  If unexpected files appear: stop, do not run the script,
+  tell Claude.
+
+NEW RULE 11: Future commit scripts include `git status`
+  as the first command before any git add, so Bill can
+  see the state before changes are staged.
+
+============================================================
+4. ACTIONS COMPLETED THIS SESSION
+============================================================
+
+  ✓ Phase 2 AA=04 commit executed (resolution path)
+      Commit a046260: deleted premature dv1_10
+      All 5 AA=04 files confirmed on GitHub
+  ✓ git push upstream set (origin/master)
+  ✓ GitHub verified — all 5 AA=04 files present
+  ✓ Root cause documented
+  ✓ Three new standing rules established (9, 10, 11)
+
+============================================================
+5. ACTIONS NOT YET COMPLETE
+============================================================
+
+  ✗ Step 2.6: 0500000 System_Architecture_Overview
+      Next action after this log is confirmed.
+
+  ✗ TB00026 not yet uploaded to Claude project
+
+  ✗ TB00027 not yet uploaded to Claude project
+
+============================================================
+6. COMPLETE DOCUMENT INVENTORY — CURRENT STATE
+============================================================
+
+PHASE 1 DOCUMENTS — APPROVED AND ON GITHUB (all v1_0):
+  0000000  Ethics_and_Safety                   v1_0  ✓
+  0100000  Management                          v1_0  ✓
+  0200000  Operations                          v1_0  ✓
+  0300000  Governance                          v1_0  ✓
+  0310000  Governance_Procedures_Anchor        v1_0  ✓
+  0311001  Namespace_Specification             v1_0  ✓
+  0311002  Document_Creation_Workflow          v1_0  ✓
+  0311003  Versioning_Procedure                v1_0  ✓
+  0311004  Document_Creation_and_Approval      v1_0  ✓
+  0311005  System_Definitions_and_Terminology  v1_0  ✓
+
+PHASE 2 AA=04 DOCUMENTS — ON GITHUB (all dv):
+  0400000  Exchange_Interface                  dv1_0  ✓
+  0410000  Exchange_Interface_Kraken_Anchor    dv1_0  ✓
+  0411001  Kraken_WS_v2_Specification          dv1_11 ✓
+  0411002  Kraken_REST_API_Specification       dv1_0  ✓
+  0411003  Kraken_Fee_Rate_Limit_Specification dv1_0  ✓
+
+WORKING DRAFT CODING SPECS (on GitHub — WD, premature):
+  1011001  Engineering_Best_Practices          dv1_5
+  1011002  WS_Manager_Coding_Spec              dv1_11
+  1011005  Exit_Controller_Coding_Spec         dv1_1
+  1011007  Logger_Coding_Spec                  dv1_1
+  1011010  CIATS_Coding_Spec                   dv1_4
+  1011011  Risk_Engine_Coding_Spec             dv1_2
+  1011012  Regime_Engine_Coding_Spec           dv1_3
+  1011013  VPS_Deployment_Coding_Spec          dv1_3
+  1011014  Startup_Sequence_Coding_Spec        dv1_2
+
+SYSTEM ARCHITECTURE (on GitHub — WD):
+  0500000  System_Architecture_Overview        dv1_17
+           Three formats on GitHub (docx, pdf, txt)
+           Multiple prior versions also on GitHub
+
+✓ = On GitHub (approved v1_0 or committed dv)
+
+============================================================
+7. OPEN ITEMS — CURRENT STATE
+============================================================
+
+  OI-006  CIATS specification — Phase 3 document writing
+  OI-007  AA=04 Exchange Interface — RESOLVED TB00026
+  OI-008  All AA=10 coding specs — Phase 8 document writing
+
+============================================================
+8. PARKING LOT — CURRENT STATE
+============================================================
+
+  PL-003  TRACKING: Pathway 1 GitHub automation.
+          After Pathway 2 reaches paper trading readiness.
+
+  PL-NEW-001  WD documents prematurely on GitHub.
+          Cannot be cleanly removed without git history
+          rewrite. Accepted as-is. Future updates to
+          these files will commit correctly as changes
+          to already-tracked files.
+
+  PL-NEW-002  git add . prohibited. Standing rule.
+  PL-NEW-003  Multi-line commit -m breaks Windows batch.
+
+============================================================
+9. BILL ACTIONS REQUIRED
+============================================================
+
+  (a) Upload TB00026 to Claude project.
+  (b) Upload TB00027 to Claude project.
+  (c) Tell Claude: "Phase 2 AA=04 committed. Proceed
+      to Step 2.6."
+
+============================================================
+10. STANDING RULES — ALL ACTIVE
+============================================================
+
+RULE 1  — 0500000 must be built with docx-js (Node.js).
+RULE 2  — 0500000 three-file protocol (txt + docx + pdf).
+RULE 3  — Diagrams placed immediately after section headings.
+RULE 4  — DocPath correction = change = version increment.
+RULE 5  — Never go from memory. Always read project files.
+RULE 6  — git add . is prohibited. Explicit git add per file.
+RULE 7  — Multi-line git commit -m breaks Windows batch.
+RULE 8  — dv → v is valid (direct promotion).
+RULE 9  — After any accidental commit, immediately run
+           git rm --cached on each affected file and push
+           the correction. Never defer.
+RULE 10 — Before running any commit script, Bill runs
+           git status first. If unexpected files appear:
+           stop, do not run the script, tell Claude.
+RULE 11 — All commit scripts include git status as the
+           first command before any git add.
+
+============================================================
+11. REVISION HISTORY
+============================================================
+
+  v1_0  04-04-2026  Initial session log. Documents Phase 2
+                    AA=04 GitHub commit execution. Root
+                    cause analysis of premature dv1_10
+                    commit from Gate 1 script. Resolution
+                    applied: staged dv1_10 deletion, pushed
+                    commit a046260. GitHub verified. Three
+                    new standing rules (9, 10, 11). TB00025
+                    leave-as-is decision reversed — should
+                    have used git rm --cached immediately.
+
+============================================================
+END OF SESSION LOG
+============================================================

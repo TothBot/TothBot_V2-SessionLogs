@@ -1,0 +1,365 @@
+DocDCN:     TB00040
+DocTitle:   TothBot_V2_Session_Log_2026-04-05_Part12
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\OneDrive\TothBot\TB00040_TothBot_V2_Session_Log_2026-04-05_Part12_v1_0.txt
+DocDate:    04-05-2026
+DocTime:    17:00:00 UTC
+
+============================================================
+TOTHBOT V2 SESSION LOG — 2026-04-05 Part 12
+============================================================
+
+============================================================
+1. SESSION START STATE
+============================================================
+
+Phase 8 functionally complete. 20 of 21 documents committed.
+Only 1011002 WS_Manager_Coding_Spec remains.
+
+Phase 8 Part 5 committed. Hashes confirmed:
+  82e6fae — 1011008 dv1_0
+  d7f7cd0 — 1011009 dv1_0
+  5f4b71a — 1021001 dv1_0
+  3003643 — 1021002 dv1_0
+  4886c26 — 1021003 dv1_0
+
+============================================================
+2. WORK COMPLETED THIS SESSION
+============================================================
+
+FP/DP analysis: WS Manager session vs. Phase 9.
+Decision: Complete 1011002 WS Manager spec first.
+Rationale: WS Manager is module 2 of 12 in the coding
+sequence. Beginning Phase 9 without it guarantees a
+forced interruption at the earliest possible point.
+All prior WD content is recoverable from project files.
+
+Session log TB00040 and next-session instructions produced.
+
+============================================================
+3. PHASE 8 STATUS — FINAL
+============================================================
+
+COMMITTED TO GITHUB (20 documents):
+
+  Structure:
+    db71382  1000000  Coding_Specification          dv1_0
+    fd88998  1010000  Trading_System_Coding_Anchor  dv1_0
+    14933f7  1020000  Testing_Coding_Anchor          dv1_0
+    36f9eee  1030000  GitHub_Auto_Coding_Anchor      dv1_0
+
+  WD Completions:
+    090fb3c  1011001  Engineering_Best_Practices     dv1_6
+    dcc3e81  1011007  Logger_Coding_Spec             dv1_2
+    d9688f9  1011013  VPS_Deployment_Coding_Spec     dv1_4
+    896d05b  1011014  Startup_Sequence_Coding_Spec   dv1_3
+    a220e19  1011011  Risk_Engine_Coding_Spec        dv1_3
+    47c51b2  1011012  Regime_Engine_Coding_Spec      dv1_4
+    ba5e76d  1011005  Exit_Controller_Coding_Spec    dv1_2
+    7dc755d  1011010  CIATS_Coding_Spec              dv1_6
+
+  New Specs:
+    50714f9  1011006  Position_Mirror_Coding_Spec    dv1_0
+    0bebc18  1011003  Signal_Pipeline_Coding_Spec    dv1_0
+    6cc8f05  1011004  Execution_Engine_Coding_Spec   dv1_0
+    82e6fae  1011008  Long_Module_Coding_Spec        dv1_0
+    d7f7cd0  1011009  Selection_Controller_Coding_Spec dv1_0
+    5f4b71a  1021001  Unit_Test_Specification        dv1_0
+    3003643  1021002  Integration_Test_Specification dv1_0
+    4886c26  1021003  Paper_Trading_Test_Specification dv1_0
+
+REMAINING — NEXT SESSION:
+    1011002  WS_Manager_Coding_Spec  (dv1_11 → dv1_12 complete)
+
+DEFERRED (PL-003):
+    1031001-1031003  Pathway 1 automation specs
+
+============================================================
+4. NEXT SESSION — WS MANAGER CODING SPEC
+============================================================
+
+------------------------------------------------------------
+OBJECTIVE
+------------------------------------------------------------
+
+Produce 1011002_WS_Manager_Coding_Spec_dv1_12.txt — the
+complete, coding-ready final version of the WS Manager
+coding specification.
+
+This is the final Phase 8 document. After it is committed,
+Phase 8 is 100% complete and Phase 9 (coding) begins.
+
+------------------------------------------------------------
+SOURCE MATERIALS — ALL IN PROJECT
+------------------------------------------------------------
+
+The complete content for 1011002 dv1_12 is recoverable
+from project files already uploaded. No missing files.
+
+Primary sources (read in this order):
+
+  1. 0511001_WS_Manager_Specification_dv1_0.txt
+     The complete parent spec. Contains all system-level
+     rules for WS Manager. This is the authoritative
+     source for all content that was accumulated across
+     dv1_0 through dv1_9. Read this FIRST and thoroughly.
+
+  2. 1011002_WS_Manager_Coding_Spec_dv1_11.txt
+     The latest WD. Contains:
+       - Key rules summary (all rule sets dv1_0 through dv1_9)
+       - Sections 3.53-3.57 (new content from dv1_10)
+       - Five coding-readiness questions (Section 5, partial)
+     Sections 4 and 5 are marked "TBD IN FINAL SPEC."
+
+  3. Session logs for WM rule derivations (supplementary):
+     TB00007 (dv1_1-dv1_2), TB00008-TB00013 (dv1_3-dv1_5),
+     TB00015-TB00019 (dv1_6-dv1_10).
+     Use only if 0511001 does not cover a specific rule.
+     0511001 is comprehensive — session logs are backup.
+
+------------------------------------------------------------
+WHAT 1011002 dv1_12 MUST CONTAIN
+------------------------------------------------------------
+
+The complete coding spec must answer all five coding-
+readiness questions for the WS Manager:
+
+  (1) What does WS Manager DO? (inputs → outputs)
+      Manages all Kraken WS v2 connections. Routes all
+      inbound messages via O(1) dispatch table (AR-015).
+      Manages per-symbol state. Triggers pipeline on
+      candle close. Executes all outbound WS messages.
+      Manages startup, reconnect, connection health.
+
+  (2) Interfaces to other components?
+      IN: Kraken WS v2 push events (all channels)
+          Internal calls from Signal Pipeline, Execution
+          Engine, Exit Controller, CIATS (via Param Store)
+      OUT: Pipeline trigger → Signal Pipeline
+           Order messages → Kraken (add_order, batch_add,
+             cancel_order, amend_order, batch_cancel)
+           Position Mirror writes
+           Logger calls
+           Operator alerts
+
+  (3) Hard rules? (ALL rules from dv1_11 key summary plus
+      new rules from Sections 3.53-3.57)
+
+  (4) Triggers: candle close, ticker events, executions
+      events, ping timer, zombie check, position changes,
+      status events, balance updates, reconnect events.
+
+  (5) Logs: all messages, connections, gaps, errors,
+      ticker changes, alerts, pair status, emergSL events,
+      cancel pathways, zombie events, drawdown checks,
+      halt/pause activations, partial fill events, TP
+      partial fills, reconnect events, CIATS outcomes,
+      unexpected amendments.
+
+The WD dv1_11 already has a partial Section 5 that answers
+these questions — carry it forward and complete any gaps.
+
+------------------------------------------------------------
+RULE SETS TO INCORPORATE
+------------------------------------------------------------
+
+From the dv1_11 key rules summary (all carry forward):
+
+  WM-ZOM-001 through -007   Zombie detection (9s threshold)
+  WM-PS-001 through -009    Pair status + portfolio
+  WM-WSLB-001               Library ping config
+  WM-EXE-013                status exec_type on emergSL
+  WM-CAN-001                cancel_order = individual (MAE)
+  WM-TOKEN-001              Token 15-min, fresh on reconnect
+  WM-OHLC-001 through -005  Candle-close detection
+  WM-STARTUP-001            Pointer to 1011014
+  WM-ROUND-001 through -004 Decimal rounding
+  WM-BAL-001 through -006   Balances spot wallet
+  WM-PS-005 through -009    Portfolio sizing
+  WM-DD-001 through -008    Drawdown formula + thresholds
+  WM-POR-001 through -007   Pending Order Registry
+  WM-DISP-020 through -023  Partial fill dispatch
+  WM-DMS-001 through -004   DMS prohibition
+  WM-RECONNECT-001 through -015  Reconnect sequence
+
+From dv1_10 (Sections 3.53-3.57 — already in dv1_11):
+  WM-CONN-001 through -007  Connection parameters
+                             (max_queue=None, ping_interval=None,
+                              websockets.asyncio.client.connect)
+  WM-DISP-024 through -026  amended exec_type dispatch
+  WM-EXE-014 through -016   last_qty and last_price capture
+  WM-STATUS-001             connection_id from status channel
+  WM-EC-004 through -008    TP partial fill handling
+
+The 0511001 parent spec contains the complete system-level
+specification for all these rule sets. Use it to fill
+any gaps in the WD content.
+
+------------------------------------------------------------
+DOCUMENT STRUCTURE FOR dv1_12
+------------------------------------------------------------
+
+Suggested section structure (adapt as needed):
+
+  1. Purpose
+  2. Parent Chain (1000000, 1010000, this doc, 0511001)
+  3. Five Coding-Readiness Questions
+  4. WS Connection Architecture
+     4.1 Four connections (public, private, reconnect x2)
+     4.2 Connection parameters (max_queue, ping_interval, API)
+     4.3 aiohttp session configuration
+     4.4 Task lifecycle management
+  5. Inbound Message Dispatch
+     5.1 O(1) dispatch table
+     5.2 All channel handlers
+     5.3 exec_type dispatch (all 10 types)
+     5.4 Partial fill handling (entry and TP)
+  6. Outbound Message Dispatch
+     6.1 add_order (entry)
+     6.2 batch_add (TP + emergSL)
+     6.3 cancel_order (individual)
+     6.4 amend_order (emergSL qty)
+     6.5 batch_cancel (Full Halt)
+  7. Connection Health Monitoring
+     7.1 Application-level JSON ping (30s)
+     7.2 Zombie detection (90s)
+     7.3 Ping vs zombie distinction
+  8. OHLC Candle Close Detection
+  9. Per-Symbol State Management
+     9.1 Pair status cache
+     9.2 ATR/EMA caches (incremental)
+     9.3 SSS indicator state
+     9.4 Cooldown and consecutive loss state
+  10. Balances and Portfolio Tracking
+  11. Drawdown Monitoring
+  12. Pending Order Registry
+  13. DMS Prohibition
+  14. Token Management
+  15. Hard Rules (complete list)
+  16. Revision History
+
+------------------------------------------------------------
+VERSION
+------------------------------------------------------------
+
+dv1_11 → dv1_12
+Reason: WD "Must be Included" sections absorbed. Sections
+4 and 5 completed. WD status removed. Parent chain updated.
+Five coding-readiness questions answered. Document is
+coding-ready.
+
+------------------------------------------------------------
+COMMIT INSTRUCTIONS
+------------------------------------------------------------
+
+After dv1_12 is produced and Bill downloads it:
+
+  git add 10XXXXX_Coding_Specification\1011002_WS_Manager_Coding_Spec_dv1_12.txt
+
+  git commit -m "Phase 8 COMPLETE: 1011002 WS_Manager_Coding_Spec dv1_12 — WD complete, coding-ready"
+
+  git push origin master
+
+Note: dv1_11 was NOT on GitHub (WD docs were pre-committed
+per PL-NEW-001). No git rm needed. Just add the new file.
+
+Verify via git status before running — dv1_11 should NOT
+appear as a tracked file to remove.
+
+============================================================
+5. OPEN ITEMS — CURRENT STATE
+============================================================
+
+  OI-008  All AA=10 coding specifications — Phase 8.
+          Status: 20 of 21 committed. 1011002 remaining.
+          Closes when 1011002 dv1_12 is committed.
+
+============================================================
+6. PARKING LOT — CURRENT STATE
+============================================================
+
+  PL-003     TRACKING: Pathway 1 GitHub automation.
+             After Pathway 2 reaches paper trading readiness.
+
+  PL-NEW-001 WD documents prematurely on GitHub. As-is.
+  PL-NEW-002 git add . prohibited.
+  PL-NEW-003 Multi-line commit -m breaks Windows batch.
+  PL-NEW-004 cd to repo root first.
+  PL-WM-001  1011002 WS Manager — next session.
+             All source material in project. No missing files.
+
+============================================================
+7. BILL ACTIONS REQUIRED
+============================================================
+
+  (a) Upload TB00040 (this log) to Claude project.
+
+  (b) Start new Claude session.
+
+  (c) Paste this instruction into the new session:
+
+  ══════════════════════════════════════════════════════
+  NEXT SESSION OPENING INSTRUCTION (copy/paste exactly):
+  ══════════════════════════════════════════════════════
+
+  Read the Project Instructions (TB00000 v2_7) and session
+  log TB00040. Phase 8 is functionally complete. One document
+  remains: 1011002 WS_Manager_Coding_Spec dv1_12.
+
+  Produce the complete, coding-ready 1011002 dv1_12 by reading:
+    (1) 0511001 WS_Manager_Specification dv1_0 (primary source)
+    (2) 1011002 WS_Manager_Coding_Spec dv1_11 (current WD)
+
+  Absorb all WD "Must be Included" content. Complete Sections
+  4 and 5 (currently TBD). Answer all five coding-readiness
+  questions. Remove WD status. Update parent chain. Version
+  to dv1_12. Deliver as .txt per DR-001.
+
+  RULE 14: git push origin master. Always.
+  RULE 15: One command per copy box. Always.
+
+  ══════════════════════════════════════════════════════
+
+============================================================
+8. STANDING RULES — ALL ACTIVE
+============================================================
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+RULE 14 -- ALL commit scripts use `git push origin master`.
+           NEVER `git push origin main`.
+           The repo branch is `master`. `main` does not
+           exist. Violation is a critical defect.
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+RULE 15 -- ONE COMMAND PER COPY BOX. ALWAYS. NO EXCEPTIONS.
+
+RULE 1  -- 0500000 must be built with docx-js (Node.js).
+RULE 2  -- 0500000 three-file protocol (txt + docx + pdf).
+RULE 3  -- Diagrams placed immediately after section headings.
+RULE 4  -- DocPath correction = change = version increment.
+RULE 5  -- Never go from memory. Always read project files.
+RULE 6  -- git add . is prohibited. Explicit git add per file.
+RULE 7  -- Multi-line commit -m breaks Windows batch.
+RULE 8  -- dv -> v is valid (direct promotion).
+RULE 9  -- After accidental commit: git rm --cached + push.
+RULE 10 -- Before commit: run git status first.
+RULE 11 -- All commit scripts include git status as first command.
+RULE 12 -- docx-js ImageRun: pixels at 96dpi. Width = 624px.
+RULE 13 -- .bat commit scripts to OneDrive or Desktop only.
+
+============================================================
+9. REVISION HISTORY
+============================================================
+
+  v1_0  04-05-2026  Final session log of the day.
+                    Phase 8 completion status documented.
+                    Next session instructions for 1011002
+                    WS Manager written. All source materials
+                    confirmed in project. No missing files.
+                    Opening instruction written for Bill
+                    to paste into next Claude session.
+
+============================================================
+END OF SESSION LOG
+============================================================

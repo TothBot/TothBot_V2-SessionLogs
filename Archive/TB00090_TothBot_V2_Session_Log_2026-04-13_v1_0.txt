@@ -1,0 +1,335 @@
+DocDCN:     TB00090
+DocTitle:   TothBot_V2_Session_Log_2026-04-13
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\My_TothBot_Stuff\TBXXXXX_Session_Logs\TB00090_TothBot_V2_Session_Log_2026-04-13_v1_0.txt
+DocDate:    04-13-2026
+DocTime:    03:30:00 UTC
+
+============================================================
+TOTHBOT V2 SESSION LOG — 2026-04-13
+============================================================
+
+============================================================
+1. SESSION IDENTITY
+============================================================
+
+Session date:     April 13, 2026
+Session number:   TB00090
+Session type:     Phase 11 — Paper Trading Deployment.
+                  Two startup_sequence.py defects fixed.
+                  Paper trading confirmed running on VPS.
+                  PT-ENTRY-003 and PT-ENTRY-007 closed.
+Prior session:    TB00089 (2026-04-12 Part 6)
+
+Documents read this session:
+  TB00000  v2_8    Project Instructions             read
+  TB00089  v1_0    Prior session log                read
+
+============================================================
+2. WORK COMPLETED THIS SESSION
+============================================================
+
+------------------------------------------------------------
+2.1 DEFECT-SS-002 — Missing position_mirror in
+    ExecutionEngine() call
+------------------------------------------------------------
+
+Symptom:
+  [STARTUP FATAL] ExecutionEngine.__init__() missing 1
+  required positional argument: 'position_mirror'
+  Crash loop immediately on service start.
+
+Root cause:
+  startup_sequence.py _build_components() called
+  ExecutionEngine(ws_manager=wm, risk_engine=re, logger=logger)
+  without position_mirror=pm. ExecutionEngine.__init__()
+  requires position_mirror as a mandatory positional argument.
+
+Fix:
+  Added position_mirror=pm to ExecutionEngine() call.
+
+File:    tothbot/startup_sequence.py
+Version: dv1_3 → dv1_4
+Commit:  b8fb0a8 (TothBot_V2-Code)
+
+------------------------------------------------------------
+2.2 DEFECT-SS-003 — PAPER_TRADING_MODE env var never
+    read by _load_config()
+------------------------------------------------------------
+
+Symptom:
+  After DEFECT-SS-002 fix, service started but immediately
+  crashed with WS_MGR_FATAL: GetWebSocketsToken error:
+  ['EAPI:Invalid key'].
+  COMPONENTS_WIRED confirmed, paper mode gate in
+  ws_manager.py was not activating.
+
+Root cause:
+  _load_config() in startup_sequence.py never read
+  PAPER_TRADING_MODE from os.environ. The key
+  "paper_trading_mode" was absent from the config dict
+  returned to WSManager. WSManager.paper_mode was always
+  False regardless of the env var. Private WS auth
+  (_rest_get_ws_token) was always called. EAPI:Invalid key
+  crash because paper trading API keys have no trade
+  permissions.
+
+Fix:
+  Added to _load_config() return dict:
+    "paper_trading_mode": os.environ.get(
+        "PAPER_TRADING_MODE", "false").lower() == "true"
+  Added PAPER_TRADING_MODE_ON / PAPER_TRADING_MODE_OFF
+  log event in _async_main() after config load.
+
+File:    tothbot/startup_sequence.py
+Version: dv1_4 → dv1_5
+Commit:  8cbc6f1 (TothBot_V2-Code)
+
+------------------------------------------------------------
+2.3 Paper Trading Confirmed Running
+------------------------------------------------------------
+
+After DEFECT-SS-003 fix, service started cleanly:
+
+  TOTHBOT_STARTING            ✓
+  PAPER_TRADING_MODE_ON       ✓  03:03:10 UTC
+  COMPONENTS_WIRED            ✓
+  CIATS_STARTED               ✓
+  INSTRUMENT_SNAPSHOT_COMPLETE ✓  1506 pairs
+  OHLC_SUBSCRIBED             ✓  BTC/USD, interval=5m
+
+Service: active (running), PID 85521
+VPS commit: 8cbc6f1
+
+PT-ENTRY-003: CLOSED.
+
+------------------------------------------------------------
+2.4 PT-ENTRY-007 — systemd Auto-Restart Confirmed
+------------------------------------------------------------
+
+kill -9 sent to PID 85234.
+systemd restarted TothBot automatically.
+New PID: 85521. active (running) confirmed.
+
+PT-ENTRY-007: CLOSED.
+
+============================================================
+3. VPS STATE — END OF SESSION
+============================================================
+
+  Service:      active (running) — PID 85521
+  Commit:       8cbc6f1 (master)
+  Paper mode:   PAPER_TRADING_MODE_ON confirmed
+  Warm-up:      IN PROGRESS — BTC/USD seeding 200 candles
+                (~17 hours from 03:03 UTC — completes
+                 approximately 20:00 UTC 2026-04-13)
+  OHLC:         5-minute subscribed and active
+                60-minute REJECTED by Kraken (see PL below)
+
+  .tothbot.env:
+    PAPER_TRADING_MODE=true  ✓ (both locations)
+
+============================================================
+4. PT-ENTRY STATUS
+============================================================
+
+  PT-ENTRY-001  All unit tests pass (95/95)     DONE
+  PT-ENTRY-002  All integration tests (8/8)     DONE
+  PT-ENTRY-003  VPS deployed, paper mode ON     DONE
+  PT-ENTRY-004  logrotate configured            DONE
+  PT-ENTRY-005  IP whitelist confirmed          DONE
+  PT-ENTRY-006  Alert email confirmed           DONE
+  PT-ENTRY-007  systemd auto-restart confirmed  DONE
+  PT-ENTRY-008  Startup sequence, pairs READY   PENDING
+                (~17hr warm-up in progress)
+
+============================================================
+5. OPEN ITEMS
+============================================================
+
+OI-006  OPEN — PT-ENTRY-008 pending.
+        BTC/USD warm-up completes ~20:00 UTC 04-13-2026.
+        Check log for READY event next session.
+
+OI-014  OPEN — startup_sequence.py stale cross-references
+        and ohlc sequence review. Post paper-trading stable.
+
+OI-NEW-001  OPEN — 60-minute OHLC subscription rejected
+        by Kraken: "Already subscribed to one ohlc interval
+        on this symbol." Kraken only allows one OHLC interval
+        per symbol per WS connection. 1H HTF cache via
+        ohlc(60) is not populating via WS. Must be resolved.
+        Parking Lot until paper trading is stable and
+        READY confirmed. Then address before evaluating
+        any trade signals.
+
+OI-NEW-002  OPEN — 1010000 Trading_System_Coding_Anchor
+        not updated for startup_sequence.py dv1_4 and dv1_5.
+        Update registry entry and increment 1010000 to
+        dv1_7. Commit to TothBot_V2-Docs next session.
+
+============================================================
+6. DEFECT LOG
+============================================================
+
+  DEFECT-SS-002
+    File:    tothbot/startup_sequence.py
+    Defect:  position_mirror=pm missing from ExecutionEngine()
+             call in _build_components().
+    Fix:     Added position_mirror=pm.
+    Status:  FIXED — commit b8fb0a8
+
+  DEFECT-SS-003
+    File:    tothbot/startup_sequence.py
+    Defect:  PAPER_TRADING_MODE env var never read by
+             _load_config(). paper_trading_mode key absent
+             from config dict. WSManager.paper_mode always
+             False. Private WS auth always attempted.
+    Fix:     Added paper_trading_mode to _load_config()
+             return dict. Added PAPER_TRADING_MODE_ON/OFF
+             log event.
+    Status:  FIXED — commit 8cbc6f1
+
+============================================================
+7. GITHUB COMMIT LOG — THIS SESSION
+============================================================
+
+  TothBot_V2-Code:
+    b8fb0a8  Fix: add missing position_mirror=pm to
+             ExecutionEngine init
+             (startup_sequence.py dv1_4)
+
+    8cbc6f1  Fix: read PAPER_TRADING_MODE env var in
+             _load_config
+             (startup_sequence.py dv1_5)
+
+  TothBot_V2-Docs:
+    No commits this session.
+    OI-NEW-002: 1010000 update deferred to next session.
+
+============================================================
+8. PARKING LOT
+============================================================
+
+  PL-001      WSManager dual PM creation paths. Monitor.
+  PL-003      Pathway 1 GitHub automation. After paper trading.
+  PL-NEW-003  VPS migration to Hillsboro OR. After stable.
+  PL-NEW-004  EE ENTRY_TIMEOUT_SEC vs WM ENTRY_GTD_SEC. Monitor.
+  PL-NEW-005  requirements.txt — websockets version pin.
+  PL-NEW-006  tothbot_service.txt not updated in GitHub. After PT-ENTRY.
+  PL-NEW-007  LOG_FILE path mismatch. After PT-ENTRY.
+  PL-NEW-008  Heartbeat UNKNOWN_MESSAGE_TYPE log spam. After PT-ENTRY.
+  PL-NEW-010  status subscription "Symbol(s) not found". After stable.
+  PL-NEW-011  OI-NEW-001: 60-min OHLC rejected by Kraken.
+              1H HTF cache not populating via WS.
+              Address after paper trading stable and READY confirmed.
+
+============================================================
+9. STANDING RULES — ALL ACTIVE
+============================================================
+
+  RULE 6  — git add . is prohibited. Explicit per file.
+  RULE 13 — .bat files go to Desktop only. Never in repo.
+  RULE 14 — git push origin master. NEVER origin main.
+  RULE 15 — ONE COMMAND PER COPY BOX. ALWAYS.
+  RULE 16 — .bat files run from cmd.exe only. Never PS.
+
+  DELIVERY RULES — ALL ACTIVE:
+  DR-001 — All documents as .txt files.
+  DR-002 — 0500000 additionally as .docx and .pdf.
+  DR-003 — ALL documents in ONE BATCH. No piecemeal.
+
+============================================================
+10. BILL ACTIONS REQUIRED
+============================================================
+
+Step 1 — Save this session log:
+  C:\Users\wstot\My_TothBot_Stuff\TBXXXXX_Session_Logs\
+
+Step 2 — Upload TB00090 to Claude project folder.
+
+Step 3 — Upload startup_sequence.py.txt (dv1_5) to Claude
+  project folder. (Replaces dv1_3 currently in project.)
+
+Step 4 — Check log tomorrow for READY event:
+  SSH to VPS, then run:
+  grep "READY" /home/tothbot/logs/tothbot.log
+
+Step 5 — Start next Claude session.
+
+============================================================
+11. NEXT SESSION — COMPLETE INSTRUCTIONS
+============================================================
+
+  ============================================================
+  DOCUMENTS TO READ — IN THIS ORDER:
+
+  1. TB00000 v2_8  — Project Instructions
+  2. TB00090 v1_0  — This session log (most recent)
+
+  STATE DOCUMENTS READ AND VERSIONS BEFORE ANY WORK.
+  ============================================================
+
+  ============================================================
+  FIRST TASK — Check paper trading status.
+
+  SSH to VPS:
+    ssh -i C:\Users\wstot\.ssh\id_ed25519 root@87.99.141.44
+
+  Check service is still running:
+    systemctl status tothbot
+
+  Check for READY event (PT-ENTRY-008):
+    grep "READY" /home/tothbot/logs/tothbot.log
+
+  Check for any errors since last session:
+    tail -50 /home/tothbot/logs/tothbot.log | grep -v heartbeat
+
+  Paste all output to Claude.
+
+  If READY seen: PT-ENTRY-008 DONE. OI-006 CLOSED.
+  If READY not seen: warm-up still in progress. Normal.
+  ============================================================
+
+  ============================================================
+  SECOND TASK — OI-NEW-002: Update 1010000 to dv1_7.
+
+  Update registry entry for startup_sequence.py:
+    From: SpecVer dv1_3, DocVersion dv1_0
+    To:   SpecVer dv1_5, DocVersion dv1_1
+    Note: DEFECT-SS-002 and DEFECT-SS-003 fixed.
+          Commits b8fb0a8 and 8cbc6f1.
+
+  Increment 1010000: dv1_6 → dv1_7.
+  Commit to TothBot_V2-Docs.
+  ============================================================
+
+  ============================================================
+  THIRD TASK — OI-NEW-001: 60-minute OHLC rejected.
+
+  Kraken rejects the 60-minute OHLC subscription with:
+  "Already subscribed to one ohlc interval on this symbol"
+  1H HTF cache is not populating. This must be resolved
+  before any trade signals can be evaluated correctly.
+  FP/DP analysis required before any code changes.
+  ============================================================
+
+============================================================
+12. REVISION HISTORY
+============================================================
+
+  v1_0  04-13-2026  Initial. Two startup_sequence.py defects
+                    found and fixed. DEFECT-SS-002: missing
+                    position_mirror=pm in ExecutionEngine call
+                    (dv1_4, commit b8fb0a8). DEFECT-SS-003:
+                    PAPER_TRADING_MODE env var never read by
+                    _load_config() (dv1_5, commit 8cbc6f1).
+                    Paper trading confirmed running on VPS.
+                    PAPER_TRADING_MODE_ON logged at 03:03:10 UTC.
+                    PT-ENTRY-003 DONE. PT-ENTRY-007 DONE.
+                    PT-ENTRY-008 pending warm-up completion.
+
+============================================================
+END OF SESSION LOG
+============================================================

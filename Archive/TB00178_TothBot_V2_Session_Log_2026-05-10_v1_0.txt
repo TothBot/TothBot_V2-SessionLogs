@@ -1,0 +1,508 @@
+DocDCN:     TB00178
+DocTitle:   TothBot_V2_Session_Log
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TBXXXXX_Session_Logs\TB00178_TothBot_V2_Session_Log_2026-05-10_v1_0.txt
+DocDate:    05-10-2026
+DocTime:    23:55:00 UTC
+
+============================================================
+TB00178 SESSION LOG v1_0
+ARCHITECTURE-RECONCILIATION CLOSURE — LEGACY V1
+RANKING ARCHITECTURE NOT REQUIRED FOR V2
+============================================================
+
+============================================================
+1. SESSION MISSION (AS EXECUTED)
+============================================================
+
+Single-mission session: investigate whether the legacy V1
+07XXXXX "weighted-average + queue + module-scoring"
+architecture (each module scores candidates per Rules;
+weighted average computed by module or Selection Controller;
+Selection Module picks next pair from queue) is required
+for TothBot V2.
+
+Bill scope-override at session start: TB00177 NSI Stage M-2
+kickoff DEFERRED pending architecture-reconciliation
+closure. TB00178 executes the architecture investigation
+that was carry-forward from TB00177 (which produced no SL
+per the prior turn's skip recommendation that Bill never
+explicitly confirmed nor denied — absorbed into TB00178 SL
+record per cleanest-path interpretation).
+
+Outcome: Architecture-reconciliation question CLOSED.
+Bill ratified the recommendation to drop the weighting
+system and stick with V2's binary 8-gate pipeline. Stage
+M-2 proceeds in TB00179 per TB00177 NSI directives
+unchanged.
+
+============================================================
+2. COLD-LOAD AT SESSION OPEN
+============================================================
+
+2.1 DOCUMENTS READ (project versions verified).
+
+  TB00000 v2_28           project instructions (system
+                          prompt). Read in full.
+  TB00177 NSI v1_0        next-session instructions
+                          (cold-load directive — under
+                          Bill scope-override). Read in
+                          full.
+  Legacy V1 07XXXXX       0710000 dv1.1, 0711001 dv1.2,
+                          0721001 dv1.2, 0730000 dv1.2,
+                          0731001 dv1.2, 0731002 dv1.2,
+                          0741001 dv1.3. Newly uploaded
+                          to project folder for this
+                          investigation.
+  Current V2 reference    0811002 dv1_0, 0711003 dv1_3,
+                          0500000 dv1_41, 1011009 dv1_1,
+                          1011003, 0511002 dv1_0,
+                          signal_pipeline.py header.
+
+2.2 TB00177 SL ABSENCE FINDING.
+
+Per RR-SCOPE-008 tools-exhaustion (the rule that says
+exhaust all tools before declaring something unverifiable),
+project_knowledge_search + listing the project files
+confirmed TB00177 SL is NOT present in project folder.
+Only TB00177 NSI v1_0 exists. Per Bill's chat turn 2
+quote of the prior TB00177 turn's recommendation, the
+prior turn recommended skipping TB00177 SL/NSI production
+with the architecture finding captured "verbatim above
+in the OCS." Bill did not explicitly approve or deny.
+TB00178 SL absorbs the TB00177 carry-in by recording the
+full investigation thread from architecture-finding
+through Bill ratification.
+
+============================================================
+3. LEGACY V1 07XXXXX FINDINGS
+============================================================
+
+3.1 MODULE-SCORING ARCHITECTURE — FOUND IN LEGACY V1.
+
+Authoritative citations (per RR-SCOPE-010 grep-verified):
+
+  0710000 §3.3 "Signal Quality Is Scored at Generation":
+    "Every CandidateSignal carries a signal_score — a
+    numeric measure of edge confidence at the moment of
+    generation."
+
+  0710000 §5 CandidateSignal data structure:
+    signal_score: float [0.0, 1.0] mandatory field;
+    "Feeds Gate 6 (Signal Quality)."
+
+  0711001 §6 Long Module:
+    signal_score = DPS_Edge_Factor × Momentum_Alignment_Factor
+    (Option A multi-factor REJECTED in legacy due to zero
+    lift per N=594,550 LONG observations simulation;
+    Option B active with Momentum_Alignment_Factor=1.0,
+    reducing to signal_score = DPS_Edge_Factor only).
+
+  0721001 §6 Short Module: parallel architecture, direction=-1.
+
+3.2 SIGNAL_QUEUE ARCHITECTURE — FOUND IN LEGACY V1.
+
+  0710000 §5: signal_queue is the central producer-
+    consumer buffer; "the authoritative interface contract
+    between all trading modules and the Selection
+    Controller."
+  0731001 §4.2: Selection Controller is "event-driven...
+    runs on every signal event received from the strategy
+    layer. It does not poll continuously — it processes
+    candidates as they arrive."
+  0720000 §7: Both Long and Short Modules submit
+    CandidateSignals to the same signal_queue.
+  HR-SC003: "One candidate at a time. No concurrent
+    evaluation."
+
+3.3 WEIGHTED AVERAGE — FOUND BUT NOT AS BILL DESCRIBED.
+
+Two weighted-average computations exist in legacy; neither
+matches "weighted average across module scores":
+
+  (a) Within-module weighted product (0711001 §6):
+      signal_score = DPS_Edge_Factor × Momentum_Alignment_Factor.
+      This is a PRODUCT of two factors, not a weighted
+      average. Option B reduction made this single-factor
+      effectively.
+
+  (b) Cross-position portfolio score (0731002 §3.3):
+      Portfolio_Impact_Score = weighted average of
+      Signed_Correlation(candidate, existing_i) across
+      all active positions. This is a Selection Controller
+      computation INSIDE Gate 2 (Signed Correlation Gate)
+      for portfolio risk evaluation. It is NOT a weighted
+      average of cross-module scores.
+
+  No weighted average of cross-module scores exists in
+  legacy V1.
+
+3.4 "SELECTION MODULE PICKS NEXT PAIR FROM QUEUE" —
+    NOT FOUND AS DESCRIBED IN LEGACY.
+
+Selection Controller does NOT rank by score and pick
+highest. Per 0731001 §4.2: processes per-arrival (FIFO);
+not priority-sorted. signal_score feeds Gate 6 as a
+pass/fail threshold check (against MIN_SIGNAL_SCORE), not
+as ranking input. Producer-consumer FIFO, not priority
+queue.
+
+============================================================
+4. CURRENT V2 RECONCILIATION
+============================================================
+
+4.1 RECONCILIATION TABLE.
+
+  Architectural Element           Legacy V1       Current V2
+  -----------------------------   -------------   -------------
+  Module signal_score             [0.0, 1.0]      ABSENT (binary SSS PASS)
+  signal_queue                    Python queue    ABSENT (pipeline walk)
+  CandidateSignal data class      Mandatory       ABSENT
+  Producer-consumer pattern       Present         ABSENT (sequential)
+  Portfolio_Impact_Score          Gate 2          ABSENT
+  Priority/ranking pick           Not present     N/A
+
+V2's architectural divergence from V1 is FUNDAMENTAL, not
+incremental. V2 replaces producer-consumer queue +
+scored-candidate evaluation with per-candle-close pipeline-
+walk over tradeable_universe. The "6 sub-gates" naming
+overlap (V1 Selection Controller has 6 gates; V2 has 6
+SC-GATE-* sub-gates) is COINCIDENTAL — the gate content is
+completely different.
+
+4.2 V2 RATIFICATION CHECK.
+
+Per RR-SCOPE-008 tools-exhaustion: search of TB00153 DR
+v1_3 (decision register), 0500000 dv1_41 ARs (architectural
+reasoning entries), 0811002 dv1_0, 1011009 dv1_1, and
+1011003 found ZERO V2 decisions ratifying any of:
+signal_score, signal_queue, CandidateSignal, weighted-
+average composite, priority-pick architecture. V2 corpus
+is silent on adopting any of these.
+
+4.3 STAGE M-2 PREREQUISITE DETERMINATION.
+
+Bill's conditional from TB00178 chat turn 1: "If found in
+legacy AND ratified for V2, this becomes a Stage M-2
+prerequisite blocking the 5 forks in TB00177 NSI §2.3."
+
+  Found in legacy:    PARTIAL (module-scoring + queue YES;
+                      cross-module weighted-avg + priority-
+                      pick NO — not present in legacy
+                      either).
+  Ratified for V2:    NO. Zero V2 ratification found after
+                      tools-exhausted search.
+
+Determination: Stage M-2 prerequisite condition NOT met
+as stated. Architecture-reconciliation does NOT auto-block
+the 5 §2.3 forks.
+
+============================================================
+5. GITHUB HISTORY CHECK
+============================================================
+
+5.1 BILL EXECUTED git log COMMANDS PROVIDED BY CLAUDE.
+
+  Repo: github.com/TothBot/TothBot-Docs (V1 archive)
+    Path: 07XXXXX_Trading_Modules/
+    Result: 3 commits only.
+      644bcdb — 0721001 Short_Module dv1.1 → dv1.2
+                Option B adopted; 4 params simulation-
+                derived.
+      65474e6 — Long Module parameters simulation-derived;
+                Option B adopted.
+      42d1785 — DocPath batch update (oldest visible).
+    Finding: Architecture predates V1 git repo. No commit
+    shows architecture being designed.
+
+  Repo: github.com/TothBot/TothBot_V2-Docs (V2 current)
+    Path: 08XXXXX_Trading_System/0811002_*.txt
+    Result: 1 commit only.
+      a9964f2 — Step 6.4: Add 0811002 dv1_0
+    Finding: V2 Selection Controller has only ever had
+    dv1_0 in git. No pre-dv1_0 version exists. V2 was
+    binary-pipeline from day one (04-05-2026).
+
+  Repo: same/05XXXXX_System_Architecture/0500000_*
+    Result: 9 commits, earliest dv1_18 (cc10c16).
+    Versions dv1_0 through dv1_17 were intentionally
+    removed from git history per:
+      ae27219 — TB00085: Remove 21 superseded document
+                versions per VP-010.
+      55815d8 — TB00086: Remove 0500000_Previous Versions
+                folder. VP-010 violation.
+    Finding: AR-072 first-introduction commit is NOT
+    recoverable from git. The architectural-decision
+    rationale lives in session logs TB00001..TB00020
+    (2026-03-23 to 2026-03-26) which are in project
+    knowledge.
+
+5.2 GITHUB HISTORY EXHAUSTED AS A SOURCE.
+
+No earlier V2 versions of 0811002 exist on GitHub. No V2
+pre-dv1_0 scoring/queue version was ever committed.
+
+============================================================
+6. WEIGHTING SYSTEM DESIGN PROPOSAL (RETRACTED)
+============================================================
+
+6.1 BILL DIRECTIVE AT CHAT TURN 5.
+
+"Can you create the system that weights the Shorts and
+Longs from existing data and the internet?"
+
+6.2 CLAUDE EXECUTED 3 SEQUENTIAL WEB SEARCHES (18 REFS).
+
+  Search 1: Multi-factor scoring momentum trading (6 refs).
+    Key findings: Z-score normalization (Z>1 buy, Z<-1
+    sell); IC weighting; rolling quantile thresholds; risk
+    parity; Alpha101 factor foundation.
+
+  Search 2: Crypto long/short composite Z-score (7 refs).
+    Key findings: Linear signal alpha-weight combination;
+    Z-score normalize composite; threshold trigger; 14-day
+    lookback common; sentiment + technical hybrid.
+
+  Search 3: Priority queue ranking trade candidates (7 refs).
+    Key findings: Two priority queues per direction;
+    Learning-to-Rank frameworks; cross-sectional ranking;
+    profile-based routing.
+
+6.3 PROPOSED ARCHITECTURE (SUMMARY).
+
+  Six factors all already computed in V2 (RSI/EMA/Volume/
+  Body/Regime/HTF). Z-score normalize where appropriate.
+  Weighted linear combination with CIATS-owned weights
+  (equal-weight prior 0.167 each). LONG_SCORE + SHORT_SCORE
+  computed per pair per candle close. Selection Controller
+  builds CandidatePool, sorts by score descending, picks
+  top-N up to slot capacity with remaining V2 gates as
+  filters in pick loop.
+
+  Full design captured in TB00178 chat transcript turn 5.
+  Not reproduced verbatim here — design RETRACTED per §7
+  Bill First Principles challenge + §8 reassessment.
+
+============================================================
+7. BILL FIRST PRINCIPLES CHALLENGE
+============================================================
+
+7.1 BILL DIRECTIVE AT CHAT TURN 6.
+
+"Is this even necessary. Both Longs and Shorts have their
+own Portfolio Money Pool. I was told in a MUCH earlier
+version that Limiting the trades to 20, when 20 was a
+hard rule and not CIATS owned, that this was required as
+a risk reduction strategy that was necessary. It was also
+told to me by MS Co-Pilot, a long time ago when we had
+MUCH LESS information and were under a completely
+different paradigm. Is it still necessary?"
+
+7.2 FP/DP REASSESSMENT.
+
+V1 paradigm required ranking because three conditions
+were stacked:
+  (1) max_concurrent = 20 was a HARD RULE (not CIATS-owned).
+  (2) Single capital pool (Longs and Shorts competed for
+      same money).
+  (3) Universe was large enough that simultaneous SSS PASS
+      signals could exceed 20.
+
+Given those three conditions, when passing signals exceeded
+slot capacity, choosing was REQUIRED. Ranking by score was
+the choosing mechanism.
+
+V2 paradigm removes those conditions:
+  (1) Per TB00000 v2_28 §9.17 V2 parameter philosophy:
+      max_concurrent is CIATS-owned starting value, not
+      hard rule. Only net 1:1.5 R:R is sacred.
+  (2) Bill stated intent (and currently TB00177 NSI §2.3
+      ITEM 1 fork): separate Long and Short capital pools
+      via per-side capacity cap split. Eliminates cross-
+      direction competition.
+  (3) Within a direction, capital arithmetic produces
+      natural cap: tradeable_pct × per_trade_pct (currently
+      50% × 5% = 10 positions per direction by arithmetic).
+
+7.3 EDGE CASE HANDLING WITHOUT RANKING.
+
+When more passing signals exist than direction-pool
+capacity allows on a single candle close (rare per V1
+simulation context — N=594,550 LONG observations):
+  - FIFO (arrival order) — simplest, deterministic
+  - Skip remaining; re-evaluate on next candle close
+    5 minutes later
+  - Tighten gates via CIATS if too much passes
+
+None require a scoring engine. Gates are the quality
+filter.
+
+============================================================
+8. BILL RATIFICATION + ARCHITECTURE-RECONCILIATION CLOSURE
+============================================================
+
+8.1 BILL DIRECTIVE AT CHAT TURN 7.
+
+"Yes I approve this recommendation. We 'Drop the weighting
+system. Stick with V2's binary 8-gate pipeline.'"
+
+8.2 RATIFIED DECISIONS.
+
+  (a) Weighting system DROPPED. No 6-factor scoring
+      architecture will be authored for V2.
+  (b) V2 binary 8-gate pipeline architecture PRESERVED
+      UNCHANGED.
+  (c) Architecture-reconciliation question CLOSED.
+  (d) Stage M-2 proceeds in TB00179 per TB00177 NSI
+      directives unchanged (carry forward to TB00179 NSI).
+
+8.3 IMPLICIT RATIFICATIONS.
+
+  (a) TB00177 SL absence accepted (no retroactive
+      authoring). TB00178 SL absorbs the TB00177 carry-in.
+  (b) TB00177 NSI v1_0 superseded by TB00179 NSI v1_0
+      (same Stage M-2 directive set).
+
+============================================================
+9. CARRY-FORWARDS FOR TB00179+
+============================================================
+
+9.1 STAGE M-2 EXECUTION per TB00177 NSI (carried forward
+    in TB00179 NSI):
+      Five Bill-direction forks (per-side capacity cap,
+      leverage cap, min order size, RSI short-side values,
+      0811005 scope decomposition).
+      0811005 Short_Module Specification dv1_0 authoring.
+      AR amendment first batch (AR-006/007/008/048/069).
+      HR-WM-032 short P&L formula amendment.
+      D-03 + D-05 spec text amendments.
+
+9.2 STAGE M-3..M-6 carry-forwards unchanged.
+
+9.3 OPTIONAL FUTURE CONSIDERATION — PORTFOLIO-AWARE
+    SELECTION (DEFERRED, NOT CURRENT SCOPE):
+
+    If Bill later wants portfolio-aware selection (e.g.,
+    reject the 3rd correlated altcoin Long when BTC + ETH
+    Longs already open), this is achievable via a SINGLE
+    CORRELATION GATE added to the V2 pipeline. Much smaller
+    change than the 6-factor scoring engine retracted in
+    this session. Concept reference: V1 legacy 0731002 §3
+    Signed Correlation Gate (Portfolio_Impact_Score).
+    NOT currently in V2; deferred to future Stage if Bill
+    initiates.
+
+9.4 DR-043 #3 + #4 SVG PORTIONS OPEN — sequenced M-3 + M-4.
+9.5 ZERO-OPEN DIAGRAM-RELEVANT MILESTONE TEMPORARY BREAK.
+9.6 DEC-008 EXECUTION TRIGGER deferred per Stage M-6 close.
+9.7 PROJECT-FOLDER PHYSICAL-REMOVAL PENDING:
+    TB00174 NSI, TB00175 NSI, TB00176 NSI, TB00168 SL,
+    TB00168 NSI (per TB00177 NSI §9.2).
+    PLUS: TB00177 NSI v1_0 (superseded by TB00179 NSI
+    v1_0 this session).
+9.8 BILL-FACING FORMAT DISCIPLINE operational verification
+    ongoing.
+9.9 DD-011 SCAN-COVERAGE OPERATIONAL DISCIPLINE ongoing.
+
+============================================================
+10. CLAUDE ERRORS THIS SESSION
+============================================================
+
+10.1 RR-SCOPE-005 / DD-011 GENUINE COMPLIANCE CHECK.
+
+Chat turn 5: Claude produced full 6-factor weighting
+system design (RR-SCOPE-005 execution under directive
+authority). Bill's directive at chat turn 5 explicitly
+invoked the 3-search web research rule, signaling
+substantial production was wanted. No DD-011 violation:
+Bill issued a direct production directive ("Can you
+create the system"), not a decision question. Claude
+executed.
+
+10.2 FP/DP COMPLETENESS GAP — LOGGED.
+
+Chat turn 5: Claude produced the weighting design without
+running RR-SCOPE-009 four-question origin investigation
+on the V1 ranking architecture before reproducing it in
+V2 form. Bill's chat turn 6 First Principles challenge
+("Is this even necessary") was the corrective. Pattern:
+faithfully executing a directive without first
+investigating WHY the requested architecture existed in
+the source paradigm.
+
+  Class: RR-SCOPE-009 spirit-of-rule gap (formal text
+  applies to constraint REMOVAL; here Claude REPRODUCED
+  an architectural element from V1 without origin
+  investigation in the V2 paradigm).
+
+  Disposition: Logged as carry-forward observation. Not a
+  formal RR-SCOPE-009 violation per current rule text
+  (which is scoped to constraint removal). Bill First
+  Principles intervention closed the gap mid-session.
+  No governance amendment required.
+
+  Recurrence prevention: For future architectural-
+  reproduction directives (V1 → V2 or any cross-paradigm
+  port), Claude should pre-emptively run the four-question
+  origin investigation (When introduced? What problem?
+  Evidence problem persists in new paradigm? Loss-
+  prevention property?) BEFORE producing the design.
+
+10.3 DR-008.9 PRE-EMIT SCAN COMPLIANCE.
+
+Session-close trio (TB00178 SL + TB00179 NSI + chat-
+response OCS copy box) verified per TB00000 v2_28 §4.1.2
+DR-008.9 PRE-EMIT SCAN at session-close turn. All four
+sub-checks PASS. Cumulative DR-008 chat-response OCS
+recurrence count unchanged at 3 (TB00169, TB00170 NSI
+rewrite, TB00171). No new recurrence this session.
+
+10.4 RR-SCOPE-010 COMPLIANCE.
+
+Identifier citations in TB00178 SL and TB00179 NSI
+grep-verified against current authoritative specs at
+authoring time. Verbatim-MDR-citation sub-requirement
+N/A this session (no MDR field citations asserted).
+
+10.5 FM-001 BILL-FACING FORMAT DISCIPLINE COMPLIANCE.
+
+Chat-turn responses this session reviewed for plain-
+language gloss compliance. No FM-001 violations identified.
+Continuing operational verification per TB00000 v2_28 §4.6.
+
+============================================================
+11. STANDING RULES IN FORCE
+============================================================
+
+  TB00000 v2_28 §1 sole-operator + §4.1 DR-001..008 +
+    DR-008.9 PRE-EMIT SCAN + §4.2 OP-001..009 +
+    §4.3 RR-SCOPE-001..010 with verbatim-MDR-citation
+    sub-requirement + RR-RULE-001..004 + RR-SHELL-001..004
+    + §4.4 PA-001..010 + §4.5 DD-001..011 + §4.6
+    FM-001..007.
+  0311001 v1_12 §15.7 V-038 + §15.11.5 + §15.12 + §15.14
+    standing-rule layer.
+  0311002 v1_10 §8.2.4 DC-CLEANUP + §8.2.5 DC-PREFLIGHT.
+  TB00153 DR v1_3 §3 + §8 (DEC-011 Option C ratified
+    Stage M sub-step sequencing M-0..M-6).
+  TB00153 MDR v1_6.
+  TB00176 SL v1_0 (immediately prior session SL —
+    TB00177 SL absent per §2.2).
+
+============================================================
+12. REVISION HISTORY
+============================================================
+
+  v1_0  2026-05-10  Initial TB00178 Session Log.
+                    Architecture-reconciliation
+                    investigation closed. Bill ratified
+                    drop the weighting system + stick
+                    with V2 binary 8-gate pipeline.
+                    Stage M-2 proceeds in TB00179 per
+                    TB00177 NSI directives carried
+                    forward in TB00179 NSI v1_0.
+
+============================================================
+END OF TB00178 SESSION LOG v1_0
+============================================================

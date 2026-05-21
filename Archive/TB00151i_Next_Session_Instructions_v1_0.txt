@@ -1,0 +1,320 @@
+DocDCN:     TB00151i_Next_Session_Instructions
+DocTitle:   Next_Session_Instructions
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TBXXXXX_Session_Logs\TB00151i_Next_Session_Instructions_v1_0.txt
+DocDate:    05-07-2026
+DocTime:    23:59:59 UTC
+
+============================================================
+TB00151i NEXT SESSION INSTRUCTIONS v1_0
+PRIMARY MISSION: STREAM D SESSION 2 OF 3 —
+                 0511005 dv1_0 -> dv1_1 PAPER-AS-MASTER
+============================================================
+
+============================================================
+1. NEXT SESSION PRIMARY MISSION
+============================================================
+
+Author: 0511005 Position_Mirror_Specification dv1_0 -> dv1_1
+        PAPER-AS-MASTER amendment.
+
+CONTEXT: TB00147 PAPER-AS-MASTER cascade closed 5 of 7
+Phase 1 close-gate specs. TB00151h closed the 6th
+(0511003 dv1_0 -> dv1_1). One spec remains pre-PA-001
+after TB00151i:
+  TB00151j: 1011014 Startup_Sequence_Coding_Spec dv1_7 -> dv1_8
+
+After TB00151j: Phase 1 close gate PASS. Phase 2 code
+rebuild authorized to begin per 0500000 dv1_24 §12.8.
+
+GitHub commit deferred per Bill direction: all three
+remaining specs (0511003 dv1_1 + 0511005 dv1_1 +
+1011014 dv1_8) commit as one batch when TB00151j
+completes. Single commit closes Phase 1 close gate.
+
+============================================================
+2. MANDATORY READING (TB00151i COLD LOAD)
+============================================================
+
+  TB00000 v2_20 (project instructions)
+  TB00151e Session Log v1_0
+  TB00151f Session Log v1_0
+  TB00151g Session Log v1_1
+  TB00151h Session Log v1_0 ★ NEW (this session's
+                              record of 0511003 dv1_1
+                              authoring)
+  TB00151i NSI v1_0 (this document)
+
+  GOVERNANCE
+    0311001 v1_6
+    0311002 v1_10
+    0311006 dv1_2
+
+  ARCHITECTURAL BLUEPRINT (read fully — primary reference)
+    0500000_System_Architecture_Overview_dv1_24_Claude_Source.html
+      §12 Paper-Mode Dispatch Boundary Architecture
+      Diagram 7 (inline SVG)
+      §12.4 Synthetic Capital Ledger — Single-Owner
+              Architecture (PRIMARY for 0511005 PM
+              sourcing parity per PA-004 #4)
+
+  PAPER-AS-MASTER CASCADE REFERENCE SPECS (for 0511005
+  alignment)
+    0511001 dv1_5 (HR-WM-024 paper fill detection;
+                   HR-WM-032 paper ledger; HR-WM-033
+                   paper exits route through EC)
+    1011002 dv1_26 (§16A WM-PAPER-LEDGER-002
+                    PositionRecord schema extension
+                    fees_entry_usd; §16A.2 WM-PAPER-EXIT)
+    0511003 dv1_1 (NEW — sibling parent spec just
+                   authored TB00151h; HR-EE-013/014/015
+                   pattern for parent-spec paper rules)
+    0511004 dv1_3 (§6A EC-PAPER; HR-EC-013/014/015)
+    1011005 dv1_3 (§10A EC-PAPER-CODE-003(a)
+                   fees_entry_usd consumption)
+    0211005 dv1_3 (PT-MODE-001 SIMULATED FILLS
+                   description; PT-MODE-006 paper
+                   exit routing through EC)
+    1011006 dv1_1 (Position_Mirror_Coding_Spec —
+                   AA=10 child of 0511005)
+
+  CURRENT 0511005 BASELINE
+    0511005_Position_Mirror_Specification_dv1_0.txt
+      (pre-PA-001; baseline-drift-defense to verify
+       at cold load)
+
+============================================================
+3. COLD-LOAD VERIFICATION (FIVE-ITEM)
+============================================================
+
+  3.1 TB00000 v2_20 in /mnt/project/.
+
+  3.2 0311001 v1_6, 0311002 v1_10, 0311006 dv1_2 present.
+
+  3.3 0500000 dv1_24 .html present. DR-007.9 well-
+      formedness PASS (0 orphan close tags, 0 unclosed
+      elements at EOF, 0 parser exceptions).
+
+  3.4 Cascade reference specs at expected versions:
+      0511001 dv1_5
+      1011002 dv1_26
+      0511003 dv1_1 ★ NEW (verify dv1_1 not dv1_0
+                            present in /mnt/project/)
+      0511004 dv1_3
+      1011005 dv1_3
+      0211005 dv1_3
+      1011006 dv1_1
+      If 0511003 dv1_0 still present alongside dv1_1 in
+      /mnt/project/: HALT and report to Bill before
+      authoring (per 0311001 v1_6 DR-005 version
+      consistency: at most ONE version of any spec in
+      the project folder).
+
+  3.5 ★ BASELINE-DRIFT DEFENSE per ERROR-TB00151g-01
+      corrective.
+      For 0511005 dv1_0:
+        (a) project_knowledge_search content grep for
+            paper-as-master markers ("HR-WM-032",
+            "HR-PM-PAPER", "WM-PAPER-LEDGER", "PT-MODE",
+            "PA-001", "PAPER-AS-MASTER",
+            "paper_trading_mode", "paper_mode",
+            "paper-as-master").
+            Expected: ZERO matches.
+        (b) conversation_search "TB001xx 0511005
+            position mirror paper" — verify no session
+            between TB00147 and TB00151i silently
+            advanced 0511005 to a paper-as-master
+            version not in /mnt/project/.
+      If (a) returns matches OR (b) surfaces a paper-
+      as-master version of 0511005 not in /mnt/project/:
+      HALT and report to Bill before authoring.
+
+============================================================
+4. AUTHORING SCOPE — 0511005 dv1_0 -> dv1_1
+============================================================
+
+Add paper-as-master architectural rules to 0511005
+Position_Mirror_Specification. Reference 0500000 dv1_24
+§12 + Diagram 7 as architectural source-of-truth.
+
+Apply PA-004 dispatch-seam rules from the Position
+Mirror perspective:
+
+  PA-004 #4 (PRIMARY for 0511005) — POSITION MIRROR
+    SOURCING.
+      PAPER: Populated EXCLUSIVELY by the local
+             simulated-fill path (HR-WM-033). No
+             external Kraken event source.
+      LIVE:  Populated by Kraken executions channel
+             events and snap_orders reconciliation.
+
+  PA-004 #2 (cascade) — ORDER DISPATCH.
+      Mirror records updated at dispatch time
+      (record-at-dispatch rule, A-2). In paper mode,
+      WSManager simulates and writes at the seam
+      moment. In live mode, WSManager transmits and
+      writes at the seam moment. Same Mirror update
+      pathway in both modes (PA-005).
+
+  PA-004 #3 (cascade) — CAPITAL LEDGER.
+      Mirror records carry fees_entry_usd field
+      populated from synthetic ledger debit (paper)
+      or Kraken executions fees (live). Per 1011002
+      dv1_26 WM-PAPER-LEDGER-002 PositionRecord
+      schema extension and 1011005 dv1_3 EC-PAPER-
+      CODE-003(a) fees_entry_usd consumption on exit.
+
+Cascade with:
+  HR-WM-024 (paper fill detection in _handle_ticker;
+             0511001 dv1_5)
+  HR-WM-032 (paper ledger update; PositionRecord
+             fees_entry_usd capture; 0511001 dv1_5)
+  HR-WM-033 (paper exits route through EC; 0511001
+             dv1_5)
+  WM-PAPER-LEDGER-002 PositionRecord schema extension
+             (1011002 dv1_26)
+  EC-PAPER-CODE-003(a) fees_entry_usd consumption
+             (1011005 dv1_3)
+  PT-MODE-001 SIMULATED FILLS Mirror update
+             description (0211005 dv1_3)
+  PT-MODE-006 paper exit routing through EC (0211005
+             dv1_3)
+  HR-EE-013/014/015 parent-spec paper-as-master rules
+             pattern (0511003 dv1_1; analogous structure
+             for HR-PM-NNN rules in 0511005)
+
+Add new section §NA Paper Mode Position Mirror
+Behavior (PM-PAPER) following the 0511004 dv1_3 §6A
+EC-PAPER and 0511003 dv1_1 §5A EE-PAPER structural
+pattern:
+
+  PM-PAPER-001  PAPER-LIVE BYTE-IDENTICAL MIRROR PATH
+                (architectural principle — same
+                pm.update_resting_orders pathway in
+                both modes; only the data source
+                differs).
+  PM-PAPER-002  ENTRY RECORD POPULATION SOURCE
+                (paper: _simulate_entry_fill writes;
+                live: executions channel writes).
+  PM-PAPER-003  TP/EMERGSL ID PARITY
+                (paper: PAPER_TP_/PAPER_SL_ prefixed
+                IDs; live: Kraken-assigned IDs;
+                same record schema).
+  PM-PAPER-004  fees_entry_usd FIELD PARITY
+                (PositionRecord schema field
+                populated at entry-fill in both modes
+                per WM-PAPER-LEDGER-002 + EC-PAPER-
+                CODE-003(a) consumption).
+  PM-PAPER-005  SINGLE-WRITER (WSManager) PARITY
+                (PA-005 byte-identical: WSManager is
+                sole writer in both modes; HR-PM-009
+                read-only-via-helpers pattern unchanged).
+
+Add HR-PM-NNN (NEW) hard rules at parent-spec level
+mirroring the 0511003 dv1_1 HR-EE-013/014/015 pattern:
+
+  HR-PM-NEW    PAPER-LIVE BEHAVIORAL PARITY (Mirror
+               byte-identical; no mode-conditional
+               branches in Mirror code; mode is
+               WSManager's concern, not Mirror's).
+  HR-PM-NEW    SINGLE-WRITER ENFORCEMENT (only
+               WSManager writes; all other modules
+               READ via helpers; no race-creating
+               multi-writer paths in either mode).
+  HR-PM-NEW    fees_entry_usd FIELD MANDATORY
+               (PositionRecord schema field is
+               populated in both modes; absence in
+               live mode is a defect that breaks
+               PA-005 CIATS data flow per
+               EC-PAPER-CODE-003(a)).
+
+Update §11 Related Documents to add citations:
+  0500000 dv1_24 (architectural blueprint)
+  0511001 dv1_5 (dispatch seam owner; HR-WM-032/033)
+  0511003 dv1_1 (sibling parent spec; HR-EE-013/014/015)
+  0511004 dv1_3 (sibling parent spec; HR-EC-013/014/015)
+  0211005 dv1_3 (operational procedure; PT-MODE)
+  1011002 dv1_26 (WS Manager coding spec; §16A)
+  1011005 dv1_3 (Exit Controller coding spec; §10A
+                  EC-PAPER-CODE-003(a) fees_entry_usd
+                  consumption)
+  1011006 dv1_1 (AA=10 child if not already cited)
+
+Update revision history with full v2_20 §4.4-conformant
+FP/DP analysis (Option A defer / Option B parent-spec
+amendment / Option C absorb seam content; mirror
+0511003 dv1_1 §12 dv1_1 entry structure). 7-field DC
+header with current DocDate, dv1_1.
+
+============================================================
+5. STANDING RULES IN EFFECT
+============================================================
+
+  TB00000 v2_20 governs.
+  Paper trading only (PA-001 paper-as-master).
+  PA-004 four divergence points; PA-005 byte-identical
+    elsewhere.
+  Universe = TOKEN/USD + USDC + USDT (D-03 LOCKED).
+  Net 1:1.5 R:R sacred constraint.
+  RR-SCOPE-002 scope-constrictor: do NOT bundle
+    additional work into 0511005 amendment session.
+  RR-SCOPE-007/008/009 anti-silent-narrowing.
+  DR-006 single-turn delivery on every present_files.
+  PA-008 self-catch: "PA-MASTER self-caught — redrafting"
+    on any wrong-direction-of-mimicry framing.
+  ★ ERROR-TB00151g-01 corrective: NSI baseline lists
+    are NOT authoritative. conversation_search +
+    project_knowledge_search content grep MUST run
+    before accepting any baseline as work scope.
+  ★ TB00151f §4.5: PKS hits do NOT prove file presence.
+    /mnt/project/ frozen mount + Bill folder UI
+    authoritative.
+
+============================================================
+6. STEP A PRE-FLIGHT (per 0311002 v1_10 §8.2.5)
+============================================================
+
+  CHECK 1 DC-PREFLIGHT-001 PROJECT-FOLDER state per §2
+          above.
+  CHECK 2 DC-PREFLIGHT-002 GIT-STATE — TothBot_V2-Docs
+          clean and synced (0511003 dv1_1 NOT yet
+          committed; held for batch commit at TB00151j
+          per D-TB00151h-02). Last GitHub commit
+          remains the TB00151e cascade commit unless
+          Bill committed between sessions.
+  CHECK 3 DC-PREFLIGHT-003 — N/A (spec authoring only).
+  CHECK 4 DC-PREFLIGHT-004 STEP A REPORTING.
+  CHECK 5 DC-PREFLIGHT-005 — no mandated absences.
+  CHECK 6 DC-PREFLIGHT-006 ORIGIN INVESTIGATION — N/A
+          (constraint-additive amendment; RR-SCOPE-009
+          not triggered).
+  CHECK 7 DC-PREFLIGHT-007 ASSET INVENTORY — N/A (.txt
+          spec, no embedded assets).
+  CHECK 8 DC-PREFLIGHT-008 — N/A (no binary
+          deliverables).
+  CHECK 9 BASELINE-DRIFT DEFENSE per §3.5 (per ERROR-
+          TB00151g-01 corrective).
+
+============================================================
+7. REVISION HISTORY
+============================================================
+
+  v1_0  2026-05-07  First issue. Directed STREAM D
+                    Session 2 of 3: 0511005 Position_
+                    Mirror_Specification dv1_0 -> dv1_1
+                    PAPER-AS-MASTER amendment. Five-
+                    item cold-load verification including
+                    §3.5 BASELINE-DRIFT DEFENSE with
+                    0511003 dv1_1 added to cascade
+                    reference list. Authoring scope
+                    enumerates §NA PM-PAPER-001..005
+                    + new HR-PM-NNN rules + §11 cascade
+                    citations + §12 FP/DP rationale.
+                    GitHub commit deferred per
+                    D-TB00151h-02 (3-spec batch commit
+                    at TB00151j close).
+
+============================================================
+END TB00151i NEXT SESSION INSTRUCTIONS v1_0
+============================================================

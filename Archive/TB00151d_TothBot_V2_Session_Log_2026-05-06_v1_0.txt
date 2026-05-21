@@ -1,0 +1,461 @@
+DocDCN:     TB00151d
+DocTitle:   TothBot_V2_Session_Log_2026-05-06
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TBXXXXX_Session_Logs\TB00151d_TothBot_V2_Session_Log_2026-05-06_v1_0.txt
+DocDate:    05-06-2026
+DocTime:    07:30:00 UTC
+
+============================================================
+TB00151d TOTHBOT V2 SESSION LOG — 2026-05-06
+============================================================
+
+============================================================
+1. SESSION HEADER
+============================================================
+
+  Session ID:           TB00151d
+  Date:                 2026-05-06
+  Original mission:     TB00151c-carried STREAM B1/B2/B3
+                          STREAM B1: Diagrams 4-7 R0->R1
+                                     refresh + retag
+                          STREAM B2: 0311001 v1_5 -> v1_6
+                                     §15.12 amendment +
+                                     R2 reissue D1+D2
+                          STREAM B3: 0500000 dv1_23 -> dv1_24
+                                     full triplet regeneration
+  Actual mission:       DIVERTED to root-cause resolution of
+                        the 5-format proliferation document
+                        control failure (.txt + .docx + .pdf
+                        + _svg.txt + .png — 13 files for ONE
+                        controlled document).
+  Diversion authority:  Bill explicit directive mid-session:
+                        "Create '0500000_System_Architecture
+                        _Overview_dv1_24_Claude_Source' with
+                        the 'Images' embedded, in any format
+                        you want and lets test it."
+  Outcome:              HTML single-format proposal verified
+                        end-to-end on Bill side and Claude
+                        side. Format adoption decision and
+                        governance amendments deferred to
+                        TB00151e for execution under cold-
+                        load conditions.
+
+============================================================
+2. ROOT CAUSE OF FORMAT PROLIFERATION
+============================================================
+
+The 0500000 source-of-truth set had grown to 13 files for
+ONE controlled document:
+  1  .txt Claude Source
+  1  .docx
+  1  .pdf
+  4  _svg.txt SVG sibling files
+  6  .png raster sibling files
+
+Each new format was added to patch a problem the prior
+format created:
+
+  (1) .txt picked as canonical because plain-text-editable.
+      -> .txt cannot show diagrams when opened.
+  (2) .docx added so Bill could view diagrams embedded.
+      -> .docx settings.xml validation gate failures
+         recurring across sessions (TB00130 origin).
+  (3) .pdf added as backup viewable format.
+      -> Three formats now diverging across regenerations
+         (ERROR-TB00149-02 SVG-DROP root cause).
+  (4) _svg.txt added to store SVG vector sources separately
+      (CI-002, CI-003 prohibit inline binary embeds).
+      -> Bill must rename .svg <-> _svg.txt cyclically to
+         view locally vs upload. Multiple delete-and-re-
+         upload cycles resulted (TB00151b/c).
+  (5) .png added to store raster versions for .docx embed.
+      -> 13 files, three viewers, two rename cycles, no
+         single source of truth Bill can open and read.
+
+Fundamental mismatch: the canonical format (.txt) does not
+natively display embedded content. Every additional format
+was a patch to compensate. Compound patching produced the
+13-file proliferation.
+
+FIRST PRINCIPLES RESOLUTION:
+
+Pick a canonical format that satisfies ALL of:
+  (a) on the Anthropic-supported project upload list,
+  (b) plain-text editable and git-diffable,
+  (c) renders embedded SVG natively when Bill double-clicks,
+  (d) extracts cleanly as text for Claude to read,
+  (e) does not require sidecar asset files.
+
+Web search and Anthropic official help-page fetch
+confirmed the supported project upload formats:
+  Documents: PDF, DOCX, CSV, TXT, HTML, ODT, RTF, EPUB,
+             JSON, XLSX
+  Images:    JPEG, PNG, GIF, WebP
+Source: https://support.claude.com/en/articles/
+        8241126-upload-files-to-claude
+
+.svg is NOT on either list — confirms the empirical
+rejection observed in TB00151b/c.
+.html IS on the document list — qualifies.
+
+HTML is the ONLY format on the supported list that
+satisfies (a) through (e) simultaneously. Browsers render
+inline <svg> as a native HTML5 standard. The same file
+opens for Bill (browser renders text + diagrams), uploads
+to project knowledge unchanged, and reads cleanly as text
+for Claude.
+
+============================================================
+3. WORK PERFORMED THIS SESSION
+============================================================
+
+3.1 FORMAT-SUPPORT VERIFICATION
+    web_search and web_fetch against Anthropic
+    documentation. Confirmed .html accepted. Confirmed
+    .svg rejected.
+
+3.2 HTML SINGLE-FORMAT PROPOSAL
+    One file per controlled document. Diagrams embed as
+    inline <svg> elements. No sidecars. No .docx/.pdf
+    renders. No _svg.txt rename cycle. Asset reference
+    architecture (0311001 §15) deprecated for HTML-class
+    documents (CI-002 / CI-003 inline-binary prohibition
+    scoped to non-HTML only).
+
+3.3 TEST FILE AUTHORED
+    File:   0500000_System_Architecture_Overview_dv1_24
+            _Claude_Source.html
+    Size:   245,394 bytes
+    Source: dv1_23 _Claude_Source.txt content carried
+            forward via Python conversion script.
+    Diagrams:
+      Image1 Kraken API Connection      inline <svg>
+      Image2 Trading Pipeline           inline <svg>
+      Image3 Exit Architecture          inline <svg>
+      Image4 Regime Taxonomy            placeholder box
+      Image5 CIATS Architecture         placeholder box
+      Image6 Complete System            placeholder box
+      Image7 Paper Mode Dispatch        placeholder box
+    Pre-delivery validation:
+      DOCTYPE present                            PASS
+      <html>, <head>, <body> balanced            PASS
+      1,177 HTML tags total, all closed          PASS
+      DC header table with DocVersion dv1_24     PASS
+      3 inline <svg> elements with xmlns/viewBox PASS
+      4 placeholder figures correctly populated  PASS
+      Asset-reference prose mentions handled
+        correctly (no false-positive replacement
+        after build-script fix)                  PASS
+      Validated via Python HTMLParser            PASS
+
+3.4 BILL SIDE VERIFICATION
+    Test 1 — Download from chat to C: drive, double-click.
+      Browser renders text + diagrams.
+      Diagrams 1-3 render as proper SVG visual content.
+      Diagrams 4-7 render as orange dashed placeholder
+      boxes with "pending TB00151d STREAM B1" notes.
+      PASS.
+    Test 2 — Repeat: delete from C:, re-download, open.
+      Same result. PASS.
+    Test 3 — Upload to project folder via right-pane "+".
+      Click file in project folder UI to view.
+      Result: project file viewer displays raw HTML source
+      ("gibberish"). EXPECTED — the project file viewer
+      shows what Claude reads as text, not a rendered
+      preview. NOT a test failure.
+    Test 4 — Click "Open in Google Chrome" link in chat.
+      Browser renders text + diagrams. Same content as
+      Test 1. PASS.
+    Test 5 — Repeat upload via right-pane arrow function.
+      Same project-viewer raw source display (expected).
+      File LEFT in project knowledge for Claude side test.
+      PASS.
+    Bill verification summary: HTML format works on Bill
+    side. Browser renders text + diagrams whether file is
+    on C: drive or accessed via the chat link. Project
+    folder viewer raw display is expected behavior.
+
+3.5 CLAUDE SIDE VERIFICATION (THIS SESSION)
+    project_knowledge_search query: "0500000 System
+    Architecture Overview dv1_24 Claude Source HTML"
+    Search returned the .html file content with:
+      Full text extraction including DC header table   PASS
+      DocVersion dv1_24 readable as text               PASS
+      Format-note paragraphs intact                    PASS
+      Inline <svg> XML preserved as readable text      PASS
+      Placeholder figure HTML structure preserved      PASS
+      Prose body extracted with section structure      PASS
+
+    BONUS finding: Claude.ai project knowledge
+    preprocessor extracted the inline SVG content and
+    rendered it as visible images in the search result
+    (Diagram 1 Kraken API Connection rendered visually
+    plus a Diagram 6 image extracted from the project
+    PNG). Claude can therefore SEE diagrams visually in
+    addition to reading the SVG XML as text.
+
+    Filesystem mount check:
+      ls /mnt/project/0500000_..._dv1_24_..._Source.html
+      Result: file not present at filesystem mount layer.
+      Reason: KPL-003 mid-session-upload mount-frozen
+      visibility. project_knowledge_search uses live
+      index and saw the file; /mnt/project/ filesystem
+      mount was frozen at session start before Bill
+      uploaded. RR-SCOPE-008 followed:
+      project_knowledge_search ran FIRST before any
+      "missing" determination. File was successfully
+      read.
+      TB00151e cold-load expected to see the file at
+      /mnt/project/ filesystem mount layer.
+
+3.6 OVERALL TEST RESULT
+    HTML format passes ALL verification criteria
+    specified by Bill in the test directive:
+      "If I can download it to my C: drive and open it
+       and read it"                                    PASS
+      "AND if I can add it to the Project Folder"      PASS
+      "we will do a Chat Hand Off to see if Claude can
+       open and read it"
+        verified this session;
+        cold-load re-test scheduled in TB00151e        PASS
+
+============================================================
+4. WHAT FORMAT ADOPTION REQUIRES (DEFERRED TO TB00151e)
+============================================================
+
+The following governance amendments are required if
+TB00151e cold-load verification confirms the test result.
+NONE executed this session — all are TB00151e scope.
+
+4.1 TB00000 v2_19 -> v2_20 amendments
+    §4.1 DR-002 RETIRED. Three-format triplet
+    requirement (.txt + .docx + .pdf) for 0500000
+    replaced by single-format HTML for diagram-bearing
+    controlled documents.
+    §4.1 DR-005 AMENDED. Canonical naming pattern
+    updated:
+      0500000_..._dvN_M_Claude_Source.html
+    No additional .docx/.pdf naming patterns.
+    §4.1 DR-007 SCOPED. Content-completeness validation
+    rules apply unchanged to HTML output. Asset-
+    reference parity (DR-007.1) reframed for HTML:
+    parity is between source <svg> count and rendered
+    <svg> count (always 1:1, identity).
+    §4.1.7 recurrence count incremented from 1 to 2.
+
+4.2 0311001 v1_5 -> v1_6 amendments
+    §15 EXTERNAL ASSET ARCHITECTURE rewritten. Scoped
+    explicitly to non-HTML controlled documents. For
+    HTML documents, inline <svg> IS the canonical
+    embedding (CI-002 and CI-003 inline-binary-embed
+    prohibition overridden for HTML scope only — HTML's
+    structural contract permits and expects inline
+    embedded content).
+    New §15.13 HTML CANONICAL FORMAT FOR DIAGRAM-BEARING
+    DOCUMENTS. Single file. No sidecars. No _svg.txt.
+    No .png. No .docx. No .pdf.
+    V-020..V-036 asset-validation rules remain in force
+    for non-HTML documents. New V-037 added for HTML:
+    every <figure class="diagram"> contains either one
+    inline <svg> (rendered) or one .placeholder-box
+    (pending authoring).
+
+4.3 0311006 dv1_1 -> dv1_2 amendments
+    KPL-004 NEW: Claude.ai project knowledge upload UI
+    does not accept .svg extension. Source: Anthropic
+    official help page. Workaround historically used:
+    rename .svg <-> _svg.txt for upload. Workaround
+    retired by HTML adoption.
+    KPL-005 NEW: HTML is the canonical format for
+    diagram-bearing controlled documents in TothBot V2.
+    Browser-rendered when opened. Text-extracted by
+    Claude.ai project knowledge. Inline <svg> rendered
+    by preprocessor as visible images (verified
+    TB00151d §3.5).
+
+4.4 0311002 v1_9 -> v1_10 amendments
+    STEP A pre-flight DC-PREFLIGHT-007 (asset reference
+    parity) and DC-PREFLIGHT-008 (asset presence
+    verification) reframed for HTML scope: applies to
+    inline <svg> count (parity check) and inline <svg>
+    well-formedness (presence check).
+
+4.5 13-FILE RETIREMENT CASCADE
+    After TB00151e governance amendments commit, the
+    following 13 files retire from project knowledge
+    folder and from GitHub TothBot_V2-Docs:
+      0500000_..._dv1_23_Claude_Source.txt
+      0500000_..._dv1_23.docx
+      0500000_..._dv1_23.pdf
+      0500000_Context_T1_R0_System_Context_svg.txt
+      0500000_Context_T1_R0_System_Context.png
+      0500000_Image1_..._svg.txt
+      0500000_Image1_....png
+      0500000_Image2_..._svg.txt
+      0500000_Image2_....png
+      0500000_Image3_..._svg.txt
+      0500000_Image3_....png
+      (+ duplicate sibling PNG/SVG variants observed in
+       /mnt/project/ listing — confirm full inventory at
+       TB00151e cold-load)
+    Replaced by single file:
+      0500000_..._dv1_24_Claude_Source.html
+    Net reduction: 13 -> 1.
+
+============================================================
+5. STREAM B1/B2/B3 ORIGINAL MISSION DISPOSITION
+============================================================
+
+  STREAM B1 (Diagrams 4-7 R0->R1 refresh + retag):
+    Not started. Will execute in TB00151e or later
+    AFTER HTML format adoption commits. Diagrams 4-7
+    will be authored as inline <svg> directly into
+    dv1_24 .html (no separate _svg.txt files).
+  STREAM B2 (0311001 §15.12 amendment + R2 reissue
+             Diagrams 1+2):
+    Not started. Subsumed and SUPERSEDED by HTML format
+    adoption package (§4 above). The §15.12 amendment
+    is no longer needed because §15 itself is being
+    scoped to non-HTML documents only.
+  STREAM B3 (0500000 dv1_23 -> dv1_24 supersession):
+    PARTIALLY EXECUTED (dv1_24 .html test file authored
+    this session, but as a TEST file pending format
+    adoption decision). Final supersession with full
+    content + all 7 diagrams + revision history entry
+    + GitHub commit deferred to TB00151e.
+
+The mission diversion was authorized, productive, and
+necessary. The original STREAM B1/B2/B3 work would have
+proceeded under the broken 5-format proliferation
+architecture, perpetuating the document-control failure
+that motivated TB00151d.
+
+============================================================
+6. CLAUDE ERRORS THIS SESSION
+============================================================
+
+None of the §4.1 / §4.2 / §4.3 / §4.4 self-catch signals
+fired this session. RR-SCOPE-008 was actively followed
+at §3.5 (project_knowledge_search ran BEFORE any "file
+missing" determination, demonstrating the rule's value).
+
+One minor cosmetic defect in initial test file build:
+  Indented prose mentions of the literal string
+  "[Asset file:" (in §15 syntax discussion) were
+  misclassified as actual asset references and wrapped
+  in <p class='asset-ref'> tags, breaking surrounding
+  preformatted text flow.
+  Cause: regex matcher did not check leading whitespace.
+  Fix: matcher amended to require column-zero start;
+  rebuild produced clean output. Bill received the
+  fixed version (post-str_replace).
+  Severity: low (cosmetic, no information loss).
+  Class: build-script defect, not governance defect.
+  No RR-* rule violation.
+
+============================================================
+7. OPEN ITEMS UPDATED
+============================================================
+
+  OI-080 CONTENT-INTEGRITY VIOLATION RECURRENCE TRACKING
+    Cumulative count incremented from 1 to 2.
+    Entry 2: TB00151d format-proliferation systemic
+             defect (5-format growth from 1-format
+             canonical, recurring delete/re-upload
+             cycles).
+    Closes via TB00151e governance amendment package.
+
+  OI-NEW (TB00151d-01) HTML FORMAT ADOPTION DECISION
+    Status: PROPOSED (this session).
+    Resolution: TB00151e governance amendment package.
+    Scope: TB00000 §4.1 amendments;
+           0311001 §15 + new §15.13 + V-037;
+           0311006 KPL-004 + KPL-005;
+           0311002 STEP A reframing.
+
+  OI-NEW (TB00151d-02) 13-FILE RETIREMENT CASCADE
+    Status: PENDING TB00151e commit of OI-TB00151d-01.
+    Scope: Delete 13 dv1_23-era files from project
+           knowledge folder + git rm from
+           TothBot_V2-Docs after dv1_24 .html commits.
+
+  TB00151c-carried OI items (STREAM B1/B2/B3 scope):
+    Subsumed by TB00151e mission scope. Tracked under
+    OI-TB00151d-01/02.
+
+============================================================
+8. HANDOFF SCOPE TO TB00151e
+============================================================
+
+TB00151e is the verification + adoption + execution
+session. Scope:
+
+  STAGE 1 — COLD-LOAD VERIFICATION (mandatory pre-flight)
+    Read /mnt/project/0500000_..._dv1_24_..._Source.html
+    via filesystem mount + project_knowledge_search.
+    Confirm:
+      DC header parses
+      DocVersion dv1_24 visible
+      3 inline <svg> elements present
+      4 placeholder boxes present
+      Total HTML tags balanced
+      File size ~245,394 bytes (or current updated)
+    If verification PASSES — proceed to STAGE 2.
+    If verification FAILS — diagnose root cause, escalate
+    to Bill before proceeding.
+
+  STAGE 2 — GOVERNANCE AMENDMENT AUTHORING
+    Author the four amendment packages per §4.1-4.4
+    above. Single delivery batch. Per DR-006.
+
+  STAGE 3 — DV1_24 PRODUCTION FILE COMPLETION
+    Author Diagrams 4, 5, 6, 7 as inline <svg> directly
+    into dv1_24 .html (replacing the 4 placeholder
+    boxes). Update revision history. Update DC header
+    DocDate/DocTime.
+
+  STAGE 4 — VALIDATION + COMMIT + RETIREMENT
+    Run pre-delivery validation per amended §4.1.4
+    procedure on dv1_24 .html.
+    Commit dv1_24 .html to GitHub TothBot_V2-Docs.
+    Retire 13 dv1_23-era files (delete from project
+    knowledge folder + git rm from TothBot_V2-Docs).
+
+============================================================
+9. SESSION CLOSE
+============================================================
+
+Bill closing message: "I'm going to bed. we will pick this
+up tomorrow, actually later today."
+
+Session closes with:
+  HTML format proposal verified end-to-end.
+  TB00151d Session Log v1_0 (this document).
+  TB00151d Next Session Instructions v1_0 (companion).
+  TB00151e Chat Start Language v1_0 (companion).
+  HTML test file remains in project knowledge folder
+    awaiting TB00151e cold-load re-verification.
+  dv1_23-era 13 files remain in project knowledge
+    folder pending TB00151e retirement cascade.
+
+============================================================
+10. REVISION HISTORY
+============================================================
+
+  v1_0  2026-05-06  First issue. Documents the TB00151d
+                    mission diversion from STREAM B1/B2/B3
+                    to root-cause format-proliferation
+                    resolution. Records HTML single-format
+                    proposal, test file authoring, dual-
+                    side verification (Bill C: drive +
+                    project upload + Chrome render; Claude
+                    project_knowledge_search + filesystem
+                    mount KPL-003 reconciliation). Defers
+                    governance amendment package and
+                    dv1_24 production-file completion to
+                    TB00151e.
+
+============================================================
+END OF TB00151d SESSION LOG v1_0
+============================================================

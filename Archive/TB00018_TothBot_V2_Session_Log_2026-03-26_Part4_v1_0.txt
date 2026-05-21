@@ -1,0 +1,383 @@
+DocDCN:     TB00018
+DocTitle:   TothBot_V2_Session_Log_2026-03-26_Part4
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\OneDrive\TothBot\TB00018_TothBot_V2_Session_Log_2026-03-26_Part4_v1_0.txt
+DocDate:    03-26-2026
+DocTime:    23:59:59 UTC
+
+============================================================
+TOTHBOT V2 — SESSION LOG 2026-03-26 PART 4
+============================================================
+
+Read TB00001 through TB00017 first.
+
+This session applied all pending architecture document
+updates. Zero new findings. Zero new ARs. Zero parking
+lot additions. Two documents updated and delivered.
+
+============================================================
+1. SESSION IDENTITY
+============================================================
+
+Session date:     March 26, 2026 (Part 4)
+Session type:     Architecture Document Update Session
+                  All pending changes applied.
+                  Zero new findings.
+Prior session:    TB00017 (2026-03-26 Part 3)
+
+Documents read:   TB00000 v2_5, TB00017 v1_0
+                  0311001 dv1_2, 0311002 dv1_7
+                  0500000 dv1_12 (Claude Source)
+                  All coding specs (current versions)
+                  All session logs TB00001 through TB00017
+
+============================================================
+2. SESSION WORK — COMPLETE RECORD
+============================================================
+
+------------------------------------------------------------
+2.1 FULL ARCHITECTURE EXPERT READ
+------------------------------------------------------------
+
+Complete read of all project files performed at session
+open. All documents, all coding specs, all session logs,
+0500000 Claude Source dv1_12 in full.
+
+Expert knowledge state confirmed: complete and current
+as of TB00017. No gaps in understanding.
+
+Pending changes identified:
+
+  PENDING 1: 0500000 dv1_13
+    14 text-only changes across 3 sessions (TB00015,
+    TB00016, TB00017). AR-044 through AR-056 + AR-047
+    amendment. No diagram changes.
+
+  PENDING 2: 1011014 dv1_1
+    Section 2 (Mid-Session WS Reconnect Sequence).
+    AR-056. Specified in TB00017 actions item (pp).
+
+  NOT PENDING (confirmed already in project):
+    1011002 dv1_9 — already applied (actions oo complete)
+    0411001 dv1_8 — already applied (actions qq complete)
+
+------------------------------------------------------------
+2.2 1011014 dv1_1 — SECTION 2 ADDED
+------------------------------------------------------------
+
+1011014 Startup_Sequence_Coding_Spec updated from dv1_0
+to dv1_1. Section 2 (Mid-Session WS Reconnect Sequence)
+added per AR-056.
+
+Section 2 content:
+  SS-RECON-001 through SS-RECON-016
+  11-step reconnect sequence fully specified.
+
+Key rules in Section 2:
+  - Mid-session reconnect is DISTINCT from startup.
+  - portfolio_baseline_USD: NEVER reset on reconnect.
+  - drawdown_pct: PRESERVED across reconnect.
+  - system_state (halt/pause): PRESERVED.
+  - ATR/EMA caches: PRESERVED unless gap > 15 minutes.
+  - Position Mirror: reconciled via snap_orders comparison.
+  - Positions closed during gap (TP/emergSL fired while
+    disconnected): detected via Position Mirror vs
+    snap_orders comparison. CIATS Trade Outcome Bus fired
+    for each gap-closed position.
+  - Pending Order Registry: reconciled against snap_orders.
+  - Pipeline evaluations: PROHIBITED during reconnect.
+    Candle events queued during reconnect are DISCARDED.
+  - Fatal reconnect: 10 attempts/120 seconds → systemd
+    restart → full startup sequence (Section 1).
+  - Invariant verification post-reconnect (SS-RECON-016).
+
+------------------------------------------------------------
+2.3 0500000 dv1_13 — 14 CHANGES APPLIED
+------------------------------------------------------------
+
+0500000 System_Architecture_Overview updated from dv1_12
+to dv1_13. All 14 pending changes applied.
+
+SOURCE: TB00015 changes 1-6 (AR-044 through AR-049).
+        TB00016 changes 7-11 (AR-050 through AR-053
+                               + AR-047 amendment).
+        TB00017 changes 12-14 (AR-054 through AR-056).
+
+CHANGES APPLIED:
+
+  CHANGE 1 — AR-044 (TB00015):
+    Startup warm-up via REST GetOHLCData.
+    GetOHLCData(5) → ATR(14) seed.
+    GetOHLCData(60) → EMA(20/50) seed.
+    GetOHLCData(1440) → Regime seed.
+    asyncio.gather() across pairs. 1.1s intra-pair stagger.
+    WARM_UP/READY pair state machine defined.
+
+  CHANGE 2 — AR-045 (TB00015):
+    OHLC candle-close detection via interval_begin change.
+    last_interval_begin tracked per symbol.
+    Fire pipeline only on interval_begin change.
+    Do NOT use wall clock for candle detection.
+
+  CHANGE 3 — AR-046 (TB00015):
+    emergSL triggers.reference="last" explicit in all
+    batch_add calls. Never rely on defaults for crash
+    protection parameters. Never use "index".
+
+  CHANGE 4 — AR-047 (TB00015, amended TB00016):
+    ALL price/qty rounding via Decimal.quantize() —
+    NEVER math.floor/ceil. Float binary representation
+    causes precision errors. All Kraken API values:
+    Decimal(str(value)) immediately on receipt.
+    Four rounding ops: entry ROUND_DOWN, qty ROUND_DOWN,
+    TP ROUND_UP, emergSL trigger ROUND_DOWN.
+
+  CHANGE 5 — AR-048 (TB00015):
+    Exit Controller MAE uses bid price (not last) for
+    long positions. bid = realizable exit value.
+    Drawdown formula also uses bid. Consistent with
+    event_trigger:bbo choice.
+
+  CHANGE 6 — AR-049 (TB00015):
+    Formal 10-step startup sequence. No pipeline until
+    at least one READY pair. Full spec in 1011014.
+
+  CHANGE 7 — AR-050 (TB00016):
+    Balances channel: use wallets[type=spot][id=main]
+    .balance ONLY. Top-level balance includes earn/
+    staking wallet — NOT tradeable capital.
+
+  CHANGE 8 — AR-051 (TB00016):
+    Portfolio for SIZING = spot_usd_balance (cash only).
+    Does NOT include MTM of open positions.
+    tradeable_USD = portfolio_USD × tradeable_pct.
+    per_trade_USD = tradeable_USD × per_trade_pct.
+
+  CHANGE 9 — AR-052 (TB00016):
+    Drawdown baseline = spot_usd_balance at startup.
+    Set ONCE. NEVER reset on reconnect.
+    Current portfolio (drawdown) = cash + bid×qty.
+    Session pause 5%, full halt 10%. No auto-close.
+
+  CHANGE 10 — AR-053 (TB00016):
+    Pending Order Registry. Self-tracks USD committed
+    to outstanding entry orders. Gate 7 checks
+    available_USD = balance − pending commitments.
+    Prevents overcommitment on simultaneous pipeline
+    activations.
+
+  CHANGE 11 — AR-047 amendment (TB00016):
+    Original AR-047 used math.floor/ceil. Amended to
+    Decimal.quantize() per BP-DEC-001 through -008
+    in 1011001 Engineering_Best_Practices dv1_4.
+
+  CHANGE 12 — AR-054 (TB00017):
+    Entry order partial fill + expiry/cancel creates
+    unprotected open position. exec_type=expired or
+    canceled with cum_qty > 0: recalculate TP/emergSL
+    from avg_price, dispatch batch_add, enter Position
+    Mirror. If below qty_min/cost_min: market sell.
+
+  CHANGE 13 — AR-055 (TB00017):
+    Dead Man's Switch (cancel_all_orders_after)
+    EXPLICITLY PROHIBITED. Cancels emergSL orders —
+    destroys crash protection. Hard rule. Code review
+    must reject any PR containing this call.
+
+  CHANGE 14 — AR-056 (TB00017):
+    Mid-session WS reconnect sequence (11 steps)
+    distinct from startup. Never reset
+    portfolio_baseline_USD or drawdown on reconnect.
+    Detect positions closed during gap. Fire CIATS
+    Trade Outcome Bus. Full spec in 1011014 Section 2.
+
+------------------------------------------------------------
+2.4 0500000 dv1_13 — THREE-FORMAT DELIVERY
+------------------------------------------------------------
+
+All three required formats produced and delivered:
+
+  FORMAT 1: Claude Source .txt
+    File: 0500000_System_Architecture_Overview_dv1_13
+          _Claude_Source.txt
+    Size: 162 KB
+    Contains: Complete document text + all 6 SVG
+              diagrams as embedded plain text.
+    Purpose: Upload to Claude project for future
+             updates. Claude reads this file for all
+             0500000 changes.
+
+  FORMAT 2: .docx
+    File: 0500000_System_Architecture_Overview_dv1_13
+          .docx
+    Size: 1.2 MB
+    Contains: Complete formatted Word document with
+              all 6 diagrams embedded as PNG (rendered
+              at 1.5x scale from SVG source).
+    Purpose: GitHub commit to TothBot-V2-Docs.
+    Produced via: docx-js build → LibreOffice re-save
+                  (removes protected view flag).
+
+  FORMAT 3: .pdf
+    File: 0500000_System_Architecture_Overview_dv1_13
+          .pdf
+    Size: 1.3 MB
+    Contains: Complete PDF converted from .docx via
+              LibreOffice.
+    Purpose: Bill's readable copy. Stored on OneDrive.
+    Path: C:\Users\wstot\OneDrive\TothBot\
+
+============================================================
+3. DOCUMENTS PRODUCED THIS SESSION
+============================================================
+
+  0500000  System_Architecture_Overview  dv1_13  ★
+           (14 text-only changes: AR-044 through AR-056
+            + AR-047 amendment. No diagram changes.)
+           Three formats: Claude Source .txt, .docx, .pdf
+
+  1011014  Startup_Sequence_Coding_Spec  dv1_1   ★
+           (Section 2: Mid-Session WS Reconnect Sequence
+            added. SS-RECON-001 through SS-RECON-016.)
+
+  TB00018  This session log               v1_0   ★
+
+★ = Produced this session
+
+============================================================
+4. DOCUMENT INVENTORY — CURRENT STATE
+============================================================
+
+SESSION LOGS:
+  TB00001 through TB00018 (all v1_0)
+
+PHASE 1 DOCUMENTS (unchanged):
+  0000000  Ethics_and_Safety                  dv1_0
+  0100000  Management                         dv1_0
+  0200000  Operations                         dv1_0
+  0300000  Governance                         dv1_0
+  0310000  Governance_Procedures_Anchor       dv1_0
+  0311001  Namespace_Specification            dv1_2
+  0311002  Document_Creation_Workflow         dv1_7
+  0311003  Versioning_Procedure               dv1_0
+  0311004  Document_Creation_and_Approval     dv1_0
+  0311005  System_Definitions_and_Terminology dv1_0
+
+WORKING DRAFT CODING SPECS (current authoritative):
+  0411001  Kraken_WS_v2_Specification         dv1_8
+  1011001  Engineering_Best_Practices         dv1_4
+  1011002  WS_Manager_Coding_Spec             dv1_9
+  1011010  CIATS_Coding_Spec                  dv1_2
+  1011011  Risk_Engine_Coding_Spec            dv1_1
+  1011012  Regime_Engine_Coding_Spec          dv1_2
+  1011013  VPS_Deployment_Coding_Spec         dv1_2
+  1011014  Startup_Sequence_Coding_Spec       dv1_1  ★ UPDATED
+
+SYSTEM ARCHITECTURE:
+  0500000  dv1_13  ★ UPDATED
+           (Claude Source .txt, .docx, .pdf — all current)
+
+SUPERSEDED — DO NOT USE:
+  0500000  dv1_12 and all prior versions
+  1011014  dv1_0
+
+============================================================
+5. OPEN ITEMS — CURRENT STATE
+============================================================
+
+  OI-001  SSS signal generation — Phase 5-6 work
+  OI-002  Asset selection universe — Phase 5-6 work
+  OI-003  Exit Controller Layer 1 full spec — Phase 5-6
+  OI-004  Entry limit placement — Phase 5-6 work
+  OI-005  Selection Controller 6-gate spec — Phase 5-6
+  Nothing in Phase 1-4 blocked.
+
+============================================================
+6. PARKING LOT — CURRENT STATE
+============================================================
+
+  PL-003  TRACKING: Pathway 1 GitHub automation.
+  All other items: Resolved. Zero new additions.
+
+============================================================
+7. PENDING CHANGES STATUS — ZERO
+============================================================
+
+All pending changes from TB00015, TB00016, and TB00017
+are now applied. No pending changes remain outstanding.
+
+  TB00015 changes (AR-044 through AR-049): APPLIED ✅
+  TB00016 changes (AR-050 through AR-053
+                   + AR-047 amendment):    APPLIED ✅
+  TB00017 changes (AR-054 through AR-056): APPLIED ✅
+  TB00017 action (pp) 1011014 dv1_1:       APPLIED ✅
+
+============================================================
+8. BILL ACTIONS REQUIRED
+============================================================
+
+  (uu) Download all three 0500000 dv1_13 files:
+         0500000_System_Architecture_Overview_dv1_13.pdf
+         0500000_System_Architecture_Overview_dv1_13.docx
+         0500000_System_Architecture_Overview_dv1_13
+           _Claude_Source.txt
+  (vv) Download 1011014 dv1_1.
+  (ww) Download TB00018 (this session log).
+  (xx) Approve 0500000 dv1_13.
+  (yy) Approve 1011014 dv1_1.
+  (zz) Store PDF to OneDrive:
+         C:\Users\wstot\OneDrive\TothBot\
+           0500000_System_Architecture_Overview_dv1_13.pdf
+  (aaa) Commit .docx to GitHub:
+          TothBot-V2-Docs/05XXXXX_System_Architecture/
+            0500000_System_Architecture_Overview_dv1_13.docx
+  (bbb) Upload for next session:
+          TB00001 through TB00018 (all session logs)
+          All Phase 1 documents (0000000 through 0311005)
+          0411001 dv1_8
+          1011001 dv1_4
+          1011002 dv1_9
+          1011010 dv1_2
+          1011011 dv1_1
+          1011012 dv1_2
+          1011013 dv1_2
+          1011014 dv1_1 (this session)
+          0500000_System_Architecture_Overview_dv1_13
+            _Claude_Source.txt (REPLACE dv1_12)
+
+============================================================
+9. NEXT SESSION — WHERE WE PICK UP
+============================================================
+
+TB00017 recommendation stands: one more targeted 10-search
+FP/DP validation pass focused on:
+  - Exit Controller Layer 1 trigger definitions (OI-003)
+  - CIATS Trade Outcome Bus complete field specification
+  - Logger async queue complete field specification
+  - Any remaining operational edge cases
+
+After that pass, if zero findings → architecture layer
+is complete and coding can begin.
+
+============================================================
+10. REVISION HISTORY
+============================================================
+
+  v1_0  03-26-2026  Initial session log. Architecture
+                    document update session. Zero new
+                    findings. Zero new ARs. Zero parking
+                    lot additions. All pending changes
+                    from TB00015, TB00016, TB00017 applied.
+                    0500000 updated to dv1_13 (14 changes:
+                    AR-044 through AR-056 + AR-047 amendment).
+                    1011014 updated to dv1_1 (Section 2:
+                    Mid-Session WS Reconnect Sequence,
+                    SS-RECON-001 through SS-RECON-016).
+                    All three 0500000 formats delivered:
+                    Claude Source .txt, .docx, .pdf.
+                    Zero pending changes remain.
+
+============================================================
+END OF SESSION LOG
+============================================================

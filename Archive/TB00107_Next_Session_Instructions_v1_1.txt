@@ -1,0 +1,477 @@
+DocDCN:     TB00107_NSI
+DocTitle:   Next_Session_Instructions_for_Claude_Code
+DocVersion: v1_1
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TBXXXXX_Session_Logs\TB00107_Next_Session_Instructions_v1_1.txt
+DocDate:    04-21-2026
+DocTime:    23:45:00 UTC
+
+============================================================
+NEXT SESSION INSTRUCTIONS — CLAUDE CODE
+TB00108 — BUNDLED DEPLOY OF OI-023 + OI-022 + OI-014
+(dv1_21 -> dv1_22)
+============================================================
+
+This file is a local reference for Bill only. NOT uploaded
+to the Claude project folder.
+
+PAPER TRADING ONLY. NO REAL MONEY.
+
+============================================================
+SECTION 1 — WHAT THIS SESSION DOES
+============================================================
+
+TB00107 (previous session, Claude Chat) discovered a
+CRITICAL data loss defect (OI-023) in trade record storage
+and pivoted from observation close-out to a new bundled
+deploy. TB00107 NSI v1_0 (Claude Chat observation close)
+was superseded by this NSI v1_1.
+
+TB00108 (this session, Claude Code) is a CODE SESSION.
+Scope: produce full files (no patches) for a bundled
+deploy addressing three open items.
+
+  AI-1  Fix OI-023 DEFECT-TRADE-RECORD-001 (CRITICAL)
+        Add append-only annual trade record file.
+        Modify logger.py to write TRADE_CLOSE events to
+        BOTH tothbot.log (diagnostics, current behavior)
+        AND /home/tothbot/records/trades_<YYYY>.jsonl
+        (permanent, append-only, no rotation, one JSON
+        per line). Update 1011007 Logger_Coding_Spec to
+        specify the new permanent record stream.
+
+  AI-2  Fix OI-022 DEFECT-OBSERVABILITY-ALERT-SENT-001
+        (LOW). Successful alert sends currently emit no
+        structured event. Add one logger.info call in
+        the alert success path of logger.py emitting an
+        ALERT_SENT event. Update 1011007 to document
+        the new event.
+
+  AI-3  Fix OI-014 startup_sequence stale xrefs (LOW).
+        Inspect startup_sequence.py and 1011014
+        Startup_Sequence_Coding_Spec for any references
+        to module names, file paths, spec DCNs, or
+        version numbers that have changed in the meantime.
+        Update to current state. No behavior change —
+        documentation / comment cleanup only.
+
+Files expected to change:
+
+  tothbot/logger.py               dv1_3 -> dv1_4
+                                  (AI-1 + AI-2 combined)
+  tothbot/startup_sequence.py     dv1_8 -> dv1_9
+                                  (AI-3, if code changes
+                                  are needed; spec-only
+                                  if not)
+
+  1011007 Logger_Coding_Spec      dv1_3 -> dv1_4
+  1011014 Startup_Sequence_Spec   dv1_6 -> dv1_7
+  1010000 Trading_System_Coding_Anchor
+                                  dv1_10 -> dv1_11
+                                  (registry update)
+
+  0511006 Logger_Specification    dv1_0 -> dv1_1
+                                  IF architectural change
+                                  is needed for two-stream
+                                  record architecture
+                                  (Claude Code decides)
+
+  TB00108 session log (new)
+  TB00108 Bill Actions (new)
+
+============================================================
+SECTION 2 — PRE-FLIGHT CHECKLIST
+============================================================
+
+Before launching Claude Code, confirm:
+
+  [ ] TB00107 v1_1 saved to:
+      C:\Users\wstot\GitHub\TothBot\TBXXXXX_Session_Logs\
+
+  [ ] TB00107 v1_1 uploaded to Claude project folder.
+      TB00107 v1_0 deleted from Claude project folder
+      (if it was uploaded earlier).
+      TB00106 session log may be removed from Claude
+      project folder (TB00107 supersedes it for context).
+
+  [ ] TothBot_V2-Docs local repo clean and up-to-date:
+      cd C:\Users\wstot\GitHub\TothBot\TothBot_V2-Docs
+      git status      (expect: clean)
+      git pull origin master
+      (expect: HEAD at 9528097 from TB00106)
+
+  [ ] TothBot_V2-Code local repo clean and up-to-date:
+      cd C:\Users\wstot\GitHub\TothBot\TothBot_V2-Code
+      git status      (expect: clean)
+      git pull origin master
+      (expect: HEAD at ebc93cf from TB00106)
+
+  [ ] VPS still running dv1_21 (verify only, do NOT touch):
+      ssh root@87.99.141.44
+      systemctl status tothbot --no-pager
+      (expect: Active since 2026-04-21 18:07:58 UTC,
+       Main PID 217309)
+      exit
+
+============================================================
+SECTION 3 — LAUNCH CLAUDE CODE
+============================================================
+
+Step A — Open PowerShell at the parent folder:
+
+  cd C:\Users\wstot\GitHub\TothBot
+
+Step B — Launch Claude Code:
+
+  claude
+
+Step C — When Claude Code opens, verify access to all
+three subfolders:
+  TBXXXXX_Session_Logs\
+  TothBot_V2-Code\
+  TothBot_V2-Docs\
+
+============================================================
+SECTION 4 — KICKOFF PROMPT TO PASTE INTO CLAUDE CODE
+============================================================
+
+Copy everything between the BEGIN and END markers and
+paste as the first message to Claude Code.
+
+---------------- BEGIN KICKOFF PROMPT ----------------
+
+PAPER TRADING ONLY. NO REAL MONEY. PAPER TRADING ONLY.
+
+NO PATCHES. Full file delivery only. Full document control
+per 0311001, 0311002, 0311003, 0311004. Every code change
+= new version = full file delivered as .txt per DR-001.
+All deliverables in ONE BATCH per DR-003.
+
+SESSION CONTEXT
+===============
+
+You are Claude Code working on TothBot V2. Bill is the
+sole operator. This is TB00108, a CODE SESSION that
+executes a bundled deploy of three open items.
+
+Prior session chain:
+  TB00105  Claude Chat — closed 42.5h observation of
+                          dv1_20. Close was subsequently
+                          invalidated by 6 overnight
+                          crashes.
+  TB00106  Claude Code — produced bundled-deploy files
+                          for AI-1 + AI-2 + AI-3
+                          (dv1_20 -> dv1_21). Did not
+                          commit or deploy.
+  TB00107  Claude Chat — investigated 6 overnight
+                          crashes. Executed TB00106 Bill
+                          Actions STEPS B-G. Deployed
+                          dv1_21 at 2026-04-21 18:07:58
+                          UTC. Opened observation window.
+                          Mid-session discovered CRITICAL
+                          defect OI-023 (trade records
+                          lost to log rotation within ~6
+                          days). Pivoted: burn
+                          observation, bundle
+                          OI-023+OI-022+OI-014 into this
+                          session.
+
+THIS SESSION (TB00108) SCOPE
+============================
+
+Produce full files for a bundled deploy of three fixes.
+All three touch the Logger module; AI-1 and AI-2 share
+one logger.py version bump.
+
+AI-1 — OI-023 DEFECT-TRADE-RECORD-001 (CRITICAL)
+------------------------------------------------
+
+Problem:
+  TRADE_CLOSE records are written only to tothbot.log.
+  tothbot.log is managed by RotatingFileHandler with
+  limited retention (~6 days observed on VPS). Any trade
+  closed more than ~6 days ago is permanently lost.
+  Breaks CIATS 200-trade statistical floor, IRS Form
+  8949 recordkeeping, and audit trail.
+
+Fix specification (LOCKED by TB00107 Section 3.6 FP/DP
+analysis — do not re-derive):
+
+  Location:  /home/tothbot/records/trades_<YYYY>.jsonl
+             where <YYYY> is the current UTC calendar
+             year at time of write. Rolls over at
+             2026-01-01 00:00:00 UTC -> trades_2027.jsonl.
+
+  Contents:  TRADE_CLOSE records only. No other event
+             types. Full record per 1011007 Section 7
+             TRADE_CLOSE contract — identical payload
+             as written to tothbot.log.
+
+  Format:    JSONL (one JSON object per line, newline-
+             delimited). Match existing tothbot.log
+             serialization exactly. Decimal values as
+             strings. Timestamps as ISO 8601 UTC.
+
+  Retention: PERMANENT. No rotation. No truncation. No
+             size cap. Append-only writes.
+
+  Write contract:
+    - On every TRADE_CLOSE event, write to BOTH:
+      (a) tothbot.log via existing Logger path
+          (unchanged)
+      (b) trades_<YYYY>.jsonl via new direct-append path
+    - Both writes MUST be non-blocking to the trading
+      hot path (consistent with HR-LG-001).
+    - If the trades_<YYYY>.jsonl write fails for any
+      reason (disk full, permission error, etc.):
+      log an ALERT-level event, send operator alert
+      HIGH, but DO NOT block the Logger or the hot
+      path. tothbot.log write proceeds normally. This
+      preserves current behavior as a fallback.
+
+  File creation:
+    - Directory /home/tothbot/records/ created at
+      startup if not present (os.makedirs exist_ok=True).
+    - Annual file created on first TRADE_CLOSE of the
+      calendar year with mode "a" (append; creates if
+      absent).
+    - File permissions: 0644 (rw for owner, r for group
+      and others — same as tothbot.log).
+
+  CSV export:
+    - NOT in this session. Deferred to future dashboard
+      session. Annual JSONL is the authoritative source;
+      CSV is a transform.
+
+Design freedoms for Claude Code to decide:
+  - Whether the write path lives inside the existing
+    QueueListener (writes to both sinks) or outside
+    (direct append in the hot path with a lock) —
+    recommend QueueListener pattern to preserve
+    HR-LG-001.
+  - Whether to add a new handler (e.g.,
+    TradesRecordHandler subclass) or a branch in an
+    existing handler.
+  - Exact naming of the constant for the records
+    directory (suggest TRADES_RECORD_DIR =
+    "/home/tothbot/records").
+
+AI-2 — OI-022 DEFECT-OBSERVABILITY-ALERT-SENT-001 (LOW)
+-------------------------------------------------------
+
+Problem:
+  logger.py emits no structured event when an alert
+  email is successfully sent. Only failures surface
+  (to stderr via journalctl in TB00106-era code, now
+  only to journalctl). Operator has no positive
+  confirmation signal for successful alert delivery.
+
+Fix:
+  In the alert success path of logger.py (wherever the
+  SMTP send completes successfully), emit a single
+  structured log event:
+
+    {
+      "event": "ALERT_SENT",
+      "level": "INFO",
+      "component": "LOGGER",
+      "to": "<recipient address>",
+      "subject": "<alert subject>",
+      "triggering_event": "<the event that caused the
+                            alert, if known>",
+      "ts": "<ISO 8601 UTC>"
+    }
+
+  Emit this via the standard Logger path (will land in
+  tothbot.log).
+
+  Also add a symmetrical ALERT_SMTP_FAILED structured
+  event on the failure path (if not already emitted
+  structurally — current code emits only to stderr).
+  Same shape with "level": "HIGH" and an "error" field
+  carrying the exception string.
+
+  Update 1011007 Section 6 event registry to include
+  both events.
+
+AI-3 — OI-014 startup_sequence.py stale xrefs (LOW)
+---------------------------------------------------
+
+Problem:
+  startup_sequence.py and/or 1011014 contain cross-
+  references (module names, file paths, spec DCNs,
+  version numbers) that have drifted out of date as
+  other files were updated.
+
+Fix:
+  Inspect both artifacts. Identify every cross-reference.
+  Verify each against the current state of the project
+  (read the referenced file's current header). Update
+  any stale reference to match current state. No
+  behavior change — cleanup only.
+
+  If startup_sequence.py requires a code change (e.g.,
+  an updated docstring): bump dv1_8 -> dv1_9.
+  If only the spec requires change: bump
+  1011014 dv1_6 -> dv1_7 and leave startup_sequence.py
+  untouched.
+
+COMMIT MESSAGES
+===============
+
+Docs repo:
+  TB00108 bundled: OI-023 permanent trade record; OI-022
+  ALERT_SENT/ALERT_SMTP_FAILED events; OI-014 xref cleanup
+
+Code repo:
+  TB00108 bundled: OI-023 trades_<YYYY>.jsonl permanent
+  record; OI-022 ALERT_SENT structured event;
+  OI-014 startup_sequence xref cleanup
+
+DELIVERABLES (ALL IN ONE BATCH — DR-003)
+========================================
+
+Files produced by this session:
+
+  CODE:
+    tothbot/logger.py                      dv1_3 -> dv1_4
+    tothbot/startup_sequence.py            dv1_8 -> dv1_9
+                                           (only if AI-3
+                                           requires code
+                                           change)
+
+  SPECS:
+    1011007_Logger_Coding_Spec             dv1_3 -> dv1_4
+    1011014_Startup_Sequence_Coding_Spec   dv1_6 -> dv1_7
+    1010000_Trading_System_Coding_Anchor   dv1_10 -> dv1_11
+
+  Architectural spec (conditional):
+    0511006_Logger_Specification           dv1_0 -> dv1_1
+      Update IF two-stream record architecture requires
+      architectural-level documentation (Claude Code
+      judgment call).
+
+  Session artifacts:
+    TB00108_TothBot_V2_Session_Log_<DATE>_v1_0.txt
+    TB00108_Bill_Actions_v1_0.txt
+
+All files delivered as .txt per DR-001. All in ONE BATCH
+per DR-003.
+
+RULES
+=====
+
+  RULE 15 — ONE COMMAND PER COPY BOX in Bill Actions.
+  NO PATCHES — full file every time.
+  Full document control on every file:
+    7-field header in exact order.
+    DocVersion incremented per 0311003.
+    DocDate / DocTime updated in UTC.
+    DocPath correct for Docs repo, Code repo, or Session
+    Logs folder.
+  VPS is running dv1_21 and continues to run. Do NOT
+  write any file directly to /root/TothBot_V2-Code/ on
+  the VPS. The VPS pulls from GitHub, same as TB00106.
+
+PROCEED WITH WORK PLAN FIRST
+============================
+
+Before producing code:
+  1. State which files you will read and why.
+  2. Read 1011007 dv1_3 (current spec) end-to-end.
+  3. Read logger.py dv1_3 (current code) end-to-end.
+  4. Read startup_sequence.py dv1_8 and 1011014 dv1_6
+     for the xref audit.
+  5. Propose the exact design for AI-1's write path
+     (QueueListener extension vs new handler) — wait for
+     Bill's approval before writing code.
+
+Then produce all deliverables in one batch.
+
+---------------- END KICKOFF PROMPT ----------------
+
+============================================================
+SECTION 5 — POST-SESSION (BILL ACTIONS)
+============================================================
+
+After Claude Code completes, Bill will receive a
+TB00108 Bill Actions document. Expected structure:
+
+  STEP A  Confirm files on disk
+  STEP B  Claude.ai project uploads / deletes
+  STEP C  Commit TothBot_V2-Docs
+  STEP D  Commit TothBot_V2-Code
+  STEP E  Deploy to VPS
+            ssh / git pull / systemctl restart
+  STEP F  Verify trades_<YYYY>.jsonl created and
+          /home/tothbot/records/ permissions correct
+  STEP G  Post-deploy baseline (counts of new events)
+  STEP H  Open NEW observation window on dv1_22
+          (24h minimum / 48h preferred)
+
+Bill follows STEPS A-H one command per copy box. Returns
+to a new Claude Chat session (TB00109) after observation
+window closes.
+
+============================================================
+SECTION 6 — IF CLAUDE CODE DRIFTS OR PROPOSES SCOPE CHANGES
+============================================================
+
+If during the session Claude Code proposes:
+  - Changes beyond AI-1, AI-2, AI-3 (e.g., "while we're
+    in here, we should also fix X")
+  - Different design than TB00107 Section 3.6 FP/DP
+    decisions (location, format, retention)
+  - Additional version bumps to unrelated files
+
+STOP. Do not approve. Tell Claude Code:
+  "Out of scope. Log on Parking Lot. Continue the
+   defined AI-1/2/3 scope only."
+
+The FP/DP decisions in TB00107 Section 3.6 are LOCKED.
+Re-deriving them mid-session invalidates the governance
+chain. Parking Lot items are addressed in future sessions.
+
+============================================================
+SECTION 7 — STANDING RULES REMINDER
+============================================================
+
+  RULE 6  — git add . is PROHIBITED. Explicit per file.
+  RULE 14 — git push origin master. NEVER origin main.
+  RULE 15 — ONE COMMAND PER COPY BOX. ALWAYS.
+  RULE 17 — Complete and correct instructions.
+
+  NO PATCHES. Full file delivery only. Full DC.
+
+  DR-001 — All documents as .txt.
+  DR-003 — All documents in ONE BATCH.
+
+  PAPER TRADING ONLY. NO REAL MONEY.
+
+============================================================
+REVISION HISTORY
+============================================================
+
+  v1_0  04-21-2026  Initial. Scoped as Claude Chat
+                    observation close-out for dv1_21.
+                    Superseded same day by v1_1.
+
+  v1_1  04-21-2026  Complete rewrite. Pivot from
+                    observation close-out to Claude Code
+                    bundled deploy. Three AIs defined:
+                    OI-023 (CRITICAL trade record
+                    permanence), OI-022 (ALERT_SENT
+                    instrumentation), OI-014 (stale
+                    xrefs cleanup). FP/DP decisions
+                    for OI-023 locked in TB00107 Section
+                    3.6 and carried into this NSI. Full
+                    Claude Code kickoff prompt with
+                    scope guards (Section 6) to prevent
+                    mid-session drift. Expected file
+                    changes enumerated. DR-001 / DR-003
+                    / NO PATCHES / full DC all
+                    restated.
+
+============================================================
+END — TB00107 NEXT SESSION INSTRUCTIONS v1_1
+============================================================

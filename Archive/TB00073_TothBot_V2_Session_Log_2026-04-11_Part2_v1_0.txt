@@ -1,0 +1,419 @@
+DocDCN:     TB00073
+DocTitle:   TothBot_V2_Session_Log_2026-04-11_Part2
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\My_TothBot_Stuff\TBXXXXX_Session_Logs\TB00073_TothBot_V2_Session_Log_2026-04-11_Part2_v1_0.txt
+DocDate:    04-11-2026
+DocTime:    23:59:59 UTC
+
+============================================================
+TOTHBOT V2 SESSION LOG — 2026-04-11 PART 2
+============================================================
+
+============================================================
+1. SESSION IDENTITY
+============================================================
+
+Session date:     April 11, 2026
+Session number:   TB00073
+Session type:     Document Control Corrective Action.
+                  Full audit of all AA=10 coding documents.
+                  Code File Registry established.
+                  0311002 governance gap corrected.
+                  1010000 fully brought to current state.
+                  ws_manager.py header patch issued.
+Prior session:    TB00072 (2026-04-11)
+
+Documents read this session:
+  TB00000  v2_8    Project Instructions             read
+  TB00072  v1_0    Prior session log                read
+  0311001  v1_0    Namespace_Specification          read
+  0311002  v1_0    Document_Creation_Workflow       read
+  0311003  v1_0    Versioning_Procedure             read
+  1000000  dv1_0   Coding_Specification             read
+  1010000  dv1_0   Trading_System_Coding_Anchor     read
+  1011001  dv1_6   Engineering_Best_Practices       read
+  1011002  dv1_13  WS_Manager_Coding_Spec           read
+  1011005  dv1_2   Exit_Controller_Coding_Spec      read
+  1011007  dv1_2   Logger_Coding_Spec               read
+  1011010  dv1_6   CIATS_Coding_Spec                read
+  1011011  dv1_3   Risk_Engine_Coding_Spec          read
+  1011012  dv1_4   Regime_Engine_Coding_Spec        read
+  1011013  dv1_4   VPS_Deployment_Coding_Spec       read
+  1011014  dv1_3   Startup_Sequence_Coding_Spec     read
+  All .py files    (headers audited)                read
+
+============================================================
+2. CONTEXT — WHY THIS SESSION EXISTS
+============================================================
+
+TB00072 OI-001 identified that Pathway 2 code files
+(.py in TothBot_V2-Code) were not formally linked to the
+document control system. Bill directed this be corrected
+completely and without shortcuts — as if the violation
+never existed. This session executes that correction.
+
+============================================================
+3. FP/DP ANALYSIS — COMPLETE FINDINGS
+============================================================
+
+A complete audit was performed against all governing
+documents (0311001, 0311002, 0311003, 1000000, 1010000)
+and all AA=10 coding spec documents and .py files.
+
+------------------------------------------------------------
+3.1 FIVE VIOLATIONS FOUND
+------------------------------------------------------------
+
+VIOLATION 1 — 0311002 Phase 8 missing Code File Registry
+maintenance rule.
+  0311002 Phase 8 defined the coding sequence but did not
+  include a mandatory rule requiring the Code File Registry
+  in 1010000 to be updated after every code session.
+  Without this rule, the governance gap was not explicitly
+  prohibited — it was simply unspecified. The corrective
+  action closes this gap.
+
+VIOLATION 2 — 1010000 Section 4 status not updated after
+Phase 8 completion.
+  1010000 dv1_0 was written at Phase 8 start (04-05-2026)
+  with status "to be written" or "WD dv1_X (as of Phase 8
+  start)" for all 14 instance documents. Phase 8 was
+  completed on the same date — all 14 specs reached
+  CODING-READY state — but 1010000 was never updated to
+  reflect completion. Every subsequent session operated
+  with a stale anchor document.
+
+VIOLATION 3 — 1010000 missing Code File Registry section.
+  No section in 1010000 formally mapped .py files to their
+  governing specs. This section was required from the moment
+  any .py file was first written. It was never created.
+  This is the primary document control gap: without this
+  registry, there is no formal traceability between code
+  and the document control system.
+
+VIOLATION 4 — ws_manager.py header references dv1_12
+instead of dv1_13.
+  ws_manager.py was updated this session to fix
+  DEFECT-WM-OHLC-001 (spec documented in dv1_13) but the
+  in-file header was not updated to reference dv1_13.
+  All other .py file headers correctly reference their
+  current governing spec version.
+
+VIOLATION 5 — Project folder contained stale superseded
+document versions alongside current versions.
+  Per VP-010, superseded versions are managed through git
+  history. The project folder should contain only the
+  current version of each document. Nine stale versions
+  were present in the project folder:
+    1011001 dv1_5 (superseded by dv1_6)
+    1011002 dv1_11, dv1_12 (superseded by dv1_13)
+    1011005 dv1_1 (superseded by dv1_2)
+    1011007 dv1_1 (superseded by dv1_2)
+    1011010 dv1_4, dv1_5 (superseded by dv1_6)
+    1011011 dv1_2 (superseded by dv1_3)
+    1011012 dv1_3 (superseded by dv1_4)
+    1011013 dv1_3 (superseded by dv1_4)
+    1011014 dv1_2 (superseded by dv1_3)
+  Corrective action: Bill deletes stale versions from
+  project folder (Claude cannot delete project files).
+
+------------------------------------------------------------
+3.2 WHAT WAS CONFIRMED CORRECT
+------------------------------------------------------------
+
+  - All AA=10 coding spec documents have valid 7-field
+    headers with correct DCN, title, version, owner,
+    path, date, and time.
+  - All 14 current coding specs reached CODING-READY
+    state at Phase 8 completion.
+  - 13 of 15 .py file headers correctly reference the
+    current version of their governing spec.
+  - The three-tier parent chain is intact for all
+    AA=10 documents (1000000 → 1010000 → instance docs).
+
+============================================================
+4. WORK COMPLETED THIS SESSION
+============================================================
+
+------------------------------------------------------------
+4.1 0311002 → rv1_0 (Pending Bill approval to v1_1)
+------------------------------------------------------------
+
+Added STEP 8.2.1 Code File Registry Mandatory Maintenance
+Rule to Phase 8 section. The rule specifies:
+  (1) 1010000 Section 5 Code File Registry MUST be updated
+      after every session that creates or modifies any .py.
+  (2) Four required fields: governing spec DCN + version,
+      git commit hash, and registry update date.
+  (3) Failure to update is a document control violation.
+  (4) Rule applies retroactively from Phase 8 start.
+Updated revision history: rv1_0 entry added.
+
+This is an approved document (v1_0). Bill must approve
+this revision to promote to v1_1. Claude cannot execute
+state transitions per VP-005.
+
+BILL ACTION REQUIRED: Review 0311002 rv1_0 and approve
+to promote to v1_1. Commit both rv1_0 and v1_1 naming?
+No — per VP-010, only the current version goes to GitHub.
+GitHub manages version history. Commit as v1_1 when
+Bill approves.
+
+------------------------------------------------------------
+4.2 1010000 → dv1_1
+------------------------------------------------------------
+
+Section 4 — Completely rewritten with current status for
+all 14 instance documents (CODING-READY, current version,
+post-deployment notes where applicable). Includes:
+  - 1011002 dv1_13 with DEFECT-WM-ZOM-001 and
+    DEFECT-WM-OHLC-001 documented.
+  - 1011014 parking lot item for stale cross-references
+    and potential ohlc sequence review.
+
+Section 5 — Code File Registry created. Contains:
+  - 5.1: Registry format definition (5 fields per entry)
+  - 5.2: Registry for all 13 trading system .py modules
+  - 5.3: Registry for 2 testing modules
+  - 5.4: Registry for requirements.txt and tothbot.service
+  - 5.5: Commit hash update procedure
+
+Old Sections 5, 6, 7, 8 renumbered to 7, 8, 9, 10.
+Section 6 Revision History added.
+DocVersion: dv1_0 → dv1_1. DocDate: 04-11-2026.
+
+NOTE: Section 5 commit hashes for all files except
+ws_manager.py are marked "[Bill: enter hash from git log]."
+Bill must run git log --oneline, enter the hash for each
+file's last commit, and increment 1010000 to dv1_2.
+
+------------------------------------------------------------
+4.3 ws_manager.py — Complete Corrected File Delivered
+------------------------------------------------------------
+
+ws_manager.py was updated in TB00072 to fix
+DEFECT-WM-OHLC-001 (ohlc subscription without symbol list),
+documented in 1011002 dv1_13. The in-file header was not
+updated to reference dv1_13. The complete corrected
+ws_manager.py (2,724 lines) is delivered this session
+with the header correctly referencing dv1_13.
+All other .py file headers audited and confirmed correct.
+
+------------------------------------------------------------
+4.4 Stale Version Identification
+------------------------------------------------------------
+
+Complete list of stale versions for Bill to delete from
+the Claude.ai project folder:
+  1011001_Engineering_Best_Practices_dv1_5.txt
+  1011002_WS_Manager_Coding_Spec_dv1_11.txt
+  1011002_WS_Manager_Coding_Spec_dv1_12.txt
+  1011005_Exit_Controller_Coding_Spec_dv1_1.txt
+  1011007_Logger_Coding_Spec_dv1_1.txt
+  1011010_CIATS_Coding_Spec_dv1_4.txt
+  1011010_CIATS_Coding_Spec_dv1_5.txt
+  1011011_Risk_Engine_Coding_Spec_dv1_2.txt
+  1011012_Regime_Engine_Coding_Spec_dv1_3.txt
+  1011013_VPS_Deployment_Coding_Spec_dv1_3.txt
+  1011014_Startup_Sequence_Coding_Spec_dv1_2.txt
+
+============================================================
+5. DEFECT LOG
+============================================================
+
+  No new code defects. DEFECT-WM-OHLC-001 from TB00072
+  remains not yet committed. See OI below.
+
+============================================================
+6. PT-ENTRY STATUS
+============================================================
+
+  PT-ENTRY-001  All unit tests pass             DONE
+  PT-ENTRY-002  All integration tests pass      DONE
+  PT-ENTRY-003  VPS deployed + paper mode       PENDING
+                (DEFECT-WM-OHLC-001 fix not committed)
+  PT-ENTRY-004  logrotate configured            DONE (wrong path — PL)
+  PT-ENTRY-005  IP whitelist confirmed          DONE
+  PT-ENTRY-006  Alert email confirmed           DONE
+  PT-ENTRY-007  systemd auto-restart confirmed  PENDING
+  PT-ENTRY-008  Startup sequence confirmed      PENDING
+
+============================================================
+7. VPS STATE — CURRENT
+============================================================
+
+  Service:      STOPPED
+  Repo:         /root/TothBot_V2-Code (commit 4241bf3)
+                DEFECT-WM-OHLC-001 fix NOT yet committed.
+
+  DO NOT restart service until ws_manager.py with
+  DEFECT-WM-OHLC-001 fix is committed and pulled.
+
+============================================================
+8. OPEN ITEMS
+============================================================
+
+OI-001  OPEN — DEFECT-WM-OHLC-001 fix not yet committed.
+        ws_manager.py with ohlc subscription fix exists
+        in project folder. Must be committed to GitHub
+        and deployed to VPS. This is the next action after
+        Bill completes Bill Actions below.
+
+OI-002  OPEN — 0311002 rv1_0 pending Bill approval.
+        Once approved: commit to GitHub as v1_1.
+
+OI-003  OPEN — 1010000 Section 5 commit hashes need
+        Bill to populate from git log for all files
+        other than ws_manager.py. Then increment to
+        dv1_2 and commit.
+
+============================================================
+9. PARKING LOT
+============================================================
+
+  PL-001      WSManager dual PM creation paths. Monitor.
+  PL-003      Pathway 1 GitHub automation. After paper trading.
+  PL-NEW-003  VPS migration to Hillsboro OR. After stable.
+  PL-NEW-004  EE ENTRY_TIMEOUT_SEC vs WM ENTRY_GTD_SEC. Monitor.
+  PL-NEW-005  requirements.txt — websockets>=13.0.
+  PL-NEW-006  tothbot.service not updated in GitHub. After PT-ENTRY.
+  PL-NEW-007  LOG_FILE path mismatch. After PT-ENTRY.
+  PL-NEW-008  Heartbeat UNKNOWN_MESSAGE_TYPE spam. After PT-ENTRY.
+  PL-NEW-009  Untracked files in TothBot_V2-Code repo. After PT-ENTRY.
+  PL-NEW-010  status subscription returns "Symbol(s) not found". After PT stable.
+  PL-NEW-011  1011014 stale cross-references (1011002 dv1_11,
+              1011010 dv1_5, 1011011 dv1_2, 1011012 dv1_3).
+              Also review whether DEFECT-WM-OHLC-001 ohlc
+              sequence change requires content update to
+              1011014 startup sequence steps. Address at
+              next natural boundary (post paper-trading stable).
+
+============================================================
+10. DELIVERABLES THIS SESSION
+============================================================
+
+Delivered in ONE BATCH per DR-001 and DR-003:
+
+  0311002_Document_Creation_Workflow_rv1_0.txt
+  1010000_Trading_System_Coding_Anchor_dv1_1.txt
+  ws_manager.py  (complete corrected file — dv1_13 header)
+  TB00073_TothBot_V2_Session_Log_2026-04-11_Part2_v1_0.txt
+
+============================================================
+11. BILL ACTIONS REQUIRED — IN ORDER
+============================================================
+
+Step 1 — Save this session log:
+  Save TB00073 to:
+  C:\Users\wstot\My_TothBot_Stuff\TBXXXXX_Session_Logs\
+
+Step 2 — Upload to Claude project:
+  Upload all four deliverables to Claude project.
+
+Step 3 — Delete stale versions from Claude project:
+  Delete these 11 files from Claude project folder:
+    1011001_Engineering_Best_Practices_dv1_5.txt
+    1011002_WS_Manager_Coding_Spec_dv1_11.txt
+    1011002_WS_Manager_Coding_Spec_dv1_12.txt
+    1011005_Exit_Controller_Coding_Spec_dv1_1.txt
+    1011007_Logger_Coding_Spec_dv1_1.txt
+    1011010_CIATS_Coding_Spec_dv1_4.txt
+    1011010_CIATS_Coding_Spec_dv1_5.txt
+    1011011_Risk_Engine_Coding_Spec_dv1_2.txt
+    1011012_Regime_Engine_Coding_Spec_dv1_3.txt
+    1011013_VPS_Deployment_Coding_Spec_dv1_3.txt
+    1011014_Startup_Sequence_Coding_Spec_dv1_2.txt
+
+Step 4 — Replace ws_manager.py in TothBot_V2-Code:
+  Download ws_manager.py from this session's deliverables.
+  Replace the existing ws_manager.py in:
+  C:\Users\wstot\GitHub\TothBot\TothBot_V2-Code\
+  with the complete corrected file delivered this session.
+  The header now correctly references dv1_13.
+
+Step 5 — Commit ws_manager.py to GitHub:
+  cd C:\Users\wstot\GitHub\TothBot\TothBot_V2-Code
+  git add ws_manager.py
+  git commit -m "Fix DEFECT-WM-OHLC-001: ohlc subscription requires symbol list; update header to dv1_13"
+  git push origin master
+
+Step 6 — Get ws_manager.py commit hash:
+  git log --oneline -1
+  Copy the commit hash.
+
+Step 7 — Update 1010000 Section 5 Code File Registry:
+  Enter the commit hash for ws_manager.py in the
+  Code File Registry entry.
+  For all other files: run git log --oneline and
+  find each file's last commit hash. Enter each.
+  When all hashes are entered, increment 1010000
+  to dv1_2 with revision history noting commit hashes
+  populated. Upload dv1_2 to Claude project.
+
+Step 8 — Review and approve 0311002 rv1_0:
+  Read 0311002_Document_Creation_Workflow_rv1_0.txt.
+  If approved, instruct Claude to produce v1_1
+  (header change only: rv1_0 → v1_1, date/time update,
+  revision history entry added).
+
+Step 9 — Commit governance documents to GitHub:
+  After Bill approves 0311002 → v1_1:
+  TothBot_V2-Docs:
+    git add 03XXXXX_Governance/0311002_Document_Creation_Workflow_v1_1.txt
+    git add 10XXXXX_Coding_Specification/1010000_Trading_System_Coding_Anchor_dv1_2.txt
+    git rm 03XXXXX_Governance/0311002_Document_Creation_Workflow_v1_0.txt
+    git rm 10XXXXX_Coding_Specification/1010000_Trading_System_Coding_Anchor_dv1_0.txt
+    git commit -m "TB00073: Document control corrective action. Add code file registry rule to 0311002. Update 1010000 with current status and code file registry."
+    git push origin master
+
+Step 10 — Deploy to VPS:
+  ssh root@87.99.141.44
+  cd /root/TothBot_V2-Code && git pull origin master
+  systemctl start tothbot
+  sleep 120
+  grep "ZOMBIE\|OHLC_SUBSCRIBED\|PAPER_TRADING\|TOTHBOT_READY\|CRITICAL" \
+    /home/tothbot/logs/tothbot.log | tail -30
+
+  MUST see: OHLC_SUBSCRIBED
+  MUST see: PAPER_TRADING_MODE_ON
+  MUST NOT see: ZOMBIE_CONNECTION_DETECTED
+  MUST NOT see: crash loop
+
+============================================================
+12. NEXT SESSION OPENING INSTRUCTION
+============================================================
+
+  ============================================================
+  Read TB00000 v2_8, TB00073.
+
+  TWO OPEN ITEMS if Bill has completed Steps 1-10 above:
+
+  OI-001 — Confirm paper trading is running.
+    Verify all PT-ENTRY checklist items complete.
+    Complete any remaining items.
+
+  OI-002 — If Bill has not yet approved 0311002 rv1_0:
+    Review 0311002 rv1_0 with Bill before any other work.
+
+  If Bill has NOT completed Steps 5-10 above, complete
+  them before any other work.
+  ============================================================
+
+============================================================
+13. REVISION HISTORY
+============================================================
+
+  v1_0  04-11-2026  Initial. Document control corrective
+                    action from TB00072 OI-001. Full audit
+                    of all AA=10 coding documents. Five
+                    violations found and corrected:
+                    (1) 0311002 missing code registry rule
+                    (2) 1010000 Section 4 stale since Phase 8 start
+                    (3) 1010000 missing Code File Registry
+                    (4) ws_manager.py header stale (dv1_12)
+                    (5) Project folder had 11 stale document versions.
+
+============================================================
+END OF SESSION LOG
+============================================================

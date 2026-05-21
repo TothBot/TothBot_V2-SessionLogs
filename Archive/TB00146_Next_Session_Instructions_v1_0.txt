@@ -1,0 +1,389 @@
+DocDCN:     TB00146
+DocTitle:   Next_Session_Instructions
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TBXXXXX_Session_Logs\TB00146_Next_Session_Instructions_v1_0.txt
+DocDate:    05-03-2026
+DocTime:    23:59:00 UTC
+
+============================================================
+TB00147 NEXT SESSION INSTRUCTIONS
+============================================================
+
+============================================================
+1. PRIMARY WORK FOR TB00147
+============================================================
+
+STREAM 5 — DEPLOY ws_manager.py dv1_25 (fb5de32) TO VPS
++ 24-72h PAPER-MODE OBSERVATION.
+
+ws_manager.py dv1_25 is the empirically-validated paper-
+canonical code. It contains:
+  - PATH 2 multi-connection sharding (WM-SHARD-001..011)
+  - Subscribe-pacing token bucket (WM-PACE-001..010)
+  - Silent-pair state machine (WM-SHARD-010)
+  - AR-070 silent-narrowing prohibition
+    (WM-PS-008 / HR-WM-028)
+  - 19/19 unit tests passing
+Committed at fb5de32 on TothBot_V2-Code master.
+NOT YET DEPLOYED to VPS.
+
+PAPER TRADING ONLY. NO REAL MONEY. paper_trading_mode
+config flag MUST be True before tothbot service start.
+
+------------------------------------------------------------
+1.1 DEPLOY SEQUENCE
+------------------------------------------------------------
+
+  STEP 1  SSH to VPS:
+            ssh root@87.99.141.44
+
+  STEP 2  Verify paper-mode flag in EnvironmentFile:
+            grep paper_trading_mode /root/.tothbot.env
+          Expected: paper_trading_mode=True
+          If False: STOP. Edit to True before proceeding.
+
+  STEP 3  Verify systemd service is stopped:
+            systemctl status tothbot
+          Stop if running:
+            systemctl stop tothbot
+
+  STEP 4  Pull latest code:
+            cd ~/TothBot_V2-Code
+            git fetch origin
+            git status
+            git pull origin master
+            git log -1 --oneline
+          Expected HEAD: fb5de32
+
+  STEP 5  Verify requirements.txt websockets>=13.0:
+            grep websockets requirements.txt
+          Update venv if needed:
+            source venv/bin/activate
+            pip install -r requirements.txt --upgrade
+            deactivate
+
+  STEP 6  Verify systemd unit StartLimitBurst=3 +
+          StartLimitIntervalSec=600 (1011013 dv1_6
+          VD-SYS-008):
+            cat /etc/systemd/system/tothbot.service
+          If unit changed:
+            systemctl daemon-reload
+
+  STEP 7  Start tothbot:
+            systemctl start tothbot
+            systemctl status tothbot
+          Expected: active (running).
+
+  STEP 8  Tail journal for startup batch (≤10 minutes):
+            journalctl -u tothbot -f --since "1 minute ago"
+          Watch for:
+            (a) WS_MGR PATH_2_SHARDING_ACTIVATED
+            (b) BOTH SHARDS REACH DATA_READY state
+            (c) PAPER_TRADING_MODE_ON log with
+                private_ws_connected: False
+            (d) NO silent-pair anomalies
+                (DATA_PENDING -> DATA_READY transitions
+                within T_silent default 60s)
+            (e) NO subscribe-pacing token-bucket
+                exhaustion errors
+            (f) NO StartLimit triggered restarts
+
+  STEP 9  Steady-state observation window (24-72h).
+          Bill checks alerts@tothbot.com periodically.
+          Bill monitors paper-trade execution log.
+          No further action during observation.
+
+------------------------------------------------------------
+1.2 OBSERVATION PASS CRITERIA (per TB00144 NSI §1.2)
+------------------------------------------------------------
+
+(a) Both PATH 2 shards reach DATA_READY state within
+    startup batch ≤10 minutes.
+(b) NO silent-pair anomalies during observation window.
+(c) NO subscribe-pacing token-bucket exhaustion.
+(d) NO StartLimit-triggered systemd restarts (≤3 restarts
+    per 600s window per VD-SYS-008).
+(e) NO WS_MGR_FATAL or other CRITICAL/HIGH alerts.
+(f) Paper-trade pipeline executes successfully: WARMED_UP
+    state reached, OHLC events processed, indicators
+    update, regime computation runs, pipeline gates
+    evaluate.
+
+PASS = all six criteria met for ≥24h continuous.
+ROLLBACK = any criterion fails OR Bill discretion.
+
+ROLLBACK PROCEDURE:
+  systemctl stop tothbot
+  cd ~/TothBot_V2-Code
+  git revert --no-edit fb5de32  -> rollback to
+                                   prior HEAD
+  git push origin master
+  Pull rollback on VPS, restart tothbot, document
+  rollback reason in TB00148 session log.
+
+------------------------------------------------------------
+1.3 SESSION CLOSE
+------------------------------------------------------------
+
+Author TB00147 Session Log + TB00147 NSI for hand-off
+to TB00148 (closure decision session).
+
+TB00147 = deploy + observation only. NO code edits, NO
+spec amendments. Operational session.
+
+============================================================
+2. LOCKED DECISIONS
+============================================================
+
+D-01 through D-08 LOCKED per TB00144 NSI §2.
+
+CRITICAL: D-03 LOCKED. Universe = ALL Kraken spot pairs
+quoted in USD, USDC, OR USDT satisfying 0711003 dv1_3
+AS-001 (online status + $500k/day USD volume floor).
+NO top-N cap. NO USDT exclusion. Any silent narrowing
+of universe scope is a defect (RR-SCOPE-007 violation).
+
+============================================================
+3. MANDATORY READING — START OF TB00147
+============================================================
+
+Per TB00000 v2_18 §2 Reading Rule. All documents read
+from project knowledge folder.
+
+  TB00000   Project_Instructions             v2_18
+  TB00146   Session_Log_2026-05-03           v1_0
+            (this session — predecessor)
+  TB00146   Next_Session_Instructions        v1_0
+            (THIS DOCUMENT)
+  0311001   Namespace_Specification          v1_3
+  0311002   Document_Creation_Workflow       v1_8
+  0311003   Versioning_Procedure             v1_1
+  0311004   Document_Creation_and_Approval   v1_2
+  0311005   System_Definitions_Terminology   v1_0
+  0311006   Known_Platform_Limitations       dv1_0
+  0500000   System_Architecture_Overview     dv1_21
+            (.txt + .docx + .pdf triplet)
+  0511001   WS_Manager_Specification         dv1_4
+  1011002   WS_Manager_Coding_Spec           dv1_25
+  0211005   Paper_Trading_Operations_Proc    dv1_2
+            (NEW this session — paper-canonical
+            cascade fix)
+  1011013   VPS_Deployment_Coding_Spec       dv1_6
+  1011014   Startup_Sequence_Coding_Spec     dv1_7
+
+ALSO READ for STREAM 5 deploy mechanics:
+  0211003   Startup_Shutdown_Procedure       dv1_0
+  0211004   Incident_Response_Procedure      dv1_0
+
+============================================================
+4. PROJECT FOLDER KEPT/ABSENT LISTS
+============================================================
+
+------------------------------------------------------------
+KEPT IN PROJECT FOLDER (for TB00147 cold-load):
+------------------------------------------------------------
+
+GOVERNANCE:
+  TB00000  v2_18
+  TB00146  Session_Log v1_0
+  TB00146  NSI v1_0
+  0311001  v1_3
+  0311002  v1_8
+  0311003  v1_1
+  0311004  v1_2
+  0311005  v1_0
+  0311006  dv1_0
+
+DESIGN / SPEC:
+  0500000  dv1_21 (.txt _Claude_Source + .docx + .pdf)
+  0511001  dv1_4
+  0211005  dv1_2 (NEW, replaces dv1_1)
+  1011013  dv1_6
+  1011014  dv1_7
+
+CODING SPEC:
+  1011002  dv1_25
+
+OPERATIONS:
+  0211003  dv1_0
+  0211004  dv1_0
+
+------------------------------------------------------------
+ABSENT FROM PROJECT FOLDER (retired or never present):
+------------------------------------------------------------
+
+  TB00000  v2_17 (retired by v2_18)
+  TB00145  Session_Log v1_1 (retired by TB00146 v1_0)
+  TB00145  NSI v1_1 (retired by TB00146 v1_0)
+  0211005  dv1_1 (retired by dv1_2 in TB00146 STREAM B)
+  0511001  dv1_5 (reverted in TB00146 STREAM A)
+  1011002  dv1_26 (reverted in TB00146 STREAM A)
+  1011014  dv1_8 (reverted in TB00146 STREAM A)
+
+------------------------------------------------------------
+HISTORICAL MUST-PRESERVE (NOT in current cold-load,
+but retained on local archive per TB00133):
+------------------------------------------------------------
+
+  TB00001, TB00012, TB00013, TB00014, TB00020
+  TB00119, TB00133, TB00134
+
+============================================================
+5. PARKING LOT — CARRIED FORWARD
+============================================================
+
+PL-001  STREAM 5 deploy is the FIRST and ONLY primary
+        action of TB00147. Operational session — no
+        spec amendments, no code edits. Deploy
+        mechanics per §1 above.
+
+PL-002  Per TB00000 v2_18 §4.4 PA-008, every authoring
+        action (spec, code, parameter, configuration)
+        MUST pre-emit-scan against PA-001..010 for
+        wrong-direction language. Self-catch signal
+        is the literal string:
+
+          PA-MASTER self-caught — redrafting.
+
+PL-003  RR-SCOPE-007 (no silent narrowing of user-
+        specified scope) is in active enforcement.
+        TB00146 STREAM B demonstrated the rule operating
+        correctly — Claude surfaced cascade scope gap
+        for Bill decision rather than silently
+        expanding. Continue this discipline.
+
+PL-004  RR-SCOPE-009 four-question origin investigation
+        applies before ANY constraint removal. STREAM 5
+        does not remove constraints — it deploys
+        already-authorized code.
+
+PL-005  RR-SCOPE-005 cumulative count: 6 entering TB00147
+        (unchanged from TB00146). Strict pre-emit scan
+        before every confirm-prompt. After FP/DP
+        determines a path, Claude proceeds — does not
+        ask Bill to confirm what FP/DP already decided.
+
+PL-006  TB00141 / TB00142 / TB00143 / TB00144 STREAM 4
+        empirical work is preserved in ws_manager.py
+        dv1_25 (fb5de32):
+          - PATH 2 sharding (WM-SHARD-001..011)
+          - Token bucket pacing (WM-PACE-001..010)
+          - Silent-pair state machine (WM-SHARD-010
+            with T_silent default 60s)
+          - AR-070 silent-narrowing prohibition
+            (WM-PS-008 + HR-WM-028)
+          - Empirical envelope: 650-700 single-
+            connection ceiling reference; PATH 2
+            multi-connection envelope per
+            SYMBOLS_PER_CONN_SAFE = 500
+        Deploying fb5de32 activates this work on the
+        VPS.
+
+PL-007  CONCURRENT PAPER + LIVE OPERATION (Bill rabbit
+        TB00145 chat-close). Future architecture
+        decision — when live trading begins, paper +
+        live should run as INDEPENDENT processes
+        (separate VPSes preferred per IP-rate-budget
+        partitioning, OR two processes on one VPS with
+        rate-budget partitioning, OR sequential mode-
+        flag switching). NOT a TB00147 scope item.
+        Captured here for future planning sessions
+        before live transition.
+
+============================================================
+6. FIRST ACTIONS FOR TB00147
+============================================================
+
+1. Cold-load mandatory reading per §3.
+
+2. State all documents read and their versions before
+   beginning any work (per TB00000 §2 Reading Rule).
+
+3. Execute STEP A pre-flight per 0311002 v1_8 §8.2.5
+   (DC-PREFLIGHT-001..006). Document output in TB00147
+   session log §2.
+
+4. Confirm GitHub state for both repos:
+     cmd /c "cd /D C:\Users\wstot\GitHub\TothBot\TothBot_V2-Docs && git fetch origin && git log -1 --oneline"
+     cmd /c "cd /D C:\Users\wstot\GitHub\TothBot\TothBot_V2-Code && git fetch origin && git log -1 --oneline"
+   Expected:
+     TothBot_V2-Docs HEAD = 14e96df
+     TothBot_V2-Code HEAD = fb5de32
+
+5. Confirm D-01 through D-08 LOCKED per §2.
+
+6. Read TB00000 v2_18 §4.4 PAPER-AS-MASTER PRINCIPLE
+   end-to-end. PA-001..010 govern all work this session.
+
+7. SSH to VPS and execute STEP 1-9 deploy sequence per
+   §1.1.
+
+8. Observation window (24-72h continuous). Bill
+   monitors alerts@tothbot.com.
+
+9. TB00148 closure decision based on §1.2 pass criteria.
+
+10. Apply RR-SCOPE-005 STRICTLY. Cumulative count = 6
+    entering this session.
+
+11. Apply RR-SCOPE-001 STRICTLY across BOTH chat and
+    Claude Code if used.
+
+12. Apply RR-SHELL-001..004 STRICTLY. PowerShell is
+    Bill's default shell. Every copy box self-contained
+    with cmd /c wrapper for cmd-syntax commands.
+
+13. Apply OP-001..009 (ONEDRIVE PROHIBITION) STRICTLY.
+
+14. Apply PA-001..010 (PAPER-AS-MASTER PRINCIPLE)
+    STRICTLY. Pre-emit scan before every authoring
+    action.
+
+============================================================
+7. SCOPE BOUNDARIES
+============================================================
+
+IN SCOPE FOR TB00147:
+  - VPS deploy of ws_manager.py dv1_25 (fb5de32)
+  - 24-72h paper-mode observation
+  - Pass/rollback decision
+  - TB00147 Session Log + NSI authoring
+
+OUT OF SCOPE FOR TB00147:
+  - Any spec authoring or amendment
+  - Any code edit, refactor, or new feature
+  - Any parameter change (CIATS-owned values)
+  - Any constraint removal (RR-SCOPE-009 territory)
+  - Any concurrent paper+live architecture work
+    (PL-007 — future session)
+  - Live trading (paper-mode only until §1.2 PASS
+    confirmed AND Bill formal approval per
+    PT-AC-006)
+
+If TB00147 surfaces a defect requiring spec amendment
+or code edit, halt observation, document in session log,
+and defer the corrective to TB00148+ as a new stream.
+
+============================================================
+8. SESSION COMPLETION CRITERIA FOR TB00147
+============================================================
+
+  [ ] Cold-load mandatory reading complete
+  [ ] STEP A pre-flight PASS
+  [ ] GitHub state verified (Docs=14e96df, Code=fb5de32)
+  [ ] VPS deploy sequence STEP 1-8 executed without error
+  [ ] Startup batch ≤10 min observed
+  [ ] All six §1.2 pass criteria verified at startup
+  [ ] Steady-state observation window started
+  [ ] TB00147 Session Log v1_0 authored
+  [ ] TB00147 NSI v1_0 authored
+
+OBSERVATION WINDOW IS NOT REQUIRED TO COMPLETE WITHIN
+TB00147. If observation extends beyond session length,
+document running state in SL and pass to TB00148 for
+closure decision.
+
+============================================================
+END OF DOCUMENT
+============================================================

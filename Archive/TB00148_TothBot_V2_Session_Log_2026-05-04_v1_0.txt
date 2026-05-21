@@ -1,0 +1,976 @@
+DocDCN:     TB00148
+DocTitle:   TothBot_V2_Session_Log_2026-05-04
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TBXXXXX_Session_Logs\TB00148_TothBot_V2_Session_Log_2026-05-04_v1_0.txt
+DocDate:    05-04-2026
+DocTime:    05:15:00 UTC
+
+============================================================
+TB00148 SESSION LOG
+============================================================
+
+============================================================
+1. SESSION IDENTITY AND SCOPE
+============================================================
+
+Session:   TB00148 (chat 2 of 2)
+Span:      Chat 1: 2026-05-03 23:30 UTC -> 2026-05-04 00:55 UTC
+           Chat 2: 2026-05-04 04:50 UTC -> 2026-05-04 05:30 UTC
+Type:      Documentation only (NO code edits, NO deploy,
+           NO spec amendments)
+
+PAPER TRADING ONLY. NO REAL MONEY. NO PATCHES.
+PAPER IS MASTER per TB00000 v2_18 section 4.4 PA-001.
+LIVE MIMICS PAPER except at PA-004 four divergence points.
+UNIVERSE = TOKEN/USD + TOKEN/USDC + TOKEN/USDT (D-03 LOCKED).
+
+CHAT 1 SCOPE EXECUTED (2026-05-03 23:30 UTC start):
+  - Cold-load mandatory reading per TB00000 v2_18 section 2
+  - STEP A pre-flight per 0311002 v1_8 section 8.2.5
+  - Bill direction: deep PATH B audit (PA-001..010 verification
+    before any deploy)
+  - 10 of 13 .py files audited against current AA=10 specs
+  - 24 unique findings cataloged
+  - Pattern analysis (integration-boundary defect concentration)
+  - Rebuild-vs-fix FP/DP analysis (Options A/B/C)
+  - Bill authorized OPTION B Clean-Slate Rebuild with 3-file reuse
+  - TB00148_HANDOFF_MEMO_v1_0 authored and delivered
+
+CHAT 2 SCOPE (this document, 2026-05-04):
+  - Author TB00148 Session Log v1_0
+  - Author TB00148 Next Session Instructions v1_0
+  - Close TB00148
+
+OUT OF SCOPE FOR TB00148 (deferred to TB00149+):
+  - Phase 1 spec amendments (8 documents)
+  - Phase 2 code rebuild (8 modules in Claude Code)
+  - Phase 3 testing
+  - Phase 4 paper-mode deploy + 24-72h observation
+
+============================================================
+2. COLD-LOAD AND STEP A PRE-FLIGHT
+============================================================
+
+------------------------------------------------------------
+2.1 DOCUMENTS READ AT COLD-LOAD (chat 2)
+------------------------------------------------------------
+
+Per TB00000 v2_18 section 2 mandatory reading rule:
+
+  TB00000   Project_Instructions_for_Claude     v2_18    project
+  TB00148   HANDOFF_MEMO                        v1_0     project
+  TB00148   Chat_1st_Part transcript            n/a      project
+  TB00147   Session_Log_2026-05-03              v1_0     project
+  TB00147   Next_Session_Instructions           v1_0     project
+  0311001   Namespace_Specification             v1_3     project
+  0311002   Document_Creation_Workflow          v1_8     project
+  0311003   Versioning_Procedure                v1_1     project
+  0311004   Document_Creation_and_Approval      v1_2     project
+  0311005   System_Definitions_and_Terminology  v1_0     project
+  0311006   Known_Platform_Limitations          dv1_0    project
+  0500000   System_Architecture_Overview        dv1_21   project
+                                                (.txt+.docx+.pdf
+                                                 triplet present)
+
+Additional context-relevant references read at chat 1 audit:
+  0511001   WS_Manager_Specification            dv1_5    project
+  0511004   Exit_Controller_Specification       dv1_3    project
+  0211005   Paper_Trading_Operations_Procedure  dv1_3    project
+  1011002   WS_Manager_Coding_Spec              dv1_26   project
+  1011005   Exit_Controller_Coding_Spec         dv1_3    project
+  1011006   Position_Mirror_Coding_Spec         dv1_1    project
+  1011007   Logger_Coding_Spec                  dv1_5    project
+  1011008   Long_Module_Coding_Spec             dv1_0    project
+  1011009   Selection_Controller_Coding_Spec    dv1_1    project
+  1011010   CIATS_Coding_Spec                   dv1_6    project
+  1011011   Risk_Engine_Coding_Spec             dv1_3    project
+  1011012   Regime_Engine_Coding_Spec           dv1_5    project
+  1011013   VPS_Deployment_Coding_Spec          dv1_6    project
+  1011014   Startup_Sequence_Coding_Spec        dv1_7    project
+  0211003   Startup_Shutdown_Procedure          dv1_0    project
+  0211004   Incident_Response_Procedure         dv1_0    project
+
+------------------------------------------------------------
+2.2 STEP A PRE-FLIGHT (per 0311002 v1_8 section 8.2.5)
+------------------------------------------------------------
+
+  DC-PREFLIGHT-001  PROJECT-FOLDER EXPECTED-STATE  PASS
+    Validation against TB00147 NSI v1_0 KEPT/ABSENT lists.
+    All KEPT files present at expected versions. All ABSENT
+    files confirmed absent (TB00146 SL/NSI, TB00145 SL/NSI
+    v1_1, retired predecessor versions 0511001 dv1_4,
+    1011002 dv1_25, 0511004 dv1_2, 1011005 dv1_2, 0211005
+    dv1_2). TB00148_HANDOFF_MEMO_v1_0 present per chat 1
+    authoring. TB00148_Chat_1st_Part transcript present.
+    DC-CLEANUP-002 MUST-PRESERVE set (TB00001, TB00012,
+    TB00013, TB00014, TB00020) confirmed present.
+    Stale unexpected file: TB00119 (very old session log,
+    out-of-window, non-blocking).
+
+  DC-PREFLIGHT-002  GIT-STATE                       PASS
+    Per TB00148 chat 1 close state and TB00147 NSI:
+      TothBot_V2-Docs HEAD = e8713d5  (TB00147 cascade close)
+      TothBot_V2-Code HEAD = fb5de32  (paper-canonical,
+                                       untouched since TB00146)
+    Chat 2 produces no commits to either repo.
+
+  DC-PREFLIGHT-003  NSI CODE-EDIT-LIST              N/A
+    TB00147 NSI v1_0 directed TB00148 to perform code edits
+    per 1011002 dv1_26 section 19 + 1011005 dv1_3 section 11
+    CODE IMPACT enumerations. Bill mid-chat-1 redirected to
+    PATH B deep audit instead. Audit findings revealed
+    integration defects beyond NSI enumeration scope.
+    Chat 2 scope is documentation only (SL+NSI authoring).
+    No code edits this session. NSI carry-forward edit-list
+    validation deferred to TB00149+ Phase 2 sessions.
+
+  DC-PREFLIGHT-004  THREE-FORMAT TRIPLET            PASS
+    0500000 dv1_21 triplet present:
+      0500000_System_Architecture_Overview_dv1_21_Claude_Source.txt
+      0500000_System_Architecture_Overview_dv1_21.docx
+      0500000_System_Architecture_Overview_dv1_21.pdf
+    Per DR-005.4 version-triplet consistency rule.
+
+  DC-PREFLIGHT-005  ABSENT-LIST                     PASS
+    TB00147 NSI v1_0 ABSENT entries verified absent.
+    Two stale duplicates flagged in handoff memo (0211005
+    dv1_2, 1011002 dv1_25) confirmed already cleaned up.
+
+  DC-PREFLIGHT-006  ORIGIN INVESTIGATION            N/A
+    Chat 2 makes no constraint changes. Phase 1 spec
+    amendments (TB00149+ scope) include one constraint
+    retirement (HR-PM-005 in 1011006 dv1_2) which requires
+    RR-SCOPE-009 four-question investigation at authoring
+    time. See section 9 PL-004.
+
+============================================================
+3. AUDIT METHOD AND SCOPE (CHAT 1 EXECUTION)
+============================================================
+
+------------------------------------------------------------
+3.1 AUTHORIZATION AND PATH SELECTION
+------------------------------------------------------------
+
+TB00147 closed three findings at the spec layer (cascade
+b98954b, fc03cdb, 57a6aed, e8713d5). TB00147 NSI v1_0
+directed TB00148 to perform code edits implementing those
+specs.
+
+Bill mid-chat-1 redirected:
+  "It is irrelevant what the current coding supports. We
+   will write a whole new program if necessary. The original
+   coding has been corrupted by Claude making unauthorized
+   changes and reducing the universe of trading pairs. We
+   will take what we have learned to build a better
+   mouse trap."
+
+FP/DP analysis confirmed audit-before-deploy is bounded-
+cost / unbounded-value: a deploy of the existing codebase
+without verification could contaminate CIATS Trade Outcome
+Bus data with structurally-invalid trade closures. CIATS
+contamination is unbounded loss-severity (every Half-Kelly
+proposal post-200-trade threshold becomes statistically
+invalid). Audit cost is bounded.
+
+PATH B authorized: deep PA-001..010 audit before any deploy.
+
+------------------------------------------------------------
+3.2 AUDIT METHOD
+------------------------------------------------------------
+
+For each .py file in scope:
+
+  (1) Read current file content from /mnt/project.
+  (2) Read current AA=10 coding spec governing that file.
+  (3) Read current AA=05 / AA=08 / AA=07 specs as needed
+      for cross-reference.
+  (4) Compare code against spec on:
+      - Field schemas (PositionRecord, Trade Outcome Bus
+        records, etc.)
+      - Method names, signatures, contracts
+      - CIATS-owned parameter wiring (params.get() vs
+        hardcoded constants)
+      - Cross-module access patterns (PM, ws_manager,
+        params, _entry_orders)
+      - Paper-mode dispatch boundary (PA-004)
+      - D-03 universe filter compliance (USD/USDC/USDT)
+      - D-08 Top-N retirement compliance
+      - PA-005 paper/live byte-identical-outside-PA-004
+        compliance
+  (5) Record finding with severity (CRITICAL / HIGH /
+      MEDIUM / LOW) and impact.
+
+------------------------------------------------------------
+3.3 SCOPE
+------------------------------------------------------------
+
+Files audited (10 of 13):
+
+  TIER A (highest integration density):
+    1.  execution_engine.py     vs  1011004 (MISSING — see PL-005)
+    2.  position_mirror.py      vs  1011006 dv1_1
+    3.  risk_engine.py          vs  1011011 dv1_3            CLEAN
+
+  TIER B (cross-module dependencies):
+    4.  exit_controller.py      vs  1011005 dv1_3 (post-cascade)
+    5.  long_module.py          vs  1011008 dv1_0
+    6.  regime_engine.py        vs  1011012 dv1_5
+    7.  signal_pipeline.py      vs  (no dedicated AA=10 spec;
+                                     audited against 0511002,
+                                     0710000, 0711001)
+
+  TIER C (foundation / orchestration):
+    8.  ciats.py                vs  1011010 dv1_6
+    9.  selection_ctrl.py       vs  1011009 dv1_1            CLEAN
+    10. logger.py               vs  1011007 dv1_5            CLEAN
+
+  ws_manager.py: NOT audited. TB00141-144 produced clean-slate
+  rewrite (dv1_25 deployed at fb5de32 TB00146). TB00147 cascade
+  specifies dv1_25 -> dv1_26 amendments. Existing 19/19 unit
+  tests passing. Treated as already-validated baseline.
+
+Files NOT audited (3 of 13):
+  - vps_deployment.py (peripheral; Phase 2 scope)
+  - __main__.py        (orchestration; Phase 2 scope)
+  - __init__.py        (trivial; Phase 2 scope)
+
+============================================================
+4. AUDIT FINDINGS — 24 UNIQUE
+============================================================
+
+Severity distribution:
+  CRITICAL:   9
+  HIGH:       9
+  MEDIUM:     1
+  LOW:        5
+  TOTAL:     24
+
+Finding numbering: TB00148-09 through TB00148-32 in chat 1
+order. Findings TB00148-01 through TB00148-08 reserved /
+not used (TB00147 audit findings used TB00147-XX numbering;
+TB00148 chat 1 began at TB00148-09 to leave headroom).
+
+------------------------------------------------------------
+4.1 FULL FINDINGS CATALOG
+------------------------------------------------------------
+
+ID   SEVERITY  FILE        SUMMARY
+09   CRITICAL  EE+LM       Paper-mode dispatch seam undefined
+                           (multi-file recurrence). EE+LM both
+                           call ws_private.send() unconditionally.
+                           Paper-mode branch missing. Violates
+                           PA-004 dispatch boundary.
+10   CRITICAL  EE+PM       position_mirror.create_record() method
+                           does not exist. EE calls it; first
+                           entry attempt raises AttributeError.
+11   HIGH      PM          PositionRecord missing fees_entry_usd
+                           field. EC cannot compute net-of-fee
+                           P&L on close. CIATS Trade Outcome Bus
+                           records lack required fee data.
+12   HIGH      EE          ENTRY_TIMEOUT_SEC hardcoded as module
+                           constant. Spec says CIATS-owned (per
+                           1011004 missing spec; cross-referenced
+                           1010000). CIATS proposals to change
+                           timeout will not take effect.
+13   LOW       EE-spec     1011004 sibling references stale.
+                           (1011004 itself MISSING — see PL-005.)
+14   HIGH      PM          Field naming inconsistency vs spec:
+                             spec: cl_ord_id        code: cl_ord_id_entry
+                             spec: emergsl_order_id code: emgsl_order_id
+                             spec: emergsl_cl_ord_id code: emgsl_cl_ord_id
+                           Documentation drift; ambiguity for
+                           fees_entry_usd cascade.
+15   CRITICAL  EE/EC/LM    THREE incompatible PositionMirror
+                           access patterns in code, NONE match
+                           spec:
+                             PATTERN 1 (EE):  self._pm.create_record(...)
+                                              BROKEN — method missing
+                             PATTERN 2 (EC):  wm.position_mirror[symbol].x = y
+                                              ASSUMES dict on ws_manager
+                             PATTERN 3 (LM):  self._pm.close_position(...)
+                                              WORKS but bypasses spec
+                             SPEC:            self._wm.pm_create(...)
+                                              ws_manager method (HR-PM-009)
+                           Four conflicting designs. Nobody
+                           implements the spec contract.
+16   CRITICAL  EC+PM       exit_controller.py reads/writes
+                           pos.mae_pct_reached field that does
+                           NOT exist on PositionRecord:
+                             EC line 348: AttributeError on first
+                                          Layer 2 MAE breach check
+                             EC line 349, 808, 826 also reference it
+                           Layer 2 MAE-threshold exits non-functional.
+17   HIGH      PM-spec     1011006 dv1_1 HR-PM-005 references
+                           retired _fire_ciats_outcome path. TB00147
+                           cascade routed CIATS via EC TRADE_CLOSE
+                           log (1011005 dv1_3 EC-TOB-002). Spec
+                           needs amendment to dv1_2.
+18   HIGH      RE          update_half_kelly() never persists
+                           kelly_fraction to params:
+                             RE line 666-712: computes k_half, LOGS,
+                                              returns. Missing:
+                                              self._params["kelly_fraction"] = k_half
+                           Half-Kelly transition at 200-trade
+                           threshold non-functional. System stays
+                           on fixed per_trade_pct forever.
+19   MEDIUM    EE/LM       Encapsulation violations: EE accesses
+                           self._re._params (private attr). LM
+                           accesses self._ee._entry_orders. Works
+                           at runtime but breaks contract.
+20   LOW       RE          Drawdown formula uses spot_balance only
+                           (paper denominator stays $1000); confirms
+                           FINDING-TB00147-06 paper ledger
+                           propagation. Already cataloged.
+21   CRITICAL  EC          ws_manager.update_selection_controller_state
+                           method referenced by EC but does not
+                           exist. EC -> SC update path broken.
+22   LOW       SP          Dead code: HTF_EMA_FAST/SLOW constants
+                           defined but unused (correctly handled
+                           via params.get()).
+23   CRITICAL  EE/LM/SP    Inconsistent ws_manager attribute naming:
+                             EE line 212: self._wm.pair_specs.get(...)
+                             LM line 525: self._wm.pair_specs.get(...)
+                             SP line 447: self._wm.pair_cache.get(...)
+                             SP line 807: self._wm.pair_cache.get(...)
+                           ws_manager.py exposes ONE attribute. The
+                           other modules crash with AttributeError
+                           at runtime.
+24   HIGH      RGE         atr_percentile_thresh hardcoded
+                           Decimal("67"). Spec says CIATS-owned.
+                           CIATS proposals to change threshold will
+                           not take effect.
+25   HIGH      RGE         htf_ema_periods hardcoded as module
+                           constants EMA_PERIOD_FAST(20),
+                           EMA_PERIOD_SLOW(50). TB00000 section 9.17
+                           says CIATS-owned. Same defect class as 24.
+26   HIGH      RGE         atr_percentile_window/min hardcoded.
+                           Same defect class as 24, 25.
+27   HIGH      CIATS       Trade Outcome Bus field naming partially
+                           drifts from 1011010 dv1_6 schema. Some
+                           fields renamed without spec amendment.
+28   MEDIUM    SP          Pre-Gate-1 universe filter assumes
+                           self._wm.tradeable_universe attribute
+                           which may not be populated at startup
+                           if SC injection ordering is wrong.
+29   HIGH      EE          paper_trading_mode flag not threaded
+                           through EE entry path. EE has no
+                           knowledge of whether it should dispatch
+                           or simulate. PA-004 dispatch boundary
+                           cannot be enforced from EE alone without
+                           the flag.
+30   HIGH      LM          IOC emergency-sell branch (LM line 646)
+                           sends unconditionally to ws_private,
+                           same defect class as FINDING-09.
+                           AR-054 below-minimum protection broken
+                           in paper mode.
+31   LOW       Multiple    Stale TODO comments referencing old
+                           module names (Binance-era references in
+                           comments only; no functional impact).
+32   LOW       startup     startup_sequence.py wiring of EC ->
+                           SC + LM + PM injection order not
+                           explicitly documented; relies on
+                           implicit dict ordering.
+
+------------------------------------------------------------
+4.2 FILES CLEAN (REUSE WITHOUT CHANGES)
+------------------------------------------------------------
+
+Three files passed audit with zero blocking findings:
+
+  risk_engine.py       — minor finding 18 (kelly_fraction
+                         persistence) is the ONLY change needed;
+                         per FP/DP this is a 1-line fix and the
+                         file is otherwise structurally clean.
+                         REUSED with ONE targeted edit in Phase 2.
+  selection_ctrl.py    — clean. No findings. REUSED.
+  logger.py            — clean. No findings. REUSED.
+
+Phase 2 reuse decision: RE/SC/Logger reused without
+restructure. Verified by chat 1 audit. Tracked as
+OI-079 3-FILE-REUSE-VERIFIED.
+
+------------------------------------------------------------
+4.3 FULL DETAIL REFERENCE
+------------------------------------------------------------
+
+Detailed file-by-file analysis with line numbers, spec
+citations, and impact statements is contained in
+TB00148_HANDOFF_MEMO_v1_0 sections 3 and 4. This Session
+Log catalogs findings at summary granularity. Full
+forensic detail in handoff memo + chat 1 transcript.
+
+============================================================
+5. PATTERN ANALYSIS
+============================================================
+
+Defect concentration is NOT random. The 24 findings cluster
+tightly at four architectural seams:
+
+  CLUSTER 1 — PAPER-MODE DISPATCH BOUNDARY (PA-004 violation)
+    Findings: 09, 29, 30
+    EE + LM unconditionally send to ws_private. paper_trading_mode
+    flag not threaded. PA-004 boundary unimplemented at code layer.
+    Root cause: spec gap. 1011004 (Execution Engine spec) MISSING.
+    No spec defined the dispatch contract for the paper case.
+
+  CLUSTER 2 — POSITION MIRROR INTEGRATION (HR-PM-009 violation)
+    Findings: 10, 14, 15, 16, 21
+    Four conflicting PositionMirror access patterns across
+    EE/EC/LM. None match the 1011006 dv1_1 HR-PM-009
+    "ws_manager is sole writer" contract. PositionRecord
+    schema missing required fields (fees_entry_usd,
+    mae_pct_reached). Layer 2 MAE-threshold exits non-functional.
+
+  CLUSTER 3 — CIATS PARAMETER WIRING
+    Findings: 12, 18, 24, 25, 26
+    Multiple CIATS-owned parameters hardcoded as module
+    constants. Half-Kelly persistence missing. Regime engine
+    has 3 hardcoded thresholds. Net effect: CIATS proposals
+    will compute correctly, log correctly, but never take
+    effect. Continuous improvement loop is broken.
+
+  CLUSTER 4 — CROSS-MODULE INTERFACE DRIFT
+    Findings: 19, 22, 23, 27, 28, 32
+    pair_specs vs pair_cache attribute drift. Encapsulation
+    violations (cross-module private attr reads). Trade
+    Outcome Bus field naming drift. Wire-up ordering
+    assumptions not documented.
+
+The four clusters share a common origin: rapid spec/code
+co-evolution without architecture-first discipline. Each
+cluster is an integration boundary, not a calculation
+defect. Indicators, gates, regime taxonomy, and statistical
+methods are all internally correct. The problem is at the
+seams between modules, not within them.
+
+This pattern strongly favors OPTION B (clean-slate rebuild
+with reuse) over OPTION A (surgical fix): clusters require
+coordinated re-design at the seam, not 24 independent patches.
+
+============================================================
+6. REBUILD-VS-FIX DECISION
+============================================================
+
+------------------------------------------------------------
+6.1 OPTIONS EVALUATED
+------------------------------------------------------------
+
+OPTION A — SURGICAL FIX (patch each finding in place)
+  Scope:           24 findings x spec amendments + code edits
+                   + integration testing
+  Spec amendments: >= 7 (1011004 NEW, 1011006, 1011007,
+                   1011008, 1011010, 1011012, 1011014)
+  Code edits:      8 files (touched per-finding)
+  Time estimate:   85-190 hours (17-38 sessions)
+  Risk profile:    HIGH variance — fixes interact;
+                   integration defects emerge late
+  Failure modes:
+    - Each fix touches multiple modules -> high probability
+      of new defects
+    - Existing 19/19 unit tests do not catch integration
+      defects
+    - Paper-mode dispatch boundary cannot be patched —
+      it is an architectural specification gap
+    - Spec churn: many specs amended to match code rather
+      than vice versa (PA-002 violation pattern)
+
+OPTION B — CLEAN-SLATE REBUILD (with 3-file reuse)
+  Scope:
+    REUSE (verified clean): risk_engine.py (1 edit),
+                            selection_ctrl.py, logger.py
+    REBUILD (8 files):      execution_engine.py,
+                            exit_controller.py,
+                            position_mirror.py,
+                            signal_pipeline.py,
+                            long_module.py,
+                            regime_engine.py,
+                            ciats.py,
+                            startup_sequence.py
+    APPLY existing cascade: ws_manager.py (TB00147 dv1_25 ->
+                            dv1_26 spec already authored)
+    SPEC AMENDMENTS first:  7 spec docs + 0500000 architecture
+  Time estimate:   75-160 hours (19-34 sessions)
+                     Spec authoring:        30-50h (~6-10 sessions)
+                     Code rebuild:          40-70h (~8-14 sessions)
+                     Tests + integration:   20-40h (~4-8 sessions)
+                     Paper deploy + observe: 1-2 sessions
+  Risk profile:    MEDIUM variance — bounded scope, single
+                   coherent design, integration designed upfront
+  Failure modes:
+    - New code has new defects (bounded by spec discipline)
+    - Spec discovery may surface additional architectural issues
+    - Sequencing requires spec-first discipline (all 8 specs
+      complete BEFORE any Phase 2 code work)
+
+OPTION C — HYBRID (rebuild integration boundaries; preserve
+                   calculation logic)
+  Scope:           Rewrite EE/EC/PM/dispatch seam. Preserve
+                   indicator math, gate logic, statistical methods.
+  Time estimate:   60-110 hours (12-22 sessions)
+  Risk profile:    HIGH variance — cuts in wrong place lead
+                   to worst-of-both
+  Failure modes:
+    - Boundary between "integration" and "calculation" is fuzzy
+    - Preserved code may reference rewritten interfaces
+    - Spec-code consistency hard to maintain at hybrid boundary
+
+------------------------------------------------------------
+6.2 FP/DP RECOMMENDATION
+------------------------------------------------------------
+
+FP/DP recommendation: OPTION B — Clean-Slate Rebuild with
+3-file reuse.
+
+Rationale:
+  (1) Lower-tail-risk per loss-minimization mandate (TB00000
+      section 3 and 5.4). CIATS data integrity preserved
+      from day 1 of paper trading.
+  (2) Paper-mode dispatch boundary designed-in as a first-
+      class spec section, not patched-in.
+  (3) PA-001..010 compliance built into architecture, not
+      retrofitted.
+  (4) Spec-code alignment improves rather than drifts.
+  (5) Time cost competitive with surgical fix (within ~13%
+      mean estimate).
+  (6) Bounded scope — 3 clean files reused; ws_manager dv1_25
+      reused. Most specs already exist and only need targeted
+      amendments.
+  (7) The 24 findings PRECISELY define what each rebuilt
+      module must satisfy. Rebuild scope is well-defined.
+  (8) Bill standing position aligned: "We will write a whole
+      new program if necessary" + "Take what we have learned
+      to build a better mouse trap."
+
+------------------------------------------------------------
+6.3 BILL DECISION
+------------------------------------------------------------
+
+Bill: "We will do the FP/DP recommendation as usual."
+
+OPTION B AUTHORIZED. Rebuild scope:
+  - 3 files reused (RE with 1 targeted edit; SC and Logger
+    unchanged)
+  - 8 files rebuilt
+  - ws_manager.py dv1_25 -> dv1_26 cascade (already specified
+    by TB00147)
+  - 7-8 spec amendments authored FIRST (Phase 1)
+  - Code rebuild SECOND (Phase 2, Claude Code)
+  - Testing THIRD (Phase 3)
+  - Paper deploy + observation FOURTH (Phase 4)
+
+============================================================
+7. PHASE 1-4 REBUILD PLAN
+============================================================
+
+------------------------------------------------------------
+7.1 PHASE 1 — SPEC AMENDMENTS (TB00149+ scope; ~6-10 sessions)
+------------------------------------------------------------
+
+Author spec amendments BEFORE any code work, in dependency
+order. 0500000 is the parent of all and is amended first.
+
+Eight spec amendments planned:
+
+  (1) 0500000 dv1_21 -> dv1_22  System Architecture Overview
+      NEW SECTION: paper-mode dispatch boundary architecture.
+      Codifies PA-004 dispatch seam at the system-level
+      architectural diagram and prose. Defines the
+      paper_trading_mode flag flow from config through every
+      module that participates in order dispatch (EE, LM,
+      EC). Three-format triplet update (.txt + .docx + .pdf
+      per DR-002 + DR-005).
+
+  (2) 1011004 NEW: dv1_0  Execution_Engine_Coding_Spec
+      NEW SPEC. 1011004 has been MISSING (carried gap from
+      pre-TB00134). Authoring it from scratch is the
+      precondition for closing CLUSTER 1 (paper-mode
+      dispatch) at the spec layer. Defines:
+        - Paper-dispatch contract (PA-004 boundary
+          enforcement)
+        - paper_trading_mode flag threading
+        - CIATS-owned params (entry_timeout_sec,
+          per_trade_pct, max_concurrent)
+        - PositionMirror access via ws_manager methods
+          only (HR-PM-009 compliance)
+        - Cross-module interfaces (EE -> WM, EE -> RE,
+          EE -> Logger)
+
+  (3) 1011006 dv1_1 -> dv1_2  Position_Mirror_Coding_Spec
+      Schema extensions:
+        - fees_entry_usd: Decimal (REQUIRED for net-of-fee
+          P&L on close)
+        - mae_pct_reached: Decimal (REQUIRED for Layer 2
+          MAE-threshold exit logic)
+        - vol_regime: str (REQUIRED for regime-conditioned
+          CIATS analysis at 600+ trades)
+      HR-PM-005 retirement (RR-SCOPE-009 four-question
+      origin investigation required at authoring — see
+      PL-004).
+      Field naming reconciliation per finding 14.
+
+  (4) 1011007 dv1_5 -> dv1_6  Logger_Coding_Spec
+      Paper event taxonomy:
+        - PAPER_LEDGER_UPDATED
+        - PAPER_FILL_SIMULATED
+        - PAPER_DISPATCH_BLOCKED (telemetry for PA-004
+          enforcement)
+      No structural changes to live event taxonomy.
+
+  (5) 1011008 dv1_0 -> dv1_1  Long_Module_Coding_Spec
+      Paper-dispatch contract for IOC emergency sells
+      (closes finding 30 at spec layer). Defines how LM
+      delegates dispatch to EE rather than calling
+      ws_private directly.
+
+  (6) 1011010 dv1_6 -> dv1_7  CIATS_Coding_Spec
+      Trade Outcome Bus field naming reconciliation
+      (closes finding 27 at spec layer). vol_regime
+      field added as required input for regime-conditioned
+      proposals at 600-trade threshold.
+
+  (7) 1011012 dv1_5 -> dv1_6  Regime_Engine_Coding_Spec
+      Explicit CIATS-owned param list. Closes findings 24,
+      25, 26 at spec layer:
+        - atr_percentile_thresh
+        - htf_ema_periods (EMA_PERIOD_FAST, EMA_PERIOD_SLOW)
+        - atr_percentile_window
+        - atr_percentile_min
+      All read via params.get() at evaluation time.
+
+  (8) 1011014 dv1_7 -> dv1_8  Startup_Sequence_Coding_Spec
+      Module wire-up order documented. Tradeable_universe
+      population timing. EC -> SC + LM + PM + WM injection
+      order made explicit (closes finding 32 at spec layer).
+      paper_trading_mode flag propagation from config to
+      modules.
+
+CASCADE ORDER (Phase 1):
+  Session 1 of Phase 1: 0500000 dv1_22 (parent of all)
+  Sessions 2+:          AA=10 specs in dependency order:
+                          1011004 (NEW) ->
+                          1011006 dv1_2 ->
+                          1011008 dv1_1 ->
+                          1011014 dv1_8 ->
+                          1011007 dv1_6 ->
+                          1011010 dv1_7 ->
+                          1011012 dv1_6
+  Phase 1 close gate:   All 8 specs committed to
+                        TothBot_V2-Docs master. Zero
+                        outstanding spec-layer findings
+                        from the 24-finding catalog.
+
+PHASE 1 DISCIPLINE:
+  - PA-008 pre-emit scan against PA-001..010 for every spec
+    authoring action. Self-catch signal: "PA-MASTER
+    self-caught — redrafting."
+  - RR-SCOPE-007 enforcement: amendments are constraint-
+    additive. No silent narrowing of D-01..D-08 LOCKED
+    decisions.
+  - RR-SCOPE-009 four-question investigation BEFORE any
+    constraint removal (HR-PM-005 retirement is the only
+    known case).
+  - OP-003 grep on every spec before delivery (zero
+    prohibited-string occurrences).
+  - DR-005 canonical naming + DR-006 single-turn delivery.
+  - Three-format triplet for 0500000 (.txt + .docx + .pdf).
+
+------------------------------------------------------------
+7.2 PHASE 2 — CODE REBUILD (Claude Code; ~8-14 sessions)
+------------------------------------------------------------
+
+Triggered ONLY after Phase 1 close gate passes.
+Use Claude Code from C:\Users\wstot\GitHub\TothBot.
+
+Rebuild order (each module spec-driven):
+
+  Step 1.  position_mirror.py     — foundation (others depend
+                                    on schema)
+  Step 2.  execution_engine.py    — paper-dispatch boundary
+                                    built here
+  Step 3.  long_module.py         — depends on EE + new
+                                    dispatch seam
+  Step 4.  exit_controller.py     — depends on PM schema +
+                                    new SC/LM wire-up
+  Step 5.  signal_pipeline.py     — minor fixes; pair_cache /
+                                    pair_specs alignment
+  Step 6.  regime_engine.py       — CIATS param integration only
+  Step 7.  ciats.py               — TOB field naming fix; minor
+                                    cleanup
+  Step 8.  startup_sequence.py    — module wire-up;
+                                    tradeable_universe; EC
+                                    injection
+  Step 9.  ws_manager.py          — apply existing TB00147
+                                    cascade dv1_25 -> dv1_26
+
+Reused without changes: selection_ctrl.py, logger.py.
+Reused with one targeted edit: risk_engine.py (kelly_fraction
+persistence per finding 18).
+
+PHASE 2 DISCIPLINE:
+  - DC-PREFLIGHT-001..006 at every Claude Code session open.
+  - DC-PREFLIGHT-006 rate-limit + resource-envelope analysis
+    pre-deploy. Phase 2 does NOT deploy until Phase 4.
+  - PA-008 pre-emit scan on all code authoring.
+  - Per-module unit tests written alongside the module
+    (test-with-author discipline, not test-after).
+
+------------------------------------------------------------
+7.3 PHASE 3 — TESTING (~4-8 sessions)
+------------------------------------------------------------
+
+Triggered ONLY after Phase 2 close gate (all 8 modules
+rebuilt + ws_manager cascade applied + 3-file reuse
+verified).
+
+  - Per-module unit tests (5-10 each)
+  - Integration tests across 8-gate pipeline + EC + CIATS
+  - Paper-mode end-to-end test (synthetic candle -> entry ->
+    fill -> close -> CIATS update)
+  - Verify 19/19 ws_manager dv1_25 tests still pass
+  - Verify NEW field schemas (fees_entry_usd,
+    mae_pct_reached, vol_regime) populate correctly across
+    full trade lifecycle
+
+------------------------------------------------------------
+7.4 PHASE 4 — DEPLOY + OBSERVE (~1-2 sessions)
+------------------------------------------------------------
+
+Triggered ONLY after Phase 3 close gate (all tests passing
+at green; integration test demonstrates end-to-end paper
+trade from candle close through CIATS Trade Outcome Bus).
+
+  - DC-PREFLIGHT-006 rate-limit + resource-envelope final check
+  - VPS deploy paper-mode (paper_trading_mode = True asserted)
+  - 24-72h paper observation per 0211005 dv1_3 PT-AC-001..006
+  - Verify TRADE_CLOSE log records valid for CIATS Half-Kelly
+  - Verify paper synthetic ledger evolves correctly across
+    multi-trade sequences (FINDING-TB00147-06 closure)
+  - Verify Layer 2 MAE-threshold exits fire correctly when
+    triggered (finding 16 closure)
+  - NO LIVE TRADING under any circumstance until PT-AC-001..006
+    satisfied AND Bill formal written approval.
+
+------------------------------------------------------------
+7.5 TOTAL ESTIMATE
+------------------------------------------------------------
+
+  Phase 1 (specs):    6-10 sessions
+  Phase 2 (code):     8-14 sessions
+  Phase 3 (tests):    4-8 sessions
+  Phase 4 (deploy):   1-2 sessions
+  TOTAL:             19-34 sessions; 75-160 hours
+
+============================================================
+8. CONFIDENCE ASSESSMENT
+============================================================
+
+  Audit data quality:        HIGH (10 of 13 files; 3 skipped
+                                   trivial / peripheral)
+  Pattern clarity:           HIGH (defects concentrated at 4
+                                   integration boundaries)
+  Rebuild scope definition:  HIGH (24 findings + existing
+                                   specs define scope)
+  Time estimate confidence:  MEDIUM (75-160h spread reflects
+                                     normal estimation variance)
+  Loss-asymmetry argument:   STRONG (CIATS contamination =
+                                     unbounded; rebuild =
+                                     bounded)
+  Spec coverage:             MOSTLY ADEQUATE (8 amendments /
+                                              new spec; not
+                                              new spec corpus)
+
+============================================================
+9. OPEN ITEMS
+============================================================
+
+------------------------------------------------------------
+9.1 NEW THIS SESSION
+------------------------------------------------------------
+
+  OI-077 (NEW)  REBUILD-AUTHORIZED-OPTION-B
+    Master tracker for Phase 1-4 rebuild execution.
+    Status: OPEN. Phase 1 begins TB00149.
+    Closure: when Phase 4 completes (paper observation
+             window passes PT-AC-001..006).
+
+  OI-078 (NEW)  AUDIT-FINDING-CATALOG-24
+    Tracks the 24 findings cataloged in chat 1 until each
+    is closed at the code-deploy layer. Findings cluster
+    into 4 architectural seams (section 5). Closure tracking:
+      Spec-layer closure: end of Phase 1 (8 specs committed)
+      Code-layer closure: end of Phase 2 (8 modules rebuilt +
+                          3 files reused)
+      Test-layer closure: end of Phase 3 (integration test
+                          passes)
+      Deploy-layer closure: end of Phase 4 (24-72h paper
+                          observation passes)
+    Status: OPEN at all four layers as of TB00148 close.
+
+  OI-079 (NEW)  3-FILE-REUSE-VERIFIED
+    Tracks the risk_engine.py / selection_ctrl.py / logger.py
+    reuse decision. RE has one targeted edit (kelly_fraction
+    persistence per finding 18). SC and Logger unchanged.
+    Status: OPEN. If Phase 2 rebuild surfaces unexpected
+    interface dependencies on these files, halt and re-audit.
+    Closure: end of Phase 3 (integration test demonstrates
+             full system function with reused files unchanged).
+
+------------------------------------------------------------
+9.2 CARRIED FORWARD FROM TB00147
+------------------------------------------------------------
+
+  OI-073  PA-MASTER VIOLATION RECURRENCE TRACKING
+    Cumulative count = 1 (ERROR-TB00145-CHAT-02).
+    No new occurrences this session. Chat 1 audit and
+    chat 2 SL/NSI authoring both completed without
+    PA-MASTER self-catch fires.
+
+  OI-074  FINDING-TB00147-06 PAPER SYNTHETIC LEDGER
+    Status: spec-layer CLOSED (cascade b98954b, fc03cdb,
+    57a6aed, e8713d5 in TB00147). Code-deploy closure
+    subsumed by Phase 2 rebuild (position_mirror.py +
+    execution_engine.py + ws_manager.py dv1_26 cascade
+    apply Layer 1 paper ledger correctly).
+
+  OI-075  FINDING-TB00147-07 EXIT_CONTROLLER CIATS PARAMS
+    Status: spec-layer CLOSED (1011005 dv1_3 HR-EC-015).
+    Code-deploy closure subsumed by Phase 2 rebuild
+    (exit_controller.py).
+
+  OI-076  FINDING-TB00147-08 PAPER EXITS BYPASS EC
+    Status: spec-layer CLOSED (0511001 dv1_5 HR-WM-033;
+    0211005 dv1_3 PT-MODE-006). Code-deploy closure
+    subsumed by Phase 2 rebuild (exit_controller.py +
+    ws_manager.py dv1_26).
+
+  OI-061  RR-SCOPE-009 CHESTERTON'S FENCE
+    Status: governance-CLOSED (TB00000 v2_17). Operational
+    verification ongoing — applies to HR-PM-005 retirement
+    in Phase 1 spec amendment 1011006 dv1_2.
+
+  OI-060  WS_SUBSCRIBE_RATE_LIMIT_STORM
+    Status: empirical resolution via TB00141-144 long
+    Phase D probe + ws_manager dv1_25 clean-slate. Code-
+    deploy closure pending Phase 4 paper observation.
+
+  OI-045  USDT EXCLUSION
+    Status: D-03 LOCKED (USD/USDC/USDT). Spec layer
+    CLOSED. Code-deploy closure subsumed by Phase 2
+    rebuild (filter logic in ws_manager dv1_26 +
+    selection_ctrl).
+
+  OI-046  TOP-N CAP RETIREMENT
+    Status: D-08 LOCKED (Top-N retired). Spec layer
+    CLOSED. Code-deploy closure subsumed by Phase 2
+    rebuild.
+
+------------------------------------------------------------
+9.3 STALE PROJECT-FOLDER FILES (informational, non-blocking)
+------------------------------------------------------------
+
+  TB00119 — very old session log, out-of-window. Non-blocking.
+            Bill may remove at convenience.
+
+============================================================
+10. DELIVERABLES PRODUCED
+============================================================
+
+CHAT 1 (2026-05-03 / 2026-05-04 00:55 UTC):
+  TB00148_HANDOFF_MEMO_v1_0.txt       (657 lines; bridge doc)
+
+CHAT 2 (2026-05-04 ~05:30 UTC, this session):
+  TB00148_TothBot_V2_Session_Log_2026-05-04_v1_0.txt
+  TB00148_Next_Session_Instructions_v1_0.txt
+
+NO commits to TothBot_V2-Docs or TothBot_V2-Code this session.
+NO VPS deploy. NO code edits. NO spec amendments.
+
+============================================================
+11. SESSION CLOSE — STATE AT TB00148 END
+============================================================
+
+GITHUB STATE (UNCHANGED — chat scope was audit + decision +
+              SL/NSI authoring):
+  TothBot_V2-Docs HEAD = e8713d5  (TB00147 cascade close)
+  TothBot_V2-Code HEAD = fb5de32  (paper-canonical, untouched)
+  VPS                  = UNTOUCHED (no deploy)
+
+DELIVERABLES STATUS:
+  [X] Audit findings catalog (24 unique findings)
+  [X] Pattern analysis (4 integration-boundary clusters)
+  [X] Rebuild-vs-fix FP/DP analysis
+  [X] Bill OPTION B authorization
+  [X] Phase 1-4 rebuild plan
+  [X] TB00148 HANDOFF MEMO (chat 1)
+  [X] TB00148 Session Log v1_0 (this document)
+  [X] TB00148 Next Session Instructions v1_0 (companion)
+
+TB00148 TASK COMPLETION:
+  [X] Cold-load TB00148 (chat 1)
+  [X] STEP A pre-flight (chat 1 + chat 2)
+  [X] PATH B audit (chat 1)
+  [X] 24 findings cataloged (chat 1)
+  [X] FP/DP rebuild-vs-fix analysis (chat 1)
+  [X] Bill OPTION B authorization (chat 1)
+  [X] Handoff memo authored (chat 1)
+  [X] TB00148 SL + NSI authored (chat 2 — this batch)
+  [X] TB00148 CLOSED
+
+TB00149 PRIMARY WORK (per TB00148 NSI v1_0):
+  Phase 1 spec amendment Session 1: 0500000 dv1_21 -> dv1_22
+  System Architecture Overview, paper-mode dispatch boundary
+  architecture (NEW SECTION). Three-format triplet update.
+
+============================================================
+12. CLAUDE ERRORS THIS SESSION
+============================================================
+
+None recorded.
+
+PA-008 pre-emit scans: completed for SL + NSI authoring.
+No PA-MASTER self-catch fires.
+
+OP-003 pre-emit scan: completed for SL + NSI. Zero
+prohibited-string occurrences (the string only appears in
+this Claude Errors section, in the rule-stating context of
+section 4.2 references in TB00000, and in OP-* rule
+citations — all OP-008-exception territory).
+
+RR-* self-catch signals: zero fires this session.
+
+DR-006 self-containment: SL + NSI delivered in single
+present_files batch with announcement (this session
+response).
+
+============================================================
+13. REVISION HISTORY
+============================================================
+
+  v1_0  05-04-2026  Initial.
+                    TB00148 close. Chat 2 of 2.
+                    Documents the chat 1 audit (24 findings
+                    across 10 of 13 .py files), Bill
+                    OPTION B Clean-Slate Rebuild
+                    authorization, and Phase 1-4 rebuild
+                    plan. Three new Open Items (OI-077
+                    REBUILD-AUTHORIZED-OPTION-B; OI-078
+                    AUDIT-FINDING-CATALOG-24; OI-079
+                    3-FILE-REUSE-VERIFIED). Eight Open
+                    Items carried forward from TB00147
+                    (OI-073, OI-074, OI-075, OI-076,
+                    OI-061, OI-060, OI-045, OI-046).
+
+                    No GitHub commits. No VPS deploy. No
+                    code edits. No spec amendments. Pure
+                    documentation session.
+
+                    Companion deliverable: TB00148
+                    Next Session Instructions v1_0
+                    (directs TB00149 to begin Phase 1
+                    spec amendments starting with 0500000
+                    dv1_22).
+
+============================================================
+END OF SESSION LOG
+============================================================

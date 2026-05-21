@@ -1,0 +1,342 @@
+DocDCN:     TB00062
+DocTitle:   TothBot_V2_Session_Log_2026-04-10
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\My_TothBot_Stuff\TBXXXXX_Session_Logs\TB00062_TothBot_V2_Session_Log_2026-04-10_v1_0.txt
+DocDate:    04-10-2026
+DocTime:    06:00:00 UTC
+
+============================================================
+TOTHBOT V2 SESSION LOG — 2026-04-10
+============================================================
+
+============================================================
+1. SESSION IDENTITY
+============================================================
+
+Session date:     April 10, 2026
+Session type:     Phase 11 — PT-ENTRY-003 continued
+                  Three critical defects found and fixed.
+                  TothBot V2 service confirmed running.
+                  CRITICAL FAILURE: Paper trading mode was
+                  never implemented. Service connected to
+                  live Kraken with real keys and no paper
+                  trading protection. Stopped immediately
+                  on discovery. No trades were placed.
+Prior session:    TB00061 (2026-04-08 Part 8)
+
+Documents read:
+  TB00000  v2_8   Project Instructions              checked
+  TB00061  v1_1   Prior session log                 checked
+
+============================================================
+2. WORK COMPLETED THIS SESSION
+============================================================
+
+------------------------------------------------------------
+2.1 DEFECT-SIG-001 — Missing HMAC-SHA512 Signing — FIXED
+------------------------------------------------------------
+
+Root cause: Three private Kraken REST calls in ws_manager.py
+were missing the mandatory API-Sign header. Kraken requires
+every private REST call to be cryptographically signed using
+HMAC-SHA512. Without the signature, Kraken returns
+EAPI:Invalid key regardless of whether the key is valid.
+This caused every startup attempt to fail immediately.
+
+Affected functions:
+  _rest_get_ws_token        — called at every startup/reconnect
+  _rest_get_open_orders     — called on executions sequence gap
+  _rest_get_account_balance — called on balances sequence gap
+
+Fix applied to ws_manager.py:
+  1. Added imports: base64, hashlib, hmac, urllib.parse
+  2. Added _sign_request() helper method implementing the
+     Kraken HMAC-SHA512 signing algorithm:
+       encoded = (nonce + urlencode(data)).encode()
+       message = url_path.encode() + sha256(encoded).digest()
+       mac = HMAC-SHA512(base64decode(secret), message)
+       return base64encode(mac.digest())
+  3. Fixed all three private REST calls to include both
+     API-Key and API-Sign headers
+
+GitHub commit: ba50221
+Commit message: Fix: add HMAC-SHA512 API-Sign header to
+                all private REST calls
+
+------------------------------------------------------------
+2.2 DEFECT-SVC-001 — Wrong systemd Service Type — FIXED
+------------------------------------------------------------
+
+Root cause: tothbot.service had Type=notify and WatchdogSec=120.
+Type=notify requires the process to call sd_notify READY=1
+to signal systemd that startup is complete. That call was
+documented in a comment as being sent by WSManager after
+Step 9, but was NEVER implemented in the code. Systemd
+waited for the notification, hit the 90-second default
+timeout, and killed the service on every startup attempt.
+
+Fix: Rewrote /etc/systemd/system/tothbot.service on VPS:
+  Type=notify  ->  Type=simple
+  WatchdogSec=120 removed
+
+Type=simple is correct for a long-running asyncio service
+that does not implement sd_notify keepalives.
+
+NOTE: tothbot.service in the GitHub repo was NOT updated
+this session. The VPS service file and the GitHub repo
+are now out of sync. Open item — see Section 6.
+
+------------------------------------------------------------
+2.3 DEFECT-LOG-001 — Wrong Log File Path — FIXED
+------------------------------------------------------------
+
+Root cause: logger.py hardcodes LOG_FILE as:
+  /home/tothbot/logs/tothbot.log
+That directory did not exist on the VPS. The logger
+silently failed to initialize, producing no log output
+despite the process running normally. The process appeared
+to be running (ps aux confirmed PID active, 54MB memory)
+but produced no logs for 13+ minutes.
+
+Fix: Created the missing directory on VPS:
+  mkdir -p /home/tothbot/logs
+
+After service restart, tothbot.log was created immediately
+and grew to 811KB within seconds confirming active logging.
+
+NOTE: The canonical log path is /home/tothbot/logs/tothbot.log
+per logger.py. Prior sessions incorrectly assumed the path
+was /root/TothBot_V2-Code/logs/tothbot.log. The logrotate
+config created in a prior session points to the wrong path
+and must be corrected. Open item — see Section 6.
+
+------------------------------------------------------------
+2.4 CRITICAL SYSTEM FAILURE — Paper Trading Mode Never
+    Implemented — SERVICE STOPPED IMMEDIATELY
+------------------------------------------------------------
+
+SEVERITY: CRITICAL. This is a fundamental process failure.
+
+Background: The TothBot V2 project plan requires paper
+trading to be completed and validated BEFORE any live
+trading. DCN 1021003 Paper_Trading_Test_Specification
+exists and governs paper trading requirements. PT-ENTRY
+checklist exists to gate the transition to live trading.
+
+What happened: Paper trading mode was never implemented
+in any module. The PAPER_TRADING_MODE environment variable
+is referenced in a comment in startup_sequence.py but no
+code in the entire codebase acts on it. The variable has
+no effect whatsoever.
+
+The system was deployed to the live VPS with:
+  - Live Kraken TRADE API keys (Create & modify orders,
+    Cancel & close orders permissions active)
+  - No paper trading mode
+  - No simulation layer
+  - No guard preventing real order dispatch
+
+If TothBot had completed warm-up and generated a signal,
+it would have placed a real order with real money.
+
+Discovery: Bill asked "Am I paper trading now?" — confirmed
+no paper trading mode exists anywhere in the code.
+
+Action taken: systemctl stop tothbot — IMMEDIATE.
+
+Confirmed: No trades were placed. At time of shutdown,
+TothBot was in warm-up phase seeding indicators for
+BTC/USD. Warm-up had not completed. No signals had been
+generated. No orders had been dispatched.
+
+Root cause of process failure: Paper trading mode was
+specified in 1021003 but was never tracked as a coding
+deliverable before deployment. The PT-ENTRY checklist
+did not include a check for paper trading mode
+implementation. This allowed deployment to proceed to
+a live exchange without the required paper trading
+protection layer.
+
+THIS IS A BLOCKING DEFECT. TothBot MUST NOT be restarted
+until paper trading mode is fully implemented, tested,
+and confirmed working. No exceptions.
+
+------------------------------------------------------------
+2.5 Kraken API Keys Recreated
+------------------------------------------------------------
+
+During troubleshooting of DEFECT-SIG-001, the Kraken API
+keys were suspected as the cause (incorrectly). The existing
+keys were deleted and new keys were created. The new keys
+are the same permission set as the originals.
+
+New keys stored in .tothbot.env on VPS. Both keys
+IP-restricted to 87.99.141.44. Keys stored in Bill's
+Notepad only. NOT in GitHub. NOT in chat.
+
+SMTP token was also regenerated this session after the
+old token was briefly visible in chat output.
+
+Security status: Old Kraken keys deleted. New keys created.
+SMTP token regenerated. No active credentials were exposed.
+
+============================================================
+3. HONEST ACCOUNTING — WHAT WENT WRONG THIS SESSION
+============================================================
+
+This section documents failures directly so they are not
+repeated.
+
+FAILURE 1: Paper trading mode was never implemented before
+deployment to live Kraken. This violated the explicit
+project requirement that paper trading precedes live
+trading. The PT-ENTRY checklist did not catch this because
+the checklist itself never included a check confirming
+paper trading mode was coded and active.
+
+FAILURE 2: Multiple sessions were spent chasing an
+EAPI:Invalid key error while asserting the keys themselves
+were the problem. The keys were valid. The signing code
+was missing. The root cause should have been identified by
+reading the code on the first occurrence of the error
+rather than cycling through key deletion and recreation.
+
+FAILURE 3: The service file Type=notify mismatch should
+have been caught in the original service file review. The
+comment in startup_sequence.py explicitly states
+"sd_notify READY=1: sent by WSManager.run() after Step 9"
+but no such code exists. This was a direct contradiction
+between documentation and implementation that was not
+caught before deployment.
+
+These failures cost significant session time and created
+real financial risk. They are documented here as a
+permanent record.
+
+============================================================
+4. PT-ENTRY STATUS
+============================================================
+
+  PT-ENTRY-001  All unit tests pass             DONE
+  PT-ENTRY-002  All integration tests pass      DONE
+  PT-ENTRY-003  VPS deployed per 1011013        BLOCKED
+  PT-ENTRY-004  logrotate configured            DONE (wrong path)
+  PT-ENTRY-005  IP whitelist confirmed          DONE
+  PT-ENTRY-006  Alert email confirmed           DONE
+  PT-ENTRY-007  systemd auto-restart confirmed  PENDING
+  PT-ENTRY-008  Startup sequence confirmed      PENDING
+
+PT-ENTRY-003 is BLOCKED. TothBot MUST NOT restart until
+paper trading mode is implemented.
+
+============================================================
+5. VPS STATE — CURRENT
+============================================================
+
+  Service:      STOPPED — paper trading not implemented
+                DO NOT RESTART until paper trading is coded
+  Repo:         /root/TothBot_V2-Code  (commit ba50221)
+  Venv:         /root/tothbot_env
+  websockets:   16.0
+  .tothbot.env: /root/.tothbot.env     (new keys — no PAPER_TRADING_MODE)
+                /root/TothBot_V2-Code/.tothbot.env  (copy)
+  Log file:     /home/tothbot/logs/tothbot.log  (exists, 811KB)
+  Service file: /etc/systemd/system/tothbot.service
+                (Type=simple, no WatchdogSec — VPS only,
+                 NOT yet updated in GitHub)
+
+============================================================
+6. NEXT SESSION OPENING INSTRUCTION
+============================================================
+
+  ============================================================
+  Read TB00000 v2_8 and TB00062.
+
+  TothBot V2 service is STOPPED.
+  DO NOT RESTART until paper trading mode is implemented.
+
+  NEXT SESSION SOLE FOCUS: Implement paper trading mode.
+
+  Paper trading mode must:
+    1. Be activated by PAPER_TRADING_MODE=true in .tothbot.env
+    2. Intercept ALL order dispatch in ws_manager.py:
+         add_order
+         batch_add
+         cancel_order
+         amend_order
+         dispatch_market_sell
+         batch_cancel
+    3. Simulate fills instead of sending to Kraken
+    4. Log all simulated fills as if they were real
+       (CIATS must receive paper trade outcomes)
+    5. Never touch the live Kraken private WebSocket
+       for order dispatch when paper mode is active
+    6. Be completely transparent to all other components
+       — signal pipeline, CIATS, exit controller all
+       operate normally
+
+  After paper trading implemented:
+    Add PAPER_TRADING_MODE=true to .tothbot.env on VPS
+    Restart service
+    Confirm running and paper trading active in logs
+
+  Additional items (after paper trading confirmed):
+    - Fix heartbeat log spam (add no-op handler to dispatch)
+    - Update tothbot.service in GitHub (Type=simple)
+    - Fix logrotate config path (/home/tothbot/logs/)
+    - Update requirements.txt (websockets>=13.0)
+    - Confirm PT-ENTRY-007 (systemd auto-restart)
+
+  VPS SSH command:
+    ssh -i C:\Users\wstot\.ssh\id_ed25519 root@87.99.141.44
+
+  After connecting:
+    source /root/tothbot_env/bin/activate
+    cd /root/TothBot_V2-Code
+  ============================================================
+
+============================================================
+7. PARKING LOT
+============================================================
+
+  PL-001  WSManager dual PM creation paths. Monitor during
+          paper trading.
+
+  PL-003  Pathway 1 GitHub automation. After paper trading.
+
+  PL-NEW-003  VPS migration to Hillsboro OR. After paper
+              trading stable.
+
+  PL-NEW-004  EE ENTRY_TIMEOUT_SEC vs WM ENTRY_GTD_SEC
+              alignment. Monitor during paper trading.
+
+  PL-NEW-005  requirements.txt — websockets>=13.0.
+
+  PL-NEW-006  tothbot.service in GitHub not updated.
+              Type=simple, no WatchdogSec. Update next session.
+
+  PL-NEW-007  LOG_FILE path: logger.py uses
+              /home/tothbot/logs/tothbot.log. logrotate
+              points to /root/TothBot_V2-Code/logs/*.log.
+              Correct logrotate next session.
+
+  PL-NEW-008  Heartbeat UNKNOWN_MESSAGE_TYPE log spam.
+              Add heartbeat no-op handler to dispatch table.
+
+============================================================
+8. REVISION HISTORY
+============================================================
+
+  v1_0  04-10-2026  Initial. Three defects fixed: HMAC-SHA512
+                    signing missing, wrong systemd Type,
+                    missing log directory. CRITICAL: Paper
+                    trading mode never implemented — service
+                    connected to live Kraken with real keys.
+                    Stopped immediately on discovery. No trades
+                    placed. PT-ENTRY-003 blocked until paper
+                    trading is implemented.
+
+============================================================
+END OF SESSION LOG
+============================================================

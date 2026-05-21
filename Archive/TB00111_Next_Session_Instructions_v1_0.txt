@@ -1,0 +1,590 @@
+DocDCN:     TB00111_NSI
+DocTitle:   Next_Session_Instructions_for_TB00112
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TBXXXXX_Session_Logs\TB00111_Next_Session_Instructions_v1_0.txt
+DocDate:    04-22-2026
+DocTime:    18:45:00 UTC
+
+============================================================
+NEXT SESSION INSTRUCTIONS — TB00112
+CHANGE SESSION — DIAGNOSE AND FIX dv1_22 REGRESSIONS
+============================================================
+
+PAPER TRADING ONLY. NO REAL MONEY.
+
+============================================================
+SECTION 1 — WHAT THIS SESSION DOES
+============================================================
+
+TB00112 is a CHANGE session. The dv1_22 observation
+window ABORTED at 2026-04-22 18:19:41 UTC with three
+tripwires fired. OI-018 / OI-019 / OI-020 remain
+PENDING. dv1_22 did NOT fix the WS reconnect defect
+it was meant to fix; a new SMTP failure mode was also
+observed.
+
+TB00112 scope:
+
+  1. Diagnose OI-028 (WS_MGR_FATAL reconnect regression)
+     by reading ws_manager.py, tracing the 4 captured
+     tracebacks, identifying root cause. FP/DP analysis
+     of candidate fixes. NO CODE CHANGES until Bill
+     approves the analysis and direction.
+
+  2. Diagnose OI-029 (SMTP read-timeout failure mode)
+     by reading logger.py SMTP send path. Identify
+     whether retry/backoff is absent, and propose
+     fix. FP/DP analysis.
+
+  3. Fix OI-030 (sweep script FATAL pattern defect)
+     by updating /root/tothbot_sweep.sh to match
+     event names directly (Option B per TB00111 §2.5)
+     OR adding CRITICAL to the level pattern
+     (Option A). Deliver as updated script.
+
+  4. Update TB00000 tripwire semantics clarification
+     if OI-031 is approved for close.
+
+  5. Produce a FULL Document Control package for any
+     code changes:
+       - Updated code file (e.g., ws_manager.py dv1_22
+         -> dv1_23)
+       - Updated coding spec (e.g., 1011002 WS Manager
+         Coding Spec)
+       - Possibly updated system specification
+         (e.g., 0511001 WS Manager Specification)
+       - Updated 1010000 Trading System Coding Anchor
+         if coding-anchor version bumps
+       - Updated TB00000 if relevant
+     No patches. Full files only. All DC headers
+     correct. All parent-chain versions incremented.
+
+  6. After deploy: open a NEW observation window
+     dv1_23 (or whatever version). Minimum 48h clean
+     before OI-018 / OI-019 / OI-020 can be closed.
+
+============================================================
+SECTION 2 — MANDATORY READING (MUST BE FIRST)
+============================================================
+
+TB00112 reads every document in this list and states
+the version read before doing any work.
+
+  TB00000                    v2_10 (latest)
+    Project Instructions. Always first.
+
+  TB00111 Session Log        v1_0
+    This session's log — forensic timeline, three new
+    OIs, current VPS state.
+
+  TB00111 NSI                v1_0
+    THIS document.
+
+  TB00110 Session Log        v1_0
+    Prior session — dv1_22 deploy and window open.
+
+  TB00110 NSI                v1_0
+    Tripwire definitions, close-decision matrix.
+
+  TB00108 Session Log        v1_0
+    dv1_22 design decisions (OI-022 / OI-023 / OI-014,
+    Q1 fsync, Q2 file-mode pin).
+
+  0311001                    v1_1  (Namespace_Specification)
+    For DCN assignments on any new documents.
+
+  0311002                    v1_2  (Document_Creation_Workflow)
+    For workflow/sequencing of document updates.
+
+  0311003                    v1_0  (Versioning_Procedure)
+    For version-increment rules on all updated
+    documents and code files.
+
+  0311004                    v1_1  (Doc Creation and Approval)
+    For approval workflow on the change package.
+
+  1011002                    dv1_20 (WS Manager Coding Spec)
+    Authoritative for current reconnect behavior.
+    Primary diagnostic document for OI-028.
+
+  0511001                    dv1_1  (WS Manager Spec)
+    System-level WS Manager specification — may need
+    update if OI-028 fix changes architecture.
+
+  1011007                    dv1_3  (Logger Coding Spec)
+    Authoritative for current SMTP send path.
+    Primary diagnostic document for OI-029.
+
+  0511006                    dv1_1  (Logger Specification)
+    System-level Logger spec — may need update.
+
+  ws_manager.py              dv1_21 (in repo at 7e744a3)
+    Source code for OI-028 diagnosis.
+
+  logger.py                  dv1_3  (in repo at 7e744a3)
+    Source code for OI-029 diagnosis.
+
+Re-query project_knowledge_search for each document's
+current version if any doubt about freshness.
+
+============================================================
+SECTION 3 — FRESH-DATA DISCIPLINE — HARD RULE
+============================================================
+
+Per TB00000 v2_10 Section 4 and prior NSIs:
+"Never use stale data. Always re-query project knowledge
+for fresh data after completing a task and before
+performing the next task."
+
+TB00112 MUST follow this discipline without exception:
+
+  3.1  Before proposing any code change, re-query
+       project_knowledge_search for the current
+       version of the relevant code file AND its
+       governing coding spec AND its governing system
+       spec. Memory from session start is NOT fresh.
+
+  3.2  If Bill asks "are you using fresh data?" the
+       honest answer is no unless project_knowledge_
+       search was called for that specific question
+       in the current turn.
+
+  3.3  If diagnostic evidence requires reading logs on
+       the VPS, the data in those logs is fresh by
+       construction but the SURROUNDING CONTEXT
+       (spec versions, code versions) may be stale.
+       Re-query the project for specs/code before
+       proposing fixes.
+
+============================================================
+SECTION 4 — SESSION STATE AT START OF TB00112
+============================================================
+
+------------------------------------------------------------
+4.1 VPS state
+------------------------------------------------------------
+
+  Service:     active (running) — confirmed at
+               end of TB00111 at 18:19:41 UTC
+  Deploy:      dv1_22 (UNCHANGED — same code on
+               auto-restarted process)
+  PID:         231707
+  Since:       Wed 2026-04-22 16:46:14 UTC
+  Mode:        paper trading (NO REAL MONEY)
+  Positions:   none open
+  Latest
+  known state: tothbot_sweep.sh reading at 18:19:41 UTC
+
+Before any other work, TB00112 runs:
+
+  ssh root@87.99.141.44 /root/tothbot_sweep.sh
+
+to confirm current state. If PID has changed again or
+if FATAL/SMTP_FAILED/WRITE_FAILED tripwires have
+incremented, note the additional evidence and proceed
+with diagnosis regardless. The service is already out
+of its clean-observation state; further changes are
+informational input to diagnosis.
+
+------------------------------------------------------------
+4.2 Repo state
+------------------------------------------------------------
+
+  Docs repo   (TothBot_V2-Docs):  master @ 802f920
+                                  Clean, synced with origin
+  Code repo   (TothBot_V2-Code):  master @ 7e744a3
+                                  Clean, synced with origin
+
+No uncommitted changes at TB00111 end.
+
+------------------------------------------------------------
+4.3 Parking Lot carried forward
+------------------------------------------------------------
+
+Full Parking Lot in TB00111 §5. OIs relevant to this
+session:
+
+  OI-028 (NEW)  — WS reconnect regression (HIGH)
+                   PRIMARY FOCUS
+  OI-029 (NEW)  — SMTP read timeout (MEDIUM)
+                   SECONDARY FOCUS
+  OI-030 (NEW)  — sweep script FATAL pattern (LOW)
+                   FIX IN PASSING
+  OI-031 (CAND) — observation-window semantic
+                   clarification (LOW)
+
+Other OIs (017, 018, 019, 020, 021, 022, 023, 024,
+025, 026, 027) remain as in TB00111 §5.
+
+============================================================
+SECTION 5 — PRE-FLIGHT CHECKLIST
+============================================================
+
+TB00112 confirms BEFORE making any change:
+
+  [ ] TB00111 Session Log and TB00111 NSI uploaded to
+      Claude.ai project folder. TB00112 reads both as
+      part of Section 2 mandatory reading.
+
+  [ ] tothbot_sweep.sh executed once on session entry;
+      current VPS state captured in TB00112 session
+      log.
+
+  [ ] ws_manager.py current version read from the
+      VPS via:
+        ssh root@87.99.141.44 \
+          "head -20 /root/TothBot_V2-Code/tothbot/ws_manager.py"
+      AND from project knowledge. Versions confirmed
+      identical. If they disagree, stop and diagnose
+      the disagreement before proceeding.
+
+  [ ] logger.py current version read from VPS AND
+      from project knowledge. Versions confirmed
+      identical.
+
+  [ ] 1011002 and 1011007 current versions re-queried
+      from project knowledge.
+
+============================================================
+SECTION 6 — DETAILED SEQUENCE
+============================================================
+
+------------------------------------------------------------
+6.1 STEP A — Read the 4 captured WS_MGR_FATAL
+            tracebacks (FULL, not just timestamps)
+------------------------------------------------------------
+
+These were tail-viewed in TB00111 but not fully
+dissected. Re-fetch in full:
+
+  ssh root@87.99.141.44
+
+Then on VPS:
+
+  grep WS_MGR_FATAL /home/tothbot/logs/tothbot.log \
+    | tail -4
+
+Document each event's traceback in TB00112 session log.
+Note: all 4 may be structurally identical (the tailing
+TB00111 forensic sample strongly suggests so) — in
+which case one representative traceback is sufficient
+for analysis plus timestamps.
+
+------------------------------------------------------------
+6.2 STEP B — Read relevant sections of ws_manager.py
+------------------------------------------------------------
+
+On VPS, read the lines called out by the traceback:
+
+  sed -n '980,1150p' /root/TothBot_V2-Code/tothbot/ws_manager.py
+  sed -n '1100,1140p' /root/TothBot_V2-Code/tothbot/ws_manager.py
+  sed -n '3350,3470p' /root/TothBot_V2-Code/tothbot/ws_manager.py
+
+Relevant entry points per TB00111 §4 traceback:
+  line 988   run()                _main_loop invocation
+  line 1064  _main_loop()         TaskGroup entry
+  line 1104  _recv_loop_public    async-for over websocket
+  line 1127  _recv_loop_public    disconnect handling
+  line 3365  _handle_recv_loop_disconnect
+  line 3448  _initiate_reconnect  raises RuntimeError
+
+Per 1011002 WS_MGR-RECONNECT-016: the three transient
+types must be fully handled at loop level. Verify
+whether ConnectionClosedError is on that list.
+
+------------------------------------------------------------
+6.3 STEP C — FP/DP analysis for OI-028
+------------------------------------------------------------
+
+Candidate root causes to evaluate (not exhaustive):
+
+  (a) ConnectionClosedError not in WM-RECONNECT-016
+      transient types → raises through TaskGroup →
+      _initiate_reconnect fires → MAX_RECONNECT_ATTEMPTS
+      failure (the test specifically increased to 20
+      in OI-020, so this is unlikely unless 20 also
+      insufficient — but MAX_RECONNECT_EXCEEDED = 0
+      in the sweep, so this is NOT the root cause).
+
+  (b) _initiate_reconnect's retry schedule EXHAUSTS
+      (the 10/20 attempts) despite network being fine.
+      BUT: MAX_RECONNECT_EXCEEDED = 0 — so this is
+      also NOT what fired. Need to understand why
+      _initiate_reconnect raised RuntimeError without
+      incrementing the EXCEEDED counter.
+
+  (c) Re-entrancy defect: concurrent disconnect
+      detection by both recv loops. WM-RECONNECT-018
+      specifies _reconnect_done_event and
+      _fatal_reconnect_failure flag to collapse dual
+      cycles. Check whether these guards were
+      exercised correctly — or absent.
+
+  (d) "no close frame received or sent" is the library-
+      level symptom. This is NOT the same as a normal
+      ConnectionClosedOK or ConnectionClosedError. It
+      may mean the websockets library is raising a
+      variant that _recv_loop_public's except-arm
+      does not catch, and which is therefore
+      propagating up as an unhandled TaskGroup sub-
+      exception.
+
+Verdict for TB00112: hypothesis (d) is first-principles
+most likely given the library-version-dependent wording
+and the 1011002 explicit enumeration of transient
+types. Diagnose by reading both 1011002 transient-type
+enumeration AND actual except-clauses in
+_recv_loop_public.
+
+NO FIX WRITTEN until FP/DP analysis confirms root
+cause AND Bill approves the direction.
+
+------------------------------------------------------------
+6.4 STEP D — FP/DP analysis for OI-029
+------------------------------------------------------------
+
+Read logger.py SMTP send path. Two specific questions:
+
+  (d1) What exception types are caught from aiosmtplib?
+       Is aiosmtplib.errors.SMTPConnectError caught?
+       Is asyncio.TimeoutError caught? Is the
+       underlying ConnectionError caught?
+
+  (d2) On catch, does the logger retry? With what
+       backoff? Or is failure terminal after a single
+       attempt?
+
+Candidate fix:
+  Wrap send in a 3-attempt retry with exponential
+  backoff (1s, 2s, 4s) for transport-level errors.
+  Preserve immediate failure for permanent errors
+  (authentication failure, 550 recipient rejection)
+  to avoid spurious retries on real problems.
+
+Full DC package required: logger.py version bump +
+1011007 Logger Coding Spec version bump + possibly
+0511006 Logger Specification update if the retry
+behavior is considered architectural.
+
+------------------------------------------------------------
+6.5 STEP E — Fix OI-030 sweep script FATAL pattern
+------------------------------------------------------------
+
+Claude delivers updated tothbot_sweep.sh per Option B
+(match event names directly). Draft pattern set:
+
+  Tripwire 1 (FATAL-class events):
+    grep -cE '"event":"(WS_MGR_FATAL|PIPELINE_FATAL|EXEC_FATAL|STARTUP_FATAL|RECONNECT_FATAL_FAILURE)"' \
+      /home/tothbot/logs/tothbot.log
+
+  (The enumerated list must be derived from actual
+  code emission — not memory. TB00112 reads ws_manager.py,
+  execution_engine.py, signal_pipeline.py, logger.py,
+  startup_sequence.py to enumerate all events explicitly
+  classified as FATAL-class. Deliver the complete list.)
+
+Claude delivers updated script as a file. Bill deploys
+with the same 4-command sequence used in TB00111:
+
+  scp <new script> root@87.99.141.44:/root/tothbot_sweep.sh
+  ssh root@87.99.141.44 "chmod +x /root/tothbot_sweep.sh"
+  ssh root@87.99.141.44 "sed -i 's/\r$//' /root/tothbot_sweep.sh"
+  ssh root@87.99.141.44 /root/tothbot_sweep.sh
+
+Verify updated script shows same or higher counts as
+previous script.
+
+------------------------------------------------------------
+6.6 STEP F — Produce full DC package for code changes
+------------------------------------------------------------
+
+Per TB00000 v2_10 NO PATCHES and per 0311002 / 0311003 /
+0311004, any code change MUST ship with a complete DC
+package:
+
+  For OI-028 fix (ws_manager.py):
+    (1) ws_manager.py            dv1_21 -> dv1_22
+    (2) 1011002 Coding Spec      dv1_20 -> dv1_21
+    (3) 0511001 System Spec      IF architecture changes
+    (4) 1010000 Coding Anchor    IF parent chain affected
+    (5) TB00000 revision         IF standing rules affected
+
+  For OI-029 fix (logger.py):
+    (1) logger.py                dv1_3 -> dv1_4
+    (2) 1011007 Coding Spec      dv1_3 -> dv1_4
+    (3) 0511006 System Spec      IF architecture changes
+    (4) 1010000 Coding Anchor    IF parent chain affected
+
+All files delivered per DR-001 (.txt) and DR-003
+(one batch).
+
+All version history blocks updated. All DocDate and
+DocTime stamps updated. All parent-chain references
+audited for stale version pointers.
+
+------------------------------------------------------------
+6.7 STEP G — Commit, push, deploy
+------------------------------------------------------------
+
+Docs repo commits: ONE commit per DC package, with
+message referencing OI numbers.
+
+Code repo commit: ONE commit bundling the code file
+updates only (ws_manager.py and/or logger.py).
+
+Deploy to VPS same pattern as TB00108/TB00110:
+
+  SSH to VPS
+  cd /root/TothBot_V2-Code
+  git fetch
+  git log HEAD..origin/master --oneline
+  git pull
+  Verify header versions on VPS
+  systemctl restart tothbot
+  systemctl status tothbot --no-pager | head -5
+  Capture new baseline with /root/tothbot_sweep.sh
+
+------------------------------------------------------------
+6.8 STEP H — Open new observation window
+------------------------------------------------------------
+
+Window start = first sweep after restart showing
+expected baseline.
+
+  Minimum duration: 48 hours
+  Tripwires:        same four tripwires, but with
+                    UPDATED /root/tothbot_sweep.sh
+                    so FATAL pattern is correct
+
+If clean at T+48h: close OI-018, OI-028.
+OI-019 / OI-029 separately: requires first real
+alert to fire and route without retry-path failures.
+OI-020: closes with OI-018 absent regression.
+
+============================================================
+SECTION 7 — SCOPE GUARD
+============================================================
+
+TB00112 is a CHANGE session. Permitted:
+  - Reading code on VPS and in project
+  - FP/DP analysis of tracebacks
+  - Delivery of full DC packages for ws_manager.py
+    and/or logger.py
+  - Delivery of updated sweep script
+  - Deploy via normal STEP C / D / E sequence
+  - Opening a new observation window after deploy
+
+NOT permitted without Bill's approval:
+  - Any change to TB00000 standing rules
+  - Any new Domain Document or Sub-Domain Anchor
+  - Retiring any existing document
+  - Touching the archive repos (TothBot-Docs /
+    TothBot-Code)
+
+Forbidden:
+  - Patches (must be full files)
+  - Skipping DC package components
+  - Changing code without coding-spec update
+  - Deploying to VPS without 48h observation plan
+
+============================================================
+SECTION 8 — DELIVERABLES EXPECTED FROM TB00112
+============================================================
+
+Minimum (diagnosis outcome):
+  TB00112_TothBot_V2_Session_Log_<DATE>_v1_0.txt
+
+If FP/DP analysis produces approved fixes:
+  Updated ws_manager.py                      (file)
+  Updated 1011002 WS Manager Coding Spec     (file)
+  Updated logger.py                          (file)
+  Updated 1011007 Logger Coding Spec         (file)
+  Updated tothbot_sweep.sh                   (file)
+  Any updated system specs (0511001 / 0511006) if
+    architecture-level changes
+  Any updated parent-chain docs (1010000) if
+    coding anchor version bumps
+  TB00112 NSI                                (file)
+
+All .txt per DR-001. One batch per DR-003. Full 7-field
+headers per 0311001 v1_1. All version increments per
+0311003.
+
+============================================================
+SECTION 9 — STANDING RULES REMINDER
+============================================================
+
+  RULE 6  — git add . is PROHIBITED. Explicit per file.
+  RULE 13 — .bat files go to Desktop only. Never in repo.
+  RULE 14 — git push origin master. NEVER origin main.
+  RULE 15 — ONE COMMAND PER COPY BOX. ALWAYS.
+  RULE 16 — .bat files run from cmd.exe only. Never PS.
+  RULE 17 — Complete and correct instructions.
+
+  CODING RULES:
+  NO PATCHES EVER. Full file delivery only. Full DC.
+
+  DELIVERY RULES:
+  DR-001 — All documents as .txt files.
+  DR-002 — 0500000 additionally as .docx and .pdf.
+  DR-003 — ALL documents in ONE BATCH.
+
+  FRESH-DATA RULE (Section 3):
+  Every authoritative question is preceded by
+  project_knowledge_search. No exceptions.
+
+  POWERSHELL / SSH QUOTING:
+  Solved by the /root/tothbot_sweep.sh script pattern.
+  Do NOT hand Bill nested-quoted ssh commands. Use
+  the script pattern (scp -> chmod -> sed CRLF -> exec).
+
+  ONEDRIVE DESKTOP PATH:
+  Bill's Desktop is redirected to
+  C:\Users\wstot\OneDrive\Desktop\
+  Use this path for all scp commands from the
+  Desktop, not C:\Users\wstot\Desktop\.
+
+  COMMAND CONCATENATION:
+  Strict RULE 15. One command per copy box. Always.
+
+  SWEEP-SCRIPT CORRECTNESS:
+  Monitoring patterns must be derived by reading the
+  code emission points, not by paraphrasing NSI
+  language.
+
+============================================================
+REVISION HISTORY
+============================================================
+
+  v1_0  04-22-2026  Initial. Next session instructions
+                    for TB00112 CHANGE session after
+                    dv1_22 observation window aborted
+                    in TB00111 with three tripwires
+                    fired. TB00112 must diagnose OI-028
+                    (WS_MGR_FATAL reconnect regression —
+                    HIGH severity, primary focus),
+                    diagnose OI-029 (SMTP read-timeout
+                    failure — MEDIUM severity), fix
+                    OI-030 (sweep script FATAL pattern
+                    defect — LOW), and optionally close
+                    OI-031 (observation-window semantic
+                    clarification). No code changes
+                    before FP/DP analysis confirms root
+                    cause. Full DC package required for
+                    any code or spec change per TB00000
+                    NO PATCHES rule and 0311002 / 0311003
+                    / 0311004. After deploy, open new
+                    observation window; minimum 48h
+                    clean required before OI-018 /
+                    OI-019 / OI-020 can be closed.
+                    Key operational pattern adopted:
+                    /root/tothbot_sweep.sh script pattern
+                    resolves the TB00110 PowerShell
+                    quote-escape problem permanently.
+                    Bill's OneDrive-redirected Desktop
+                    path documented.
+
+============================================================
+END — TB00111 NEXT SESSION INSTRUCTIONS v1_0
+============================================================

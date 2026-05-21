@@ -1,0 +1,573 @@
+DocDCN:     TB00118_NSI
+DocTitle:   Next_Session_Instructions_for_TB00119
+DocVersion: v1_1
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TBXXXXX_Session_Logs\TB00118_Next_Session_Instructions_v1_1.txt
+DocDate:    04-23-2026
+DocTime:    05:15:00 UTC
+
+============================================================
+NEXT SESSION INSTRUCTIONS - TB00119
+CLEANUP SESSION — COMMIT / PUSH / DEPLOY / OBSERVE
+OI-039 FORMAL CLOSE AT PRE-FLIGHT
+============================================================
+
+PAPER TRADING ONLY. NO REAL MONEY.
+
+============================================================
+SECTION 1 - WHAT THIS SESSION DOES
+============================================================
+
+TB00119 is a CLEANUP session. TB00118 produced the complete
+DC package for OI-028 + OI-029 + OI-030 and documented
+diagnosis in the TB00118 session log. TB00119 commits,
+pushes, deploys, and opens the 48-hour observation window.
+
+TB00119 scope, in this order:
+
+  STEP A  Pre-flight. Cold-load verification of TB00000
+          v2_12 presence; 14 mandatory TB files (TB00111
+          through TB00118 = 15 session log/NSI files total
+          + TB00000); active-governance prohibited-string
+          count = 0; 0311001 v1_2 CONFIRMED ABSENT from
+          project folder. FORMALLY CLOSE OI-039 in this
+          step.
+
+  STEP B  Commit DC package to GitHub.
+            - Docs repo commits (5 files):
+                0311001 (if not already committed from
+                prior session — verify)
+                1011002 dv1_21
+                1011007 dv1_5
+                1010000 dv1_13
+            - Code repo commits (3 files):
+                tothbot/ws_manager.py    dv1_22
+                tothbot/logger.py        dv1_5
+                operations/tothbot_sweep.sh  dv1_0
+            - Both pushes to origin/master.
+
+  STEP C  VPS deploy via git pull.
+            ssh root@87.99.141.44 `cd /root/TothBot_V2-Code
+              && git fetch && git log HEAD..origin/master
+              --oneline && git pull`
+            Verify head:
+              head -20 tothbot/ws_manager.py
+              head -20 tothbot/logger.py
+              head -20 operations/tothbot_sweep.sh
+
+  STEP D  Sweep-script activation. Choose ONE:
+            Option 1 (symlink — backward-compatible):
+              mv /root/tothbot_sweep.sh /root/tothbot_sweep.sh.pre-dv1_0
+              ln -s /root/TothBot_V2-Code/operations/tothbot_sweep.sh \
+                    /root/tothbot_sweep.sh
+              chmod +x /root/TothBot_V2-Code/operations/tothbot_sweep.sh
+            Option 2 (direct path — cleanest):
+              chmod +x /root/TothBot_V2-Code/operations/tothbot_sweep.sh
+              (and update cron / manual invocations)
+          Recommend Option 1 — preserves the existing
+          /root/tothbot_sweep.sh invocation path for muscle
+          memory and any cron/systemd timer references.
+
+  STEP E  Service restart and post-restart sweep.
+            systemctl restart tothbot
+            systemctl status tothbot --no-pager | head -5
+            /root/tothbot_sweep.sh  (new controlled version)
+
+          Expected post-restart sweep:
+            - Tripwire CRITICAL events: historical count
+              (non-zero baseline). Record baseline.
+            - FATAL_RECONNECT_FAILURE: historical count
+              baseline. Record baseline.
+            - RECONNECT_COMPLETE: 0 at t=0 (no reconnects
+              yet in new lifetime). Will grow as the
+              paper-mode reconnect branch succeeds on
+              future transient disconnects.
+            - Service should stay alive; no new
+              FATAL_RECONNECT_FAILURE events above baseline
+              during the observation window.
+
+  STEP F  Open 48-hour observation window.
+          Window start: timestamp of first sweep after
+          restart showing expected baseline.
+          Minimum duration: 48 hours.
+
+  STEP G  Manual SMTP alert test (OI-029 verification).
+          Trigger a test CRITICAL-level alert from the VPS
+          to confirm the retry loop path. One approach:
+            python3 -c "from tothbot.logger import \
+              _alert_operator_direct; \
+              _alert_operator_direct('TB00119 OI-029 \
+              retry-path verification test', \
+              subject='[TothBot TEST] OI-029 verify', \
+              triggering_event='MANUAL_TEST')"
+          Expected: one ALERT_SENT event in tothbot.log.
+          If the test also catches a transient: expect
+          one ALERT_SENT after at most 2 attempts (and
+          zero ALERT_SMTP_FAILED).
+
+  STEP H  TB00119 Session Log and TB00119 NSI.
+
+OPTIONAL SCOPE (Bill decides at open):
+
+  - OI-041 investigation (Kraken API key rejection).
+    Candidate root causes listed in TB00118 §2.4.
+    Prioritize: clock-drift check (systemctl status
+    systemd-timesyncd), key/secret validation from
+    .env, IP-whitelist check from Kraken dashboard.
+  - OI-036 / OI-037 / OI-038 remediation via TB00000
+    v2_12 → v2_13. OI-037 now has FIVE-session
+    recurrence (TB00114/115/116/117/118). Escalation
+    strongly warranted.
+
+============================================================
+SECTION 2 - MANDATORY READING (MUST BE FIRST)
+============================================================
+
+TB00119 reads every document below and states the version
+read before doing any work.
+
+  TB00000                       v2_12
+  TB00118 Session Log           v1_0  (THIS SESSION'S
+                                       PRIOR CHAT)
+  TB00118 NSI                   v1_0  (THIS document)
+  TB00117 Session Log           v1_0
+  TB00117 NSI                   v1_0
+  TB00116 Session Log + NSI     v1_0
+  TB00115 Session Log + NSI     v1_0
+  TB00114 Session Log + NSI     v1_0
+  TB00113 Session Log + NSI     v1_0
+  TB00112 Session Log           v1_0
+  TB00111 Session Log + NSI     v1_0
+  0311001                       v1_3
+  0311002                       v1_3
+  0311003                       v1_1
+  0311004                       v1_2
+  1010000                       dv1_13  (NEW — from TB00118
+                                         DC package, verify
+                                         committed + uploaded)
+  1011002                       dv1_21  (NEW — from TB00118)
+  1011007                       dv1_5   (NEW — from TB00118)
+  ws_manager.py                 dv1_22  (NEW — from TB00118)
+  logger.py                     dv1_5   (NEW — from TB00118)
+  operations/tothbot_sweep.sh   dv1_0   (NEW — from TB00118)
+  0500000                       dv1_19
+
+Fresh-data discipline: every version claim in TB00119
+session log must be from direct file read this session,
+not from this NSI's text.
+
+============================================================
+SECTION 3 - SHELL DISCIPLINE (TB00118 ERROR LESSON)
+============================================================
+
+PowerShell is the established shell for this project.
+TB00119 emits PowerShell commands for all local-Windows
+operations unless Bill explicitly requests cmd.exe or
+WSL. No silent shell switches.
+
+If an NSI, session log, or prior artifact prescribes
+cmd.exe, Claude translates to PowerShell before emitting.
+
+VPS-side commands always go through ssh from PowerShell.
+Complex pipelines go in .sh files uploaded via scp and
+executed with `tr -d '\r' < /tmp/NAME.sh | bash` to strip
+Windows CRLF line endings.
+
+============================================================
+SECTION 4 - COMMIT / PUSH COMMANDS (TB00119 STEP B)
+============================================================
+
+Individual copy boxes. Shell-context-complete per OI-038.
+PowerShell at the repository root.
+
+Docs repo commit:
+
+  cd C:\Users\wstot\GitHub\TothBot\TothBot_V2-Docs
+  git add 10XXXXX_Coding_Specification\1011002_WS_Manager_Coding_Spec_dv1_21.txt
+  git add 10XXXXX_Coding_Specification\1011007_Logger_Coding_Spec_dv1_5.txt
+  git add 10XXXXX_Coding_Specification\1010000_Trading_System_Coding_Anchor_dv1_13.txt
+  git status
+  git commit -m "OI-028 / OI-029 / OI-030 remediation: spec updates (WM-RECONNECT-019, LG-ALERT-004 retry loop, operations/tothbot_sweep.sh registration)"
+  git push origin master
+
+Note: the prior superseded spec files (1011002 dv1_19,
+1011007 dv1_4, 1010000 dv1_12) remain in the repository
+per 0311003 v1_1 VP-010 superseded-document retention.
+They are NOT deleted. Only the new versions are added.
+
+1011002 dv1_20 is a local-disk orphan on Bill's working
+tree (authored 04-20-2026, never uploaded to the
+Claude.ai project folder, never committed to GitHub). It
+is referenced in 1010000 dv1_12 §4.2 and §5.2 as the
+governing spec for ws_manager.py dv1_21. TB00118 skips
+over it and lands at dv1_21 to preserve the existing
+reference chain. The orphan stays on local disk per
+VP-010 and is not committed to GitHub.
+
+Code repo commit:
+
+  cd C:\Users\wstot\GitHub\TothBot\TothBot_V2-Code
+  git add tothbot\ws_manager.py
+  git add tothbot\logger.py
+  git add operations\tothbot_sweep.sh
+  git status
+  git commit -m "OI-028 / OI-029 / OI-030 remediation: ws_manager dv1_22 (paper-mode reconnect gating), logger dv1_5 (SMTP retry loop), operations/tothbot_sweep.sh dv1_0"
+  git push origin master
+
+operations/.gitkeep: the file remains in the repo for
+now. Per 1010000 dv1_13 §5.6 retirement note, the
+placeholder's registry entry is marked RETIRED but the
+physical file's removal is a separate git operation
+(not in TB00119 scope — track as minor cleanup for a
+future session).
+
+============================================================
+SECTION 5 - VPS DEPLOY (TB00119 STEP C)
+============================================================
+
+From PowerShell:
+
+  ssh root@87.99.141.44 "cd /root/TothBot_V2-Code && git fetch"
+  ssh root@87.99.141.44 "cd /root/TothBot_V2-Code && git log HEAD..origin/master --oneline"
+  ssh root@87.99.141.44 "cd /root/TothBot_V2-Code && git pull"
+  ssh root@87.99.141.44 "head -20 /root/TothBot_V2-Code/tothbot/ws_manager.py"
+  ssh root@87.99.141.44 "head -20 /root/TothBot_V2-Code/tothbot/logger.py"
+  ssh root@87.99.141.44 "head -20 /root/TothBot_V2-Code/operations/tothbot_sweep.sh"
+
+All four head commands should show DocVersion: dv1_22 /
+dv1_5 / dv1_0 respectively.
+
+============================================================
+SECTION 6 - SWEEP SCRIPT ACTIVATION (TB00119 STEP D)
+============================================================
+
+Recommended: Option 1 (symlink). Preserves
+/root/tothbot_sweep.sh as the invocation path operators
+already have in muscle memory.
+
+  ssh root@87.99.141.44 "mv /root/tothbot_sweep.sh /root/tothbot_sweep.sh.pre-dv1_0"
+  ssh root@87.99.141.44 "ln -s /root/TothBot_V2-Code/operations/tothbot_sweep.sh /root/tothbot_sweep.sh"
+  ssh root@87.99.141.44 "chmod +x /root/TothBot_V2-Code/operations/tothbot_sweep.sh"
+  ssh root@87.99.141.44 "ls -la /root/tothbot_sweep.sh*"
+
+Verify the symlink resolves:
+
+  ssh root@87.99.141.44 "readlink -f /root/tothbot_sweep.sh"
+  (expect: /root/TothBot_V2-Code/operations/tothbot_sweep.sh)
+
+============================================================
+SECTION 7 - SERVICE RESTART + POST-RESTART SWEEP (STEP E)
+============================================================
+
+  ssh root@87.99.141.44 "systemctl restart tothbot"
+  ssh root@87.99.141.44 "systemctl status tothbot --no-pager | head -10"
+  ssh root@87.99.141.44 "sleep 60 && /root/tothbot_sweep.sh"
+
+The 60-second sleep lets the service stabilize (startup +
+warm-up) before the sweep runs. Expected post-restart
+sweep output highlights:
+
+  SERVICE active (running); PID fresh; auto-restart
+  counter stable (not incrementing further)
+  CRITICAL events count = historical baseline (large
+  from prior failed lifetimes); RECORD THIS BASELINE
+  FATAL_RECONNECT_FAILURE = historical baseline; RECORD
+  RECONNECT_INITIATED = 0 (new lifetime just started)
+  RECONNECT_COMPLETE = 0 (none yet; non-zero means the
+  new paper-mode branch ran successfully at least once)
+  ALERT_SMTP_FAILED = historical baseline
+  PAPER_BALANCE_SET = 1 or 2 (fresh paper-mode init)
+
+Observation window opens at the timestamp of this sweep.
+
+============================================================
+SECTION 8 - MANUAL SMTP ALERT TEST (TB00119 STEP G)
+============================================================
+
+This test exercises the OI-029 retry-loop path before the
+observation window would otherwise have to wait for a
+natural CRITICAL/HIGH event to trigger an alert.
+
+VPS command (from PowerShell via ssh):
+
+  ssh root@87.99.141.44 "cd /root/TothBot_V2-Code && /root/tothbot_env/bin/python3 -c 'from tothbot.logger import _alert_operator_direct; _alert_operator_direct(\"TB00119 OI-029 retry-path verification\", subject=\"[TothBot TEST] OI-029 verify\", triggering_event=\"MANUAL_TEST\")'"
+
+Expected:
+  - Email lands in alerts@tothbot.com within ~1-20 sec
+  - tothbot.log gets ONE ALERT_SENT event with
+    triggering_event="MANUAL_TEST"
+  - No ALERT_SMTP_FAILED events from this test
+
+If the transient is caught by the retry loop:
+  - Email still lands
+  - tothbot.log still has ONE ALERT_SENT (not two)
+  - Second-attempt success is only observable via the
+    absence of ALERT_SMTP_FAILED and the present
+    ALERT_SENT after a ~1-21 second delay
+
+OI-029 closes at T+48h on zero ALERT_SMTP_FAILED events
+new to the observation window AND at least one
+ALERT_SENT visible (this manual test satisfies that half
+immediately).
+
+============================================================
+SECTION 9 - OBSERVATION WINDOW CLOSURE CRITERIA
+============================================================
+
+All six closeable OIs share the 48-hour window:
+
+  OI-018 (HIGH)  Zero WS_MGR_FATAL events new to window.
+  OI-019 (MED)   At least one ALERT_SENT (satisfied by
+                 STEP G manual test). Zero
+                 ALERT_SMTP_FAILED new to window.
+  OI-020 (MED)   Zero FATAL_RECONNECT_FAILURE new to
+                 window.
+  OI-028 (HIGH)  Zero FATAL_RECONNECT_FAILURE new to
+                 window AND at least one
+                 RECONNECT_COMPLETE (confirms new paper-
+                 mode reconnect path works).
+  OI-029 (MED)   Same as OI-019.
+  OI-030 (LOW)   Immediate: sweep script reports accurate
+                 CRITICAL / FATAL_RECONNECT_FAILURE
+                 counts.
+
+If no natural reconnect event occurs during the 48-hour
+window, OI-028 cannot be fully closed on RECONNECT_
+COMPLETE criterion alone. In that case: close on absence-
+of-FATAL evidence and schedule a follow-up window check
+after the first natural reconnect event occurs.
+
+============================================================
+SECTION 10 - SCOPE GUARD
+============================================================
+
+TB00119 is a CLEANUP session. Permitted:
+
+  - Pre-flight verification + OI-039 formal close
+  - Git commits (docs + code), pushes to origin/master
+  - VPS deploy via git pull
+  - Sweep script activation (symlink or direct)
+  - Service restart + post-restart sweep
+  - Manual SMTP alert test
+  - Opening 48-hour observation window
+
+NOT permitted without Bill's explicit approval:
+
+  - Any change to TB00000 standing rules (v2_13 content)
+  - Any new Domain Document or Sub-Domain Anchor
+  - Re-opening any code file for further edits (if a
+    defect is found in the TB00118 DC package, STOP and
+    open a new OI rather than hot-fixing)
+  - Retiring or deleting any existing document beyond
+    operations/.gitkeep cleanup (which is deferred
+    anyway)
+  - Changing code delivery strategy (.txt always, full
+    files always)
+
+Forbidden:
+
+  - Patches (must be full files if any changes arise)
+  - Skipping DC package components
+  - Any real-money trading
+  - Using ANY Windows file path not in TB00000 §11
+    authoritative tree
+  - Emitting the §4.2-prohibited string per TB00000
+    v2_12 §4.2 OP-001 through OP-009
+  - Silent shell switches from PowerShell to cmd.exe
+
+============================================================
+SECTION 11 - DELIVERABLES EXPECTED FROM TB00119
+============================================================
+
+Minimum:
+
+  TB00119_TothBot_V2_Session_Log_<DATE>_v1_0.txt
+  TB00119_Next_Session_Instructions_v1_0.txt
+
+Session-record artifacts (paste-ins to session log):
+
+  - Git commit SHAs (docs + code repos)
+  - VPS deploy confirmation head outputs
+  - Post-restart sweep output (baseline snapshot)
+  - Manual SMTP test ALERT_SENT log line
+  - Observation window open timestamp
+
+Post-session Bill actions:
+
+  - Upload TB00119 Session Log v1_0 and NSI v1_0 to
+    Claude.ai project folder
+  - Upload new DC package versions (1011002 dv1_21,
+    1011007 dv1_5, 1010000 dv1_13) to project folder —
+    AFTER they are in GitHub per 0311002 v1_3 DC-SYNC-002
+  - Remove superseded project-folder copies:
+      1011002 dv1_19
+      1011007 dv1_4
+      1010000 dv1_12
+
+No .docx/.pdf DR-002 work (0500000 not updated in
+TB00119 unless architecture change is approved mid-
+session).
+
+============================================================
+SECTION 12 - CURRENT STATE AT TB00119 OPEN
+============================================================
+
+------------------------------------------------------------
+12.1 VPS state (from TB00118 §7.1)
+------------------------------------------------------------
+
+  Service:     active (running) — likely one or more
+               further auto-restarts between TB00118 close
+               and TB00119 open because the deploy has
+               not yet occurred
+  Deploy:      dv1_21 (commit 7e744a3 — unchanged until
+               TB00119 STEP C)
+  PID:         stale from TB00118 close — verify fresh
+  Mode:        paper trading (NO REAL MONEY)
+               paper_balance: 10000 USD
+  Positions:   none open
+
+------------------------------------------------------------
+12.2 Repo state (from TB00118 §7.2)
+------------------------------------------------------------
+
+  Docs repo (TothBot_V2-Docs):  master @ b5ca306
+  Code repo (TothBot_V2-Code):  master @ 7e744a3
+
+------------------------------------------------------------
+12.3 Project folder state
+------------------------------------------------------------
+
+Expected at TB00119 open (contingent on Bill's post-
+TB00118 actions):
+
+  - 0311001 v1_2 ABSENT (removed by Bill post-TB00118)
+  - TB00118 Session Log v1_0 + NSI v1_0 PRESENT
+  - DC package files NOT YET in project folder (per
+    0311002 DC-SYNC-002 they upload post-commit in
+    TB00119 STEP B)
+
+Mandatory retention at TB00119 open:
+  TB00111 through TB00118 session logs + NSIs
+  = 15 TB files + TB00000 = 16
+
+------------------------------------------------------------
+12.4 Parking Lot carried forward
+------------------------------------------------------------
+
+  OI-018 (HIGH)   - closes at T+48h
+  OI-019 (MED)    - closes at T+48h
+  OI-020 (MED)    - closes at T+48h
+  OI-028 (HIGH)   - closes at T+48h
+  OI-029 (MED)    - closes at T+48h
+  OI-030 (LOW)    - closes at STEP E post-restart sweep
+  OI-031 (LOW)    - optional close
+  OI-036 (LOW)    - v2_13 optional remediation
+  OI-037 (MED)    - FIVE-session recurrence.
+                    v2_13 rule addition STRONGLY
+                    RECOMMENDED.
+  OI-038 (LOW)    - v2_13 optional remediation
+  OI-039 (MED)    - CLOSES at STEP A pre-flight pending
+                    0311001 v1_2 absence confirmation
+  OI-041 (MED)    - Kraken API key EAPI:Invalid key.
+                    NEW. Does not block TB00119 scope.
+                    Must resolve before live trading.
+  OI-042 (CAND)   - Shell-context-mismatch. Promote if
+                    cmd.exe-vs-PowerShell drift recurs.
+
+============================================================
+SECTION 13 - CRITICAL LESSONS CARRIED FORWARD
+============================================================
+
+NO PATCHES RULE:
+  All code changes delivered as complete files. No
+  unified diffs. No partial files.
+
+FRESH DATA:
+  Every version claim in TB00119 session log from direct
+  file read this session. Memory and NSI text are stale
+  by definition.
+
+FP/DP DISCIPLINE — NEXT-LOGICAL-STEP EXECUTION
+(OI-037 recurrence mitigation, now five-session):
+  When the next logical step follows deterministically
+  from first principles, Claude executes. Claude does
+  NOT ask Bill A/B/C/D/E decision questions when the
+  choice can be derived from data.
+
+SHELL DISCIPLINE (TB00118 new lesson):
+  PowerShell is the established shell. No silent
+  switches to cmd.exe. If a prior NSI prescribes
+  cmd.exe, translate to PowerShell before emit.
+
+CODE EMISSION AUDIT (OI-030 lesson):
+  Derive sweep patterns, grep patterns, and event-name
+  lists by reading code emission points. NEVER paraphrase
+  from NSI text.
+
+FORENSIC PULL DISCIPLINE (TB00117 lesson):
+  Before crafting journalctl priority filters or log
+  greps, verify the emission path (stream handler vs
+  file handler) to know which sink the target events
+  land in.
+
+SHELL-CONTEXT COMPLETENESS (OI-038):
+  Every copy box contains every shell-state element
+  required to execute it - including working directory.
+  No "cd first, then paste" separations. Lead commands
+  with `cd <abs_path>` when directory matters.
+
+NEW-RULE SELF-APPLICATION (OI-036):
+  After authoring a governance update, Claude re-reads
+  the new rule before issuing any subsequent operational
+  command that could be governed by it.
+
+SINGLE-LINE REINFORCEMENT (TB00000 v2_12 §4.2 OP-007):
+  Bill may paste this line at the top of any session
+  message:
+
+    ONEDRIVE BAN ACTIVE per TB00000 §4.2: do not emit
+    the string in any path, command, or response.
+    Self-catch before emit.
+
+============================================================
+REVISION HISTORY
+============================================================
+
+  v1_1  2026-04-23  Post-v1_0-delivery amendment. Cascade
+                    of 1011002 dv1_20 → dv1_21 following
+                    discovery of a local-disk dv1_20 orphan
+                    during TB00118 post-session deliverable
+                    placement. See TB00118 Session Log v1_1
+                    revhist for full context. NSI content
+                    changes: §2 mandatory reading list
+                    reference to 1011002 updated dv1_20 →
+                    dv1_21; §4 git-add filename updated;
+                    §4 new paragraph explains orphan-
+                    preservation policy; §11 post-session
+                    Bill actions list references updated
+                    spec version. No scope / procedure /
+                    closure-criteria changes.
+
+  v1_0  2026-04-23  Initial. Next-session instructions
+                    for TB00119 CLEANUP session executing
+                    commit / push / deploy / observe for
+                    the TB00118 DC package. Six code and
+                    spec files plus two session documents
+                    flow through TB00119 into GitHub and
+                    onto the VPS. 48-hour observation
+                    window closes OI-018 / OI-019 / OI-020
+                    / OI-028 / OI-029 / OI-030 in one
+                    bundled verification pass. Manual
+                    SMTP alert test included in STEP G to
+                    exercise OI-029 retry path. OI-039
+                    formally closes in STEP A pre-flight
+                    if Bill has removed 0311001 v1_2 from
+                    project folder. OI-041 Kraken API key
+                    rejection deferred to parking lot.
+                    Paper trading only. No real money.
+                    Shell discipline: PowerShell only.
+
+============================================================
+END - TB00118 NEXT SESSION INSTRUCTIONS v1_0
+============================================================

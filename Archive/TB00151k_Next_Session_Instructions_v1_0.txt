@@ -1,0 +1,451 @@
+DocDCN:     TB00151k
+DocTitle:   Next_Session_Instructions
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TBXXXXX_Session_Logs\TB00151k_Next_Session_Instructions_v1_0.txt
+DocDate:    05-08-2026
+DocTime:    06:00:00 UTC
+
+============================================================
+TB00151k NEXT SESSION INSTRUCTIONS v1_0
+PRIMARY MISSION: PHASE 2 CODE REBUILD KICKOFF —
+                 CLEAN-SLATE TothBot_V2-Code REBUILD
+                 PER 0500000 dv1_24 §12.8
+============================================================
+
+============================================================
+1. NEXT SESSION PRIMARY MISSION
+============================================================
+
+Phase 1 close gate has PASSED at TB00151j close per the
+three-spec single-batch GitHub commit (0511003 dv1_1 +
+0511005 dv1_1 + 1011014 dv1_8). Per 0500000 dv1_24 §12.0:
+"Bill authorized OPTION B Clean-Slate Rebuild on
+2026-05-04. ... No downstream rebuild may proceed until
+this section is committed to TothBot_V2-Docs master."
+That precondition is now satisfied.
+
+Phase 2 mission: PLAN the clean-slate code rebuild of
+the TothBot_V2-Code repository. Phase 2 is bounded to
+PLANNING in TB00151k. Actual code authoring begins in
+TB00151L+ per the plan ratified in TB00151k.
+
+TB00151k PRIMARY DELIVERABLES:
+  (1) Module rebuild order — derived from architectural
+      dependency analysis of 0500000 dv1_24 + the 8
+      Phase 1 close-gate specs. First-principles
+      ordering, not pattern-matched from prior cycles.
+  (2) Module rebuild scope per session — sized for one
+      module per session unless first-principles
+      analysis supports bundling.
+  (3) Test scaffolding plan — paper-mode unit + paper-
+      mode integration coverage targets per module.
+  (4) PA-001..010 paper-as-master enforcement plan —
+      every module MUST honor the four PA-004
+      divergence points and PA-005 byte-identical-
+      elsewhere mandate. Mode-conditional branching
+      outside the WSManager dispatch seam is a defect.
+  (5) Decision register — what NEW decisions arise from
+      Phase 2 planning that were NOT settled in Phase
+      1 (e.g., test-suite framework choice, deployment
+      strategy for the rebuilt modules, observation
+      window length before declaring a module
+      validated).
+
+TB00151k IS NOT a code-authoring session. No .py files
+are written in TB00151k. Code authoring begins TB00151L.
+
+============================================================
+2. MANDATORY READING — START OF TB00151k
+============================================================
+
+Per TB00000 v2_20 §2 MANDATORY READING. Claude MUST
+read all of the following from /mnt/project/ before
+authoring any content. State the version of each in
+the chat-start response.
+
+GOVERNANCE / META:
+  TB00000 v2_20
+  TB00151h SL v1_0  (closed 0511003)
+  TB00151i SL v1_0  (closed 0511005)
+  TB00151j SL v1_0  (closed 1011014; closed Phase 1
+                     close gate)
+  TB00151k NSI v1_0 (this document)
+  0311001 v1_6
+  0311002 v1_10
+  0311006 dv1_2
+
+ARCHITECTURAL SOURCE-OF-TRUTH:
+  0500000_System_Architecture_Overview_dv1_24_Claude_
+    Source.html (read fully; §12 + §12.7 + §12.8
+    PRIMARY for Phase 2 module ordering)
+
+PHASE 1 CLOSE-GATE SPECS (8 specs) — read fully for
+Phase 2 implementation contracts:
+  0211005 dv1_3 (PT-MODE-001..007)
+  0511001 dv1_5 (HR-WM-001..033; §13 paper-mode rules)
+  0511003 dv1_1 (§5A EE-PAPER-001..005)
+  0511004 dv1_3 (§6A EC-PAPER-001..006)
+  0511005 dv1_1 (§6A PM-PAPER-001..005)
+  1011002 dv1_26 (§13 + §16A WM-PAPER-LEDGER + WM-
+                  PAPER-EXIT)
+  1011005 dv1_3 (§10A EC-PAPER-CODE-001..006)
+  1011014 dv1_8 (§6A SS-PAPER-001..007)
+
+ENGINEERING STANDARDS:
+  1011001 Engineering_Best_Practices dv1_7
+  1010000 Trading_System_Coding_Anchor dv1_17
+
+EXCHANGE INTERFACE:
+  0411001 dv1_11 (Kraken WS v2)
+  0411002 dv1_1  (Kraken REST API)
+  0411003 dv1_0  (Kraken Fee Rate Limit)
+
+OPERATIONAL PROCEDURE:
+  0211003 dv1_0 (Startup_Shutdown_Procedure)
+  0211004 dv1_0 (Incident_Response_Procedure)
+
+============================================================
+3. COLD-LOAD VERIFICATION (FIVE-ITEM)
+============================================================
+
+  3.1 TB00000 v2_20 in /mnt/project/.
+
+  3.2 0311001 v1_6, 0311002 v1_10, 0311006 dv1_2
+      present.
+
+  3.3 0500000 dv1_24 .html present. DR-007.9 well-
+      formedness PASS (0 orphan close tags, 0
+      unclosed elements at EOF, 0 parser exceptions
+      via Python html.parser feed).
+
+  3.4 Phase 1 close-gate specs at expected versions:
+        0211005 dv1_3
+        0511001 dv1_5
+        0511003 dv1_1 (NOT dv1_0)
+        0511004 dv1_3
+        0511005 dv1_1 (NOT dv1_0)
+        1011002 dv1_26
+        1011005 dv1_3
+        1011014 dv1_8 (NOT dv1_7) ★ NEW from TB00151j
+      If any predecessor version present alongside
+      the close-gate version: HALT and report to
+      Bill before authoring (per 0311001 v1_6 DR-005
+      version consistency).
+
+  3.5 ★ BASELINE-DRIFT DEFENSE per ERROR-TB00151g-01
+      corrective.
+      (a) project_knowledge_search content grep on
+          tothbot/ source files for paper-as-master
+          markers. EXPECTED: matches present in
+          startup_sequence.py / ws_manager.py /
+          execution_engine.py / exit_controller.py /
+          position_mirror.py from prior partial
+          paper-mode integrations. The Phase 2
+          rebuild is a CLEAN-SLATE — prior code is
+          discarded, not amended.
+      (b) conversation_search "Phase 2 code rebuild
+          plan TothBot V2 module order" — verify no
+          prior-session plan exists that TB00151k
+          would supersede or conflict with.
+      If (a) returns indication that any partial
+      Phase 2 work has been committed to TothBot_V2-
+      Code master post-Phase-1-close-gate without a
+      session log: HALT and report to Bill.
+
+  3.6 PHASE 1 CLOSE-GATE COMMIT VERIFICATION.
+      Verify via Bill that the D-TB00151h-02 three-
+      spec single-batch commit succeeded:
+        Bill provides `git log -1 --oneline` output
+        from TothBot_V2-Docs master showing the
+        Phase 1 close-gate commit message.
+      If commit not present or failed: HALT and
+      remediate before Phase 2 planning begins.
+
+============================================================
+4. AUTHORING SCOPE — TB00151k DELIVERABLES
+============================================================
+
+4.1 MODULE REBUILD ORDER (FIRST-PRINCIPLES DERIVATION)
+
+Author a module rebuild order derived from
+architectural dependencies in 0500000 dv1_24 §12.7
+(dispatch boundary diagram) + dependency graph
+analysis of the 8 close-gate specs. Do NOT pattern-
+match from prior code-rebuild cycles in TothBot V2 or
+the legacy Binance-era TothBot.
+
+Required outputs:
+  (a) Dependency graph: which module depends on which.
+  (b) Topological sort: which module rebuilds first;
+      which last.
+  (c) PA-001..010 enforcement check at each module:
+      where the WSManager dispatch seam is enforced;
+      how the four PA-004 divergence points are
+      honored; how PA-005 byte-identical-elsewhere is
+      guaranteed.
+
+Expected modules (subject to first-principles
+adjustment in TB00151k authoring):
+  ws_manager.py        per 1011002 dv1_26
+  execution_engine.py  per 1011004 dv1_0
+  exit_controller.py   per 1011005 dv1_3
+  position_mirror.py   per 1011006 dv1_1
+  startup_sequence.py  per 1011014 dv1_8
+  signal_pipeline.py   per 1011003 dv1_0
+  long_module.py       per 1011008 dv1_0
+  selection_ctrl.py    per 1011009 dv1_1
+  ciats.py             per 1011010 dv1_6
+  risk_engine.py       per 1011011 dv1_3
+  regime_engine.py     per 1011012 dv1_5
+  logger.py            per 1011007 dv1_5
+
+4.2 MODULE REBUILD SCOPE PER SESSION
+
+Per first-principles analysis: one module per session
+unless dependency analysis supports bundling. Specify
+in TB00151k for each module the planned session ID
+(TB00151L, TB00151M, ...) and any bundling
+justification.
+
+4.3 TEST SCAFFOLDING PLAN
+
+Author the test framework + per-module coverage
+targets:
+  Unit:        paper-mode behavioral parity per the
+               sibling spec §X.A sub-rule set
+               (SS-PAPER-001..007 for startup_
+               sequence.py; etc.).
+  Integration: paper-mode end-to-end startup ->
+               warm-up -> first paper trade -> close
+               -> CIATS Trade Outcome Bus record.
+  Paper:       72-hour observation window in paper
+               mode before declaring the rebuild
+               validated.
+
+Bind to existing test specs:
+  1021001 Unit_Test_Specification dv1_0
+  1021002 Integration_Test_Specification dv1_0
+  1021003 Paper_Trading_Test_Specification dv1_0
+
+4.4 PA-001..010 ENFORCEMENT PLAN
+
+For every module Phase 2 rebuilds, document:
+  (a) Whether the module is ABOVE or BELOW the
+      WSManager dispatch seam.
+  (b) If ABOVE: confirm zero mode-conditional
+      branching (mode-blind per HR-EE-013 / HR-PM-009
+      / SS-PAPER-007).
+  (c) If BELOW (i.e., WSManager itself): enumerate
+      which PA-004 gates the module enforces and
+      bind to the specific spec rule.
+  (d) PA-005 audit: at each module rebuild commit,
+      Claude runs a static check that confirms zero
+      `if paper_mode` / `if self.paper_mode` /
+      equivalent mode-conditional branches outside
+      the explicitly enumerated PA-004 gate locations.
+      The check is added to the test scaffolding.
+
+4.5 DECISION REGISTER
+
+Capture NEW decisions arising from Phase 2 planning:
+  (1) Test framework: pytest (likely; verify against
+      existing test infrastructure).
+  (2) Code-rebuild deployment strategy: replace
+      modules in-place on a feature branch; merge to
+      master only after the 72-hour paper observation
+      window passes for the module.
+  (3) Paper-observation window length: 72 hours per
+      module (subject to FP/DP analysis).
+  (4) CIATS data continuity: the Phase 1 -> Phase 2
+      transition must NOT discard accumulated CIATS
+      Trade Outcome Bus records. The rebuilt code
+      must consume the same logger/CIATS data
+      structures.
+
+============================================================
+5. SCOPE CONSTRICTION — RR-SCOPE-002
+============================================================
+
+TB00151k is BOUNDED to PLANNING. Specifically EXCLUDED:
+
+  - Code authoring (.py file creation/modification)
+  - VPS deploy actions
+  - Paper observation window initiation
+  - GitHub commits to TothBot_V2-Code (no Phase 2
+    code commits in TB00151k)
+  - Spec amendments (Phase 1 close gate is closed;
+    spec freeze active until Phase 2 surfaces a
+    spec defect)
+  - Any opportunistic cascade work outside the five
+    deliverables in §4 above
+
+If during planning Claude identifies a defect or
+gap in any Phase 1 close-gate spec: capture on the
+Parking Lot per TB00000 v2_20 §4 Response Rule 14 +
+§3.4.4 — do NOT amend the spec in TB00151k. The
+spec is FROZEN.
+
+============================================================
+6. STEP A PRE-FLIGHT (per 0311002 v1_10 §8.2.5)
+============================================================
+
+  CHECK 1 (parent chain compliance):
+    TB00151k is a session-control document outside the
+    DCN namespace. No DCN parent chain.
+  CHECK 2 (governance documents reachable):
+    0311001 v1_6, 0311002 v1_10, 0311006 dv1_2,
+    TB00000 v2_20 — all readable in /mnt/project/.
+  CHECK 3 (binary deliverable integrity):
+    N/A (.txt scope).
+  CHECK 4 (DR-005 version consistency):
+    Plan to confirm only ONE version of each Phase 1
+    close-gate spec in /mnt/project/. No predecessor
+    versions present.
+  CHECK 5 (DR-006 single-turn announcement):
+    Plan present_files call in same response turn
+    as delivery announcement.
+  CHECK 6 (DR-007 content completeness):
+    Plan post-author validation per §4.1.4.
+  CHECK 7 (asset presence):
+    N/A (no embedded assets expected).
+  CHECK 8 (HTML well-formedness):
+    N/A (.txt scope).
+  CHECK 9 (RR-SCOPE-002 scope bound):
+    Confirm authoring scope strictly limited to
+    TB00151k five planning deliverables per §4.
+
+============================================================
+7. STANDING RULES IN EFFECT
+============================================================
+
+  TB00000 v2_20 governs.
+  PA-001 paper-as-master.
+  PA-004 four divergence points; PA-005 byte-
+    identical elsewhere.
+  PA-006 new divergence points require Bill written
+    authorization. Phase 2 code rebuild MUST NOT
+    introduce a fifth PA-004 divergence point without
+    explicit Bill written authorization in TB00151L+.
+  PA-008 pre-emit scan + self-catch
+    "PA-MASTER self-caught — redrafting".
+  ERROR-TB00151g-01 corrective: NSI baseline lists
+    are NOT authoritative. conversation_search +
+    project_knowledge_search content grep MUST run
+    before accepting any baseline as work scope.
+  TB00151f §4.5: PKS hits do NOT prove file
+    presence; /mnt/project/ frozen mount + Bill
+    folder UI authoritative.
+  DR-006 single-turn delivery on every
+    present_files.
+  RR-SCOPE-002: do NOT bundle code authoring into
+    TB00151k planning session.
+  RR-SCOPE-005: execute next logical step when
+    derivable from data; do NOT ask A/B clarifying
+    questions when answer is in context.
+  RR-SCOPE-007/009 anti-silent-narrowing.
+  RR-SCOPE-009 four-question origin investigation
+    BEFORE removing or relaxing any constraint
+    inherited from Phase 1. The Phase 1 close-gate
+    specs are LOAD-BEARING by default.
+
+============================================================
+8. EXPECTED DELIVERABLES — TB00151k
+============================================================
+
+  TB00151k Module Rebuild Plan (NEW; could be a
+    standalone .txt or absorbed into the TB00151k
+    Session Log — Claude decides per first-principles
+    structuring at authoring time).
+  TB00151k Session Log v1_0 (NEW).
+  TB00151L NSI v1_0 (NEW — directs first module
+    rebuild session, e.g., ws_manager.py per the
+    plan ratified in TB00151k).
+
+  NO code commits this session. NO spec amendments.
+  Planning artifacts only.
+
+============================================================
+9. POST-PHASE-2-KICKOFF
+============================================================
+
+After TB00151k delivers the Phase 2 plan + TB00151L
+NSI:
+  - Phase 2 code rebuild begins per the plan.
+  - Each module rebuild gets its own TB00151L+ session.
+  - 72-hour paper observation window per module before
+    merge to TothBot_V2-Code master.
+  - Phase 2 close gate: all 12 modules rebuilt + all
+    paper-observation windows passed + CIATS data
+    continuity verified.
+  - Phase 3 (live trading authorization gate) is OUT
+    OF SCOPE for this NSI and will be addressed at
+    Phase 2 close.
+
+============================================================
+10. CHAT-START LANGUAGE TEMPLATE
+============================================================
+
+Bill may use the following chat-start text at the
+start of TB00151k (paste into the first user message
+verbatim):
+
+============================================================
+BEGIN
+============================================================
+Hi Claude. New chat. Starting TB00151k per TB00151k NSI v1_0.
+Primary mission: Phase 2 code rebuild PLANNING — author
+module rebuild order, per-session scope, test scaffolding
+plan, PA-001..010 enforcement plan, decision register.
+NO code authoring this session.
+Cold-load mandatory reading per TB00151k NSI v1_0 §2.
+Run TB00151k NSI v1_0 §3 SIX-ITEM cold-load verification
+including ★ §3.5 BASELINE-DRIFT DEFENSE and §3.6 PHASE 1
+CLOSE-GATE COMMIT VERIFICATION. Report PASS/FAIL.
+DO NOT read any retired 0500000 sidecar / .txt / .docx /
+.pdf files. They are RETIRED. Flag any predecessor-version
+spec files alongside Phase 1 close-gate versions.
+KEY STANDING RULES:
+  - PA-001 paper-as-master. PA-004 four divergence points;
+    PA-005 byte-identical elsewhere; PA-006 new divergence
+    points require Bill written authorization.
+  - PA-008 self-catch on direction-of-mimicry violations.
+  - ERROR-TB00151g-01 corrective: NSI baseline lists are
+    NOT authoritative.
+  - TB00151f §4.5: PKS hits do NOT prove file presence.
+  - DR-006 single-turn delivery on every present_files.
+  - RR-SCOPE-002: NO code authoring this session.
+  - RR-SCOPE-005: execute next logical step when
+    derivable from data.
+  - RR-SCOPE-009: Phase 1 close-gate specs are LOAD-
+    BEARING; four-question origin investigation before
+    removing or relaxing any constraint.
+  - First Principles + Data-Driven + maximize profit /
+    minimize loss (loss minimization paramount).
+After cold-load PASS: proceed directly to authoring the
+Phase 2 plan deliverables per TB00151k NSI v1_0 §4.
+============================================================
+END
+============================================================
+
+============================================================
+11. REVISION HISTORY
+============================================================
+
+  v1_0  2026-05-08  First issue. Directs TB00151k to
+                    PLAN the Phase 2 code rebuild per
+                    0500000 dv1_24 §12.0 OPTION B
+                    Clean-Slate Rebuild authorization.
+                    Phase 1 close gate PASSED at
+                    TB00151j close per the three-spec
+                    single-batch commit (D-TB00151h-02).
+                    TB00151k authors module rebuild
+                    order, per-session scope, test
+                    scaffolding plan, PA-001..010
+                    enforcement plan, and decision
+                    register. NO code authoring this
+                    session — code begins TB00151L+.
+
+============================================================
+END TB00151k NEXT SESSION INSTRUCTIONS v1_0
+============================================================

@@ -1,0 +1,657 @@
+DocDCN:     TB00148_HANDOFF
+DocTitle:   TB00148_Chat_Handoff_Memo
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TBXXXXX_Session_Logs\TB00148_HANDOFF_MEMO_v1_0.txt
+DocDate:    05-04-2026
+DocTime:    00:00:00 UTC
+
+============================================================
+TB00148 CHAT HANDOFF MEMO
+============================================================
+
+PURPOSE: Bridge current TB00148 chat (audit + architectural
+decision complete) to a NEW chat that will author the full
+TB00148 Session Log v1_0 + Next Session Instructions v1_0.
+
+This memo is NOT a Session Log. It is a working bridging
+document. The new chat authors the formal TB00148 SL + NSI
+from this memo's contents plus its own cold-load.
+
+This memo follows TB00000 standing rules but is not a DCN-
+governed document.
+
+PAPER TRADING ONLY. NO REAL MONEY. NO PATCHES.
+PAPER IS MASTER per TB00000 v2_18 §4.4 PA-001.
+LIVE MIMICS PAPER except at PA-004 four divergence points.
+UNIVERSE = TOKEN/USD + TOKEN/USDC + TOKEN/USDT (D-03 LOCKED).
+
+============================================================
+1. SESSION STATUS AT HANDOFF
+============================================================
+
+CHAT SCOPE EXECUTED:
+  - Cold-load TB00148 (mandatory reading complete)
+  - STEP A pre-flight (DC-PREFLIGHT-001..006)
+  - PATH B authorized (deep PA-001..010 audit before deploy)
+  - Tier A + B + 3 of 6 Tier C files audited (10 of 13)
+  - 24 findings cataloged (9 CRITICAL, 9 HIGH, 1 MEDIUM, 5 LOW)
+  - Rebuild-vs-fix FP/DP analysis
+  - Bill authorized OPTION B Clean-Slate Rebuild
+
+CHAT SCOPE REMAINING (for new chat):
+  - Author TB00148 Session Log v1_0
+  - Author TB00148 Next Session Instructions v1_0
+  - Close TB00148
+
+GITHUB STATE AT HANDOFF (UNCHANGED — no commits this chat):
+  TothBot_V2-Docs HEAD = e8713d5  (TB00147 cascade close)
+  TothBot_V2-Code HEAD = fb5de32  (untouched)
+  VPS                  = UNTOUCHED (no deploy)
+
+PROJECT FOLDER NOTES:
+  Two stale duplicates remain (non-blocking):
+    0211005_Paper_Trading_Operations_Procedure_dv1_2.txt
+    1011002_WS_Manager_Coding_Spec_dv1_25.txt
+  Bill may remove at convenience. Do NOT block TB00148
+  closure on these.
+
+============================================================
+2. COLD-LOAD AT TB00148 START
+============================================================
+
+Documents read by current chat:
+  TB00000   Project_Instructions             v2_18    project
+  TB00147   Session_Log_2026-05-03           v1_0     project
+  TB00147   Next_Session_Instructions        v1_0     project
+  0311001   Namespace_Specification          v1_3     project
+  0311002   Document_Creation_Workflow       v1_8     project
+  0311003   Versioning_Procedure             v1_1     project
+  0311004   Document_Creation_and_Approval   v1_2     project
+  0311005   System_Definitions_Terminology   v1_0     project
+  0311006   Known_Platform_Limitations       dv1_0    project
+  0500000   System_Architecture_Overview     dv1_21   project
+  0511001   WS_Manager_Specification         dv1_5    project
+  1011002   WS_Manager_Coding_Spec           dv1_26   project
+  0511004   Exit_Controller_Specification    dv1_3    project
+  1011005   Exit_Controller_Coding_Spec      dv1_3    project
+  0211005   Paper_Trading_Operations_Proc    dv1_3    project
+  1011013   VPS_Deployment_Coding_Spec       dv1_6    project
+  1011014   Startup_Sequence_Coding_Spec     dv1_7    project
+  0211003   Startup_Shutdown_Procedure       dv1_0    project
+  0211004   Incident_Response_Procedure      dv1_0    project
+
+Plus during audit:
+  1011004   Execution_Engine_Coding_Spec     dv1_0
+  1011006   Position_Mirror_Coding_Spec      dv1_1
+  1011008   Long_Module_Coding_Spec          dv1_0
+  1011009   Selection_Controller_Coding_Spec dv1_1
+  1011010   CIATS_Coding_Spec                dv1_6
+  1011011   Risk_Engine_Coding_Spec          dv1_3
+  1011012   Regime_Engine_Coding_Spec        dv1_5
+  1011007   Logger_Coding_Spec               dv1_5
+
+============================================================
+3. PATH B AUTHORIZATION + AUDIT SCOPE
+============================================================
+
+PATH SELECTION:
+  Bill declined TB00147 NSI's deploy-only directive (PATH A).
+  Bill authorized PATH B — deep PA-001..010 audit of all
+  remaining .py files BEFORE any deploy.
+
+AUDIT METHOD:
+  Per file, verify against:
+    1. Universe corruption (USDT exclusion, Top-N, narrowing)
+    2. Paper/live divergence outside PA-004 four points
+    3. CIATS-owned params hardcoded (FINDING-7 class)
+    4. Cross-module interface mismatches
+    5. Stale references (monitored→tradeable, schema names)
+    6. Sacred 1:1.5 R:R compliance
+    7. Method-name and schema-field existence
+
+FILES AUDITED (10 of 13):
+  TIER A (Universe + critical paper-live boundaries):
+    1. execution_engine.py    vs 1011004 dv1_0
+    2. position_mirror.py     vs 1011006 dv1_1
+    3. risk_engine.py         vs 1011011 dv1_3   CLEAN
+
+  TIER B (Pipeline / strategy):
+    4. signal_pipeline.py     vs 1011003 dv1_0
+    5. selection_ctrl.py      vs 1011009 dv1_1   CLEAN
+    6. long_module.py         vs 1011008 dv1_0
+    7. regime_engine.py       vs 1011012 dv1_5
+
+  TIER C (Infrastructure):
+    8. ciats.py               vs 1011010 dv1_6
+    9. logger.py              vs 1011007 dv1_5   CLEAN
+   10. startup_sequence.py    vs 1011014 dv1_7
+
+FILES SKIPPED (low architectural relevance):
+   11. vps_deployment.py    (operations layer)
+   12. __main__.py          (entry point)
+   13. __init__.py          (package init)
+
+============================================================
+4. FINDINGS CATALOG — 24 UNIQUE FINDINGS
+============================================================
+
+ID    SEV       FILE        SUMMARY
+----  --------  ----------  ------------------------------------
+09    CRITICAL  EE/LM       Paper-mode entry dispatch seam
+                            UNDEFINED. EE+LM unconditionally
+                            send to ws_private; WM paper has
+                            no ws_private. Specs disagree —
+                            HR-EE-013 says no branching, but
+                            HR-WM-022 says paper has no
+                            ws_private. Architecturally
+                            unspecified.
+
+10    CRITICAL  EE+PM       position_mirror.create_record()
+                            method does not exist. EE calls
+                            it with 4 args; PM has create()
+                            with 10 args. Runtime
+                            AttributeError on first entry.
+
+11    HIGH      PM          PositionRecord missing
+                            fees_entry_usd. Required by
+                            TB00147 dv1_26 cascade. EC reads
+                            it on close.
+
+12    HIGH      EE          ENTRY_TIMEOUT_SEC hardcoded as
+                            module constant. CIATS-owned
+                            (TB00000 §9.17). FINDING-7 class.
+
+13    LOW       EE-spec     1011004 spec sibling refs stale
+                            (1011002 dv1_23, 1011005 dv1_2).
+
+14    HIGH      PM          PositionRecord field naming:
+                            spec uses cl_ord_id /
+                            emergsl_order_id; code uses
+                            cl_ord_id_entry / emgsl_order_id.
+
+15    CRITICAL  EE/EC/LM    THREE incompatible PositionMirror
+                            access patterns: EE uses
+                            self._pm.create_record (broken),
+                            EC uses wm.position_mirror[sym]
+                            dict (broken), LM uses
+                            self._pm.close_position (works).
+                            Spec mandates wm.pm_create()
+                            wrapping. NOBODY implements spec.
+
+16    CRITICAL  EC+PM       pos.mae_pct_reached field does
+                            not exist on PositionRecord.
+                            EC reads + writes at 4 sites.
+                            First Layer 2 MAE check =
+                            AttributeError. L2 exits broken.
+
+17    HIGH      PM-spec     1011006 HR-PM-005 references
+                            retired _fire_ciats_outcome.
+                            TB00147 cascade routed CIATS
+                            via EC TRADE_CLOSE log. Spec
+                            stale.
+
+18    HIGH      RE          update_half_kelly() never writes
+                            kelly_fraction to _params. Half-
+                            Kelly transition non-functional
+                            from RE side.
+
+19    MEDIUM    EE/LM       Cross-module private attr
+                            access: EE reads RE._params
+                            (line 284); LM reads
+                            EE._entry_orders (lines 239, 615).
+
+20    LOW       RE          FINDING-6 propagates to drawdown
+                            formula. spot_balance stays $1000
+                            in paper; circuit breakers fire
+                            on wrong numerator. (Consequence,
+                            not new defect.)
+
+21    CRITICAL  EC          wm.update_selection_controller_
+                            state() method does not exist.
+                            EC calls at line 842. Method
+                            never defined. EC needs direct
+                            SC reference per TB00147 cascade.
+
+22    LOW       SP          Dead code: HTF_EMA_FAST_PERIOD /
+                            SLOW_PERIOD declared, never used.
+
+23    CRITICAL  EE/LM/SP    Inconsistent ws_manager attribute
+                            naming: EE+LM use pair_specs;
+                            SP uses pair_cache. ws_manager
+                            must expose ONE consistently.
+                            One side crashes at runtime.
+
+24    HIGH      RGE         atr_percentile_thresh hardcoded
+                            as Decimal("67"). Spec line 134
+                            says CIATS-owned. FINDING-7 class.
+
+25    HIGH      RGE         htf_ema_periods (20/50) used as
+                            module constants. Spec line 126
+                            says CIATS-owned. FINDING-7 class.
+
+26    HIGH      RGE         atr_percentile_window/min
+                            hardcoded. CIATS-owned.
+
+27    CRITICAL  CIATS       TRADE_CLOSE field name typo.
+                            EC emits net_PL_USD,
+                            net_gain_usd, net_loss_usd.
+                            Spec says read net_gain_usd.
+                            ciats.py reads "net_pl_usd"
+                            (matches NEITHER spec NOR EC
+                            emission). Half-Kelly statistical
+                            inference 100% non-functional —
+                            avg_loss=0 → return at line 555.
+
+28    CRITICAL  EC+PM       PositionRecord missing
+                            vol_regime field. EC TRADE_CLOSE
+                            emission at line 832 reads
+                            pos.vol_regime. Third missing
+                            field on PositionRecord.
+
+29    LOW       Logger-spec TB00147 paper events
+                            (PAPER_LEDGER_UPDATED,
+                            PAPER_BALANCE_SET,
+                            PAPER_MARKET_SELL_SIMULATED)
+                            not in 1011007 dv1_5 spec
+                            taxonomy. logger.py uses generic
+                            formatter — won't crash. Spec
+                            stale.
+
+30    HIGH      Startup     wm.monitored_universe stale
+                            attribute reference. Per
+                            1011002 dv1_26, attribute
+                            renamed to tradeable_universe.
+                            Daily regime refresh broken.
+
+31    CRITICAL  Startup+EC  ExitController NOT wired to
+                            SelectionController. EC
+                            constructor takes (re, rge,
+                            logger). Has no self._sc.
+                            TB00147 cascade HR-EC-014
+                            mandates EC owns SC state —
+                            unimplementable. Also no LM
+                            ref → on_position_closed
+                            chain broken.
+
+32    LOW       Startup     "all 50 pairs" comment stale
+                            (D-08 retired Top-N cap).
+
+============================================================
+5. PATTERN ANALYSIS — STRUCTURAL CONCLUSION
+============================================================
+
+CLEAN FILES (3): risk_engine.py, selection_ctrl.py, logger.py
+  - Self-contained, single-purpose modules
+  - Correct CIATS parameter integration
+  - No broken cross-module dependencies
+  - Clean PA-001..010
+
+BROKEN AT INTEGRATION BOUNDARIES (7):
+  - Method names that don't exist (create_record,
+    clear_record, update_selection_controller_state)
+  - Schema fields that don't exist (fees_entry_usd,
+    mae_pct_reached, vol_regime)
+  - Attribute name drift (pair_specs vs pair_cache,
+    monitored_universe vs tradeable_universe)
+  - Incompatible access patterns (PM-as-class vs PM-as-dict)
+  - Field name typos breaking statistical pipelines
+    (net_pl_usd vs net_PL_USD)
+  - Constructor wire-up missing critical dependencies
+    (EC ↔ SC, EC ↔ LM)
+  - Paper-mode dispatch architecture undefined at
+    multiple module boundaries
+
+ROOT CAUSE: Code authored from FRAGMENTED specs at different
+points in time, against different module designs, NEVER
+integration-tested. Bill's stated suspicion of "Claude
+making unauthorized changes" is confirmed at far deeper
+level than universe corruption alone.
+
+CURRENT STATE: Bot CANNOT execute end-to-end in either paper
+or live mode at fb5de32. First entry hits FINDING-10
+AttributeError. First L2 MAE check hits FINDING-16. First
+close hits FINDING-21+28. CIATS Half-Kelly never fires
+(FINDING-27+18). Drawdown formula returns wrong values
+(FINDING-6+20).
+
+============================================================
+6. ARCHITECTURAL DECISION — BILL AUTHORIZED
+============================================================
+
+DECISION: OPTION B — CLEAN-SLATE REBUILD WITH 3-FILE REUSE
+
+FP/DP RECOMMENDATION OFFERED 3 OPTIONS:
+  A. Surgical fix (patch each finding in place)
+  B. Clean-slate rebuild with reuse of 3 clean files
+  C. Hybrid (rebuild integration boundaries only)
+
+BILL CHOSE: B (per "We will do the FP/DP recommendation as
+usual.")
+
+DECISIVE FACTORS:
+  (1) CIATS data integrity preserved from day 1
+  (2) Paper-mode dispatch boundary designed-in, not patched
+  (3) PA-001..010 compliance built into architecture
+  (4) Lower-tail-risk per TB00000 §3 loss-min mandate
+  (5) Spec-code alignment improves rather than drifts
+  (6) Time cost competitive with surgical fix (~13% within)
+  (7) Bill's prior "we will write a whole new program if
+      necessary" position aligned
+
+REUSE LIST (verified clean — DO NOT REBUILD):
+  - risk_engine.py
+  - selection_ctrl.py
+  - logger.py
+
+CASCADE REUSE (TB00147 specs already authored):
+  - 0511001 dv1_5    parent system spec
+  - 1011002 dv1_26   WS Manager coding spec (paper ledger,
+                     EC routing, retire _fire_ciats_outcome)
+  - 0511004 dv1_3    Exit Controller spec (EC-PAPER section)
+  - 1011005 dv1_3    Exit Controller coding spec (CODE IMPACT)
+  - 0211005 dv1_3    Paper trading ops procedure
+  - ws_manager.py dv1_25 (fb5de32) → applies cascade to dv1_26
+
+============================================================
+7. PROPOSED REBUILD PLAN — 4 PHASES
+============================================================
+
+PHASE 1 — SPEC AMENDMENTS (~6-10 sessions)
+  Author spec amendments BEFORE any code work:
+
+  0500000 dv1_22  System Architecture
+                  NEW SECTION: paper-mode dispatch
+                  architectural boundary specification
+                  (closes FINDING-09 architectural seam)
+
+  1011004 dv1_1   Execution Engine Coding Spec
+                  Paper-dispatch contract (HR-EE-013
+                  amended); CIATS param integration for
+                  ENTRY_TIMEOUT_SEC; PM interface contract
+
+  1011006 dv1_2   Position Mirror Coding Spec
+                  Schema: add fees_entry_usd, mae_pct_reached,
+                  vol_regime fields. Field naming
+                  reconciliation (cl_ord_id vs cl_ord_id_entry
+                  etc). Retire HR-PM-005 (post-TB00147 CIATS
+                  routes via EC TRADE_CLOSE log).
+
+  1011007 dv1_6   Logger Coding Spec
+                  Paper event taxonomy: PAPER_LEDGER_UPDATED,
+                  PAPER_BALANCE_SET,
+                  PAPER_MARKET_SELL_SIMULATED. TRADE_CLOSE
+                  field naming canonical statement.
+
+  1011008 dv1_1   Long Module Coding Spec
+                  Paper-dispatch contract for IOC sells
+                  (FINDING-09 recurrence).
+
+  1011010 dv1_7   CIATS Coding Spec
+                  TRADE_CLOSE field consumption: read
+                  net_gain_usd (canonical) NOT net_pl_usd.
+
+  1011012 dv1_6   Regime Engine Coding Spec
+                  Explicit CIATS-owned param list:
+                  atr_percentile_thresh, htf_ema_periods,
+                  atr_percentile_window/min.
+
+  1011014 dv1_8   Startup Sequence Coding Spec
+                  tradeable_universe (not monitored_universe).
+                  EC wire-up: inject SC + LM + PM + WM into
+                  ExitController constructor. Module
+                  dependency graph correction.
+
+PHASE 2 — CODE REBUILD (~8-14 sessions)
+  USE CLAUDE CODE (not chat). Order:
+
+  1. position_mirror.py    — foundation (schema first;
+                             other modules depend on it)
+  2. execution_engine.py   — paper-dispatch boundary
+                             implemented per new 0500000
+                             §; CIATS params integrated
+  3. long_module.py        — depends on EE + new dispatch
+                             seam; IOC paper path
+  4. exit_controller.py    — depends on PM schema + new
+                             SC/LM/PM/WM wire-up; on_paper_
+                             close per 1011005 dv1_3
+  5. signal_pipeline.py    — minor: pair_cache/pair_specs
+                             alignment per WM canonical
+  6. regime_engine.py      — CIATS param integration only
+  7. ciats.py              — TRADE_CLOSE field name fix;
+                             minor cleanup
+  8. startup_sequence.py   — module wire-up;
+                             tradeable_universe; full EC
+                             dep injection
+
+  ws_manager.py: apply existing TB00147 cascade per 1011002
+  dv1_26 spec (CODE IMPACT enumeration §19) — code edit
+  only, spec already authored.
+
+PHASE 3 — TESTING (~4-8 sessions)
+  - Per-module unit tests (5-10 each)
+  - Integration tests across 8-gate pipeline + EC + CIATS
+  - Paper-mode end-to-end test (synthetic candle → entry
+    → fill → close → CIATS update)
+  - Verify 19/19 ws_manager dv1_25 tests still pass
+  - Verify NEW field schemas (fees_entry_usd,
+    mae_pct_reached, vol_regime) populate correctly
+
+PHASE 4 — DEPLOY + OBSERVE (1-2 sessions)
+  - VPS deploy paper-mode
+  - 24-72h paper observation per 0211005 dv1_3
+    PT-AC-001..006
+  - Verify TRADE_CLOSE log records valid for CIATS
+    Half-Kelly
+  - Verify paper synthetic ledger evolves correctly across
+    multi-trade sequences (FINDING-6 closure)
+
+TOTAL ESTIMATE: 19-34 sessions; 75-160 hours
+
+============================================================
+8. NEW CHAT DIRECTIVE
+============================================================
+
+NEW CHAT TASK: Author TB00148 Session Log v1_0 + TB00148
+Next Session Instructions v1_0. Close TB00148.
+
+NEW CHAT MUST NOT:
+  - Re-audit (this memo IS the audit output)
+  - Re-derive the rebuild-vs-fix decision (Bill authorized B)
+  - Author Phase 1 spec amendments (TB00149+ scope)
+  - Touch code (TB00149+ scope, Claude Code only)
+  - Deploy anything (post-TB00148 scope)
+
+NEW CHAT MUST:
+  - Cold-load mandatory reading per TB00000 §2 + this memo
+    (state docs read with versions)
+  - STEP A pre-flight per 0311002 v1_8 §8.2.5
+  - Author TB00148 Session Log v1_0:
+      - Document audit scope, method, findings (24)
+      - Document rebuild decision + Bill authorization
+      - Document Phase 1-4 plan
+      - Open Items: OI-077 through OI-080 NEW (one per
+        finding cluster) OR enumerate 32 findings
+        individually (Claude FP/DP at authoring time)
+      - Document GitHub state at close (no commits)
+  - Author TB00148 NSI v1_0:
+      - Direct TB00149 to begin Phase 1 spec amendments
+      - 8 spec amendments enumerated above (start with
+        0500000 dv1_22 — parent of all)
+      - PA-008 pre-emit scan applies (paper-as-master
+        discipline for all spec authoring)
+      - Cascade order: 0500000 first (parent), then
+        AA=10 specs in dependency order
+      - DO NOT direct TB00149 to start coding — Phase 2
+        only after Phase 1 complete
+      - Project folder KEPT/ABSENT lists
+      - Parking Lot carried forward
+  - Deliver both documents in ONE BATCH per DR-003
+
+NEW CHAT INPUTS:
+  - This memo (TB00148_HANDOFF_MEMO_v1_0.txt)
+  - Project folder (mandatory reading per TB00000 §2)
+  - Bill confirmation when prompted
+
+============================================================
+9. PROJECT FOLDER KEPT/ABSENT LISTS (FOR NEW CHAT)
+============================================================
+
+NEW CHAT will produce final lists. Anticipated:
+
+KEPT IN PROJECT FOLDER (for TB00149 cold-load):
+  GOVERNANCE:
+    TB00000  v2_18
+    TB00148  Session_Log v1_0      (NEW from new chat)
+    TB00148  NSI v1_0              (NEW from new chat)
+    0311001  v1_3
+    0311002  v1_8
+    0311003  v1_1
+    0311004  v1_2
+    0311005  v1_0
+    0311006  dv1_0
+
+  DESIGN / SPEC + CODING SPEC:
+    0500000  dv1_21 (.txt + .docx + .pdf)
+    0511001  dv1_5
+    0511004  dv1_3
+    0211005  dv1_3
+    1011002  dv1_26
+    1011005  dv1_3
+    1011013  dv1_6
+    1011014  dv1_7
+    + all other AA=04..AA=12 specs currently in folder
+
+  OPERATIONS:
+    0211003  dv1_0
+    0211004  dv1_0
+
+  HANDOFF:
+    TB00148_HANDOFF_MEMO_v1_0  (this document — kept
+                                until new chat closes
+                                TB00148; can be removed
+                                from project folder after
+                                TB00148 SL+NSI authored)
+
+ABSENT FROM PROJECT FOLDER:
+  TB00147  Session_Log v1_0  (retired by TB00148)
+  TB00147  NSI v1_0          (retired by TB00148)
+  TB00145  Session_Log v1_1  (already retired; if still
+                              present, may be removed)
+  TB00145  NSI v1_1          (already retired)
+  0211005  dv1_2             (stale; may be removed)
+  1011002  dv1_25            (stale; may be removed)
+
+============================================================
+10. PARKING LOT CARRIED FORWARD
+============================================================
+
+PL-001  TB00149+ is the spec-amendment session sequence.
+        NO code edits. NO deploy. Code work resumes only
+        AFTER all 8 spec amendments are complete.
+
+PL-002  Per TB00000 v2_18 §4.4 PA-008, every spec
+        amendment MUST pre-emit-scan against PA-001..010
+        for wrong-direction (live-as-master) language.
+        Self-catch signal: PA-MASTER self-caught —
+        redrafting.
+
+PL-003  RR-SCOPE-007 enforcement: spec amendments are
+        constraint-additive (new fields, new methods, new
+        wire-up requirements). No silent narrowing of
+        D-01..D-08 LOCKED decisions.
+
+PL-004  RR-SCOPE-009 four-question origin investigation
+        applies before any spec REMOVES or RELAXES an
+        existing constraint. Phase 1 amendments are
+        primarily additive but spec retirement of
+        HR-PM-005 (FINDING-17) requires RR-SCOPE-009
+        investigation: HR-PM-005 was load-bearing for
+        pre-TB00147 architecture; it is correctly
+        retired because TB00147 cascade routed CIATS via
+        EC TRADE_CLOSE log. Investigation: TB00147 SL
+        + cascade commits b98954b, fc03cdb, 57a6aed,
+        e8713d5.
+
+PL-005  Three .py files NOT audited
+        (vps_deployment.py, __main__.py, __init__.py).
+        New chat does not need to audit these. They will
+        be addressed during Phase 2 code rebuild as
+        peripheral deliverables.
+
+PL-006  CONCURRENT PAPER + LIVE OPERATION (Bill rabbit
+        TB00145 chat-close). Future architecture
+        decision — when live trading begins, paper +
+        live should run as INDEPENDENT processes. NOT
+        a Phase 1 scope item. Captured for future
+        planning sessions.
+
+PL-007  3 clean files (risk_engine.py, selection_ctrl.py,
+        logger.py) reused without changes. Verified by
+        TB00148 audit. If Phase 2 rebuild surfaces
+        unexpected interface dependencies on these
+        files, halt and re-audit.
+
+PL-008  Bot at fb5de32 cannot execute end-to-end. Do not
+        attempt deploy until full rebuild (Phase 1 + 2 +
+        3) complete. PT-AC-001..006 acceptance criteria
+        per 0211005 dv1_3 govern paper validation gate.
+
+============================================================
+11. SESSION CLOSE — STATE AT TB00148 HANDOFF
+============================================================
+
+GITHUB STATE (UNCHANGED — chat scope was audit + decision)
+  TothBot_V2-Docs HEAD = e8713d5
+  TothBot_V2-Code HEAD = fb5de32
+  VPS                  = UNTOUCHED
+
+DELIVERABLES PRODUCED THIS CHAT:
+  ✓ Audit findings catalog (24 unique findings)
+  ✓ Pattern analysis (integration-boundary defect
+    concentration)
+  ✓ Rebuild-vs-fix FP/DP analysis
+  ✓ Bill OPTION B authorization
+  ✓ Phase 1-4 rebuild plan
+  ✓ This handoff memo
+
+DELIVERABLES PENDING (new chat):
+  - TB00148 Session Log v1_0
+  - TB00148 NSI v1_0
+
+OPEN ITEMS (all introduced this chat — final IDs assigned
+by new chat at SL authoring):
+
+  OI-NEW-CANDIDATE  REBUILD-AUTHORIZED-OPTION-B.
+                    Tracks Phase 1-4 execution.
+
+  OI-NEW-CANDIDATE  AUDIT-FINDING-CATALOG. Tracks 24
+                    findings until all closed at code-
+                    deploy layer.
+
+  OI-NEW-CANDIDATE  3-FILE-REUSE-VERIFIED. Tracks the
+                    risk_engine.py / selection_ctrl.py /
+                    logger.py reuse decision.
+
+  Carried forward from prior sessions (per TB00147 SL §9):
+    OI-073 PA-MASTER violation recurrence (count = 1)
+    OI-074 FINDING-TB00147-06 paper ledger (cascade
+           closed at spec layer; code-deploy pending)
+    OI-075 FINDING-TB00147-07 EC CIATS params (cascade
+           closed at spec layer; code-deploy pending)
+    OI-076 FINDING-TB00147-08 paper exits bypass EC
+           (cascade closed at spec layer; code-deploy
+           pending)
+    OI-061 RR-SCOPE-009 Chesterton's Fence (governance
+           closed; operational verification ongoing)
+    OI-060 WS_SUBSCRIBE_RATE_LIMIT_STORM (empirical
+           resolution; code-deploy closure pending
+           rebuild)
+    OI-045 USDT exclusion (D-03 LOCKED; code-deploy
+           closure subsumed by rebuild)
+    OI-046 Top-N cap retirement (D-08 LOCKED; code-deploy
+           closure subsumed by rebuild)
+
+============================================================
+END OF HANDOFF MEMO
+============================================================

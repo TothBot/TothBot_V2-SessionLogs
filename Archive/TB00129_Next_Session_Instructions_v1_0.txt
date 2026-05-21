@@ -1,0 +1,248 @@
+DocDCN:     TB00129_NSI
+DocTitle:   Next_Session_Instructions_for_TB00130
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TBXXXXX_Session_Logs\TB00129_Next_Session_Instructions_v1_0.txt
+DocDate:    04-24-2026
+DocTime:    23:59:59 UTC
+
+============================================================
+NEXT SESSION INSTRUCTIONS — TB00130
+REMEDIATION AUTHORING CONTINUATION + DC PACKAGE + DEPLOY
+============================================================
+
+PAPER TRADING ONLY. NO REAL MONEY.
+PAPER TRADING MUST MIMIC LIVE TRADING EXACTLY.
+
+============================================================
+1. WHAT TB00130 DOES
+============================================================
+
+Continue remediation file authoring from TB00129 close.
+Author the remaining ~18 files, run internal consistency
+audit, deliver DC package per DR-003 single-batch, deploy
+to VPS, verify.
+
+TB00130 MUST be opened as a COLD-LOAD NEW CLAUDE CHAT.
+
+TB00130 may itself split into TB00131 if authoring scope
+exceeds a single session budget. Natural split point:
+after all authoring complete, before deploy.
+
+============================================================
+2. LOCKED DECISIONS — DO NOT RE-ASK
+============================================================
+
+D-01  Option B (burn window)        LOCKED
+D-02  REPAIR (not rewrite)          LOCKED
+D-03  Universe USDC + USDT, no cap  LOCKED
+D-04  Liquidity filter $500k/day    LOCKED
+D-05  Starting capital $1,000       LOCKED
+D-06  Paper-to-live parity EXACT    LOCKED
+D-07  NO PATCHES                    LOCKED
+D-08  Top-N cap retired             LOCKED
+
+============================================================
+3. MANDATORY READING AT COLD-LOAD
+============================================================
+
+From project folder:
+  TB00000 v2_13       (Project Instructions — in system prompt)
+  TB00129 Session Log v1_0
+  TB00129 NSI v1_0    (this document)
+  TB00128 Session Log v1_0
+  0311001 v1_3, 0311002 v1_3, 0311003 v1_1, 0311004 v1_2, 0311005 v1_0
+  0500000 dv1_19 (current baseline for AR-070 amendment)
+  0711003 dv1_2 (companion — authored TB00129)
+  0511001 dv1_2 (companion — authored TB00129)
+
+MUST-PRESERVE set (already in project folder):
+  TB00001, TB00012, TB00013, TB00014, TB00020, TB00126,
+  TB00127, TB00128.
+
+============================================================
+4. WORK QUEUE — FILES TO AUTHOR IN TB00130
+============================================================
+
+4.1 PRIORITY 1 — Code files for R-01 through R-03
+                  (paper parity + universe scope):
+
+  ws_manager.py            dv1_23 → dv1_24
+                           Paper mode startup rewritten to
+                           execute universe population per
+                           0511001 dv1_2 §4.2 Steps 2-8.
+                           Universe criteria updated to
+                           USDC + USDT, no top-N cap.
+                           Paper starting balance default
+                           $1,000.
+  selection_ctrl.py        Top-N cap logic removed. Universe
+                           = all AS-001 qualifying pairs.
+  startup_sequence.py      Verify paper-mode parity binding.
+
+4.2 PRIORITY 2 — 0500000 dv1_19 → dv1_20:
+                  DEDICATED 0500000 SESSION per TB00020
+                  precedent. AR-070 amended: quote currencies
+                  USDC + USDT (not "USD or USDC"); top-N cap
+                  retired; BTC/USD reclassified as non-
+                  tradeable regime anchor (AR-074 amended).
+                  Deliverables: .txt (Claude Source), .docx,
+                  .pdf per DR-002.
+
+4.3 PRIORITY 3 — Remaining spec files:
+
+  1011002  WS_Manager_Coding_Spec           bump
+  1011009  Selection_Controller_Coding_Spec  top-N retired
+  1010000  Trading_System_Coding_Anchor      dv1_14 → dv1_15
+                                              registry bumps
+  0211005  Paper_Trading_Operations_Procedure  parity binding
+  0921001  Business_Plan §3 Capital Model    $1,000 (R-13)
+
+4.4 PRIORITY 4 — Remediation bundled items:
+
+  R-07 CIATS corpus migration:
+       ciats.py (corpus source = trades_<YYYY>.jsonl)
+       1011010 CIATS_Coding_Spec
+  R-08 logrotate path fix:
+       vps_deployment.py
+       1011013 VPS_Deployment_Coding_Spec
+       /etc/logrotate.d/tothbot on VPS (ops task)
+  R-09 slippage instrumentation:
+       exit_controller.py
+       logger.py
+       1011005 Exit_Controller_Coding_Spec
+       1011007 Logger_Coding_Spec
+       0511006 Logger_Specification
+
+4.5 PRIORITY 5 — R-11 citation hygiene (bundled):
+
+  0611001 FLAG-C, 0611002 FLAG-A, 0611003 FLAG-C,
+  0711002 FLAG-F, 0811001 FLAG-D, 0811002 FLAG-B.
+  Pattern: inline "CIATS-owned starting value; source =
+  TB00001 CIATS Parameter Registry (pre-TB00001 FP/DP per
+  TB00001 line 95-96); 200-trade CIATS validation floor
+  per 0211001." No parameter value changes.
+
+4.6 PRIORITY 6 — Governance:
+
+  TB00000 v2_13 → v2_14   R-10 add RR-SCOPE-007.
+  Text drafted in TB00126 NSI §1.5.
+
+============================================================
+5. STANDING RULES — ALL ACTIVE
+============================================================
+
+All TB00000 v2_13 rules active throughout TB00130:
+  §4 Response Rules (1-13)
+  §4.1 DR-001, DR-002, DR-003
+  §4.2 OP-001 through OP-009 (ONEDRIVE PROHIBITION)
+  §4.3 RR-SCOPE-001 through RR-SCOPE-006
+  §4.3 RR-RULE-001 through RR-RULE-004
+  §4.3 RR-SHELL-001 through RR-SHELL-004
+  §4.3 RR-VIOL-001 through RR-VIOL-002
+
+Proposed for TB00000 v2_14 (apply discipline pre-emptively
+per TB00126 / TB00128):
+  RR-SCOPE-007  Never narrow user-specified scope without
+                explicit approval. Pre-emit scan for
+                restrictions/caps/filters on user inputs.
+
+Coding rules:
+  NO PATCHES EVER. Full file delivery only. Full DC header
+  and revision history entry on every file.
+
+============================================================
+6. WORK PLAN STEPS
+============================================================
+
+  STEP A  Pre-flight. Cold-load verification. VPS sweep.
+          Confirm D-01..D-08 locked.
+
+  STEP B  [COMPLETE in TB00129]. No re-execution.
+
+  STEP C  Compact design summary (file list, brief per-file
+          scope). NOT a deliverable document — just a
+          working plan.
+
+  STEP D  Code file authoring per §4.1, §4.4 above. Full
+          files, DC headers, revision histories.
+
+  STEP E  Spec file authoring per §4.2, §4.3, §4.5 above.
+          Full files, DC headers, revision histories.
+
+  STEP F  TB00000 v2_14 per §4.6.
+
+  STEP G  Internal consistency audit across all package
+          artifacts (cross-references resolve, AR numbers
+          consistent, dv versions line up in 1010000).
+
+  STEP H  DC package assembly per DR-003 single-batch.
+
+  STEP I  Bill review and approval.
+
+  STEP J  Commit (docs and code repos) and VPS deploy.
+          New observation window T+0 opens. Old window
+          burns per Option B (D-01).
+
+  STEP K  Post-deploy VPS sweep verification. Session
+          close: TB00130 session log + NSI.
+
+Multi-session split allowed. Natural split after STEP F or
+STEP H if scope demands it.
+
+============================================================
+7. BILL ACTIONS BEFORE TB00130 OPENS
+============================================================
+
+  (1) Complete Bill Actions in TB00129 Session Log §11
+      STEPS 1-3 (save, upload, do NOT commit).
+
+  (2) Launch TB00130 as cold-load new Claude Chat.
+
+============================================================
+8. CRITICAL LESSONS CARRIED FORWARD
+============================================================
+
+  L1  AR-070 pattern is systemic — batch AR closures embed
+      silent narrowings. Audit before close.
+  L2  Restoration is not a new decision.
+  L3  Independent evidence search mandatory on "FIND IT."
+  L4  Parameter independence — liquidity filter and sizing
+      are separate.
+  L5  Research floor deviation must be explicit.
+  L6  Citations must point to real artifacts. No fabrications.
+  L7  Fake parameter justifications are invisible without
+      audit.
+  L8  (NEW TB00129) Do not ask questions derivable from data.
+      Execute per RR-SCOPE-005 next-logical-step.
+  L9  (NEW TB00129) Verify project_files listing by
+      independent search before claiming absence.
+
+============================================================
+9. PARKING LOT — CARRIED TO TB00130
+============================================================
+
+See TB00129 Session Log §10.
+
+New this TB00129:   none.
+Resolved in specs: OI-044 (0511001), OI-045 (0711003 +
+                   0511001), OI-046 (0711003 + 0511001),
+                   OI-049/050 (0711003 §8). All close at
+                   code deploy.
+
+============================================================
+REVISION HISTORY
+============================================================
+
+  v1_0  2026-04-24  Initial. NSI for TB00130. Phase 1 audit
+                    complete in TB00129. Two spec files
+                    authored (0711003 dv1_2, 0511001 dv1_2).
+                    Remaining ~18 files queued for TB00130+
+                    across 6 priority tiers. D-01..D-08 all
+                    LOCKED. Standing rules all active.
+                    Paper trading only. No real money.
+                    Paper trading must mimic live trading
+                    exactly. No patches.
+
+============================================================
+END - TB00129 NEXT SESSION INSTRUCTIONS v1_0
+============================================================

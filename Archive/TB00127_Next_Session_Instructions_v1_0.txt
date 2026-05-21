@@ -1,0 +1,625 @@
+DocDCN:     TB00127_NSI
+DocTitle:   Next_Session_Instructions_for_TB00128
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TBXXXXX_Session_Logs\TB00127_Next_Session_Instructions_v1_0.txt
+DocDate:    04-24-2026
+DocTime:    22:30:00 UTC
+
+============================================================
+NEXT SESSION INSTRUCTIONS - TB00128
+FULL REMEDIATION SESSION (CONTINUATION)
+POST-HISTORICAL-LOG-UPLOAD COLD-LOAD
+============================================================
+
+PAPER TRADING ONLY. NO REAL MONEY.
+
+============================================================
+SECTION 1 - WHAT TB00128 DOES
+============================================================
+
+TB00128 is the continuation of the FULL REMEDIATION
+session initiated in TB00127. TB00127 completed Phase 0
+locked decisions (Option B window burn; REPAIR vs.
+rewrite). TB00127 then pivoted to upload historical
+session logs to expand the Phase 1 audit evidence base.
+TB00128 operates on the expanded reading set.
+
+TB00128 MUST be opened as a COLD-LOAD NEW CLAUDE CHAT.
+
+TB00128 is expected to span multiple Claude Chat
+sessions (TB00128, possibly TB00129, TB00130) due to
+scope size. Bill decides at each session close whether
+to proceed directly or split.
+
+------------------------------------------------------------
+1.1 Locked decisions carried forward from TB00127
+------------------------------------------------------------
+
+DO NOT RE-ASK these decisions. Both are LOCKED:
+
+  (a) Window disposition: Option B (burn window).
+      First remediation deploy burns the current
+      observation window. OI-018 / OI-019 / OI-020 /
+      OI-028 / OI-029 re-exercise in new window after
+      deploy.
+
+  (b) Rewrite vs. repair: REPAIR. Defects are spec-layer,
+      not code-layer. Validated modules (ws_manager.py
+      dv1_23, Logger, Position Mirror, startup sequence,
+      etc.) are retained. Only files downstream of
+      corrupted specs are rewritten (NO PATCHES - each
+      change is full-file).
+
+------------------------------------------------------------
+1.2 Pending decisions Bill states at TB00128 open
+------------------------------------------------------------
+
+  R-03  OI-046 - Universe size cap disposition:
+          R-03a: remove monitored_universe_n cap entirely
+          R-03b: raise cap above total qualifying pair count
+          R-03c: retain cap (Bill authorizes specific value)
+
+  R-04  OI-046 companion - Liquidity filter disposition:
+          R-04a: retain $500k filter
+          R-04b: lower to specific value Bill states
+          R-04b-alt: raise to $1M per 0500000 Finding 4
+                     research recommendation
+          R-04c: remove filter entirely
+
+Both LOCKED for this session once stated. No mid-session
+changes.
+
+------------------------------------------------------------
+1.3 Scope
+------------------------------------------------------------
+
+Three phases remain. Each phase has a gate that must be
+satisfied before the next phase begins.
+
+PHASE 1 - Systematic scope-drift audit (STEP B)
+  Audit the entire specification set AND historical session
+  logs for unauthorized scope narrowings following the
+  AR-070 pattern. Historical logs are new scope for this
+  session.
+
+  Audit targets in priority order:
+
+  (1) Historical session logs TB00001 - TB00126:
+      Search for all batch-AR-closure events. Compare
+      batch-closed ARs against Bill's originating
+      project instructions.
+      Flag any AR that narrowed scope without explicit
+      Bill approval.
+
+  (2) All ARs in 0500000 dv1_19: 80+ ARs inventoried.
+      For each AR: verify Bill approval trail in session
+      logs or flag as UNVERIFIED.
+
+  (3) 0711001 SSS_Signal_Model (thresholds - RSI, EMA,
+      volume).
+
+  (4) 0711002 Regime_Taxonomy (regime definitions,
+      entry permissions).
+
+  (5) 0611001 Position_Sizing_Rules (tradeable_pct,
+      per_trade_pct, max_concurrent). NEW SCOPE: verify
+      initial capital assumption ($1,000 stated by Bill;
+      not documented in any spec).
+
+  (6) 0611002 Drawdown_and_Halt_Rules (thresholds).
+
+  (7) 0611003 Concentration_and_Exposure_Rules.
+
+  (8) 0811001 Long_Module_Specification.
+
+  (9) 0811002 Selection_Controller_Specification.
+
+  (10) 0811003 Exit_Controller_Specification.
+
+  (11) 0411003 Kraken_Fee_Rate_Limit_Specification
+       (fee tier assumption).
+
+  (12) 0511001 WS_Manager_Specification (connection,
+       ping, keepalive).
+
+  (13) 0211001 CIATS_Specification (activation
+       thresholds, proposal approval path).
+
+  (14) 1010000 Trading_System_Coding_Anchor (registry
+       completeness).
+
+  (15) 0711003 AS-001 Criterion 3: $500k vs. $1M research
+       floor (PL-127-01). Specific audit item carried
+       from TB00127.
+
+  (16) 0711003 Section 8: post-hoc linkage of liquidity
+       filter to sizing parameters (PL-127-02). Specific
+       audit item carried from TB00127.
+
+  For each spec: identify every constant, threshold,
+  cap, filter, enumeration, or restriction. For each
+  such item: verify Bill approval trail (now cross-
+  referenced with historical session logs) or flag
+  UNVERIFIED.
+
+  Phase 1 output: audit report added to TB00128 session
+  log §3 with enumeration of all UNVERIFIED scope items.
+  Bill approves remediation scope before Phase 2 begins.
+
+PHASE 2 - Full remediation DC package (STEPS C-H)
+  Remediation package covers:
+
+  Mandatory scope (Bill directive from TB00126):
+    R-01  OI-044: Paper mode universe parity.
+          0511001 §4.2 rewritten. ws_manager.py paper
+          mode startup path rewritten to execute Steps
+          3-6 (universe population, REST Ticker, volume
+          filter, top-N selection if retained, BTC/USD
+          anchor) identically to live mode. Only private
+          WS subscription and auth steps skipped.
+
+    R-02  OI-045: USDT included in approved quote
+          currencies. 0500000 AR-070 amended. 0711003
+          AS-001 Criterion 1 amended to "USD, USDC,
+          or USDT".
+
+    R-03  OI-046: Universe size per Bill decision
+          (§1.2 above).
+
+    R-04  Liquidity filter per Bill decision (§1.2
+          above).
+
+    R-05  Systematic rewrite of all code files touching
+          universe, selection, regime, or paper-mode
+          behavior. NO PATCHES EVER - every touched file
+          delivered as complete file with full DC header
+          and revision history entry.
+
+    R-06  Systematic rewrite of all governance /
+          procedure documents reflecting the new reality.
+          Coding-ready requirements per TB00000 Section 3.
+
+  Bundled scope (pre-existing):
+    R-07  OI-024: CIATS corpus migration from tothbot.log
+          tail to trades_<YYYY>.jsonl. ciats.py rewrite.
+          1011010 spec update.
+
+    R-08  OI-025: logrotate config path correction.
+          /etc/logrotate.d/tothbot file correction on VPS.
+          1011013 spec update. Optional: promote to
+          operations/ subfolder as controlled operational
+          script per 0311001 v1_3.
+
+    R-09  OI-047: Slippage tracking instrumentation.
+          exit_controller.py captures bid at market-sell
+          submission. TRADE_CLOSE record gains
+          exit_expected_price and exit_submit_timestamp_
+          utc fields. 1011005, 1011007, 0511006 spec
+          updates. 1010000 registry bump.
+
+  Phase 1 audit scope (added per TB00128 STEP B
+  findings): any additional UNVERIFIED scope items
+  approved by Bill for remediation.
+
+  Governance scope:
+    R-10  TB00000 v2_13 -> v2_14. Add new Section 4.3
+          rule RR-SCOPE-007 (text per TB00126_NSI §1.5).
+          Bill override continues per standing v2_11
+          authority. Direct increment, no rv state.
+
+    R-11  Documentation fix for $500k vs. $1M research
+          discrepancy (PL-127-01). Update 0500000 Finding
+          4 or 0711003 Section 8 rationale as appropriate
+          with Bill's final R-04 decision as justification.
+
+    R-12  Documentation fix for post-hoc linkage artifact
+          (PL-127-02). Rewrite 0711003 Section 8 rationale
+          to present liquidity filter as INDEPENDENT
+          parameter. Remove implied coupling to sizing
+          math.
+
+    R-13  Documentation addition for initial capital
+          assumption (PL-127-03). Add Bill-confirmed
+          initial capital figure to 0921001 Business
+          Plan Section 3 Capital Model, or explicitly
+          state that no initial capital assumption is
+          embedded in the spec.
+
+Phase 2 gate: all code and specs authored and internally
+consistent; DC package complete; Bill reviews and
+approves before commit and deploy.
+
+PHASE 3 - Commit, deploy, verify (STEPS I-K)
+  Standard DC package delivery, VPS deploy, post-deploy
+  verification. Burns the current observation window
+  per Option B. Opens new observation window T+0 at
+  deploy timestamp. OI-018 / OI-019 / OI-020 / OI-028 /
+  OI-029 pending close on new window evidence.
+
+------------------------------------------------------------
+1.4 Out of scope for TB00128
+------------------------------------------------------------
+
+  - OI-048-CAND (Operator Observer Dashboard)
+  - OI-041 (already closed TB00125)
+  - Any CIATS PDCA activity (still pre-200-trade floor)
+  - Emergency live-mode testing or OI-041-style exercises
+  - Any third-party integration or new exchange
+
+============================================================
+SECTION 2 - MANDATORY READING (MUST BE FIRST, COLD-LOAD)
+============================================================
+
+TB00128 reads every document below directly from the
+Claude.ai project folder at session open. Claude states
+all documents read and their versions before beginning
+any work.
+
+------------------------------------------------------------
+2.1 Project instructions and current session context
+------------------------------------------------------------
+
+  TB00000 v2_13             Project Instructions
+  TB00127 Session Log v1_0  Current session context
+  TB00127 NSI v1_0          This document (governing
+                            this session)
+
+------------------------------------------------------------
+2.2 Governance documents
+------------------------------------------------------------
+
+  0311001 v1_3  Namespace_Specification
+  0311002 v1_3  Document_Creation_Workflow
+  0311003 v1_1  Versioning_Procedure
+  0311004 v1_2  Document_Creation_and_Approval_Procedure
+  0311005 v1_0  System_Definitions_and_Terminology
+
+------------------------------------------------------------
+2.3 7-session rolling window (recent session logs + NSIs)
+------------------------------------------------------------
+
+  TB00121 Session Log v1_1
+  TB00122 Session Log v1_0
+  TB00123 Session Log v1_0
+  TB00124 Session Log v1_0
+  TB00125 Session Log v1_0
+  TB00126 Session Log v1_0
+  TB00127 Session Log v1_0
+
+------------------------------------------------------------
+2.4 Historical session logs (EXPANDED SCOPE - Phase 1 audit
+    evidence base)
+------------------------------------------------------------
+
+Every historical session log Bill uploads between TB00127
+close and TB00128 open. Maximum useful scope is TB00001
+through TB00120 (pre-rolling-window range). Claude reads
+all uploaded logs and builds a batch-AR-closure inventory
+as first work product.
+
+Priority logs per TB00127 §8 STEP 2:
+  TB00014 (first $500k mention in Search 8)
+  TB00020 (AR-070 batch closure - primary drift evidence)
+  All TB logs referencing AR-067 through AR-075
+  All TB logs referencing initial capital / portfolio /
+    $1,000 / paper-trading balance
+  All TB logs referencing batch-AR closures
+
+------------------------------------------------------------
+2.5 Specs in scope for remediation (current versions)
+------------------------------------------------------------
+
+  0500000 System_Architecture_Overview  dv1_19
+  0711001 SSS_Signal_Model              current version
+  0711002 Regime_Taxonomy                current version
+  0711003 Asset_Selection               dv1_1
+  0511001 WS_Manager                    dv1_1
+  0511006 Logger                        dv1_1
+  0211005 Paper_Trading_Operations      dv1_0
+  0611001 Position_Sizing               dv1_0
+  0611002 Drawdown_and_Halt             dv1_0
+  0811001, 0811002, 0811003, 0811004    current versions
+  0411003 Kraken_Fee_Rate_Limit         dv1_0
+  0921001 Business_Plan                 dv1_0
+
+------------------------------------------------------------
+2.6 Coding specs in scope
+------------------------------------------------------------
+
+  1010000 Trading_System_Coding_Anchor  dv1_14
+  1011002 WS_Manager_Coding_Spec        dv1_22
+  1011005 Exit_Controller_Coding_Spec   dv1_2
+  1011007 Logger_Coding_Spec            dv1_5
+  1011009 Selection_Controller_Spec     current version
+  1011010 CIATS_Coding_Spec             current version
+  1011013 VPS_Deployment_Coding_Spec    dv1_4
+
+------------------------------------------------------------
+2.7 Code files (read for current state)
+------------------------------------------------------------
+
+  ws_manager.py              dv1_23
+  exit_controller.py         current
+  selection_ctrl.py          current
+  regime_engine.py           current
+  startup_sequence.py        dv1_9
+  ciats.py                   current
+  logger.py                  dv1_5
+  signal_pipeline.py         current
+  risk_engine.py             current
+  long_module.py             current
+  execution_engine.py        current
+  position_mirror.py         current
+  vps_deployment.py          current
+
+============================================================
+SECTION 3 - PRE-FLIGHT CHECKS (STEP A)
+============================================================
+
+------------------------------------------------------------
+3.1 Project folder state verification
+------------------------------------------------------------
+
+Claude states project folder expected contents per §1
+above and §2 mandatory reading list. Bill confirms
+contents match expectation. Any drift flagged before
+proceeding.
+
+Specifically verify: historical session logs uploaded
+per TB00127 §8 STEP 2. Count of uploaded logs stated.
+If zero uploaded, Bill decides whether to proceed with
+narrower Phase 1 scope or defer TB00128 until upload
+complete.
+
+------------------------------------------------------------
+3.2 VPS state verification (no remediation action)
+------------------------------------------------------------
+
+Execute (PowerShell):
+
+  ssh root@87.99.141.44 "/root/tothbot_sweep.sh"
+
+Capture full output. Record PID, uptime, counter values.
+Compare to TB00126 close state.
+
+------------------------------------------------------------
+3.3 Locked-decision confirmation
+------------------------------------------------------------
+
+Claude confirms to Bill (does not re-ask):
+  Window: Option B (burn). LOCKED per TB00127.
+  Approach: REPAIR. LOCKED per TB00127.
+
+------------------------------------------------------------
+3.4 Pending-decision lock
+------------------------------------------------------------
+
+Bill states R-03 choice and R-04 choice per §1.2.
+Decisions LOCKED for this session - no mid-session
+changes.
+
+============================================================
+SECTION 4 - WORK PLAN STEPS
+============================================================
+
+  STEP A  Pre-flight per §3.
+
+  STEP B  Phase 1 audit per §1.3 Phase 1. Deliverable:
+          audit report in TB00128 session log §3.
+          Expanded scope includes historical session logs
+          as evidence source for batch-AR-closure
+          detection.
+
+  STEP C  Remediation DC package design. Deliverable:
+          design document listing every file to be
+          authored or modified, with scope statement
+          per file. Include Phase 1 audit findings
+          approved by Bill.
+
+  STEP D  Code file authoring (full files, DC headers,
+          revision histories).
+
+  STEP E  Spec file authoring (full files, DC headers,
+          revision histories, coding-ready validation).
+
+  STEP F  TB00000 v2_14 authoring (RR-SCOPE-007 addition
+          per TB00126_NSI §1.5).
+
+  STEP G  Internal consistency audit across all package
+          artifacts.
+
+  STEP H  DC package delivery batch (DR-003 compliance).
+
+  STEP I  Bill review and approval.
+
+  STEP J  Commit and deploy (if approved). New observation
+          window T+0 opens. Old window burns per Option B.
+
+  STEP K  Post-deploy verification and session close.
+
+Multi-session split: Bill decides at STEP B close, STEP D
+close, and STEP H close whether to continue in current
+session or split to next session. Scope-size threshold is
+Claude context-window risk.
+
+============================================================
+SECTION 5 - STANDING RULES - ALL ACTIVE
+============================================================
+
+  TB00000 v2_13 Section 4 Response Rules - all active.
+  TB00000 v2_13 Section 4.1 DR-001, DR-002, DR-003 -
+    all active.
+  TB00000 v2_13 Section 4.2 OP-001 through OP-009 -
+    all active.
+  TB00000 v2_13 Section 4.3:
+    RR-SCOPE-001 through RR-SCOPE-006 - all active.
+    RR-RULE-001 through RR-RULE-004 - all active.
+    RR-SHELL-001 through RR-SHELL-004 - all active.
+    RR-VIOL-001, RR-VIOL-002 - all active.
+
+  CODING: NO PATCHES EVER. Full file delivery only.
+          Full DC required for every code change.
+
+  DELIVERY: DR-001 (.txt for all documents to project
+            folder), DR-002 (0500000 additionally as
+            .docx and .pdf), DR-003 (single batch
+            delivery, no piecemeal).
+
+  Paper trading only. No real money. Shell discipline:
+  PowerShell is session default. PAPER TRADING MUST
+  MIMIC ALL ASPECTS OF LIVE TRADING EXACTLY.
+
+Proposed for TB00000 v2_14 this session (STEP F):
+  RR-SCOPE-007 - Never narrow user-specified scope
+                 without explicit approval.
+  Not active in TB00128 until v2_14 authored and Bill
+  approves. HOWEVER the DISCIPLINE applies immediately:
+  Claude must not narrow user-specified scope without
+  explicit Bill confirmation during TB00128 itself.
+
+============================================================
+SECTION 6 - DECISIONS LOCKED AT TB00128 OPEN
+============================================================
+
+Upon Bill stating R-03 and R-04 choices:
+
+  All four Phase 0 decisions LOCKED:
+    Window:    Option B (from TB00127)
+    Approach:  REPAIR (from TB00127)
+    R-03:      Bill states at TB00128 open
+    R-04:      Bill states at TB00128 open
+
+No decision is revisited mid-session. If new evidence
+emerges from Phase 1 audit that challenges any locked
+decision, Claude flags to Bill explicitly and Bill
+decides whether to reopen that decision or defer to a
+later session.
+
+============================================================
+SECTION 7 - PARKING LOT CARRIED FORWARD
+============================================================
+
+From TB00126 §7 and TB00127 §5 / §6:
+
+  OI-017  OPEN (LOW)    - liquidity refresh (deferred)
+  OI-018  PENDING CLOSE (HIGH) - window evidence. Burns
+          at first remediation deploy per Option B.
+          Re-exercises in new window.
+  OI-019  PENDING CLOSE (MED)  - as OI-018.
+  OI-020  PENDING CLOSE (MED)  - as OI-018.
+  OI-021  OPEN (COSMETIC) - bounces per fatal.
+  OI-023  CLOSED (CRITICAL) - op verification pending.
+  OI-024  OPEN (MED)    - CIATS corpus migration.
+                          [SCOPE FOR TB00128 R-07]
+  OI-025  OPEN (LOW)    - logrotate path.
+                          [SCOPE FOR TB00128 R-08]
+  OI-028  PENDING CLOSE (HIGH) - as OI-018.
+  OI-029  PENDING CLOSE (MED)  - as OI-018.
+  OI-036  LOW           - optional.
+  OI-037  MED           - v2_13 rules active.
+  OI-038  LOW           - optional.
+  OI-041  CLOSED (TB00125).
+  OI-043  LOW/CAND.
+  OI-044  OPEN (HIGH)   - paper mode universe bypass.
+                          [SCOPE FOR TB00128 R-01]
+  OI-045  OPEN (HIGH)   - USDT exclusion.
+                          [SCOPE FOR TB00128 R-02]
+  OI-046  OPEN (MED)    - universe size cap.
+                          [SCOPE FOR TB00128 R-03 / R-04]
+  OI-047  OPEN (LOW)    - slippage instrumentation.
+                          [SCOPE FOR TB00128 R-09]
+  OI-048-CAND           - Dashboard UI scope (future).
+
+New parking lot items from TB00127:
+
+  PL-127-01  $500k vs. $1M research floor discrepancy.
+             [SCOPE FOR TB00128 Phase 1 audit item (15)]
+  PL-127-02  0711003 Section 8 post-hoc sizing linkage.
+             [SCOPE FOR TB00128 Phase 1 audit item (16)]
+             [R-12 remediation target]
+  PL-127-03  Initial capital ($1,000) undocumented.
+             [SCOPE FOR TB00128 R-13]
+  PL-127-04  Batch-AR-closure practice root cause.
+             [SCOPE FOR TB00128 Phase 1 (overall
+             framing) and R-10 (RR-SCOPE-007)]
+
+============================================================
+SECTION 8 - CRITICAL LESSONS CARRIED FORWARD
+============================================================
+
+LESSON 1 - Scope narrowing discipline
+  From TB00126 §8: AR-070 embedded two unauthorized scope
+  narrowings that persisted for ~105 sessions without
+  surface. Root cause: batch-AR-closure practice.
+  Corrective: RR-SCOPE-007 in Phase 2. Phase 1 audit
+  mandatory before any further architectural work.
+
+LESSON 2 - Paper-to-live parity is non-negotiable
+  From TB00126 §8: 0511001 §4.2 paper mode startup path
+  skips universe population. Corrective: OI-044 rewrite
+  in Phase 2.
+
+LESSON 3 - Parameter independence
+  From TB00127 §3.5: liquidity filter ($500k) and
+  position sizing (0.50 / 0.05 / 20) are independent
+  parameters. Do not conflate origin with post-hoc
+  rationale. Every parameter in the CIATS registry gets
+  its own research source, its own evidence trail, its
+  own approval record. Shared rationale across parameters
+  is a drift warning sign.
+
+LESSON 4 - Research floor deviation
+  From TB00127 §3.4: 0500000 Finding 4 cited "$1M+/day
+  minimum" per 5 sources 2024-2025. Adopted value was
+  $500k (50% of the floor). No recorded justification
+  for the deviation. Rule: any parameter adopted at a
+  value divergent from its cited research recommendation
+  MUST carry an explicit justification in the spec text.
+  Silent deviation is a defect.
+
+============================================================
+SECTION 9 - FIRST ACTIONS IN TB00128
+============================================================
+
+1. Cold-load mandatory reading per §2.
+2. State all documents read and their versions.
+3. Execute STEP A pre-flight per §3.
+4. Confirm locked decisions per §3.3.
+5. Capture Bill's R-03 and R-04 decisions per §3.4.
+6. Execute STEP B Phase 1 audit per §4.
+7. Deliver audit report in TB00128 session log §3.
+8. Pause for Bill approval of Phase 1 findings before
+   proceeding to STEP C.
+
+============================================================
+REVISION HISTORY
+============================================================
+
+  v1_0  2026-04-24  Initial. Next-session instructions for
+                    TB00128 post-historical-log-upload
+                    cold-load. Continuation of full
+                    remediation initiated in TB00127.
+                    Phase 0 decisions LOCKED from TB00127:
+                    Option B (burn window), REPAIR (not
+                    rewrite). Phase 0 decisions PENDING
+                    from TB00127: R-03 (universe size
+                    cap), R-04 (liquidity filter
+                    disposition) - Bill states at TB00128
+                    open. Expanded Phase 1 audit scope:
+                    historical session logs TB00001-TB00126
+                    added as evidence source for batch-AR-
+                    closure detection. Phase 1 audit target
+                    count: 16 items (original 13 + 3 new
+                    from TB00127 Parking Lot additions).
+                    Phase 2 remediation package: R-01
+                    through R-13 (R-11/R-12/R-13 new from
+                    TB00127 PL additions). R-13 addresses
+                    initial capital ($1,000) documentation
+                    gap. Standing rules all active. Paper
+                    trading only. No real money. Shell
+                    discipline: PowerShell only.
+
+============================================================
+END - TB00127 NEXT SESSION INSTRUCTIONS v1_0
+============================================================

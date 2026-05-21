@@ -1,0 +1,362 @@
+DocDCN:     TB00005
+DocTitle:   TothBot_V2_Session_Log_2026-03-24_Part3
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\OneDrive\TothBot\TB00005_TothBot_V2_Session_Log_2026-03-24_Part3_v1_0.txt
+DocDate:    03-24-2026
+DocTime:    23:59:59 UTC
+
+============================================================
+TOTHBOT V2 — SESSION LOG 2026-03-24 PART 3
+============================================================
+
+This document is the continuity record for the TothBot V2
+session of March 24, 2026 Part 3. It records all work
+performed: the second deep API validation search, two
+architectural evaluations, and implementation of all
+recommendations across all affected documents.
+
+Read TB00001, TB00002, TB00003, TB00004 first.
+
+============================================================
+1. SESSION IDENTITY
+============================================================
+
+Session date:     March 24, 2026
+Session type:     Deep API validation (second) +
+                  architectural evaluations +
+                  full document implementation
+Prior session:    TB00004 (March 24, 2026 Part 2)
+Documents in:     TB00000 v2_5, TB00001, TB00002,
+                  TB00003, TB00004, 0311001 dv1_2,
+                  0311002 dv1_4, 0500000 dv1_3 (docx)
+
+============================================================
+2. WORK PERFORMED THIS SESSION
+============================================================
+
+------------------------------------------------------------
+2.1 Second Deep API Validation Search
+------------------------------------------------------------
+
+Ten sequential searches executed against Kraken API
+documentation and related sources. 77+ references total.
+Minimum 15 references per search, no repeated references
+across searches. Each search built on prior knowledge.
+
+Search focus: validate all 0500000 connections and
+communication channels, look for missing connections,
+look for efficiency and speed improvements, look for
+anything that improves the primary mission of maximizing
+profit and minimizing loss with emphasis on minimizing
+loss.
+
+Results: 1 correction required (C-1 MPP), 5 additions
+identified (A-1 through A-5), 2 items requiring Bill
+decisions before implementation (PL-008 FIX, PL-011 OTO),
+5 parking lot items captured (PL-007 through PL-011).
+
+All existing 0500000 dv1_3 connections and architecture
+confirmed correct. No items contradicted prior sessions.
+Notable confirmations: Spot REST auth UNCHANGED (October
+2025 breaking change was Futures only). cancel_all_orders_
+after exists in WS v2 as DMS — AR-001 no-DMS decision
+confirmed correct and correct for same reason. WS v2 only
+policy confirmed.
+
+------------------------------------------------------------
+2.2 Bill Decisions — Two Items Closed Before Implementation
+------------------------------------------------------------
+
+DECISION 1 — PL-008 FIX API:
+Analysis delivered to Bill. Conclusion: FIX API cancel-
+on-disconnect conflicts with AR-001 — it would cancel the
+off-book emergSL stop orders on session drop, destroying
+the crash protection mechanism. All FIX advantages already
+solved in WS v2 architecture. No trading benefit at
+TothBot's 5-minute candle frequency. Bill confirmed:
+PL-008 CLOSED permanently. Rejection reason documented
+in AR-001 of 0500000 dv1_4.
+
+DECISION 2 — PL-011 OTO Conditional Orders:
+Full FP/DP analysis delivered to Bill. Conclusion:
+OTO rejected because (1) uses limit price not actual
+fill price for TP/SL calculation — systematically biases
+sacred R:R in adverse direction over 200+ trades;
+(2) creates Position Mirror race condition between fill
+event receipt and secondary order ID receipt. batch_add
+on fill confirmed correct architecture. Bill confirmed:
+PL-011 CLOSED permanently. Rejection reason documented
+in AR-008 of 0500000 dv1_4.
+
+------------------------------------------------------------
+2.3 Documents Updated This Session
+------------------------------------------------------------
+
+THREE DOCUMENTS PRODUCED:
+
+  1. 0500000_System_Architecture_Overview_dv1_4.docx
+     Full .docx with all 6 diagrams embedded.
+     All dv1_4 changes applied throughout text and
+     in all 6 flow diagrams (diagrams rebuilt from
+     updated SVG source files, converted to PNG,
+     embedded). Valid: 486 paragraphs. 1.78MB.
+
+  2. 0311002_Document_Creation_Workflow_dv1_5.txt
+     Updated for all dv1_4 implications. Phase step
+     notes added for 0411001, 0511001, 0511003,
+     0511004, 0511005, 0511006, 0211001, 0811001,
+     0811003, 0811004. OI-003 and OI-004 updated.
+     PL-007 through PL-011 added. PL-008 and PL-011
+     closed with documented rejection reasons.
+
+  3. TB00005_TothBot_V2_Session_Log_2026-03-24_Part3
+     This document.
+
+============================================================
+3. COMPLETE CHANGE RECORD — dv1_4 CHANGES TO 0500000
+============================================================
+
+Seven changes applied to 0500000 in this session:
+
+C-1 — MPP Always Enforced on Market Orders
+  Market Price Protection (MPP) is now always enforced
+  on Kraken market orders — the no_mpp override flag
+  is deprecated and ignored. Risk documented for:
+  - Layer 2 market sell (may reject on wide spread
+    during fast adverse moves — exactly when Layer 2
+    fires most frequently). Exit Controller MUST
+    handle MPP rejection and retry. Assign to 0511004.
+  - Layer 3 emergSL trigger (triggered market order
+    subject to MPP on wide spread). Assign to 0411001.
+  Added to: Section 4.1 table (Layer 2 and Layer 3 rows),
+  Section 11.2, Section 11.3, Diagram 1, Diagram 3,
+  Diagram 6.
+
+A-1 — AR-001 Expanded with Explicit Rejection Reasons
+  AR-001 now documents explicit evaluated-and-rejected
+  analysis of both:
+  (1) cancel_all_orders_after (WS v2 DMS): would cancel
+      ALL orders on TothBot failure including protective
+      off-book emergSL stop orders. Defeats crash
+      protection it is supposed to support.
+  (2) FIX API cancel-on-disconnect: same architectural
+      conflict. Cancels all orders on session drop,
+      destroying emergSL crash protection.
+  Both evaluated and rejected on identical grounds.
+  Added to: Section 8 AR-001 row, Section 2.1.
+
+A-2 — cl_ord_id on All Outbound WS Messages
+  All add_order and batch_add calls now carry cl_ord_id
+  (client-assigned alphanumeric identifier, up to 18
+  characters). TothBot assigns at dispatch time before
+  Kraken response. Position Mirror records immediately
+  at dispatch — no async gap. Cancel operations may
+  reference cl_ord_id.
+  Added to: Section 2.1, Section 2.4 (A-2 description),
+  Section 8 AR-002, AR-006, Section 11.1,
+  Diagram 1, Diagram 2, Diagram 6.
+  Assign to: 0511001, 0511003, 0511005.
+
+A-3 — WS snap_orders as Preferred Restart Reconciliation
+  WS executions snap_orders:true provides full open
+  orders snapshot over WS at zero REST call cost.
+  Preferred over REST GetOpenOrders on restart.
+  REST GetOpenOrders remains as cold-start fallback.
+  Added to: Section 2.1, Section 2.4 (A-3 description),
+  Section 8 AR-003, Section 11.1.
+  Assign to: 0511001, 0511006, 0211001.
+
+A-4 — stp_type:cancel-newest on All add_order Calls
+  Self Trade Prevention added to all add_order and
+  batch_add calls. Prevents inadvertent self-fills
+  when a prior GTD entry has not expired before next
+  signal fires for same pair.
+  Added to: Section 2.1, Section 2.4 (A-4 description),
+  Section 8 AR-006, Section 11.1,
+  Diagram 1, Diagram 2, Diagram 6.
+  Assign to: 0511003.
+
+A-5 — Reconnect Constraint Distinction
+  Two distinct reconnect behaviors now documented:
+  (1) Random drop: reconnect instantly, handful of
+      attempts
+  (2) Confirmed maintenance: minimum 5-second delay
+  Previously only the 5-second rule was documented.
+  Added to: Section 2 constraints note (was in Section 2.4),
+  Diagram 1 constraints box.
+  Assign to: 0511001.
+
+A-6 — OTO Conditional Orders: Evaluated and Rejected
+  OTO conditional orders evaluated as alternative to
+  batch_add for emergSL placement. Rejected because:
+  (1) uses limit price not actual fill price — systematic
+      adverse bias to sacred R:R;
+  (2) creates Position Mirror race condition.
+  batch_add confirmed correct.
+  Added to: Section 4.1 (note in exit table), Section 4.2,
+  Section 8 AR-008, Diagram 3, Diagram 6.
+
+DIAGRAM CHANGES — All 6 Diagrams Updated:
+
+  Diagram 1 (API Connection Architecture):
+    Added: cl_ord_id and stp_type:cancel-newest to
+    outbound notes. Reconnect distinction (A-5).
+    MPP enforcement note in matching engine box.
+    DMS and FIX CoD rejection noted explicitly.
+
+  Diagram 2 (Trading Pipeline):
+    Added: cl_ord_id and stp_type:cancel-newest on
+    add_order dispatch box. OTO REJECTED note in
+    on-fill path.
+
+  Diagram 3 (Exit Architecture):
+    Added: MPP risk note on Layer 2 market sell and
+    Layer 3 emergency SL trigger. OTO REJECTED note.
+
+  Diagram 4 (Regime Taxonomy): No changes.
+
+  Diagram 5 (CIATS Architecture): No changes.
+
+  Diagram 6 (Complete System):
+    Added: cl_ord_id registry in WS Manager.
+    stp_type in Execution Engine.
+    MPP rejection handling in Exit Controller.
+    snap_orders on reconnect in Private WS.
+    DMS and FIX CoD rejection in Private WS.
+
+============================================================
+4. SVG SOURCE FILES — UPDATED
+============================================================
+
+All 6 SVG source files regenerated for dv1_4.
+Store locally at:
+  C:\Users\wstot\OneDrive\TothBot\0500000_SVG_Sources\
+
+Updated filenames (dv1_4 source):
+  0500000_Diagram1_Kraken_API_Connection_Architecture.svg
+  0500000_Diagram2_Trading_Pipeline.svg
+  0500000_Diagram3_Exit_Architecture.svg
+  0500000_Diagram4_Regime_Taxonomy.svg
+  0500000_Diagram5_CIATS_Architecture.svg
+  0500000_Diagram6_Complete_System.svg
+
+These SVG files are Claude's working tools for future
+docx rebuilds. Not controlled documents. Not committed
+to GitHub. Upload them to the project when a docx
+rebuild is needed.
+
+============================================================
+5. NEXT SESSION — WHERE WE PICK UP
+============================================================
+
+  1. Bill opens 0500000 dv1_4.docx in Word and confirms
+     all 6 diagrams are present. Approves if correct.
+
+  2. Bill reviews 0311002 dv1_5.txt and approves.
+
+  3. Create GitHub repositories (if not yet done):
+       github.com/TothBot/TothBot-V2-Docs
+       github.com/TothBot/TothBot-V2-Code
+
+  4. Create folder structure in TothBot-V2-Docs
+     per 0311001 dv1_2 Section 7.
+
+  5. Begin Phase 1 document creation per 0311002 dv1_5:
+       Step 1.1 → 0000000_Ethics_and_Safety
+       Step 1.2 → 0100000_Management
+       Step 1.3 → 0200000_Operations
+       Step 1.4 → 0300000_Governance
+       Step 1.5 → 0310000_Governance_Procedures_Anchor
+     Once Steps 1.1-1.5 complete, 0311001 and 0311002
+     can be committed to GitHub.
+
+============================================================
+6. OPEN ITEMS — CURRENT STATE
+============================================================
+
+  OI-001  SSS signal generation — Kraken Spot
+  OI-002  Asset selection universe — Kraken USDT/USDC
+  OI-003  Exit Controller full specification
+          (now includes MPP rejection handling requirement)
+  OI-004  Entry limit placement rule
+          (now includes ticker event_trigger evaluation)
+  OI-005  Selection Controller full specification
+
+All five are Phase 5-6 work. Nothing in Phase 1-4
+is blocked.
+
+============================================================
+7. PARKING LOT — CURRENT STATE
+============================================================
+
+  PL-001  Document template standardization
+  PL-002  README.md for TothBot-V2-Docs repo
+  PL-003  Pathway 1 GitHub automation — after Pathway 2
+          reaches paper trading readiness
+  PL-004  Formally retire old 0511005 in V2 namespace
+  PL-005  amend_order WS v2 — document in 0411001,
+          evaluate in OI-003 for trailing TP capability
+  PL-006  trade channel — evaluate for future CIATS
+          microstructure analytics stream
+  PL-007  Kraken AWS PoP direct connection — evaluate
+          if strategy evolves toward latency-sensitive
+          entries or if VPS is relocated
+  PL-008  CLOSED — FIX API evaluated and rejected.
+          Cancel-on-disconnect destroys emergSL crash
+          protection. Documented in AR-001 of 0500000.
+  PL-009  L3 order book (separate endpoint ws-l3) —
+          evaluate during OI-004 for queue priority
+          analytics on post_only fills
+  PL-010  L2 book channel — evaluate during OI-004
+          for spread monitoring and fill probability
+  PL-011  CLOSED — OTO conditional orders evaluated
+          and rejected. Uses limit price not fill price,
+          violates sacred R:R. Creates Position Mirror
+          race condition. batch_add confirmed correct.
+          Documented in AR-008 of 0500000.
+
+============================================================
+8. COMPLETE DOCUMENT INVENTORY — CURRENT STATE
+============================================================
+
+  AUTHORITATIVE:
+    TB00001  Session Log 2026-03-23              v1_0
+    TB00002  Session Log 2026-03-23 Part 2       v1_0
+    TB00003  Session Log 2026-03-24              v1_0
+    TB00004  Session Log 2026-03-24 Part 2       v1_0
+    TB00005  Session Log 2026-03-24 Part 3       v1_0
+    0311001  Namespace_Specification             dv1_2
+    0311002  Document_Creation_Workflow          dv1_5
+
+  PENDING BILL APPROVAL:
+    0500000  System_Architecture_Overview  dv1_4.docx
+             (Bill confirms all 6 diagrams present)
+    0311002  dv1_5.txt
+
+  DO NOT USE:
+    0500000  dv1_2.docx  (missing all diagrams)
+    0500000  dv1_3.docx  (superseded by dv1_4)
+    0311002  dv1_4.txt   (superseded by dv1_5)
+    0311001  dv1_2.txt already authoritative —
+             no changes required in this session
+
+============================================================
+9. REVISION HISTORY
+============================================================
+
+  v1_0  03-24-2026  Initial session log. Records second
+                    deep API validation search (10 searches,
+                    77+ references), two architectural
+                    evaluations (FIX API closed/rejected,
+                    OTO conditional closed/rejected), all
+                    7 changes applied to 0500000 dv1_4
+                    (C-1 MPP, A-1 AR-001 expansion, A-2
+                    cl_ord_id, A-3 snap_orders, A-4
+                    stp_type, A-5 reconnect distinction,
+                    A-6 OTO rejection), all 6 flow diagrams
+                    updated, 0311002 updated to dv1_5.
+
+============================================================
+END OF SESSION LOG
+============================================================

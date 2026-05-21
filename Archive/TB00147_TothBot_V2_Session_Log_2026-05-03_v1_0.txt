@@ -1,0 +1,605 @@
+DocDCN:     TB00147
+DocTitle:   TothBot_V2_Session_Log_2026-05-03
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TBXXXXX_Session_Logs\TB00147_TothBot_V2_Session_Log_2026-05-03_v1_0.txt
+DocDate:    05-03-2026
+DocTime:    23:59:59 UTC
+
+============================================================
+TB00147 SESSION LOG
+============================================================
+
+============================================================
+1. SESSION SCOPE
+============================================================
+
+PRIMARY: TB00146 NSI v1_0 directed STREAM 5 deploy of
+  ws_manager.py dv1_25 (fb5de32) to VPS + 24-72h paper-mode
+  observation.
+
+SCOPE CHANGE (chat-authorized): Bill expressed concern
+  that "original coding has been corrupted by Claude
+  making unauthorized changes and reducing the universe
+  of trading pairs." Authorized PATH B audit-before-deploy
+  per FP/DP analysis, then expanded to ALT-C (full Tier 2
+  audit of all remaining .py files) for thoroughness.
+  Audit surfaced three defects (FINDINGS 6, 7, 8) requiring
+  spec amendment + code edit before deploy. Bill authorized
+  expanded ALT-A spec cascade.
+
+ACTUAL WORK COMPLETED:
+  - PATH B Tier 1 audit: universe scope verification.
+  - PATH B Tier 1.5 audit: paper P&L ledger verification.
+  - PATH B Tier 2 audit: 8 remaining .py files for
+    defect-class scan.
+  - Spec cascade authoring: 5 documents amended + 4
+    commits to TothBot_V2-Docs master.
+  - TB00147 Session Log + NSI authoring (this document).
+
+OUT OF SCOPE (deferred to TB00148):
+  - VPS deploy of ws_manager.py dv1_25.
+  - 24-72h paper observation window.
+  - Code edits to ws_manager.py + exit_controller.py
+    implementing the dv1_5 / dv1_26 / dv1_3 cascade.
+
+PAPER TRADING ONLY. NO REAL MONEY. NO PATCHES.
+PAPER IS MASTER per TB00000 v2_18 §4.4 PA-001.
+LIVE MIMICS PAPER except at PA-004 four divergence points.
+
+============================================================
+2. COLD-LOAD AND PRE-FLIGHT
+============================================================
+
+Documents read at cold-load:
+  TB00000   Project_Instructions             v2_18    project
+  TB00146   Session_Log_2026-05-03           v1_0     project
+  TB00146   Next_Session_Instructions        v1_0     project
+  0311001   Namespace_Specification          v1_3     project
+  0311002   Document_Creation_Workflow       v1_8     project
+  0311003   Versioning_Procedure             v1_1     project
+  0311004   Document_Creation_and_Approval   v1_2     project
+  0311005   System_Definitions_Terminology   v1_0     project
+  0311006   Known_Platform_Limitations       dv1_0    project
+  0500000   System_Architecture_Overview     dv1_21   project
+  0511001   WS_Manager_Specification         dv1_4    project
+  1011002   WS_Manager_Coding_Spec           dv1_25   project
+  0211005   Paper_Trading_Operations_Proc    dv1_2    project
+  1011013   VPS_Deployment_Coding_Spec       dv1_6    project
+  1011014   Startup_Sequence_Coding_Spec     dv1_7    project
+  0211003   Startup_Shutdown_Procedure       dv1_0    project
+  0211004   Incident_Response_Procedure      dv1_0    project
+
+STEP A pre-flight per 0311002 v1_8 §8.2.5:
+
+  DC-PREFLIGHT-001 (DUAL-SOURCE): PASS.
+    Filesystem mount probe via /mnt/project/. Project
+    folder clean — no duplicates relative to TB00146 NSI
+    KEPT/ABSENT lists. Two stale files identified
+    (TB00145 SL v1_1, TB00145 NSI v1_1) — non-blocking
+    per FP/DP (cannot interfere with TB00147 mandatory
+    reading anchored on TB00146).
+
+  DC-PREFLIGHT-002 (GIT-STATE): PASS.
+    Pre-cascade verification:
+      Docs HEAD = 14e96df (TB00146 close state)
+      Code HEAD = fb5de32 (paper-canonical, untouched)
+
+  DC-PREFLIGHT-003 (NSI CODE-EDIT-LIST): N/A.
+    TB00146 NSI v1_0 STREAM 5 was deploy-only — no code
+    edits. TB00147 chat-scope expansion remained
+    no-code-edit (spec amendments only).
+
+  DC-PREFLIGHT-004 (THREE-FORMAT TRIPLET): PASS.
+    0500000 dv1_21 .txt + .docx + .pdf triplet present.
+
+  DC-PREFLIGHT-005 (ABSENT-LIST): PASS.
+    All four wrong-direction specs from TB00145 confirmed
+    absent (0511001 dv1_5, 1011002 dv1_26, 0211005 dv1_2,
+    1011014 dv1_8). TB00000 v2_17 confirmed absent.
+
+  DC-PREFLIGHT-006 (ORIGIN INVESTIGATION): N/A at
+    cold-load. Triggered later for cascade-document
+    constraint analysis (cascade was constraint-additive
+    only; no constraint removal — investigation not
+    required per RR-SCOPE-009).
+
+============================================================
+3. LOCKED DECISIONS
+============================================================
+
+D-01 through D-08 LOCKED per TB00144 NSI §2. No
+re-opening this session.
+
+D-03 LOCKED universe = USD + USDC + USDT verified by
+audit. fb5de32 ws_manager.py confirmed compliant.
+
+============================================================
+4. PATH B AUDIT — TIER 1
+============================================================
+
+------------------------------------------------------------
+4.1 FP/DP — PATH A vs PATH B
+------------------------------------------------------------
+
+Bill's stated concern: "original coding has been corrupted
+by Claude making unauthorized changes and reducing the
+universe of trading pairs."
+
+PATH A: Deploy fb5de32 as-directed by TB00146 NSI;
+  observe 24-72h.
+PATH B: Audit codebase against paper-canonical specs
+  before deploy.
+
+Loss-asymmetry analysis:
+  PATH A worst case: undetected corruption in deployed
+    code → corrupted CIATS data accumulating during
+    observation → invalid validation. UNBOUNDED downstream
+    cost (real capital at risk if corruption survives
+    into live transition).
+  PATH B worst case: 1-3 sessions of audit time. BOUNDED.
+
+FP/DP recommendation: PATH B. Bill authorized "Yes,
+proceed as recommended."
+
+------------------------------------------------------------
+4.2 Tier 1 Initial Plan + Self-Correction
+------------------------------------------------------------
+
+Initial Tier 1 target: selection_ctrl.py + signal_pipeline.py
++ startup_sequence.py + ws_manager.py.
+
+Mid-audit RR-SCOPE-005 next-logical-step pivot: reading
+selection_ctrl.py revealed it is Gate 5 (cooldown +
+consecutive-loss block), NOT the universe selector. Per
+0711003 dv1_3 AS-004, universe selection is performed by
+the WS Manager startup path. Tier 1 target revised to
+remove selection_ctrl.py from scope.
+
+This was a data-derived scope correction, not silent
+narrowing — RR-SCOPE-007 not triggered. Logged in §7
+Claude Errors as cosmetic finding (initial scope
+mis-identification corrected mid-stream).
+
+------------------------------------------------------------
+4.3 Tier 1 Findings
+------------------------------------------------------------
+
+FINDING 2 (LOW) — /mnt/project/ws_manager.py is dv1_23
+  STALE. Project-folder copy contains the dv1_23
+  corruption pattern (UNIVERSE_TOP_N=50; quote not in
+  ("USD","USDC") excluding USDT). NOT the code at GitHub
+  HEAD. Project-folder hygiene issue, not deploy concern.
+
+FINDING 3 (LOW) — startup_sequence.py docstring at
+  /mnt/project copy references "50-pair universe."
+  Stale wording; no behavioral defect (docstring only).
+
+FINDING 4 (NONE) — signal_pipeline.py + selection_ctrl.py
+  CLEAN on universe scope. Gate 1 is engine_state check;
+  Gate 5 is cooldown. No universe filter, no quote-currency
+  filter, no Top-N cap.
+
+FINDING 5 (PASS) — fb5de32 ws_manager.py dv1_25 verified
+  by direct file inspection (Bill pasted file content):
+    ALLOWED_QUOTE_CURRENCIES = ("USD","USDC","USDT") ✓
+    UNIVERSE_TOP_N constant ABSENT ✓
+    _build_tradeable_universe applies no Top-N cap ✓
+    AR-074 BTC/USD always included ✓
+    HR-WM-022 paper-no-private-WS guards present ✓
+    PA-004 #3 PAPER_STARTING_BALANCE_DEFAULT = 1000 ✓
+    PATH 2 sharding present ✓
+    Token bucket pacing present ✓
+    Silent-pair state machine present ✓
+    NET_RR_RATIO = Decimal("1.5") sacred hardcoded ✓
+
+  Bill's stated corruption suspicion — "reducing universe
+  of trading pairs" — DISPROVEN for fb5de32. The dv1_25
+  rewrite correctly removed the dv1_23 USD/USDC-only
+  filter and Top-N=50 cap.
+
+============================================================
+5. PATH B AUDIT — TIER 1.5 + TIER 2
+============================================================
+
+------------------------------------------------------------
+5.1 Tier 1.5 — Paper P&L Ledger
+------------------------------------------------------------
+
+Tier 1 PASS for universe scope did not address PA-004 #3
+(synthetic ledger evolution). Bill's broader corruption
+concern justified deeper paper-mode audit.
+
+FINDING 6 (CRITICAL) — Paper synthetic ledger never
+  updated on simulated fills.
+
+  Spec requirement (TB00000 v2_18 §4.4 PA-004 #3):
+    "synthetic spot_usd_balance starting at
+     paper_starting_balance ($1,000 per D-05); updated
+     by simulated-fill P&L applied locally using the
+     SAME fee schedule."
+
+  Code reality at fb5de32:
+    spot_usd_balance is set ONCE in paper mode at
+    _startup() and never updated by simulated fills.
+    Only update path is _handle_balances() which is
+    live-only by HR-WM-022.
+
+  Behavioral consequences:
+    - Drawdown computation broken after first close.
+      _compute_drawdown_for_pair computes
+      current = spot_usd_balance + open-position MTM.
+      In live, spot_usd_balance accumulates closed-
+      trade cash. In paper it doesn't. Drawdown
+      numerator wrong.
+    - CIATS Trade Outcome Bus receives only PositionRecord
+      (entry_price); exit_price from _maybe_paper_fill
+      is logged but NOT transmitted to CIATS bus. CIATS
+      cannot reconstruct paper P&L.
+    - PA-001 violation. Paper ledger does not maintain
+      a state that mirrors live's balances-channel
+      ledger evolution.
+
+  Severity: CRITICAL. Drawdown circuit breakers fire on
+  wrong numbers. CIATS data invalid.
+
+------------------------------------------------------------
+5.2 Tier 2 — All Remaining .py Files
+------------------------------------------------------------
+
+Bill changed mind from ALT-A (fix FINDING 6 only) to
+ALT-C (full Tier 2 audit) per "I want to know for sure."
+FP/DP supported the change — bounded cost, addresses
+remaining unknown defects.
+
+Files audited: regime_engine.py, exit_controller.py,
+execution_engine.py, position_mirror.py, risk_engine.py,
+long_module.py, ciats.py, logger.py.
+
+Audit checks: universe corruption, paper-mode handling,
+sacred 1:1.5 R:R compliance, hardcoded-vs-CIATS-owned
+parameters, fee-schedule arithmetic.
+
+------------------------------------------------------------
+5.3 Tier 2 Findings
+------------------------------------------------------------
+
+UNIVERSE CORRUPTION: NONE FOUND in any of the 8 files.
+  Universe handling contained entirely to ws_manager.py
+  (Tier 1 verified clean at fb5de32).
+
+SACRED R:R: NONE FOUND. SACRED_RR = Decimal("1.5") in
+  risk_engine.py line 70 is correctly hardcoded per
+  TB00000 §9.10. R:R math at risk_engine.py lines
+  478-484 correct.
+
+FEE SCHEDULE: CORRECT. ENTRY_FEE_PCT=0.0016 (maker),
+  TP_FEE_PCT=0.0016 (maker), SL_FEE_PCT=0.0026 (taker)
+  match 0411003 spec.
+
+FINDING 7 (HIGH) — exit_controller.py uses 4 hardcoded
+  module constants for CIATS-owned parameters.
+
+  Spec mandate (1011005 dv1_2 lines 98-101):
+    cancel_timeout_window: 5.0s — CIATS-owned
+    mpp_retry_count: 3 — CIATS-owned
+    max_hold_candles: 24 — CIATS-owned
+    mae_mult: 1.5x — CIATS-owned
+
+  Code reality:
+    Line 93: CANCEL_TIMEOUT_WINDOW: float = 5.0
+      (used as constant at lines 679, 700)
+    Line 94: MPP_RETRY_COUNT: int = 3
+    Line 95: MAX_HOLD_CANDLES: int = 24
+      (used as constant at line 251)
+    Line 96: MAE_MULT: Decimal = Decimal("1.5")
+      (used as constant at line 372)
+
+  All four read directly without _params.get() integration.
+  Compare execution_engine.py line 284 (correct) and
+  risk_engine.py line 473 (correct) and ciats.py lines
+  656/697 (correct) — only exit_controller.py is wrong.
+
+  Concrete failure mode: CIATS proposes mae_mult 1.5 →
+  1.7 based on data analysis. risk_engine sizes for wider
+  stops. execution_engine computes entries with 1.7. But
+  exit_controller still triggers L2 MAE breach at 1.5x —
+  closes positions BEFORE they reach the new threshold
+  the rest of the system was sized for.
+
+  Severity: HIGH. Defeats CIATS PDCA for four parameters.
+
+FINDING 8 (CRITICAL) — Paper-mode exit path bypasses
+  Exit Controller entirely.
+
+  Spec requirement (0511001 dv1_4 HR-WM-025):
+    "Paper mode does not affect OHLC processing,
+     indicator updates, pipeline triggering, or CIATS
+     data flows. These operate identically in both
+     modes."
+
+  Spec requirement (TB00000 v2_18 §4.4 PA-005):
+    "Outside the four PA-004 divergence points, paper
+     and live MUST be byte-identical."
+
+  Code reality at fb5de32:
+    Live path:  _handle_filled → dispatch_market_sell or
+                EE callback → exit_controller._close_position
+                → TRADE_CLOSE log emitted with full P/L
+                payload.
+
+    Paper path: _maybe_paper_fill detects TP/SL →
+                position_mirror.pop(symbol, None) directly
+                → _fire_ciats_outcome called with
+                (symbol, exit_reason, pos) signature →
+                no exit_price, no fees, no realized P/L
+                in payload → NO TRADE_CLOSE log emitted.
+
+  Behavioral consequences:
+    - CIATS Half-Kelly polls TRADE_CLOSE log records.
+      Paper produces zero TRADE_CLOSE records. CIATS
+      cannot operate on paper data. PDCA broken in
+      paper mode.
+    - Position close handling is NOT in PA-004 four
+      divergence points. The bypass is a defect, not a
+      permitted divergence.
+
+  Severity: CRITICAL. Paper-as-master architecturally
+  broken at the close-path layer.
+
+============================================================
+6. SPEC CASCADE — EXPANDED ALT-A AUTHORING
+============================================================
+
+Bill authorized expanded ALT-A: "Yes, I authorize
+expanded ALT-A."
+
+Three corrective streams:
+  CP-FIX-1: Paper synthetic ledger update (FINDING 6)
+  CP-FIX-2: exit_controller CIATS param integration
+            (FINDING 7)
+  CP-FIX-3: Paper exits route through Exit Controller
+            (FINDING 8)
+
+------------------------------------------------------------
+6.1 Cascade Documents (5 amendments, 4 commits)
+------------------------------------------------------------
+
+Per γ rhythm (paired authoring; three commit cycles):
+
+  COMMIT 1 (b98954b) — 0511001 dv1_4 → dv1_5
+    Parent system spec. Two new sections (§13.7 Paper
+    Synthetic Ledger Update Rule; §13.8 Paper Exit
+    Routing Through EC). Two new HR rules (HR-WM-032
+    paper ledger; HR-WM-033 paper exits route through
+    EC). §13.6 amended (paper_starting_balance
+    initializes; ledger evolves). §16 logging amended
+    (PAPER_LEDGER_UPDATED added). §18 Related Documents
+    expanded.
+
+  COMMIT 2 (fc03cdb) — 1011002 dv1_25 → dv1_26
+    WS Manager coding spec. New §16A PAPER MODE
+    OPERATIONS section with §16A.1 Paper Synthetic
+    Ledger (WM-PAPER-LEDGER-001..004) and §16A.2 Paper
+    Exit Routing (WM-PAPER-EXIT-001..005). Three new
+    HR rules: HR-WM-032 (cascaded), HR-WM-033 (cascaded),
+    HR-WM-034 (former HR-WM-032 token bucket renumbered).
+    Code-impact enumeration for TB00148.
+
+  COMMIT 3 (57a6aed) — 0511004 dv1_2 → dv1_3 + 1011005
+                       dv1_2 → dv1_3 (Exit Controller pair)
+    0511004 dv1_3: New §6A EC-PAPER section
+    (EC-PAPER-001..005). Three new HR rules: HR-EC-013
+    paper-live close-path parity; HR-EC-014 EC sole SC
+    state updater; HR-EC-015 CIATS-owned parameters MUST
+    be read at use-time.
+
+    1011005 dv1_3: HR-EC-003/004 strengthened. HR-EC-013/
+    014/015 cascaded. New §10A EC-PAPER coding contract
+    with EC-PAPER-CODE-001..006 (on_paper_close entry
+    point, dispatch_market_sell tuple return,
+    _close_position SC state integration, TRADE_CLOSE
+    schema parity, ws_manager code removal cross-ref,
+    required unit test list). CODE IMPACT enumeration
+    with line-numbered fixes for FINDING 7.
+
+  COMMIT 4 (e8713d5) — 0211005 dv1_2 → dv1_3
+    Operations procedure. PT-MODE-004 ledger arithmetic
+    tightened. PT-MODE-006 (NEW) Paper Exit Routing
+    Through EC with 11-step expected event flow +
+    operator verification log sequence. PT-MODE-007
+    (NEW) CIATS Data Flow Parity. §10 Related Documents
+    expanded.
+
+------------------------------------------------------------
+6.2 Cascade Compliance
+------------------------------------------------------------
+
+Parent-down authoring order maintained:
+  0511001 dv1_5 (parent system spec)
+  → 1011002 dv1_26 (cascades from 0511001)
+  → 0511004 dv1_3 (parent system spec, sibling cascade)
+  → 1011005 dv1_3 (cascades from 0511004)
+  → 0211005 dv1_3 (cascades from all upstream)
+
+All cross-references in committed documents point to
+the version actually committed in this session. No
+forward-references to unwritten documents.
+
+PA-MASTER pre-emit scan applied to every document.
+Direction-of-mimicry verified: paper is master; live
+mimics paper outside PA-004 four points. Live-mode
+behavior unchanged by all five amendments — only paper-
+mode behavior is corrected to match what live already
+does (or to formalize what spec already required).
+
+============================================================
+7. CLAUDE ERRORS THIS SESSION
+============================================================
+
+ERROR-TB00147-CHAT-01 (LOW) — Initial Tier 1 audit scope
+  mis-identification.
+
+  Defect: Initial PATH B Tier 1 plan named
+  "selection_ctrl.py + signal_pipeline.py" as universe-
+  corruption suspects. selection_ctrl.py is Gate 5
+  (cooldown), not universe selector. Universe selector
+  is in ws_manager.py per 0711003 AS-004.
+
+  Detection: Mid-audit reading of selection_ctrl.py at
+  line 22-29 docstring revealed actual scope.
+
+  Corrective: RR-SCOPE-005 next-logical-step pivot
+  applied. Audit scope corrected to ws_manager.py +
+  startup_sequence.py + signal_pipeline.py Gate 1.
+  Surfaced and explained to Bill.
+
+  Impact: Zero. Caught and corrected before any
+  incorrect deliverable. No deploy or commit
+  consequences.
+
+ERROR-TB00147-CHAT-02 (LOW) — Confusing file
+  re-presentation in WS Manager pair delivery.
+
+  Defect: After Bill committed 0511001 dv1_5 separately
+  (b98954b), the present_files call accompanying the
+  1011002 dv1_26 delivery re-listed 0511001 dv1_5. Bill
+  expressed confusion ("Why are you giving me 0511001
+  dv1_5 again?"). The 1011002 commit message text also
+  contained a "cascades from 0511001 dv1_5" reference
+  which Bill interpreted as a re-action.
+
+  Detection: Bill question.
+
+  Corrective: Clarified the two separate concerns
+  (re-presentation was for batch convenience; commit
+  message text references parent spec relationship,
+  not an action). The commit command itself only
+  touched 1011002 files and was correct as written.
+  Bill ran the command successfully producing fc03cdb.
+
+  Impact: One round-trip of clarification. No deploy
+  or commit consequences. Future delivery turns should
+  not re-present already-committed files.
+
+============================================================
+8. BILL DECISIONS AND OVERRIDES
+============================================================
+
+D-TB00147-01: PATH B authorized over PATH A.
+  "Proceed as recommended by FP/DP recommendation B."
+  Bounded audit cost preferred over unbounded
+  CIATS-data-contamination risk.
+
+D-TB00147-02: ALT-A → ALT-C scope expansion.
+  "I have changed my mind. I want to go with ALT-C."
+  Full Tier 2 audit chosen over targeted FINDING 6 fix.
+  Surfaced FINDINGS 7 + 8 that ALT-A would have missed.
+
+D-TB00147-03: Expanded ALT-A authorized.
+  "Yes, I authorize expanded ALT-A."
+  Three-stream corrective accepted.
+
+D-TB00147-04: γ authoring rhythm chosen by FP/DP standing
+  delegation. Parent + child coding spec authored as
+  pairs; three commit cycles.
+
+BILL DOCUMENT-CONTROL OVERRIDE:
+  All five cascade documents enacted under standing
+  override scope established TB00115 (v2_10 → v2_11)
+  and continuing through TB00147. Direct dv-state
+  increments; no rv state.
+
+============================================================
+9. OPEN ITEMS
+============================================================
+
+  OI-074 (NEW) — FINDING-TB00147-06 PAPER LEDGER UPDATE.
+    Closed at governance/spec layer (0511001 dv1_5
+    HR-WM-032; 1011002 dv1_26 §16A.1; 0211005 dv1_3
+    PT-MODE-004). Code-deploy closure pending TB00148
+    implementation per 1011002 dv1_26 Revision History
+    CODE IMPACT enumeration.
+
+  OI-075 (NEW) — FINDING-TB00147-07 EXIT_CONTROLLER
+    CIATS PARAMETER INTEGRATION. Closed at spec layer
+    (0511004 dv1_3 HR-EC-015; 1011005 dv1_3 HR-EC-015
+    + EC-PAPER-CODE-006(e)). Code-deploy closure
+    pending TB00148 implementation per 1011005 dv1_3
+    Revision History CODE IMPACT enumeration —
+    specifically four params.get() insertions at
+    documented line numbers (251, 372, 679, 700).
+
+  OI-076 (NEW) — FINDING-TB00147-08 PAPER EXITS BYPASS
+    EXIT CONTROLLER. Closed at spec layer (0511001
+    dv1_5 HR-WM-033; 1011002 dv1_26 §16A.2; 0511004
+    dv1_3 §6A; 1011005 dv1_3 §10A; 0211005 dv1_3
+    PT-MODE-006). Code-deploy closure pending TB00148
+    implementation. Operational verification per
+    PT-MODE-006 11-step expected event flow.
+
+  OI-073 PA-MASTER VIOLATION RECURRENCE (carried).
+    Cumulative count = 1 (ERROR-TB00145-CHAT-02).
+    No new occurrences this session. Five cascade
+    documents authored under PA-008 pre-emit scan
+    discipline; zero PA-MASTER self-catch fires.
+
+  STALE PROJECT-FOLDER FILES (informational, non-blocking):
+    TB00145 SL v1_1 and TB00145 NSI v1_1 remain in
+    project knowledge folder despite TB00146 NSI close
+    instructions to remove. Non-blocking — they cannot
+    interfere with mandatory reading anchored on
+    TB00146 v1_0 + TB00147 v1_0. Bill may remove at
+    convenience.
+
+============================================================
+10. SESSION CLOSE — STATE AT TB00147 END
+============================================================
+
+GITHUB STATE
+  TothBot_V2-Docs HEAD = e8713d5  (cascade complete:
+                                   5 documents amended,
+                                   4 commits)
+  TothBot_V2-Code HEAD = fb5de32  (UNTOUCHED — no
+                                   code edits this
+                                   session)
+  VPS state            = UNTOUCHED — no deploy this
+                                   session
+
+CASCADE COMMIT HASHES
+  b98954b  0511001 dv1_4 → dv1_5
+  fc03cdb  1011002 dv1_25 → dv1_26
+  57a6aed  0511004 dv1_2 → dv1_3 + 1011005 dv1_2 → dv1_3
+  e8713d5  0211005 dv1_2 → dv1_3
+
+DELIVERABLES
+  ✓ 0511001 dv1_5 (parent system spec — HR-WM-032/033)
+  ✓ 1011002 dv1_26 (WS Manager coding spec — §16A)
+  ✓ 0511004 dv1_3 (Exit Controller spec — §6A EC-PAPER
+                   + HR-EC-013/014/015)
+  ✓ 1011005 dv1_3 (Exit Controller coding spec —
+                   §10A EC-PAPER + CODE IMPACT)
+  ✓ 0211005 dv1_3 (Paper Trading Operations Procedure
+                   — PT-MODE-006/007)
+  ✓ TB00147 Session Log v1_0 (this document)
+  ✓ TB00147 NSI v1_0 (companion)
+
+FINDINGS RESOLVED AT GOVERNANCE LAYER
+  FINDING-TB00147-06 (CRITICAL) — paper ledger
+  FINDING-TB00147-07 (HIGH)     — EC CIATS params
+  FINDING-TB00147-08 (CRITICAL) — paper exits bypass EC
+  FINDING-TB00147-02..05 — Tier 1 informational only
+
+TB00148 PRIMARY WORK
+  Code edits per CODE IMPACT enumerations in 1011002
+  dv1_26 and 1011005 dv1_3 Revision History. Unit tests
+  per EC-PAPER-CODE-006 enumeration. Verify 19/19 dv1_25
+  tests still pass (regression). Commit ws_manager.py
+  dv1_26 + exit_controller.py dv1_3 code to
+  TothBot_V2-Code master. THEN deploy + observe per
+  TB00146 STREAM 5 (now superseded by post-TB00148
+  deploy session).
+
+============================================================
+END OF DOCUMENT
+============================================================

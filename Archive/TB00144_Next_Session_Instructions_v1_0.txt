@@ -1,0 +1,667 @@
+DocDCN:     TB00144
+DocTitle:   Next_Session_Instructions
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TBXXXXX_Session_Logs\TB00144_Next_Session_Instructions_v1_0.txt
+DocDate:    05-03-2026
+DocTime:    23:00:00 UTC
+
+============================================================
+TOTHBOT V2 NEXT SESSION INSTRUCTIONS - TB00145
+============================================================
+
+PAPER TRADING ONLY. NO REAL MONEY.
+PAPER TRADING MUST MIMIC LIVE TRADING EXACTLY.
+NO PATCHES.
+UNIVERSE = TOKEN/USD + TOKEN/USDC + TOKEN/USDT (D-03).
+
+============================================================
+1. NEXT SESSION SCOPE
+============================================================
+
+------------------------------------------------------------
+PRIMARY: STREAM 5 - ws_manager.py dv1_25 VPS DEPLOY +
+                    OBSERVATION
+------------------------------------------------------------
+
+TB00144 closed STREAM 4: ws_manager.py dv1_25 clean-slate
+rewrite, 19/19 unit tests pass, code committed at fb5de32
+on TothBot_V2-Code master and pushed to GitHub. Code is
+PRODUCTION READY but NOT YET DEPLOYED to the VPS. The VPS
+continues to run the working-tree-drift dv1_23 baseline
+from the TB00125 deploy state.
+
+STREAM 5 deploys dv1_25 to the VPS and observes Kraken
+behavior under live paper-trading conditions. This is the
+empirical-confirmation phase for the two-layer rate-limit-
+storm protection authored TB00143:
+
+  Layer 1 (code):       1011002 dv1_25 §4.7 token bucket
+                        WM-PACE-001..010 + HR-WM-032
+  Layer 2 (operational): 1011013 dv1_6 §6 VD-SYS-008
+                        StartLimit directives
+
+Together: bucket bounds outbound subscribe rate within a
+process lifetime; StartLimit caps lifetime cadence per
+10-min window. Closes the gap between architectural fix
+(PATH 2 sharding alone does not bound IP-level rate) and
+empirical proof.
+
+------------------------------------------------------------
+1.1 STREAM 5 DEPLOY SEQUENCE
+------------------------------------------------------------
+
+Per TB00144 Claude Code session log §3 Q5 rollback section
+(which doubles as the deploy command set):
+
+  ssh root@87.99.141.44
+  cd ~/TothBot_V2-Code
+  git pull                                 # Pulls fb5de32
+  pip install -r requirements.txt          # websockets >=13
+  cp tothbot_service.txt /etc/systemd/system/tothbot.service
+  systemctl daemon-reload
+  systemctl restart tothbot
+  journalctl -u tothbot -f                 # Observe startup
+
+Pre-deploy verification (paper-mode confirmation):
+  cat ~/TothBot_V2-Code/.env | grep -i mode
+  Expected: TOTHBOT_MODE=paper (or equivalent paper-mode
+  flag per 0211005 dv1_1 paper trading procedure).
+
+ABSOLUTE GATE: paper-mode must be confirmed BEFORE
+systemctl restart. Per D-06 paper-to-live parity EXACT,
+dv1_25 behavior is the same in both modes EXCEPT private
+WS connect (paper=skipped, live=connected). Confirming
+mode flag prevents accidental live-mode startup.
+
+Rollback per Q5 (if observation fails):
+  cd ~/TothBot_V2-Code
+  git revert fb5de32
+  git pull                                 # Restore prior
+  systemctl restart tothbot
+  Elapsed: ~5 min.
+
+------------------------------------------------------------
+1.2 OBSERVATION CRITERIA
+------------------------------------------------------------
+
+Per HR-WM-030 + DC-PREFLIGHT-006 Q4 (1011002 dv1_25 §4.7
++ 0311002 v1_8 §8.2.5):
+
+(a) STARTUP BATCH CLEAN.
+    ~1498 subscribes across 2 shards complete in
+    ~150s under bucket pacing (10/sec aggregate).
+    Zero rate-limit errors. Zero shard disconnects
+    during startup.
+
+(b) BOTH SHARDS REACH DATA_READY.
+    Per WM-SHARD-010 silent-pair state machine,
+    each shard transitions INITIAL -> SUBSCRIBED ->
+    DATA_READY within reasonable time. Document
+    pairs that hold in DATA_PENDING (silent-pair
+    candidates) for cross-reference against TB00141
+    6-pair silent set.
+
+(c) STEADY-STATE INBOUND MATCHES PHASE D.
+    ~10 msg/s aggregate, ~5 msg/s per shard, per
+    TB00142 Phase D long observation. Significant
+    deviation (>2x) is a deploy-time anomaly worth
+    investigation before continued observation.
+
+(d) NO SILENT-PAIR ANOMALIES BEYOND TB00141 SET.
+    Cross-reference DATA_PENDING pairs against
+    TB00141 6-pair silent set documented in
+    0511001 dv1_4 §17 ADR. New silent pairs warrant
+    REST cross-check per TB00142 §3.4 Rabbit 1
+    procedure.
+
+(e) STARTLIMIT NOT TRIGGERED.
+    No crash-loop. systemd unit reports stable
+    "active (running)" state. journalctl -u tothbot
+    --since "10 min ago" shows zero "Start request
+    repeated too quickly" errors.
+
+(f) STEADY-STATE OBSERVATION WINDOW.
+    Minimum 24 hours. Recommended 48-72 hours to
+    sample multiple Kraken-side behaviors (US/EU/AS
+    market hours, weekend low-volume periods,
+    occasional Kraken maintenance windows).
+
+------------------------------------------------------------
+1.3 CLOSURE-PENDING-STREAM-5 OPEN ITEMS
+------------------------------------------------------------
+
+These OIs close at successful STREAM 5 deploy +
+observation per the criteria above:
+
+  OI-018, OI-019, OI-020      WS_Manager reconnect /
+                              alert routing / retry
+                              window. Code in dv1_25
+                              implements the corrected
+                              behavior. Live VPS proves it.
+  OI-028, OI-029, OI-044      Logger / WS connection /
+                              private-channel handling.
+                              Code in dv1_25.
+  OI-045 / OI-046             D-08 silent-narrowing
+                              prohibition. WM-PS-008 +
+                              HR-WM-028 in dv1_25 enforce
+                              tradeable_universe immutability.
+                              Live VPS proves universe
+                              not silently narrowed.
+  OI-060                      WS_SUBSCRIBE_RATE_LIMIT_STORM.
+                              Two-layer protection in code +
+                              service file. Live VPS proves
+                              storm does not recur.
+  OI-062                      STREAM 4 implementation.
+                              CLOSED at code-deploy STREAM 5.
+  OI-065-CAND                 websockets pin >=13.0. CLOSED
+                              at requirements.txt deploy.
+  FINDING-TB00135-001         Silent-narrowing detection.
+                              CLOSED at live verification.
+
+============================================================
+2. LOCKED DECISIONS
+============================================================
+
+Confirmed locked through TB00144. No re-opening without
+explicit Bill override.
+
+  D-01  Burn window                              LOCKED
+  D-02  REPAIR not rewrite (named exceptions:    LOCKED
+        ws_manager.py dv1_25 clean-slate, NOW
+        COMPLETE at fb5de32)
+  D-03  Universe TOKEN/USD + TOKEN/USDC +        LOCKED
+        TOKEN/USDT, no cap
+  D-04  Liquidity filter $500k/day               LOCKED
+  D-05  Starting capital $1,000                  LOCKED
+  D-06  Paper-to-live parity EXACT               LOCKED
+  D-07  NO PATCHES                               LOCKED
+  D-08  Top-N cap retired                        LOCKED
+
+If any TB00145 instruction or response would contradict
+D-01 through D-08, Claude STOPS and flags the contradiction
+to Bill before proceeding.
+
+============================================================
+3. MANDATORY READING AT COLD-LOAD
+============================================================
+
+From project folder:
+
+Project instructions + current session context:
+  TB00000 v2_17        Project Instructions
+  TB00144 Session Log  v1_1 (Claude Code session log)
+  TB00144 NSI          v1_0 (this document)
+  TB00143 Session Log  v1_0
+  TB00143 NSI          v1_0
+  TB00142 Session Log  v1_0
+  TB00142 NSI          v1_0
+  TB00141 Session Log  v1_0
+  TB00141 NSI          v1_0
+
+Governance:
+  0311001 v1_3         Namespace_Specification
+  0311002 v1_8         Document_Creation_Workflow
+                       (DC-PREFLIGHT-001..006)
+  0311003 v1_1         Versioning_Procedure (VP-010)
+  0311004 v1_2         Document_Creation_and_Approval
+  0311005 v1_0         System_Definitions_and_Terminology
+  0311006 dv1_0        Known_Platform_Limitations
+
+Architecture + active spec baseline:
+  0500000 dv1_21       System Architecture Overview
+                       (.txt + .docx + .pdf three-format)
+  0511001 dv1_4        WS Manager Specification
+                       (PATH 2 ADR + sharding)
+  1011002 dv1_25       WS Manager Coding Spec
+                       (token bucket §4.7 + HR-WM-032)
+  1011013 dv1_6        VPS Deployment Coding Spec
+                       (StartLimit + VD-SYS-008)
+  0411001 dv1_11       Kraken_WS_v2_Specification
+  0411002 dv1_1        Kraken_REST_API_Specification
+  0411003 dv1_0        Kraken_Fee_Rate_Limit_Specification
+  0211005 dv1_1        Paper Trading Operations Procedure
+  0611004 dv1_1        Safety Parameter Framework
+
+For STREAM 5 deploy command reference:
+  TB00144 Claude Code session log v1_1 §3 (Q1-Q5
+    documentation including Q5 rollback procedure).
+
+============================================================
+4. EXPECTED PROJECT FOLDER STATE AT TB00145 OPEN
+============================================================
+
+PRESENT:
+  TB00000 v2_17                                   ALL
+  0311001 v1_3                                    KEPT
+  0311002 v1_8                                    KEPT
+  0311003 v1_1                                    KEPT
+  0311004 v1_2                                    KEPT
+  0311005 v1_0                                    KEPT
+  0311006 dv1_0                                   KEPT
+  0500000 dv1_21 .txt _Claude_Source              KEPT
+  0500000 dv1_21 .docx                            KEPT
+  0500000 dv1_21 .pdf                             KEPT
+  0511001 dv1_4                                   KEPT
+  1011002 dv1_25                                  KEPT
+  1011013 dv1_6                                   KEPT
+  TB00135 - TB00144 Session Logs / NSI            ROLLING WINDOW
+  TB00001/12/13/14/20                             MUST-PRESERVE
+  TB00119/133/134                                 BILL HISTORICAL
+
+ABSENT (none new this session — Bill cleanup
+already applied through TB00143 close + TB00144
+chat-scope VP-010 cleanup commit a4d5924):
+  TB00000 v2_16                                   absent
+  1011002 dv1_24                                  absent
+  1011013 dv1_4                                   absent
+  1011013 dv1_5                                   absent
+  0311002 v1_7 / 0511001 dv1_3 / 1011002 dv1_23   absent
+                                                  (never in project folder)
+
+GIT STATE EXPECTED:
+  TothBot_V2-Docs HEAD = a4d5924  (clean,
+                                   master = origin/master)
+  TothBot_V2-Code HEAD = fb5de32  (clean,
+                                   master = origin/master)
+  VPS working-tree    = dv1_23 drift remains
+                        until STREAM 5 git pull.
+                        EXPECTED, not a defect.
+
+============================================================
+5. PARKING LOT - CARRIED FROM TB00144
+============================================================
+
+------------------------------------------------------------
+5.1 CLOSED IN TB00144
+------------------------------------------------------------
+
+CODE-LAYER IMPLEMENTATION COMPLETE (fb5de32):
+  All 1011002 dv1_25 hard rules HR-WM-001 through
+    HR-WM-032 implemented in ws_manager.py dv1_25.
+  Subscribe pacing token bucket WM-PACE-001..010
+    implemented (process-singleton, async-Lock-
+    protected, no-bypass).
+  PATH 2 sharding WM-SHARD-001..011 implemented
+    (alternating-index distribution, N_conns=2 at
+    748-pair universe, silent-pair state machine).
+  AR-070 silent-narrowing prohibition WM-PS-008 +
+    HR-WM-028 implemented (tradeable_universe never
+    mutated outside Universe Re-evaluation).
+  Companion edits: requirements.txt websockets>=13.0,
+    tothbot_service.txt StartLimit directives.
+  Unit tests 19/19 passing.
+
+DC-PREFLIGHT-006 Q1-Q5 DOCUMENTATION COMPLETE:
+  Q1 traffic profile, Q2 exchange limit, Q3 utilization
+  + margin (93-97% steady, 95-97.5% burst), Q4 backpressure
+  + bucket validation, Q5 rollback procedure documented
+  in TB00144 Claude Code session log v1_1 §3 BEFORE any
+  deploy. Closes governance gate.
+
+RR-SCOPE-009 FOUR-QUESTION CHESTERTON'S-FENCE
+INVESTIGATION COMPLETE:
+  Documented for every constraint in dv1_23 retained,
+  modified, or removed in dv1_25. TB00144 Claude Code
+  session log v1_1 §4. Notable: MAX_RECONNECT_ATTEMPTS
+  retained at 10 (origin: WM-RECONNECT-017; the dv1_24
+  =20 was a TB00105 OI-020 transient bridge that became
+  obsolete after dv1_25 token bucket math made the
+  bridge unnecessary).
+
+CHAT-SCOPE WORK CLOSED:
+  STEP A pre-flight clean (no defects).
+  VP-010 supersession cleanup commit a4d5924
+    (5 superseded versions removed from
+    TothBot_V2-Docs tracked tree per 0311003 v1_1
+    VP-010(b)).
+
+------------------------------------------------------------
+5.2 NEW OI / FOLLOWUP CANDIDATES TB00144
+------------------------------------------------------------
+
+TB00144-FOLLOWUP-001  SUBSCRIBE_PACE_BATCH_COMPLETE
+  log event named in 1011002 dv1_25 WM-PACE-005 not
+  emitted by ws_manager.py dv1_25 implementation.
+  Workaround: STREAM 5 observation can use
+  SUBSCRIBE_PACE_WAIT log counts and startup-bracket
+  log delimiters for batch-completion inference.
+  NON-BLOCKING for STREAM 5 deploy. Recommend dv1_25
+  -> dv1_26 increment (or in-place dv1_25 patch with
+  Bill authorization) to add the missing log event in
+  a future session.
+
+TB00144-FOLLOWUP-002  PRIVATE WS ENDPOINT CONFLICT.
+  0411001 dv1_11 specifies ws-l3.kraken.com/v2 as
+  the private WS endpoint. 1011002 dv1_25 specifies
+  ws-auth.kraken.com/v2 (which Claude Code dv1_25
+  implementation uses). Endpoint reconciliation
+  required BEFORE LIVE-MODE deploy. Paper-mode
+  STREAM 5 does NOT connect private WS, so this is
+  NON-BLOCKING for paper STREAM 5. BLOCKING for any
+  future live-mode transition.
+  Recommend cross-check Kraken docs at TB00145 open
+  (or earliest convenient session) and update
+  whichever spec is incorrect.
+
+TB00144-FOLLOWUP-003  FILENAME RENAME PROCEDURE
+  NOT FORMALIZED. v1_n -> v1_(n+1) in-place edits
+  succeed under existing VP-009 / VP-011 rules but
+  the actual filesystem rename (mv old.txt
+  new.txt) requires explicit Bill authorization
+  per RR-SCOPE-001 strict reading observed at
+  TB00144 Claude Code STEP 8 hand-off. Recommend
+  0311003 v1_2 amendment formalizing rename as an
+  intrinsic part of version increment when
+  filename is part of DocPath.
+  DEFERRED. Non-blocking.
+
+NEW CLAUDE ERROR PATTERN TB00144:
+  ERROR-TB00144-CC-01 RR-SCOPE-001 (Co-Authored-By
+  trailer added to TothBot V2 commit message
+  without authorization). Caught at approval gate
+  by Bill in chat. Logged in TB00144 Claude Code
+  session log v1_1 §7. Corrective acknowledged by
+  Claude Code: TothBot V2 commit messages are
+  exactly what Bill provides, no system-default
+  trailers, no Co-Authored-By, no added attribution.
+  RR-SCOPE-001 cumulative count this session: 1.
+
+OI-037 RECURRENCE PATTERN UPDATE:
+  Pattern RECURRED at TB00144 Claude Code session
+  via ERROR-TB00144-CC-01. Chat-session streak:
+  9 consecutive passes (TB00135 - TB00143). First
+  Claude Code recurrence: TB00144. Tracking now
+  unified across both chat and Claude Code
+  environments per FP/DP strict-reading decision
+  TB00144. Apply RR-SCOPE-001 strictly TB00145 in
+  both environments.
+
+------------------------------------------------------------
+5.3 CARRIED FORWARD UNCHANGED
+------------------------------------------------------------
+
+OI-018 / OI-019 / OI-020 / OI-028 / OI-029 / OI-044
+  CLOSURE PENDING STREAM 5 deploy.
+
+OI-043  Recommend formal closure at TB00145 STEP A
+  success (zero pre-flight defects this session).
+
+OI-045 / OI-046  D-08 silent-narrowing CODE
+  implementation complete via dv1_25 WM-PS-008 +
+  HR-WM-028. CLOSURE PENDING STREAM 5 live
+  verification.
+
+OI-049-CAND / OI-050-CAND / OI-051-CAND  Preserved.
+
+OI-055-CAND-D3  Carried.
+
+OI-058  CLOSED in TB00140.
+
+OI-060  CLOSURE PENDING STREAM 5 deploy. Governance +
+  design + code layers COMPLETE through TB00144
+  fb5de32.
+
+OI-061 / OI-063  CLOSED in TB00142.
+
+OI-062  CLOSURE PENDING STREAM 5 deploy.
+
+OI-064-CAND  Deferred.
+
+OI-065-CAND  CLOSURE PENDING requirements.txt
+  STREAM 5 deploy.
+
+OI-066-CAND / OI-067-CAND / OI-068-CAND  Deferred.
+
+OI-069-CAND  RR-SCOPE-005 RECURRENCE PATTERN.
+  Recurrence count = 5 cumulative across sessions.
+  NOT advanced TB00144. Continued vigilance TB00145.
+  Governance escalation candidate.
+
+OI-070-CAND  Probe per-symbol counters. Deferred.
+
+OI-071-CAND  PRE-FLIGHT-FILESYSTEM-INDEX-DRIFT.
+  STEP A in TB00144 successfully applied
+  RR-SCOPE-008 dual-source verification (filesystem
+  + project_knowledge_search). No drift detected.
+  Pattern held. Recommend 0311002 v1_8 -> v1_9
+  amendment to formalize dual-source as DC-
+  PREFLIGHT-001 sub-step.
+
+FINDING-TB00135-001  CLOSURE PENDING STREAM 5.
+
+ERROR-PRE-001  Forensic record only.
+
+============================================================
+6. FIRST ACTIONS IN TB00145
+============================================================
+
+1. Cold-load mandatory reading per §3.
+
+2. State all documents read and their versions before
+   any work.
+
+3. Execute STEP A pre-flight per 0311002 v1_8 §8.2.5
+   WITH RR-SCOPE-008 ENHANCEMENT (filesystem mount +
+   project_knowledge_search dual-source verification).
+
+4. Confirm GitHub state for both repos via cmd /c
+   wrappers per RR-SHELL-002 (PowerShell session):
+
+     cmd /c "cd /D C:\Users\wstot\GitHub\TothBot\TothBot_V2-Docs && git fetch origin && git status && git log --oneline -3"
+     Expected: HEAD = master = origin/master = a4d5924
+
+     cmd /c "cd /D C:\Users\wstot\GitHub\TothBot\TothBot_V2-Code && git fetch origin && git status && git log --oneline -3"
+     Expected: HEAD = master = origin/master = fb5de32
+
+5. Confirm D-01 through D-08 LOCKED per §2.
+
+6. CONFIRM PAPER-MODE BEFORE DEPLOY. Per D-06 paper-
+   to-live parity EXACT, dv1_25 deploys identically
+   in both modes EXCEPT private WS connect. Verify
+   .env mode flag on VPS BEFORE systemctl restart.
+
+7. Determine STREAM scope per Bill direction at
+   session open. PRIMARY: STREAM 5 ws_manager.py
+   dv1_25 deploy + observation. NSI §1.1 deploy
+   sequence is the operational reference.
+
+8. Apply RR-SCOPE-005 STRICTLY. Cumulative count
+   is at 5; do NOT add another. Where FP/DP
+   determines the path, execute. Do NOT emit
+   confirm-prompts.
+
+9. Apply RR-SCOPE-001 STRICTLY across BOTH chat
+   AND Claude Code environments. ERROR-TB00144-
+   CC-01 broke the chat-only streak; tracking is
+   unified. Commit messages are exactly what Bill
+   provides. No added trailers.
+
+10. Apply RR-SHELL-001..004 STRICTLY. PowerShell
+    session uses cmd /c "..." wrapper for cmd-
+    syntax commands. SSH-to-VPS sessions use bash-
+    native syntax (no cmd /c wrapping needed).
+
+11. Apply RR-SCOPE-008 (tools-exhaustion) STRICTLY.
+    Filesystem mount alone is INSUFFICIENT for
+    pre-flight verification queries. Combine with
+    project_knowledge_search.
+
+12. Apply RR-SCOPE-009 (Chesterton's Fence)
+    STRICTLY if any constraint removal / relaxation
+    is proposed during STREAM 5 observation
+    debugging.
+
+13. Apply pre-emit OP-003 grep scan before EVERY
+    file delivery.
+
+14. AUDIT-QUESTION RESPONSE PATTERN per TB00136
+    NSI §8: if Bill asks any "are there any more
+    X" question, execute audit + report findings
+    + execute corrective in same turn.
+
+============================================================
+7. STANDING RULES - REINFORCEMENT
+============================================================
+
+ALL TB00000 v2_17 standing rules apply unchanged:
+
+  §4.1 DR-001 / DR-002 / DR-003 / DR-004 / DR-005 /
+       DR-006.
+  §4.2 ABSOLUTE STANDING RULE (OP-001..009).
+  §4.3.1 RR-SCOPE-001..009. RR-SCOPE-001 newly load-
+       bearing for TB00145 across BOTH chat and Claude
+       Code environments per OI-037 unified-tracking
+       update TB00144.
+  §4.3.2 RR-RULE-001..004.
+  §4.3.3 RR-SHELL-001..004 (PowerShell session
+       requires cmd /c "..." wrapper; SSH bash
+       sessions native).
+  §4.3.4 RR-VIOL-001..002.
+
+ALL TB00142 0311002 v1_8 standing rules apply:
+
+  §8.2.5 DC-PREFLIGHT-001 through DC-PREFLIGHT-006.
+       DC-PREFLIGHT-006 Q1-Q5 satisfied for STREAM 5
+       deploy via TB00144 Claude Code session log
+       v1_1 §3 documentation. No new Q1-Q5 required
+       UNLESS dv1_25 -> dv1_26 increment occurs
+       before deploy.
+
+NEW TB00144 LESSONS CAPTURED FOR TB00145:
+
+  ERROR-TB00144-CC-01 corrective: TothBot V2 commit
+    messages are EXACTLY what Bill provides. No
+    Co-Authored-By trailer. No system-default
+    attribution. Apply across chat and Claude Code.
+
+  TB00144-FOLLOWUP-002 caveat: private WS endpoint
+    spec conflict (0411001 vs 1011002). Paper-mode
+    STREAM 5 unaffected; live-mode transition
+    blocked until reconciled.
+
+  Filename-rename authorization pattern (TB00144
+    Claude Code STEP 8): version increment edits
+    in-place are inside scope; filename rename
+    requires explicit Bill authorization. Carry
+    forward as TB00144-FOLLOWUP-003.
+
+============================================================
+8. OUT OF SCOPE FOR TB00145
+============================================================
+
+  - Spec authoring beyond Streams listed above
+    UNLESS STREAM 5 observation surfaces a defect
+    requiring spec amendment.
+  - OI-041 (closed TB00125).
+  - OI-048-CAND (Operator Observer Dashboard --
+    future).
+  - Any CIATS PDCA activity (still pre-200-trade
+    floor).
+  - Live-mode deploy or testing. STREAM 5 is
+    PAPER-MODE ONLY.
+  - Re-opening D-01 through D-08 without explicit
+    Bill override.
+  - TB00144-FOLLOWUP-001 (missing log event).
+    Address in dv1_26 cycle if/when needed.
+  - TB00144-FOLLOWUP-002 (private WS endpoint).
+    Defer to pre-live-deploy reconciliation
+    session.
+  - TB00144-FOLLOWUP-003 (rename procedure).
+    Defer to next 0311003 amendment cycle.
+
+============================================================
+9. SESSION OPENING CHECKLIST FOR BILL
+============================================================
+
+When opening TB00145, paste at top of first message
+to enforce standing rules. Recommended template:
+
+  Standing-rule reinforcement line per TB00000 v2_17
+  §4.2 OP-007 (paste verbatim from the OP-007
+  paragraph -- the canonical banner line is stored
+  there).
+
+  Use FP/DP analysis to make all decisions that do
+  not REQUIRE my actual decision. Per RR-SCOPE-005,
+  do NOT emit confirm-prompts when FP/DP has
+  determined the answer. Cumulative count = 5;
+  count must NOT advance.
+
+  Be sure we are doing Paper Trading ONLY. PAPER
+  TRADING ONLY. NO REAL MONEY. PAPER TRADING MUST
+  MIMIC ALL ASPECTS OF LIVE TRADING EXACTLY.
+
+  NO PATCHES. ALL CHANGES TO BE FULLY DOCUMENTED
+  TO INCLUDE ALL DOCUMENT CONTROL REQUIREMENTS.
+
+  Programming MUST INCLUDE the entire universe of
+  TOKEN/USD, TOKEN/USDC and TOKEN/USDT trading
+  pairs.
+
+  Read Project Instructions 2_17, TB00144_NSI, and
+  TB00144_TothBot_V2_Session_Log v1_1 in Project
+  Folder.
+
+  Apply RR-SCOPE-001 STRICTLY across both chat and
+  Claude Code environments per OI-037 unified
+  tracking. Commit messages are exactly what I
+  provide.
+
+  Apply RR-SCOPE-008: STEP A pre-flight queries
+  BOTH /mnt/project/ filesystem AND project_
+  knowledge_search index. Flag drift.
+
+  Apply RR-SHELL-002: PowerShell session uses
+  cmd /c "..." wrapper for cmd-syntax commands.
+
+  cold-load TB00145.
+
+============================================================
+REVISION HISTORY
+============================================================
+
+  v1_0  05-03-2026  Initial. NSI for TB00145.
+                    TB00144 closed STREAM 4
+                    ws_manager.py dv1_25 clean-slate
+                    rewrite. Code committed at
+                    fb5de32 in TothBot_V2-Code with
+                    19/19 unit tests passing. PATH 2
+                    sharding (WM-SHARD-001..011) +
+                    subscribe pacing token bucket
+                    (WM-PACE-001..010 + HR-WM-032) +
+                    AR-070 silent-narrowing
+                    prohibition (WM-PS-008 +
+                    HR-WM-028) + silent-pair state
+                    machine all implemented.
+                    Companion edits: requirements.txt
+                    websockets>=13.0, tothbot_service
+                    .txt StartLimit directives.
+                    DC-PREFLIGHT-006 Q1-Q5 satisfied
+                    in TB00144 Claude Code session
+                    log v1_1 §3. RR-SCOPE-009 four-
+                    question Chesterton's-Fence
+                    investigation documented v1_1 §4.
+                    Chat-scope VP-010 supersession
+                    cleanup commit a4d5924 closed
+                    TB00143 STREAM 6 deferred work.
+                    One Claude error logged TB00144
+                    Claude Code: ERROR-TB00144-CC-01
+                    RR-SCOPE-001 (Co-Authored-By
+                    trailer added without
+                    authorization, caught by Bill at
+                    approval gate). OI-037 tracking
+                    unified across chat and Claude
+                    Code environments. Three new
+                    follow-ups (FOLLOWUP-001 missing
+                    log event, FOLLOWUP-002 private
+                    WS endpoint spec conflict,
+                    FOLLOWUP-003 rename procedure
+                    formalization). STREAM 5
+                    ws_manager.py dv1_25 VPS deploy
+                    + paper-mode observation is
+                    TB00145 primary work.
+
+============================================================
+END OF NSI
+============================================================

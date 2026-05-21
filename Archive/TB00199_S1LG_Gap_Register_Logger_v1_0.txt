@@ -1,0 +1,1891 @@
+DocDCN:     TB00199
+DocTitle:   S1LG_Gap_Register_Logger
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TBXXXXX_Session_Logs\TB00199_S1LG_Gap_Register_Logger_v1_0.txt
+DocDate:    05-11-2026
+DocTime:    23:59:30 UTC
+
+============================================================
+TOTHBOT V2 — STEP 3 SUB-STEP S-1 GAP REGISTER
+LOGGER MODULE PAIR AUDIT
+============================================================
+
+============================================================
+1. SCOPE + METHODOLOGY
+============================================================
+
+1.1 IN-SCOPE TARGETS.
+  AA=10:  1011007 Logger_Coding_Spec dv1_5
+          (dated 04-23-2026; OI-029 SMTP retry fix
+          scope; 1210 lines)
+  AA=05:  0511006 Logger_Specification dv1_1
+          (dated 04-21-2026; OI-023 two-stream
+          architectural uplift; 755 lines)
+  Against:
+          0500000 System_Architecture_Overview dv1_46
+          (8 diagrams: Tier-1 Context + D1..D7).
+
+1.2 METHODOLOGY.
+  Element-by-element enumeration of every architectural
+  element in 1011007 dv1_5. Each element assigned to
+  exactly one of four buckets:
+    (a) ARCHITECTURAL RESTATEMENT — content already
+        canonical in 0500000 diagrams + governs lists
+        OR in 0511006 prose. Migration: drop at S-4
+        retirement of 1011007.
+    (b) CODING-UNIQUE — implementation-level Python
+        artifact (imports, decorators, dict syntax,
+        function signature, format strings, type
+        annotations, library-specific calls).
+        Migration: NONE — code-appropriate content
+        belongs in code (Step 4), not documentation.
+    (c) ARCHITECTURAL CONTENT NOT IN DIAGRAMS —
+        architectural rule / contract / AR /
+        parameter / module / event / channel NOT
+        encoded in any 0500000 root <desc> governs
+        list. Migration: AMENDMENT-NN to 0500000
+        root governs (preferred — no SVG byte
+        change) OR diagram body update (if visual
+        content amendment required). Then
+        PROSE-UPDATE-XX to 0511006 prose. Then S-4
+        retirement of 1011007.
+    (d) UNCLEAR ORIGIN — element exists but
+        architectural intent / canonical source
+        cannot be determined. Apply RR-SCOPE-009
+        four-question Chesterton's-fence gate. Any
+        load-bearing element with unanswered origin
+        is preserved + surfaced to Bill at Step 3
+        close-gate.
+
+1.3 BASH VERIFICATION OF PRIMARY TARGETS.
+  /mnt/project/ sweep confirms:
+    1011007_Logger_Coding_Spec_dv1_5.txt           PRESENT
+    0511006_Logger_Specification_dv1_1.txt         PRESENT
+    0500000_System_Architecture_Overview_dv1_46    PRESENT
+                _Claude_Source.html
+    TB00153_Master_Defect_Register_v1_8.txt        PRESENT
+    TB00153_Decision_Register_v1_4.txt             PRESENT
+
+1.4 SINGLE-AA-SIDE PARENT SIMPLIFICATION.
+  Bash-verified: no AA=08 Logger spec exists in the
+  current corpus. Logger has SINGLE-AA-side parent
+  (0511006 dv1_1 only) — matching the TB00198
+  Position_Mirror simplification. RR-SCOPE-005
+  derivable-decision execution: simplification
+  enacted directly (single-parent classification
+  does not require cross-namespace §1.4 5-section
+  methodology). DD-011 ratification question NOT
+  surfaced.
+
+1.5 RR-SCOPE-008 TOOLS-EXHAUSTION COMPLIANCE.
+  Bash sweep + view + grep across primary targets +
+  0500000 diagram-canonical sweep + MDR + DR + cross-
+  pair forward-declaration verification complete
+  BEFORE asserting (c) cluster contents.
+
+1.6 RR-SCOPE-010 IDENTIFIER-CITATION DISCIPLINE.
+  Every ar:/rule:/contract:/evt:/channel:/mod: token
+  cited in this gap register is grep-verified against
+  the current spec corpus (0500000 dv1_46 +
+  0511006 dv1_1 + 1011007 dv1_5 + 0311001 v1_12
+  registries). Verbatim MDR citation: zero MDR
+  entries cited (MDR has zero OPEN entries —
+  verified at TB00198 close + TB00199 cold-load).
+
+1.7 V-038 DIAGRAM-PROSE PARITY APPROACH.
+  For every (c) gap, the diagram-side fix is
+  identified FIRST per DD-001/DD-002 prose-follows-
+  diagram authority hierarchy. Prose-only
+  dispositions are NOT surfaced as primary fix.
+
+============================================================
+2. DIAGRAM COVERAGE
+============================================================
+
+2.1 PRIMARY DIAGRAMS (Logger appears as explicit
+    module group with constraints + governs entries).
+
+  D1 R2 — Tier-1 Bot Architecture
+    mod:Logger group (line 1726) — constraints:
+      ar:AR-014 (Logger async bounded queue 10000
+      entries, never blocks hot path),
+      decision:D-06_Paper_Live_Parity,
+      pt_mode:PT_MODE_001, pt_mode:PT_MODE_006
+    Drill-targets: channel:logger_async_queue
+    Consumes: evt:ENTRY_SUBMITTED, evt:ENTRY_FILLED,
+      evt:TRADE_CLOSE, evt:PAPER_LEDGER_UPDATED,
+      evt:PAPER_DISPATCH_BLOCKED, evt:WS_RECONNECT,
+      evt:SUBSCRIBE_PACE_WAIT,
+      evt:SUBSCRIBE_PACE_BATCH_COMPLETE,
+      evt:PAIR_DATA_PENDING,
+      evt:PAIR_DATA_READY_RECOVERED
+    Produces: channel:logger_async_queue
+    Visual content: green Logger box with
+      "TRADE_CLOSE schema mode-agnostic (PA-005)"
+      decoration.
+    Root governs list includes: ar:AR-014,
+      ar:AR-064 (connection_id), ar:AR-066
+      (TRADE_CLOSE fires once on complete close).
+
+  D5 R3 — CIATS Architecture
+    Logger appears twice:
+      (a) Title-row Logger reference in CIATS-zone
+          inputs panel ("INPUTS — Logger is sole
+          CIATS data source").
+      (b) mod:Logger group (line 3367) — leaf,
+          drill_targets: none.
+          Constraints: ar:AR-014 (Logger async
+          bounded queue — never blocks the trading
+          hot path), rule:Sacred_R_R_1_to_1_5.
+          Produces: channel:logger_async_queue
+          (the CIATS-feeding log stream, sole
+          CIATS data source per HR-CI-001).
+    contract:CIATS_Trade_Outcome_Bus group
+      (line 3404+): canonical Stream 2 surface
+      with 12-field schema_fields enumeration
+      (TB00181 dv1_45 amendment for asset_regime/
+      market_regime).
+    Root governs list includes mod:Logger,
+      channel:logger_async_queue, evt:TRADE_CLOSE,
+      contract:CIATS_Trade_Outcome_Bus,
+      ar:AR-014, rule:PA-001, rule:Sacred_R_R_1_to_1_5.
+
+  D6 R4 — Complete System: One CIATS-Owned Organism
+    tb_logger group (line 4006) — constraints:
+      ar:AR-014 (10,000-entry queue · async writer
+      · never blocks hot path), SOLE CIATS DATA
+      SOURCE.
+    Drill-targets: channel:logger_async_queue.
+    Consumes: every event/decision from every
+      TothBot module.
+    Produces: channel:logger_async_queue
+      (CIATS-side consumption).
+    Visual content: green Logger box with
+      "SOLE CIATS DATA SOURCE" italic decoration.
+    Root governs list (line 3742) includes:
+      mod:Logger, channel:logger_async_queue,
+      contract:CIATS_Trade_Outcome_Bus,
+      ar:AR-014, ar:AR-066, rule:PA-001.
+
+2.2 ANCILLARY DIAGRAMS (Logger appears as named
+    consumer / producer in cross-references).
+
+  Tier-1 Context (line 353) — system context band
+    naming "Position_Mirror · Logger" in
+    TOTHBOT_V2 process band. Logger is
+    architectural participant but no governs entry
+    at Tier-1 level.
+
+  D2 — SSS Signal Engine (TB00177 dv1_44)
+    Logger not directly depicted; emit-receiver
+    relationship implicit via channel:logger_
+    async_queue and evt: tokens.
+
+  D3 R3 — TRADE_CLOSE Emission (Exit Controller)
+    Exit Controller emits evt:TRADE_CLOSE to
+    Logger via channel:logger_async_queue
+    (per-layer L1A/L1B/L2/L3 exit completion).
+    Logger is the consumer; not depicted as
+    a named module group in D3.
+
+  D4 — Regime Engine (line 2874) — mod:Logger in
+    root governs list as consumer of regime-tagged
+    TRADE_CLOSE records.
+
+  D7 R3 — Paper-Mode Dispatch Seam — Logger
+    appears as consumer of evt:PAPER_LEDGER_UPDATED
+    + evt:PAPER_DISPATCH_BLOCKED via channel:logger_
+    async_queue.
+
+2.3 CROSS-DIAGRAM DEPENDENCY DEPTH.
+  Logger is the UNIVERSAL OBSERVER per 0511006
+  §1 mission statement: "Everything CIATS knows
+  about TothBot's operation, it knows from the
+  Logger." Every module pair audited so far
+  (TB00194/195/196/197/198) declared Logger as a
+  consumer of their produced events. Forward-
+  declaration surface from Logger pair is
+  proportionally large but mostly closed by
+  upstream module pairs.
+
+============================================================
+3. ELEMENT-BY-ELEMENT CLASSIFICATION
+============================================================
+
+3.1  §1 Purpose paragraph 1 (Logger as sole CIATS
+     data interface; never block hot path).
+     CLASSIFICATION: (a) ARCHITECTURAL RESTATEMENT.
+     Encoded in D5 R3 produces (line 3376)
+     "channel:logger_async_queue (the CIATS-feeding
+     log stream, sole CIATS data source per
+     HR-CI-001)" + D6 R4 "SOLE CIATS DATA SOURCE"
+     visible decoration + ar:AR-014 governs entries.
+
+3.2  §1 Purpose paragraph 2 (Tier 1 in coding
+     sequence — must exist before any other
+     module can be tested).
+     CLASSIFICATION: (a) ARCHITECTURAL RESTATEMENT.
+     Sequencing rationale; matches 0511006 §1
+     parent-document statement.
+
+3.3  §1 Purpose paragraph 3 (dv1_4 two-stream
+     record architecture statement).
+     CLASSIFICATION: (a) ARCHITECTURAL RESTATEMENT.
+     Restates 0511006 dv1_1 §1 + §3.3. NOTE:
+     the underlying two-stream architecture itself
+     IS a (c) gap — see C5-10 below. This element
+     (the §1 sentence "operates a two-stream record
+     architecture") is the restatement; the
+     contract content is the (c) gap.
+
+3.4  §2 Parent Chain (1000000 / 1010000 / 1011007
+     this document / parent: 0511006 dv1_1).
+     CLASSIFICATION: (a) ARCHITECTURAL RESTATEMENT.
+     Parent chain canonical in 0311001 v1_12 §15.5
+     namespace conventions + 0510000 anchor.
+
+3.5  §3 Question 1 "What does Logger DO?"
+     description.
+     CLASSIFICATION: (a) ARCHITECTURAL RESTATEMENT.
+     Five-question reformulation of 0511006 §2
+     component summary. Mentions queue.Queue
+     stdlib (cross-references C5-3 ar:AR-063),
+     QueueListener thread, two persistent sinks
+     (cross-references C5-10), SMTP alert
+     handler, CRITICAL/HIGH alert routing,
+     queue overflow handling.
+
+3.6  §3 Question 2 "Interfaces?" description.
+     CLASSIFICATION: (a) ARCHITECTURAL RESTATEMENT.
+     IN: logging.getLogger("tothbot") universal
+     entry. OUT: tothbot.log + trades_<YYYY>.jsonl
+     + operator email + stderr. CIATS reads
+     logs directly. Same as 0511006 §2 + §8 +
+     0500000 D5 R3 / D6 R4 visual content.
+
+3.7  §3 Question 3 HR-LG-001 (never block hot
+     path).
+     CLASSIFICATION: (a) ARCHITECTURAL RESTATEMENT.
+     Encoded in D5 R3 logger_box constraint
+     ar:AR-014 (line 3374) AND D6 R4 tb_logger
+     constraint ar:AR-014 (line 4013) AND D1 R2
+     mod:Logger constraint ar:AR-014 (line 1733).
+
+3.8  §3 Question 3 HR-LG-002 (queue.Queue stdlib,
+     NOT asyncio.Queue).
+     CLASSIFICATION: (c) ARCHITECTURAL CONTENT NOT
+     IN DIAGRAMS. See C5-3.
+
+3.9  §3 Question 3 HR-LG-003 (maxsize=10,000).
+     CLASSIFICATION: (a) ARCHITECTURAL RESTATEMENT.
+     AR-014 governs-list text encodes "10000 entries"
+     explicitly in D1 R2 / D5 R3 / D6 R4.
+
+3.10 §3 Question 3 HR-LG-004 (log_listener.stop()
+     on clean shutdown).
+     CLASSIFICATION: (c) ARCHITECTURAL CONTENT NOT
+     IN DIAGRAMS. See C5-4.
+
+3.11 §3 Question 3 HR-LG-005 (All TRADE_CLOSE
+     fields mandatory per Section 7).
+     CLASSIFICATION: (a) ARCHITECTURAL RESTATEMENT
+     for the 12 fields enumerated in D5 R3
+     contract:CIATS_Trade_Outcome_Bus
+     schema_fields (line 3074, TB00181 dv1_45
+     amendment). NOTE: the 1011007 §7 list
+     enumerates ~22 fields (entry_fill_price,
+     exit_price, entry_timestamp_utc,
+     exit_timestamp_utc, hold_candle_count,
+     MAE_pct_reached, fees_entry_usd,
+     fees_exit_usd, fees_total_usd, exit_reason,
+     asset_regime, vol_regime, market_regime,
+     signal_params [5 sub-fields], actual_RR,
+     net_PL_USD, net_gain_usd, net_loss_usd,
+     plus ts/event/level/component) — exceeds
+     the 12-field diagram-canonical schema. The
+     "all fields mandatory" rule is restatement;
+     the field-count discrepancy is surfaced as
+     §7.4 observational finding (NOT cluster C5
+     — schema is partial-coverage, not absent).
+
+3.12 §3 Question 3 HR-LG-006 (TRADE_CLOSE fires
+     ONCE per position close).
+     CLASSIFICATION: (a) ARCHITECTURAL RESTATEMENT.
+     ar:AR-066 governs in D1, D2, D3, D4, D5,
+     D6 R4 governs lists.
+
+3.13 §3 Question 3 HR-LG-007 (ws_roundtrip_
+     latency_ms from WS v2 time_in / time_out
+     fields).
+     CLASSIFICATION: (c) ARCHITECTURAL CONTENT NOT
+     IN DIAGRAMS. See C5-5.
+
+3.14 §3 Question 3 HR-LG-008 (connection_id
+     logged on every WS event).
+     CLASSIFICATION: (a) ARCHITECTURAL RESTATEMENT.
+     ar:AR-064 governs in D1 R2 root governs list
+     (line 1365).
+
+3.15 §3 Question 3 HR-LG-009 (Decimal-as-string,
+     no float storage).
+     CLASSIFICATION: (c) ARCHITECTURAL CONTENT NOT
+     IN DIAGRAMS. See C5-6.
+
+3.16 §3 Question 3 HR-LG-010 (NDJSON format,
+     one JSON per line).
+     CLASSIFICATION: (c) ARCHITECTURAL CONTENT NOT
+     IN DIAGRAMS. See C5-7.
+
+3.17 §3 Question 3 HR-LG-011 (Queue full -> stderr
+     + HIGH alert, never block).
+     CLASSIFICATION: (c) ARCHITECTURAL CONTENT NOT
+     IN DIAGRAMS. See C5-8.
+
+3.18 §3 Question 4 "What triggers Logger?"
+     description.
+     CLASSIFICATION: (a) ARCHITECTURAL RESTATEMENT.
+     Triggered-by list (WS Manager, Signal
+     Pipeline, Execution Engine, Exit Controller,
+     Position Mirror, Regime Engine, CIATS) is
+     restatement of 0511006 §10 trigger list.
+
+3.19 §3 Question 5 "What does Logger log?"
+     description.
+     CLASSIFICATION: (a) ARCHITECTURAL RESTATEMENT.
+     Self-observability scope statement. Refers
+     to §6.9 events (cross-references C5-11,
+     C5-12, C5-13, C5-14).
+
+3.20 §4.1 LG-QUEUE-001 (use Python stdlib queue,
+     NOT asyncio.Queue + import statements).
+     CLASSIFICATION: (a) for the architectural
+     content (stdlib queue mandate); (b) for the
+     specific import statements. The stdlib
+     mandate restates ar:AR-063 which is itself
+     (c) C5-3. Split classification: the
+     architectural commitment goes to C5-3; the
+     example import statements are (b).
+
+3.21 §4.1 LG-QUEUE-002 (queue size derivation:
+     20 positions x 10 events/candle x 50-candle
+     buffer = 10,000).
+     CLASSIFICATION: (a) ARCHITECTURAL RESTATEMENT.
+     AR-014 governs-list text encodes "10000
+     entries"; derivation appears in 0511006 §3.1
+     prose.
+
+3.22 §4.2 LG-QUEUE-003 (TothBotQueueHandler class
+     definition with put_nowait + queue.Full
+     handler + _alert_operator_direct call).
+     CLASSIFICATION: (b) CODING-UNIQUE for the
+     Python class definition; (c) C5-8 for the
+     architectural content (queue-full behavior
+     contract). The class definition is the
+     implementation of HR-LG-011.
+
+3.23 §4.3 LG-QUEUE-004 (QueueListener config with
+     RotatingFileHandler + alert_handler +
+     trade_record_handler + respect_handler_level
+     + log_listener.start()).
+     CLASSIFICATION: (a) for the architectural
+     dispatch-to-three-handlers content (matches
+     0511006 §3.1 + §3.3 + 0500000 D5/D6 sole
+     CIATS data source contract). (b) for the
+     specific parameter values (maxBytes=
+     50*1024*1024, backupCount=90, encoding=
+     "utf-8") — these are coding-unique
+     implementation choices, though some are
+     architectural (50MB/90 files = 4.5GB
+     bounded disk footprint).
+     Per-handler exception isolation via
+     logging.Handler.handleError = (a)
+     architectural restatement of 0511006 §3.1
+     "per-handler exception isolation".
+
+3.24 §4.3 LG-QUEUE-005 (SHUTDOWN ORDER: signal
+     stop -> log_listener.stop() -> close
+     file_handler -> shutdown asyncio loop).
+     CLASSIFICATION: (c) ARCHITECTURAL CONTENT NOT
+     IN DIAGRAMS. See C5-4 HR-LG-004.
+
+3.25 §4.4 LG-QUEUE-006 (monitor_log_queue async
+     function: 60s interval, fill_pct >= 0.80
+     warning).
+     CLASSIFICATION: (a) for the queue-health-
+     monitoring architectural concept (matches
+     HR-LG-001 hot-path-never-blocks via early
+     warning); (b) for the Python async function
+     code (async def, asyncio.sleep, log_queue.
+     qsize). Architectural threshold value (80%)
+     is implementation detail.
+
+3.26 §5 LG-FMT-001 (NDJSON one JSON per line,
+     no pretty-print).
+     CLASSIFICATION: (c) ARCHITECTURAL CONTENT NOT
+     IN DIAGRAMS. See C5-7 HR-LG-010.
+
+3.27 §5 LG-FMT-002 (mandatory fields: ts, event,
+     level, component).
+     CLASSIFICATION: (a) ARCHITECTURAL RESTATEMENT.
+     Restates 0511006 §4.1 minimum-fields list.
+
+3.28 §5 LG-FMT-003 (orjson + _json_default with
+     Decimal callback + log_record helper
+     function).
+     CLASSIFICATION: (b) CODING-UNIQUE. Python
+     library choice + serialization helper
+     pattern.
+
+3.29 §5 LG-FMT-004 (Decimal values stored as JSON
+     string).
+     CLASSIFICATION: (c) ARCHITECTURAL CONTENT NOT
+     IN DIAGRAMS. See C5-6 HR-LG-009.
+
+3.30 §5 LG-FMT-005 (connection_id (AR-064): uint64
+     included in all WS connection/reconnect/
+     disconnect/gap/ping/pong/zombie log entries).
+     CLASSIFICATION: (a) ARCHITECTURAL RESTATEMENT.
+     ar:AR-064 governs in D1 R2 root governs list.
+
+3.31 §6 LG-EVT-001 (all event codes MUST be
+     registered; code review rejects unregistered).
+     CLASSIFICATION: (c) ARCHITECTURAL CONTENT NOT
+     IN DIAGRAMS. Governance rule itself is
+     Logger-specific architectural commitment;
+     0500000 lists individual evt: tokens but
+     does not enforce "all events must be
+     registered" as a rule. SUB-CLUSTER:
+     governance-of-events rule.
+     UPDATE: classifying this as (a) instead —
+     LG-EVT-001 is a generalization of "every
+     evt: token used in TothBot must be
+     enumerable" which is implicit in 0311001
+     v1_12 §15.12.7 evt: registry. Not a unique
+     architectural content to Logger.
+
+3.32 §6.1 WS Manager Events table (32+ rows).
+     CLASSIFICATION: (a) ARCHITECTURAL RESTATEMENT.
+     The events themselves are produced by
+     WS Manager (TB00194 audited scope); Logger
+     is consumer/recorder. Each event code is
+     diagram-canonical via 0511006 §5.1 + the
+     producing module's spec. The table itself
+     is restatement of 0511006 §5.1 plus
+     field-level enumerations.
+     NOTE: a small subset of WS Manager events
+     are referenced in 0500000 D1 R2 mod:Logger
+     consumes list (line 1734) — explicit
+     diagram-canonical encoding.
+
+3.33 §6.2 Signal Pipeline Events table (~13 rows).
+     CLASSIFICATION: (a) ARCHITECTURAL RESTATEMENT.
+     Same pattern as §6.1.
+
+3.34 §6.3 Execution Engine Events table (~11 rows).
+     CLASSIFICATION: (a) ARCHITECTURAL RESTATEMENT.
+     Same pattern. NOTE: §6.3 references
+     UNEXPECTED_ORDER_AMENDED with CRITICAL
+     level, which corresponds to ar:AR-057 in
+     0511006 §5.1 — surface AR-057 as (c) gap
+     in C5-1 (the AR is not in any 0500000 root
+     governs list).
+     EXEC_TRADE event references multiple fields
+     (cum_qty, avg_price, last_qty, last_price)
+     which corresponds to ar:AR-061 in 0511006
+     §5.1 — surface AR-061 as (c) gap in C5-2.
+
+3.35 §6.4 Exit Controller Events table (~10 rows).
+     CLASSIFICATION: (a) ARCHITECTURAL RESTATEMENT.
+     Same pattern as §6.1.
+
+3.36 §6.5 Position Mirror Events table (4 rows).
+     CLASSIFICATION: (a) ARCHITECTURAL RESTATEMENT.
+     Same pattern.
+
+3.37 §6.6 Regime Engine Events table (2 rows).
+     CLASSIFICATION: (a) ARCHITECTURAL RESTATEMENT.
+
+3.38 §6.7 CIATS Events table (5 rows).
+     CLASSIFICATION: (a) ARCHITECTURAL RESTATEMENT.
+     evt:KELLY_UPDATE + evt:KELLY_NEGATIVE
+     diagram-canonical in D5 R3 governs (line
+     3332). Other CIATS events restate 0211001
+     dv1_0 §14.
+
+3.39 §6.8 Trade Outcome Bus — TRADE_CLOSE
+     ("fires ONCE on each complete position
+     close").
+     CLASSIFICATION: (a) ARCHITECTURAL RESTATEMENT.
+     ar:AR-066 + HR-LG-006 both diagram-canonical.
+
+3.40 §6.9 Logger Self-Observability Events table
+     (LOG_QUEUE_FULL, ALERT_SENT, ALERT_SMTP_
+     FAILED, TRADE_RECORD_WRITE_FAILED).
+     CLASSIFICATION: (c) ARCHITECTURAL CONTENT NOT
+     IN DIAGRAMS for all four event tokens.
+     See C5-11 evt:ALERT_SENT, C5-12
+     evt:ALERT_SMTP_FAILED, C5-13
+     evt:TRADE_RECORD_WRITE_FAILED, C5-14
+     evt:LOG_QUEUE_FULL.
+
+3.41 §7 LG-TOB-001 (TRADE_CLOSE fires ONCE per
+     position close, never on partial fills).
+     CLASSIFICATION: (a) ARCHITECTURAL RESTATEMENT.
+     ar:AR-066 governs.
+
+3.42 §7 LG-TOB-002 (all Section 7 fields
+     mandatory; missing fields break CIATS
+     statistical computation).
+     CLASSIFICATION: (a) ARCHITECTURAL RESTATEMENT.
+     Mirror of HR-LG-005. Field-count
+     discrepancy with D5 R3 schema_fields
+     (12 fields enumerated vs ~22 in spec) is
+     §7.4 observational finding.
+
+3.43 §7 LG-TOB-003 (TRADE_CLOSE byte-for-byte
+     identical on Stream 1 + Stream 2;
+     enforced by QueueListener architecture).
+     CLASSIFICATION: (c) ARCHITECTURAL CONTENT NOT
+     IN DIAGRAMS. Two-stream payload identity
+     contract is part of C5-10
+     contract:Two_Stream_Record_Architecture.
+
+3.44 §7 Required TRADE_CLOSE fields list (ts,
+     event, level, component, symbol,
+     entry_fill_price, exit_price,
+     entry_timestamp_utc, exit_timestamp_utc,
+     hold_candle_count, MAE_pct_reached,
+     fees_entry_usd, fees_exit_usd,
+     fees_total_usd, exit_reason, asset_regime,
+     vol_regime, market_regime, signal_params,
+     actual_RR, net_PL_USD, net_gain_usd,
+     net_loss_usd).
+     CLASSIFICATION: split.
+     Fields enumerated in D5 R3 schema_fields:
+     (a) RESTATEMENT for ~12 fields (symbol,
+     entry_fill_price, exit_price,
+     hold_candle_count, MAE_reached, fees_total,
+     exit_reason, asset_regime, market_regime,
+     signal_params_at_entry, actual_RR,
+     net_PL_USD).
+     Fields NOT in diagram-canonical 12-field
+     schema (ts, event, level, component,
+     entry_timestamp_utc, exit_timestamp_utc,
+     fees_entry_usd, fees_exit_usd,
+     vol_regime, net_gain_usd, net_loss_usd):
+     surface as §7.4 schema-completeness
+     observational finding — these may be
+     additions made post-D5 R3 dv1_45 amendment
+     not yet propagated, OR spec-side additions
+     that need diagram-canonical promotion.
+     NOTE: ts/event/level/component are the
+     LG-FMT-002 mandatory fields universal to
+     all log records — they're not TRADE_CLOSE-
+     specific. The remaining 7 fields are
+     TRADE_CLOSE-specific additions beyond the
+     12-field diagram schema.
+
+3.45 §7 exit_reason enumerated values (TP_FILL,
+     MAE_THRESHOLD_BREACH, HTF_REGIME_REVERSAL,
+     DAILY_REGIME_DOWNGRADE, TIME_EXPIRY,
+     SIGNAL_DECAY, TP_PARTIAL_FILL_REMAINDER,
+     PAIR_LIMIT_ONLY_EXIT).
+     CLASSIFICATION: (a) ARCHITECTURAL RESTATEMENT.
+     Exit reason taxonomy belongs to Exit
+     Controller scope (TB00197 audit) — Logger
+     records but does not own the taxonomy.
+
+3.46 §7 signal_params sub-fields (rsi_14, ema_9,
+     ema_21, volume_ratio, sss_pass).
+     CLASSIFICATION: (a) ARCHITECTURAL RESTATEMENT.
+     SSS Signal Engine schema belongs to Signal
+     Pipeline scope (TB00195 audit).
+
+3.47 §7 Feed: list (Statistical Engine ->
+     Proposal Engine at 200 trades; Regime
+     Library at 600 trades; Half-Kelly at 200+
+     trades; permanent trade record file as
+     authoritative long-term source).
+     CLASSIFICATION: (a) ARCHITECTURAL RESTATEMENT.
+     200-trade threshold (rule:PS-HK-001 +
+     rule:HR-CI-004 in D5 R3 governs), 600-trade
+     threshold (D5 R3 mod:CIATS_Regime_Library
+     constraints), Half-Kelly persistence path
+     (D5 R3 governs rule:PS-HK-001 +
+     rule:HR-CI-009).
+
+3.48 §8 LG-ALERT-001 (CRITICAL -> alerts@tothbot.com
+     immediately + stderr fallback. List of
+     CRITICAL event codes).
+     CLASSIFICATION: (a) ARCHITECTURAL RESTATEMENT.
+     Alert routing model encoded as Tier-1 Context
+     "Logger_Alert_Out_Of_Band" arrow (line 607-
+     617) consuming evt:LOGGER_CRITICAL +
+     evt:LOGGER_HIGH + evt:LOGGER_MEDIUM. The
+     specific routing target alerts@tothbot.com is
+     OI-019-fixed (dv1_3) — plural-mailbox
+     architectural commitment. NOTE: the specific
+     CRITICAL event-code list (PING_TIMEOUT,
+     ZOMBIE_CONNECTION_DETECTED, etc.) is
+     enumeration of restatement-class events
+     (each event has its own producing module
+     spec).
+
+3.49 §8 LG-ALERT-002 (HIGH -> alerts@tothbot.com.
+     List of HIGH event codes).
+     CLASSIFICATION: (a) ARCHITECTURAL RESTATEMENT.
+     Same pattern as LG-ALERT-001.
+
+3.50 §8 LG-ALERT-003 (WARN -> log file only, no
+     email).
+     CLASSIFICATION: (a) ARCHITECTURAL RESTATEMENT.
+     0511006 §7 alert-routing taxonomy.
+
+3.51 §8 LG-ALERT-004 (_alert_operator_direct
+     function + ALERT_EMAIL constant +
+     ALERT_SMTP_TIMEOUT_SEC (20) +
+     ALERT_SMTP_MAX_ATTEMPTS (2) +
+     ALERT_SMTP_RETRY_BACKOFF_SEC (1) +
+     bounded retry loop + per-attempt timeout).
+     CLASSIFICATION: split.
+     (a) ARCHITECTURAL RESTATEMENT for the
+     alert-bypass architectural concept ("alert
+     email implementation separate from Logger
+     queue to avoid circularity").
+     (c) ARCHITECTURAL CONTENT NOT IN DIAGRAMS
+     for the dv1_5 SMTP retry contract:
+     timeout=20s + max_attempts=2 +
+     backoff=1s + worst-case wall time 41s +
+     off-hot-path commitment. See C5-15 below.
+     (b) CODING-UNIQUE for the function
+     signature (keyword-only args, type hints,
+     smtplib import, time import).
+
+3.52 §8 LG-ALERT-005 (ANTI-RECURSION GUARD:
+     TothBotAlertHandler.emit MUST skip
+     records with event=="ALERT_SMTP_FAILED").
+     CLASSIFICATION: (c) ARCHITECTURAL CONTENT NOT
+     IN DIAGRAMS. Anti-recursion is an
+     architectural commitment to prevent
+     persistent-SMTP-outage failure-mode
+     amplification. Tightly coupled to C5-12
+     evt:ALERT_SMTP_FAILED; could be subsumed
+     under C5-12 ALERT-EXEMPT semantics OR
+     surfaced as a discrete rule. Surfaced
+     discretely here as C5-16.
+
+3.53 §9 LG-FILE-001 (log directory: /home/tothbot/
+     logs/; created at startup).
+     CLASSIFICATION: (a) ARCHITECTURAL RESTATEMENT.
+     File path is implementation-binding; 0511006
+     §3.3 Stream 1 location.
+
+3.54 §9 LG-FILE-002 (RotatingFileHandler config:
+     50MB/90 files = 4.5GB max disk usage;
+     ~280 days of logs at ~80,000 entries/day x
+     ~200 bytes/entry).
+     CLASSIFICATION: (a) ARCHITECTURAL RESTATEMENT
+     for the bounded-retention concept (matches
+     0511006 §3.3 Stream 1 "Rotating — 90 files
+     x 50 MB. Finite."); (b) CODING-UNIQUE for
+     the specific parameter values.
+
+3.55 §9 LG-FILE-003 (logrotate integration per
+     1011013 VPS spec; /etc/logrotate.d/tothbot).
+     CLASSIFICATION: (b) CODING-UNIQUE / deferral
+     to 1011013 VPS_Deployment scope.
+     Cross-pair forward-declaration to TB00203
+     VPS_Deployment audit: verify logrotate
+     integration architectural commitment.
+
+3.56 §9 LG-FILE-004 (NDJSON file format).
+     CLASSIFICATION: (c) ARCHITECTURAL CONTENT NOT
+     IN DIAGRAMS. See C5-7 HR-LG-010.
+
+3.57 §10 initialize_logger function (os.makedirs
+     for log directory + records directory;
+     queue.Queue(maxsize=10_000); RotatingFile
+     Handler with maxBytes=50MB / backupCount=
+     90 / encoding=utf-8; TothBotAlertHandler;
+     TothBotTradeRecordHandler;
+     QueueListener.start(); tothbot_logger.
+     handlers=[queue_handler]; setLevel(DEBUG);
+     propagate=False).
+     CLASSIFICATION: (b) CODING-UNIQUE.
+     Implementation-level function definition.
+     Architectural intent (queue-backed,
+     non-blocking, two-stream, propagate=False)
+     is restatement of (a) + (c) C5 entries
+     above.
+
+3.58 §11 LG-TREC-001 (Stream 2 purpose +
+     rationale + file location /home/tothbot/
+     records/trades_<YYYY>.jsonl + directory
+     creation at startup).
+     CLASSIFICATION: (c) ARCHITECTURAL CONTENT NOT
+     IN DIAGRAMS. See C5-9 rule:HR-LG-012 +
+     C5-10 contract:Two_Stream_Record_
+     Architecture.
+
+3.59 §11 LG-TREC-002 (annual segmentation;
+     <YYYY> = UTC calendar year at write time;
+     rollover at first TRADE_CLOSE of new year).
+     CLASSIFICATION: (c) ARCHITECTURAL CONTENT NOT
+     IN DIAGRAMS. Sub-clause of C5-9 HR-LG-012.
+
+3.60 §11 LG-TREC-003 (file permissions 0o644
+     hard-pinned via os.open with O_CREAT;
+     independent of runtime umask;
+     TRADES_RECORD_FILE_MODE constant).
+     CLASSIFICATION: (c) ARCHITECTURAL CONTENT NOT
+     IN DIAGRAMS. Sub-clause of C5-9 HR-LG-012.
+     Implementation example is (b).
+
+3.61 §11 LG-TREC-004 (write contract: filter on
+     event=="TRADE_CLOSE"; pre-serialized NDJSON
+     payload identity with Stream 1; append-only
+     via O_WRONLY|O_APPEND|O_CREAT; atomicity
+     via single os.write under PIPE_BUF; single-
+     writer no-lock).
+     CLASSIFICATION: split.
+     (c) for the architectural commitment
+     (Stream 2 write contract).
+     (b) for the implementation details (os
+     flags, PIPE_BUF reference, single-writer
+     argument). Sub-clause of C5-9 HR-LG-012.
+
+3.62 §11 LG-TREC-005 (DURABILITY — fsync per
+     write before close; compliance-grade
+     records must survive VPS power loss + kernel
+     panic; cost negligible in QueueListener
+     background thread; per-trade frequency low).
+     CLASSIFICATION: (c) ARCHITECTURAL CONTENT NOT
+     IN DIAGRAMS. Sub-clause of C5-9 HR-LG-012.
+
+3.63 §11 LG-TREC-006 (failure path: catch
+     locally + emit TRADE_RECORD_WRITE_FAILED
+     HIGH + stderr fallback + tothbot.log write
+     unaffected via per-handler handleError
+     isolation).
+     CLASSIFICATION: (c) ARCHITECTURAL CONTENT NOT
+     IN DIAGRAMS. Cross-references C5-13
+     evt:TRADE_RECORD_WRITE_FAILED.
+
+3.64 §11 LG-TREC-007 (independence from
+     diagnostic log: no RotatingFileHandler,
+     no logrotate, no size caps, no TTL;
+     operator-side archival only permitted
+     lifecycle action).
+     CLASSIFICATION: (a) ARCHITECTURAL RESTATEMENT
+     of 0511006 §3.3 contract (c) failure-domain
+     independence. NOTE: the underlying contract
+     IS (c) C5-10; this element is the
+     restatement.
+
+3.65 §11 LG-TREC-008 (CSV EXPORT IS DEFERRED;
+     annual JSONL is authoritative; CSV is
+     read-only transform implemented in future
+     Operator Observer Dashboard scope).
+     CLASSIFICATION: (a) for the deferral
+     statement; not an architectural commitment
+     this session.
+
+3.66 §11 LG-TREC-009 (TothBotTradeRecordHandler
+     Python class with emit() method:
+     orjson.loads + event filter + path
+     construction + os.open with 0o644 mode +
+     os.write + os.fsync + os.close +
+     exception emits HIGH event + stderr
+     fallback).
+     CLASSIFICATION: (b) CODING-UNIQUE.
+     Implementation class definition.
+
+3.67 §12 Revision History (per-version entries
+     dv1_5, dv1_4, dv1_3, dv1_2, dv1_1, dv1_0).
+     CLASSIFICATION: (a) document-control
+     content; not architectural. CI-006
+     revision-history completeness requirement
+     means this is PRESERVED at retirement, not
+     dropped.
+
+============================================================
+4. ROLL-UP
+============================================================
+
+  Bucket (a) ARCHITECTURAL RESTATEMENT:    ~46 elements
+            (1011007 §1 / §2 / §3 / §4 / §5 / §6 /
+            §7 / §8 / §9 / §11 partial / §12; matched
+            to 0511006 + 0500000 D1 R2 / D4 / D5 R3 /
+            D6 R4 root governs)
+
+  Bucket (b) CODING-UNIQUE:                ~13 elements
+            (Python class definitions, function
+            signatures, library-specific calls,
+            implementation-only parameter values
+            and flags)
+
+  Bucket (c) ARCHITECTURAL CONTENT NOT IN
+            DIAGRAMS — CLUSTER C5:         16 elements
+            (C5-1 through C5-16 — see §7.1 below)
+
+  Bucket (d) UNCLEAR ORIGIN:               0 elements
+            (RR-SCOPE-009 four-question Chesterton's-
+            fence gate surfaced zero ambiguity;
+            every architectural element traceable
+            to TB00107 + TB00108 OI-022/023 +
+            TB00118 OI-029 origin + AR-014 / AR-063 /
+            AR-064 / AR-066 FP/DP analyses in 0500000
+            dv1_18 predecessor)
+
+  Total elements classified: ~75
+
+============================================================
+5. DOWNSTREAM QUEUE
+============================================================
+
+5.1 AMENDMENT-11 NEW.
+  Scope: D1 R2 + D5 R3 + D6 R4 root governs lists
+  ADD all 16 cluster C5 tokens (and clarify diagram
+  body content where necessary).
+
+  Target diagram + governs-list additions:
+
+    D1 R2 root governs ADD:
+      ar:AR-057, ar:AR-061, ar:AR-063,
+      rule:HR-LG-004, rule:HR-LG-007,
+      rule:HR-LG-009, rule:HR-LG-010,
+      rule:HR-LG-011
+
+    D5 R3 root governs ADD:
+      ar:AR-061, ar:AR-063, rule:HR-LG-004,
+      rule:HR-LG-007, rule:HR-LG-009, rule:HR-LG-010,
+      rule:HR-LG-011, rule:HR-LG-012,
+      contract:Two_Stream_Record_Architecture,
+      evt:ALERT_SENT, evt:ALERT_SMTP_FAILED,
+      evt:TRADE_RECORD_WRITE_FAILED,
+      evt:LOG_QUEUE_FULL, rule:LG-ALERT-005
+
+    D6 R4 root governs ADD:
+      ar:AR-057, rule:HR-LG-011, rule:HR-LG-012,
+      contract:Two_Stream_Record_Architecture,
+      evt:ALERT_SENT, evt:ALERT_SMTP_FAILED,
+      evt:TRADE_RECORD_WRITE_FAILED,
+      evt:LOG_QUEUE_FULL
+
+  Tier-1 Context root governs CONSIDERATION:
+      evt:LOGGER_CRITICAL / evt:LOGGER_HIGH /
+      evt:LOGGER_MEDIUM consumed by Mail_Alerts
+      arrow (lines 607-617) are EXISTING — verify
+      this maps cleanly to the C5-11/C5-12/C5-13/
+      C5-14 self-observability event tokens vs
+      pre-existing severity-grouping tokens.
+      (Likely separate tokens; the LOGGER_CRITICAL/
+      HIGH/MEDIUM tokens are severity grouping, the
+      C5 events are specific event codes.)
+
+  SVG BYTE CHANGE: NO — root <desc> governs-list
+  additions only. No visual content modifications.
+  Matches TB00198 AMENDMENT-10 form-factor.
+
+  REGISTRY-GAP STATUS: rule:HR-LG-004/007/009/010/
+  011/012 are NOT currently in 0311001 v1_12
+  §15.12.9 rule: registry (verified via cold-load
+  reading). AMENDMENT-11 enactment surfaces a
+  §15.12.9 registry housekeeping requirement (same
+  pattern as HR-CI-002/004/008/009 carry-forward
+  from D5 R2 -> R3 per TB00163 NSI). Deferred to
+  future 0311001 increment per registry-gap-note
+  convention.
+  contract:Two_Stream_Record_Architecture and the
+  four self-observability evt: tokens are also
+  NOT currently in 0311001 v1_12 §15.12.3 +
+  §15.12.7 registries — same registry-housekeeping
+  deferral.
+
+5.2 PROSE-UPDATE-AH through AT NEW (13 updates
+    to 0511006 dv1_1).
+  Cross-references to AMENDMENT-11 diagram-
+  canonical promotion of cluster C5 tokens.
+  Each prose update reconciles a 0511006 prose
+  statement with the post-amendment diagram-
+  canonical reality.
+
+  PROSE-UPDATE-AH: 0511006 §3.1 paragraph
+    "NOT asyncio.Queue: QueueListener runs in
+    a separate non-asyncio thread..." — add
+    explicit ar:AR-063 citation matching D1 +
+    D5 root governs entry.
+
+  PROSE-UPDATE-AI: 0511006 §3.1 paragraph
+    "QueueHandler: Non-blocking..." + §3.2
+    "If log_queue.Full exception raised..." —
+    add explicit rule:HR-LG-011 citation
+    matching D1 + D5 + D6 root governs entry.
+
+  PROSE-UPDATE-AJ: 0511006 §3.3 STREAM 1 +
+    STREAM 2 section — add explicit
+    contract:Two_Stream_Record_Architecture
+    citation matching D5 + D6 root governs
+    entry.
+
+  PROSE-UPDATE-AK: 0511006 §3.4 Shutdown
+    paragraph — add explicit rule:HR-LG-004
+    citation matching D1 + D5 root governs
+    entry.
+
+  PROSE-UPDATE-AL: 0511006 §4.2 numeric fields
+    statement — add explicit rule:HR-LG-009
+    citation.
+
+  PROSE-UPDATE-AM: 0511006 §4.3 log file format
+    paragraph — add explicit rule:HR-LG-010
+    citation.
+
+  PROSE-UPDATE-AN: 0511006 §5.1 EXEC_TRADE
+    event row — add explicit ar:AR-061
+    citation.
+
+  PROSE-UPDATE-AO: 0511006 §5.1
+    UNEXPECTED_ORDER_AMENDED event row — add
+    explicit ar:AR-057 citation.
+
+  PROSE-UPDATE-AP: 0511006 §5.7 Logger Self-
+    Observability Events section — add
+    explicit evt:ALERT_SENT,
+    evt:ALERT_SMTP_FAILED,
+    evt:TRADE_RECORD_WRITE_FAILED,
+    evt:LOG_QUEUE_FULL citations matching D5 +
+    D6 root governs entries.
+
+  PROSE-UPDATE-AQ: 0511006 §6.1 EWMA Monitor
+    Signal 3 ws_roundtrip_latency_ms paragraph
+    — add explicit rule:HR-LG-007 citation.
+
+  PROSE-UPDATE-AR: 0511006 §7 Level CRITICAL
+    + Level HIGH alert routing tables — add
+    explicit rule:LG-ALERT-005 anti-recursion
+    citation for ALERT_SMTP_FAILED ALERT-
+    EXEMPT row.
+
+  PROSE-UPDATE-AS: 0511006 §9 HR-LG-012
+    paragraph — add explicit rule:HR-LG-012
+    diagram-canonical citation matching D5 +
+    D6 root governs entry.
+
+  PROSE-UPDATE-AT: 0511006 §1 + §3.3 two-
+    stream architecture mission statement —
+    add explicit
+    contract:Two_Stream_Record_Architecture
+    citation matching diagram-canonical
+    encoding.
+
+  Cumulative S-3 prose updates: 46 (33 prior
+  + 13 new PROSE-UPDATE-AH through AT to
+  0511006 dv1_1).
+
+5.3 S-4 1011007 RETIREMENT GATING.
+  1011007 dv1_5 retirement gated on:
+    (a) AMENDMENT-11 enactment (D1 R2 + D5 R3 +
+        D6 R4 root governs additions; SVG
+        byte-identical preserved).
+    (b) PROSE-UPDATE-AH..AT closure (0511006
+        dv1_1 -> dv1_2).
+    (c) Bill approval gate at Step 3 close.
+
+  Post-retirement: 1011007 elements
+  redistributed:
+    (a) buckets dropped (already canonical).
+    (b) buckets migrated to logger.py source
+        comments (Step 4 — coding phase).
+    (c) buckets canonical in 0500000 D1/D5/D6 +
+        0511006 dv1_2.
+    Permanent revision-history entries preserved
+    per CI-006.
+
+5.4 CROSS-PAIR FORWARD-DECLARATIONS.
+
+  Logger is the UNIVERSAL OBSERVER — every other
+  TothBot module is a producer of events Logger
+  records. Cross-pair forward-declaration surface
+  from Logger pair is HIGH-COUNT, but most
+  upstream module pairs have already been audited
+  (TB00194 / TB00195 / TB00196 / TB00197 /
+  TB00198). Forward-declarations to remaining
+  module pair audits and inheritance verifications:
+
+  TO TB00200 Long_Module (1011008 + 0811001):
+    - evt:ENTRY_SUBMITTED, evt:ENTRY_FILLED,
+      evt:TRADE_CLOSE production verification
+      (Long_Module is event producer; Logger is
+      consumer/recorder).
+    - Cross-pair AR-014 hot-path-never-blocks
+      contract: verify Long_Module logger calls
+      use TothBotQueueHandler put_nowait, not
+      blocking enqueue.
+
+  TO TB00201 Selection_Controller (1011009 +
+    0811002):
+    - evt:SELECTION_CYCLE_COMPLETE,
+      evt:EXIT_COOLDOWN_RESPECTED,
+      evt:CONSECUTIVE_LOSS_COUNT_INCREMENTED
+      production (Selection Controller is
+      event producer per AR-073).
+    - No new event-schema obligations from
+      Logger side.
+
+  TO TB00202 Risk_Engine (1011011 + 0611001..
+    0611004):
+    - evt:SESSION_PAUSE_TRIGGERED,
+      evt:FULL_HALT_TRIGGERED,
+      evt:DRAWDOWN_UPDATE production (Risk
+      Engine is event producer for halt logic).
+    - Per-wallet drawdown halt events
+      (rule:Per_Wallet_Drawdown_Halt per
+      v2_29 §9.7): NEW event schemas may need
+      per-module tagging for per-module CIATS
+      routing — see Cluster C7 systemic
+      finding §7.2.
+
+  TO TB00203 Regime_Engine (1011012 + 0711002):
+    - evt:REGIME_COMPUTED, evt:REGIME_STALE_
+      WARNING production. Already canonical
+      via D4 governs.
+
+  TO TB00204 VPS_Deployment (1011013 + 0211002):
+    - Cross-pair forward-declaration for
+      logrotate integration (§9 LG-FILE-003
+      reference to 1011013 VPS spec).
+      Verify /etc/logrotate.d/tothbot
+      architectural commitment.
+    - Cross-pair forward-declaration for
+      /home/tothbot/logs/ + /home/tothbot/
+      records/ directory ownership +
+      permissions (likely covered by VPS_
+      Deployment user-setup scope).
+
+  TO TB00205 Startup_Sequence (1011014 + 0211003):
+    - Cross-pair forward-declaration for
+      log_listener.start() in startup sequence
+      (rule:HR-LG-004 boot-time contract).
+    - Cross-pair forward-declaration for
+      log_listener.stop() in shutdown sequence
+      (rule:HR-LG-004 drain + join contract).
+
+  CROSS-PAIR VERIFICATIONS (from prior audits).
+
+    HR-LG-007 (ws_roundtrip_latency_ms from WS v2
+    time_in / time_out fields) — Logger captures
+    fields produced by WS Manager
+    (TB00194 audited). WS Manager spec
+    (0511001 dv1_6) explicitly captures
+    time_in + time_out per PONG_RECEIVED event
+    in §A-3 EWMA Signal 3 source. Cross-pair
+    verification COMPLETE: WS Manager produces;
+    Logger consumes/records via §5.1 PONG_
+    RECEIVED entry. No outstanding cross-pair
+    item.
+
+    HR-LG-008 / AR-064 (connection_id on every WS
+    event) — WS Manager (TB00194) is event
+    producer. WS Manager spec 0511001 dv1_6 §17A
+    encodes per_connection_id field on every
+    WS connection-class event. Cross-pair
+    verification COMPLETE.
+
+    AR-057 / UNEXPECTED_ORDER_AMENDED — Execution
+    Engine + Exit Controller producers
+    (TB00196 + TB00197). Verify AR-057 surfaces
+    in EE + EC pair scopes:
+      - TB00196 §3 EE element classification:
+        UNEXPECTED_ORDER_AMENDED is referenced
+        in 1011004 §6 + 0511003 §5 event
+        registries. AR-057 not in EE pair
+        cluster C5 (verified TB00196 SL §2.2 +
+        gap register §3 — AR-057 was not
+        surfaced as gap there).
+      - TB00197 §3 EC element classification:
+        AR-057 not in EC cluster C5.
+      Surfaced HERE in TB00199 Logger pair as
+      C5-1 because Logger's spec is the place
+      AR-057 is referenced as an event-routing
+      rule. The producing modules' specs reference
+      it as a CRITICAL event code; the alert-
+      routing architectural commitment is
+      Logger-side.
+      Cross-pair status: AR-057 is a Logger pair
+      original surface; no prior pair has
+      ownership. PROMOTE in AMENDMENT-11 D6
+      governs.
+
+    AR-061 / EXEC_TRADE multi-field — Execution
+    Engine producer (TB00196). Verify AR-061
+    in EE pair scope: 1011004 §6 EXEC_TRADE
+    event row references cum_qty + avg_price +
+    last_qty + last_price multi-field schema.
+    AR-061 not in TB00196 cluster C5 (verified
+    in gap register).
+    Cross-pair status: same pattern as AR-057.
+    Logger pair surfaces; AMENDMENT-11
+    promotes.
+
+    AR-063 (queue.Queue stdlib) — Logger-side
+    architectural rule. No cross-pair obligation
+    on other modules; this is a Logger
+    implementation contract.
+
+  REGISTRY-AMENDMENT SURFACE (0311001 v1_12).
+    §15.12.7 evt: registry currently does NOT
+      contain: evt:ALERT_SENT,
+      evt:ALERT_SMTP_FAILED,
+      evt:TRADE_RECORD_WRITE_FAILED,
+      evt:LOG_QUEUE_FULL.
+    §15.12.9 rule: registry currently does NOT
+      contain: rule:HR-LG-001..012 (none
+      registered; verified via cold-load grep).
+    §15.12.3 contract: registry currently does
+      NOT contain:
+      contract:Two_Stream_Record_Architecture.
+    Registry-housekeeping deferred to future
+    0311001 increment per registry-gap-note
+    convention. AMENDMENT-11 enactment is the
+    forcing function.
+
+============================================================
+6. AMBIGUITY-SURFACE PATHS — STATUS
+============================================================
+
+6.1 GAP CLASSIFICATION AMBIGUITY (NSI §7.1).
+  Zero ambiguous classifications. All 75+
+  elements assigned unambiguously to one of
+  four buckets. Split classifications (3.20,
+  3.22, 3.23, 3.25, 3.44, 3.51, 3.54, 3.61)
+  documented explicitly with rationale for
+  each portion.
+
+6.2 TARGET-DIAGRAM IDENTIFICATION (NSI §7.2).
+  Logger primary diagrams: D1 R2 (Tier-1 Bot
+  Architecture) + D5 R3 (CIATS Architecture) +
+  D6 R4 (Complete System). Logger appears in
+  three diagrams because Logger is the universal
+  observer and the sole CIATS data interface.
+  Ambiguity resolution: AMENDMENT-11 distributes
+  C5 tokens across all three diagrams per the
+  scope of each diagram (D1 for system-wide
+  Logger module commitments; D5 for CIATS-feed
+  contract commitments; D6 for complete-system
+  cross-module commitments).
+
+6.3 VOLUME-OF-(c)-GAPS HIGH FINDING (NSI §7.3).
+  Cluster C5 = 16 items, EXCEEDS the 12-item
+  threshold. Surfaced as observational finding
+  for Step 3 close-gate. See §7.1.
+
+6.4 RR-SCOPE-009 CHESTERTON'S-FENCE (NSI §7.4).
+  Zero (d) bucket elements. RR-SCOPE-009 four-
+  question gate cleared all retention parameters
+  (50MB / 90 files / 80% fill threshold), error
+  categorizations (CRITICAL/HIGH/WARN), alert
+  routing (alerts@tothbot.com plural), and
+  retry parameters (20s timeout / 2 attempts /
+  1s backoff). All elements traceable to TB00107
+  / TB00108 / TB00118 origin sessions per Logger
+  spec revision history §12.
+
+6.5 FILESYSTEM-STATE ASSERTION (NSI §7.5).
+  Bash sweep §1.3 executed BEFORE assertions
+  in this gap register. RR-SCOPE-008 tools-
+  exhaustion compliance verified.
+
+6.6 STALE PARAMETER REFERENCE HANDLING (NSI §7.6).
+  Bash grep for tradeable_pct / per_trade_pct /
+  max_concurrent / paper_starting_balance across
+  Logger pair returned ZERO matches. Logger spec
+  contains exactly one parameter reference
+  ("MAX_CONCURRENT_REACHED") and it is a rejection
+  code STRING, not a parameter reference. No
+  cluster C6 citation drift from parameter
+  references.
+  CIATS-FEED SCOPE: Logger spec describes a
+  single logger_async_queue feeding a single
+  CIATS instance — predates v2_29 §9.7 per-
+  module CIATS framework. Surfaced as
+  Cluster C7 SYSTEMIC pattern (§7.2 below)
+  rather than cluster C6 because the lag is
+  architectural (single-CIATS vs per-module-
+  CIATS), not a stale parameter citation.
+
+6.7 DD-011 DERIVABLE-DECISION DISCIPLINE
+    (NSI §7.7).
+  Single-AA-side parent simplification (no
+  AA=08 Logger spec) enacted directly per
+  RR-SCOPE-005 — see §1.4. DD-011 ratification
+  question NOT surfaced.
+
+6.8 CROSS-PAIR DEPENDENCY SURFACING (NSI §7.8).
+  See §5.4. Logger is universal observer —
+  forward-declaration count is HIGH but most
+  are closed by prior upstream module pairs.
+  Outstanding forward-declarations: 6 items
+  to TB00200..TB00205 + registry-housekeeping
+  surface.
+
+============================================================
+7. SEPARATE FINDINGS
+============================================================
+
+7.1 CLUSTER C5 — 16-ITEM DIAGRAM-ENCODING GAP.
+    EXCEEDS 12-ITEM THRESHOLD — OBSERVATIONAL
+    FINDING FOR STEP 3 CLOSE-GATE.
+
+  C5-1  ar:AR-057 — UNEXPECTED_ORDER_AMENDED
+        CRITICAL alert rule.
+        Referenced in 0511006 §5.1 + 1011007
+        §6.1 + §6.3 as CRITICAL event code.
+        Architectural intent: any non-TothBot-
+        initiated order amendment on a TothBot-
+        owned order triggers CRITICAL alert
+        (Kraken-side or external interference
+        detection). NOT in any 0500000 root
+        governs list.
+        Promotion target: D1 R2 + D6 R4 root
+        governs ADD ar:AR-057.
+
+  C5-2  ar:AR-061 — EXEC_TRADE multi-field
+        schema.
+        Referenced in 0511006 §5.1 + 1011007
+        §6.1 as event row with order_id +
+        cum_qty + avg_price + last_qty +
+        last_price required fields.
+        Architectural intent: EXEC_TRADE event
+        carries all five fields for CIATS-side
+        fill-quality analysis + partial-fill
+        reconstruction. NOT in 0500000 root
+        governs.
+        Promotion target: D1 R2 + D5 R3 root
+        governs ADD ar:AR-061.
+
+  C5-3  ar:AR-063 — queue.Queue stdlib, NOT
+        asyncio.Queue.
+        Referenced in 0511006 §3.1 + 1011007
+        LG-QUEUE-001 + HR-LG-002.
+        Architectural intent: QueueListener
+        runs in non-asyncio thread; stdlib
+        queue.Queue is the only thread-safe
+        bounded queue compatible with this
+        thread model. NOT in 0500000 root
+        governs.
+        Promotion target: D1 R2 + D5 R3 root
+        governs ADD ar:AR-063.
+
+  C5-4  rule:HR-LG-004 — log_listener.stop()
+        clean-shutdown drain + join.
+        Referenced in 1011007 §3 Q3 + §4.3
+        LG-QUEUE-005 + 0511006 §3.4.
+        Architectural intent: deterministic
+        shutdown drains queue + joins background
+        thread; no log entries lost. Specific to
+        Logger-side shutdown protocol.
+        NOT in 0500000 root governs.
+        Promotion target: D1 R2 + D5 R3 root
+        governs ADD rule:HR-LG-004. Cross-pair
+        coverage in Startup_Sequence audit
+        (TB00205).
+
+  C5-5  rule:HR-LG-007 — ws_roundtrip_latency_ms
+        captured from WS v2 time_in / time_out
+        fields (A-3 EWMA Signal 3 source).
+        Referenced in 1011007 §3 Q3 + §6.1
+        PONG_RECEIVED + 0511006 §6.1.
+        Architectural intent: CIATS EWMA Monitor
+        Signal 3 requires Logger to capture WS
+        v2 nanosecond time_in + time_out fields
+        from PONG_RECEIVED events.
+        Cross-pair: WS Manager (TB00194) is the
+        event producer.
+        NOT in 0500000 root governs.
+        Promotion target: D1 R2 + D5 R3 root
+        governs ADD rule:HR-LG-007.
+
+  C5-6  rule:HR-LG-009 — Decimal-as-string
+        serialization, no float storage.
+        Referenced in 1011007 §3 Q3 + LG-FMT-003
+        + LG-FMT-004 + 0511006 §4.2.
+        Architectural intent: precision contract
+        for CIATS statistical computation. Float
+        storage would introduce floating-point
+        error in CIATS Mann-Whitney U / Half-
+        Kelly / EWMA computations.
+        NOT in 0500000 root governs.
+        Promotion target: D1 R2 + D5 R3 root
+        governs ADD rule:HR-LG-009.
+
+  C5-7  rule:HR-LG-010 — NDJSON format, machine-
+        readable.
+        Referenced in 1011007 §3 Q3 + LG-FMT-001
+        + LG-FILE-004 + 0511006 §4.3.
+        Architectural intent: format contract
+        between Logger and CIATS — CIATS reads
+        log files directly using one-JSON-per-
+        line iteration.
+        NOT in 0500000 root governs.
+        Promotion target: D1 R2 + D5 R3 root
+        governs ADD rule:HR-LG-010.
+
+  C5-8  rule:HR-LG-011 — Queue full ->
+        stderr + HIGH alert + never block.
+        Referenced in 1011007 §3 Q3 + §4.2
+        LG-QUEUE-003 + 0511006 §3.2 + §9.
+        Architectural intent: preserves
+        HR-LG-001 hot-path-never-blocks
+        contract under queue overflow
+        conditions. Drops the record but
+        surfaces the drop via stderr +
+        alert (operator triages queue sizing).
+        NOT in 0500000 root governs.
+        Promotion target: D1 R2 + D5 R3 +
+        D6 R4 root governs ADD rule:HR-LG-011.
+
+  C5-9  rule:HR-LG-012 — Stream 2 contract
+        (NEW dv1_1).
+        Referenced in 0511006 §9 HR-LG-012
+        + §3.3 STREAM 2 + 1011007 §11
+        LG-TREC-001..009.
+        Architectural intent: permanent trade
+        record file with multi-clause contract:
+        append-only, annual segmentation
+        (trades_<YYYY>.jsonl), 0o644 hard-pin
+        via os.open, fsync per write,
+        failure-path HIGH event emission.
+        NOT in 0500000 root governs.
+        Promotion target: D5 R3 + D6 R4 root
+        governs ADD rule:HR-LG-012.
+
+  C5-10 contract:Two_Stream_Record_Architecture
+        — Stream 1 + Stream 2 dual-sink dual-
+        retention contract (NEW dv1_1).
+        Referenced in 0511006 §3.3 +
+        1011007 §7 LG-TOB-003.
+        Architectural intent: dual-stream
+        disk architecture with distinct
+        retention contracts. Stream 1 = bounded
+        rotating retention (tothbot.log). Stream
+        2 = unbounded annual-segmented retention
+        (trades_<YYYY>.jsonl). Per-handler
+        failure-domain independence via
+        QueueListener handleError. Byte-
+        identical TRADE_CLOSE payload across
+        both streams.
+        NOT in 0500000 root governs (Stream 1 +
+        Stream 2 labels appear in D5 R3 visible
+        text but the dual-contract architecture
+        itself is not bound as a contract: token).
+        Promotion target: D5 R3 + D6 R4 root
+        governs ADD contract:Two_Stream_Record_
+        Architecture.
+
+  C5-11 evt:ALERT_SENT — positive-delivery
+        confirmation event (NEW dv1_4 / OI-022).
+        Referenced in 1011007 §6.9 + §8
+        LG-ALERT-004 + 0511006 §5.7.
+        Architectural intent: emit INFO event
+        after SMTP sendmail returns without
+        exception. Provides operator
+        observability of successful alert
+        delivery (closes TB00107 forensic gap
+        where bounces were visible externally
+        but no structured signal existed in
+        tothbot.log).
+        NOT in 0500000 root governs.
+        Promotion target: D5 R3 + D6 R4 root
+        governs ADD evt:ALERT_SENT.
+
+  C5-12 evt:ALERT_SMTP_FAILED — failure-surface
+        event (NEW dv1_4 / OI-022, ALERT-EXEMPT
+        per LG-ALERT-005).
+        Referenced in 1011007 §6.9 + §8
+        LG-ALERT-005 + 0511006 §5.7 + §7.
+        Architectural intent: emit HIGH event
+        after SMTP raises exception. Carries
+        exception string. Exempt from alert
+        routing (anti-recursion) to prevent
+        persistent-SMTP-outage failure-mode
+        amplification.
+        NOT in 0500000 root governs.
+        Promotion target: D5 R3 + D6 R4 root
+        governs ADD evt:ALERT_SMTP_FAILED.
+
+  C5-13 evt:TRADE_RECORD_WRITE_FAILED — Stream
+        2 failure observability event (NEW
+        dv1_4 / OI-023).
+        Referenced in 1011007 §6.9 + §11
+        LG-TREC-006 + 0511006 §5.7 + §7.
+        Architectural intent: emit HIGH event
+        when Stream 2 write fails for any
+        reason (disk full, permission error,
+        etc.). Triggers operator alert per
+        LG-ALERT-002. Stream 1 fallback
+        unaffected via per-handler handleError
+        isolation.
+        NOT in 0500000 root governs.
+        Promotion target: D5 R3 + D6 R4 root
+        governs ADD evt:TRADE_RECORD_WRITE_FAILED.
+
+  C5-14 evt:LOG_QUEUE_FULL — queue-full surface
+        event (HIGH, stderr-only).
+        Referenced in 1011007 §6.9 + §4.2
+        LG-QUEUE-003 + §8 LG-ALERT-002 +
+        0511006 §5.7.
+        Architectural intent: signal that the
+        Logger queue has hit maxsize and is
+        dropping records. Emitted to stderr
+        only (queue is full — re-enqueue would
+        fail). Triggers _alert_operator_direct
+        bypass with emit_structured=False.
+        NOT in 0500000 root governs.
+        Promotion target: D1 R2 + D5 R3 +
+        D6 R4 root governs ADD
+        evt:LOG_QUEUE_FULL.
+
+  C5-15 rule:LG-ALERT-004 SMTP retry contract
+        (NEW dv1_5 / OI-029).
+        Referenced in 1011007 §8 LG-ALERT-004
+        + 0511006 §7 (implicit).
+        Architectural intent: bounded-retry
+        SMTP loop with timeout=20s +
+        max_attempts=2 + backoff=1s.
+        Worst-case wall time 41s. Off the
+        hot path (QueueListener background
+        thread). Single event surface
+        preserved on all-attempts-fail
+        (anti-recursion semantics intact).
+        NOT in 0500000 root governs.
+        Promotion target: D5 R3 root governs
+        ADD rule:LG-ALERT-004.
+
+  C5-16 rule:LG-ALERT-005 anti-recursion guard
+        (NEW dv1_4 / OI-022).
+        Referenced in 1011007 §8 LG-ALERT-005
+        + 0511006 §7.
+        Architectural intent: TothBotAlertHandler
+        .emit MUST skip records with
+        event=="ALERT_SMTP_FAILED" to prevent
+        persistent-SMTP-outage from
+        self-triggering recursive alert
+        attempts. Stderr remains the ultimate
+        observability surface for SMTP failure.
+        NOT in 0500000 root governs.
+        Promotion target: D5 R3 root governs
+        ADD rule:LG-ALERT-005.
+
+  TOTAL: 16 items. EXCEEDS NSI §7.3 12-item
+  threshold by 4 items. SURFACED AS
+  OBSERVATIONAL FINDING FOR STEP 3 CLOSE-GATE.
+  Logger is the highest-volume cluster C5
+  module pair in Step 3 S-1 sequence to date:
+    TB00194 Signal_Pipeline:    12 items
+    TB00195 SP-related:          9 items
+    TB00196 Execution_Engine:    7 items
+    TB00197 Exit_Controller:     8 items (6+2)
+    TB00198 Position_Mirror:     8 items
+    TB00199 Logger:             16 items
+  Volume rationale: Logger is the universal
+  observer with high coupling to every other
+  module. Logger-specific architectural
+  commitments (queue-full behavior, NDJSON
+  format, Decimal precision, two-stream
+  architecture, self-observability event suite,
+  SMTP retry contract, anti-recursion guard)
+  are extensive and predominantly Logger-side.
+
+7.2 CLUSTER C7 — SYSTEMIC SPEC-CURRENCY-LAG
+    PATTERN (THIRD CONSECUTIVE FINDING —
+    SYSTEMIC).
+
+  0511006 dv1_1 (dated 04-21-2026) and 1011007
+  dv1_5 (dated 04-23-2026) both PRE-DATE TB00000
+  v2_29 §9.7 per-module CIATS framework
+  (effective 2026-05-10 / TB00179).
+
+  Pre-v2_29 single-CIATS architecture:
+    - Single logger_async_queue feeding a single
+      CIATS instance.
+    - CIATS Statistical Engine, PDCA Engine,
+      Proposal Engine, Regime Library all
+      operate on a single shared pool of trade
+      outcomes.
+    - Half-Kelly computed once across all
+      modules at 200-trade threshold.
+
+  v2_29 §9.6 per-module CIATS architecture:
+    - Each trading module (Long_Module,
+      Short_Module, future modules) has its
+      OWN CIATS instance with its own
+      statistical pool, own 200-trade
+      inference threshold, own 600-trade
+      per-regime threshold, own parameter
+      proposals.
+    - Cross-module data contamination
+      prohibited.
+
+  Logger-side implications:
+    - TRADE_CLOSE records need module_id
+      tagging (Long_Module / Short_Module /
+      etc.) for per-module CIATS routing.
+    - OR: per-module logger_async_queue
+      instances (parallel data planes).
+    - OR: post-Logger routing layer in CIATS
+      consumes module field from each
+      TRADE_CLOSE record.
+    Current Logger spec (0511006 dv1_1 +
+    1011007 dv1_5) describes Option 1 (single
+    queue + module field on record) implicitly
+    via the "component" field
+    (LG-FMT-002), but no explicit per-module
+    CIATS routing protocol is defined.
+
+  CONSECUTIVE LAG FINDINGS:
+    1. TB00197 §7.3 — 0811003 Exit_Controller
+       AA=08 spec currency lag (single
+       position_mirror dict vs long/short).
+    2. TB00198 §5.4 — 0511005 dv1_1 + 1011006
+       dv1_1 Position_Mirror currency lag
+       (single position_mirror dict vs per-
+       module instantiation).
+    3. TB00199 (this audit) — 0511006 dv1_1 +
+       1011007 dv1_5 Logger pair currency lag
+       (single CIATS feed vs per-module CIATS
+       framework).
+
+  Three consecutive findings = SYSTEMIC PATTERN.
+  Per NSI §3.4 + §6.3 carry-forward: Step 3
+  close-gate should include cross-corpus
+  per-module-instantiation sweep before Step 4
+  begins.
+
+  RECOMMENDATION (Step 3 close-gate review):
+  Defer a cross-corpus AA=05 + AA=10 currency-
+  lag amendment pass after S-1 Logger close,
+  OR continue S-1 with currency lag preserved
+  and queue a Step 3 sub-step S-2b for
+  cross-corpus per-module-instantiation
+  amendments.
+
+  Recommendation does NOT halt TB00199.
+  Surfaced for Bill awareness + Step 3
+  close-gate disposition.
+
+7.3 CLUSTER C6 — CITATION DRIFT.
+
+  Logger pair citation drift findings (LOW
+  severity, all minor):
+
+  CD-1: 1011007 §12 dv1_4 revision history
+        references "0511006 dv1_0 -> dv1_1
+        (two-stream record architecture
+        captured at architectural level)" —
+        VERIFIED current. 0511006 IS dv1_1.
+
+  CD-2: 1011007 §11 LG-TREC-008 "Operator
+        Observer Dashboard scope" — FORWARD-
+        DECLARED for future session. Not
+        citation drift; deferral statement.
+
+  CD-3: 0511006 §8.3 references "1010000
+        dv1_11 §4.10 OI-024 parking lot" —
+        VERIFY current. 1010000 current version
+        is dv1_17 (per /mnt/project/ sweep).
+        Citation drift on version number; §4.10
+        section reference may or may not still
+        apply (not audited this session — minor,
+        outside Logger pair scope).
+
+  CD-4: 0511006 §12 Related Documents lists
+        "1011007 Logger_Coding_Spec dv1_4
+        (AA=10 child)" — citation drift on
+        version. Current 1011007 is dv1_5.
+        Minor — does not affect cluster C5
+        analysis.
+
+  No cluster C6 items rise to AMENDMENT-
+  prerequisite severity. PROSE-UPDATE-AH..AT
+  package will refresh stale version
+  references as a side-effect.
+
+7.4 TRADE_CLOSE SCHEMA FIELD-COUNT DISCREPANCY
+    — OBSERVATIONAL FINDING.
+
+  D5 R3 contract:CIATS_Trade_Outcome_Bus
+  schema_fields enumeration (12 fields):
+    symbol, entry_fill_price, exit_price,
+    hold_candle_count, MAE_reached,
+    fees_total, exit_reason, asset_regime,
+    market_regime, signal_params_at_entry,
+    actual_RR, net_PL_USD.
+
+  1011007 §7 Required TRADE_CLOSE fields list
+  (~22 fields including universals):
+    ts, event, level, component (universal
+    LG-FMT-002 fields applied to every record),
+    symbol, entry_fill_price, exit_price,
+    entry_timestamp_utc, exit_timestamp_utc,
+    hold_candle_count, MAE_pct_reached,
+    fees_entry_usd, fees_exit_usd,
+    fees_total_usd, exit_reason, asset_regime,
+    vol_regime, market_regime,
+    signal_params (sub-fields),
+    actual_RR, net_PL_USD, net_gain_usd,
+    net_loss_usd.
+
+  Diagram-side fields NOT in 1011007 §7:
+    (none — D5 R3 12-field list is a subset
+    of 1011007 §7 list)
+
+  1011007 §7 fields NOT in D5 R3 12-field
+  schema:
+    - entry_timestamp_utc (vs diagram-
+      canonical schema_fields)
+    - exit_timestamp_utc
+    - fees_entry_usd (vs fees_total)
+    - fees_exit_usd (vs fees_total)
+    - fees_total_usd (vs fees_total —
+      different naming)
+    - vol_regime (vs asset_regime +
+      market_regime only)
+    - net_gain_usd
+    - net_loss_usd
+    Plus the universals ts/event/level/component
+    which are LG-FMT-002 universal fields.
+
+  CLASSIFICATION: this is partial-coverage
+  rather than complete-absence. Per DD-002
+  diagram-governs authority hierarchy, two
+  interpretations:
+    (1) Diagram is canonical 12-field schema
+        and spec elements not in diagram are
+        OPTIONAL (relax HR-LG-005 "all fields
+        mandatory" claim).
+    (2) Diagram is INCOMPLETE 12-field
+        enumeration and spec elements are
+        also mandatory (extend diagram-
+        canonical schema).
+
+  RECOMMENDATION: Bill disposition required at
+  Step 3 close-gate. If interpretation (2) is
+  correct, AMENDMENT-11 scope expands to
+  include D5 R3 schema_fields extension to
+  ~19 fields (12 current + 7 additions:
+  entry_timestamp_utc, exit_timestamp_utc,
+  fees_entry_usd, fees_exit_usd, vol_regime,
+  net_gain_usd, net_loss_usd; plus universals
+  per LG-FMT-002).
+
+  Surfaced as observational finding for Step 3
+  close-gate. Does NOT halt TB00199.
+
+7.5 HR-CI-001 "SOLE CIATS DATA SOURCE" — PARTIAL
+    DIAGRAM ENCODING OBSERVATION.
+
+  HR-CI-001 ("Logger is the sole CIATS data
+  source") is referenced as a constraint in
+  D5 R3 (line 3376 in produces clause:
+  "channel:logger_async_queue (the CIATS-
+  feeding log stream, sole CIATS data source
+  per HR-CI-001)") and visually depicted in
+  D6 R4 tb_logger group ("SOLE CIATS DATA
+  SOURCE" italic decoration at line 4021).
+  However, rule:HR-CI-001 is NOT itself in
+  any 0500000 root <desc> governs list — it
+  appears in PRODUCES clauses and visible
+  decorations but not as a registered
+  governs-list token.
+
+  This is a "visible-but-not-fully-registered"
+  pattern similar to TB00198 §5.3 HR-PM-011
+  finding. Lower-severity than C5 (the
+  architectural commitment IS depicted; only
+  the governs-list registration is partial).
+
+  Surfaced as observational finding. CIATS
+  pair audit (1011010 CIATS_Coding_Spec) is
+  KEPT per DEC-009(b) (no AA=10 retirement
+  for 1011010) so this could be addressed
+  during CIATS pair audit at Step 3
+  completion review. NOT in TB00199
+  AMENDMENT-11 scope.
+
+============================================================
+8. EXIT CRITERIA STATUS
+============================================================
+
+E-S1LG-01  GAP REGISTER AUTHORED.
+           COMPLETE. TB00199_S1LG_Gap_Register_
+           Logger_v1_0.txt at /home/claude/ +
+           delivered via present_files in
+           single chat turn.
+
+E-S1LG-02  ALL 1011007 ELEMENTS CLASSIFIED.
+           COMPLETE. ~75 elements classified
+           across §3.1-§3.67. Roll-up §4:
+           (a)≈46 / (b)≈13 / (c) cluster C5=16 /
+           (d)=0.
+
+E-S1LG-03  CLUSTER C5 ENUMERATED.
+           COMPLETE. 16 items enumerated in
+           §7.1: AR-057 + AR-061 + AR-063 +
+           HR-LG-004 + HR-LG-007 + HR-LG-009 +
+           HR-LG-010 + HR-LG-011 + HR-LG-012 +
+           contract:Two_Stream_Record_Architecture
+           + evt:ALERT_SENT +
+           evt:ALERT_SMTP_FAILED +
+           evt:TRADE_RECORD_WRITE_FAILED +
+           evt:LOG_QUEUE_FULL +
+           rule:LG-ALERT-004 +
+           rule:LG-ALERT-005.
+
+E-S1LG-04  AMENDMENT-11 SCOPE DEFINED.
+           COMPLETE. §5.1 enumerates D1 R2 +
+           D5 R3 + D6 R4 root governs additions.
+           NO SVG BYTE CHANGE — root <desc>
+           governs-list additions only.
+
+E-S1LG-05  PROSE-UPDATE-AH..AT QUEUE EXTENDED.
+           COMPLETE. §5.2 enumerates 13 PROSE-
+           UPDATE-AH through AT updates to
+           0511006 dv1_1. Cumulative S-3
+           queue: 46 prose updates (33 prior +
+           13 NEW).
+
+E-S1LG-06  CROSS-PAIR DEPENDENCIES SURFACED.
+           COMPLETE. §5.4 enumerates forward-
+           declarations to TB00200..TB00205
+           + registry-amendment surface for
+           0311001 v1_12 §15.12.3 / §15.12.7 /
+           §15.12.9.
+
+E-S1LG-07  BILL APPROVAL GATE STATUS.
+           PENDING. AMENDMENT-11 +
+           PROSE-UPDATE-AH..AT queued for
+           Step 3 close-gate package.
+           Step 3 close-gate package now
+           cumulative: AMENDMENT-1 through
+           AMENDMENT-11 (with AMENDMENT-8
+           CANDIDATE still pending S-2 author
+           decision); PROSE-UPDATE-A through AT
+           (46 items cumulative); 1011002/3/4/5/
+           6/7 retirements gated.
+
+E-S1LG-08  SESSION LOG AUTHORED.
+           COMPLETE THIS TURN.
+           TB00199_TothBot_V2_Session_Log_
+           2026-05-11_v1_0.txt.
+
+E-S1LG-09  NSI AUTHORED.
+           COMPLETE THIS TURN.
+           TB00200_Next_Session_Instructions_
+           v1_0.txt directs TB00200 Long_Module
+           pair audit (1011008 dv1_0 + 0811001
+           Long_Module_Specification — verify
+           existence via bash sweep at TB00200
+           cold-load).
+
+============================================================
+9. REVISION HISTORY
+============================================================
+
+  v1_0  2026-05-11  Initial. Step 3 sub-step
+                    S-1 Logger module pair audit
+                    (1011007 dv1_5 + 0511006
+                    dv1_1 vs 0500000 dv1_46).
+                    ~75 elements classified;
+                    16-item cluster C5
+                    enumerated EXCEEDING the
+                    12-item NSI §7.3 threshold
+                    (AR-057 + AR-061 + AR-063 +
+                    HR-LG-004 + HR-LG-007 +
+                    HR-LG-009 + HR-LG-010 +
+                    HR-LG-011 + HR-LG-012 +
+                    contract:Two_Stream_Record_
+                    Architecture +
+                    evt:ALERT_SENT +
+                    evt:ALERT_SMTP_FAILED +
+                    evt:TRADE_RECORD_WRITE_FAILED
+                    + evt:LOG_QUEUE_FULL +
+                    rule:LG-ALERT-004 +
+                    rule:LG-ALERT-005).
+                    AMENDMENT-11 NEW (D1 R2 +
+                    D5 R3 + D6 R4 root governs
+                    additions; NO SVG byte
+                    change — root <desc>
+                    additions only) +
+                    PROSE-UPDATE-AH through AT
+                    (13 items to 0511006 dv1_1
+                    prose) queued for Bill
+                    approval gate.
+                    Cumulative Step 3 cross-
+                    pair state: 10 AMENDMENTs
+                    confirmed + AMENDMENT-11
+                    NEW + 1 candidate
+                    (AMENDMENT-8 mod:Short_
+                    Module D2 R-increment); 46
+                    prose updates (33 prior +
+                    13 new); 1011002/3/4/5/6/7
+                    retirements gated.
+                    CLUSTER C7 SYSTEMIC PATTERN
+                    confirmed: THIRD consecutive
+                    AA=05 + AA=10 currency lag
+                    finding (TB00197 0811003 +
+                    TB00198 0511005/1011006 +
+                    TB00199 0511006/1011007).
+                    Cluster C7 escalates to
+                    SYSTEMIC status for Step 3
+                    close-gate review per NSI
+                    §3.4 + §6.3 carry-forward.
+                    CLUSTER C5 VOLUME-EXCEEDS-
+                    THRESHOLD finding: 16
+                    items > 12-item threshold
+                    per NSI §7.3 — Logger is
+                    universal observer with
+                    high architectural-
+                    commitment density.
+                    TRADE_CLOSE SCHEMA FIELD-
+                    COUNT DISCREPANCY: D5 R3
+                    12-field schema vs 1011007
+                    §7 ~22-field list —
+                    observational finding for
+                    Step 3 close-gate
+                    disposition.
+                    HR-CI-001 PARTIAL DIAGRAM
+                    ENCODING observation —
+                    visible-but-not-fully-
+                    registered pattern similar
+                    to TB00198 HR-PM-011;
+                    deferred to CIATS pair
+                    audit at Step 3 completion
+                    review.
+                    Single-AA-side parent
+                    simplification (no AA=08
+                    Logger spec) enacted
+                    directly per RR-SCOPE-005
+                    — DD-011 ratification
+                    question NOT surfaced.
+                    Cross-pair §5.4 forward-
+                    declarations: 6 items to
+                    TB00200..TB00205. WS Manager
+                    cross-pair verifications
+                    (AR-064 + HR-LG-007 time_in
+                    /time_out + HR-LG-008
+                    connection_id) COMPLETE.
+                    Six consecutive post-v2_27
+                    clean sessions: TB00194 +
+                    195 + 196 + 197 + 198 +
+                    199 (this audit). Zero
+                    DD-011 / FM / RR-SCOPE
+                    recurrences this session.
+                    Single-turn DR-006
+                    delivery enforced per OCS
+                    directive.
+
+============================================================
+END OF TB00199 S1LG GAP REGISTER v1_0
+============================================================

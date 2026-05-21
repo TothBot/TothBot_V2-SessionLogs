@@ -1,0 +1,633 @@
+DocDCN:     TB00145
+DocTitle:   TothBot_V2_Session_Log_2026-05-03
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TBXXXXX_Session_Logs\TB00145_TothBot_V2_Session_Log_2026-05-03_v1_0.txt
+DocDate:    05-03-2026
+DocTime:    22:00:00 UTC
+
+============================================================
+TOTHBOT V2 SESSION LOG - TB00145 (CLAUDE CHAT)
+TRUE PAPER-LIVE PARITY (D-06) RESTORATION — SCOPE X
+============================================================
+
+PAPER TRADING ONLY. NO REAL MONEY.
+PAPER TRADING MUST MIMIC LIVE TRADING EXACTLY.
+NO PATCHES.
+UNIVERSE = TOKEN/USD + TOKEN/USDC + TOKEN/USDT (D-03).
+
+============================================================
+1. SESSION SUMMARY
+============================================================
+
+TB00145 was opened by Bill with TB00144 NSI §1 STREAM 5
+(deploy ws_manager.py dv1_25 to VPS) as primary scope.
+At session-open Bill issued the standing emphasis (5
+exclamations, repeated twice):
+
+  "PAPER TRADING MUST MIMIC ALL ASPECTS OF LIVE TRADING
+   EXACTLY!!!!! LET ME REPEAT, PAPER TRADING MUST MIMIC
+   ALL ASPECTS OF LIVE TRADING EXACTLY!!!!!"
+
+Before issuing the first deploy command, Claude surfaced
+an internal contradiction in the spec set governing
+paper trading:
+
+  HR-WM-022 (0511001 dv1_4):  "In paper mode, private WS
+                              MUST NEVER be connected."
+  HR-WM-026 (0511001 dv1_4):  "Steps 9-11 are skipped in
+                              paper mode."
+  PT-MODE-003 (0211005 dv1_1): "TothBot V2 connects to
+                              the private Kraken WS in
+                              paper trading mode."
+
+The deployed code at fb5de32 (1011002 dv1_25)
+implemented HR-WM-022 (private WS NOT connected in
+paper mode). The narrow-parity reading honored the
+spec narrative ("execute IDENTICALLY") through Steps
+2-8 only and called Steps 9-11 paper-skipped — even
+though Steps 9-11 are precisely the private-WS data
+path that paper trading exists to validate.
+
+Bill directed: "There is only one correct action.
+Halt STREAM 5, fix the design (single code path with
+dispatch-layer gate), and re-validate."
+
+STREAM 5 was halted. dv1_25 (committed fb5de32) does
+NOT match the corrected design. Rewrite to dv1_26
+contract is required before any deploy.
+
+The session pivoted to Scope X spec authoring under
+Bill's standing override. The four primary specs
+governing paper-mode behavior were rewritten in one
+chat-scope batch:
+
+  STEP 1  Cold-load mandatory reading; STEP A
+          pre-flight (DC-PREFLIGHT-001/002/003).
+  STEP 2  Surface spec contradiction; halt STREAM 5;
+          codify design principle (single execution
+          code path with dispatch-layer gate;
+          four-point divergence set).
+  STEP 3  Author 0511001 dv1_4 -> dv1_5
+          (architectural spec). Retire HR-WM-022;
+          rewrite HR-WM-021/023/026; add HR-WM-032/
+          033/034/035; new ADR §18 TRUE PAPER-LIVE
+          PARITY.
+  STEP 4  Author 1011002 dv1_25 -> dv1_26
+          (WS Manager coding spec). Mirror dv1_5
+          ADR §18; retire WM-RECONNECT-019; add
+          §6.10 dispatch_market_sell, §6.11
+          _simulate_entry_fill, §6.12
+          _maybe_paper_fill, §6.13 Paper P&L
+          Application; add HR-WM-033/034/035/036.
+  STEP 5  Author 0211005 dv1_1 -> dv1_2 (paper-
+          trading operations procedure). Resolve
+          three internal contradictions (DATA-key
+          claim; real-balance baseline; Steps 2-8
+          narrow parity). Rewrite PT-MODE-003/
+          004/005; add PT-MODE-006/007; rewrite
+          HR-PT-008.
+  STEP 6  Author 1011014 dv1_7 -> dv1_8 (startup
+          sequence coding spec). Add §6 PARITY
+          PREFIX; rewrite Step 5 (private WS
+          connect both modes), Step 6 (paper logs
+          snap_orders), Step 8 (private-WS-absence
+          language retired).
+  STEP 7  Author this session log + TB00145 NSI
+          v1_0 for hand-off to TB00146 (next
+          Claude Code session: ws_manager.py
+          dv1_26 clean-slate rewrite + tests).
+
+OI-072 (paper-live parity design defect) was opened
+and partially closed in this session: spec layer
+CLOSED across all four touched specs; code layer
+PENDING ws_manager.py dv1_26 rewrite (TB00146);
+test layer PENDING unit + integration suite update;
+deploy layer PENDING dv1_26 deploy + paper
+observation.
+
+DEPLOY IS DEFERRED. STREAM 5 is HALTED until dv1_26
+is implemented in code, tests pass, and a fresh deploy
+package is prepared. Earliest deploy session is
+TB00147 (post-TB00146 code rewrite).
+
+One Claude error logged: ERROR-TB00145-CHAT-01
+RR-SCOPE-005 — see §7.
+
+============================================================
+2. COLD-LOAD + STEP A PRE-FLIGHT
+============================================================
+
+Mandatory reading executed at session-open per
+TB00144 NSI §3:
+
+  TB00000  Project Instructions for Claude   v2_17
+  TB00144  Session Log 2026-05-03           v1_1
+  TB00144  Next Session Instructions         v1_0
+  0311001  Namespace Specification          v1_3
+  0311002  Document Creation Workflow       v1_8
+  0500000  System Architecture Overview     dv1_21
+  0511001  WS Manager Specification         dv1_4
+  1011002  WS Manager Coding Spec           dv1_25
+  0211005  Paper Trading Operations Procedure dv1_1
+  1011014  Startup Sequence Coding Spec     dv1_7
+
+All versions match project knowledge folder. STEP A
+DC-PREFLIGHT-001/002/003 PASS (no duplicates, no
+version triplet defects, no governance gaps).
+
+GitHub state confirmed at session-open:
+  TothBot_V2-Docs HEAD = a4d5924 (TB00143 commit)
+  TothBot_V2-Code HEAD = fb5de32 (TB00144 STREAM 4
+                                  ws_manager.py dv1_25
+                                  clean-slate +
+                                  19/19 tests)
+
+Working tree clean on both repos.
+
+VPS state:
+  Continues running working-tree-drift dv1_23 baseline
+  per TB00125 deploy state. Not touched this session.
+
+============================================================
+3. DESIGN PRINCIPLE CODIFIED
+============================================================
+
+TothBot V2 paper mode and live mode share ONE execution
+code path. The minimum divergence set between modes is
+restricted to four specific points:
+
+  (1) Order-dispatch boundary (six methods in WSManager).
+      Paper simulates locally via _simulate_entry_fill;
+      live transmits via _send_private. Methods:
+      add_order, batch_add, cancel_order, amend_order,
+      batch_cancel, dispatch_market_sell.
+
+  (2) Step 11 capital-ledger initialization source.
+      Live initializes spot_usd_balance and
+      portfolio_baseline_USD from snap_orders
+      spot_usd_balance. Paper initializes both from
+      paper_starting_balance ($1,000 per D-05).
+
+  (3) Step 11 + reconnect snap_orders Mirror handling.
+      Live reconciles Position Mirror against
+      snap_orders. Paper logs snap_orders for parity-
+      of-data-path verification but does NOT populate
+      paper Mirror (paper Mirror is owned by the local
+      simulated-fill path).
+
+  (4) Capital-ledger update source.
+      Live updates spot_usd_balance from balances
+      events. Paper updates from simulated-fill P&L
+      applied locally per fee schedule.
+
+ALL OTHER SUBSYSTEMS BYTE-IDENTICAL between modes:
+
+  Public WS shards (connect, subscribe, receive).
+  Private WS connection.
+  WS auth token acquisition (TRADE key, both modes).
+  All subscriptions: instrument, status, ohlc, ticker,
+    executions, balances.
+  Receive loops, JSON ping (every connection),
+    zombie monitor (every connection), sequence-gap
+    detection (executions and balances), ratecounter
+    monitoring.
+  snap_orders / snap_trades reception (both modes;
+    paper logs, live reconciles).
+  Indicator computation, pipeline gates (all 8),
+    regime engine, exit triggers (Layers 1a/1b/2/3),
+    alerts, drawdown computation logic, reconnect
+    (per-shard and private), CIATS data flows.
+
+TRADE key role in paper mode: TRADE key is REQUIRED
+in both modes for private WS authentication
+(GetWebSocketsToken). TRADE key has both order-
+dispatch capability and read capability. In paper
+mode, the order-dispatch capability is gated at the
+§13.2 dispatch boundary (six methods); the read
+capability is exercised in paper for parity-of-
+data-path verification.
+
+DATA key role: public WS subscriptions and REST
+market data calls (GetOHLCData, REST Ticker).
+Used in both modes.
+
+============================================================
+4. ROOT-CAUSE ANALYSIS — OI-072 PAPER-LIVE PARITY
+   DESIGN DEFECT
+============================================================
+
+The defect is a multi-session governance failure
+inherited across at least seven spec versions:
+
+  0511001 dv1_1 (introduced HR-WM-022 narrow parity)
+  0511001 dv1_2 (HR-WM-022 preserved; HR-WM-026 narrow
+                 parity codified)
+  0511001 dv1_3 (HR-WM-022 + HR-WM-026 preserved)
+  0511001 dv1_4 (HR-WM-022 + HR-WM-026 preserved)
+
+  1011002 dv1_15 onward (inherited HR-WM-022 / HR-WM-026
+                         language; WM-RECONNECT-019
+                         added in dv1_21 codifying
+                         paper-mode skip of all private-
+                         side reconnect steps)
+
+  0211005 dv1_1 (PT-MODE-003 had CORRECT plain-language
+                 reading but contradicted HR-WM-022;
+                 contradiction was never escalated;
+                 PT-MODE-004 introduced its own
+                 contradiction with 0511001 baseline-
+                 source semantics; PT-MODE-005
+                 codified the narrow Steps-2-8-only
+                 parity)
+
+  1011014 dv1_7 (Step 8 "Private WS absence does not
+                 affect REST warm-up" reinforced the
+                 incorrect paper-mode-no-private-WS
+                 reading)
+
+The narrow-parity reading conflated "no order
+dispatch" with "no private WS connection." These
+are different things. Paper trading exists to
+validate the entire system before real capital is
+at risk. Validation of public WS only is partial
+validation; the private WS data path (token, connect,
+executions/balances subscribe, snap_orders, sequence-
+gap detection, ratecounter, private ping, private
+zombie, private reconnect) is precisely what paper
+trading must validate. Skipping it defeats the
+purpose.
+
+Bill's plain-language EXACTLY instruction
+(consistent across multiple session-open statements)
+was honored in spec narrative but violated by the
+hard-rule encoding. Multi-session governance
+failure.
+
+The defect surfaced when Claude noticed during
+STREAM 5 deploy preparation that the deployed code
+behavior contradicted Bill's standing emphasis
+"paper trading must mimic live trading EXACTLY."
+The contradiction was raised before any deploy
+command issued.
+
+Resolution at spec layer (this session):
+  0511001 dv1_5: ADR §18 codifies single execution
+                 code path with four-point divergence;
+                 retires HR-WM-022; rewrites HR-WM-026;
+                 adds HR-WM-033/034/035.
+  1011002 dv1_26: mirrors ADR §18 in coding contract;
+                  retires WM-RECONNECT-019; adds
+                  HR-WM-033/034/035/036; specifies
+                  dispatch-boundary gate code pattern;
+                  adds §6.10-6.13 paper helper methods.
+  0211005 dv1_2: rewrites PT-MODE-003/004/005;
+                 adds PT-MODE-006/007; rewrites
+                 HR-PT-008. Resolves three internal
+                 contradictions.
+  1011014 dv1_8: §6 PARITY PREFIX; Step 5/6/8
+                 rewrites; §11 cross-references
+                 updated.
+
+Resolution at code / test / deploy layers: PENDING
+TB00146 / TB00147.
+
+============================================================
+5. WORK PERFORMED
+============================================================
+
+5.1 Spec authoring (Scope X — chat scope).
+
+Four primary specs amended in one session batch:
+
+  0511001  WS_Manager_Specification             dv1_4 -> dv1_5
+           Lines 2063 -> 3069 (+1006 lines).
+           File MD5: d72e25ed4d8eeb7ed90d75560d0cee84
+           Commit: abaa430 (TothBot_V2-Docs).
+
+  1011002  WS_Manager_Coding_Spec               dv1_25 -> dv1_26
+           Lines 4153 -> 4889 (+736 lines).
+           File MD5: 95e0da59a87d1b4b136c5f0044a6aee6
+           Commit: da64c9b.
+
+  0211005  Paper_Trading_Operations_Procedure   dv1_1 -> dv1_2
+           Lines 880 -> 1399 (+519 lines).
+           File MD5: 2a3212bd41fbe5a836610ee70511a9a2
+           Commit: 45144b6.
+
+  1011014  Startup_Sequence_Coding_Spec         dv1_7 -> dv1_8
+           Lines 875 -> 1180 (+305 lines).
+           File MD5: b6066a7de2c6d850034dfbc032b2e2ca
+           Commit: 8426fe1.
+
+All four committed to TothBot_V2-Docs master and
+pushed to GitHub. dv1_(N-1) versions superseded
+via git rename detection in same commit
+(similarity: 56% / 83% / 51% / 71% — substantial
+content rewrites).
+
+5.2 Specs reviewed but NOT amended this session.
+
+  1011005  Exit_Controller_Coding_Spec          dv1_2
+           Reviewed for paper_mode branch defects
+           against the four §13.1 divergence points.
+           No defects found requiring amendment.
+           Verification deferred to TB00146 STREAM A
+           (full audit during code rewrite).
+
+  1011010  CIATS_Coding_Spec                    dv1_6
+           Reviewed for paper_trade flag tagging
+           consistency. No defects requiring
+           amendment in this session. Verification
+           deferred to TB00146.
+
+  0500000  System_Architecture_Overview         dv1_21
+           Reviewed for arch-level paper/live
+           divergence statements. No defects
+           requiring amendment in this session.
+           Verification deferred to TB00146.
+
+  1021001  Unit_Test_Specification              dv1_0
+           HR-WM-036 (1011002 dv1_26) requires test
+           coverage update. Test spec amendment
+           deferred to TB00146 alongside test
+           authoring.
+
+  1021002  Integration_Test_Specification       dv1_0
+           Same: amendment deferred to TB00146.
+
+5.3 STREAM 5 status.
+
+HALTED. ws_manager.py dv1_25 (committed fb5de32 on
+TothBot_V2-Code master) does NOT match the corrected
+1011002 dv1_26 contract. Specifically:
+
+  - dv1_25 implements HR-WM-022 (private WS NOT
+    connected in paper mode). dv1_26 retires
+    HR-WM-022; private WS connects in both modes.
+  - dv1_25 implements WM-RECONNECT-019 (paper mode
+    skips all private-side reconnect steps).
+    dv1_26 retires WM-RECONNECT-019; all 10
+    reconnect steps execute in both modes.
+  - dv1_25 lacks _simulate_entry_fill /
+    _maybe_paper_fill / _apply_paper_pnl_*
+    methods specified in dv1_26 §6.11/6.12/6.13.
+  - dv1_25 lacks PositionRecord.entry_cost_usd
+    field specified in dv1_26 §6.13.
+  - dv1_25 lacks SNAP_ORDERS_RECEIVED_PAPER /
+    BALANCES_EVENT_PAPER_LOGGED logging events
+    specified in dv1_26.
+
+Code rewrite is mandatory before any deploy. Cannot
+be resolved by patch — too many semantic changes.
+NO PATCHES (D-07) applies.
+
+VPS continues running working-tree-drift dv1_23
+baseline. Not touched this session.
+
+5.4 Deliverables NOT produced this session.
+
+The following were within Scope X consideration but
+were NOT produced this session due to scope-narrowing
+to the four primary specs:
+
+  - 1011005 dv1_3 amendment: deferred to TB00146
+    audit pass.
+  - 1011010 dv1_7 amendment: deferred to TB00146.
+  - 0500000 dv1_22 amendment: deferred to TB00146.
+  - 1021001 dv1_1 + 1021002 dv1_1 test spec
+    amendments: deferred to TB00146 (alongside test
+    authoring for ws_manager.py dv1_26).
+
+Rationale: the four primary specs are the ones
+that GOVERN paper-mode behavior at the architectural,
+coding-contract, operations, and startup layers.
+The deferred specs are downstream consumers /
+verifiers of those four. Amending the primary
+specs first establishes the canonical reference;
+the downstream amendments can then be cleanly
+authored against the canonical reference in
+TB00146.
+
+============================================================
+6. BILL OVERRIDES THIS SESSION
+============================================================
+
+Bill's standing document-control override (originally
+established TB00115 v2_10 -> v2_11 04-22-2026 and
+continued for every architectural increment since)
+applies to all four primary spec increments this
+session:
+
+  0511001  dv1_4  -> dv1_5   (direct increment, no rv)
+  1011002  dv1_25 -> dv1_26  (direct increment, no rv)
+  0211005  dv1_1  -> dv1_2   (direct increment, no rv)
+  1011014  dv1_7  -> dv1_8   (direct increment, no rv)
+
+Bill verbal override at session-open: "There is only
+one correct action. Halt STREAM 5, fix the design
+(single code path with dispatch-layer gate), and
+re-validate."
+
+This was the authorizing instruction for Scope X
+spec authoring.
+
+============================================================
+7. CLAUDE ERRORS THIS SESSION
+============================================================
+
+ERROR-TB00145-CHAT-01  RR-SCOPE-005 violation
+                       (cumulative count: 5 -> 6;
+                       OI-069-CAND advances).
+
+  Defect: After FP/DP analysis recommended Scope X
+  authoring (all four primary specs in one batch),
+  Claude emitted a confirm-prompt asking Bill to
+  approve Scope X anyway. Two questions were posed:
+  (1) "Scope X or Scope Y?" and (2) "Confirm the
+  design principle as I stated it above (TRADE key
+  used in paper for private WS auth, read-only by
+  virtue of dispatch gate)?"
+
+  RR-SCOPE-005 NEXT-LOGICAL-STEP EXECUTION rule
+  states Claude executes when the next step follows
+  deterministically from data or first principles.
+  Both questions had answers determined by the FP/DP
+  analysis Claude had just completed. The confirm-
+  prompts violated the rule.
+
+  Bill corrective: "Why do you ask a stupid question
+  like that. The FP/DP gave you your answer and you
+  still asked the question." (Repeated verbatim
+  twice.)
+
+  Corrective taken: acknowledged violation, logged
+  ERROR-TB00145-CHAT-01, proceeded under Scope X
+  with the design principle as stated. No further
+  RR-SCOPE-005 violations in this session.
+
+  Cumulative RR-SCOPE-005 count after this session:
+  6. OI-069-CAND advances. NSI for TB00146 must
+  carry the cumulative count and reinforce the
+  rule.
+
+No other Claude errors logged this session.
+
+============================================================
+8. DELIVERABLES PRODUCED THIS SESSION
+============================================================
+
+Specs (committed to TothBot_V2-Docs master,
+pushed to GitHub):
+
+  0511001_WS_Manager_Specification_dv1_5.txt
+    Commit abaa430 — supersedes dv1_4 via git rename.
+    Path: 05XXXXX_System_Architecture/
+
+  1011002_WS_Manager_Coding_Spec_dv1_26.txt
+    Commit da64c9b — supersedes dv1_25.
+    Path: 10XXXXX_Coding_Specification/
+
+  0211005_Paper_Trading_Operations_Procedure_dv1_2.txt
+    Commit 45144b6 — supersedes dv1_1.
+    Path: 02XXXXX_Operations/
+
+  1011014_Startup_Sequence_Coding_Spec_dv1_8.txt
+    Commit 8426fe1 — supersedes dv1_7.
+    Path: 10XXXXX_Coding_Specification/
+
+GitHub HEAD at session close: 8426fe1
+(TothBot_V2-Docs master, origin/master).
+
+Session-tracking documents (not git-controlled;
+project-folder upload required):
+
+  TB00145_TothBot_V2_Session_Log_2026-05-03_v1_0.txt
+    THIS DOCUMENT.
+
+  TB00145_Next_Session_Instructions_v1_0.txt
+    Hand-off to TB00146 (Claude Code session for
+    ws_manager.py dv1_26 clean-slate rewrite +
+    tests).
+
+============================================================
+9. PROJECT FOLDER + WORKING-TREE EXPECTED STATE AT
+   TB00145 CLOSE
+============================================================
+
+GitHub TothBot_V2-Docs:
+  HEAD = 8426fe1 master
+  4 commits this session: abaa430 -> da64c9b ->
+                          45144b6 -> 8426fe1.
+  Working tree clean.
+
+GitHub TothBot_V2-Code:
+  HEAD = fb5de32 master (unchanged from TB00144).
+  Working tree clean.
+
+Project knowledge folder (Bill upload required):
+  REPLACE 0511001_WS_Manager_Specification_dv1_4.txt
+       with 0511001_WS_Manager_Specification_dv1_5.txt
+  REPLACE 1011002_WS_Manager_Coding_Spec_dv1_25.txt
+       with 1011002_WS_Manager_Coding_Spec_dv1_26.txt
+  REPLACE 0211005_Paper_Trading_Operations_Procedure_dv1_1.txt
+       with 0211005_Paper_Trading_Operations_Procedure_dv1_2.txt
+  REPLACE 1011014_Startup_Sequence_Coding_Spec_dv1_7.txt
+       with 1011014_Startup_Sequence_Coding_Spec_dv1_8.txt
+  ADD     TB00145_TothBot_V2_Session_Log_2026-05-03_v1_0.txt
+  ADD     TB00145_Next_Session_Instructions_v1_0.txt
+
+VPS (root@87.99.141.44):
+  Continues running working-tree-drift dv1_23
+  baseline. Untouched this session.
+  STREAM 5 deploy HALTED. dv1_25 (fb5de32) does
+  NOT match dv1_26 contract; rewrite required.
+
+============================================================
+10. OPEN ITEMS STATUS
+============================================================
+
+OPENED THIS SESSION:
+
+  OI-072  PAPER-LIVE PARITY DESIGN DEFECT.
+          Spec layer CLOSED across all four touched
+          specs (0511001 dv1_5; 1011002 dv1_26;
+          0211005 dv1_2; 1011014 dv1_8).
+          Code layer PENDING ws_manager.py dv1_26
+          rewrite (TB00146 STREAM A).
+          Test layer PENDING unit + integration
+          suite update per HR-WM-036 (TB00146).
+          Deploy layer PENDING dv1_26 deploy +
+          paper observation (TB00147+).
+
+  OI-072 SUB-ITEM A. Narrow-parity inheritance audit
+          for 1011005 / 1011010 / 0500000.
+          Deferred to TB00146 STREAM A.
+
+  OI-072 SUB-ITEM B. HR-WM-035 enforcement mechanism
+          choice. CLOSED via grep audit gate codified
+          in 1011002 dv1_26 HR-WM-035.
+
+  ERROR-TB00145-CHAT-01. RR-SCOPE-005 violation.
+          See §7. Cumulative count -> 6.
+
+ADVANCED FROM PRIOR SESSIONS:
+
+  STREAM 5 (deploy ws_manager.py dv1_25 to VPS).
+          HALTED. Cannot proceed; dv1_25 does not
+          match dv1_26 contract. Earliest deploy
+          session is TB00147 (post-TB00146 code
+          rewrite).
+
+  OI-069-CAND  RR-SCOPE-005 cumulative recurrence
+          tracking. Count -> 6 this session.
+
+UNCHANGED:
+
+  D-01 through D-08 LOCKED decisions remain in
+  force.
+
+  All RR-SCOPE-001..009 / RR-RULE-001..004 /
+  RR-SHELL-001..004 standing rules apply.
+
+  ONEDRIVE BAN active per TB00000 v2_17 §4.2.
+
+============================================================
+11. STANDING RULES OBSERVED THIS SESSION
+============================================================
+
+TB00000 v2_17:
+  §4.1   Document delivery rules (DR-001..006) — all
+         deliverables in batch with self-contained
+         delivery turns.
+  §4.2   ONEDRIVE BAN active. No emissions of the
+         prohibited string.
+  §4.3.1 RR-SCOPE-001..009. ONE violation logged
+         (RR-SCOPE-005 — see §7).
+  §4.3.2 RR-RULE-001..004 self-application. No
+         violations.
+  §4.3.3 RR-SHELL-001..004 shell context. No
+         violations.
+
+0311002 v1_8 STEP A pre-flight + DC-PREFLIGHT-001..006
+applied at session-open.
+
+============================================================
+12. SESSION COMPLETION
+============================================================
+
+Status: COMPLETE.
+
+Bill action items at session close (in order):
+
+  1. Upload TB00145 Session Log + NSI to project
+     knowledge folder (replace prior session's
+     versions if any).
+  2. Upload the four amended specs to project
+     knowledge folder, replacing prior versions.
+  3. Confirm TB00146 readiness (Claude Code session
+     for ws_manager.py dv1_26 clean-slate rewrite).
+
+Next session: TB00146 (Claude Code).
+
+End TB00145 session log v1_0.

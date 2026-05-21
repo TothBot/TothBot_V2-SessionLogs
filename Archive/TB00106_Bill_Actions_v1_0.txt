@@ -1,0 +1,232 @@
+DocDCN:     TB00106
+DocTitle:   TothBot_V2_Bill_Actions_2026-04-20
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TBXXXXX_Session_Logs\TB00106_Bill_Actions_v1_0.txt
+DocDate:    04-20-2026
+DocTime:    23:00:00 UTC
+
+============================================================
+TOTHBOT V2 — BILL ACTIONS — TB00106
+Bundled AI-1 + AI-2 + AI-3 Deploy
+============================================================
+
+Run STEPS A through H in order. One step at a time. One
+command per copy box (RULE 15). Do NOT skip steps.
+
+============================================================
+STEP A — Confirm local files on disk                    PENDING
+============================================================
+
+Claude Code already wrote every file. Confirm these paths
+exist before proceeding. Nothing to execute in this step.
+
+  C:\Users\wstot\GitHub\TothBot\TBXXXXX_Session_Logs\
+    TB00106_TothBot_V2_Session_Log_2026-04-20_v1_0.txt
+    TB00106_Bill_Actions_v1_0.txt
+    TB00000_TothBot_V2_Project_Instructions_for_Claude_v2_10.txt
+
+  C:\Users\wstot\GitHub\TothBot\TothBot_V2-Code\tothbot\
+    ws_manager.py           (header says dv1_21)
+    logger.py               (header says dv1_3)
+    startup_sequence.py     (header says dv1_8)
+    vps_deployment.py       (header says dv1_5)
+
+  C:\Users\wstot\GitHub\TothBot\TothBot_V2-Docs\10XXXXX_Coding_Specification\
+    1011002_WS_Manager_Coding_Spec_dv1_20.txt
+    1011007_Logger_Coding_Spec_dv1_3.txt
+    1011013_VPS_Deployment_Coding_Spec_dv1_5.txt
+    1011014_Startup_Sequence_Coding_Spec_dv1_6.txt
+    1010000_Trading_System_Coding_Anchor_dv1_10.txt
+
+============================================================
+STEP B — Claude.ai project uploads / deletes            PENDING
+============================================================
+
+Upload to Claude.ai project folder (replace any existing):
+  TB00106_TothBot_V2_Session_Log_2026-04-20_v1_0.txt
+  TB00000_TothBot_V2_Project_Instructions_for_Claude_v2_10.txt
+  1011002_WS_Manager_Coding_Spec_dv1_20.txt
+  1011007_Logger_Coding_Spec_dv1_3.txt
+  1011013_VPS_Deployment_Coding_Spec_dv1_5.txt
+  1011014_Startup_Sequence_Coding_Spec_dv1_6.txt
+  1010000_Trading_System_Coding_Anchor_dv1_10.txt
+
+Delete from Claude.ai project folder (superseded):
+  TB00105_TothBot_V2_Session_Log_2026-04-20_v1_0.txt
+  TB00000_TothBot_V2_Project_Instructions_for_Claude_v2_9.txt
+  1011002_WS_Manager_Coding_Spec_dv1_19.txt
+  1011007_Logger_Coding_Spec_dv1_2.txt
+  1011013_VPS_Deployment_Coding_Spec_dv1_4.txt
+  1011014_Startup_Sequence_Coding_Spec_dv1_5.txt
+  1010000_Trading_System_Coding_Anchor_dv1_9.txt
+
+TB00106_Bill_Actions_v1_0.txt is NOT uploaded to Claude
+project. It stays local only.
+
+============================================================
+STEP C — Commit TothBot_V2-Docs                         PENDING
+============================================================
+
+Open a terminal at C:\Users\wstot\GitHub\TothBot\TothBot_V2-Docs\
+
+Run each command below in its own copy box:
+
+git add 10XXXXX_Coding_Specification/1011002_WS_Manager_Coding_Spec_dv1_20.txt
+
+git add 10XXXXX_Coding_Specification/1011007_Logger_Coding_Spec_dv1_3.txt
+
+git add 10XXXXX_Coding_Specification/1011013_VPS_Deployment_Coding_Spec_dv1_5.txt
+
+git add 10XXXXX_Coding_Specification/1011014_Startup_Sequence_Coding_Spec_dv1_6.txt
+
+git add 10XXXXX_Coding_Specification/1010000_Trading_System_Coding_Anchor_dv1_10.txt
+
+git commit -m "TB00106 bundled: OI-018 closed; OI-019 alert routing singular->plural; OI-020 retry window N=10->20"
+
+git push origin master
+
+============================================================
+STEP D — Commit TothBot_V2-Code                         PENDING
+============================================================
+
+Open a terminal at C:\Users\wstot\GitHub\TothBot\TothBot_V2-Code\
+
+Run each command below in its own copy box:
+
+git add tothbot/ws_manager.py
+
+git add tothbot/logger.py
+
+git add tothbot/startup_sequence.py
+
+git add tothbot/vps_deployment.py
+
+git commit -m "TB00106 bundled: OI-019 alert routing plural; OI-020 MAX_RECONNECT_ATTEMPTS 10->20"
+
+git push origin master
+
+============================================================
+STEP E — Deploy to VPS                                  PENDING
+============================================================
+
+SSH to the VPS:
+
+ssh root@87.99.141.44
+
+On the VPS, pull code:
+
+cd /root/TothBot_V2-Code
+
+git fetch origin
+
+git pull origin master
+
+Restart the service:
+
+systemctl restart tothbot
+
+Verify:
+
+systemctl status tothbot --no-pager
+
+Expected: Active (running), new PID, recent timestamp, no
+errors in the last 20 log lines.
+
+============================================================
+STEP F — VPS cleanup (stale env backup)                 PENDING
+============================================================
+
+On the VPS (still in the SSH session):
+
+rm /root/.tothbot.env.save
+
+Rationale: this file contains the obsolete singular
+TOTHBOT_SMTP_USER=alert@tothbot.com reference. It is a
+backup of a pre-OI-019 environment state. Leaving it in
+place risks it being sourced or referenced later and
+reintroducing the bug. Deleting it is safe because
+/root/.tothbot.env (the live file) is authoritative and
+now matches the plural address.
+
+============================================================
+STEP G — Post-deploy test-alert verification            PENDING
+============================================================
+
+After the service restart:
+
+  (a) Watch the log for a naturally-occurring HIGH or
+      CRITICAL event:
+
+      tail -f /home/tothbot/logs/tothbot.log | grep -E "HIGH|CRITICAL|ALERT_SENT|ALERT_SMTP_FAILED"
+
+  (b) Check Bill's Proton inbox at alerts@tothbot.com for
+      a delivered alert email. NO bounce should arrive.
+
+  (c) If a deliberate test is preferred, trigger any
+      harmless HIGH-level code path and confirm end-to-end
+      delivery.
+
+Success:
+  - Email arrives in inbox at alerts@tothbot.com.
+  - No "550 5.1.1 Recipient address rejected" bounce.
+  - Log contains ALERT_SENT event with to=alerts@tothbot.com.
+
+Failure path:
+  - Bounce received  → SMTP env var still points at
+                       singular. Check /root/.tothbot.env
+                       ALERT_EMAIL_TO value. Fix env var
+                       and restart service.
+  - No email delivered and no bounce → SMTP config issue,
+                       not AI-2. Check ALERT_SMTP_FAILED
+                       log events.
+
+============================================================
+STEP H — 24-hour observation window                     PENDING
+============================================================
+
+Observation start:  immediately after STEP E verified
+                    Active (running).
+Minimum duration:   24 hours.
+Preferred duration: 48 hours (matches TB00105 cadence).
+
+Monitor:
+  - Any WS_MGR_FATAL during the window (should be rare /
+    zero — each one is a regression candidate).
+  - Any RECONNECT_COMPLETE (direct AI-3 success indicator).
+  - Any email bounce notifications (should be zero after
+    AI-2).
+
+End-of-window VPS queries (run one per copy box):
+
+systemctl status tothbot --no-pager
+
+grep -c "WS_MGR_FATAL" /home/tothbot/logs/tothbot.log
+
+grep -c "RECONNECT_TRIGGERED" /home/tothbot/logs/tothbot.log
+
+grep -c "RECONNECT_COMPLETE" /home/tothbot/logs/tothbot.log
+
+grep -c "FATAL_RECONNECT_FAILURE" /home/tothbot/logs/tothbot.log
+
+grep -c "ALERT_SENT" /home/tothbot/logs/tothbot.log
+
+tail -50 /home/tothbot/logs/tothbot.log
+
+Stop condition: if any novel fatal signature (outside the
+two known pre-existing external Kraken EAPI:Invalid key
+patterns) appears, stop the observation immediately and
+open a new defect ID.
+
+Next session (after observation closes):
+  - Close OI-019 if STEP G succeeded across the window.
+  - Close OI-020 if any RECONNECT_COMPLETE fired without a
+    following FATAL_RECONNECT_FAILURE during the window,
+    OR if no Kraken transient outage occurred (in which
+    case close after 48h clean run).
+  - Re-evaluate OI-021 (8-bounces-per-fatal) now that AI-2
+    has deployed.
+
+============================================================
+END — TB00106 BILL ACTIONS v1_0
+============================================================

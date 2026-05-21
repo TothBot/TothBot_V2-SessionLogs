@@ -1,0 +1,312 @@
+DocDCN:     TB00072
+DocTitle:   TothBot_V2_Session_Log_2026-04-11
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\My_TothBot_Stuff\TBXXXXX_Session_Logs\TB00072_TothBot_V2_Session_Log_2026-04-11_v1_0.txt
+DocDate:    04-11-2026
+DocTime:    23:59:59 UTC
+
+============================================================
+TOTHBOT V2 SESSION LOG — 2026-04-11
+============================================================
+
+============================================================
+1. SESSION IDENTITY
+============================================================
+
+Session date:     April 11, 2026
+Session number:   TB00072
+Session type:     Phase 11 — Paper Trading Deployment.
+                  Two defects found and fixed in ws_manager.py.
+                  1011002 updated to dv1_13.
+                  Document control failure identified —
+                  coding documents not controlled.
+                  Paper trading NOT yet confirmed running.
+Prior session:    TB00071 (2026-04-10 Part 10)
+
+Documents read:
+  TB00000  v2_8    Project Instructions             checked
+  TB00071  v1_0    Most recent session log          checked
+  ws_manager.py    (project folder — 2,686 lines)   checked
+  1011002  dv1_12  WS_Manager_Coding_Spec           checked
+  0311001  v1_0    Namespace_Specification           checked
+
+============================================================
+2. WORK COMPLETED THIS SESSION
+============================================================
+
+------------------------------------------------------------
+2.1 VPS Deployment Attempted — Service Started
+------------------------------------------------------------
+
+Per TB00071 next session instructions:
+
+  ws_manager.py downloaded from GitHub (commit b1ce378)
+    and uploaded to Claude project folder.
+  git pull origin master on VPS — confirmed b1ce378.
+  systemctl start tothbot — service started.
+  Service entered crash loop immediately.
+  Restart counter reached 64 before investigation began.
+
+------------------------------------------------------------
+2.2 DEFECT-WM-ZOM-001 — Zombie Timer Starts at __init__
+------------------------------------------------------------
+
+Symptom:
+  ZOMBIE_CONNECTION_DETECTED CRITICAL at elapsed_seconds=
+  99.9 on every service instance.
+
+Root cause:
+  _last_real_data_public initialized to time.monotonic()
+  at WSManager.__init__(). Construction occurs before
+  wm.run() is called. Startup overhead consumed the
+  90-second zombie budget before the recv loop started.
+
+Fix:
+  Reset _last_real_data_public = time.monotonic() at END
+  of _startup_connect_and_subscribe() in both paper mode
+  and live mode paths. Clock now starts from connection-
+  live, not construction.
+
+Commit: 4241bf3 — deployed to VPS. Zombie still fired.
+DEFECT-WM-OHLC-001 was primary root cause (Section 2.3).
+
+------------------------------------------------------------
+2.3 DEFECT-WM-OHLC-001 — ohlc Subscription Without Symbols
+------------------------------------------------------------
+
+Symptom:
+  Zombie still fired at elapsed_seconds=99.9 after
+  DEFECT-WM-ZOM-001 fix.
+
+Root cause confirmed from full log inspection:
+  _subscribe_public() sent four subscriptions at startup:
+    instrument  — SUCCESS (INSTRUMENT_SNAPSHOT_COMPLETE,
+                  1506 pairs)
+    status      — FAIL: "Symbol(s) not found"
+    ohlc(5)     — FAIL: "Symbol(s) not found"
+    ohlc(60)    — FAIL: "Symbol(s) not found"
+
+  Kraken WS v2 ohlc channel requires a symbol list.
+  Without it Kraken returns "Symbol(s) not found".
+  Without ohlc data, _last_real_data_public was only
+  updated by the initial instrument snapshot and the
+  auto-sent status message on connect — both one-time
+  events. 90 seconds later zombie fired. Every time.
+
+Fix:
+  (1) Removed ohlc(5) and ohlc(60) from
+      _subscribe_public(). These cannot be sent at
+      startup — monitored_universe not yet built.
+  (2) Added _subscribe_ohlc_channels() method. Sends
+      ohlc(5) and ohlc(60) with symbol=monitored_universe.
+      Logs OHLC_SUBSCRIBED (INFO) on success.
+      Logs OHLC_SUBSCRIBE_SKIPPED (WARN) if empty.
+  (3) Called via asyncio.create_task() from
+      _handle_instrument() after msg_type=="snapshot"
+      and _build_monitored_universe() completes.
+
+Status: Fixed in ws_manager.py. NOT YET committed to
+GitHub or deployed to VPS.
+
+------------------------------------------------------------
+2.4 1011002 Updated to dv1_13
+------------------------------------------------------------
+
+Both defects documented. Changes from dv1_12:
+  Section 4.1: ohlc subscription sequencing noted.
+  Section 5.2: handle_instrument ohlc trigger documented.
+  Section 7.6: NEW — WM-OHLC-SUB-001 through -003.
+  Section 19:  dv1_13 revision history added.
+
+------------------------------------------------------------
+2.5 DOCUMENT CONTROL FAILURE — Coding Documents
+------------------------------------------------------------
+
+Bill identified that coding documents (Python source
+files) are not controlled under the TothBot V2 document
+control system. This is wrong. Code files are as critical
+as any other system document — they are what actually
+runs. They must be controlled.
+
+Current state:
+  Code files live in TothBot_V2-Code under git version
+  control only. They have no DCN, no 7-field header,
+  no version in filename, no controlled document status.
+  The only traceability is git commit history.
+
+  The coding specs in TothBot_V2-Docs (AA=10) define
+  what the code must do but the code files themselves
+  are uncontrolled.
+
+This is an open governance gap. It must be resolved
+before the next session begins work.
+
+============================================================
+3. DEFECT LOG
+============================================================
+
+  DEFECT-WM-ZOM-001
+    File:    ws_manager.py
+    Defect:  _last_real_data_public initialized at __init__
+             not at connection-live.
+    Fix:     Reset at end of _startup_connect_and_subscribe()
+             both paths.
+    Commit:  4241bf3 — deployed to VPS.
+    Status:  FIXED and DEPLOYED.
+
+  DEFECT-WM-OHLC-001
+    File:    ws_manager.py
+    Defect:  ohlc subscribed without symbol list. Kraken
+             returns "Symbol(s) not found". No ohlc data.
+             Zombie fires at 90s. Crash loop.
+    Fix:     Removed ohlc from _subscribe_public(). Added
+             _subscribe_ohlc_channels() called from
+             _handle_instrument() after universe built.
+    Status:  FIXED in ws_manager.py delivered this session.
+             NOT YET committed to GitHub or deployed to VPS.
+
+============================================================
+4. PT-ENTRY STATUS
+============================================================
+
+  PT-ENTRY-001  All unit tests pass             DONE
+  PT-ENTRY-002  All integration tests pass      DONE
+  PT-ENTRY-003  VPS deployed + paper mode       PENDING
+                (DEFECT-WM-OHLC-001 fix not yet deployed)
+  PT-ENTRY-004  logrotate configured            DONE (wrong path — PL)
+  PT-ENTRY-005  IP whitelist confirmed          DONE
+  PT-ENTRY-006  Alert email confirmed           DONE
+  PT-ENTRY-007  systemd auto-restart confirmed  PENDING
+  PT-ENTRY-008  Startup sequence confirmed      PENDING
+
+============================================================
+5. VPS STATE — CURRENT
+============================================================
+
+  Service:      STOPPED
+  Repo:         /root/TothBot_V2-Code (commit 4241bf3)
+                DEFECT-WM-OHLC-001 fix NOT yet deployed.
+  .tothbot.env: PAPER_TRADING_MODE=true (both locations) ✓
+
+  DO NOT restart service until ws_manager.py with
+  DEFECT-WM-OHLC-001 fix is committed and pulled.
+
+============================================================
+6. OPEN ITEMS
+============================================================
+
+OI-001  OPEN — Coding document control governance gap.
+        Code files in TothBot_V2-Code are not controlled
+        documents. Bill has directed this must be resolved.
+        Next session MUST address this before any other
+        work. Requires FP/DP analysis and Bill approval
+        before any governance documents are changed.
+        Governing documents affected: 0311001, 0311002,
+        possibly 0300000.
+
+OI-002  OPEN — DEFECT-WM-OHLC-001 fix not yet committed
+        or deployed. Next session must commit ws_manager.py
+        and 1011002 dv1_13 to GitHub then deploy to VPS.
+
+============================================================
+7. DELIVERABLES THIS SESSION
+============================================================
+
+Delivered in ONE BATCH per DR-001 and DR-003:
+
+  ws_manager.py.txt                              — both fixes
+  1011002_WS_Manager_Coding_Spec_dv1_13.txt      — spec updated
+  TB00072_TothBot_V2_Session_Log_2026-04-11_v1_0.txt
+
+============================================================
+8. PARKING LOT
+============================================================
+
+  PL-001      WSManager dual PM creation paths. Monitor.
+  PL-003      Pathway 1 GitHub automation. After paper trading.
+  PL-NEW-003  VPS migration to Hillsboro OR. After stable.
+  PL-NEW-004  EE ENTRY_TIMEOUT_SEC vs WM ENTRY_GTD_SEC. Monitor.
+  PL-NEW-005  requirements.txt — websockets>=13.0.
+  PL-NEW-006  tothbot.service not updated in GitHub. After PT-ENTRY.
+  PL-NEW-007  LOG_FILE path mismatch. After PT-ENTRY.
+  PL-NEW-008  Heartbeat UNKNOWN_MESSAGE_TYPE spam. After PT-ENTRY.
+  PL-NEW-009  Untracked files in TothBot_V2-Code repo. After PT-ENTRY.
+  PL-NEW-010  status subscription returns "Symbol(s) not found".
+              Status auto-sent on connect so not blocking.
+              Investigate correct format after paper trading stable.
+
+============================================================
+9. BILL ACTIONS REQUIRED
+============================================================
+
+Step 1 — Save this session log:
+  Save TB00072 to:
+  C:\Users\wstot\My_TothBot_Stuff\TBXXXXX_Session_Logs\
+
+Step 2 — Upload TB00072 to Claude project.
+
+Step 3 — Upload 1011002_WS_Manager_Coding_Spec_dv1_13.txt
+  to Claude project.
+
+Step 4 — Upload ws_manager.py to Claude project.
+
+============================================================
+10. NEXT SESSION OPENING INSTRUCTION
+============================================================
+
+  ============================================================
+  Read TB00000 v2_8 and TB00072.
+
+  TWO OPEN ITEMS. Address in this order:
+
+  OI-001 FIRST — Coding document control.
+    Bill has directed that code files must be controlled.
+    Current governance (0311001) scopes document control
+    to TothBot_V2-Docs only. Code lives in TothBot_V2-Code
+    under git only.
+    Next session must:
+      (1) FP/DP analysis of options for controlling code
+          files within the existing governance framework.
+      (2) Present options to Bill for decision.
+      (3) Update governance documents per Bill's decision.
+      (4) Get Bill approval before any governance change.
+    DO NOT change any governance documents without Bill
+    explicit approval.
+
+  OI-002 SECOND — After OI-001 resolved:
+    Commit ws_manager.py and 1011002 dv1_13 to GitHub.
+    Deploy to VPS. Complete PT-ENTRY checklist.
+
+    GitHub commit sequence:
+      TothBot_V2-Code: commit ws_manager.py
+      TothBot_V2-Docs: commit 1011002 dv1_13,
+                       delete 1011002 dv1_12
+
+    VPS deploy:
+      ssh root@87.99.141.44 (PowerShell)
+      cd /root/TothBot_V2-Code && git pull origin master
+      systemctl start tothbot
+      sleep 120 && grep "ZOMBIE\|OHLC_SUBSCRIBED\|PAPER_TRADING\|TOTHBOT_READY\|PAIR_READY\|CRITICAL" \
+        /home/tothbot/logs/tothbot.log | tail -30
+
+      MUST see: OHLC_SUBSCRIBED
+      MUST see: PAPER_TRADING_MODE_ON
+      MUST NOT see: ZOMBIE_CONNECTION_DETECTED
+      MUST NOT see: crash loop
+  ============================================================
+
+============================================================
+11. REVISION HISTORY
+============================================================
+
+  v1_0  04-11-2026  Initial. Two defects found and fixed.
+                    DEFECT-WM-ZOM-001: zombie timer at __init__.
+                    DEFECT-WM-OHLC-001: ohlc without symbol list.
+                    1011002 updated to dv1_13.
+                    Coding document control gap identified.
+                    Paper trading not yet confirmed running.
+
+============================================================
+END OF SESSION LOG
+============================================================

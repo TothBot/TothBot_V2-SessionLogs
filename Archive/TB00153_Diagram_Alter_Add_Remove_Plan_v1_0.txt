@@ -1,0 +1,838 @@
+DocDCN:     TB00153
+DocTitle:   Diagram_Alter_Add_Remove_Plan
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TBXXXXX_Session_Logs\TB00153_Diagram_Alter_Add_Remove_Plan_v1_0.txt
+DocDate:    05-08-2026
+DocTime:    14:30:00 UTC
+
+============================================================
+TB00153 DIAGRAM ALTER / ADD / REMOVE PLAN v1_0
+PER-DIAGRAM DECISION MATRIX FOR TIER 1 + D1-D7
+============================================================
+
+============================================================
+1. PURPOSE
+============================================================
+
+Per TB00152 NSI v1_0 §4.3, this document is the per-
+diagram decision matrix that drives TB00154+ diagram-
+rework session sequencing. For each of the 7 existing
+Tier 2 diagrams (D1-D7) plus the planned Tier 1
+Context, the matrix lists:
+
+  ALTER:  what changes against current dv1_24 inline
+          SVG content (constraint restoration,
+          element corrections, label corrections).
+  ADD:    new elements to introduce.
+  REMOVE: elements no longer architecturally valid.
+
+Driving defects from the TB00153 Master Defect
+Register are cited per item.
+
+This document is the INPUT to TB00154+ diagram-rework
+sessions. It is NOT the authoring of any diagram. The
+SVG geometry, color palette, exact layout decisions
+are delegated to the diagram-rework session per
+RR-SCOPE-002.
+
+============================================================
+2. PRE-AUTHORING NOTES — APPLIES TO EVERY DIAGRAM
+============================================================
+
+PRE-1   T-2+ TAGGING IS UNIVERSAL.
+        Per 0311001 v1_6 §15.11.3, every labeled
+        <g> group MUST carry <title>+<desc> with
+        structured key:value content. D4, D5, D6,
+        D7 currently have ZERO labeled groups.
+        D1, D2, D3 have 13 / 15 / 6 labeled groups
+        (verified TB00153 cold-load). Stages H, E,
+        F, D in §10.1 sequencing must ADD T-2+
+        tagging across D4-D7. Stages B, C, G must
+        verify T-2+ tagging on D1, D2, D3.
+
+PRE-2   PARENT_DIAGRAM RESOLUTION.
+        All seven Tier 2 diagrams reference
+        parent_diagram = 0500000_Context_T1_R0_
+        System_Context. After Stage A authoring
+        of the Tier 1 Context, every Tier 2
+        increment must verify parent_diagram
+        binding is intact (no R-increment
+        regression).
+
+PRE-3   REGISTRY BINDING (§15.12).
+        Every CANONICAL_NAME token in any diagram
+        MUST resolve to a §15.12 registry entry in
+        the parent 0500000 .html document. A
+        diagram-rework session that introduces a
+        new canonical name MUST also author the
+        §15.12 entry for that name. Bundling the
+        registry update with the diagram update is
+        zero-cost-expansion under RR-SCOPE-009 four-
+        question analysis (the registry binding is
+        structurally inseparable from the diagram).
+
+PRE-4   HTML WELL-FORMEDNESS.
+        Every diagram-rework increment to
+        0500000 dvN_M .html MUST PASS DR-007.9
+        well-formedness (Python html.parser feed:
+        0 orphan close tags, 0 unclosed elements,
+        0 parser exceptions). Validation script
+        retained at /home/claude scratch from
+        TB00150 / TB00151 cycles.
+
+PRE-5   RR-SCOPE-009 LOAD-BEARING DEFAULT.
+        Every constraint depicted in dv1_24 is
+        LOAD-BEARING by default. Removal requires
+        four-question origin investigation per
+        TB00000 v2_20 §4.3.1 RR-SCOPE-009.
+        Application: REMOVE items below are
+        already RR-SCOPE-009-justified (each cites
+        the master-register entry that documents
+        the removal rationale).
+
+============================================================
+3. TIER 1 CONTEXT DIAGRAM
+============================================================
+
+Status: ABSENT.
+Master register driver: DR-001 CRITICAL.
+
+  ALTER list:      None (does not yet exist).
+  ADD list:
+    A1   Author the entire Tier 1 Context Diagram
+         per the companion TB00153 Tier 1 Context
+         Diagram Content Scope v1_0.
+         Driver: DR-001.
+         Notes:  See Tier 1 Content Scope §3-7 for
+                 root-desc structured metadata,
+                 depicted elements (4.1 internal
+                 organism + 4.2 five external
+                 actors + 4.3 six primary flows +
+                 4.4 decorative), §15.12 registry
+                 binding, T-2+ tagging contract,
+                 and validation gates.
+    A2   §15.12 registry entries for any new
+         canonical names introduced by the Tier 1
+         authoring (TothBot_V2_Organism,
+         BILL_OPERATOR, HETZNER_VPS, MAIL_ALERTS,
+         GITHUB_REPOSITORIES, KRAKEN_EXCHANGE)
+         that are not already registered.
+         Driver: PRE-3 + 0311001 v1_6 §15.12.
+  REMOVE list:     None.
+
+  Sequencing: STAGE A. Must precede every other
+              stage because all 7 Tier 2 diagrams
+              point at this name. The 50 phantom
+              parent_diagram references resolve
+              the moment Tier 1 is authored.
+
+============================================================
+4. D1 — KRAKEN_API_CONNECTION_ARCHITECTURE
+============================================================
+
+Status: PRESENT, T-2+ tagged (13 labeled groups).
+Master register drivers: DR-002, DR-003, DR-006
+(CRITICAL), DR-007, DR-014.
+
+  ALTER list:
+    L1   PATH 2 multi-shard topology depiction.
+         Replace any single-connection visual with
+         multi-shard (Public_WS_Shard_0 +
+         Public_WS_Shard_1) topology per 0511001
+         dv1_5 + 1011002 dv1_26 contract.
+         Driver: DR-006.
+         Notes:  Shard count is 2 in the empirically-
+                 validated configuration (TB00142
+                 long Phase D). The architecture
+                 supports N-shard but the canonical
+                 depicted N=2 unless universe size
+                 forces otherwise.
+
+    L2   Token-bucket pacing element.
+         ADD/SHOW SubscribeTokenBucket primitive
+         between WS_Manager and outbound subscribe
+         operations on each shard. Element label:
+         token_bucket(SUBSCRIBE_RATE_PER_SEC=10,
+         SUBSCRIBE_BURST_CAPACITY=20).
+         Driver: DR-006 + HR-WM-032.
+
+    L3   Silent-pair state machine.
+         ADD/SHOW PairState enum on the per-pair
+         tracking (INITIAL -> SUBSCRIBED ->
+         DATA_PENDING -> DATA_READY) per WM-SHARD-010
+         + WM-PS-007.
+         Driver: DR-006.
+
+    L4   Reconnect coordination across shards.
+         ADD/SHOW per-shard reconnect with
+         exponential backoff and the
+         RECONNECT_STALE_CACHE_SEC threshold per
+         WM-RECONNECT-016.
+         Driver: DR-006.
+
+    L5   Universe boundary label.
+         VERIFY/CORRECT universe label depicts
+         "USD + USDC + USDT" (D-03 LOCKED) and
+         carries no Top-N cap glyph (D-08 LOCKED).
+         If any prior scope text or cap label
+         remains in dv1_24 D1 SVG, REPLACE.
+         Driver: DR-002 + DR-003 + DR-007.
+
+    L6   Liquidity floor label.
+         VERIFY/CORRECT G2-equivalent display in
+         D1 (if D1 carries a liquidity-filter
+         representation; D2 G2 is the canonical
+         location). If D1 displays a liquidity-
+         filter representation, label MUST read
+         "$500k USD/day".
+         Driver: DR-004.
+
+    L7   AR-070 governs:ar tag content.
+         VERIFY/CORRECT D1 root <desc> governs:ar
+         field reflects the AMENDED AR-070 form
+         (USD+USDC+USDT, no cap), not the historic
+         silent-narrowed form. Use the form
+         currently authoritative in 0500000 dv1_20
+         (AR-070 amended).
+         Driver: DR-007.
+
+  ADD list:
+    A1   AR-014 (Logger async bounded queue) added
+         to D1 root <desc> governs:ar field and
+         the corresponding Logger module group
+         <desc> constraint.
+         Driver: DR-014 + TB00152 NSI v1_0 §4.3
+         G-A4.
+
+    A2   AR-038 added to D1 root <desc> governs:ar
+         field. Module-level placement of AR-038
+         constraint to be determined at authoring
+         time (likely WS_Manager group).
+         Driver: DR-014 + TB00152 NSI v1_0 §4.3
+         G-A5.
+
+    A3   AR-039 added to D1 root <desc> governs:ar
+         field. Module-level placement of AR-039
+         constraint to be determined at authoring
+         time.
+         Driver: DR-014 + TB00152 NSI v1_0 §4.3
+         G-A6.
+
+    A4   PATH 2 sharding ADR reference in root
+         <desc> (link to 0511001 dv1_5 ADR section
+         and 1011002 dv1_26 implementation
+         contract).
+         Driver: DR-006.
+
+  REMOVE list:
+    R1   Top-N cap glyph or label (if present in
+         dv1_24 D1 SVG).
+         Driver: DR-002 (D-08 LOCKED retirement).
+         RR-SCOPE-009 origin investigation:
+         already executed in TB00146 §4 RR-SCOPE-
+         009 ON CP-001 REVERT (cap was Top-N=50
+         empirically a Kraken WS subscribe rate-
+         limit defense; replaced by token bucket
+         per L2 above + StartLimit per ops-layer;
+         retirement justified).
+
+  R-increment: R1 -> R2 (PATH 2 sharding rewrite +
+               cumulative AR restoration).
+
+============================================================
+5. D2 — TRADING_PIPELINE
+============================================================
+
+Status: PRESENT, T-2+ tagged (15 labeled groups).
+Master register drivers: DR-002, DR-003, DR-004,
+DR-005 (G8 -> EE seam), DR-007, DR-010, DR-015.
+
+  ALTER list:
+    L1   Universe scope label at G1 (Pre_Gate_1)
+         or G2 entry. VERIFY/CORRECT to
+         "USD + USDC + USDT" (D-03 LOCKED).
+         Driver: DR-003.
+
+    L2   G2 (Liquidity) label.
+         VERIFY/CORRECT "$500k USD/day" floor +
+         param tag "param:min_volume_usd_daily".
+         Driver: DR-004.
+
+    L3   G5 (Selection_Controller) label.
+         VERIFY no Top-N cap content survives
+         (D-08 retired the cap; SC is now solely
+         cooldown / volatility filtering, not
+         universe trim).
+         Driver: DR-002.
+
+    L4   G8 -> Execution_Engine dispatch seam.
+         REWORK to depict the PA-004 dispatch
+         boundary: order intent comes out of G8;
+         dispatch decision (paper simulate vs
+         live transmit) is the seam. The seam
+         element must label-carry "PA-004(2)
+         dispatch boundary".
+         Driver: DR-005 + DR-010.
+
+    L5   Cluster 1 paper-mode dispatch wiring
+         (LM emergency-IOC path).
+         ADD a labeled connection from
+         Long_Module to the dispatch seam (LM
+         emergency sells must traverse the seam,
+         not call ws_private directly).
+         Driver: DR-010 (TB00148 F30).
+
+    L6   AR-070 governs:ar tag.
+         VERIFY/CORRECT D2 root <desc> governs:ar
+         field reflects amended AR-070.
+         Driver: DR-007.
+
+  ADD list:
+    A1   AR-005 added to D2 root <desc> governs:ar
+         field. Gate-level placement to be
+         determined at authoring (likely G3 or G4
+         per AR-005 subject matter).
+         Driver: DR-015 + TB00152 NSI v1_0 §4.3
+         G-A7.
+
+    A2   AR-016 (ATR incremental) added to D2 root
+         <desc> governs:ar field and to whichever
+         gate uses ATR (G2 if MAE inputs, or G3
+         if regime).
+         Driver: DR-015 + TB00152 NSI v1_0 §4.3
+         G-A8.
+
+    A3   contract:Paper_Dispatch_Boundary group
+         (new) at the G8 -> EE seam carrying
+         drill_target reference to D7.
+         Driver: DR-005 + DR-010.
+
+  REMOVE list:
+    R1   Any Top-N cap residual at G5 if present.
+         Driver: DR-002.
+
+  R-increment: R1 -> R2 (dispatch seam rework +
+               cumulative AR restoration).
+
+============================================================
+6. D3 — EXIT_ARCHITECTURE
+============================================================
+
+Status: PRESENT, T-2+ tagged (6 labeled groups).
+Master register drivers: DR-009, DR-011, DR-040.
+
+  ALTER list:
+    L1   Layer 2 (L2_MAE_Threshold) <desc>
+         constraint field.
+         ADD reference to PositionRecord.
+         mae_pct_reached field (Phase 1 spec
+         dependency 1011006 dv1_2). The diagram
+         depiction stands; the structured-tag
+         metadata must reflect the authoritative
+         field schema.
+         Driver: DR-040 + DR-011.
+         SEQUENCING NOTE: this ALTER is gated on
+         Phase 1 spec landing (1011006 dv1_2).
+         If Phase 1 spec has not yet landed at
+         the diagram-rework session, defer L1 to
+         a follow-up sub-session and execute the
+         remaining D3 work.
+
+    L2   Layer 1a (L1a_Signal_Exit) and Layer 1b
+         (L1b_TP_Fill) <desc> constraint fields.
+         VERIFY drill_target reference to
+         Execution_Engine and dispatch-seam
+         consistency with D2 L4 above. If D3
+         currently shows EE/EC interactions
+         that bypass the dispatch seam in paper
+         mode, REWORK to traverse the seam.
+         Driver: DR-005 paper-mode parity +
+         DR-011.
+
+    L3   HR-PM-009 sole-writer callout.
+         ADD note to Exit_Controller group <desc>:
+         EC reads PositionMirror via ws_manager
+         method (e.g., wm.pm_get(symbol)); does
+         NOT mutate. PM mutation is sole-writer
+         (ws_manager) per HR-PM-009.
+         Driver: DR-011.
+
+  ADD list:
+    A1   None (D3 already has T-2+ tagging on
+         all 6 labeled groups).
+
+  REMOVE list:
+    R1   None.
+
+  R-increment: R1 -> R2 (Layer 2 schema reference
+               + sole-writer callout).
+
+============================================================
+7. D4 — REGIME_TAXONOMY
+============================================================
+
+Status: PRESENT but T-2+ tagging ABSENT (0
+labeled <g> groups). Master register drivers:
+DR-008 (regime count), DR-009 (T-2+ missing).
+
+  ALTER list:
+    L1   Regime enumeration count reconciliation.
+         RESOLVE: 5 regimes (current dv1_24 root
+         <desc>: TRENDING_BULL, TRENDING_BEAR,
+         RANGING, NORMAL_VOL, ELEVATED_VOL) vs
+         6 regimes (TB00000 v2_20 §3.4.2). Read
+         0711002 Regime_Taxonomy_Specification
+         dv1_0 at authoring time; whichever count
+         the spec mandates is canonical. If
+         0711002 mandates 6, ADD the missing 6th
+         regime to D4 SVG and root <desc>. If
+         0711002 mandates 5, AMEND TB00000 §3.4.2
+         to match (out of TB00154 diagram-rework
+         scope; capture as Decision Register
+         item).
+         Driver: DR-008.
+
+  ADD list:
+    A1   T-2+ structured tagging on every regime
+         group. Each regime depicted in D4 SVG
+         must be wrapped in a labeled <g
+         class="regime"> group with <title>
+         "regime:<NAME>" and <desc> body
+         containing canonical:, role:, governs:
+         params (adx_threshold, atr_percentile_
+         thresh, htf_ema_periods), schema_version:.
+         Driver: DR-009 + 0311001 v1_6 §15.11.3.
+
+    A2   T-2+ structured tagging on the regime-
+         classification flow (BTC/USD anchor,
+         daily classification cadence). Each
+         labeled <g class="contract"> with
+         <title>+<desc> referencing AR-017
+         (already in root <desc> governs:ar).
+         Driver: DR-009.
+
+  REMOVE list:
+    R1   None.
+
+  R-increment: R1 -> R2 (regime count reconciled
+               + T-2+ tagging added).
+
+============================================================
+8. D5 — CIATS_ARCHITECTURE
+============================================================
+
+Status: PRESENT but T-2+ tagging ABSENT (0
+labeled <g> groups). Master register drivers:
+DR-009, DR-012 (CIATS Parameter Store + Half-Kelly
++ vol_regime).
+
+  ALTER list:
+    L1   Trade Outcome Bus group structured
+         metadata. EXISTING D5 root <desc>
+         governs:mod includes CIATS_Trade_Outcome_
+         Bus. ADD T-2+ tagging on the group
+         depicting it: <title>contract:CIATS_
+         Trade_Outcome_Bus</title>, <desc>
+         describing input fields (symbol, regime,
+         entry/exit prices, fees, P&L,
+         vol_regime per Phase 1 spec
+         1011010 dv1_7).
+         Driver: DR-012 + DR-013.
+
+  ADD list:
+    A1   CIATS_Parameter_Store group (NEW; if not
+         already depicted).
+         Group depicts the read-by-modules
+         contract analogous to HR-PM-009 sole-
+         writer for Position Mirror. Other
+         modules (EE, EC, RE, SC) read parameters
+         from the Parameter Store at evaluation
+         time; the Parameter Store is the
+         single canonical CIATS-owned write side.
+         Driver: DR-012 (TB00148 CLUSTER 3
+         findings 12, 18, 24, 25, 26).
+
+    A2   Half-Kelly persistence path callout.
+         ADD a flow from CIATS_Statistical_Engine
+         -> CIATS_Parameter_Store at the 200-trade
+         threshold (Half-Kelly replaces fixed
+         per_trade_pct).
+         Driver: DR-012 (TB00148 F18).
+
+    A3   vol_regime input feed.
+         ADD a connection from RegimeEngine -> 
+         CIATS_Trade_Outcome_Bus indicating
+         vol_regime is captured per-trade. This
+         supports regime-conditioned analysis at
+         the 600-trade threshold.
+         Driver: DR-012.
+
+    A4   T-2+ structured tagging on every
+         labeled group in D5 (mod:*, contract:*,
+         param:*, ar:*).
+         Per current dv1_24 D5 root <desc>
+         governs:mod list, the labeled groups
+         should include CIATS_EWMA_Monitor,
+         CIATS_Trade_Outcome_Bus, CIATS_
+         Statistical_Engine, CIATS_PDCA_Engine,
+         CIATS_Proposal_Engine, CIATS_Regime_
+         Library, CIATS_Parameter_Store
+         (NEW per A1 above) — 7 module groups.
+         Driver: DR-009.
+
+  REMOVE list:
+    R1   None.
+
+  R-increment: R1 -> R2 (Parameter Store + Half-
+               Kelly + vol_regime + T-2+ tagging).
+
+============================================================
+9. D6 — COMPLETE_SYSTEM
+============================================================
+
+Status: PRESENT but T-2+ tagging ABSENT (0
+labeled <g> groups). Master register drivers:
+DR-009, DR-011, DR-013.
+
+  ALTER list:
+    L1   Container-level governs:ar enumeration.
+         CURRENT D6 root <desc> governs:ar:
+         "AR-001 through AR-025 (system level)".
+         RECONCILE against current 0500000 AR
+         numbering (TB00133 cited AR-070..AR-076
+         via TB00128/TB00130 cascade). Update
+         the AR span to current authoritative
+         range.
+         Driver: DR-013 + DR-007.
+
+  ADD list:
+    A1   HR-PM-009 (Position Mirror sole-writer)
+         system-level callout.
+         ADD a constraint annotation visible at
+         the system-level diagram showing
+         ws_manager is the sole writer to
+         PositionMirror; EE/EC/LM read via
+         ws_manager methods only.
+         Driver: DR-011 (TB00148 CLUSTER 2).
+
+    A2   Module wire-up order callout.
+         ADD a system-level annotation depicting
+         the canonical startup wire-up order:
+         Logger -> Risk_Engine -> Regime_Engine ->
+         Position_Mirror -> WS_Manager ->
+         Signal_Pipeline -> Execution_Engine ->
+         Exit_Controller -> Selection_Controller
+         -> Long_Module -> CIATS.
+         Order to be reconciled against
+         1011014 dv1_8 (Phase 1 startup_sequence
+         spec) at authoring time.
+         Driver: DR-013 (TB00148 CLUSTER 4
+         finding 32).
+
+    A3   T-2+ structured tagging on every
+         labeled group: KRAKEN, TOTHBOT, CIATS
+         containers + every module + every
+         primary connector arrow.
+         Driver: DR-009.
+
+  REMOVE list:
+    R1   None.
+
+  R-increment: R1 -> R2 (HR-PM-009 + wire-up order
+               + T-2+ tagging + AR span
+               reconciled).
+
+============================================================
+10. D7 — PAPER_MODE_DISPATCH_BOUNDARY
+============================================================
+
+Status: PRESENT (added TB00150) but T-2+ tagging
+ABSENT (0 labeled <g> groups). Master register
+drivers: DR-005 (CRITICAL), DR-009, DR-010.
+
+  ALTER list:
+    L1   Direction-of-mimicry visual annotation.
+         ADD/REWORK explicit visual encoding:
+         "Paper IS MASTER. Live MIMICS Paper."
+         The four PA-004 divergence points must
+         be visually marked as the ONLY
+         differences. Outside the four, paper
+         and live code paths MUST visually merge
+         (single block / overlapping band) to
+         depict byte-identical behavior per
+         PA-005.
+         Driver: DR-005 + TB00000 v2_20 §4.4
+         PA-001..010.
+
+    L2   PA-004 four divergence points labels.
+         VERIFY/CORRECT each of the four
+         divergence points is depicted with the
+         current Phase 1 close-gate spec content:
+           (1) Private WS Connection
+               (HR-WM-021 paper-mode skip;
+                live connects)
+           (2) Order Dispatch
+               (HR-EE-013 + HR-WM-022 paper
+                simulate; live transmit)
+           (3) Capital Ledger
+               (paper synthetic; live real;
+                identical fee arithmetic)
+           (4) Position Mirror Sourcing
+               (paper local-fill source;
+                live executions+snap_orders)
+         Driver: DR-005 + DR-010.
+
+    L3   Root <desc> governs:rule expansion.
+         CURRENT D7 root <desc> governs:rule:
+         "HR-WM-021, HR-WM-022, HR-WM-023,
+          HR-WM-024, HR-WM-025, HR-WM-026,
+          HR-WM-032, HR-WM-033, HR-EE-013".
+         ADD: HR-WM-027, HR-WM-028, HR-WM-029,
+              HR-WM-030, HR-WM-031, HR-WM-034,
+              HR-EC-013, HR-EC-014, HR-EC-015,
+              HR-PT-008.
+         Verify against 0511001 dv1_5 + 1011002
+         dv1_26 + 0211005 dv1_3 + 1011014 dv1_8
+         + 0511004 dv1_3 + 1011005 dv1_3 at
+         authoring time; the actual canonical
+         set is whatever those Phase 1 close-
+         gate specs declare.
+         Driver: DR-005.
+
+    L4   Root <desc> governs:pt_mode expansion.
+         CURRENT D7 root <desc> governs:pt_mode:
+         "PT-MODE-001, PT-MODE-002, PT-MODE-003".
+         ADD: PT-MODE-004, PT-MODE-005,
+              PT-MODE-006, PT-MODE-007.
+         Verify against 0211005 dv1_3 at
+         authoring time.
+         Driver: DR-005.
+
+    L5   Root <desc> governs:ar expansion.
+         CURRENT D7 root <desc> governs:ar:
+         "PA-001, PA-002, PA-003, PA-004,
+          PA-005, PA-006, PA-007".
+         ADD: PA-008, PA-009, PA-010 (TB00000
+              v2_18+ §4.4).
+         Driver: DR-005.
+
+  ADD list:
+    A1   T-2+ structured tagging on every
+         labeled group in D7. Required groups
+         per the Tier 1 Context Scope §4 actor
+         enumeration plus PA-004 divergence
+         points:
+           - boundary:Public_WS_Boundary (paper +
+             live identical)
+           - boundary:Private_WS_Boundary (PA-004
+             divergence point 1)
+           - boundary:Order_Dispatch (PA-004
+             divergence point 2)
+           - boundary:Capital_Ledger (PA-004
+             divergence point 3)
+           - boundary:Position_Mirror_Sourcing
+             (PA-004 divergence point 4)
+           - container:Paper_Mode_Code_Path
+           - container:Live_Mode_Code_Path
+           - rule:Paper_As_Master (PA-001
+             annotation)
+         Driver: DR-005 + DR-009.
+
+    A2   PA-006 new-divergence-point Bill-
+         authorization-required visual annotation.
+         ADD a margin annotation: "Adding a 5th
+         divergence point requires Bill written
+         authorization per PA-006 + RR-SCOPE-009
+         four-question origin investigation."
+         Driver: DR-005.
+
+  REMOVE list:
+    R1   None (D7 was added TB00150; no legacy
+         elements to retire).
+
+  R-increment: R1 -> R2 (full reframe + T-2+
+               tagging + governs expansion +
+               direction-of-mimicry annotation).
+
+============================================================
+11. SEQUENCING — STAGE PLAN
+============================================================
+
+Per the TB00153 Master Defect Register §7 critical-
+path sequencing, the following stage plan governs
+TB00154+ diagram-rework session sequencing:
+
+  STAGE A   AUTHOR TIER 1 CONTEXT
+            Driver:    DR-001 CRITICAL
+            Diagram:   Tier 1 Context (NEW)
+            Pre-reqs:  None
+            Unblocks:  All Tier 2 diagrams (50
+                       phantom parent_diagram
+                       references resolved)
+            Estimated: 1 session (TB00154)
+            Output:    0500000 dv1_24 -> dv1_25
+                       (.html with Tier 1 added)
+
+  STAGE B   REWORK D1
+            Driver:    DR-006 CRITICAL + DR-002,
+                       003, 007, 014
+            Diagram:   D1 (R1 -> R2)
+            Pre-reqs:  Stage A complete
+            Estimated: 1 session (TB00155). PATH 2
+                       sharding rewrite is the
+                       single largest architectural
+                       change in the corpus.
+            Output:    0500000 dv1_25 -> dv1_26
+
+  STAGE C   REWORK D2
+            Driver:    DR-005 + DR-010 + DR-004,
+                       015
+            Diagram:   D2 (R1 -> R2)
+            Pre-reqs:  Stage A complete (Tier 1
+                       parent reference); Stage D
+                       coordination (G8 -> EE
+                       dispatch seam shared with D7)
+            Estimated: 1 session (TB00156)
+            Output:    0500000 dv1_26 -> dv1_27
+
+  STAGE D   REWORK D7
+            Driver:    DR-005 CRITICAL + DR-010,
+                       DR-009
+            Diagram:   D7 (R1 -> R2)
+            Pre-reqs:  Stage A complete; Phase 1
+                       close-gate specs
+                       authoritative (already
+                       achieved per TB00152 close)
+            Estimated: 1 session (TB00157)
+            Output:    0500000 dv1_27 -> dv1_28
+            Note:      Stage D may swap with
+                       Stage C if Bill prefers
+                       to lock paper-as-master
+                       direction visually before
+                       reworking the dispatch
+                       seam in D2. Sequencing is
+                       Claude recommendation;
+                       Bill ratifies in Decision
+                       Register.
+
+  STAGE E   REWORK D5
+            Driver:    DR-012 + DR-009
+            Diagram:   D5 (R1 -> R2)
+            Pre-reqs:  Stage A complete
+            Estimated: 1 session (TB00158)
+            Output:    0500000 dv1_28 -> dv1_29
+
+  STAGE F   REWORK D6
+            Driver:    DR-011 + DR-013 + DR-009
+            Diagram:   D6 (R1 -> R2)
+            Pre-reqs:  Stages B, C, E complete
+                       (D6 is system-level roll-
+                       up of D1, D2, D5 modules)
+            Estimated: 1 session (TB00159)
+            Output:    0500000 dv1_29 -> dv1_30
+
+  STAGE G   REWORK D3
+            Driver:    DR-011 + DR-040 + DR-009
+            Diagram:   D3 (R1 -> R2)
+            Pre-reqs:  Stage A; Phase 1 spec
+                       1011006 dv1_2 landing
+                       (gates Layer 2
+                       mae_pct_reached field)
+            Estimated: 1 session (TB00160). May
+                       sequence earlier if 1011006
+                       dv1_2 is authored in a
+                       parallel Phase 1 batch.
+            Output:    0500000 dv1_30 -> dv1_31
+
+  STAGE H   REWORK D4
+            Driver:    DR-008 + DR-009
+            Diagram:   D4 (R1 -> R2)
+            Pre-reqs:  Stage A; regime count
+                       reconciled (5 vs 6 — see
+                       Decision Register item
+                       DEC-002)
+            Estimated: 1 session (TB00161)
+            Output:    0500000 dv1_31 -> dv1_32
+
+Total sessions: 8 diagram-rework sessions (TB00154
+through TB00161). One diagram per session is the
+default; bundling is permitted only with
+first-principles justification (see Decision
+Register item DEC-001).
+
+Concurrent / parallel sessions:
+
+  - 0311001 v1_6 -> v1_7 §15.12 amendment for
+    G-A1..G-A8 cumulative gaps may be authored
+    in its own session (TB00153.5 or equivalent)
+    OR bundled into Stage B (D1 rework). See
+    Decision Register item DEC-003.
+
+  - Phase 1 close-gate spec amendments
+    (1011006 dv1_2 etc.) needed for Stage G
+    require their own session(s). They are
+    Phase 1 Step 3 work in Bill's stated
+    workflow ("write/rewrite the 10XXXXX coding
+    specs to match"). See Decision Register
+    item DEC-004.
+
+============================================================
+12. EXIT CRITERIA — DIAGRAM CORPUS COMPLETE
+============================================================
+
+The diagram-rework portion of Step 1 (per Bill's
+diagram-first workflow) is complete when:
+
+  E1   Tier 1 Context Diagram exists in the
+       parent 0500000 .html with full T-2+
+       structured tagging and §15.12 registry
+       binding.
+
+  E2   All 7 Tier 2 diagrams (D1-D7) carry full
+       T-2+ structured tagging on every labeled
+       group.
+
+  E3   Every parent_diagram reference in D1-D7
+       resolves to the authored Tier 1 (zero
+       phantom references).
+
+  E4   Every CANONICAL_NAME token in any diagram
+       resolves to a §15.12 registry entry.
+
+  E5   The parent 0500000 .html PASSES DR-007.9
+       well-formedness on every increment.
+
+  E6   The Master Defect Register entries
+       DR-001 through DR-015 + DR-040 are CLOSED
+       (status moves from OPEN to CLOSED-elsewhere).
+       DR-016 onward are governance / spec / code-
+       deploy items not gating diagram-rework
+       completion.
+
+When E1-E6 are met, Bill's stated workflow
+proceeds to Step 2 (update 0500000 prose to match
+the diagrams).
+
+============================================================
+13. REVISION HISTORY
+============================================================
+
+  v1_0  2026-05-08  First issue. Per-diagram
+                    decision matrix for Tier 1
+                    Context (NEW) plus D1-D7,
+                    citing Master Defect Register
+                    entries DR-001 through DR-040.
+                    Eight-stage sequencing plan
+                    (Stages A through H) covering
+                    TB00154 through TB00161.
+                    Decision Register cross-
+                    references for Stage C/D
+                    swap, regime-count
+                    reconciliation, 0311001 §15.12
+                    amendment timing, and Phase 1
+                    spec landing.
+
+============================================================
+END OF TB00153 DIAGRAM ALTER / ADD / REMOVE PLAN v1_0
+============================================================

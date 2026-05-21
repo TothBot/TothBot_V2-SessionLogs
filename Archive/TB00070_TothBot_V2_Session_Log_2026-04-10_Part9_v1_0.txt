@@ -1,0 +1,280 @@
+DocDCN:     TB00070
+DocTitle:   TothBot_V2_Session_Log_2026-04-10_Part9
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\My_TothBot_Stuff\TBXXXXX_Session_Logs\TB00070_TothBot_V2_Session_Log_2026-04-10_Part9_v1_0.txt
+DocDate:    04-10-2026
+DocTime:    23:59:59 UTC
+
+============================================================
+TOTHBOT V2 SESSION LOG — 2026-04-10 PART 9
+============================================================
+
+============================================================
+1. SESSION IDENTITY
+============================================================
+
+Session date:     April 10, 2026 (Part 9)
+Session number:   TB00070
+Session type:     ws_manager.py verification (project folder
+                  and GitHub) and GitHub commit confirmation.
+Prior session:    TB00069 (2026-04-10 Part 8)
+
+Documents read:
+  TB00000  v2_8   Project Instructions              checked
+  TB00069  v1_0   Most recent session log           checked
+
+============================================================
+2. WORK COMPLETED THIS SESSION
+============================================================
+
+------------------------------------------------------------
+2.1 ws_manager.py — Project Folder Verification
+------------------------------------------------------------
+
+Confirmed ws_manager.py present in /mnt/project/.
+
+Verification checks performed:
+
+  Line count:
+    Command:  wc -l /mnt/project/ws_manager.py
+    Result:   2,686 lines
+    Expected: ~2,686 (TB00069 corrected paper trading version)
+    Status:   PASS
+
+  paper_mode reference count:
+    Command:  grep -c "paper_mode" /mnt/project/ws_manager.py
+    Result:   12 references
+    Expected: > 0
+    Status:   PASS
+
+  paper_mode line locations confirmed:
+    Line  204:  self.paper_mode: bool = bool(
+                    config.get("paper_trading_mode", False))
+                  → WSManager.__init__ attribute                PASS
+
+    Line  594:  FIX-WM-PT-001 comment —
+                _startup_connect_and_subscribe() paper gate     PASS
+
+    Line  596:  if self.paper_mode:
+                  → _startup paper gate active                  PASS
+
+    Line  631:  FIX-WM-PT-002 comment —
+                _main_loop() paper gate                         PASS
+
+    Line  633:  if self.paper_mode:
+                  → _main_loop 3-task paper path active         PASS
+
+    Line  865:  if self.paper_mode and symbol in
+                    self.position_mirror:
+                  → _handle_ticker paper fill detection         PASS
+
+    Line 1684:  if self.paper_mode:
+                  → add_order() paper gate                      PASS
+
+    Line 1830:  if self.paper_mode:
+                  → batch_add() paper gate                      PASS
+
+    Line 1874:  if self.paper_mode:
+                  → cancel_order() paper gate                   PASS
+
+    Line 1905:  if self.paper_mode:
+                  → amend_order() paper gate                    PASS
+
+    Line 1938:  if self.paper_mode:
+                  → batch_cancel() paper gate                   PASS
+
+    Line 1967:  if self.paper_mode:
+                  → dispatch_market_sell() paper gate           PASS
+
+  _ws_private is not None guards confirmed:
+    Command:  grep -n "ws_private is not None"
+                  /mnt/project/ws_manager.py
+    Line 2040:  _ping_loop() private section guard             PASS
+    Line 2098:  _zombie_monitor() private section guard        PASS
+
+  All 16 TB00068/TB00069 checks:                              PASS
+
+------------------------------------------------------------
+2.2 ws_manager.py — GitHub Commit
+------------------------------------------------------------
+
+Local path:
+  C:\Users\wstot\GitHub\TothBot\TothBot_V2-Code\tothbot\
+  ws_manager.py
+
+Commands executed in sequence:
+
+  Step 1 — Navigate to repo root:
+    cd C:\Users\wstot\GitHub\TothBot\TothBot_V2-Code
+    Result: directory confirmed
+
+  Step 2 — git status:
+    Result:
+      On branch master
+      Changes not staged for commit:
+        modified: tothbot/startup_sequence.py
+        modified: tothbot/ws_manager.py
+      Untracked files: (various — not addressed this session)
+
+  Step 3 — git add tothbot/ws_manager.py:
+    Result:
+      warning: in the working copy of 'tothbot/ws_manager.py',
+      LF will be replaced by CRLF the next time Git touches it
+    Status: EXPECTED — Windows line ending normalization.
+            Not a defect.
+
+  Step 4 — git commit:
+    Command:
+      git commit -m "Add paper trading version of
+      ws_manager.py with DEFECT-WM-PT-002 fixes"
+    Result:
+      [master b1ce378] Add paper trading version of
+      ws_manager.py with DEFECT-WM-PT-002 fixes
+      1 file changed, 75 insertions(+), 41 deletions(-)
+    Status: COMMITTED
+
+  Step 5 — git push origin master:
+    Result:
+      Enumerating objects: 7, done.
+      Counting objects: 100% (7/7), done.
+      Delta compression using up to 20 threads
+      Compressing objects: 100% (4/4), done.
+      Writing objects: 100% (4/4), 1.31 KiB | 1.31 MiB/s, done.
+      Total 4 (delta 3), reused 0 (delta 0), pack-reused 0
+      remote: Resolving deltas: 100% (3/3), completed with
+              3 local objects.
+      To https://github.com/TothBot/TothBot_V2-Code.git
+         6e0843c..b1ce378  master -> master
+    Status: PUSHED — CONFIRMED
+
+  GitHub commit hash:  b1ce378
+  Prior commit hash:   6e0843c (defective — superseded)
+  Branch:              master
+  Remote:              origin (TothBot/TothBot_V2-Code)
+
+============================================================
+3. CURRENT STATE AT END OF SESSION
+============================================================
+
+  ws_manager.py (project folder):
+    Version:      Paper trading — corrected (TB00069)
+    Lines:        2,686
+    paper_mode:   12 references confirmed
+    All 16 checks: PASS
+    Status:       CURRENT AND CORRECT ✓
+
+  ws_manager.py (GitHub):
+    Commit:       b1ce378
+    Branch:       master
+    Content:      Paper trading version with DEFECT-WM-PT-002
+                  fixes — all 4 gates applied
+    Status:       CURRENT AND CORRECT ✓
+
+  ws_manager.py (VPS):
+    Commit:       6e0843c — STALE — defective version
+    Status:       NOT YET UPDATED — PENDING
+
+  startup_sequence.py (GitHub):
+    Commit:       7ae8cf5
+    Status:       Current — paper trading version ✓
+
+  startup_sequence.py (VPS):
+    Status:       Pulled — matches 7ae8cf5 ✓
+
+  Service:        STOPPED
+
+  VPS env files:
+    /root/.tothbot.env:                PAPER_TRADING_MODE=true ✓
+    /root/TothBot_V2-Code/.tothbot.env: PAPER_TRADING_MODE=true ✓
+
+  PT-ENTRY STATUS:
+    PT-ENTRY-001  All unit tests pass             DONE
+    PT-ENTRY-002  All integration tests pass      DONE
+    PT-ENTRY-003  VPS deployed per 1011013        PENDING
+    PT-ENTRY-004  logrotate configured            DONE (PL)
+    PT-ENTRY-005  IP whitelist confirmed          DONE
+    PT-ENTRY-006  Alert email confirmed           DONE
+    PT-ENTRY-007  systemd auto-restart confirmed  PENDING
+    PT-ENTRY-008  Startup sequence confirmed      PENDING
+
+============================================================
+4. DEFECT LOG
+============================================================
+
+  DEFECT-SS-001
+    File:    startup_sequence.py
+    Status:  FIXED AND COMMITTED (commit 7ae8cf5)
+
+  DEFECT-WM-PT-001
+    File:    ws_manager.py
+    Status:  FIXED AND COMMITTED (commit 6e0843c)
+             NOTE: commit 6e0843c contained the TB00063
+             10-change paper trading version but was missing
+             the DEFECT-WM-PT-002 fixes. Superseded by
+             commit b1ce378.
+
+  DEFECT-WM-PT-002
+    File:    ws_manager.py
+    Defect:  _startup_connect_and_subscribe(), _main_loop(),
+             _ping_loop(), _zombie_monitor() had no paper
+             mode guards. Private WS operations executed in
+             paper mode causing crash loop.
+    Fix:     FIX-WM-PT-001 through FIX-WM-PT-004 applied
+             (TB00069). All 4 guards in place.
+    Status:  FIXED — COMMITTED (commit b1ce378) ✓
+             NOT YET DEPLOYED TO VPS
+
+============================================================
+5. NEXT SESSION
+============================================================
+
+  Read TB00000 v2_8 and TB00070 before any work.
+
+  Next task: Deploy corrected ws_manager.py to VPS.
+
+  VPS deploy sequence:
+    ssh root@87.99.141.44
+    cd ~/TothBot_V2-Code
+    git pull origin master
+    Confirm ws_manager.py updated (commit b1ce378)
+    systemctl start tothbot
+    journalctl -u tothbot -f
+    Confirm PAPER_TRADING_MODE_ON in log
+    Confirm no crash loop
+    Confirm public WS connects and subscribes
+    Confirm OHLC events received
+
+  PT-ENTRY-003 completion criteria:
+    Service starts without crash
+    PAPER_TRADING_MODE_ON logged at startup
+    Public WS connected and subscribed
+    OHLC events flowing
+    No ZOMBIE or PING_TIMEOUT alerts within 5 minutes
+
+============================================================
+6. PARKING LOT
+============================================================
+
+  PL-001      WSManager dual PM creation paths. Monitor.
+  PL-003      Pathway 1 GitHub automation. After paper trading.
+  PL-NEW-003  VPS migration to Hillsboro OR. After stable.
+  PL-NEW-004  EE ENTRY_TIMEOUT_SEC vs WM ENTRY_GTD_SEC. Monitor.
+  PL-NEW-005  requirements.txt — websockets>=13.0.
+  PL-NEW-006  tothbot.service not updated. After PT-ENTRY.
+  PL-NEW-007  LOG_FILE path mismatch. After PT-ENTRY.
+  PL-NEW-008  Heartbeat UNKNOWN_MESSAGE_TYPE spam. After PT-ENTRY.
+  PL-NEW-009  Untracked files in TothBot_V2-Code repo. After PT-ENTRY.
+
+============================================================
+7. REVISION HISTORY
+============================================================
+
+  v1_0  04-10-2026  Initial. ws_manager.py verified in project
+                    folder (2,686 lines, 12 paper_mode refs,
+                    all 16 checks PASS). GitHub commit b1ce378
+                    confirmed. DEFECT-WM-PT-002 closed.
+
+============================================================
+END OF SESSION LOG
+============================================================

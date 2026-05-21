@@ -1,0 +1,479 @@
+DocDCN:     TB00103_NSI
+DocTitle:   Next_Session_Instructions_for_Claude_Code
+DocVersion: v1_1
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TBXXXXX_Session_Logs\TB00103_Next_Session_Instructions_v1_1.txt
+DocDate:    04-18-2026
+DocTime:    20:15:00 UTC
+
+============================================================
+NEXT SESSION INSTRUCTIONS — CLAUDE CODE
+DEFECT-WM-RECONNECT-001 FIX IMPLEMENTATION
+============================================================
+
+This file is a local reference for Bill only. It is NOT
+uploaded to the Claude project folder. Its purpose is to
+give Bill the exact steps to launch Claude Code for the
+next session and the exact kickoff prompt to paste.
+
+PAPER TRADING ONLY. NO REAL MONEY.
+
+============================================================
+SECTION 1 — PRE-FLIGHT CHECKLIST
+============================================================
+
+Before opening Claude Code, confirm:
+
+  [ ] TB00000 v2_9 saved to:
+      C:\Users\wstot\GitHub\TothBot\TBXXXXX_Session_Logs\
+
+  [ ] TB00103 v1_1 saved to:
+      C:\Users\wstot\GitHub\TothBot\TBXXXXX_Session_Logs\
+
+  [ ] TB00000 v2_9 uploaded to Claude project folder.
+      TB00000 v2_8 deleted from Claude project folder.
+
+  [ ] TB00103 v1_1 uploaded to Claude project folder.
+      TB00103 v1_0 (if present) and TB00102 v1_2 deleted
+      from Claude project folder.
+
+  [ ] TothBot_V2-Docs local repo is clean and up-to-date:
+      C:\Users\wstot\GitHub\TothBot\TothBot_V2-Docs\
+      (git pull first to confirm latest)
+
+  [ ] TothBot_V2-Code local repo is clean and up-to-date:
+      C:\Users\wstot\GitHub\TothBot\TothBot_V2-Code\
+      (git pull first to confirm latest)
+
+  [ ] VPS is still running (it will continue crashing on
+      the known signature — that is expected and not a
+      blocker):
+      ssh root@87.99.141.44
+      systemctl status tothbot
+
+Pre-flight git pull commands (PowerShell):
+
+  cd C:\Users\wstot\GitHub\TothBot\TothBot_V2-Docs
+
+  git pull origin master
+
+  cd C:\Users\wstot\GitHub\TothBot\TothBot_V2-Code
+
+  git pull origin master
+
+============================================================
+SECTION 2 — LAUNCH CLAUDE CODE
+============================================================
+
+NOTE: Claude Code is already installed (v2.1.114) and
+authenticated. You do not need to reinstall. Follow
+Section 2 only when starting a fresh terminal.
+
+Step A — Open PowerShell at the parent folder:
+
+  Open PowerShell. Press Windows key, type powershell,
+  press Enter. Then paste:
+
+  cd C:\Users\wstot\GitHub\TothBot
+
+Step B — Launch Claude Code:
+
+  In the same PowerShell window, paste:
+
+  claude
+
+Step C — When Claude Code starts, verify it has access
+to all three subfolders under
+C:\Users\wstot\GitHub\TothBot:
+
+    TBXXXXX_Session_Logs\
+    TothBot_V2-Code\
+    TothBot_V2-Docs\
+
+  If any is missing, close Claude Code and confirm you
+  are launching from C:\Users\wstot\GitHub\TothBot.
+
+============================================================
+SECTION 3 — KICKOFF PROMPT TO PASTE INTO CLAUDE CODE
+============================================================
+
+Copy everything between the BEGIN and END markers and
+paste it as the very first message to Claude Code.
+
+---------------- BEGIN KICKOFF PROMPT ----------------
+
+PAPER TRADING ONLY. NO REAL MONEY. PAPER TRADING ONLY.
+
+NO PATCHES. Full file delivery only. Full document control
+per 0311001, 0311002, 0311003, 0311004. Every code change
+= new version = full file delivered as .txt per DR-001.
+All deliverables in ONE BATCH per DR-003.
+
+SESSION CONTEXT
+===============
+
+You are Claude Code working on TothBot V2. Bill is the
+sole operator. This is a continuation from TB00103.
+
+Prior session in Claude Chat (TB00103 v1_1) completed the
+24-hour observation period for DEFECT-WM-RECONNECT-001.
+Observation confirmed the crash signature is exclusively:
+
+  ConnectionClosedError at ws_manager.py line 975
+  (_recv_loop_public), propagated through asyncio
+  TaskGroup at line 958 to run() at line 882.
+
+Stop condition was NOT triggered. We proceed with the fix.
+
+LOCAL FILESYSTEM LAYOUT (your working directory)
+================================================
+
+You are launched from:
+  C:\Users\wstot\GitHub\TothBot\
+
+Subfolders:
+  TBXXXXX_Session_Logs\   session logs + TB00000
+  TothBot_V2-Code\        code repo (commit to master)
+  TothBot_V2-Docs\        docs repo (commit to master)
+
+DOCUMENTS TO READ — IN THIS ORDER
+=================================
+
+Read every file below before any work. State each file
+name and version before proceeding.
+
+Session logs (TBXXXXX_Session_Logs\):
+
+  1.  TB00000  v2_9    Project Instructions
+      File: TB00000_TothBot_V2_Project_Instructions_for_Claude_v2_9.txt
+  2.  TB00103  v1_1    Prior session log (most recent)
+      File: TB00103_TothBot_V2_Session_Log_2026-04-18_v1_1.txt
+
+Governance (TothBot_V2-Docs\03XXXXX_Governance\):
+
+  3.  0311001  v1_1    Namespace_Specification
+  4.  0311002  v1_2    Document_Creation_Workflow
+  5.  0311003  v1_0    Versioning_Procedure
+  6.  0311004  v1_1    Document_Creation_and_Approval_Procedure
+
+Specs (TothBot_V2-Docs\10XXXXX_Coding_Specification\):
+
+  7.  1011002  dv1_18  WS_Manager_Coding_Spec
+  8.  1010000  dv1_8   Trading_System_Coding_Anchor
+
+Code (TothBot_V2-Code\tothbot\):
+
+  9.  ws_manager.py   dv1_19 (3,317 lines)
+
+Confirm versions of all 9 files before starting work.
+
+DEFECT-WM-RECONNECT-001 — FIX SPECIFICATION
+===========================================
+
+Component:   ws_manager.py (dv1_19 — current)
+Governing:   1011002_WS_Manager_Coding_Spec dv1_18
+Severity:    CRITICAL — blocks stable paper trading
+
+Problem Statement
+-----------------
+
+Transient WebSocket disconnects from Kraken's CloudFlare
+proxy are propagating out of the asyncio TaskGroup inside
+ws_manager.py, causing WS_MGR_FATAL and systemd restart.
+Observed frequency: approximately 1-2 per hour.
+
+Observed signatures (from 2026-04-16 to 2026-04-18):
+  - ConnectionClosedError: no close frame received
+    at _recv_loop_public:975
+  - ConnectionClosedOK: received 1001 (going away)
+    at _send_public:735 (via _ping_loop:2360)
+  - ConnectionResetError [Errno 104]
+    at _recv_loop_public:975
+  - RuntimeError: Fatal reconnect failure
+    at _initiate_reconnect:3241
+
+Required Behavior
+-----------------
+
+ConnectionClosedError, ConnectionClosedOK, and
+ConnectionResetError within public WebSocket loops must
+be CAUGHT LOCALLY and trigger orderly reconnect without
+process termination.
+
+_initiate_reconnect must retry with backoff. It must
+NOT raise RuntimeError on first failure. It propagates
+fatal WS_MGR_FATAL only after all retry attempts are
+exhausted.
+
+Private WebSocket loops must be similarly hardened (symmetric
+treatment).
+
+Fix Scope
+---------
+
+CODE:
+
+  ws_manager.py dv1_19 → dv1_20 (full file, new version,
+  full 7-field header, revision history entry).
+
+  Target fix areas (existing line numbers in dv1_19):
+
+    Line 735   — _send_public: catch transient disconnect
+                 locally, trigger orderly reconnect path.
+    Line 958   — _main_loop TaskGroup: ensure transient
+                 errors from children do not bubble to
+                 TaskGroup. TaskGroup only receives
+                 genuinely fatal errors.
+    Line 975   — _recv_loop_public: catch transient
+                 disconnect locally, trigger orderly
+                 reconnect path.
+    Line 2353  — _ping_loop path 1: same treatment.
+    Line 2360  — _ping_loop path 2: same treatment.
+    Line 3241  — _initiate_reconnect: remove immediate
+                 RuntimeError. Implement N-attempt retry
+                 with exponential backoff. Only raise
+                 fatal after N exhausted.
+    _recv_loop_private — apply symmetric hardening.
+    _send_private      — apply symmetric hardening.
+
+SPEC:
+
+  1011002_WS_Manager_Coding_Spec dv1_18 → dv1_19.
+  Add or update reconnect hard rules (WM-RECONNECT-*) to
+  match new behavior. Candidate new rules (confirm with
+  spec during read):
+    WM-RECONNECT-NEW-001  Transient WS disconnect errors
+                          (ConnectionClosedError,
+                          ConnectionClosedOK,
+                          ConnectionResetError) MUST be
+                          caught locally in the loop that
+                          raises them and MUST trigger
+                          orderly reconnect. They MUST
+                          NOT propagate to the TaskGroup.
+    WM-RECONNECT-NEW-002  _initiate_reconnect MUST retry
+                          with backoff for at least N
+                          attempts before raising fatal.
+                          Propose N and backoff schedule;
+                          default N=5, base=2s, cap=60s,
+                          exponential.
+    WM-RECONNECT-NEW-003  TaskGroup in _main_loop MUST
+                          receive only truly fatal
+                          conditions. Transient errors
+                          MUST be fully handled at
+                          loop-level.
+  Exact rule numbering follows 1011002 existing scheme.
+  Propose final numbering after reading 1011002 dv1_18.
+
+REGISTRY:
+
+  1010000_Trading_System_Coding_Anchor dv1_8 → dv1_9.
+  Code File Registry: ws_manager.py SpecVer updated
+  dv1_18 → dv1_19. Revision history entry added.
+
+Design Constraints
+------------------
+
+  DC-1  NO PATCHES. Full ws_manager.py delivered as .txt.
+  DC-2  ws_manager.py header updated (dv1_20, new date,
+        new UTC time). Revision history entry added.
+  DC-3  Preserve all behavior unrelated to reconnect.
+        Do not refactor unrelated code.
+  DC-4  All new constants (retry N, backoff base, cap)
+        declared at top of module with clear names and
+        comments. No magic numbers.
+  DC-5  Every new code path MUST emit a structured log
+        event (log_record) with event name, level,
+        component = WS_MGR, and any relevant context
+        (attempt number, elapsed seconds, last error
+        class). Logger is CIATS sole data source.
+  DC-6  Emit log events at key transitions:
+          RECONNECT_TRIGGERED
+          RECONNECT_ATTEMPT
+          RECONNECT_SUCCEEDED
+          RECONNECT_FAILED (non-fatal, still retrying)
+          FATAL_RECONNECT_FAILURE (N attempts exhausted)
+        Use existing event names where present in dv1_19.
+  DC-7  Half-open / zombie detection behavior preserved.
+        Do not weaken existing WM-RECONNECT-* rules.
+  DC-8  No new external dependencies.
+  DC-9  Follow 1011001 Engineering_Best_Practices.
+  DC-10 No code path catches bare Exception. All catches
+        target specific exception types.
+
+Acceptance Criteria
+-------------------
+
+  AC-1  All three transient exception types
+        (ConnectionClosedError, ConnectionClosedOK,
+        ConnectionResetError) are caught locally in
+        every loop that can raise them.
+  AC-2  _initiate_reconnect retries with backoff per
+        DC-4. Fatal raised only after exhaustion.
+  AC-3  TaskGroup in _main_loop no longer sees transient
+        WS errors as sub-exceptions under normal
+        CloudFlare cycling.
+  AC-4  Revision history entry in ws_manager.py explicitly
+        references DEFECT-WM-RECONNECT-001 and the
+        governing rules (WM-RECONNECT-NEW-00x).
+  AC-5  1011002 and 1010000 updated with matching
+        version increments and cross-references.
+  AC-6  All three deliverable .txt files pass seven-field
+        header validation and DC compliance check.
+
+Deliverables
+------------
+
+Produce these files as .txt and present in ONE BATCH:
+
+  1.  ws_manager.py                         (dv1_20)
+  2.  1011002_WS_Manager_Coding_Spec        (dv1_19)
+  3.  1010000_Trading_System_Coding_Anchor  (dv1_9)
+
+Plus:
+
+  4.  TB0010X session log for this session (new TB DCN,
+      v1_0 — Bill will provide the TB number when saving;
+      draft with placeholder TB0010X and Bill will rename
+      on download). Save to:
+        C:\Users\wstot\GitHub\TothBot\TBXXXXX_Session_Logs\
+
+  5.  Bill actions list for commit + VPS deploy + observe.
+
+Commit and Deploy Instructions
+------------------------------
+
+Provide Bill with:
+
+  (a) TothBot_V2-Docs commit command sequence
+      (1011002 and 1010000).
+  (b) TothBot_V2-Code commit command sequence
+      (ws_manager.py).
+  (c) VPS deployment command sequence
+      (ssh, git pull, systemctl restart tothbot, verify
+      DocVersion on VPS, tail log for startup sequence).
+  (d) Success criteria for deployment verification.
+  (e) Observation window definition (post-deploy).
+
+Follow standing rules RULE 6, 14, 15, 17 exactly.
+
+WORK PLAN
+=========
+
+Step 1.  Read all 9 files. State versions.
+Step 2.  Confirm with Bill the proposed new rule numbers
+         and retry schedule (N, base, cap) before coding.
+Step 3.  Draft ws_manager.py dv1_20. Show unified diff
+         preview ONLY for Bill to review (this is NOT
+         the delivery — this is a design review).
+Step 4.  After Bill approves the design, produce full
+         ws_manager.py dv1_20 as .txt.
+Step 5.  Produce 1011002 dv1_19 as .txt.
+Step 6.  Produce 1010000 dv1_9 as .txt.
+Step 7.  Produce session log TB0010X v1_0 as .txt.
+Step 8.  Produce Bill actions list (commit + deploy +
+         observe).
+Step 9.  Deliver all four files in ONE BATCH.
+
+Do NOT skip Step 2 (design confirmation). Do NOT deliver
+any file until Step 4.
+
+HARD STOPS
+==========
+
+Stop and ask Bill if:
+  - Any of the 9 read files is missing or a version
+    mismatch is detected.
+  - The fix would require changing behavior outside the
+    reconnect paths.
+  - A change would weaken any existing WM-RECONNECT-* rule.
+  - You are uncertain whether a code path is transient or
+    fatal.
+
+PROCEED NOW WITH STEP 1.
+
+---------------- END KICKOFF PROMPT ----------------
+
+============================================================
+SECTION 4 — AFTER CLAUDE CODE DELIVERS
+============================================================
+
+When Claude Code delivers the four files:
+
+  1.  Review unified diff preview from Step 3 before
+      approving full file generation.
+  2.  Confirm retry schedule (N, base, cap) proposal.
+  3.  Approve or request changes.
+  4.  Once full files delivered, follow the commit +
+      deploy + observe steps Claude Code provides.
+
+Remember:
+  - git add . is PROHIBITED. Explicit per file.
+  - git push origin master. NEVER origin main.
+  - ONE COMMAND PER COPY BOX.
+  - Include root file path in every instruction.
+  - Full file delivery only. NO PATCHES.
+
+============================================================
+SECTION 5 — IF CLAUDE CODE SESSION FAILS
+============================================================
+
+If Claude Code session crashes or loses context:
+  (a) Return to Claude Chat.
+  (b) Upload the most recent TB0010X session log produced
+      by Claude Code (if any) to the Claude project.
+  (c) Paste:
+
+      Resume DEFECT-WM-RECONNECT-001 fix from prior
+      Claude Code session. Read TB00103 v1_1 and the
+      most recent TB0010X from Claude Code. State all
+      versions. Identify which steps in the work plan
+      are complete and which remain.
+
+============================================================
+REVISION HISTORY
+============================================================
+
+  v1_1  04-18-2026  DocPath and all internal path
+                    references updated to the new session
+                    log location:
+                      C:\Users\wstot\GitHub\TothBot\
+                        TBXXXXX_Session_Logs\
+
+                    Reason: TBXXXXX_Session_Logs folder
+                    was moved from My_TothBot_Stuff to
+                    the TothBot parent folder during
+                    Claude Code onboarding. Co-location
+                    with the two git repos gives Claude
+                    Code a single least-privilege file-
+                    system tree containing everything it
+                    needs. Full FP/DP rationale is in
+                    TB00000 v2_9 Section 11 and TB00103
+                    v1_1 Section 2.5.
+
+                    Changes this version:
+                      - DocPath updated.
+                      - Section 1 pre-flight checklist
+                        paths updated.
+                      - Section 2 cd command changed
+                        from Command Prompt /d syntax
+                        to PowerShell syntax; added
+                        note that Claude Code is already
+                        installed and authenticated.
+                      - Kickoff prompt (Section 3) has
+                        new LOCAL FILESYSTEM LAYOUT
+                        section reflecting the three-
+                        subfolder structure.
+                      - Documents-to-read list in
+                        kickoff prompt shows explicit
+                        subfolder paths and updated
+                        TB00000/TB00103 versions.
+                      - Section 5 fallback instruction
+                        references TB00103 v1_1.
+
+  v1_0  04-18-2026  Initial. Next-session kickoff prompt
+                    and launch instructions for Claude Code.
+                    Produced alongside TB00103 v1_0.
+
+============================================================
+END OF NEXT SESSION INSTRUCTIONS
+============================================================

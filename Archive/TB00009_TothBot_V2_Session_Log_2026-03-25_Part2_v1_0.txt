@@ -1,0 +1,425 @@
+DocDCN:     TB00009
+DocTitle:   TothBot_V2_Session_Log_2026-03-25_Part2
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\OneDrive\TothBot\TB00009_TothBot_V2_Session_Log_2026-03-25_Part2_v1_0.txt
+DocDate:    03-25-2026
+DocTime:    23:59:59 UTC
+
+============================================================
+TOTHBOT V2 — SESSION LOG 2026-03-25 PART 2
+============================================================
+
+Read TB00001 through TB00008 first.
+
+============================================================
+1. SESSION IDENTITY
+============================================================
+
+Session date:     March 25, 2026 (Part 2 — same day as TB00008)
+Session type:     10-search FP/DP organism validation +
+                  Document updates across 0411001, 1011002,
+                  new 1011013, 0500000 dv1_8 production
+Prior session:    TB00008 (2026-03-25 Part 1)
+Documents in:     All documents listed in TB00008 Section 9,
+                  plus 0500000 dv1_7 Claude Source
+
+============================================================
+2. SESSION OPENING — MANDATORY READING
+============================================================
+
+All mandatory documents read per TB00000 Section 2:
+
+  TB00000  v2_5       — governing
+  TB00008  v1_0       — most recent prior session log
+  0311001  dv1_2      — confirmed present (was missing from
+                        initial session check — present in
+                        project)
+  0311002  dv1_7      — confirmed
+  0500000  dv1_7      — Claude Source confirmed
+
+State from TB00008: 0500000 dv1_7 produced. PL-014 pending
+verification. Parking lot all resolved or tracking. Next
+step: Begin Phase 1 per 0311002 dv1_7.
+
+============================================================
+3. WORK PERFORMED THIS SESSION
+============================================================
+
+------------------------------------------------------------
+3.1 10-Search FP/DP Organism Validation
+------------------------------------------------------------
+
+Conducted 10 sequential web searches per Bill instruction.
+Minimum 15 references per search. 100 unique references
+total (no repeats across searches). Topic: validate all
+0500000 connections and communication channels; identify
+gaps, improvements; resolve all parking lot items.
+
+SEARCH 1  — Kraken WS v2 API 2025-2026 changelog review
+SEARCH 2  — Kraken REST auth Oct 2025 change details
+SEARCH 3  — Python asyncio 24/7 memory leak patterns
+SEARCH 4  — WebSocket reconnection strategies, state sync
+SEARCH 5  — ATR-based SL/TP research 2024-2025
+SEARCH 6  — Market regime detection research 2024-2025
+SEARCH 7  — Kraken MPP, post_only, no_mpp deprecation
+SEARCH 8  — VPS systemd watchdog, circuit breaker patterns
+SEARCH 9  — Hetzner Hillsboro latency, aiohttp pooling
+SEARCH 10 — Kraken executions channel sequence, exec_type,
+             restated, amended, reason vs cancel_reason
+
+------------------------------------------------------------
+3.2 Findings — Confirmed Correct (no changes needed)
+------------------------------------------------------------
+
+CONFIRMED-01:  All 21 core connection points from dv1_7
+               remain valid. No architectural reversals.
+
+CONFIRMED-02:  ATR(14) x 1.5x MAE, x 3.0x emergSL remain
+               optimal starting values. Research confirms
+               1.5x is standard swing trader stop distance.
+               CIATS parameter ownership confirmed correct.
+
+CONFIRMED-03:  6-regime ADX+ATR percentile classification
+               confirmed by RegimeNAS academic paper (2025)
+               which uses same ADX+ATR percentile approach.
+
+CONFIRMED-04:  200-trade and 600-trade floors remain valid.
+               No new statistical evidence changes thresholds.
+
+CONFIRMED-05:  Hetzner Hillsboro availability confirmed
+               (IMP-01/PL-007). Location exists, pricing
+               revised Dec 2024. Migration still recommended.
+
+CONFIRMED-06:  WS v2 only confirmed for all future Kraken
+               enhancements (AR-005).
+
+------------------------------------------------------------
+3.3 Findings — New Requirements Found (ALL RESOLVED)
+------------------------------------------------------------
+
+A-11  CRITICAL: cancel_reason field DEPRECATED in executions
+      channel (deprecated at WS v2.0.0 release Dec 2023).
+      Must use reason field. Silent None return if wrong.
+      Resolved in: 0411001 dv1_1 WS-EXE-002/003/004,
+                   1011002 dv1_1 WM-EXE-002/003/004,
+                   0500000 dv1_8 text + AR-022.
+
+A-12  Complete exec_type enum handling required.
+      All 10 exec_type values documented and dispatched:
+      pending_new, new, trade, filled, iceberg_refill,
+      canceled, expired, amended, restated, status.
+      Resolved in: 0411001 dv1_1 WS-EXE-005/006,
+                   1011002 dv1_1 WM-EXE-005/006/007,
+                   0500000 dv1_8 text + AR-023.
+
+A-13  CRITICAL: restated exec_type handling specified.
+      Engine-initiated order amend. NOT fill. NOT cancel.
+      Elevated alert if resting TP or emergSL is restated.
+      Resolved in: 0411001 dv1_1 WS-EXE-007/008/009,
+                   1011002 dv1_1 WM-EXE-008/009/010,
+                   0500000 dv1_8 text + AR-024.
+
+A-14  PL-014 FULLY RESOLVED: Spot REST auth confirmed
+      UNCHANGED. Oct 2025 breaking change applied to
+      Futures REST ONLY. No code changes needed.
+      Resolved in: 0411001 dv1_1 WS-AUTH-001/002/003,
+                   0500000 dv1_8 text + A-14 section.
+      Bill action PL-014 (verify auth) is CLOSED.
+
+IMP-06  aiohttp mandatory for all REST calls. requests
+        library blocks the asyncio event loop — unacceptable
+        for GetWebSocketsToken (called every reconnect) and
+        GetOpenOrders (called on gap detection).
+        Resolved in: 0411001 dv1_1 WS-REST-001/002/003/004,
+                     1011002 dv1_1 WM-REST-001 through -005,
+                     0500000 dv1_8 text + IMP-06 section.
+
+IMP-07  asyncio TaskManager pattern mandatory for 24/7
+        operation. asyncio.create_task() without done
+        callback causes memory leak — task references grow
+        indefinitely. Central create_task() helper required.
+        Resolved in: 1011002 dv1_1 WM-TASK-001 through -004,
+                     0500000 dv1_8 text + IMP-07 section.
+
+IMP-08  systemd WatchdogSec=120 with 30-second asyncio
+        ping loop. Detects frozen-but-alive TothBot with
+        open positions. Without watchdog, frozen event
+        loop is undetected indefinitely.
+        Resolved in: 1011013 dv1_0 (NEW) VD-WD-001 through
+                     VD-WD-006, 0500000 dv1_8 + IMP-08.
+
+IMP-09  logrotate configuration required for 24/7 log
+        management. Without rotation, log files fill VPS.
+        Resolved in: 1011013 dv1_0 VD-LOG-001 through -006.
+
+IMP-10  API key secure storage via systemd EnvironmentFile.
+        Never hardcode keys. chmod 600.
+        Resolved in: 1011013 dv1_0 VD-KEY-001 through -005.
+
+RECONNECT  Exponential backoff with jitter for reconnects
+           beyond initial 5 instant attempts.
+           Resolved in: 0411001 dv1_1 WS-RC-002,
+                        1011002 dv1_1 WM-RC-001 through -004.
+
+SUB-RESTORE  Subscription restoration procedure explicitly
+             specified with correct ordering and wait-for-
+             snapshot requirement.
+             Resolved in: 0411001 dv1_1 WS-RC-003,
+                          1011002 dv1_1 WM-RC-005 through -006.
+
+MPP-RETRY  MPP retry strategy specified: IOC limit at
+           best_bid - 0.2% on rejection. No repeated market
+           orders. no_mpp parameter permanently deprecated
+           Sep 2025.
+           Resolved in: 0411001 dv1_1 WS-MPP-001 through -004.
+
+------------------------------------------------------------
+3.4 Parking Lot — Final Resolution This Session
+------------------------------------------------------------
+
+PL-003  TRACKING (Pathway 1 automation — per plan)
+PL-007  RESOLVED → 1011013 dv1_0 VD-VPS-002
+        Hillsboro migration recommendation formally
+        documented with rationale (AWS us-west-2 Oregon).
+PL-010  RESOLVED → 0411001 dv1_1 WS-L2-001/002
+        GroupedBook REST endpoint noted. OI-004 tracking.
+PL-012  RESOLVED → 0411001 dv1_1 WS-L3-001
+        L3 REST endpoint added Dec 2025. OI-004 tracking.
+PL-014  RESOLVED → 0411001 dv1_1 WS-AUTH-001/002/003
+        Spot REST auth confirmed UNCHANGED. Bill action
+        from TB00007/TB00008 is CLOSED.
+
+ALL PARKING LOT ITEMS: PL-001 through PL-018 resolved
+or tracking as of TB00009. No open parking lot items.
+
+============================================================
+4. DOCUMENTS PRODUCED THIS SESSION
+============================================================
+
+  UPDATED DOCUMENTS:
+    0411001  dv1_1  Kraken_WS_v2_Specification
+             7 additions: A-11 reason field, A-12 exec_type
+             enum, A-13 restated handling, C-3 MPP retry
+             IOC strategy, IMP-06 aiohttp, exponential
+             backoff WS-RC-002, subscription restore
+             WS-RC-003. PL-014 RESOLVED (WS-AUTH-001/003).
+
+    1011002  dv1_1  WS_Manager_Coding_Spec
+             8 additions: A-11 reason field (WM-EXE-002/004),
+             A-12 exec_type dispatch (WM-EXE-005/007),
+             A-13 restated (WM-EXE-008/010), exponential
+             backoff (WM-RC-001/004), subscription restore
+             (WM-RC-005/006), asyncio TaskManager
+             (WM-TASK-001/004), aiohttp REST
+             (WM-REST-001/005), exec seq gap moved to
+             WM-ESQ-001/004.
+
+    0500000  dv1_8  System_Architecture_Overview
+             Claude_Source.txt + .docx + .pdf produced.
+             8 changes: A-11 through A-14, IMP-06/07/08.
+             New AR-022 through AR-025. Diagrams 1 and 6
+             updated. 1448 lines. DOCX: 1.68MB, 697 para.
+             PDF: 1.4MB.
+
+  NEW DOCUMENTS:
+    1011013  dv1_0  VPS_Deployment_Coding_Spec
+             NEW WD placeholder. Captures: systemd service
+             unit spec with LimitNOFILE=65535 (IMP-08),
+             WatchdogSec=120 + sd_notify watchdog loop
+             (IMP-08), logrotate (IMP-09), API key secure
+             storage via EnvironmentFile (IMP-10), Hillsboro
+             migration recommendation (PL-007), email alert
+             async delivery pattern.
+
+============================================================
+5. BILL ACTIONS REQUIRED
+============================================================
+
+FROM TB00008 (status updated):
+  (a) PL-014 auth verification — CLOSED. Spot REST auth
+      confirmed unchanged. No action required.
+  (b) Create GitHub repositories — if not yet done.
+  (c) Create folder structure in TothBot-V2-Docs.
+  (d) Approve 0311002 dv1_7 — if not yet done.
+  (e) Save 0500000 dv1_6 PDF/Claude_Source.txt — if not done.
+
+NEW THIS SESSION:
+  (f) Save 0500000 dv1_8 PDF (download from session).
+  (g) Save 0500000 dv1_8 Claude_Source.txt (download).
+  (h) Approve 0411001 dv1_1.
+  (i) Approve 1011002 dv1_1.
+  (j) Approve 1011013 dv1_0.
+
+NEXT STEP: Begin Phase 1 per 0311002 dv1_7:
+    Step 1.1 → 0000000_Ethics_and_Safety
+    Step 1.2 → 0100000_Management
+    Step 1.3 → 0200000_Operations
+    Step 1.4 → 0300000_Governance
+    Step 1.5 → 0310000_Governance_Procedures_Anchor
+
+============================================================
+6. NEXT SESSION — WHERE WE PICK UP
+============================================================
+
+  1. Upload to project for next session:
+       TB00001 through TB00009 (all session logs)
+       0311001 dv1_2
+       0311002 dv1_7
+       0311004 dv1_0
+       0411001 dv1_1 (NEW — replaces dv1_0)
+       1011001 dv1_0
+       1011002 dv1_1 (NEW — replaces dv1_0)
+       1011010 dv1_0
+       1011012 dv1_0
+       1011013 dv1_0 (NEW)
+       0500000_System_Architecture_Overview_dv1_8_Claude_Source.txt
+
+  2. Confirm Bill actions (b) through (j) above.
+
+  3. Begin Phase 1 — Step 1.1: 0000000_Ethics_and_Safety.
+
+============================================================
+7. OPEN ITEMS — CURRENT STATE
+============================================================
+
+  OI-001  SSS signal generation — Phase 5-6 work.
+  OI-002  Asset selection universe — Phase 5-6 work.
+  OI-003  Exit Controller full spec — Phase 5-6 work.
+          Requires: MPP IOC retry (0411001 dv1_1 WS-MPP)
+  OI-004  Entry limit placement — Phase 5-6 work.
+          Add: GroupedBook REST (Dec 2025), L3 REST (Dec 2025)
+  OI-005  Selection Controller — Phase 5-6 work.
+
+All five are Phase 5-6 work. Nothing in Phase 1-4 blocked.
+
+============================================================
+8. PARKING LOT — CURRENT STATE
+============================================================
+
+ALL ITEMS RESOLVED OR TRACKING:
+
+  PL-001  RESOLVED → 0311004 dv1_0
+  PL-002  RESOLVED → 0311002 dv1_7 Section 17
+  PL-003  TRACKING (Pathway 1 after paper trading)
+  PL-004  RESOLVED → _Archive + 0611004 note
+  PL-005  RESOLVED → 0411001 dv1_0/dv1_1
+  PL-006  CLOSED — not needed for V1
+  PL-007  RESOLVED → 1011013 dv1_0 VD-VPS-002 (THIS SESSION)
+  PL-008  CLOSED (FIX API)
+  PL-009  RESOLVED — L3 URL in 0411001 dv1_1
+  PL-010  RESOLVED → 0411001 dv1_1 WS-L2-001/002 (THIS SESSION)
+  PL-011  CLOSED (OTO)
+  PL-012  RESOLVED → 0411001 dv1_1 WS-L3-001 (THIS SESSION)
+  PL-013  RESOLVED → 0411001 dv1_1, 1011002 dv1_1
+  PL-014  RESOLVED → 0411001 dv1_1 WS-AUTH (THIS SESSION)
+  PL-015  RESOLVED → 0500000 dv1_8, 1011012 dv1_0
+  PL-016  RESOLVED → 0411001 dv1_1, 1011002 dv1_1
+  PL-017  RESOLVED → 0411001 dv1_1, 1011002 dv1_1
+  PL-018  RESOLVED → 0411001 dv1_1, 1011002 dv1_1
+
+============================================================
+9. COMPLETE DOCUMENT INVENTORY — CURRENT STATE
+============================================================
+
+  AUTHORITATIVE SESSION LOGS:
+    TB00001  Session Log 2026-03-23              v1_0
+    TB00002  Session Log 2026-03-23 Part 2       v1_0
+    TB00003  Session Log 2026-03-24              v1_0
+    TB00004  Session Log 2026-03-24 Part 2       v1_0
+    TB00005  Session Log 2026-03-24 Part 3       v1_0
+    TB00006  Session Log 2026-03-24 Part 4       v1_0
+    TB00007  Session Log 2026-03-24 Part 5       v1_0
+    TB00008  Session Log 2026-03-25              v1_0
+    TB00009  Session Log 2026-03-25 Part 2       v1_0
+
+  AUTHORITATIVE CONTROLLED DOCUMENTS:
+    0311001  Namespace_Specification             dv1_2
+    0311002  Document_Creation_Workflow          dv1_7
+
+  WORKING DRAFT DOCUMENTS:
+    0311004  Document_Creation_and_Approval      dv1_0
+    0411001  Kraken_WS_v2_Specification          dv1_1  (UPDATED)
+    1011001  Engineering_Best_Practices          dv1_0
+    1011002  WS_Manager_Coding_Spec              dv1_1  (UPDATED)
+    1011010  CIATS_Coding_Spec                   dv1_0
+    1011012  Regime_Engine_Coding_Spec           dv1_0
+    1011013  VPS_Deployment_Coding_Spec          dv1_0  (NEW)
+
+  0500000 SYSTEM ARCHITECTURE OVERVIEW:
+    dv1_8.pdf                 — Bill's readable copy ✅ (NEW)
+    dv1_8_Claude_Source.txt   — Claude's source copy ✅ (NEW)
+    dv1_8.docx                — For GitHub commit (TBD)
+
+  DO NOT USE:
+    0500000  dv1_7 and all prior versions (superseded)
+    0411001  dv1_0 (superseded by dv1_1)
+    1011002  dv1_0 (superseded by dv1_1)
+
+============================================================
+10. RESEARCH FINDINGS — REFERENCE RECORD
+============================================================
+
+All 100 references from 10 searches. Key validated findings:
+
+  Kraken API (Searches 1, 7, 10):
+  - cancel_reason deprecated Dec 2023 → use reason field
+  - exec_type values: 10 total including amended, restated
+  - no_mpp permanently deprecated Sep 2025 — MPP always on
+  - MPP fires on bid/ask spread 2.5-20% of market price
+  - GroupedBook REST endpoint added Dec 2025
+  - Level3 REST endpoint added Dec 2025
+  - GTD max one month confirmed; deadline param 500ms-60s
+
+  Auth (Search 2):
+  - Oct 2025 breaking change: Futures REST ONLY
+  - Spot REST HMAC-SHA512 unchanged — confirmed from
+    support.kraken.com auth article and docs.kraken.com
+
+  Python Async (Searches 3, 9):
+  - asyncio.create_task() without done callback = memory leak
+  - BoundedQueue prevents unbounded growth (confirmed)
+  - requests library blocks event loop — use aiohttp
+  - aiohttp.ClientSession with TCPConnector pooling
+  - uvloop confirmed 2-4x faster on Linux (same as dv1_7)
+
+  Reconnection (Search 4):
+  - Exponential backoff jitter: prevents thundering herd
+  - Start 1s, double each attempt, cap 30s, +10% jitter
+  - Subscription state restoration critical post-reconnect
+  - Wait for snapshot before resuming pipeline
+
+  ATR Research (Search 5):
+  - 1.5x ATR stop confirmed: standard swing trading stop
+  - Multiple independent sources 2024-2025
+  - Current CIATS starting values validated
+
+  Regime Detection (Search 6):
+  - ADX + ATR percentile confirmed in academic papers
+  - RegimeNAS (2025): same ADX+ATR percentile approach
+  - Current 6-regime taxonomy validated
+
+  VPS/SystemD (Searches 8, 9):
+  - systemd WatchdogSec detects frozen event loops
+  - sd_notify protocol for Python watchdog pings
+  - LimitNOFILE=65535 critical for many WS connections
+  - logrotate + journald retention for 24/7 log management
+  - Hetzner Hillsboro confirmed available, pricing noted
+
+============================================================
+11. REVISION HISTORY
+============================================================
+
+  v1_0  03-25-2026  Initial session log. Records 10-search
+                    FP/DP organism validation (100 unique
+                    references). A-11 through A-14 found and
+                    resolved. IMP-06 through IMP-10 found
+                    and resolved. All parking lot items
+                    resolved. 0411001 updated to dv1_1.
+                    1011002 updated to dv1_1. 1011013 dv1_0
+                    created. 0500000 dv1_8 produced (Claude
+                    Source + .docx + .pdf).
+
+============================================================
+END OF SESSION LOG
+============================================================

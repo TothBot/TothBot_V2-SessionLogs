@@ -1,0 +1,1242 @@
+DocDCN:     TB00203
+DocTitle:   S1RE_Gap_Register_Risk_Engine
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TBXXXXX_Session_Logs\TB00203_S1RE_Gap_Register_Risk_Engine_v1_0.txt
+DocDate:    05-11-2026
+DocTime:    23:30:00 UTC
+
+============================================================
+TOTHBOT V2 STEP 3 SUB-STEP S-1 GAP REGISTER —
+RISK_ENGINE MODULE PAIR — CROSS-NAMESPACE
+AA=06 + AA=10 AUDIT
+============================================================
+
+============================================================
+1. SCOPE + METHODOLOGY
+============================================================
+
+1.1 PRIMARY MISSION.
+Element-by-element gap classification of the Risk_Engine
+module pair vs the 0500000 dv1_46 architecture canonical,
+with full cross-namespace verification against the FOUR
+AA=06 parent specifications. Classifies every architectural
+element from the AA=10 coding spec into one of four buckets
+per TB00203 NSI §4 methodology:
+  (a) Architectural restatement (verified present in
+      EITHER 0500000 governs/prose OR any of 0611001..
+      0611004 prose).
+  (b) Coding-unique.
+  (c) Architectural content not in diagrams.
+  (d) Unclear origin per RR-SCOPE-009 four-question gate.
+
+1.2 TARGET PAIR (FIVE-PARENT SCOPE — LARGEST IN STEP 3).
+  AA=10: 1011011 Risk_Engine_Coding_Spec dv1_3
+         (PRESENT at /mnt/project/, 18,429 bytes, dated
+          04-05-2026; 431 lines).
+  AA=06: 0611001 Position_Sizing_Rules dv1_0
+         (PRESENT, 25,547 bytes, dated 04-05-2026;
+          609 lines).
+  AA=06: 0611002 Drawdown_and_Halt_Rules dv1_0
+         (PRESENT, 26,631 bytes, dated 04-05-2026;
+          640 lines).
+  AA=06: 0611003 Concentration_and_Exposure_Rules dv1_0
+         (PRESENT, 27,944 bytes, dated 04-05-2026;
+          667 lines).
+  AA=06: 0611004 Safety_Parameter_Framework dv1_1
+         (PRESENT, 35,083 bytes, dated 04-24-2026;
+          783 lines).
+
+1.3 CANONICAL SOURCE.
+  0500000 dv1_46_Claude_Source.html (8 diagrams):
+    D1 R2 — Kraken API Connection Architecture
+    D2 R2 — TothBot Trading Pipeline (8 Gates) — PRIMARY
+            (Gate 7 + Gate 8 cells)
+    D3 R3 — Exit Architecture (3 layers) — PRIMARY
+            (mae_mult + emergency_sl_mult consumer)
+    D4 R3 — Regime Taxonomy (6-regime 3x2 grid)
+    D5 R3 — CIATS Architecture (Half-Kelly persistence
+            path A2 — PS-HK-001)
+    D6 R4 — Complete System (mod:Risk_Engine present;
+            full system view)
+    D7 R3 — Paper-Mode Dispatch Boundary
+
+1.4 FULL CROSS-NAMESPACE METHODOLOGY APPLIED.
+
+All five parents present at TB00203 cold-load. Full
+TB00197 §1.4 5-section cross-namespace methodology applies
+in FULL FORM. Largest parent set in Step 3.
+
+  Section 1 — Scope + cross-namespace methodology.
+  Section 2 — Diagram coverage + AA=06 cross-references.
+  Section 3 — Element-by-element classification verifying
+              each (a) bucket item against 0500000
+              canonical AND the relevant 0611* parent
+              prose.
+  Section 4 — Roll-up by bucket.
+  Section 5 — Downstream queue (AMENDMENT-14 + PROSE-
+              UPDATE-* + S-4 retirement gating + cross-
+              pair §5.4 verifications).
+  Section 6 — Exit Criteria.
+  Section 7 — Separate Findings (clusters C5, C6, C7).
+  Section 8 — Exit Criteria Status.
+  Section 9 — Revision History.
+
+Hierarchical AR / rule / contract override per TB00203 NSI
+§4.1.3: AA=06 (0611001..0611004) takes precedence over
+AA=10 (1011011) where they differ. Conflicts flagged as
+cluster C6 citation drift.
+
+1.5 OUT-OF-SCOPE THIS SESSION.
+  - No diagram amendment authoring (S-2 sub-step).
+  - No 0611* prose update authoring (S-3 sub-step).
+  - No 1011011 retirement authoring (S-4 sub-step).
+  - No code changes (Step 3 is documentation-only).
+  - No Regime_Engine / VPS_Deployment / Startup_Sequence
+    pair audits (sequenced to TB00204-206).
+
+============================================================
+2. DIAGRAM COVERAGE + AA=06 PROSE CROSS-REFERENCES
+============================================================
+
+2.1 PRIMARY DIAGRAMS.
+
+D2 R2 — Trading Pipeline (PRIMARY for Gate 7 + Gate 8).
+  Cell: g7_risk_guard (lines 2287-2308 of 0500000 dv1_46).
+    canonical: gate:G7_Risk_Guard
+    constraints: rule:HR-WM-024
+    consumes: param:full_halt_drawdown,
+              param:session_pause_drawdown,
+              param:max_concurrent, channel:kraken_ws_ticker
+    drill_targets: mod:Risk_Engine, channel:kraken_ws_ticker
+  Cell: g8_position_sizer (lines 2310-2330).
+    canonical: gate:G8_Position_Sizer
+    constraints: rule:Sacred_R_R_1_to_1_5, ar:AR-016
+    consumes: indicator:ATR_14, param:mae_mult,
+              param:emergency_sl_mult
+    drill_targets: layer:L2_MAE_Threshold,
+                   layer:L3_Emergency_SL, layer:L1b_TP_Fill
+  D2 R2 root governs cites gate:G7_Risk_Guard +
+  gate:G8_Position_Sizer + rule:Sacred_R_R_1_to_1_5 +
+  ar:AR-016. NO individual HR-PS-*, HR-DD-*, HR-CE-*,
+  HR-SPF-*, RE-SEM-*, RE-DD-*, RE-G7-*, RE-SZ-*,
+  RE-SIZER-*, RE-CIATS-* identifiers appear in D2 R2
+  governs/constraints lists. mod:Risk_Engine NOT in D2
+  governs (present in D1 + D6 + D7 only).
+
+D3 R3 — Exit Architecture (PRIMARY for Layer 2 + Layer 3).
+  Root governs (line 2557) cites:
+    rule:HR-EC-013, rule:HR-EC-014, rule:HR-PM-009,
+    rule:Sacred_R_R_1_to_1_5, ar:AR-008,
+    mod:Exit_Controller,
+    layer:L1a_Signal_Exit, layer:L1b_TP_Fill,
+    layer:L2_MAE_Threshold, layer:L3_Emergency_SL,
+    channel:kraken_ws_executions,
+    channel:kraken_ws_ticker, indicator:ATR_14,
+    param:mae_mult, param:emergency_sl_mult,
+    evt:TRADE_CLOSE, container:Matching_Engine,
+    contract:CIATS_Trade_Outcome_Bus.
+  param:mae_mult + param:emergency_sl_mult shown but
+  no HR-PS-RR / RE-SIZER identifier bindings.
+
+D5 R3 — CIATS Architecture (PRIMARY for Half-Kelly).
+  Governs cites rule:PS-HK-001 + rule:HR-CI-009 (Half-
+  Kelly applied_pct normalization). PS-HK-001 IS
+  registered/referenced — sole Risk_Engine-domain rule
+  identifier registered in 0500000 dv1_46 governs lists.
+
+D6 R4 — Complete System.
+  Governs (line 3746) includes mod:Risk_Engine plus
+  param:per_trade_pct, param:mae_mult,
+  param:emergency_sl_mult, param:paper_starting_balance.
+  NO HR-RE-* / HR-DD-* / HR-CE-* / HR-PS-* / HR-SPF-*
+  / RE-* identifiers.
+
+D7 R3 — Paper-Mode Dispatch Boundary.
+  Governs (line 5999) includes ar:PA-001..PA-007 +
+  decision:D-05_Paper_Starting_Balance +
+  param:paper_starting_balance + mod:Long_Module +
+  mod:Short_Module. Risk_Engine drawdown halt state
+  machine (state:NORMAL / state:SESSION_PAUSE /
+  state:FULL_HALT) NOT encoded.
+
+2.2 AA=06 PARENT PROSE CONTENT MAP.
+
+  0611001 (Position_Sizing_Rules dv1_0) — owns:
+    PS-PORT-001..003 portfolio_USD definition (AR-051).
+    PS-TRADE-001..002 tradeable_USD formula.
+    PS-PTA-001..002 fixed per_trade_USD (Phase 1).
+    PS-HK-001..007 Half-Kelly (Phase 2, AR-065).
+    PS-MOD-001..002 NON_DIR 50% modifier.
+    PS-RR-001..008 Gate 8 R:R formula (AR-011).
+    PS-QTY-001..002, PS-TP-001..002, PS-SL-001..002,
+    PS-MAE-001..002 Decimal rounding rules.
+    PS-MIN-001..004 minimum position validation.
+    PS-OUT-001..002 Gate 8 output contract.
+    11 interfaces, 3 logging, HR-PS-001..011 hard
+    rules, 5 coding-readiness questions.
+
+  0611002 (Drawdown_and_Halt_Rules dv1_0) — owns:
+    DD-BASE-001..007 portfolio_baseline (AR-052).
+    DD-CURR-001..005 current_portfolio_USD MTM
+      (AR-048).
+    DD-FORM-001..004 drawdown_pct formula.
+    DD-EVAL-001..004 evaluation triggers (bbo +
+      Gate 7).
+    System state machine (NORMAL/SESSION_PAUSE/
+      FULL_HALT) — §8.
+    DD-SP-001..005 session pause behavior.
+    DD-FH-001..006 full halt behavior + batch_cancel
+      (AR-041).
+    DD-PEAK-001..005 peak portfolio tracking.
+    12 interfaces, 7 logging (DD-LOG-001..007),
+    HR-DD-001..013 hard rules, 5 coding-readiness
+    questions.
+
+  0611003 (Concentration_and_Exposure_Rules dv1_0)
+    — owns:
+    CE-MC-001..002 max_concurrent (AR-043).
+    CE-SEM-001..011 BoundedSemaphore enforcement
+      (acquire/release/recreate).
+    CE-POR-001..019 Pending Order Registry (AR-053):
+      definition, population, clear/hold conditions,
+      Gate 7 available_USD check, reconciliation
+      on startup + reconnect.
+    Gate 7 three-check sequence (drawdown ->
+      concentration -> exposure).
+    8 interfaces, 9 logging (CE-LOG-001..009),
+    HR-CE-001..012 hard rules, 5 coding-readiness
+    questions.
+
+  0611004 (Safety_Parameter_Framework dv1_1) — owns:
+    SPF-HC-001..004 sacred 1:1.5 R:R hardcoded
+      exception (AR-011).
+    SPF-OWN-001..005 CIATS ownership framework
+      (200-trade floor, 50-trade interval, p<0.01).
+    §6 parameter registry — 8 Risk-domain params:
+      tradeable_pct, per_trade_pct, max_concurrent,
+      mae_mult, emergency_sl_mult, entry_timeout_sec,
+      session_pause_drawdown, full_halt_drawdown.
+    SPF-INIT-001..004 Parameter Store init sequence.
+    SPF-CHG-001..008 CIATS change constraints.
+    SPF-PL004-001..005 old 0511005 retirement.
+    4 interfaces, HR-SPF-001..010 hard rules, 5
+      coding-readiness questions.
+
+2.3 PRESENCE-IN-0500000 INVENTORY (grep counts on
+    /mnt/project/0500000_System_Architecture_Overview_
+    dv1_46_Claude_Source.html):
+
+  PRESENT (>= 1 reference):
+    rule:Sacred_R_R_1_to_1_5            — multi-figure
+    rule:PS-HK-001                      — D5 R3 governs
+    ar:AR-011                           — 2 references
+    ar:AR-016                           — 13 references
+    gate:G7_Risk_Guard                  — D2 R2 cell
+    gate:G8_Position_Sizer              — D2 R2 cell
+    mod:Risk_Engine                     — D1 + D6 + D7
+                                          labeled groups
+    layer:L1a_Signal_Exit                ✓
+    layer:L1b_TP_Fill                    ✓
+    layer:L2_MAE_Threshold               ✓
+    layer:L3_Emergency_SL                ✓
+    param:full_halt_drawdown             ✓
+    param:session_pause_drawdown         ✓
+    param:max_concurrent                 ✓
+    param:mae_mult                       ✓
+    param:emergency_sl_mult              ✓
+    param:tradeable_pct                  ✓
+    param:per_trade_pct                  ✓
+    param:paper_starting_balance         ✓
+    decision:D-05_Paper_Starting_Balance ✓
+    decision:D-06_Paper_Live_Parity      ✓
+
+  ABSENT (0 references in governs lists):
+    ar:AR-041, ar:AR-043, ar:AR-048, ar:AR-051,
+    ar:AR-052, ar:AR-053, ar:AR-065, ar:AR-067
+    rule:HR-RE-001..N (ANY)
+    rule:HR-PS-001..011 (none)
+    rule:HR-DD-001..013 (none)
+    rule:HR-CE-001..012 (none)
+    rule:HR-SPF-001..010 (none)
+    rule:RE-SEM-001..006, RE-DD-001..008, RE-G7-001,
+         RE-SZ-001..005, RE-SIZER-001..007,
+         RE-CIATS-001..002 (mentioned in TB00153 plan
+         prose at lines 4439/4618-4644/4689/7761/7773
+         but NOT in any diagram governs list).
+    contract:BoundedSemaphore
+    contract:Pending_Order_Registry
+    contract:Drawdown_Baseline / Drawdown_Formula
+    contract:R_R_Formula
+    contract:Decimal_Quantize_Rules
+    contract:Half_Kelly_Formula (Half-Kelly IS in
+      governs via rule:PS-HK-001, but no dedicated
+      contract: token)
+    state:NORMAL / state:SESSION_PAUSE /
+      state:FULL_HALT (drawdown halt state machine)
+    param:entry_timeout_sec (CITED in 0611004 §6.3
+      but ZERO governs-list references in 0500000)
+
+============================================================
+3. ELEMENT-BY-ELEMENT CLASSIFICATION
+============================================================
+
+Each architectural element from 1011011 dv1_3 classified
+per §4.2 methodology of TB00203 NSI. Citations to
+0500000 dv1_46 line numbers + relevant 0611* parent
+prose.
+
+3.1 mod:Risk_Engine architectural identity.
+    BUCKET: (a) ARCHITECTURAL RESTATEMENT.
+    CITATION: 0500000 dv1_46 lines 1706-1726 (D1 R2
+    labeled group); 3989-3994 (D6 R4 labeled group);
+    3203-3216 (D6 R4 consumer reference). Drill targets
+    gate:G7_Risk_Guard + gate:G8_Position_Sizer. Cited
+    by all four AA=06 parents in §15 Related Documents.
+
+3.2 Parent chain (1000000 / 1010000 / 0611001..003).
+    BUCKET: (a) ARCHITECTURAL RESTATEMENT.
+    CITATION: 0500000 dv1_46 architecture hierarchy
+    canonical; 1011011 cites 0611001/2/3 — NOTE: parent
+    list at §2 of 1011011 dv1_3 cites only 0611001,
+    0611002, 0611003 (NOT 0611004). 0611004 is
+    referenced in 0611001 §15 + 0611002 §16 + 0611003
+    §11 + 1011011 implicitly via Parameter Store usage.
+    CLUSTER C6 CITATION DRIFT: 1011011 parent chain
+    INCOMPLETE — should include 0611004.
+
+3.3 Five coding-readiness questions (1011011 §3).
+    BUCKET: (b) CODING-UNIQUE.
+    Boilerplate per TB00000 v2_29 §3.2; not architectural
+    content. Excluded from cluster C5.
+
+3.4 Gate 7 max_concurrent (RE-SEM-001..006).
+    BUCKET: (c) ARCHITECTURAL CONTENT NOT IN DIAGRAMS.
+    The asyncio.BoundedSemaphore enforcement architecture
+    (RE-SEM-001..006 in 1011011 §4.1; cross-spec CE-SEM-
+    001..011 in 0611003 §4.2-4.4) is architectural
+    (sole enforcement mechanism per HR-CE-001) but ABSENT
+    from 0500000 dv1_46 governs lists. The cell
+    g7_risk_guard cites param:max_concurrent as a
+    consumed parameter but does NOT cite contract:
+    BoundedSemaphore or any HR-CE-NNN / RE-SEM-NNN
+    rule identifier. CLUSTER C5: 1 (architectural
+    mechanism + ValueError critical-bug handling).
+
+3.5 Gate 7 drawdown monitoring (RE-DD-001..008).
+    BUCKET: (c) ARCHITECTURAL CONTENT NOT IN DIAGRAMS.
+    The bbo-ticker-driven continuous drawdown evaluation
+    (RE-DD-001 / DD-EVAL-001 / AR-048) + drawdown_pct
+    formula (RE-DD-002 = RE-FORM-001 = DD-FORM-001) +
+    peak portfolio tracking (RE-DD-003 / DD-PEAK-001..
+    005) + full halt behavior (RE-DD-005 / DD-FH-001..
+    006) + session pause behavior (RE-DD-006 / DD-SP-
+    001..005) + emergSL preservation through halt
+    (RE-DD-007 / DD-FH-003..004 / HR-DD-008) + manual
+    operator restart requirement (RE-DD-008 / DD-FH-005
+    / HR-DD-010) are ALL architectural but ABSENT from
+    0500000 dv1_46 governs lists. The drawdown halt
+    state machine (state:NORMAL / state:SESSION_PAUSE /
+    state:FULL_HALT) has NO encoding in any 0500000
+    diagram. CLUSTER C5: ~13 individual hard rules +
+    state machine (3 states).
+
+3.6 Gate 7 decision logic (RE-G7-001).
+    BUCKET: (a) ARCHITECTURAL RESTATEMENT (sequence;
+    consumes-list satisfied) + (c) for individual rule
+    bindings.
+    The three-check ordered sequence (drawdown ->
+    concentration -> exposure) is mandated by 0611003
+    §6 + HR-CE-012 (fixed order). 0500000 D2 R2 g7
+    cell governs cites param:full_halt_drawdown +
+    param:session_pause_drawdown + param:max_concurrent
+    consistent with the sequence. CLUSTER C5 marks
+    HR-CE-012 sequence-immutability hard rule.
+
+3.7 Gate 8 portfolio + sizing definitions (RE-SZ-001..
+    005 + PS-PORT-001..003 + PS-TRADE-001..002 +
+    PS-PTA-001..002).
+    BUCKET: (a) ARCHITECTURAL RESTATEMENT for the
+    parameters (param:tradeable_pct + param:per_trade_
+    pct present in D6 governs) + (c) for the
+    portfolio_USD-vs-current_portfolio_USD separation
+    rule (PS-PORT-003 + HR-PS-001 + DD-CURR-005)
+    which is architectural-discipline content. CLUSTER
+    C5 marks the separation rule.
+
+3.8 Gate 8 R:R formula (RE-SIZER-001..007 + PS-RR-
+    001..008).
+    BUCKET: (a) ARCHITECTURAL RESTATEMENT.
+    rule:Sacred_R_R_1_to_1_5 is well-represented
+    (multi-figure governance constraint per D2 G8 +
+    D3 + D5 + D6). ar:AR-016 (incremental ATR) is
+    well-represented (D2 + D3 + multiple consumers).
+    The fee-schedule values (entry_fee_pct = 0.0016,
+    tp_fee_pct = 0.0016, mae_exit_taker_fee = 0.0026
+    per PS-RR-003 / RE-SIZER-002) are NOT encoded as
+    diagram tokens — but these are arithmetic
+    constants, not architectural identifiers. (a)
+    BUCKET for the formula structure.
+
+3.9 Gate 8 Decimal rounding rules (PS-QTY-001..002 +
+    PS-TP-001..002 + PS-SL-001..002 + PS-MAE-001..002
+    + HR-PS-003..005).
+    BUCKET: (c) ARCHITECTURAL CONTENT NOT IN DIAGRAMS.
+    The four directional Decimal.quantize() rounding
+    rules (ROUND_DOWN for qty + emergSL_price +
+    mae_price; ROUND_UP for tp_price) per HR-PS-005
+    are architectural (loss-prevention discipline:
+    erring toward smaller-size + further-from-trigger)
+    but absent from 0500000. The float-prohibition
+    rule (HR-PS-003 / HR-DD-004 / HR-PS-004) is also
+    architectural-discipline content. CLUSTER C5
+    marks the four rounding rules + float prohibition.
+
+3.10 Gate 8 minimum validation (PS-MIN-001..004 +
+     RE-SIZER-005 + HR-PS-007).
+     BUCKET: (c) ARCHITECTURAL CONTENT NOT IN DIAGRAMS.
+     The POSITION_TOO_SMALL skip-not-halt rule
+     (HR-PS-007: Gate 8 NEVER blocks) is architectural
+     but absent from 0500000. The skip routing to next
+     pair (PS-MIN-003) is also architectural.
+     CLUSTER C5: 1.
+
+3.11 Half-Kelly transition (RE-SZ-003 Phase 2 +
+     PS-HK-001..007 + AR-065).
+     BUCKET: (a) ARCHITECTURAL RESTATEMENT.
+     rule:PS-HK-001 IS registered in 0500000 D5 R3
+     governs (sole Risk_Engine-domain rule registered
+     in any diagram governs list). The 200-trade
+     activation threshold + W/R inputs + K_full/K_half
+     formula + Bill approval requirement (HR-CI-011) +
+     50-trade minimum interval are all encoded via D5
+     R3 + rule:HR-CI-002/HR-CI-003/HR-CI-004/HR-CI-008/
+     HR-CI-009 in D5 governs.
+
+3.12 NON_DIR 50% modifier (PS-MOD-001..002 +
+     HR-PS-010).
+     BUCKET: (a) ARCHITECTURAL RESTATEMENT.
+     regime:NON_DIR_NORMAL + regime:NON_DIR_ELEVATED
+     tokens encoded in D4 + D5 governs. The 50%
+     modifier behavior is implicit in the
+     gate:G6_Regime_Sizer cell with decoration
+     "SIZED — REGIME_50PCT" (D2 lines 2270-2284).
+
+3.13 Pending Order Registry (RE-SZ-005 + CE-POR-001..
+     019 + AR-053 + HR-CE-006..010).
+     BUCKET: (c) ARCHITECTURAL CONTENT NOT IN DIAGRAMS.
+     The POR self-tracking mechanism (Kraken WS v2
+     balances channel does NOT expose hold_trade —
+     CE-POR-001 rationale) is architectural and
+     mission-critical (loss-prevention via prevention
+     of capital overcommitment) but ABSENT from 0500000
+     governs lists. The clear/hold conditions (filled =
+     CLEAR; expired = CLEAR; canceled = CLEAR; trade
+     = HOLD per HR-CE-007/008) are architectural state
+     machine encoded only in 0611003 prose.
+     CLUSTER C5: 1 contract + ~5 hard rules.
+
+3.14 Reconciliation at startup + reconnect (CE-POR-
+     016..019 + HR-CE-010).
+     BUCKET: (c) ARCHITECTURAL CONTENT NOT IN DIAGRAMS.
+     POR reconciliation against Kraken snap_orders at
+     startup Step 6 and at every mid-session reconnect
+     is architectural (correctness invariant via
+     0411002 GetOpenOrders cross-reference) but absent
+     from 0500000.
+
+3.15 CIATS parameter interface (RE-CIATS-001..002 +
+     SPF-INIT-001..004 + SPF-CHG-001..008).
+     BUCKET: (a) ARCHITECTURAL RESTATEMENT.
+     Parameter Store frozen-snapshot pattern at
+     pipeline start (contract:Parameter_Store_Snapshot
+     in D2/D5/D6 governs) covers the architectural
+     contract. The eight Risk-domain parameter starting
+     values (SPF-INIT-002) are encoded as individual
+     param: tokens in D2/D3/D5/D6/D7 governs. The
+     no-Parameter-Store-storage rule for the sacred
+     1:1.5 R:R (SPF-INIT-004 + SPF-HC-001..004) is
+     enforced via rule:Sacred_R_R_1_to_1_5 + AR-016
+     (code-literal nature implicit).
+
+3.16 Drawdown circuit breaker live-Parameter-Store
+     read rule (HR-DD-012).
+     BUCKET: (c) ARCHITECTURAL CONTENT NOT IN DIAGRAMS.
+     The continuous-ticker evaluation reads from the
+     LIVE Parameter Store (NOT the frozen pipeline
+     snapshot) — necessary because circuit breakers
+     must reflect current CIATS-owned thresholds during
+     real-time monitoring. Architectural exception to
+     contract:Parameter_Store_Snapshot covenant. ABSENT
+     from 0500000 governs lists.
+
+3.17 batch_cancel scope rule (HR-DD-008 + DD-FH-003
+     + AR-041).
+     BUCKET: (c) ARCHITECTURAL CONTENT NOT IN DIAGRAMS.
+     FULL_HALT batch_cancel targets ENTRY GTD only;
+     TP + emergSL are explicitly preserved. Rate-
+     counter-bypass property (HR-DD-009: batch_cancel
+     bypasses rate counter maximum per AR-041) is
+     architectural correctness rule. ABSENT from
+     0500000 governs lists.
+
+3.18 emergSL crash-protection-only rule (PS-RR-008 +
+     RE-DD-007 + HR-DD-008).
+     BUCKET: (a) ARCHITECTURAL RESTATEMENT.
+     layer:L3_Emergency_SL token encoded in D3 R3
+     governs. "must NEVER fire in normal operation"
+     constraint per 0511004 dv1_3 EC-L3 binding +
+     TB00000 v2_29 §9.9 "Emergency brake only".
+     Visual content in D3 reinforces this.
+
+3.19 portfolio_baseline session-based rule (DD-BASE-
+     001..007 + AR-052 + HR-DD-001).
+     BUCKET: (c) ARCHITECTURAL CONTENT NOT IN DIAGRAMS.
+     The set-once-at-startup-Step-6 rule (never reset
+     on reconnect; only resets on full process restart)
+     is architectural with operational impact. ABSENT
+     from 0500000 governs lists. RATIONALE present
+     in 0611002 §4 + 0211003 Step 6 trigger.
+
+3.20 SESSION_PAUSE auto-resume rule (DD-SP-004 +
+     HR-DD-011).
+     BUCKET: (c) ARCHITECTURAL CONTENT NOT IN DIAGRAMS.
+     Architectural state machine transition rule.
+     ABSENT from 0500000.
+
+3.21 FULL_HALT manual-resume requirement (DD-FH-005 +
+     HR-DD-010).
+     BUCKET: (c) ARCHITECTURAL CONTENT NOT IN DIAGRAMS.
+     Architectural state machine transition rule with
+     operational impact (TB00000 v2_29 §9 implicit;
+     0211004 Incident Response IC-007/IC-008 binding).
+     ABSENT from 0500000.
+
+3.22 peak_portfolio_USD CIATS-only-tracking rule
+     (DD-PEAK-001..005 + HR-DD-013).
+     BUCKET: (c) ARCHITECTURAL CONTENT NOT IN DIAGRAMS.
+     Architectural data-flow rule: peak does NOT affect
+     circuit breakers — used by CIATS for max drawdown
+     tracking + future HWM trailing drawdown analysis.
+     ABSENT from 0500000 governs lists; mentioned in
+     prose at line 3127 of 0500000.
+
+3.23 Mann-Whitney p<0.01 hard rule for Risk-domain
+     CIATS changes (HR-SPF-005 + SPF-CHG-003).
+     BUCKET: (a) ARCHITECTURAL RESTATEMENT.
+     Encoded via rule:HR-CI-002/HR-CI-003/HR-CI-004 +
+     CIATS statistical-method discipline registered in
+     D5 R3. Specific Risk-domain p<0.01 threshold
+     (vs general signal-domain 0.05) is detail rather
+     than diagram-level architecture.
+
+3.24 mae_mult R:R-floor preservation rule (HR-SPF-006
+     + SPF-CHG-005).
+     BUCKET: (a) ARCHITECTURAL RESTATEMENT.
+     rule:Sacred_R_R_1_to_1_5 is encoded as the
+     governing constraint; SPF-CHG-005 is the CIATS
+     enforcement of that constraint at the mae_mult
+     adjustment boundary. Covered via D5 + D2 G8
+     cell governs.
+
+3.25 50-trade interval between parameter changes
+     (HR-SPF-004 + SPF-OWN-005 + PS-HK-006).
+     BUCKET: (a) ARCHITECTURAL RESTATEMENT.
+     Covered via CIATS-PDCA-001 in 1011010 + D5 R3
+     governs (rule:HR-CI-003 inter-trade boundary
+     binding); specific 50-trade interval is detail.
+
+3.26 200-trade hard floor (HR-SPF-003 + SPF-OWN-004
+     + PS-HK-001).
+     BUCKET: (a) ARCHITECTURAL RESTATEMENT.
+     rule:HR-CI-004 in D5 R3 governs. rule:PS-HK-001
+     activation threshold. ar:AR-065 NOT registered
+     (cluster C5 / C6 candidate).
+
+3.27 Risk_Engine interfaces section (1011011 §4 +
+     §5).
+     BUCKET: (a) ARCHITECTURAL RESTATEMENT.
+     Interfaces correspond to D6 R4 cross-module
+     wire-up callouts and mod:Risk_Engine consumer
+     declarations. All consumer/producer relationships
+     match 0500000 architecture.
+
+3.28 Logging requirements (PS-LOG-001..003 +
+     DD-LOG-001..007 + CE-LOG-001..009 + 1011011 §3
+     question 5).
+     BUCKET: (a) ARCHITECTURAL RESTATEMENT for the
+     evt: tokens (channel:logger_async_queue in D6
+     R4 governs covers the bus contract).
+     CLUSTER C5 marks any individual evt: tokens not
+     already in 0311001 v1_12 §15.12.7 evt: registry —
+     candidate enumerations: evt:GATE_7_RESULT,
+     evt:GATE_8_OUTPUT, evt:FULL_HALT_TRIGGERED,
+     evt:SESSION_PAUSE_TRIGGERED,
+     evt:SESSION_PAUSE_RECOVERED,
+     evt:FULL_HALT_BATCH_CANCEL_RESULT,
+     evt:PEAK_PORTFOLIO_UPDATED,
+     evt:POSITION_TOO_SMALL, evt:MAX_CONCURRENT_REACHED,
+     evt:SKIP_INSUFFICIENT_USD,
+     evt:BOUNDED_SEMAPHORE_VALUE_ERROR,
+     evt:MAX_CONCURRENT_UPDATED,
+     evt:POR_RECONCILIATION_COMPLETE.
+
+3.29 Risk_Engine hard rules — comprehensive identifier
+     inventory (HR-PS-001..011 + HR-DD-001..013 +
+     HR-CE-001..012 + HR-SPF-001..010).
+     BUCKET: (c) ARCHITECTURAL CONTENT NOT IN DIAGRAMS.
+     ZERO of the 46 Risk-domain hard rules appear in
+     ANY 0500000 dv1_46 governs list. This is the
+     primary cluster C5 finding for the Risk_Engine
+     pair audit.
+
+3.30 PL-004 0511005 retirement (SPF-PL004-001..005).
+     BUCKET: (b) CODING-UNIQUE (governance-state
+     residual content).
+     Documents the retirement of the Binance-era
+     0511005 Safety_Parameter_Review_Procedure. Not
+     architectural content for current TothBot V2;
+     excluded from cluster C5.
+
+============================================================
+4. ROLL-UP — BUCKET TALLIES
+============================================================
+
+  (a) ARCHITECTURAL RESTATEMENT:
+        Primary: 13 elements
+        Elements: 3.1, 3.2, 3.6 (partial), 3.7 (partial),
+                  3.8, 3.11, 3.12, 3.15, 3.18, 3.23,
+                  3.24, 3.25, 3.26, 3.27.
+
+  (a) ARCHITECTURAL RESTATEMENT — with C6 mark:
+        1 element (3.2 — parent chain missing 0611004
+        citation; minor citation drift).
+
+  (b) CODING-UNIQUE:
+        2 elements: 3.3 (five questions boilerplate),
+        3.30 (PL-004 retirement notice).
+
+  (c) ARCHITECTURAL CONTENT NOT IN DIAGRAMS:
+        17 element groups: 3.4, 3.5, 3.6 (partial),
+        3.7 (partial), 3.9, 3.10, 3.13, 3.14, 3.16,
+        3.17, 3.19, 3.20, 3.21, 3.22, 3.28 (partial —
+        evt: tokens), 3.29 (umbrella for all 46
+        hard rules), and the 3 state tokens
+        (state:NORMAL/SESSION_PAUSE/FULL_HALT).
+
+  (d) UNCLEAR ORIGIN:
+        0 elements. Zero RR-SCOPE-009 four-question
+        gates required.
+
+============================================================
+5. AMENDMENT QUEUE + PROSE-UPDATE QUEUE + S-4
+   RETIREMENT GATING + CROSS-PAIR
+============================================================
+
+5.1 AMENDMENT-14 NEW.
+
+  AMENDMENT-14  D2 R2 + D3 R3 + D6 R4 governs ADD +
+                D7 R3 governs ADD (state machine).
+                Closes TB00203 cluster C5 (Risk_Engine
+                comprehensive identifier integration).
+
+  Token list (cluster C5 — see §7.1 for full
+  enumeration):
+
+    A. HARD RULES (46 individual identifiers — primary
+       cluster C5 finding):
+         rule:HR-PS-001..011 (11)
+         rule:HR-DD-001..013 (13)
+         rule:HR-CE-001..012 (12)
+         rule:HR-SPF-001..010 (10)
+
+    B. ARCHITECTURAL REASONING (7 AR identifiers):
+         ar:AR-011  (1:1.5 R:R sacred — minimal
+                     references; PROMOTE)
+         ar:AR-041  (batch_cancel rate-counter bypass)
+         ar:AR-043  (max_concurrent BoundedSemaphore)
+         ar:AR-048  (bbo ticker drawdown source)
+         ar:AR-051  (portfolio_USD definition)
+         ar:AR-052  (drawdown baseline + state machine)
+         ar:AR-053  (POR / pending_orders)
+         ar:AR-065  (Half-Kelly transition; PS-HK-001
+                     registered; AR-065 NOT)
+
+    C. CONTRACTS (4 new):
+         contract:BoundedSemaphore
+         contract:Pending_Order_Registry
+         contract:Drawdown_Formula
+         contract:R_R_Formula
+
+    D. STATE TOKENS (3 new):
+         state:NORMAL
+         state:SESSION_PAUSE
+         state:FULL_HALT
+
+    E. EVENT TOKENS (13 new evt: candidates per §3.28):
+         evt:GATE_7_RESULT, evt:GATE_8_OUTPUT,
+         evt:FULL_HALT_TRIGGERED,
+         evt:SESSION_PAUSE_TRIGGERED,
+         evt:SESSION_PAUSE_RECOVERED,
+         evt:FULL_HALT_BATCH_CANCEL_RESULT,
+         evt:PEAK_PORTFOLIO_UPDATED,
+         evt:POSITION_TOO_SMALL,
+         evt:MAX_CONCURRENT_REACHED,
+         evt:SKIP_INSUFFICIENT_USD,
+         evt:BOUNDED_SEMAPHORE_VALUE_ERROR,
+         evt:MAX_CONCURRENT_UPDATED,
+         evt:POR_RECONCILIATION_COMPLETE.
+
+  Total cluster C5 token count: 46 + 7 + 4 + 3 + 13 =
+  73 tokens. LARGEST CLUSTER C5 FINDING IN STEP 3 to
+  date (Logger TB00199 = 16; Long_Module TB00200/201
+  = 21; Selection_Controller TB00202 = 26; Risk_Engine
+  TB00203 = 73).
+
+  Target diagrams: D2 R2 PRIMARY (gates 7+8); D3 R3
+  (mae_mult/emergency_sl_mult); D6 R4 (full system);
+  D7 R3 (drawdown halt state machine governs
+  extension). All four diagrams require governs-list
+  extension + per-group desc constraint additions.
+
+  SVG byte change determination: NO SVG byte change
+  required (governs list extension + labeled-group
+  desc-block constraint additions only; the visual
+  cells g7_risk_guard + g8_position_sizer + Exit
+  Architecture three-layer figure already depict the
+  architecture). Same closure pattern as
+  AMENDMENT-9/10/11/12/13.
+
+5.2 PROSE-UPDATE QUEUE EXTENSION.
+
+  PROSE-UPDATE-BF AUTHORABLE: 0611001 §13 add HR-PS
+    parent-rule-set binding consolidation (specify
+    that the 11 HR-PS-NNN rules ARE the authoritative
+    AA=06 form; the 1011011 RE-SZ / RE-SIZER prose is
+    implementation restatement).
+  PROSE-UPDATE-BG AUTHORABLE: 0611002 §14 add HR-DD
+    parent-rule-set binding consolidation (same
+    pattern for 13 HR-DD rules vs 1011011 RE-DD).
+  PROSE-UPDATE-BH AUTHORABLE: 0611003 §9 add HR-CE
+    parent-rule-set binding consolidation (12 HR-CE
+    rules vs 1011011 RE-SEM).
+  PROSE-UPDATE-BI AUTHORABLE: 0611004 §11 cite
+    1011011 dv1_3 as implementation consumer of
+    SPF-INIT-002 starting values (currently §13
+    Related Documents lists 1011011 but §11 Hard
+    Rules section does not explicitly bind).
+  PROSE-UPDATE-BJ BLOCKED on §7.2 (Risk_Engine vs
+    AA=06 identifier-binding mismatch — joint
+    resolution with TB00201 §7.7 + TB00202 §7.4).
+  PROSE-UPDATE-BK BLOCKED on §7.3 (1011011 parent
+    chain missing 0611004 — minor; conditional on
+    Bill ratification of parent-chain completeness
+    rule).
+  PROSE-UPDATE-BL BLOCKED on §7.4 (currency-lag
+    cluster C7 reconciliation: all 5 specs require
+    v2_29 architectural amendments).
+
+  Cumulative S-3 prose-update queue at TB00203
+  close: 56 active (52 prior + 4 new BF-BI) + 7
+  blocked (4 prior + 3 new BJ/BK/BL) = 63 total
+  entries.
+
+5.3 S-4 RETIREMENT GATING.
+
+  1011011 retirement gated on:
+    AMENDMENT-14 closure (73-token cluster C5
+      integration into D2/D3/D6/D7 governs).
+    PROSE-UPDATE-BF + BG + BH + BI closure (parent
+      HR-PS / HR-DD / HR-CE binding consolidation in
+      0611001/2/3/4 prose).
+    §7.2 + §7.3 + §7.4 resolution (HR-RE-NNN binding,
+      parent chain, and currency-lag reconciliation
+      via Bill ratification at Step 3 close-gate).
+    0611001..0611004 prose verification (post-
+      currency-lag-resolution).
+
+  RATIONALE: 1011011 is the AA=10 coding-spec
+  shadow of four AA=06 parent specs. Per AA=06
+  precedence rule (TB00203 NSI §4.1.3), the four
+  AA=06 specs are the canonical authority. Once
+  diagram amendments encode the HR-PS/DD/CE/SPF
+  identifiers + the four AA=06 specs cite 1011011
+  as implementation consumer, 1011011 dv1_3
+  becomes a redundant restatement (similar to
+  1011009 vs 0811002 + 1011008 vs 0811001 patterns
+  surfaced in TB00200-202).
+
+5.4 CROSS-PAIR VERIFICATIONS (per TB00203 NSI §4.3).
+
+5.4-1 Long_Module ↔ Risk_Engine — per-trade sizing
+      function ownership boundary.
+      Risk_Engine Gate 8 (RE-SIZER + PS-RR) computes
+      per_trade_USD, order_qty, tp_price, emergsl_
+      price, mae_price + applies NON_DIR 50% modifier.
+      Long_Module consumes the Gate 8 output via the
+      Execution Engine dispatch interface (0511003
+      EE-001). The sacred-floor R:R minimum (TB00000
+      v2_29 §9.10) is enforced UPSTREAM at Gate 8
+      via Sacred_R_R_1_to_1_5 code literal. Long_
+      Module has NO sizing-computation logic of its
+      own. Per TB00201 SL §5.4-4 LM precedent (LM
+      consumer obligation upstream-enforcement-
+      satisfied; zero grep hits in 0811001 for
+      SC-GATE-* / Selection / Gate 5 — same pattern
+      applies to Gate 8 sizing terms in 0811001;
+      RE-SIZER / PS-RR / Gate 8 sizing logic NOT in
+      0811001 prose). RESOLVED via upstream-
+      enforcement-satisfied semantics. No new LM-side
+      PROSE-UPDATE-* required.
+
+5.4-2 Position_Mirror ↔ Risk_Engine — concentration
+      checks (open-position count; per-pair exposure;
+      portfolio-level exposure).
+      Per HR-PM-009 + HR-PM-011 (0511005 dv1_1
+      single-writer enforcement BOTH paper and live)
+      + 0500000 D6 R4 line 4250 + line 3960: Position
+      Mirror is read-only consumed by mod:Risk_Engine
+      via WSManager helper methods. Risk_Engine
+      consumes position_mirror.keys() for the
+      open-position semaphore-recreation count
+      (CE-SEM-010) + position_qty[sym] for the
+      drawdown MTM formula (DD-CURR-001..005). The
+      read-only-via-helpers contract per HR-PM-009
+      is preserved. RESOLVED via existing 0500000
+      D6 R4 callout + D3 R3 R2-increment HR-PM-009
+      callout. No new PM-side PROSE-UPDATE-* required.
+
+5.4-3 Exit_Controller ↔ Risk_Engine — mae_mult /
+      emergency_sl_mult parameter consumption.
+      Risk_Engine Gate 8 OWNS the computation:
+      mae_price + emergsl_price derived from
+      param:mae_mult + param:emergency_sl_mult + ATR(14)
+      at Gate 8 dispatch time. Exit_Controller CONSUMES
+      mae_price + emergsl_price from Position Mirror
+      (recorded at dispatch per PS-OUT-001) + monitors
+      bid_price for Layer 2 / Layer 3 trigger events.
+      Per TB00197 S1EC §5.4-3 precedent: Exit_Controller
+      does NOT recompute the threshold prices — it reads
+      stored mae_price / emergsl_price. Parameter
+      ownership is unambiguous: Risk_Engine owns
+      computation; Exit_Controller owns monitoring.
+      RESOLVED via existing 0500000 D3 R3 governs +
+      D6 R4 cross-module wire-up callouts. No new
+      EC-side PROSE-UPDATE-* required.
+
+5.4-4 WS_Manager ↔ Risk_Engine — per-wallet drawdown
+      halt cascade (session_pause_drawdown +
+      full_halt_drawdown).
+      Risk_Engine on FULL_HALT trigger calls
+      batch_cancel on entry GTD orders via WS_Manager
+      (DD-FH-002 step 3 + 0611002 §12.6). WS_Manager
+      provides the batch_cancel wire protocol per
+      0411001 + AR-041. The halt-state propagation
+      itself is internal to Risk_Engine (system_state
+      flag consulted by Gate 7); WS_Manager does NOT
+      observe system_state directly. RESOLVED via
+      existing batch_cancel interface; no halt-state
+      cross-module propagation contract needed.
+
+      CARRY-FORWARD: Per TB00000 v2_29 §9.7 (PER-WALLET
+      DRAWDOWN HALTS), the per-wallet drawdown evaluation
+      requires per-module wallet ledgers. Long_Module
+      wallet halts independent from Short_Module wallet
+      halts. The legacy 1011011 dv1_3 + 0611002 dv1_0
+      single-portfolio drawdown formula does NOT
+      implement per-module wallet decomposition. This
+      is a §7.4 currency-lag finding (per-wallet split
+      is v2_29 architecture; 0611002 dv1_0 + 1011011
+      dv1_3 predate the parallel-module framework).
+
+============================================================
+6. EXIT CRITERIA
+============================================================
+
+E-S1RE-01  GAP REGISTER AUTHORED.
+           This document.
+
+E-S1RE-02  ALL 1011011 ELEMENTS CLASSIFIED + 0611001
+           ..0611004 CROSS-VERIFIED.
+           30 element groups classified per §3.
+
+E-S1RE-03  CLUSTER C5 ENUMERATED.
+           73 individual tokens per §5.1 + §7.1.
+
+E-S1RE-04  AMENDMENT-14 SCOPE DEFINED.
+           Token list + target diagrams (D2 R2 +
+           D3 R3 + D6 R4 + D7 R3) + SVG-byte-change
+           determination (NO SVG byte change required).
+
+E-S1RE-05  PROSE-UPDATE QUEUE EXTENDED.
+           4 new (BF + BG + BH + BI) + 3 blocked
+           (BJ + BK + BL).
+
+E-S1RE-06  CROSS-PAIR VERIFICATIONS COMPLETE.
+           §5.4-1 Long_Module + §5.4-2 Position_Mirror
+           + §5.4-3 Exit_Controller all RESOLVED.
+           §5.4-4 WS_Manager batch_cancel RESOLVED with
+           per-wallet carry-forward to §7.4.
+
+E-S1RE-07  BILL APPROVAL GATE STATUS.
+           PENDING — AMENDMENT-14 + new PROSE-UPDATE-BF
+           through BI queued for Step 3 close-gate.
+
+E-S1RE-08  SESSION LOG AUTHORED.
+           TB00203_TothBot_V2_Session_Log_2026-05-11
+           _v1_0.txt — companion deliverable this turn.
+
+E-S1RE-09  NSI AUTHORED.
+           TB00204_Next_Session_Instructions_v1_0.txt
+           — companion deliverable directs TB00204
+           Regime_Engine pair audit.
+
+============================================================
+7. SEPARATE FINDINGS
+============================================================
+
+7.1 CLUSTER C5 — RE-SPECIFIC ARCHITECTURAL IDENTIFIERS
+    ABSENT FROM DIAGRAMS.
+
+    Final count: 73 individual tokens (LARGEST in
+    Step 3 to date).
+    Detail per §5.1 A/B/C/D/E:
+      A: 46 hard rules (HR-PS-001..011 + HR-DD-001..013
+         + HR-CE-001..012 + HR-SPF-001..010)
+      B: 7 AR identifiers (AR-011 PROMOTE + AR-041 +
+         AR-043 + AR-048 + AR-051 + AR-052 + AR-053
+         + AR-065)
+      C: 4 contracts (BoundedSemaphore + POR +
+         Drawdown_Formula + R_R_Formula)
+      D: 3 state tokens (NORMAL + SESSION_PAUSE +
+         FULL_HALT)
+      E: 13 evt: tokens
+
+    RATIONALE FOR THE LARGE COUNT: Risk_Engine is the
+    pipeline's terminal filter before order dispatch
+    (per TB00203 NSI §1.1) and the system's primary
+    loss-prevention layer (per TB00000 v2_29 §3 +
+    §9.10). Its content density (46 hard rules across
+    four AA=06 specs + a coding-spec consolidation in
+    1011011) is the highest among the Step 3 module
+    pairs. The four-AA=06-parent scope structurally
+    produces more identifiers per element than the
+    single-AA-side or two-AA-side audits in
+    TB00198-202. The count is proportional to the
+    parent set size + content density; not anomalous.
+
+7.2 CLUSTER C6 — HR-RE-NNN / HR-RISK-NNN IDENTIFIER-
+    BINDING MISMATCH CLASS — THIRD OCCURRENCE.
+
+    SYSTEMIC PATTERN CONFIRMED.
+
+    Per TB00203 NSI §6.3 + §3.4 anticipated pattern:
+    the 1011011 RE-SEM-* / RE-DD-* / RE-G7-* / RE-SZ-*
+    / RE-SIZER-* / RE-CIATS-* identifier-prefix family
+    covers the SAME architectural content as the
+    AA=06 parent specs (CE-SEM-* / DD-FORM-* / DD-EVAL-*
+    / PS-PTA-* / PS-HK-* / PS-RR-* etc.) but uses
+    DIFFERENT identifier-prefix slots. The content
+    correspondence is roughly:
+      1011011 RE-SEM-001..006   ↔ 0611003 CE-SEM-001..011
+      1011011 RE-DD-001..008    ↔ 0611002 DD-FORM-001..004
+                                 + DD-EVAL-001..004
+                                 + DD-SP-001..005
+                                 + DD-FH-001..006
+                                 + DD-PEAK-001..005
+      1011011 RE-G7-001         ↔ 0611003 §6 sequence
+      1011011 RE-SZ-001..005    ↔ 0611001 PS-PORT-001..003
+                                 + PS-TRADE-001..002
+                                 + PS-PTA-001..002
+                                 + PS-HK-001..007
+      1011011 RE-SIZER-001..007 ↔ 0611001 PS-RR-001..008
+                                 + PS-QTY-001..002
+                                 + PS-TP-001..002
+                                 + PS-SL-001..002
+                                 + PS-MAE-001..002
+                                 + PS-MIN-001..004
+                                 + PS-OUT-001..002
+      1011011 RE-CIATS-001..002 ↔ 0611004 SPF-INIT-001..004
+                                 + SPF-CHG-001..008
+
+    THIRD OCCURRENCE OF THE PATTERN AFTER:
+      (1) TB00201 §7.7 — HR-LM-NNN binding mismatch
+          (1011008 dv1_0 vs 0811001 dv1_0).
+      (2) TB00202 §7.4 — HR-SC-003..007 binding
+          mismatch (1011009 dv1_1 vs 0811002 dv1_0).
+      (3) TB00203 §7.2 — HR-RE-NNN binding mismatch
+          (1011011 dv1_3 vs 0611001..0611004).
+
+    SYSTEMIC PATTERN ESTABLISHED.
+
+    Resolution options (per TB00203 NSI §6.3
+    universal-resolution-principle directive):
+    Option X (AA=06 precedence universally) —
+      retire all 1011011 RE-* identifiers; 0611001-
+      0611004 AA=06 identifiers (PS-/DD-/CE-/SPF-)
+      are sole canonical. Same pattern proposed in
+      TB00201 §7.7 + TB00202 §7.4.
+    Option Y (AA=10 implementation-ordering
+      universally) — keep both identifier families;
+      define a cross-reference mapping table; treat
+      AA=10 prefixes as implementation-ordering aids
+      that do not re-bind architectural authority.
+    Option Z (cross-reference table universally)
+      — extension of Option Y: produce a single
+      table at the 0610000 anchor level mapping
+      every AA=10 RE-* identifier to its AA=06
+      counterpart. Joint authority.
+
+    RECOMMENDED RESOLUTION: Bill ratification at
+    Step 3 close-gate joint with TB00201 §7.7 +
+    TB00202 §7.4 per universal-resolution principle.
+    All three findings have the SAME defect class and
+    should resolve via a single Bill ratification
+    decision covering all three module pairs (and
+    any further occurrences at TB00204-206).
+
+7.3 CLUSTER C6 — 1011011 PARENT CHAIN CITATION
+    INCOMPLETE.
+
+    1011011 dv1_3 §2 Parent Chain lists:
+      1000000 Coding_Specification
+      1010000 Trading_System_Coding_Anchor
+      1011011 This document
+      Parent specifications: 0611001, 0611002, 0611003
+
+    MISSING: 0611004 Safety_Parameter_Framework.
+
+    The Risk Engine consumes the Parameter Store
+    initialization values defined in 0611004 §6 (the
+    eight Risk-domain parameter starting values).
+    0611004 is cited in 0611001 §15 + 0611002 §16 +
+    0611003 §11 + 0611004 §13 (Related Documents)
+    + 1011011 §5.3 (RE-CIATS-001 references the
+    Parameter Store implicitly).
+
+    Resolution: minor citation drift; 1011011 §2
+    Parent Chain extension to include 0611004 as a
+    fourth Parent specification. Sequenced into
+    PROSE-UPDATE-BK (blocked pending Bill
+    ratification of parent-chain completeness rule
+    requirement).
+
+7.4 CLUSTER C7 — SEVENTH CONSECUTIVE CURRENCY-LAG
+    FINDING — SYSTEMIC PATTERN FURTHER REINFORCED.
+
+    All five Risk_Engine pair-audit parents pre-date
+    TB00000 v2_29 by significant margin:
+      1011011 dv1_3  04-05-2026  36d pre-v2_29
+      0611001 dv1_0  04-05-2026  36d pre-v2_29
+      0611002 dv1_0  04-05-2026  36d pre-v2_29
+      0611003 dv1_0  04-05-2026  36d pre-v2_29
+      0611004 dv1_1  04-24-2026  17d pre-v2_29
+
+    None reflect v2_29 architectural amendments:
+
+    (A) PARALLEL-MODULE FRAMEWORK (§9.3).
+        Long_Module + Short_Module + future modules as
+        parallel siblings. Risk_Engine 1011011 dv1_3
+        + 0611001..0611004 do NOT decompose for
+        per-module scope. RE-SEM-001 single
+        BoundedSemaphore covers all modules
+        (vs v2_29 §9.6: per-module BoundedSemaphore).
+
+    (B) PER-MODULE CIATS (§9.6).
+        Per v2_29 §9.6: each module gets its own
+        CIATS instance + its own statistical pool +
+        200-trade inference threshold. 1011011 + 0611*
+        assume a single CIATS Trade Outcome Bus pool
+        (PS-HK-003/004 + SPF-CHG-002/005). Cross-
+        module data contamination is currently
+        possible in the spec architecture (though
+        prohibited by v2_29 §9.6).
+
+    (C) PER-WALLET DRAWDOWN HALTS (§9.7).
+        Per v2_29 §9.7: drawdown thresholds evaluated
+        per-module-wallet, NOT per-portfolio. Long
+        wallet halt does not halt Short, and vice
+        versa. 0611002 DD-CURR-001 + DD-FORM-001 use
+        spot_usd_balance + position_mirror as
+        SINGLE-PORTFOLIO baseline. The v2_29 per-
+        wallet decomposition (paper_starting_balance
+        _long_usd + paper_starting_balance_short_usd)
+        is NOT reflected in 0611002 or 1011011
+        formulas.
+
+    (D) SACRED-FLOOR R:R MINIMUM (§9.10).
+        Per v2_29 §9.10: net 1:1.5 R:R is the MINIMUM
+        expected R:R on every trade (NOT a fixed
+        ratio). CIATS owns the sizing curve ABOVE the
+        floor; trades with expected R:R > 1:1.5 may
+        receive larger allocations. 0611001 PS-RR-004
+        + RE-SIZER-007 + HR-PS-001 currently treat
+        net_gain = net_loss × 1.5 as a FIXED multiplier
+        (not a floor). Bill rationale at TB00179 for
+        the §9.10 shift: maximize-CIATS-latitude
+        above the floor. Implementation requires
+        CIATS expected-R:R-acceptance rule A1 (reject
+        at point-estimate below 1:1.5) + R:R-driven
+        sizing curve + per_trade_ceiling_pct = 25%
+        cap. NONE of these are in 0611001 or 1011011.
+
+    (E) R:R-DRIVEN SIZING CURVE (§9.10 + §9.17).
+        Per v2_29 §9.17: per_trade_size_usd starts at
+        Kraken per-pair minimum (~$0.50) flat across
+        R:R buckets; CIATS-owned function of expected
+        R:R from 200-trade inference threshold forward.
+        0611001 PS-PTA-001 fixed 5% per-trade and
+        PS-HK-001..007 Half-Kelly transition rule are
+        RETIRED in §9.17 v2_29 in favor of the
+        Kraken-minimum starting value + per_trade_
+        ceiling_pct cap. Half-Kelly remains a
+        candidate sizing-curve methodology CIATS MAY
+        adopt; it is no longer a hardcoded 200-trade
+        transition.
+
+    (F) RETIRED PARAMETERS PER §9.17 v2_29.
+        tradeable_pct (50% of portfolio) RETIRED ->
+          replaced by operator-controlled wallet
+          funding per module.
+        per_trade_pct (5% fixed + Half-Kelly
+          transition at 200) RETIRED -> replaced by
+          per_trade_size_usd Kraken minimum starting
+          value + CIATS-owned function of expected
+          R:R.
+        max_concurrent (20) RETIRED -> concurrent
+          count emerges from wallet_balance /
+          per_trade_size_usd arithmetic. No
+          artificial ceiling.
+        Hardcoded Half-Kelly 200-trade transition
+          RETIRED -> remains a candidate methodology.
+
+        0611001 PS-TRADE-001/002 + PS-PTA-001/002 +
+        PS-HK-001..007 + 0611003 CE-MC-001..002 +
+        CE-SEM-001..011 + 0611004 §6.1 Capital
+        Allocation Parameters all assume the RETIRED
+        v2_28 architecture.
+
+    (G) PER-MODULE WALLET STARTING BALANCES (§9.4 +
+        §9.17).
+        paper_starting_balance_long_usd = $5,000
+        paper_starting_balance_short_usd = $5,000
+        0611001/2/3/4 + 1011011 + 0500000 D7 (line
+        6069 + line 6584) still reference paper_
+        starting_balance = $1,000 (D-05). 0500000 D7
+        R3 governs cites decision:D-05_Paper_Starting
+        _Balance but the value is stale.
+
+    SEVENTH CONSECUTIVE CLUSTER C7 FINDING. Pattern
+    list:
+      TB00197 EC + TB00198 PM + TB00199 LG + TB00200
+      LM + TB00201 LM RE-AUDIT + TB00202 SC + TB00203
+      RE.
+
+    Magnitude of Step 3 close-gate currency-lag
+    reconciliation expanded to ≥14 specs:
+      Step 3 cumulative (TB00194-203):
+        0511001 (WSM) — verified at TB00194 +
+                        re-verified
+        0511002 (SP), 0511003 (EE), 0511004 (EC),
+        0511005 (PM), 0511006 (LG),
+        0811001 (LM), 0811002 (SC),
+        0611001 (PS), 0611002 (DD), 0611003 (CE),
+        0611004 (SPF),
+        plus 1011002-1011011 coding-spec siblings.
+      The four AA=06 docs are NEW additions to the
+      currency-lag reconciliation scope at TB00203.
+
+7.5 SEPARATE FINDING — 1011011 dv1_3 §1 PURPOSE
+    references RETIRED v2_28 ARCHITECTURE.
+
+    1011011 dv1_3 §1 PURPOSE explicitly states:
+      "The Risk Engine enforces three circuit breakers:
+        full_halt_drawdown:      10% of portfolio (HALT)
+        session_pause_drawdown:  5% of portfolio (PAUSE)
+        max_concurrent:          20 positions (BLOCK
+                                                entry)"
+
+    Per v2_29 §9.7 PER-WALLET DRAWDOWN HALTS: the
+    "portfolio" basis is replaced by per-module-wallet
+    basis. Per v2_29 §9.17 RETIRED: max_concurrent
+    is RETIRED. The §1 PURPOSE statement encodes
+    RETIRED architecture as the document's foundational
+    purpose. Resolution: full §1 rewrite required
+    under PROSE-UPDATE-BL currency-lag class.
+
+7.6 SEPARATE FINDING — 0611004 dv1_1 §6.1 PARAMETER
+    REGISTRY references RETIRED PARAMETERS.
+
+    0611004 dv1_1 §6.1 Capital Allocation Parameters
+    lists tradeable_pct, per_trade_pct, max_concurrent
+    as CIATS-OWNED with starting values 0.50 / 0.05 /
+    20 respectively. Per v2_29 §9.17, ALL THREE are
+    RETIRED. The replacement set (per_trade_size_usd,
+    per_trade_ceiling_pct, leverage_cap_short, etc.)
+    is NOT in 0611004 §6. Resolution: full §6.1
+    rewrite under PROSE-UPDATE-BL currency-lag class.
+
+============================================================
+8. EXIT CRITERIA STATUS
+============================================================
+
+E-S1RE-01  GAP REGISTER AUTHORED.            COMPLETE.
+E-S1RE-02  ALL 1011011 ELEMENTS CLASSIFIED +
+           0611001..0611004 CROSS-VERIFIED.   COMPLETE.
+E-S1RE-03  CLUSTER C5 ENUMERATED (73 tokens).COMPLETE.
+E-S1RE-04  AMENDMENT-14 SCOPE DEFINED.       COMPLETE.
+E-S1RE-05  PROSE-UPDATE QUEUE EXTENDED
+           (+4 new + 3 blocked).             COMPLETE.
+E-S1RE-06  CROSS-PAIR VERIFICATIONS COMPLETE
+           (§5.4-1 + §5.4-2 + §5.4-3 + §5.4-4
+            resolved).                       COMPLETE.
+E-S1RE-07  BILL APPROVAL GATE.               PENDING
+                                              (Step 3
+                                               close-
+                                               gate).
+E-S1RE-08  SESSION LOG AUTHORED.             COMPLETE.
+E-S1RE-09  NSI AUTHORED.                     COMPLETE.
+
+============================================================
+9. REVISION HISTORY
+============================================================
+
+  v1_0  2026-05-11  Initial. Step 3 sub-step S-1
+                    Risk_Engine pair audit deliverable.
+                    Full cross-namespace AA=06 + AA=10
+                    methodology applied with FIVE
+                    parents in scope (1 AA=10 +
+                    4 AA=06 — largest parent set in
+                    Step 3). 30 element groups
+                    classified into 4 buckets per §3.
+                    Cluster C5: 73 tokens (largest
+                    in Step 3 to date); AMENDMENT-14
+                    NEW with NO SVG byte change.
+                    PROSE-UPDATE-BF/BG/BH/BI authorable
+                    + BJ/BK/BL blocked. §7.2 HR-RE-NNN
+                    binding mismatch — THIRD
+                    OCCURRENCE confirming SYSTEMIC
+                    pattern across module pairs
+                    (joint resolution with TB00201
+                    §7.7 + TB00202 §7.4 at Step 3
+                    close-gate per universal-
+                    resolution principle). §7.3
+                    1011011 parent chain missing
+                    0611004 citation. §7.4 SEVENTH
+                    consecutive currency-lag finding
+                    (v2_29 amendments: parallel-
+                    module framework + per-module
+                    CIATS + per-wallet drawdown halts
+                    + sacred-floor R:R + R:R-driven
+                    sizing curve + retired parameters
+                    + per-module wallet balances).
+                    §7.5 + §7.6 RETIRED-architecture
+                    embedded in foundational document
+                    sections. Cross-pair verifications
+                    §5.4-1 through §5.4-4 RESOLVED.
+                    Bill approval gate PENDING at
+                    Step 3 close-gate.
+
+============================================================
+END OF DOCUMENT
+============================================================

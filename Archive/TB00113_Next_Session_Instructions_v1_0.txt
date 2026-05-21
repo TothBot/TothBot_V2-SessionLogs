@@ -1,0 +1,698 @@
+DocDCN:     TB00113_NSI
+DocTitle:   Next_Session_Instructions_for_TB00114
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TBXXXXX_Session_Logs\TB00113_Next_Session_Instructions_v1_0.txt
+DocDate:    04-22-2026
+DocTime:    23:00:00 UTC
+
+============================================================
+NEXT SESSION INSTRUCTIONS - TB00114
+RESUME CLEANUP + CHANGE SESSION
+COLD-LOAD VERIFICATION OF STEP 2B/2C UPLOADS/DELETES,
+THEN EXECUTE STEPS 3 THROUGH 15 OF THE TB00113 PLAN
+============================================================
+
+PAPER TRADING ONLY. NO REAL MONEY.
+
+============================================================
+SECTION 1 - WHAT THIS SESSION DOES
+============================================================
+
+TB00114 is a fresh Claude Chat opened specifically so
+that Claude can cold-load the current state of the
+Claude.ai project folder and deterministically verify
+the STEP 2B upload and STEP 2C delete actions that
+Bill performs either before or at the start of TB00114.
+
+The full plan is the 15-step plan delivered in TB00113.
+TB00113 completed STEP 1 (VPS sweep) and STEP 2 (git
+pull verified local repo). STEPS 2B, 2C, 3-15 remain.
+
+TB00114 scope, in this order:
+
+  STEP 2B-VERIFY  Claude reads the project folder cold.
+                  Confirms logger.py is dv1_4 and
+                  startup_sequence.py is dv1_9. Halts if
+                  either file is not at expected version.
+
+  STEP 2C-VERIFY  Claude confirms that the two duplicate
+                  stale files are absent from the project
+                  folder:
+                    0511006_Logger_Specification_dv1_0.txt
+                    TB00103_TothBot_V2_Session_Log_
+                      2026-04-18_v1_0.txt
+                  Halts if either file is still present.
+
+  STEP 4          Deliver 0311001 v1_2 with refreshed
+                  DCN Register + backfilled v1_1 rev-
+                  history entry.
+
+  STEP 5          Deliver 0311002 v1_3 (rev-history
+                  backfill + post-commit sync rule for
+                  OI-032 recurrence prevention).
+                  Deliver 0311004 v1_2 (rev-history
+                  backfill).
+
+  STEP 6          0311001 v1_2 (from STEP 4) also closes
+                  OI-033 by adding explicit path-
+                  governance rule.
+
+  STEP 7          0311002 v1_3 (from STEP 5) closes
+                  OI-032 procedure gap.
+
+  STEP 8          Bill commits the Part 1 cleanup DC
+                  package to TothBot_V2-Docs.
+
+  STEP 9          FP/DP diagnose OI-028 against
+                  ws_manager.py dv1_21. No code change
+                  without Bill approval of direction.
+
+  STEP 10         FP/DP diagnose OI-029 against
+                  logger.py dv1_4 (NOT dv1_3 as TB00111
+                  NSI incorrectly stated). No code
+                  change without Bill approval.
+
+  STEP 11         Fix OI-030 sweep-script FATAL pattern
+                  with code-derived event list. Deliver
+                  updated /root/tothbot_sweep.sh.
+
+  STEP 12         Full DC package for any approved code
+                  fix. No patches. Full files only.
+
+  STEP 13         Commit, push, deploy, verify.
+
+  STEP 14         Open new 48-hour observation window.
+
+  STEP 15         TB00114 Session Log and TB00114 NSI.
+
+============================================================
+SECTION 2 - MANDATORY READING (MUST BE FIRST)
+============================================================
+
+TB00114 reads every document below and states the
+version read before doing any work.
+
+  TB00000                       v2_10
+    Project Instructions. Always first.
+
+  TB00113 Session Log           v1_0
+    This session's audit, plan, and STEP 1/2 execution.
+
+  TB00113 NSI                   v1_0
+    THIS document.
+
+  TB00112 Session Log           v1_0
+    OI-032 discovery, Claude operational errors.
+
+  TB00112 NSI                   v1_0
+    Diagnostic direction for OI-028/029/030.
+
+  TB00111 Session Log           v1_0
+    Observation window abort, forensic timeline, the
+    4 WS_MGR_FATAL tracebacks.
+
+  TB00111 NSI                   v1_0
+    §6 diagnosis sequence. §6.4 line references were
+    against logger.py dv1_3 - MUST be re-verified
+    against dv1_4.
+
+  0311001                       v1_1
+    Namespace. TO BE BUMPED TO v1_2 in STEP 4.
+
+  0311002                       v1_2
+    Workflow. TO BE BUMPED TO v1_3 in STEP 5/7.
+
+  0311003                       v1_0
+    Versioning.
+
+  0311004                       v1_1
+    Document Creation & Approval. TO BE BUMPED TO v1_2
+    in STEP 5.
+
+  ws_manager.py                 dv1_21
+  logger.py                     dv1_4   (verify cold)
+  startup_sequence.py           dv1_9   (verify cold)
+
+  1011002 WS_Manager_Coding_Spec          dv1_19
+  1011007 Logger_Coding_Spec              dv1_4
+  1011014 Startup_Sequence_Coding_Spec    dv1_7
+  1011013 VPS_Deployment_Coding_Spec      dv1_4
+  1010000 Trading_System_Coding_Anchor    dv1_11
+  0511001 WS_Manager_Specification        dv1_1
+  0511006 Logger_Specification            dv1_1
+
+Re-query project_knowledge_search (or view the file)
+for each document's current version at session start.
+Memory is not fresh data. NSI text is not fresh data.
+
+============================================================
+SECTION 3 - FRESH-DATA DISCIPLINE - HARD RULE
+============================================================
+
+Per TB00000 v2_10 Section 4, TB00112 §6.1, TB00113 §7.1:
+
+  3.1  Before any work, TB00114 reads file headers
+       directly (view tool or bash_tool grep) to
+       confirm current version. No version is stated
+       from memory or NSI text.
+
+  3.2  If any drift is discovered at session open, work
+       halts until resolved. No diagnosis work proceeds
+       on stale data.
+
+  3.3  Mid-session project-folder mutation verification
+       is NOT reliable (OI-035). Any file replacement
+       or deletion that happens during a TB00114 turn
+       is considered applied at the next cold-load
+       session, unless Claude demonstrates a working
+       fresh-read mechanism for the specific file at
+       that moment.
+
+  3.4  TB00111 NSI stated logger.py was dv1_3 at commit
+       7e744a3. TB00112 confirmed actual is dv1_4.
+       TB00114 MUST verify actual dv1_4 at session open.
+
+============================================================
+SECTION 4 - SESSION STATE AT START OF TB00114
+============================================================
+
+------------------------------------------------------------
+4.1 VPS state (as of TB00113 STEP 1 sweep 22:xx UTC)
+------------------------------------------------------------
+
+  Service:     active (running) since 2026-04-22
+               16:46:14 UTC (systemd auto-restart)
+  Deploy:      dv1_22 (unchanged - commit 7e744a3)
+  PID:         231707
+  Mode:        paper trading (NO REAL MONEY)
+  Positions:   none open
+
+State between TB00113 close and TB00114 open may have
+changed. TB00114 runs /root/tothbot_sweep.sh at session
+open to capture current state.
+
+------------------------------------------------------------
+4.2 Repo state
+------------------------------------------------------------
+
+  Docs repo (TothBot_V2-Docs):  master @ 802f920
+                                (unchanged at TB00113
+                                 close; may have advanced
+                                 if TB00113 deliverables
+                                 were committed)
+  Code repo (TothBot_V2-Code):  master @ 7e744a3
+                                (unchanged - TB00113 did
+                                 not commit code)
+  Local code repo:              synced with origin/master
+                                at TB00113 STEP 2.
+
+------------------------------------------------------------
+4.3 Expected project-folder state at TB00114 open
+------------------------------------------------------------
+
+Bill's pending actions between TB00113 close and TB00114
+open:
+
+  Upload (from local repo):
+    logger.py            dv1_4
+    startup_sequence.py  dv1_9
+
+  Delete (from project folder):
+    0511006_Logger_Specification_dv1_0.txt
+    TB00103_TothBot_V2_Session_Log_2026-04-18_v1_0.txt
+
+TB00114 verifies all four conditions before any other
+work.
+
+------------------------------------------------------------
+4.4 Parking Lot carried forward
+------------------------------------------------------------
+
+Full Parking Lot in TB00113 §6. Of particular relevance
+to TB00114:
+
+  OI-028 (HIGH)  - WS reconnect regression
+                    PRIMARY DIAGNOSIS FOCUS
+  OI-029 (MED)   - SMTP read timeout
+                    SECONDARY DIAGNOSIS FOCUS
+  OI-030 (LOW)   - sweep script FATAL pattern
+                    FIX IN PASSING
+  OI-032 (HIGH)  - project-folder / VPS sync drift
+                    STEP 2B-VERIFY opens TB00114
+                    Governance fix lands in STEP 7
+  OI-033 (LOW)   - Claude Desktop staging-path defect
+                    Closed via STEP 6 (0311001 v1_2)
+  OI-035 (LOW)   - mid-session index uncertainty
+                    Formalize as standing rule in
+                    TB00000 update (candidate)
+
+============================================================
+SECTION 5 - PRE-FLIGHT CHECKLIST (HARD GATE)
+============================================================
+
+TB00114 confirms BEFORE making any change:
+
+  [ ] Session started fresh (cold load). Verify this by
+      reading TB00113 Session Log - it will not be in
+      conversation history, only in the project folder.
+
+  [ ] logger.py header in project shows dv1_4.
+      Use view tool on /mnt/project/logger.py or
+      project_knowledge_search with an explicit
+      version-string check. If header is still dv1_3,
+      HALT and ask Bill to complete the upload.
+
+  [ ] startup_sequence.py header in project shows dv1_9.
+      Same verification pattern. HALT on mismatch.
+
+  [ ] 0511006_Logger_Specification_dv1_0.txt is NOT
+      present. Only dv1_1 present. HALT if both
+      present.
+
+  [ ] TB00103_TothBot_V2_Session_Log_2026-04-18_v1_0.txt
+      is NOT present. Only v1_1 present. HALT if both
+      present.
+
+  [ ] Run /root/tothbot_sweep.sh once to capture current
+      VPS state.
+
+  [ ] Coding specs 1011002 / 1011007 / 1011014 re-queried
+      for current versions (expected dv1_19 / dv1_4 /
+      dv1_7).
+
+If ANY item above fails, TB00114 stops all other work
+and instructs Bill on the remediation command before
+continuing.
+
+============================================================
+SECTION 6 - DETAILED SEQUENCE
+============================================================
+
+------------------------------------------------------------
+6.1 STEP 2B-VERIFY  Verify logger.py and startup_sequence.py
+------------------------------------------------------------
+
+Claude runs:
+  view /mnt/project/logger.py (first 10 lines)
+  view /mnt/project/startup_sequence.py (first 10 lines)
+
+Confirms DocVersion lines match VPS state.
+
+If mismatch, Claude instructs Bill to upload the correct
+file from:
+  C:\Users\wstot\GitHub\TothBot\TothBot_V2-Code\tothbot\
+    logger.py
+  C:\Users\wstot\GitHub\TothBot\TothBot_V2-Code\tothbot\
+    startup_sequence.py
+
+...and halts until Bill confirms upload complete AND
+a next cold-load session can verify.
+
+------------------------------------------------------------
+6.2 STEP 2C-VERIFY  Verify duplicate stale files deleted
+------------------------------------------------------------
+
+Claude runs a project-folder listing check (bash_tool
+ls on /mnt/project/ or equivalent) for:
+  0511006_Logger_Specification_dv1_0.txt
+  TB00103_TothBot_V2_Session_Log_2026-04-18_v1_0.txt
+
+Both must be absent. If either is present, Claude
+instructs Bill to delete via the Claude.ai project UI
+and halts until cleared.
+
+------------------------------------------------------------
+6.3 STEP 4  Deliver 0311001 v1_2
+------------------------------------------------------------
+
+Content changes:
+  Section 12 DCN Register: refreshed to actual current
+    versions across all entries. Full sweep - not just
+    the five entries listed in TB00113 §2.1.C.
+
+  Section 3 (Governing Repositories): add explicit
+    path-governance statement closing OI-033. Only
+    the two governed local paths are authoritative
+    for controlled documents. Permit a named exception
+    for non-controlled operational scripts (e.g.,
+    /root/tothbot_sweep.sh) with explicit prohibition
+    on using the exception path for controlled code
+    files.
+
+  Revision History: add v1_1 entry backfill (missing)
+    and v1_2 entry for this change set.
+
+Version increment: v1_1 -> v1_2 (minor correction +
+register refresh + path-governance rule). Bill approves
+as minor correction per VP-004 ("minor corrections...
+v1_0 -> v1_1 with Bill approval; rv not required").
+Claude increments on Bill approval.
+
+Deliverable:
+  0311001_Namespace_Specification_v1_2.txt
+
+------------------------------------------------------------
+6.4 STEP 5  Deliver 0311002 v1_3 and 0311004 v1_2
+------------------------------------------------------------
+
+0311002 v1_3 content changes:
+  Revision History: backfill v1_1 and v1_2 entries
+    (missing). Add v1_3 entry for this change set.
+  Section 8 STEP 8.2.3: add mandatory post-commit
+    project-folder sync rule (OI-032 remediation,
+    Option C from TB00112 §4). Every git commit that
+    touches a code file MUST be followed by upload
+    of the updated file to the Claude.ai project
+    folder before session close. NSI pre-flight §5
+    version sweep catches any that slip through.
+
+0311004 v1_2 content changes:
+  Revision History: backfill v1_1 entry (missing).
+    Add v1_2 entry for this change set.
+
+Version increments: 0311002 v1_2 -> v1_3; 0311004
+v1_1 -> v1_2. Both minor corrections per VP-004.
+
+Deliverables:
+  0311002_Document_Creation_Workflow_v1_3.txt
+  0311004_Document_Creation_and_Approval_Procedure_v1_2.txt
+
+------------------------------------------------------------
+6.5 STEP 6  OI-033 closed via STEP 4 bundle
+------------------------------------------------------------
+
+0311001 v1_2 from STEP 4 contains the path-governance
+rule. Close OI-033 on commit.
+
+------------------------------------------------------------
+6.6 STEP 7  OI-032 closed via STEP 5 bundle
+------------------------------------------------------------
+
+0311002 v1_3 from STEP 5 contains the post-commit
+project-folder sync rule. Close OI-032 on commit.
+
+------------------------------------------------------------
+6.7 STEP 8  Commit Part 1 DC package to TothBot_V2-Docs
+------------------------------------------------------------
+
+Bill executes, one command per copy box:
+
+  cd C:\Users\wstot\GitHub\TothBot\TothBot_V2-Docs
+  git pull origin master
+  [copy 0311001 v1_2, 0311002 v1_3, 0311004 v1_2
+   to the governed local repo; delete superseded
+   v1_1/v1_2/v1_1 copies]
+  git add 03XXXXX_Governance\0311001_Namespace_Specification_v1_2.txt
+  git add 03XXXXX_Governance\0311002_Document_Creation_Workflow_v1_3.txt
+  git add 03XXXXX_Governance\0311004_Document_Creation_and_Approval_Procedure_v1_2.txt
+  git rm 03XXXXX_Governance\0311001_Namespace_Specification_v1_1.txt
+  git rm 03XXXXX_Governance\0311002_Document_Creation_Workflow_v1_2.txt
+  git rm 03XXXXX_Governance\0311004_Document_Creation_and_Approval_Procedure_v1_1.txt
+  git commit -m "TB00114: cleanup DC - 0311001 v1_2, 0311002 v1_3, 0311004 v1_2"
+  git push origin master
+
+RULE 6: no git add . Explicit per file.
+RULE 14: push origin master. Never main.
+RULE 15: one command per copy box.
+
+------------------------------------------------------------
+6.8 STEP 9  OI-028 diagnosis (WS reconnect regression)
+------------------------------------------------------------
+
+Execute TB00111 NSI §6.1 - §6.3.
+
+ws_manager.py is dv1_21 on BOTH VPS and project folder
+(verified TB00112, re-verified TB00114 STEP 2B).
+Line-number references in TB00111 NSI §6.2 are valid.
+
+Bill executes:
+
+  ssh root@87.99.141.44 "grep WS_MGR_FATAL /home/tothbot/logs/tothbot.log | tail -4"
+  ssh root@87.99.141.44 "sed -n '980,1150p' /root/TothBot_V2-Code/tothbot/ws_manager.py"
+  ssh root@87.99.141.44 "sed -n '3350,3470p' /root/TothBot_V2-Code/tothbot/ws_manager.py"
+
+Claude FP/DP analyzes per TB00111 NSI §6.3 candidates
+(a)-(d). Hypothesis (d) is first-principles most likely.
+Confirms or refutes by reading actual except-clauses.
+
+NO FIX WRITTEN until Bill approves diagnosis direction.
+
+------------------------------------------------------------
+6.9 STEP 10  OI-029 diagnosis (SMTP read timeout)
+------------------------------------------------------------
+
+Execute TB00111 NSI §6.4, BUT:
+  (a) Use logger.py dv1_4 (verified TB00114 STEP 2B).
+  (b) Re-verify all line-number references (dv1_3 vs
+      dv1_4 delta may shift lines).
+  (c) Re-verify retry-logic analysis - dv1_4 may
+      already have retry added.
+
+Questions per TB00111 NSI §6.4 still apply:
+  (d1) Which exception types are caught from aiosmtplib?
+  (d2) Does the logger retry? With what backoff?
+
+NO FIX WRITTEN until Bill approves diagnosis direction.
+
+------------------------------------------------------------
+6.10 STEP 11  Fix OI-030 (sweep script FATAL pattern)
+------------------------------------------------------------
+
+Claude reads code emission points in:
+  ws_manager.py (dv1_21)
+  logger.py (dv1_4)
+  execution_engine.py (dv1_0)
+  signal_pipeline.py (dv1_0)
+  startup_sequence.py (dv1_9)
+
+...to enumerate all FATAL-class event names explicitly
+by reading the code. NOT by paraphrasing NSI.
+
+Deliver updated /root/tothbot_sweep.sh with Option B
+pattern (match event names directly).
+
+Bill deploys using the proven pattern from TB00111:
+  scp C:\Users\wstot\OneDrive\Desktop\tothbot_sweep.sh root@87.99.141.44:/root/tothbot_sweep.sh
+  ssh root@87.99.141.44 "chmod +x /root/tothbot_sweep.sh"
+  ssh root@87.99.141.44 "sed -i 's/\r$//' /root/tothbot_sweep.sh"
+  ssh root@87.99.141.44 /root/tothbot_sweep.sh
+
+Desktop scp staging for tothbot_sweep.sh is acceptable
+because it is a non-controlled operational script. This
+is the path-exception scope formalized in 0311001 v1_2
+STEP 4.
+
+------------------------------------------------------------
+6.11 STEP 12  Full DC for any approved code fix
+------------------------------------------------------------
+
+Per TB00000 v2_10 NO PATCHES and 0311002 / 0311003 /
+0311004, any code change MUST ship with a complete DC
+package. No patches. Full files only.
+
+For OI-028 fix (if approved in STEP 9):
+  ws_manager.py        dv1_21 -> dv1_22
+  1011002 Coding Spec  dv1_19 -> dv1_20
+  0511001 System Spec  dv1_1  -> dv1_2 if arch changes
+  1010000 Coding Anchor dv1_11 -> dv1_12 if parent
+                        chain affected
+  TB00000              v2_10 -> v2_11 if standing
+                        rules affected
+
+For OI-029 fix (if approved in STEP 10):
+  logger.py            dv1_4  -> dv1_5
+  1011007 Coding Spec  dv1_4  -> dv1_5
+  0511006 System Spec  dv1_1  -> dv1_2 if arch changes
+  1010000 Coding Anchor dv1_11 -> dv1_12 if parent
+                        chain affected
+
+All files per DR-001 (.txt) and DR-003 (one batch).
+All version history blocks updated. All DocDate /
+DocTime stamps updated in UTC.
+
+------------------------------------------------------------
+6.12 STEP 13  Commit, push, deploy
+------------------------------------------------------------
+
+Docs repo commits: one commit per DC package.
+Code repo commit: one commit bundling code file updates.
+
+Deploy pattern (TB00108 / TB00110 standard):
+
+  ssh root@87.99.141.44
+  cd /root/TothBot_V2-Code
+  git fetch
+  git log HEAD..origin/master --oneline
+  git pull
+  head -20 tothbot/<changed_file>.py   (verify version)
+  systemctl restart tothbot
+  systemctl status tothbot --no-pager | head -5
+
+Capture new baseline with /root/tothbot_sweep.sh.
+
+------------------------------------------------------------
+6.13 STEP 14  Open new 48-hour observation window
+------------------------------------------------------------
+
+Window start = first sweep after restart showing
+expected baseline.
+
+  Minimum duration:  48 hours
+  Tripwires:         four tripwires, UPDATED sweep
+                     script (FATAL pattern corrected
+                     per STEP 11)
+
+If clean at T+48h:
+  OI-018 / OI-028 closeable
+  OI-019 / OI-029 closeable only after a real
+    CRITICAL/HIGH alert routes successfully
+  OI-020 closeable with OI-018 absent regression
+
+------------------------------------------------------------
+6.14 STEP 15  TB00114 Session Log + NSI
+------------------------------------------------------------
+
+All deliverables per DR-001 (.txt) and DR-003 (one
+batch) at session close.
+
+============================================================
+SECTION 7 - SCOPE GUARD
+============================================================
+
+TB00114 is a cleanup + CHANGE session. Permitted:
+  - Reading code and specs on VPS and in project folder
+  - Delivering 0311001 v1_2, 0311002 v1_3, 0311004 v1_2
+  - Git commits to TothBot_V2-Docs (Part 1 cleanup)
+  - FP/DP analysis of OI-028 / OI-029 tracebacks
+  - Delivery of full DC packages for any Bill-approved
+    code fix
+  - Delivery of updated /root/tothbot_sweep.sh
+  - Deploy to VPS using TB00108/TB00110 standard
+    sequence
+  - Opening a new 48-hour observation window
+
+NOT permitted without Bill's explicit approval:
+  - Any change to TB00000 standing rules
+  - Any new Domain Document or Sub-Domain Anchor
+  - Retiring any existing document
+  - Touching the archive repos (TothBot-Docs /
+    TothBot-Code)
+  - Any code change before STEP 9 / STEP 10 diagnosis
+    is Bill-approved
+
+Forbidden:
+  - Patches (must be full files)
+  - Skipping DC package components
+  - Changing code without coding-spec update
+  - Using ANY local path not in 0311001 §3 for
+    controlled documents (exception scope formalized
+    in 0311001 v1_2)
+  - Any real-money trading
+
+============================================================
+SECTION 8 - DELIVERABLES EXPECTED FROM TB00114
+============================================================
+
+Minimum (cleanup DC + verification + session log):
+
+  0311001_Namespace_Specification_v1_2.txt
+  0311002_Document_Creation_Workflow_v1_3.txt
+  0311004_Document_Creation_and_Approval_Procedure_v1_2.txt
+  TB00114_TothBot_V2_Session_Log_<DATE>_v1_0.txt
+  TB00114_Next_Session_Instructions_v1_0.txt
+
+If diagnosis produces approved code fixes:
+
+  Updated ws_manager.py                      (file)
+  Updated 1011002 WS_Manager_Coding_Spec     (file)
+  Updated logger.py                          (file)
+  Updated 1011007 Logger_Coding_Spec         (file)
+  Updated /root/tothbot_sweep.sh             (file)
+  Any updated system specs (0511001 / 0511006)
+    if architecture-level changes
+  Any updated parent-chain docs (1010000)
+    if coding anchor bumps
+
+All .txt per DR-001. One batch per DR-003. Full 7-field
+headers per 0311001 v1_2. All version increments per
+0311003.
+
+============================================================
+SECTION 9 - STANDING RULES REMINDER
+============================================================
+
+  RULE 6  - git add . is PROHIBITED. Explicit per file.
+  RULE 13 - .bat files go to Desktop only. Never in repo.
+  RULE 14 - git push origin master. NEVER origin main.
+  RULE 15 - ONE COMMAND PER COPY BOX. ALWAYS.
+  RULE 16 - .bat files run from cmd.exe only. Never PS.
+  RULE 17 - Complete and correct instructions.
+
+  CODING RULES:
+  NO PATCHES EVER. Full file delivery only. Full DC.
+
+  DELIVERY RULES:
+  DR-001 - All documents as .txt files.
+  DR-002 - 0500000 additionally as .docx and .pdf.
+  DR-003 - ALL documents in ONE BATCH.
+
+  FRESH-DATA RULE:
+  Every authoritative question preceded by direct
+  file read (view tool or bash_tool grep). FILE
+  VERSIONS verified by opening the file, not by
+  restating NSI or memory.
+
+  MID-SESSION INDEX RULE (OI-035, TB00113):
+  Mid-session project-folder mutation verification is
+  not reliable. Any file replacement or deletion during
+  a session is verified at the next cold-load session.
+
+  AUTHORITATIVE SOURCE FOR CODE:
+  GitHub, mirrored at the governed local repo per
+  0311001 §3. NEVER scp from VPS to Desktop for
+  controlled code files.
+
+  PATH GOVERNANCE:
+  Only the two governed local paths in 0311001 §3
+  are authoritative for controlled documents. The
+  non-controlled operational-script exception is
+  formalized in 0311001 v1_2 and scoped explicitly.
+
+  POWERSHELL / SSH QUOTING:
+  Solved by /root/tothbot_sweep.sh pattern.
+
+  SWEEP-SCRIPT CORRECTNESS:
+  Monitoring patterns derived by reading code emission
+  points. NOT paraphrased from NSI language.
+
+============================================================
+REVISION HISTORY
+============================================================
+
+  v1_0  2026-04-22  Initial. Next-session instructions
+                    for TB00114, which resumes the 15-
+                    step cleanup + change plan delivered
+                    in TB00113. TB00114 cold-load
+                    verifies STEP 2B uploads (logger.py
+                    dv1_4, startup_sequence.py dv1_9)
+                    and STEP 2C deletions (two duplicate
+                    stale files) before executing STEP 4
+                    through STEP 15. Includes
+                    formalization of OI-035 mid-session
+                    index-uncertainty standing rule
+                    discovered in TB00113. Includes
+                    delivery of 0311001 v1_2 (DCN
+                    Register refresh + path-governance
+                    rule closing OI-033), 0311002 v1_3
+                    (rev-history backfill + post-commit
+                    project-folder sync rule closing
+                    OI-032 procedure gap), and 0311004
+                    v1_2 (rev-history backfill). All
+                    code fixes remain conditional on
+                    Bill-approved diagnosis direction.
+                    Paper trading only. No real money.
+
+============================================================
+END - TB00113 NEXT SESSION INSTRUCTIONS v1_0
+============================================================

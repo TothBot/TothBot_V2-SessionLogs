@@ -1,0 +1,583 @@
+DocDCN:     TB00104
+DocTitle:   TothBot_V2_Session_Log_2026-04-18
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TBXXXXX_Session_Logs\TB00104_TothBot_V2_Session_Log_2026-04-18_v1_0.txt
+DocDate:    04-18-2026
+DocTime:    22:00:00 UTC
+
+============================================================
+TOTHBOT V2 SESSION LOG — 2026-04-18 (continuation)
+============================================================
+
+============================================================
+1. SESSION IDENTITY
+============================================================
+
+Session date:     April 18, 2026
+Session number:   TB0010X (placeholder — Bill to assign,
+                  expected TB00104)
+Session type:     DEFECT-WM-RECONNECT-001 fix implementation.
+                  Code, spec, and registry updates produced.
+                  First full-file delivery session in Claude Code.
+Prior session:    TB00103 v1_1 (2026-04-18, Claude Chat — 24h
+                  observation confirmed CloudFlare signature;
+                  no stop-condition trigger; cleared to proceed
+                  with fix)
+Platform:         Claude Code (model claude-opus-4-7[1m])
+Working directory: C:\Users\wstot\GitHub\TothBot
+
+Documents read this session:
+  TB00000  v2_9    Project Instructions                 read
+  TB00103  v1_1    Prior session log                    read
+  0311001  v1_1    Namespace_Specification              read
+  0311002  v1_2    Document_Creation_Workflow           read
+  0311003  v1_0    Versioning_Procedure                 read
+  0311004  v1_1    Document_Creation_and_Approval       read
+  1011002  dv1_18  WS_Manager_Coding_Spec               read
+  1010000  dv1_8   Trading_System_Coding_Anchor         read
+  ws_manager.py  dv1_19  (3,317 lines)                  read
+
+All 9 versions match the TB00103 v1_1 next-session manifest.
+No discrepancies detected.
+
+PAPER TRADING ONLY. NO REAL MONEY.
+
+============================================================
+2. WORK COMPLETED THIS SESSION
+============================================================
+
+------------------------------------------------------------
+2.1 Design Review — Step 2 (confirmed with Bill)
+------------------------------------------------------------
+
+Proposed and obtained Bill approval for:
+
+  (1) Rule numbers WM-RECONNECT-016, WM-RECONNECT-017,
+      WM-RECONNECT-018 (following existing -015 sequence).
+
+  (2) Retry schedule: KEEP existing N=10, base=1s, cap=30s,
+      factor 2x exponential. Rationale: defect is "never
+      invoked", not "too few attempts"; existing logic is
+      proven; changing constants adds risk. Matches
+      WM-RECONNECT-002.
+
+  (3) Send-helper behavior on transient disconnect:
+      log → schedule reconnect (background task) → swallow.
+      Option A per DC-3 (preserve unrelated behavior). Paper
+      trading scope. Not a broader send-retry refactor.
+
+Three Step-3 confirmation questions also answered OK by Bill:
+  (a) Send helpers guard create_task with is_reconnecting
+      and fatal flag to avoid zombie reconnect tasks.
+  (b) Clean async-for exit also triggers reconnect (safer
+      under websockets-library edge cases).
+  (c) recv loops never return except on _fatal_reconnect_
+      failure — matches current semantics (loop forever).
+
+------------------------------------------------------------
+2.2 Code Changes — ws_manager.py dv1_19 → dv1_20
+------------------------------------------------------------
+
+Full file rewritten via targeted edits (no patches produced
+for delivery — the on-disk file is a complete new version).
+Python py_compile syntax check: PASSED.
+
+Changes applied:
+
+  (a) Header: DocVersion dv1_20, DocDate 04-18-2026,
+      DocTime 22:00:00 UTC.
+  (b) Revision history entry dv1_20 prepended, documenting
+      DEFECT-WM-RECONNECT-001 fix and governing rules.
+  (c) Import added:
+        from websockets.exceptions import
+            ConnectionClosedError, ConnectionClosedOK
+      (ConnectionResetError is Python built-in.)
+  (d) Constants added (no magic numbers, DC-4):
+        RECONNECT_BACKOFF_BASE_SEC = 1.0
+        RECONNECT_BACKOFF_CAP_SEC  = 30.0
+        RECONNECT_BACKOFF_FACTOR   = 2.0
+        _TRANSIENT_WS_ERRORS = (
+            ConnectionClosedError,
+            ConnectionClosedOK,
+            ConnectionResetError,
+        )
+  (e) __init__ reconnect-control fields added:
+        self._reconnect_done_event: asyncio.Event (set initially)
+        self._fatal_reconnect_failure: bool = False
+  (f) _send_public and _send_private rewritten: wrap send
+      in try/except _TRANSIENT_WS_ERRORS → log
+      SEND_DISCONNECT + RECONNECT_TRIGGERED → schedule
+      reconnect → swallow.
+  (g) _recv_loop_public and _recv_loop_private rewritten:
+      outer while True + try wrapping async-for; catch
+      _TRANSIENT_WS_ERRORS → _handle_recv_loop_disconnect
+      → continue on new connection. Clean async-for exit
+      also triggers reconnect. _fatal_reconnect_failure
+      is the only return path.
+  (h) New method _handle_recv_loop_disconnect added
+      before _initiate_reconnect (shared helper; logs
+      RECONNECT_TRIGGERED; awaits in-flight reconnect via
+      _reconnect_done_event; respects _fatal_reconnect_
+      failure).
+  (i) _initiate_reconnect rewritten: event gate on entry
+      (clear), try/finally wrapping retry loop, event set
+      in finally on every exit path, _fatal_reconnect_
+      failure set before raising final RuntimeError, retry
+      constants used instead of literals.
+  (j) _main_loop TaskGroup UNCHANGED (by design — after
+      a-i, TaskGroup only sees real fatals).
+
+All behavior unrelated to reconnect is preserved (DC-3).
+No new external dependencies (DC-8). No bare Exception
+catch added (DC-10). Every new code path emits a
+structured log event (DC-5). All five DC-6 event names
+present: RECONNECT_TRIGGERED (new at catch sites),
+RECONNECT_INITIATED (existing — maps to RECONNECT_ATTEMPT),
+RECONNECT_COMPLETE (existing — maps to RECONNECT_SUCCEEDED),
+RECONNECT_ATTEMPT_FAILED (existing — maps to RECONNECT_FAILED
+non-fatal), FATAL_RECONNECT_FAILURE (existing).
+
+------------------------------------------------------------
+2.3 Spec Changes — 1011002 dv1_18 → dv1_19
+------------------------------------------------------------
+
+Created new file
+  1011002_WS_Manager_Coding_Spec_dv1_19.txt
+via copy-from-dv1_18 + targeted edits. The dv1_18 file
+remains on disk (and in the Claude.ai project if uploaded)
+until Bill deletes it per Section 4 actions.
+
+Changes:
+  (a) Header updated to dv1_19 / 04-18-2026 / 22:00:00 UTC;
+      DocPath filename updated.
+  (b) Section 3 Q5 CONNECTION log list extended with
+      RECONNECT_TRIGGERED, SEND_DISCONNECT, and
+      RECONNECT_ATTEMPT_FAILED (the last was previously
+      implicit but now listed explicitly).
+  (c) Section 15 extended with three new rules:
+        WM-RECONNECT-016  local catch of the three transient
+                           types in both recv loops and both
+                           send helpers; no propagation to
+                           TaskGroup; recv loops resume on
+                           new connection; send helpers
+                           swallow + schedule reconnect.
+        WM-RECONNECT-017  retry schedule formalised: N=10,
+                           base=1s, cap=30s, factor 2x.
+                           Matches WM-RECONNECT-002.
+                           All four constants at module top
+                           level (DC-4).
+        WM-RECONNECT-018  _main_loop TaskGroup receives only
+                           true fatals; _reconnect_done_event
+                           collapses concurrent disconnect
+                           detection; _fatal_reconnect_failure
+                           prevents post-fatal retry race.
+  (d) Revision history entry dv1_19 prepended documenting
+      the three new rules and cross-referencing
+      DEFECT-WM-RECONNECT-001 and ws_manager.py dv1_20.
+
+Existing rules WM-RECONNECT-001 through WM-RECONNECT-015
+and all HR-WM-* unchanged. No existing rule weakened
+(hard-stop check PASSED).
+
+------------------------------------------------------------
+2.4 Registry Changes — 1010000 dv1_8 → dv1_9
+------------------------------------------------------------
+
+Created new file
+  1010000_Trading_System_Coding_Anchor_dv1_9.txt
+via copy-from-dv1_8 + targeted edits.
+
+Changes:
+  (a) Header updated to dv1_9 / 04-18-2026 / 22:00:00 UTC;
+      DocPath filename updated.
+  (b) Section 4.2 (1011002 status block) updated: current
+      version dv1_13 → dv1_19; scope note amended; defect
+      list extended with DEFECT-WM-CRASH-001 and
+      DEFECT-WM-RECONNECT-001 summaries.
+  (c) Section 5.2 ws_manager.py entry: SpecVer dv1_18 →
+      dv1_19; RegDate 04-14-2026 → 04-18-2026.
+  (d) Revision history entry dv1_9 prepended with full
+      fix summary and rule cross-references.
+
+------------------------------------------------------------
+2.5 First Full-Session Claude Code Workflow
+------------------------------------------------------------
+
+This is the first TothBot V2 session conducted end-to-end
+in Claude Code (prior sessions used Claude Chat). Workflow
+observations (for TB00000 future note):
+
+  - Direct filesystem access eliminates the Claude.ai
+    project-folder round-trip. New file versions can be
+    produced by copy-then-edit on disk, eliminating
+    transcription risk for large documents.
+  - py_compile as a verification step between edit and
+    delivery is cheap and catches syntax errors early.
+  - Full-file delivery is still preserved — every .txt
+    and .py on disk is a complete new version, and the
+    Edit tool writes the complete modified file each call.
+    "No patches" is satisfied by deliverable shape, not
+    by the internal editing mechanism.
+
+============================================================
+3. DELIVERABLES PRODUCED THIS SESSION
+============================================================
+
+All four deliverables are present on the local filesystem.
+They are delivered in one batch (DR-003 compliant):
+
+  (1) ws_manager.py  dv1_20 (new version — full file)
+      Path: C:\Users\wstot\GitHub\TothBot\TothBot_V2-Code\
+            tothbot\ws_manager.py
+      Status: syntax verified via py_compile.
+
+  (2) 1011002_WS_Manager_Coding_Spec_dv1_19.txt
+      Path: C:\Users\wstot\GitHub\TothBot\TothBot_V2-Docs\
+            10XXXXX_Coding_Specification\
+      Supersedes: dv1_18 (same folder, NOT deleted by
+                  Claude — Bill deletes per Section 4.3).
+
+  (3) 1010000_Trading_System_Coding_Anchor_dv1_9.txt
+      Path: C:\Users\wstot\GitHub\TothBot\TothBot_V2-Docs\
+            10XXXXX_Coding_Specification\
+      Supersedes: dv1_8 (same folder, NOT deleted by
+                  Claude — Bill deletes per Section 4.3).
+
+  (4) TB0010X_TothBot_V2_Session_Log_2026-04-18_v1_0.txt
+      Path: C:\Users\wstot\GitHub\TothBot\TBXXXXX_Session_Logs\
+      This file. Filename placeholder TB0010X — Bill
+      renames to assigned TB number (expected TB00104)
+      before save/upload.
+
+============================================================
+4. BILL ACTIONS REQUIRED
+============================================================
+
+------------------------------------------------------------
+STEP 1 — Rename session log to assigned TB number  PENDING
+------------------------------------------------------------
+
+Current placeholder filename:
+  TB0010X_TothBot_V2_Session_Log_2026-04-18_v1_0.txt
+
+Rename (in-place) to assigned TB number, expected:
+  TB00104_TothBot_V2_Session_Log_2026-04-18_v1_0.txt
+
+Also update inside the file:
+  - DocDCN   field (TB0010X → TB00104)
+  - DocPath  field (filename portion)
+
+If Bill assigns a different TB number, use that everywhere.
+
+------------------------------------------------------------
+STEP 2 — Upload session log to Claude.ai project   PENDING
+------------------------------------------------------------
+
+After rename, upload the renamed session log to the
+Claude.ai TothBot V2 project folder (for future sessions
+that may use Claude Chat).
+
+Delete the prior file from Claude.ai project folder:
+  TB00103_TothBot_V2_Session_Log_2026-04-18_v1_1.txt
+  (superseded — newer session log now covers context.)
+
+TB00000 v2_9 is unchanged this session — remains in
+project folder as-is.
+
+------------------------------------------------------------
+STEP 3 — Delete superseded files from local disk    PENDING
+------------------------------------------------------------
+
+Delete these superseded files from the local filesystem:
+
+  (a) C:\Users\wstot\GitHub\TothBot\TothBot_V2-Docs\
+      10XXXXX_Coding_Specification\
+      1011002_WS_Manager_Coding_Spec_dv1_18.txt
+
+  (b) C:\Users\wstot\GitHub\TothBot\TothBot_V2-Docs\
+      10XXXXX_Coding_Specification\
+      1010000_Trading_System_Coding_Anchor_dv1_8.txt
+
+Superseded session log from prior session (TB00103 v1_0
+was already removed in that session; v1_1 remains until
+Bill superseded it with TB00104 — NOT this session's
+responsibility).
+
+PowerShell commands (one per copy box — RULE 15):
+
+  del "C:\Users\wstot\GitHub\TothBot\TothBot_V2-Docs\10XXXXX_Coding_Specification\1011002_WS_Manager_Coding_Spec_dv1_18.txt"
+
+  del "C:\Users\wstot\GitHub\TothBot\TothBot_V2-Docs\10XXXXX_Coding_Specification\1010000_Trading_System_Coding_Anchor_dv1_8.txt"
+
+------------------------------------------------------------
+STEP 4 — Commit TothBot_V2-Docs (specs + registry) PENDING
+------------------------------------------------------------
+
+Open PowerShell in the docs repo:
+
+  cd "C:\Users\wstot\GitHub\TothBot\TothBot_V2-Docs"
+
+Explicit file adds (RULE 6 — no git add .):
+
+  git add "10XXXXX_Coding_Specification/1011002_WS_Manager_Coding_Spec_dv1_19.txt"
+
+  git add "10XXXXX_Coding_Specification/1010000_Trading_System_Coding_Anchor_dv1_9.txt"
+
+  git rm "10XXXXX_Coding_Specification/1011002_WS_Manager_Coding_Spec_dv1_18.txt"
+
+  git rm "10XXXXX_Coding_Specification/1010000_Trading_System_Coding_Anchor_dv1_8.txt"
+
+Verify staging:
+
+  git status
+
+Expected: two new files staged, two deleted files staged,
+nothing else.
+
+Commit:
+
+  git commit -m "DEFECT-WM-RECONNECT-001 fix: 1011002 dv1_19 adds WM-RECONNECT-016/017/018; 1010000 dv1_9 registry update (ws_manager.py SpecVer dv1_19)"
+
+Push to master (RULE 14 — origin master, NEVER origin main):
+
+  git push origin master
+
+------------------------------------------------------------
+STEP 5 — Commit TothBot_V2-Code (ws_manager.py)    PENDING
+------------------------------------------------------------
+
+Open PowerShell in the code repo:
+
+  cd "C:\Users\wstot\GitHub\TothBot\TothBot_V2-Code"
+
+Explicit file add (RULE 6):
+
+  git add "tothbot/ws_manager.py"
+
+Verify staging:
+
+  git status
+
+Expected: one modified file staged (tothbot/ws_manager.py),
+nothing else.
+
+Commit:
+
+  git commit -m "DEFECT-WM-RECONNECT-001 fix: ws_manager.py dv1_20 - transient WS disconnects caught locally in recv loops and send helpers; TaskGroup receives only true fatals; governed by 1011002 dv1_19 WM-RECONNECT-016/017/018"
+
+Push to master (RULE 14):
+
+  git push origin master
+
+Note the commit hash (short) for Step 6 verification and
+for the next session's registry CommitHash reference if
+Bill re-enables hash tracking.
+
+------------------------------------------------------------
+STEP 6 — Deploy to VPS                              PENDING
+------------------------------------------------------------
+
+SSH into the VPS (key at C:\Users\wstot\.ssh\id_ed25519):
+
+  ssh root@87.99.141.44
+
+On the VPS, pull the updated code:
+
+  cd ~/TothBot_V2-Code
+
+  git pull origin master
+
+Expected: one file updated (tothbot/ws_manager.py).
+
+Verify the deployed DocVersion matches dv1_20:
+
+  head -20 tothbot/ws_manager.py
+
+Expected output includes:
+  DocVersion: dv1_20
+  DocDate:    04-18-2026
+
+Restart the tothbot systemd service:
+
+  systemctl restart tothbot
+
+Check service came up cleanly (wait ~30s for startup):
+
+  systemctl status tothbot --no-pager
+
+Expected: "active (running)", recent Main PID, memory
+around 60-65M, no recent restart cascades.
+
+Tail the log to confirm startup sequence:
+
+  tail -n 200 /home/tothbot/logs/tothbot.log
+
+Expected startup events (in order):
+  WS_TOKEN_ACQUIRED
+  WS_CONNECTED            (public)
+  WS_CONNECTED            (private)
+  INSTRUMENT_SNAPSHOT_COMPLETE
+  OHLC_SUBSCRIBED
+  WARMUP_REST_STARTED
+  PAIR_READY              (multiple)
+  WARMUP_REST_COMPLETE
+  REGIME_STARTUP_SEED_STARTED
+  REGIME_STARTUP_SEED_COMPLETE
+  SYSTEM_OPERATIONAL
+
+No WS_MGR_FATAL events from the new code should appear
+during normal startup.
+
+------------------------------------------------------------
+STEP 7 — Observation window — 24 hours post-deploy PENDING
+------------------------------------------------------------
+
+Start time: whenever Step 6 completes.
+End time:   Start + 24 hours.
+
+Success criteria:
+
+  SC-1  Zero WS_MGR_FATAL events in the observation window.
+        Verify:
+          grep -c "WS_MGR_FATAL" /home/tothbot/logs/tothbot.log
+        Expected: same count as before Step 6 (crashes from
+        pre-dv1_20 do not vanish from the log; what matters
+        is NO NEW crashes after the restart timestamp).
+
+  SC-2  RECONNECT_TRIGGERED events occur at roughly the
+        historical transient-disconnect rate (~1-2/hour)
+        — confirms the catch path is firing.
+        Verify:
+          grep -c "RECONNECT_TRIGGERED" /home/tothbot/logs/tothbot.log
+
+  SC-3  Each RECONNECT_TRIGGERED is followed by a
+        RECONNECT_INITIATED and a RECONNECT_COMPLETE
+        (successful reconnect). Spot-check:
+          grep -E "RECONNECT_(TRIGGERED|INITIATED|COMPLETE)" \
+            /home/tothbot/logs/tothbot.log | tail -30
+
+  SC-4  systemd restart counter does NOT increment.
+        Verify:
+          systemctl show tothbot --property=NRestarts
+        Expected: same value as immediately post-Step-6.
+
+  SC-5  Gate 3 continues to operate (no regression from
+        DEFECT-SS-009 fix):
+          grep "NO_REGIME_DATA" /home/tothbot/logs/tothbot.log
+        Expected: zero hits (or only transient startup-window
+        hits per DEFECT-RE-002 design window).
+
+Stop condition (early termination and re-open for redesign):
+  Any WS_MGR_FATAL event during the observation window
+  indicates the fix is incomplete. Capture the traceback
+  and sub_exceptions from the structured log and open the
+  next session.
+
+Observation complete: if all five success criteria hold at
+24h, DEFECT-WM-RECONNECT-001 can be formally closed in the
+next session log.
+
+============================================================
+5. OPEN ITEMS / PARKING LOT — UPDATED
+============================================================
+
+OI-018  UPDATED — DEFECT-WM-RECONNECT-001 fix IMPLEMENTED.
+        Awaiting Step 6 deploy and Step 7 observation.
+        Target close: next session (TB00105 or later)
+        if SC-1 through SC-5 hold.
+
+OI-017  OPEN — DEFECT-WM-LIQ-001. Liquidity refresh
+        returning empty_result every 4 hours. Non-blocking.
+        Investigate after OI-018 closes.
+
+OI-014  OPEN — startup_sequence.py stale cross-references
+        and ohlc sequence review. Post paper-trading stable.
+
+============================================================
+6. STANDING RULES — ALL ACTIVE
+============================================================
+
+  RULE 6  — git add . is PROHIBITED. Explicit per file.
+  RULE 13 — .bat files go to Desktop only. Never in repo.
+  RULE 14 — git push origin master. NEVER origin main.
+  RULE 15 — ONE COMMAND PER COPY BOX. ALWAYS.
+  RULE 16 — .bat files run from cmd.exe only. Never PS.
+  RULE 17 — Complete and correct instructions. Shell,
+            root file path, each step executable without
+            interpretation.
+
+  CODING RULES — ALL ACTIVE:
+  NO PATCHES EVER. Full file delivery only. Full document
+  control. Every code change = new version = full file
+  per DR-001.
+
+  DELIVERY RULES — ALL ACTIVE:
+  DR-001 — All documents as .txt files. (Code .py files
+           written directly to repo via Claude Code.)
+  DR-002 — 0500000 additionally as .docx and .pdf.
+           (Not applicable this session.)
+  DR-003 — ALL documents in ONE BATCH. Completed.
+
+============================================================
+7. CURRENT STATE SUMMARY — END OF SESSION
+============================================================
+
+GitHub — TothBot_V2-Docs:
+  Latest commit: f882a81 (from TB00102)
+  Pending (local): 1011002_dv1_19, 1010000_dv1_9, delete
+                   1011002_dv1_18, delete 1010000_dv1_8.
+                   Awaiting Bill Step 4.
+
+GitHub — TothBot_V2-Code:
+  Latest commit: 6d75479 (from TB00102)
+  Pending (local): ws_manager.py dv1_20.
+                   Awaiting Bill Step 5.
+
+VPS:
+  Status: RUNNING — ws_manager.py dv1_19 (FIX NOT YET
+          DEPLOYED). Fix applied to local repo only.
+  Awaiting Bill Step 6 deploy.
+
+Local filesystem — produced this session:
+  TothBot_V2-Code\tothbot\ws_manager.py           (dv1_20)
+  TothBot_V2-Docs\10XXXXX_..._1011002_..._dv1_19.txt
+  TothBot_V2-Docs\10XXXXX_..._1010000_..._dv1_9.txt
+  TBXXXXX_Session_Logs\TB0010X_..._v1_0.txt (this file)
+
+Local filesystem — to be deleted by Bill (Step 3):
+  TothBot_V2-Docs\10XXXXX_..._1011002_..._dv1_18.txt
+  TothBot_V2-Docs\10XXXXX_..._1010000_..._dv1_8.txt
+
+Syntax verification:
+  python -m py_compile ws_manager.py → SYNTAX_OK
+
+Open defects:
+  OI-018  DEFECT-WM-RECONNECT-001 — FIX IMPLEMENTED,
+          awaiting deploy + 24h observation.
+  OI-017  DEFECT-WM-LIQ-001 — deferred.
+  OI-014  startup_sequence.py stale xrefs — deferred.
+
+Closed this session:
+  (none — DEFECT-WM-RECONNECT-001 formally closes in a
+  future session after 24h clean observation.)
+
+============================================================
+REVISION HISTORY
+============================================================
+
+  v1_0  04-18-2026  Initial. DEFECT-WM-RECONNECT-001 fix
+                    implementation session. Three new rules
+                    (WM-RECONNECT-016/017/018) added to
+                    1011002 dv1_19. ws_manager.py incremented
+                    to dv1_20 with local catches in recv
+                    loops and send helpers, _reconnect_done_
+                    event gate, and _fatal_reconnect_failure
+                    flag. 1010000 dv1_9 registry updated.
+                    Python py_compile syntax check passed.
+                    Filename placeholder TB0010X — Bill to
+                    rename on save.
+
+============================================================
+END OF SESSION LOG TB0010X v1_0
+============================================================

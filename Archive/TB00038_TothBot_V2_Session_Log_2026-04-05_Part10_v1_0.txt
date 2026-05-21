@@ -1,0 +1,188 @@
+DocDCN:     TB00038
+DocTitle:   TothBot_V2_Session_Log_2026-04-05_Part10
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\OneDrive\TothBot\TB00038_TothBot_V2_Session_Log_2026-04-05_Part10_v1_0.txt
+DocDate:    04-05-2026
+DocTime:    15:00:00 UTC
+
+============================================================
+TOTHBOT V2 SESSION LOG — 2026-04-05 Part 10
+============================================================
+
+============================================================
+1. SESSION START STATE
+============================================================
+
+Continuation of Phase 8. Phase 8 Part 3 committed.
+Commit hashes confirmed:
+  ba5e76d — 1011005 dv1_2
+  7dc755d — 1011010 dv1_6
+
+============================================================
+2. WORK COMPLETED THIS SESSION (PART 4)
+============================================================
+
+3 new coding specs written from scratch:
+
+  NEW  1011006  Position_Mirror_Coding_Spec   dv1_0  COMPLETE
+  NEW  1011003  Signal_Pipeline_Coding_Spec   dv1_0  COMPLETE
+  NEW  1011004  Execution_Engine_Coding_Spec  dv1_0  COMPLETE
+
+All 3 pass two-criteria review:
+  (a) Five coding-readiness questions answered
+  (b) No TBD or placeholder sections
+
+Key content:
+
+  1011006 dv1_0 (Position Mirror):
+    PositionRecord dataclass with all fields.
+    All 6 write operations with implementation code:
+      create (at dispatch), fill confirmed, orders set,
+      partial fill, candle count increment, close (delete).
+    Reconciliation at startup and reconnect.
+    Read access patterns for all 4 consuming components.
+    HR-PM-001 through -009.
+
+  1011003 dv1_0 (Signal Pipeline):
+    Full 8-gate implementation contract.
+    Pre-pipeline steps (snapshot freeze, cache read, status check).
+    All gate conditions with pass/fail/rejection codes.
+    SSS Engine: RSI Wilder's SMMA, EMA(9/21), volume MA20
+      with per-symbol state structures.
+    SC-GATE-1 through SC-GATE-6 with cooldown and loss limit logic.
+    Gate 6 sizing modifier. Gate 7 Risk Guard delegation.
+    Gate 8 Position Sizer delegation.
+    SSS indicator seeding at startup.
+    HR-SP-001 through -010.
+
+  1011004 dv1_0 (Execution Engine):
+    cl_ord_id assignment at dispatch (no async gap).
+    add_order construction: all mandatory fields.
+    GTD expire time and deadline helpers.
+    At-dispatch: Position Mirror create + Pending Order Registry.
+    post_only rejection and GTD expiry handling.
+    Fill-price recomputation for TP and emergSL at actual avg_price.
+    batch_add construction: TP limit + emergSL stop-market atomic.
+    triggers.reference="last" MANDATORY (AR-046).
+    HR-EE-001 through -012.
+
+============================================================
+3. PHASE 8 PROGRESS — CUMULATIVE
+============================================================
+
+Parts 1+2+3+4 combined (15 of ~17 documents done):
+
+  COMMITTED (Parts 1-3):
+    1000000, 1010000, 1020000, 1030000 — structure
+    1011001, 1011007, 1011013 — WD complete
+    1011014, 1011011, 1011012 — WD complete
+    1011005, 1011010 — WD complete
+
+  NEEDS COMMIT (Part 4):
+    1011006  dv1_0  NEW COMPLETE
+    1011003  dv1_0  NEW COMPLETE
+    1011004  dv1_0  NEW COMPLETE
+
+  REMAINING:
+    1011008  Long_Module_Coding_Spec (NEW)
+    1011009  Selection_Controller_Coding_Spec (NEW)
+    1021001  Unit_Test_Specification (NEW)
+    1021002  Integration_Test_Specification (NEW)
+    1021003  Paper_Trading_Test_Specification (NEW)
+    1011002  WS_Manager (dedicated session — PL-WM-001)
+
+============================================================
+4. DECISIONS RECORDED
+============================================================
+
+  D-010  entry_limit_price = candle close price (AR-069),
+         quantized DOWN to price_increment. Confirmed in
+         1011004 EE-ADD-002.
+
+  D-011  TP and emergSL recomputed at actual fill avg_price,
+         not the entry limit price. R:R evaluated at fill.
+         Confirmed in 1011004 EE-BA-002.
+
+  D-012  SSS uses two different smoothing methods:
+         RSI(14): Wilder's SMMA (alpha=1/14) — MANDATORY.
+         EMA(9) and EMA(21): Standard EMA (alpha=2/(n+1)).
+         These are DIFFERENT and must not be confused.
+         (AR-076, SP-SSS-002/003.)
+
+============================================================
+5. PARKING LOT — CURRENT STATE
+============================================================
+
+  PL-003     TRACKING: Pathway 1 GitHub automation.
+  PL-NEW-001 WD documents prematurely on GitHub.
+  PL-NEW-002 git add . prohibited.
+  PL-NEW-003 Multi-line commit -m breaks Windows batch.
+  PL-NEW-004 cd to repo root first.
+  PL-WM-001  1011002 WS Manager — dedicated session needed.
+
+============================================================
+6. BILL ACTIONS REQUIRED
+============================================================
+
+  (a) Download 3 Part 4 documents:
+        1011006_Position_Mirror_Coding_Spec_dv1_0.txt
+        1011003_Signal_Pipeline_Coding_Spec_dv1_0.txt
+        1011004_Execution_Engine_Coding_Spec_dv1_0.txt
+
+  (b) Place all 3 in:
+        C:\Users\wstot\GitHub\TothBot\TothBot_V2-Docs\
+        10XXXXX_Coding_Specification\
+
+  (c) Download Phase8_Part4_Commit.bat.
+      Save to OneDrive or Desktop (NOT inside repo).
+
+  (d) Run git status. Verify only 3 untracked files.
+
+  (e) Run Phase8_Part4_Commit.bat.
+
+  (f) Confirm commits. Report hashes.
+
+  (g) Upload TB00038 + all 3 docs to Claude project.
+
+  (h) Tell Claude: "Phase 8 Part 4 committed. Continue Phase 8."
+
+============================================================
+7. NEXT SESSION — WHERE WE PICK UP
+============================================================
+
+Phase 8 Part 5. Priority order:
+  1. 1011008 Long_Module_Coding_Spec (NEW)
+  2. 1011009 Selection_Controller_Coding_Spec (NEW)
+  3. 1021001 Unit_Test_Specification (NEW)
+  4. 1021002 Integration_Test_Specification (NEW)
+  5. 1021003 Paper_Trading_Test_Specification (NEW)
+  After all above: 1011002 WS Manager dedicated session.
+
+============================================================
+8. STANDING RULES — ALL ACTIVE
+============================================================
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+RULE 14 -- ALL commit scripts use `git push origin master`.
+           NEVER `git push origin main`.
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+RULE 15 -- ONE COMMAND PER COPY BOX. ALWAYS. NO EXCEPTIONS.
+
+RULE 1-13 — all unchanged from prior logs.
+
+============================================================
+9. REVISION HISTORY
+============================================================
+
+  v1_0  04-05-2026  Initial session log. Phase 8 Part 4.
+                    3 new specs written from scratch:
+                    1011006, 1011003, 1011004 all dv1_0.
+                    Phase 8: 15 of ~17 core specs done
+                    (excluding WS Manager dedicated session).
+                    3 decisions recorded (D-010 through D-012).
+
+============================================================
+END OF SESSION LOG
+============================================================

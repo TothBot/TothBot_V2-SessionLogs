@@ -1,0 +1,266 @@
+DocDCN:     TB00049
+DocTitle:   TothBot_V2_Session_Log_2026-04-07_Part2
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\OneDrive\TothBot\TB00049_TothBot_V2_Session_Log_2026-04-07_Part2_v1_0.txt
+DocDate:    04-07-2026
+DocTime:    23:59:59 UTC
+
+============================================================
+TOTHBOT V2 SESSION LOG -- 2026-04-07 PART 2
+============================================================
+
+============================================================
+1. SESSION START STATE
+============================================================
+
+Phase 10 Tier 1 complete (95/95 passing). Tier 2
+integration tests begin this session.
+
+Documents read at session start:
+  TB00000  v2_7    Project Instructions              checked
+  TB00048  v1_0    Prior session log                 checked
+  1021002  dv1_0   Integration_Test_Specification    read in full
+  1011001  dv1_6   Engineering_Best_Practices        confirmed
+
+============================================================
+2. WORK COMPLETED THIS SESSION
+============================================================
+
+------------------------------------------------------------
+2.1 Pre-Coding Integration Analysis
+------------------------------------------------------------
+
+Before writing test_integration.py, full interface analysis
+performed across all modules involved in the 8 IT scenarios.
+
+Source files read:
+  signal_pipeline.py      (8-gate pipeline, interfaces)
+  execution_engine.py     (full -- 627 lines)
+  exit_controller.py      (header -- 150 lines)
+  ws_manager.py           (PositionRecord, WSManager init)
+  risk_engine.py          (constructor, key methods)
+  1011006_Position_Mirror_Coding_Spec_dv1_0.txt (full)
+
+------------------------------------------------------------
+2.2 CRITICAL PRE-CODING FINDING -- Field Name Mismatch
+------------------------------------------------------------
+
+Two discrepancies found that MUST be resolved before
+test_integration.py can be written correctly.
+
+FINDING 1 -- PositionRecord field name conflict:
+
+  1011006 coding spec (Section 4) defines:
+    cl_ord_id_entry      str
+    entry_limit_price    Decimal
+    entry_fill_price     Decimal
+    emgsl_order_id       str
+    emgsl_cl_ord_id      str
+
+  ws_manager.py (line 136) PositionRecord dataclass has:
+    cl_ord_id            str   (NOT cl_ord_id_entry)
+    -- no entry_limit_price field present --
+    entry_fill_price     Decimal
+    emergsl_order_id     str   (NOT emgsl_order_id)
+    emergsl_cl_ord_id    str   (NOT emgsl_cl_ord_id)
+
+  Specifically:
+    Spec uses:  cl_ord_id_entry   / ws_manager uses: cl_ord_id
+    Spec uses:  emgsl_order_id    / ws_manager uses: emergsl_order_id
+    Spec uses:  emgsl_cl_ord_id   / ws_manager uses: emergsl_cl_ord_id
+    Spec has:   entry_limit_price / ws_manager: absent
+
+FINDING 2 -- PositionMirror method resolution:
+
+  ExecutionEngine._pm is injected as "position_mirror"
+  and calls these methods:
+    self._pm.create_record(symbol, cl_ord_id,
+                           entry_limit_price, entry_qty)
+    self._pm.on_entry_filled(symbol, entry_fill_price,
+                             entry_qty, timestamp)
+    self._pm.on_batch_add_ack(symbol, tp_order_id,
+                              emgsl_order_id)
+    self._pm.clear_record(symbol)
+
+  These method names do NOT match the 1011006 spec
+  method names:
+    Spec uses:    create_position_record()
+    EE uses:      create_record()
+
+    Spec uses:    on_entry_filled()  (same name -- OK)
+    Spec uses:    on_batch_add_ack() (same name -- OK)
+    Spec uses:    close_position()
+    EE uses:      clear_record()
+
+  None of these methods exist in any uploaded .py file.
+  PositionMirror is NOT a separate class in the repo.
+  Position Mirror state is a plain dict on WSManager:
+    self.position_mirror: dict[str, PositionRecord] = {}
+  The methods in 1011006 spec are pseudocode-style
+  operations, not a class API.
+
+  This means: ExecutionEngine._pm must be a duck-type
+  object (or WSManager itself) providing these methods.
+  There is no position_mirror.py module in the repo.
+
+------------------------------------------------------------
+2.3 Impact Assessment
+------------------------------------------------------------
+
+These discrepancies block test_integration.py until resolved:
+
+  (a) PositionRecord field names in ws_manager.py must match
+      the names used by ExitController and CIATS at runtime.
+      If exit_controller.py uses pos.emgsl_order_id but
+      ws_manager.py stores emergsl_order_id, the code
+      crashes at runtime — not at test time.
+
+  (b) ExecutionEngine._pm.create_record() / .clear_record()
+      are called at runtime. If no object provides these
+      methods, execution_engine.py crashes on first entry
+      dispatch.
+
+  Resolution required (Bill to confirm):
+    Option A: Add a PositionMirror wrapper class that
+              provides create_record(), on_entry_filled(),
+              on_batch_add_ack(), clear_record() as thin
+              wrappers over the position_mirror dict on
+              WSManager. ExecutionEngine._pm = this wrapper.
+
+    Option B: Add these methods directly to WSManager and
+              pass `wm` as the `position_mirror` arg to EE.
+
+    Option C: The PositionRecord in ws_manager.py is wrong.
+              Update it to match 1011006 spec field names.
+
+  Claude cannot self-approve a resolution. Bill decides.
+
+------------------------------------------------------------
+2.4 Work NOT Started This Session
+------------------------------------------------------------
+
+test_integration.py: NOT written. Blocked by Finding 1
+and Finding 2 above. Writing the test file against an
+inconsistent interface would embed the bug in the tests,
+not surface it.
+
+============================================================
+3. OPEN ITEMS
+============================================================
+
+------------------------------------------------------------
+OI-001 (NEW -- BLOCKING): PositionRecord field name mismatch
+------------------------------------------------------------
+
+  Status:   BLOCKING -- test_integration.py cannot be
+            written until resolved.
+  Priority: P0 -- blocks Phase 10 completion.
+
+  Conflict:
+    ws_manager.py PositionRecord:
+      cl_ord_id, emergsl_order_id, emergsl_cl_ord_id
+      (no entry_limit_price field)
+    1011006 spec PositionRecord:
+      cl_ord_id_entry, emgsl_order_id, emgsl_cl_ord_id,
+      entry_limit_price
+
+  Action required:
+    1. Decide which naming is authoritative.
+    2. Update ws_manager.py PositionRecord dataclass
+       to match, OR update 1011006 spec to match.
+    3. Audit exit_controller.py and ciats.py for actual
+       field name usage to determine which is in use.
+    4. Confirm resolution with Claude before IT coding.
+
+------------------------------------------------------------
+OI-002 (NEW -- BLOCKING): PositionMirror method contract
+------------------------------------------------------------
+
+  Status:   BLOCKING -- execution_engine.py calls methods
+            that don't exist on any object in the repo.
+  Priority: P0 -- blocks Phase 10 completion.
+
+  ExecutionEngine calls on self._pm:
+    .create_record()       -- not found anywhere
+    .on_entry_filled()     -- not found anywhere
+    .on_batch_add_ack()    -- not found anywhere
+    .clear_record()        -- not found anywhere
+
+  Action required:
+    1. Decide: wrapper class or methods on WSManager.
+    2. Create position_mirror.py (if wrapper class chosen).
+    3. Wire _pm correctly in startup_sequence.py.
+    4. Update unit test for position_mirror if needed.
+
+------------------------------------------------------------
+OI-003 (CARRY FORWARD from TB00048): Module 8 gaps
+------------------------------------------------------------
+
+  Status:   Mitigated. Documented. No action required.
+
+  Cancel ACK not routed from ws_manager to exit_ctrl_fn.
+  Mitigated: asyncio.sleep(5.0) + second retry.
+
+  Daily regime downgrade not forwarded to EC after
+  regime_refresh.
+  Mitigated: EC polls regime_cache on every ticker_bbo.
+
+============================================================
+4. NEXT SESSION -- IMMEDIATE ACTIONS
+============================================================
+
+  Step 1: Read exit_controller.py and ciats.py for actual
+          PositionRecord field name usage (emgsl vs emergsl,
+          cl_ord_id vs cl_ord_id_entry).
+
+  Step 2: Resolve OI-001 (field names) -- Bill confirms.
+
+  Step 3: Resolve OI-002 (PositionMirror methods) --
+          Bill confirms approach.
+
+  Step 4: Apply fixes to ws_manager.py and/or create
+          position_mirror.py.
+
+  Step 5: Write tests/test_integration.py -- 8 scenarios
+          per 1021002 dv1_0.
+
+  Step 6: Run pytest. Fix failures. 8/8 green.
+
+  Step 7: Commit and push per rules (RULE 4, 6, 14, 15).
+
+------------------------------------------------------------
+SESSION OPENING INSTRUCTION (copy/paste exactly):
+------------------------------------------------------------
+
+  ============================================================
+  Read TB00000 v2_7 and TB00049.
+  Continue Phase 10 Tier 2 integration tests.
+  OI-001 BLOCKING: PositionRecord field name mismatch.
+    ws_manager.py: cl_ord_id / emergsl_order_id / emergsl_cl_ord_id
+    1011006 spec:  cl_ord_id_entry / emgsl_order_id / emgsl_cl_ord_id
+    ws_manager.py missing: entry_limit_price field
+  OI-002 BLOCKING: ExecutionEngine._pm calls create_record(),
+    on_entry_filled(), on_batch_add_ack(), clear_record() --
+    none exist in any uploaded .py file.
+  Before writing tests: audit exit_controller.py and ciats.py
+  for actual field usage. Resolve OI-001 and OI-002. Then
+  write tests/test_integration.py (8 scenarios, 1021002 dv1_0).
+  RULE 14: git push origin master. Always.
+  RULE 15: One command per copy box. Always.
+  RULE 6:  git add . is prohibited. Explicit git add per file.
+  RULE 4:  cd to repo root first. Always.
+  ============================================================
+
+============================================================
+5. REVISION HISTORY
+============================================================
+
+  v1_0  04-07-2026  Initial. Phase 10 Tier 2 session.
+                    Pre-coding analysis complete.
+                    Two blocking findings documented.
+                    No test file written this session.
+
+============================================================
+END OF SESSION LOG
+============================================================

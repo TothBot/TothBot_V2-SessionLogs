@@ -1,0 +1,368 @@
+DocDCN:     TB00064
+DocTitle:   TothBot_V2_Session_Log_2026-04-10_Part3
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\My_TothBot_Stuff\TBXXXXX_Session_Logs\TB00064_TothBot_V2_Session_Log_2026-04-10_Part3_v1_0.txt
+DocDate:    04-10-2026
+DocTime:    23:59:59 UTC
+
+============================================================
+TOTHBOT V2 SESSION LOG — 2026-04-10 PART 3
+============================================================
+
+============================================================
+1. SESSION IDENTITY
+============================================================
+
+Session date:     April 10, 2026
+Session number:   TB00064
+Session type:     Phase 11 — Paper Trading Mode Implementation
+                  Full implementation of paper trading mode
+                  per TB00063 §2.4 specification.
+                  ws_manager.py: 9 changes applied.
+                  startup_sequence.py: 2 changes applied.
+                  Both files syntax-verified clean.
+                  Awaiting: commit, deploy, env var, confirm.
+Prior session:    TB00063 (2026-04-10 Part 2)
+
+Documents read:
+  TB00000  v2_8   Project Instructions              checked
+  TB00062  v1_0   Prior session log                 checked
+  TB00063  v1_0   FP/DP analysis session log        checked
+
+============================================================
+2. WORK COMPLETED THIS SESSION
+============================================================
+
+------------------------------------------------------------
+2.1 Paper Trading Mode — Full Implementation
+------------------------------------------------------------
+
+All 11 changes from TB00063 §2.4 implemented exactly.
+Source files read from project before writing.
+Both files syntax-verified with ast.parse() — zero errors.
+
+ws_manager.py: 2,485 lines → 2,677 lines (+192 lines)
+startup_sequence.py: 515 lines → 536 lines (+21 lines)
+
+------------------------------------------------------------
+2.1.1 PositionRecord changes (§2.4.1)
+------------------------------------------------------------
+
+Added two fields to PositionRecord dataclass after
+emergsl_cl_ord_id:
+
+  tp_price: Decimal = Decimal("0")
+    # paper mode: simulated TP price
+  emergsl_price: Decimal = Decimal("0")
+    # paper mode: simulated emergSL price
+
+Written in paper mode by batch_add() gate.
+Remain Decimal("0") in live mode — unused.
+
+------------------------------------------------------------
+2.1.2 WSManager.__init__ (§2.4.2)
+------------------------------------------------------------
+
+Added one attribute after self._ciats_params:
+
+  self.paper_mode: bool = bool(
+      config.get("paper_trading_mode", False))
+
+------------------------------------------------------------
+2.1.3 add_order() paper gate (§2.4.3)
+------------------------------------------------------------
+
+Pre-dispatch block (validation, PositionRecord creation,
+pending_orders) runs in BOTH modes unchanged.
+
+Paper mode gate added before _send_private(payload):
+  - Logs PAPER_ORDER_SIMULATED (INFO)
+  - Calls asyncio.create_task(_simulate_entry_fill(...))
+  - Switches ticker to bbo mode
+  - Returns
+
+Live mode path: existing _send_private() unchanged.
+
+------------------------------------------------------------
+2.1.4 _simulate_entry_fill() new method (§2.4.4)
+------------------------------------------------------------
+
+New private async method inserted after add_order():
+
+  async def _simulate_entry_fill(
+      self, symbol, cl_ord_id, limit_price, order_qty
+  ) -> None:
+    await asyncio.sleep(0.1)   # 100ms — avoids same-tick race
+    fee_usd = order_qty × limit_price × Decimal("0.0026")
+    synthetic_order_id = f"PAPER_ENTRY_{cl_ord_id}"
+    Constructs synthetic filled event dict and calls
+    await self._handle_filled(synthetic_event)
+
+This drives the entire downstream fill pipeline
+(ExecutionEngine, batch_add, PositionRecord update)
+identically to a live Kraken fill.
+
+------------------------------------------------------------
+2.1.5 batch_add() paper gate (§2.4.5)
+------------------------------------------------------------
+
+Pre-dispatch validation (tp > entry, sl < entry) runs in
+BOTH modes unchanged.
+
+Paper mode gate added before _send_private(payload):
+  - Stores tp_price, sl_trigger on PositionRecord
+  - Sets synthetic order IDs:
+      pos.tp_order_id     = f"PAPER_TP_{tp_cl_ord_id}"
+      pos.emergsl_order_id = f"PAPER_SL_{sl_cl_ord_id}"
+  - Logs PAPER_BATCH_ADD_SIMULATED (INFO)
+  - Returns
+
+Live mode: existing _send_private() path unchanged.
+
+Synthetic order IDs on PositionRecord ensure _handle_ticker
+paper fill detection (startswith guard) works correctly.
+
+------------------------------------------------------------
+2.1.6 cancel_order() paper gate (§2.4.6)
+------------------------------------------------------------
+
+Paper mode check at top of method:
+  - Logs PAPER_CANCEL_SIMULATED (INFO)
+  - Returns
+
+Live mode: req_id registration + _send_private() unchanged.
+
+------------------------------------------------------------
+2.1.7 amend_order() paper gate (§2.4.7)
+------------------------------------------------------------
+
+Paper mode check at top of method:
+  - Logs PAPER_AMEND_SIMULATED (INFO)
+  - Returns
+
+Live mode: _send_private() unchanged.
+amend_order used only for emergSL qty amendment after
+partial TP fill. In paper mode the simulated emergSL is
+detected via ticker price crossing — amendment is a no-op.
+
+------------------------------------------------------------
+2.1.8 batch_cancel() paper gate (§2.4.8)
+------------------------------------------------------------
+
+Paper mode check at top of method (after PROHIBITION check
+comment):
+  - Logs PAPER_CANCEL_SIMULATED (HIGH/WARNING level)
+  - Includes note: "FULL_HALT in paper mode — batch_cancel
+    suppressed"
+  - Returns
+
+Live mode: _send_private() + BATCH_CANCEL_SENT log unchanged.
+FULL_HALT circuit breaker fires normally in paper mode.
+batch_cancel is suppressed because no real orders exist.
+
+------------------------------------------------------------
+2.1.9 dispatch_market_sell() paper gate (§2.4.9)
+------------------------------------------------------------
+
+Paper mode check at top of method:
+  - Reads bid from latest_bid dict
+  - Logs PAPER_MARKET_SELL_SIMULATED (INFO)
+  - Returns
+
+Live mode: _send_private() unchanged.
+This path (partial fill protection cleanup) should almost
+never fire in paper mode — simulated entries fill
+immediately at limit price.
+
+------------------------------------------------------------
+2.1.10 _handle_ticker() paper fill detection (§2.4.10)
+------------------------------------------------------------
+
+Added paper fill detection block after existing MAE check
+block (which is unchanged):
+
+  if self.paper_mode and symbol in self.position_mirror:
+    pos = self.position_mirror[symbol]
+    ask = item.get("ask")
+
+    # Paper TP: ask >= pos.tp_price AND PAPER_TP_ prefix guard
+    → Logs PAPER_TP_FILL_DETECTED
+    → Calls _exit_ctrl_fn with trigger="tp_filled"
+    → Clears pos.tp_price = Decimal("0") to prevent re-fire
+
+    # Paper emergSL: bid <= pos.emergsl_price AND PAPER_SL_ guard
+    → Logs PAPER_EMERG_SL_TRIGGERED (CRITICAL)
+    → Calls _alert_operator_direct (PT-VAL-004 VIOLATION)
+    → Calls _exit_ctrl_fn to close position
+    → Clears pos.emergsl_price = Decimal("0")
+
+PAPER_TP_/PAPER_SL_ startswith guard prevents detection
+from firing on positions opened in a prior live mode session.
+
+------------------------------------------------------------
+2.1.11 startup_sequence.py changes (§2.4.11)
+------------------------------------------------------------
+
+_load_config(): Added to return dict:
+  "paper_trading_mode": os.environ.get(
+      "PAPER_TRADING_MODE", "false"
+  ).lower() == "true",
+
+_async_main(): Added after TOTHBOT_STARTING log:
+  paper_mode = config.get("paper_trading_mode", False)
+  If True:  log PAPER_TRADING_MODE_ON (INFO)
+  If False: log PAPER_TRADING_MODE_OFF (INFO)
+
+============================================================
+3. VERIFICATION
+============================================================
+
+  Syntax check: ast.parse() — both files PASS
+  Line counts:
+    ws_manager.py:      2,677 lines (was 2,485)
+    startup_sequence.py:  536 lines (was 515)
+
+  paper_mode grep: 22 occurrences in ws_manager.py
+  All 6 order methods gated: add_order, batch_add,
+    cancel_order, amend_order, batch_cancel,
+    dispatch_market_sell — CONFIRMED
+  PositionRecord fields: tp_price, emergsl_price — CONFIRMED
+  _simulate_entry_fill: method present — CONFIRMED
+  _handle_ticker: paper fill detection block — CONFIRMED
+  startup_sequence: PAPER_TRADING_MODE env var read — CONFIRMED
+  startup_sequence: PAPER_TRADING_MODE_ON/OFF log — CONFIRMED
+
+============================================================
+4. WHAT BILL MUST DO NOW
+============================================================
+
+Step 1 — Copy files from download to GitHub working copy:
+  Copy ws_manager.py to:
+    C:\Users\wstot\GitHub\TothBot\TothBot_V2-Code\tothbot\ws_manager.py
+  Copy startup_sequence.py to:
+    C:\Users\wstot\GitHub\TothBot\TothBot_V2-Code\tothbot\startup_sequence.py
+
+Step 2 — Commit to GitHub:
+  cd C:\Users\wstot\GitHub\TothBot\TothBot_V2-Code
+  git add tothbot/ws_manager.py tothbot/startup_sequence.py
+  git commit -m "Feat: implement paper trading mode"
+  git push origin master
+
+Step 3 — SSH to VPS:
+  ssh -i C:\Users\wstot\.ssh\id_ed25519 root@87.99.141.44
+
+Step 4 — Pull to VPS:
+  source /root/tothbot_env/bin/activate
+  cd /root/TothBot_V2-Code
+  git pull origin master
+
+Step 5 — Add PAPER_TRADING_MODE=true to both env files:
+  echo "PAPER_TRADING_MODE=true" >> /root/.tothbot.env
+  echo "PAPER_TRADING_MODE=true" >> /root/TothBot_V2-Code/.tothbot.env
+
+Step 6 — Verify env files have the new line:
+  grep PAPER_TRADING /root/.tothbot.env
+  grep PAPER_TRADING /root/TothBot_V2-Code/.tothbot.env
+
+Step 7 — Start service:
+  systemctl start tothbot
+
+Step 8 — Confirm PAPER_TRADING_MODE_ON in log:
+  sleep 5 && tail -50 /home/tothbot/logs/tothbot.log
+  MUST see PAPER_TRADING_MODE_ON before proceeding.
+  If not seen: grep PAPER /home/tothbot/logs/tothbot.log
+
+Step 9 — Confirm service running:
+  systemctl status tothbot
+
+============================================================
+5. PT-ENTRY STATUS
+============================================================
+
+  PT-ENTRY-001  All unit tests pass             DONE
+  PT-ENTRY-002  All integration tests pass      DONE
+  PT-ENTRY-003  VPS deployed per 1011013        PENDING
+                (paper trading coded — deploy step 2-9 above)
+  PT-ENTRY-004  logrotate configured            DONE (wrong path — PL)
+  PT-ENTRY-005  IP whitelist confirmed          DONE
+  PT-ENTRY-006  Alert email confirmed           DONE
+  PT-ENTRY-007  systemd auto-restart confirmed  PENDING
+  PT-ENTRY-008  Startup sequence confirmed      PENDING
+
+============================================================
+6. NEXT SESSION OPENING INSTRUCTION
+============================================================
+
+  ============================================================
+  Read TB00000 v2_8 and TB00064.
+
+  After Bill completes Steps 1-9 above and confirms
+  PAPER_TRADING_MODE_ON in the log:
+
+  NEXT SESSION FOCUS:
+    PT-ENTRY-003: Confirm VPS deployed and paper mode active
+    PT-ENTRY-007: Confirm systemd auto-restart works
+    PT-ENTRY-008: Confirm startup sequence, all pairs READY
+
+  Parking lot items (after PT-ENTRY complete):
+    PL-NEW-007: Fix logrotate path
+    PL-NEW-008: Fix heartbeat log spam
+    PL-NEW-006: Update tothbot.service in GitHub
+    PL-NEW-005: Update requirements.txt websockets>=13.0
+
+  VPS SSH command:
+    ssh -i C:\Users\wstot\.ssh\id_ed25519 root@87.99.141.44
+
+  After connecting:
+    source /root/tothbot_env/bin/activate
+    cd /root/TothBot_V2-Code
+  ============================================================
+
+============================================================
+7. PARKING LOT
+============================================================
+
+  PL-001  WSManager dual PM creation paths. Monitor during
+          paper trading.
+
+  PL-003  Pathway 1 GitHub automation. After paper trading.
+
+  PL-NEW-003  VPS migration to Hillsboro OR. After paper
+              trading stable.
+
+  PL-NEW-004  EE ENTRY_TIMEOUT_SEC vs WM ENTRY_GTD_SEC
+              alignment. Monitor during paper trading.
+
+  PL-NEW-005  requirements.txt — websockets>=13.0.
+
+  PL-NEW-006  tothbot.service in GitHub not updated.
+              Type=simple, no WatchdogSec. Update after
+              PT-ENTRY complete.
+
+  PL-NEW-007  LOG_FILE path: logger.py uses
+              /home/tothbot/logs/tothbot.log. logrotate
+              points to /root/TothBot_V2-Code/logs/*.log.
+              Correct after PT-ENTRY complete.
+
+  PL-NEW-008  Heartbeat UNKNOWN_MESSAGE_TYPE log spam.
+              Add heartbeat no-op handler to dispatch table.
+              Fix after PT-ENTRY complete.
+
+============================================================
+8. REVISION HISTORY
+============================================================
+
+  v1_0  04-10-2026  Initial. Full paper trading mode
+                    implementation. ws_manager.py 9 changes
+                    (PositionRecord fields, paper_mode attr,
+                    6 order method gates, _simulate_entry_fill,
+                    _handle_ticker fill detection).
+                    startup_sequence.py 2 changes (env var
+                    read, PAPER_TRADING_MODE_ON/OFF log).
+                    Both files syntax-verified clean.
+                    Awaiting commit, deploy, confirm.
+
+============================================================
+END OF SESSION LOG
+============================================================

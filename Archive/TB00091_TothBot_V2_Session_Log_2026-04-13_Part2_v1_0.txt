@@ -1,0 +1,320 @@
+DocDCN:     TB00091
+DocTitle:   TothBot_V2_Session_Log_2026-04-13_Part2
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\My_TothBot_Stuff\TBXXXXX_Session_Logs\TB00091_TothBot_V2_Session_Log_2026-04-13_Part2_v1_0.txt
+DocDate:    04-13-2026
+DocTime:    16:30:00 UTC
+
+============================================================
+TOTHBOT V2 SESSION LOG — 2026-04-13 PART 2
+============================================================
+
+============================================================
+1. SESSION IDENTITY
+============================================================
+
+Session date:     April 13, 2026 (Part 2)
+Session number:   TB00091
+Session type:     Paper trading health check.
+                  DEFECT-SS-004 identified and diagnosed.
+                  No code changes made this session.
+Prior session:    TB00090 (2026-04-13)
+
+Documents read this session:
+  TB00000  v2_8    Project Instructions             read
+  TB00090  v1_0    Prior session log                read
+
+============================================================
+2. WORK COMPLETED THIS SESSION
+============================================================
+
+------------------------------------------------------------
+2.1 Paper Trading Health Check
+------------------------------------------------------------
+
+Bill SSH'd to VPS and ran four diagnostic commands.
+
+COMMAND 1: systemctl status tothbot
+  Result: active (running) since Mon 2026-04-13 10:27:44 UTC
+  Uptime at time of check: 5h 19min
+  PID: 90727
+  Memory: 35.0M (peak 35.5M)
+  CPU: 16.814s
+  Restart counter: 2 (the two defects fixed in TB00090)
+
+COMMAND 2: grep "READY" /home/tothbot/logs/tothbot.log
+  Result: No output. READY event never logged.
+  PT-ENTRY-008 still open.
+
+COMMAND 3: tail -50 /home/tothbot/logs/tothbot.log | grep -v heartbeat
+  Result: Only PING_SENT and PONG_RECEIVED events.
+  Latency ~90-93ms. WS connection healthy.
+  No substantive activity.
+
+COMMAND 4: grep -v "heartbeat\|PING\|PONG" ... | tail -80
+  Result: Full startup history recovered. See Section 2.2.
+
+------------------------------------------------------------
+2.2 Log Analysis — Full Startup History
+------------------------------------------------------------
+
+The log contains the following startup attempts:
+
+ATTEMPTS 1-4 (02:47 UTC — 02:48 UTC):
+  PAPER_TRADING_MODE env var not read by _load_config().
+  ws_manager.py always called _rest_get_ws_token().
+  WS_MGR_FATAL: GetWebSocketsToken error: EAPI:Invalid key
+  systemd restarted after each crash.
+  This was DEFECT-SS-003, fixed in TB00090. Confirmed
+  in log: these four crashes pre-date the fix deployment.
+
+ATTEMPT 5 (03:03 UTC):
+  PAPER_TRADING_MODE_ON logged — fix confirmed active.
+  Progressed further: WS_CONNECTED, INSTRUMENT_SNAPSHOT_
+  COMPLETE, OHLC_SUBSCRIBED. Then: complete stop.
+  No REST warm-up. No SYSTEM_OPERATIONAL. No READY.
+
+ATTEMPT 6 (03:22 UTC):
+  Identical progression to Attempt 5. Stopped at
+  OHLC_SUBSCRIBED. No further activity.
+
+ATTEMPT 7 (03:23 UTC):
+  Identical progression to Attempts 5 and 6.
+  Stopped at OHLC_SUBSCRIBED.
+  Ran from 03:23 until 10:27 UTC (~7 hours) with no
+  further events except heartbeat/ping/pong.
+
+  Crash at 10:27 UTC:
+  WS_MGR_FATAL: unhandled errors in a TaskGroup
+  (1 sub-exception). Root cause of sub-exception unknown
+  from log alone — but timing consistent with a watchdog
+  or zombie monitor timeout after 7 hours of no real data.
+
+CURRENT INSTANCE (10:27 UTC — present):
+  Started after systemd restart from 10:27 crash.
+  Identical progression: stops at OHLC_SUBSCRIBED.
+  Running 5h+ on ping/pong only. 57,399 log lines.
+  51,963 of them are heartbeat events.
+  No READY. No pipeline activity. Ever.
+
+------------------------------------------------------------
+2.3 Root Cause Analysis — DEFECT-SS-004
+------------------------------------------------------------
+
+Code inspection confirmed the following:
+
+In ws_manager.py, paper mode startup path
+(_startup_connect_and_subscribe):
+
+  1. Sets paper balance ($10,000)
+  2. Connects public WS
+  3. Calls _subscribe_public()
+  4. Resets zombie timer
+  5. Returns immediately ← THE DEFECT
+
+In _main_loop(), paper mode path runs:
+  - _recv_loop_public()
+  - _ping_loop()
+  - _zombie_monitor()
+
+REST warm-up (Step 8 per SS-WARMUP-001 through -008 in
+1011014) is NEVER called in paper mode. Specifically:
+  - GetOHLCData(interval=5) never called → ATR not seeded
+  - GetOHLCData(interval=60) never called → EMA not seeded
+  - GetOHLCData(interval=1440) never called → Regime unknown
+  - No pair ever transitions WARM_UP → READY
+  - Signal pipeline never evaluates a candle
+  - VPS_STARTUP_COMPLETE never logged
+  - sd_notify READY=1 never sent to systemd
+
+The system receives live OHLC candles from Kraken WS.
+Every candle is silently dropped because BTC/USD is
+permanently in WARM_UP state. The pipeline gate that
+checks pair status (pre-Gate 1) rejects every candle.
+This has been happening since 03:03 UTC. Paper trading
+has never executed a single pipeline evaluation.
+
+Secondary observation:
+  OHLC interval=60 subscription is rejected by Kraken:
+  "Already subscribed to one ohlc interval on this symbol"
+  This is known issue PL-NEW-011. It is a separate defect
+  from DEFECT-SS-004. PL-NEW-011 is on the Parking Lot.
+  It does not block the fix for DEFECT-SS-004 but must
+  be addressed in the same fix session as the 1H HTF
+  cache is not populating via WS either.
+
+------------------------------------------------------------
+2.4 Current System Status
+------------------------------------------------------------
+
+Service:     Running. Stable. Not harmful.
+Trading:     Zero pipeline evaluations. Never started.
+Risk:        None. Paper mode. No real orders possible.
+Action:      Leave running as-is until next session.
+             Do not restart. Do not touch.
+
+============================================================
+3. DEFECTS
+============================================================
+
+DEFECT-SS-004  OPEN — Paper mode startup omits REST warm-up.
+  Symptom:   OHLC_SUBSCRIBED logged. Startup stalls.
+             No GetOHLCData calls. No indicator seeding.
+             No WARM_UP → READY transition. No pipeline.
+             No SYSTEM_OPERATIONAL. No VPS_STARTUP_COMPLETE.
+  Root cause: _startup_connect_and_subscribe() in paper
+             mode returns immediately after _subscribe_public().
+             REST warm-up step is gated behind the live
+             trading code path only.
+  Affected files:
+             tothbot/ws_manager.py
+             tothbot/startup_sequence.py
+  Affected specs:
+             1011014 Startup_Sequence_Coding_Spec
+             1011002 WS_Manager_Coding_Spec
+  Fix:       Spec-driven. Update 1011014 and 1011002 first.
+             Explicitly define warm-up call path in paper mode.
+             Then update code per updated specs.
+             Full DC compliance required. No patches.
+
+============================================================
+4. OPEN ITEMS
+============================================================
+
+OI-006  OPEN — Paper trading not active.
+        Root cause: DEFECT-SS-004.
+        Resolution: Fix DEFECT-SS-004 next session.
+
+OI-014  OPEN — startup_sequence.py stale cross-references
+        and OHLC sequence review. Post paper-trading stable.
+
+OI-NEW-001 (was PL-NEW-011)  OPEN — OHLC interval=60 rejected
+        by Kraken: "Already subscribed to one ohlc interval
+        on this symbol." 1H HTF cache not populating via WS.
+        Address in same session as DEFECT-SS-004 fix since
+        both affect warm-up and READY path.
+
+============================================================
+5. PARKING LOT
+============================================================
+
+  PL-001      WSManager dual PM creation paths. Monitor.
+  PL-003      Pathway 1 GitHub automation. After paper trading.
+  PL-NEW-003  VPS migration to Hillsboro OR. After stable.
+  PL-NEW-004  EE ENTRY_TIMEOUT_SEC vs WM ENTRY_GTD_SEC. Monitor.
+  PL-NEW-005  requirements.txt — websockets version pin.
+  PL-NEW-006  tothbot_service.txt not updated in GitHub. After PT-ENTRY.
+  PL-NEW-007  LOG_FILE path mismatch. After PT-ENTRY.
+  PL-NEW-008  Heartbeat UNKNOWN_MESSAGE_TYPE log spam. After PT-ENTRY.
+  PL-NEW-010  status subscription "Symbol(s) not found". After stable.
+  PL-NEW-011  OI-NEW-001: 60-min OHLC rejected by Kraken.
+              1H HTF cache not populating via WS.
+              Address in same session as DEFECT-SS-004.
+
+============================================================
+6. GITHUB COMMIT LOG — THIS SESSION
+============================================================
+
+  No commits this session.
+
+============================================================
+7. STANDING RULES — ALL ACTIVE
+============================================================
+
+  RULE 6  — git add . is prohibited. Explicit per file.
+  RULE 13 — .bat files go to Desktop only. Never in repo.
+  RULE 14 — git push origin master. NEVER origin main.
+  RULE 15 — ONE COMMAND PER COPY BOX. ALWAYS.
+  RULE 16 — .bat files run from cmd.exe only. Never PS.
+
+  DELIVERY RULES — ALL ACTIVE:
+  DR-001 — All documents as .txt files.
+  DR-002 — 0500000 additionally as .docx and .pdf.
+  DR-003 — ALL documents in ONE BATCH. No piecemeal.
+
+============================================================
+8. BILL ACTIONS REQUIRED
+============================================================
+
+Step 1 — Save this session log:
+  C:\Users\wstot\My_TothBot_Stuff\TBXXXXX_Session_Logs\
+
+Step 2 — Upload TB00091 to Claude project folder.
+
+Step 3 — Start next Claude session per Section 9 below.
+
+============================================================
+9. NEXT SESSION — COMPLETE INSTRUCTIONS
+============================================================
+
+============================================================
+DOCUMENTS TO READ — IN THIS ORDER:
+
+1. TB00000 v2_8  — Project Instructions
+2. TB00091 v1_0  — This session log (most recent)
+
+STATE DOCUMENTS READ AND VERSIONS BEFORE ANY WORK.
+============================================================
+
+============================================================
+FIRST TASK — Fix DEFECT-SS-004
+
+DEFECT-SS-004: Paper mode startup omits REST warm-up.
+Startup stalls at OHLC_SUBSCRIBED. No indicators seeded.
+No pair ever reaches READY. Pipeline never executes.
+
+Root cause confirmed:
+  ws_manager.py _startup_connect_and_subscribe() in paper
+  mode returns immediately after _subscribe_public().
+  REST warm-up (GetOHLCData calls, indicator seeding,
+  WARM_UP → READY) is never called.
+
+Affected specs (update FIRST, before any code changes):
+  1011014  Startup_Sequence_Coding_Spec (dv1_3 current)
+  1011002  WS_Manager_Coding_Spec (dv1_13 current)
+
+Affected code (update AFTER specs are updated):
+  tothbot/ws_manager.py
+  tothbot/startup_sequence.py
+
+Also address in this same session:
+  PL-NEW-011 / OI-NEW-001:
+  OHLC interval=60 subscription rejected by Kraken:
+  "Already subscribed to one ohlc interval on this symbol"
+  1H HTF cache not populating via WS.
+  Both issues affect the warm-up and READY path.
+  Resolve together with DEFECT-SS-004.
+
+SEQUENCE (mandatory — no patches, no code-first):
+  1. Read 1011014 dv1_3 from project.
+  2. Read 1011002 dv1_13 from project.
+  3. Read ws_manager.py from project.
+  4. Read startup_sequence.py.txt from project.
+  5. Diagnose exact fix required in specs.
+  6. Update 1011014 — version to dv1_4.
+  7. Update 1011002 — version increment as required.
+  8. Update ws_manager.py per updated specs.
+  9. Update startup_sequence.py per updated specs if needed.
+  10. DC compliance audit on all changed documents.
+  11. Deliver all changed docs + code in one batch per DR-003.
+  12. Bill commits to GitHub.
+  13. Bill restarts tothbot service on VPS.
+  14. Bill tails log and pastes output to confirm READY.
+
+VPS restart command (after commit and deploy):
+  systemctl restart tothbot
+
+Confirm READY:
+  grep "READY\|OPERATIONAL\|WARMUP\|SEED" \
+    /home/tothbot/logs/tothbot.log | tail -30
+
+If READY seen: PT-ENTRY-008 DONE. OI-006 CLOSED.
+
+============================================================
+CURRENT VPS STATE (as of end of this session):
+  Service: active (running) since 10:27:44 UTC
+  Status:  Stalled at OHLC_SUBSCRIBED
+  Risk:    None — paper mode, no real orders
+  Action:  Leave running. Do not restart until next session.
+============================================================

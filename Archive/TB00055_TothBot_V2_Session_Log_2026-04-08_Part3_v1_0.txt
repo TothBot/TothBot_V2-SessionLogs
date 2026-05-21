@@ -1,0 +1,505 @@
+DocDCN:     TB00055
+DocTitle:   TothBot_V2_Session_Log_2026-04-08_Part3
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\My_TothBot_Stuff\TBXXXXX_Session_Logs\TB00055_TothBot_V2_Session_Log_2026-04-08_Part3_v1_0.txt
+DocDate:    04-08-2026
+DocTime:    23:59:59 UTC
+
+============================================================
+TOTHBOT V2 — SESSION LOG 2026-04-08 PART 3
+============================================================
+
+============================================================
+1. SESSION IDENTITY
+============================================================
+
+Session date:     April 8, 2026 (Part 3)
+Session type:     Phase 11 — Defect analysis and fix planning
+Prior session:    TB00054 (2026-04-08 Part 2)
+
+Documents read:
+  TB00000  v2_8   Project Instructions          ✓
+  TB00054  v1_0   Prior session log             ✓
+  All affected source files read from project   ✓
+
+============================================================
+2. SESSION CONTEXT
+============================================================
+
+Bill opened this session frustrated with the previous
+chat's failures (TB00054). This session was directed to
+perform FP/DP analysis on the best path forward, then
+proceed with defect fixes.
+
+============================================================
+3. FP/DP ANALYSIS — PATH FORWARD
+============================================================
+
+------------------------------------------------------------
+3.1 Chrome Extension / VPS Access Question
+------------------------------------------------------------
+
+Bill asked whether setting up Chrome extension to VPS
+would help. FP/DP analysis result:
+
+  - Chrome extension → web SSH = fragile, new failure mode
+  - Bill already has working SSH from his PC terminal
+  - Defect fixes do not require live VPS access — all
+    defect locations and correct replacements are fully
+    documented in TB00054
+  - Complete file replacement has no line-mismatch problem
+    (TB00054 FAILURE-006 was about patch approach only)
+
+Decision: Chrome extension setup is NOT the priority.
+Write complete corrected files now. Bill commits normally.
+
+  - Chrome extension: set up only if Bill wants Claude to
+    run VPS commands autonomously. Not a requirement.
+
+------------------------------------------------------------
+3.2 Kraken API Keys
+------------------------------------------------------------
+
+Not needed until PT-ENTRY-003 (connectivity test).
+That step is AFTER defect fixes and tests pass.
+Do not configure until next session after defects fixed.
+
+------------------------------------------------------------
+3.3 Sequencing Decision
+------------------------------------------------------------
+
+Step 1 (this session): Complete defect analysis. Produce
+  next-session instruction with full fix specification.
+Step 2 (next session): Write all corrected files. Deliver
+  as .txt batch per DR-001/DR-003.
+Step 3 (Bill): Save .py to local repo. git commit. git push.
+Step 4 (Bill): On VPS via SSH: git pull. Run tests.
+Step 5 (next): VPS deployment PT-ENTRY-003 through 008.
+Step 6 (PT-ENTRY-003): Configure Kraken API keys.
+
+============================================================
+4. DEFECT ANALYSIS — COMPLETE FINDINGS
+============================================================
+
+All 7 defects from TB00054 confirmed and analyzed.
+Authoritative fix for each defect determined by reading
+source files: execution_engine.py, ws_manager.py,
+risk_engine.py, exit_controller.py, startup_sequence.py,
+position_mirror.py, 1011004 coding spec.
+
+------------------------------------------------------------
+4.1 DEFECT-001 — execution_engine.py line 255
+------------------------------------------------------------
+
+Old:  self._pm.create_record(symbol, cl_ord_id,
+                              entry_limit_price, entry_qty)
+Problem: PositionMirror has no create_record() method.
+         WS Manager is SOLE WRITER per HR-PM-009.
+         EE is calling wrong object, wrong method, wrong
+         architecture.
+
+Root cause: EE was written with a standalone pm object
+            injected. At runtime, WM owns position_mirror
+            as an internal dict of WM's own PositionRecord
+            class. wm.add_order() BOTH sends the order AND
+            creates the PM record.
+
+Fix: Replace the entire entry message construction + send
+     block (lines 233–265 in on_gate8_output) with a
+     single call:
+       await self._wm.add_order(
+           symbol, entry_limit_price, entry_qty, cl_ord_id
+       )
+     Remove: manual add_order message dict construction
+     Remove: await self._wm.ws_private.send(...)
+     Remove: self._pm.create_record(...)
+     Remove: self._wm.pending_orders[cl_ord_id] = ...
+             (wm.add_order() handles pending_orders)
+     Remove: self._wm.req_id_registry[req_id] = ...
+             (not needed for entry — only batch_add)
+     Keep:   cl_ord_id = _make_entry_cl_ord_id(symbol)
+     Keep:   atr_14 computation
+     Keep:   self._entry_orders[cl_ord_id] = {...} storage
+     Keep:   minimum size validation (lines 212–226)
+             (redundant but harmless — defense in depth)
+     Keep:   ENTRY_DISPATCHED log
+
+Note: wm.add_order() uses ENTRY_GTD_SEC=30s. EE used
+      ENTRY_TIMEOUT_SEC=45s. The wm.add_order() value
+      governs after this fix. CIATS owns this parameter.
+      Starting value alignment is a CIATS concern.
+
+------------------------------------------------------------
+4.2 DEFECT-002 — execution_engine.py lines 505 and 538
+------------------------------------------------------------
+
+Old:  self._pm.clear_record(symbol)
+Problem: PositionMirror has no clear_record() method.
+         AttributeError crash on every entry cancel or
+         GTD expiry with no fill.
+
+Fix (both locations):
+  self._wm.position_mirror.pop(symbol, None)
+
+------------------------------------------------------------
+4.3 DEFECT-003 — execution_engine.py line 198
+------------------------------------------------------------
+
+Old:  pair_spec = self._wm.pair_specs.get(symbol, {})
+Problem: WSManager attribute is pair_cache, not pair_specs.
+         AttributeError before any order is sent.
+
+Fix:
+  pair_spec = self._wm.pair_cache.get(symbol, {})
+
+------------------------------------------------------------
+4.4 DEFECT-004 — ws_manager.py _handle_filled
+------------------------------------------------------------
+
+Status: ALREADY FIXED IN PROJECT FILE.
+
+The project ws_manager.py (2485 lines) already contains
+cl_ord_id in the exec_engine_fn event dict at line 1206.
+This defect exists on the VPS (2441 lines, old commit)
+but is not present in the project file.
+
+Since next session delivers COMPLETE replacement files
+(not patches), the project file version will overwrite
+the VPS version. DEFECT-004 is resolved by complete
+file delivery.
+
+------------------------------------------------------------
+4.5 DEFECT-005 — ws_manager.py batch_add ACK not handled
+------------------------------------------------------------
+
+Problem: Kraken batch_add response has method="batch_add".
+         _recv_loop_private extracts channel via:
+           msg.get("channel") or msg.get("method", "")
+         This yields "batch_add" as the channel key.
+         _channel_dispatch has no "batch_add" entry.
+         Message goes to UNKNOWN_MESSAGE_TYPE and is
+         discarded. EE.on_batch_add_response() is never
+         called. tp_order_id and emergsl_order_id remain
+         empty string on every fill.
+
+Fix:
+  (a) Add to _setup_dispatch_tables():
+        "batch_add": self._handle_batch_add_ack,
+
+  (b) Add new method _handle_batch_add_ack(msg):
+        req_id = msg.get("req_id")
+        if self._exec_engine_fn:
+            await self._exec_engine_fn.on_batch_add_response(msg)
+            # OR route via existing exec_engine_fn callback pattern
+
+  NOTE: The exec_engine_fn callback pattern is
+  Callable[[dict, WSManager], Awaitable]. EE.on_batch_add_response()
+  takes msg: dict only (no wm arg). The handler must call
+  the EE method correctly.
+
+  Correct approach: store EE reference directly OR add
+  a separate batch_add_ack_fn callback. Next session
+  must check how exec_engine_fn is wired in startup_sequence
+  and match the call signature.
+
+------------------------------------------------------------
+4.6 DEFECT-006 — risk_engine.py lines 205 and 254
+------------------------------------------------------------
+
+Old line 205:
+  for sym, rec in self._pm.all_records.items():
+Old line 254:
+  "open_count": self._pm.open_count,
+
+Problem: self._pm is standalone PositionMirror whose
+         _mirror is never populated at runtime. WM owns
+         self.position_mirror dict at runtime. Drawdown
+         MTM is always 0. Circuit breakers do not fire.
+
+Fix line 205:
+  for sym, rec in self._wm.position_mirror.items():
+
+Fix line 254:
+  "open_count": len(self._wm.position_mirror),
+
+Note: wm.position_mirror PositionRecord has .qty field.
+      RE accesses rec.qty — compatible with both classes.
+
+------------------------------------------------------------
+4.7 DEFECT-007 — test_integration.py never committed
+------------------------------------------------------------
+
+Status: File does not exist in any commit.
+        8 integration tests from TB00052 exist only in
+        session history.
+
+Fix: Recreate test_integration.py with 8 integration tests.
+     Deliver as tests/test_integration.py.
+
+============================================================
+5. PAPER TRADING MODE IMPLEMENTATION
+============================================================
+
+Required by 0211005 Paper_Trading_Operations_Procedure
+before any live capital is deployed.
+
+------------------------------------------------------------
+5.1 startup_sequence.py
+------------------------------------------------------------
+
+Add PAPER_TRADING_MODE env var:
+  paper_mode = os.environ.get(
+      "PAPER_TRADING_MODE", "false"
+  ).lower() == "true"
+
+Add to _load_config() return dict:
+  "paper_trading_mode": paper_mode
+
+Log at startup:
+  If paper_mode:
+    Log PAPER_TRADING_MODE_ON (INFO)
+  Else:
+    Log PAPER_TRADING_MODE_OFF (INFO)
+
+Pass paper_mode to WSManager constructor.
+
+------------------------------------------------------------
+5.2 ws_manager.py
+------------------------------------------------------------
+
+Add paper_mode bool to WSManager.__init__():
+  self.paper_mode: bool = config.get(
+      "paper_trading_mode", False
+  )
+
+Gate all order-sending methods behind:
+  if self.paper_mode:
+      self._logger.info(log_record({
+          "event": "PAPER_ORDER_SUPPRESSED",
+          ...
+      }))
+      return
+
+Methods to gate:
+  add_order()
+  batch_add()
+  cancel_order() / batch_cancel()
+  dispatch_market_sell()
+
+Add tp_price and emergsl_price fields to PositionRecord:
+  tp_price: Decimal = Decimal("0")
+  emergsl_price: Decimal = Decimal("0")
+
+Add paper TP/emergSL detection in ticker handler:
+  In paper mode, when bid crosses emergsl_price or ask
+  crosses tp_price for an open position, fire exit_ctrl_fn
+  with appropriate trigger.
+
+------------------------------------------------------------
+5.3 exit_controller.py
+------------------------------------------------------------
+
+Add paper_trade field to TRADE_CLOSE log record:
+  "paper_trade": wm.paper_mode,
+
+Read wm.paper_mode from wm reference (already injected).
+
+============================================================
+6. WHAT NEXT SESSION MUST DO
+============================================================
+
+RULE: Read TB00000 v2_8 and TB00055 FIRST.
+
+Step 1: Read the following project files in full before
+        writing any code:
+          execution_engine.py
+          ws_manager.py
+          risk_engine.py
+          exit_controller.py
+          startup_sequence.py
+          Also read: TB00052 for test_integration.py
+          integration test list
+
+Step 2: Write complete corrected files for ALL of the
+        following. Complete files — not patches.
+
+  (a) execution_engine.py
+      Fix DEFECT-001: replace lines 233-265 with
+        await self._wm.add_order(
+            symbol, entry_limit_price, entry_qty, cl_ord_id
+        )
+      Fix DEFECT-002: both self._pm.clear_record(symbol)
+        → self._wm.position_mirror.pop(symbol, None)
+      Fix DEFECT-003: self._wm.pair_specs
+        → self._wm.pair_cache
+
+  (b) ws_manager.py
+      Fix DEFECT-004: already fixed in project file.
+        Deliver complete project file — VPS gets overwritten.
+      Fix DEFECT-005: add "batch_add" to _channel_dispatch.
+        Add _handle_batch_add_ack() method.
+        Route to EE.on_batch_add_response() correctly.
+        Check startup_sequence wiring for call signature.
+      Add paper trading mode per Section 5.2 above.
+
+  (c) risk_engine.py
+      Fix DEFECT-006: both self._pm references
+        → self._wm.position_mirror
+
+  (d) startup_sequence.py
+      Add PAPER_TRADING_MODE per Section 5.1 above.
+
+  (e) exit_controller.py
+      Add paper_trade field to TRADE_CLOSE log record
+      per Section 5.3 above.
+
+  (f) tests/test_integration.py
+      Recreate 8 integration tests from TB00052.
+
+Step 3: Deliver ALL 6 files in ONE BATCH as .txt files.
+        Per DR-001 and DR-003. No exceptions.
+
+Step 4: Give Bill exact save instructions:
+  (a) through (e) → save as .py to:
+      C:\Users\wstot\GitHub\TothBot\TothBot_V2-Code\tothbot\
+  (f) → save as .py to:
+      C:\Users\wstot\GitHub\TothBot\TothBot_V2-Code\tests\
+
+Step 5: Give Bill exact git commands (LOCAL command prompt,
+        NOT SSH, at C:\Users\wstot\GitHub\TothBot\TothBot_V2-Code\):
+
+  git add tothbot/execution_engine.py
+  git add tothbot/ws_manager.py
+  git add tothbot/risk_engine.py
+  git add tothbot/startup_sequence.py
+  git add tothbot/exit_controller.py
+  git add tests/test_integration.py
+  git commit -m "Phase 11: Fix 6 critical defects + paper trading mode"
+  git push origin master
+
+Step 6: Give Bill VPS pull command (SSH terminal):
+  cd /root/TothBot_V2-Code && git pull
+
+Step 7: Run tests on VPS:
+  cd /root/TothBot_V2-Code
+  python3.12 -m pytest tests/ -q
+
+Step 8: After tests pass — proceed to PT-ENTRY-003
+        through PT-ENTRY-008 per 1011013 VD-DEPLOY-001.
+        Configure Kraken API keys at PT-ENTRY-003.
+
+============================================================
+7. VPS CURRENT STATE
+============================================================
+
+  Repo:       /root/TothBot_V2-Code
+  HEAD:       2f95c3b — "Phase 10: Fix 3 test files"
+  Service:    NOT installed
+  Venv:       NOT created
+  .tothbot.env: NOT created
+  logrotate:  NOT configured
+  Tests:      95 unit tests pass, 0 integration tests
+
+  REMINDER: VPS has pending OS restart.
+  Run before deployment: reboot (then reconnect SSH)
+
+  No changes made to repo this session.
+
+============================================================
+8. PARKING LOT
+============================================================
+
+  PL-001  WSManager dual PM creation paths. Monitor during
+          paper trading. Do not chase until confirmed.
+
+  PL-003  Pathway 1 GitHub automation. After paper trading.
+
+  PL-NEW-001  RiskEngine MTM wrong position_mirror.
+              Fix in next session (DEFECT-006).
+
+  PL-NEW-002  VPS pending OS restart. Run reboot before
+              deployment. Then reconnect SSH.
+
+  PL-NEW-003  VPS migration to Hillsboro OR (VD-VPS-002).
+              Evaluate after paper trading stable.
+
+  PL-NEW-004  EE ENTRY_TIMEOUT_SEC (45s) vs WM ENTRY_GTD_SEC
+              (30s) alignment. After DEFECT-001 fix, WM
+              governs at 30s. CIATS owns this. Monitor
+              during paper trading. Adjust if needed.
+
+============================================================
+9. OPEN ITEMS
+============================================================
+
+  All PT-ENTRY criteria (003 through 008) remain PENDING.
+
+  DEFECT-001 through DEFECT-007: all open, all blocking.
+  (DEFECT-004 resolved by complete file replacement.)
+
+  Paper trading mode: not implemented. Blocking PT-ENTRY-008.
+
+============================================================
+10. BILL ACTIONS REQUIRED
+============================================================
+
+Step 1 — Save this session log:
+  Save TB00055 to:
+  C:\Users\wstot\My_TothBot_Stuff\TBXXXXX_Session_Logs\
+
+Step 2 — Upload to Claude project:
+  Upload TB00055 to Claude project.
+
+Step 3 — Start next session with instruction in Section 11.
+
+============================================================
+11. NEXT SESSION OPENING INSTRUCTION
+============================================================
+
+  ============================================================
+  Read TB00000 v2_8 and TB00055. This is Phase 11 defect fix
+  session. Defect analysis is complete in TB00055 Section 4.
+  Paper trading mode spec is in TB00055 Section 5.
+
+  BEFORE WRITING ANY CODE: Read these project files in full:
+    execution_engine.py, ws_manager.py, risk_engine.py,
+    exit_controller.py, startup_sequence.py.
+  Also read TB00052 for the 8 integration tests.
+
+  Write complete corrected files for ALL 6 files:
+    tothbot/execution_engine.py  — DEFECT-001, 002, 003
+    tothbot/ws_manager.py        — DEFECT-005, paper mode
+    tothbot/risk_engine.py       — DEFECT-006
+    tothbot/startup_sequence.py  — paper mode
+    tothbot/exit_controller.py   — paper_trade TRADE_CLOSE
+    tests/test_integration.py    — 8 integration tests
+
+  Full fix specification in TB00055 Sections 4, 5, and 6.
+
+  RULE: Complete files. ONE BATCH. .txt format.
+  RULE: No patches. No options. No questions. No SCP.
+  RULE: git add . is PROHIBITED. Named files only.
+  RULE: git push origin master. Always.
+  RULE: One command per copy box. Always.
+
+  VPS: ssh root@87.99.141.44
+  Repo: /root/TothBot_V2-Code
+  Python: 3.12.3
+  ============================================================
+
+============================================================
+12. REVISION HISTORY
+============================================================
+
+  v1_0  04-08-2026  Session log for Phase 11 defect analysis.
+                    Complete defect analysis documented.
+                    Paper trading mode spec documented.
+                    Next session instruction written.
+                    No code produced this session —
+                    analysis only. Tool budget preserved
+                    for next session code writing.
+
+============================================================
+END OF SESSION LOG
+============================================================

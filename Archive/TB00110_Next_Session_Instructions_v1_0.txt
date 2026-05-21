@@ -1,0 +1,455 @@
+DocDCN:     TB00110_NSI
+DocTitle:   Next_Session_Instructions_for_TB00111
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TBXXXXX_Session_Logs\TB00110_Next_Session_Instructions_v1_0.txt
+DocDate:    04-22-2026
+DocTime:    02:40:00 UTC
+
+============================================================
+NEXT SESSION INSTRUCTIONS — TB00111
+CLOSE dv1_22 OBSERVATION WINDOW
+============================================================
+
+PAPER TRADING ONLY. NO REAL MONEY.
+
+============================================================
+SECTION 1 — WHAT THIS SESSION DOES
+============================================================
+
+TB00111 is a Claude Chat session that closes the dv1_22
+observation window opened in TB00110 STEP H. Specifically:
+
+  1. Verify >= 48 hours elapsed since 2026-04-22
+     02:15:21 UTC (earliest close 2026-04-24 02:15:21
+     UTC).
+  2. Sweep all four tripwire conditions to confirm
+     no abort was missed.
+  3. Operationally verify OI-022 (ALERT_SENT structured
+     event) and OI-023 (trades_<YYYY>.jsonl permanent
+     record) payloads on whatever real events occurred
+     during observation (or note absence of such
+     events if the window stayed quiet).
+  4. Make close decisions on OI-018 (WM reconnect),
+     OI-019 (alert routing), OI-020 (Kraken retry
+     window).
+  5. Produce the session log and decide whether any
+     follow-up session is needed.
+
+If the earliest close time has NOT yet been reached,
+TB00111 may be split into an early-check session
+(tripwire sweep only) and a separate close session
+once T+48h is passed.
+
+============================================================
+SECTION 2 — MANDATORY READING (MUST BE FIRST)
+============================================================
+
+Before any other work, TB00111 reads every document
+in this list and states the version read:
+
+  TB00000                    v2_10 (latest)
+    Project Instructions. Always first.
+
+  TB00110 Session Log        v1_0
+    Documents everything done in this session — the
+    completed dv1_22 deploy, baseline snapshot at
+    T+~6min, observation window parameters, the two
+    new Parking Lot OIs (OI-026 heartbeat spam,
+    OI-027 service-runs-as-root), and the PowerShell
+    quoting / concatenation lessons.
+
+  TB00110 NSI                v1_0
+    THIS document.
+
+  TB00108 Session Log        v1_0
+    Claude Code bundled-deploy session log (OI-022 /
+    OI-023 / OI-014 design decisions, including
+    Q1 fsync=yes and Q2 hard-pin 0o644 via os.open).
+
+  TB00108 Bill Actions       v1_0
+    Original STEP A-H procedure. STEP F-3/F-4/F-5
+    are resumed here.
+
+  0311003                    v1_0  (Versioning Procedure)
+    For any governance question during OI close
+    decisions.
+
+  1011007 Logger Coding Spec dv1_4
+    Source-of-truth for TRADES_RECORD_DIR semantics,
+    fsync policy, and file permission pinning — needed
+    for F-3/F-4/F-5 payload verification.
+
+============================================================
+SECTION 3 — FRESH-DATA DISCIPLINE — HARD RULE
+============================================================
+
+Per TB00000 v2_10 Section 4 and TB00109 NSI Section 3:
+"Never use stale data. Always re-query project knowledge
+for fresh data after completing a task and before
+performing the next task."
+
+TB00111 MUST follow this discipline without exception:
+
+  3.1  Before answering ANY governance, procedural,
+       versioning, namespace, or document-control
+       question, call project_knowledge_search to
+       retrieve the current authoritative source text.
+
+  3.2  Memory of documents read earlier in the same
+       session is NOT fresh data. Re-query.
+
+  3.3  When Bill asks a question that requires
+       authoritative data, Claude states which
+       document/section is being re-queried, queries
+       it, and answers with the quoted / cited source.
+
+  3.4  If Bill asks "are you using fresh data?" the
+       honest answer is no unless project_knowledge_
+       search was called for that specific question
+       in the current turn.
+
+============================================================
+SECTION 4 — SESSION STATE AT START OF TB00111
+============================================================
+
+------------------------------------------------------------
+4.1 Deploy status entering TB00111
+------------------------------------------------------------
+
+  STEP C-1 through C-7:                         COMPLETE
+  STEP D-1 through D-8:                         COMPLETE
+  STEP E-1 through E-9:                         COMPLETE
+  STEP F-1, F-2:                                COMPLETE
+  STEP F-3, F-4, F-5:                           DEFERRED
+                                                (resume here)
+  STEP G-1 through G-5:                         COMPLETE
+  STEP H (observation window opened):           COMPLETE
+  Observation window closed:                    NOT YET
+
+------------------------------------------------------------
+4.2 Repo state entering TB00111
+------------------------------------------------------------
+
+  Docs repo (TothBot_V2-Docs):  master @ 802f920
+                                Clean, synced with origin
+  Code repo (TothBot_V2-Code):  master @ 7e744a3
+                                Clean, synced with origin
+  VPS (87.99.141.44):           RUNNING dv1_22
+                                PID 223133 at observation open
+                                Since 2026-04-22 02:15:21 UTC
+
+------------------------------------------------------------
+4.3 Observation window parameters
+------------------------------------------------------------
+
+  Window start:       2026-04-22 02:15:21 UTC
+  Minimum duration:   48 hours
+  Earliest close:     2026-04-24 02:15:21 UTC
+  Deploy version:     dv1_22
+  Main PID at start:  223133
+  Code repo HEAD:     7e744a3
+  Docs repo HEAD:     802f920
+
+------------------------------------------------------------
+4.4 Tripwires (ANY fires -> abort, no close, open TB00112)
+------------------------------------------------------------
+
+  1. Any FATAL event during window
+  2. ALERT_SMTP_FAILED > 0 during window
+  3. TRADE_RECORD_WRITE_FAILED > 0 during window
+  4. Unplanned service restart (PID != 223133 without
+     a Bill-initiated restart event recorded)
+
+------------------------------------------------------------
+4.5 Parking Lot (carried from TB00110)
+------------------------------------------------------------
+
+  OI-026  UNKNOWN_MESSAGE_TYPE heartbeat spam (LOW)
+  OI-027  Service runs as root, not tothbot (LOW,
+          governance/least-privilege)
+
+Neither is a tripwire. Both deferred to a future change
+session after dv1_22 observation closes cleanly.
+
+============================================================
+SECTION 5 — PRE-FLIGHT CHECKLIST (TB00111 SHORT FORM)
+============================================================
+
+TB00111 confirms the following BEFORE making close
+decisions:
+
+  [ ] TB00110 Session Log and TB00110 NSI uploaded to
+      Claude.ai project folder. TB00111 reads both as
+      part of Section 2 mandatory reading.
+
+  [ ] Current UTC time noted. Determine whether
+      window is >= 48h elapsed.
+
+  [ ] VPS still RUNNING dv1_22 with PID 223133
+      unchanged and start time 2026-04-22 02:15:21 UTC
+      unchanged. Command:
+        ssh root@87.99.141.44 "systemctl status tothbot --no-pager | head -5"
+      If PID changed or start time changed -> tripwire
+      4 fired -> abort, do NOT close OI-018/019/020.
+
+============================================================
+SECTION 6 — DETAILED SEQUENCE
+============================================================
+
+Per TB00109 session lesson: PowerShell -> ssh -> bash
+quote escaping is fragile with embedded double quotes.
+Use plain-string grep for quick counts, and SSH
+interactively for precise event-only grep with single
+quotes.
+
+------------------------------------------------------------
+6.1 STEP F-3 — Verify trades_2026.jsonl exists
+(IF a TRADE_CLOSE occurred during window)
+------------------------------------------------------------
+
+SSH to VPS:
+  ssh root@87.99.141.44
+
+Then check whether any trades file was created:
+  ls -la /home/tothbot/records/
+
+If trades_2026.jsonl exists, verify ownership and perms:
+  stat -c '%a %U %G' /home/tothbot/records/trades_2026.jsonl
+
+Expected: 644 root root (service runs as root per
+TB00110 STEP F-2 finding). Per 1011007 Logger Coding
+Spec dv1_4, file must be hard-pinned 0o644 via os.open.
+
+If NO trades_2026.jsonl exists:
+  Check whether any TRADE_CLOSE events occurred:
+    grep -c TRADE_CLOSE /home/tothbot/logs/tothbot.log
+  If 0 -> window was too quiet for operational
+          verification of OI-023 payload. Mark OI-023
+          operational-verification status as STILL
+          PENDING and defer to a future session after
+          first real close.
+  If > 0 but no file -> DEFECT. File creation failed
+          silently. Open new OI, abort close, open
+          TB00112.
+
+------------------------------------------------------------
+6.2 STEP F-4 — Verify JSONL format
+(IF trades_2026.jsonl exists)
+------------------------------------------------------------
+
+Inspect file:
+  wc -l /home/tothbot/records/trades_2026.jsonl
+  head -3 /home/tothbot/records/trades_2026.jsonl
+  tail -3 /home/tothbot/records/trades_2026.jsonl
+
+Each line must be:
+  - Valid JSON
+  - Newline-terminated
+  - Contains keys specified by 1011007 Logger Coding
+    Spec dv1_4 (re-read via project_knowledge_search
+    for current authoritative field list)
+
+------------------------------------------------------------
+6.3 STEP F-5 — Byte-for-byte payload identity check
+(IF trades_2026.jsonl exists)
+------------------------------------------------------------
+
+Compare the last TRADE_CLOSE event in tothbot.log
+against the last line of trades_2026.jsonl:
+
+  grep TRADE_CLOSE /home/tothbot/logs/tothbot.log | tail -1
+  tail -1 /home/tothbot/records/trades_2026.jsonl
+
+The payload JSON object from the log event must
+match the jsonl file entry exactly. Any mismatch ->
+DEFECT in the AI-1 implementation -> new OI, no OI-023
+operational close.
+
+------------------------------------------------------------
+6.4 OBSERVATION TRIPWIRE SWEEP (MANDATORY)
+------------------------------------------------------------
+
+Run all four precise event-only counts. SSH
+interactively to avoid PowerShell quoting issues:
+
+  ssh root@87.99.141.44
+
+Then in the VPS shell:
+  grep -c '"level":"FATAL"' /home/tothbot/logs/tothbot.log
+  grep -c '"event":"ALERT_SMTP_FAILED"' /home/tothbot/logs/tothbot.log
+  grep -c '"event":"TRADE_RECORD_WRITE_FAILED"' /home/tothbot/logs/tothbot.log
+
+Expected: 0, 0, 0.
+
+Also verify PID and start time still match open state:
+  systemctl status tothbot --no-pager | head -5
+
+Expected:
+  Main PID: 223133
+  Since: 2026-04-22 02:15:21 UTC
+
+Any tripwire fire -> abort close, do NOT close
+OI-018/019/020. Open TB00112 change session.
+
+------------------------------------------------------------
+6.5 OI-018 / OI-019 / OI-020 CLOSE DECISIONS
+(only if tripwire sweep passes AND window >= 48h)
+------------------------------------------------------------
+
+OI-018 (WM reconnect):
+  Close criterion: No WS_MGR_FATAL during window AND
+  no unplanned reconnect storms AND no regression in
+  reconnect behavior logged.
+  Evidence required: grep count of WS_MGR_FATAL = 0
+  during window.
+
+OI-019 (alert routing — singular -> plural):
+  Close criterion: If any ALERT_SENT events fired
+  during window, they routed successfully
+  (ALERT_SMTP_FAILED stays 0 AND Proton
+  alerts@tothbot.com inbox received them).
+  If zero alerts fired during window, OI-019
+  operational close is INCONCLUSIVE — keep PENDING
+  until first real alert firing.
+
+OI-020 (Kraken retry window — 10 -> 20 reconnect
+attempts):
+  Close criterion: No MAX_RECONNECT_ATTEMPTS_EXCEEDED
+  events during window.
+  Evidence required: grep count = 0.
+
+------------------------------------------------------------
+6.6 OBSERVATION CLOSE DECISION MATRIX
+------------------------------------------------------------
+
+  Case 1 — CLEAN CLOSE:
+    All tripwires at 0, window >= 48h, at least one
+    real ALERT_SENT and at least one TRADE_CLOSE
+    fired with verified payloads.
+    Action: Close OI-018, OI-019, OI-020, OI-022, OI-023.
+    Produce TB00111 Session Log with close summary.
+    Decide whether a TB00112 NSI is needed for next
+    change session or if Bill resumes normal operations.
+
+  Case 2 — QUIET CLOSE:
+    All tripwires at 0, window >= 48h, but NO alerts
+    or NO TRADE_CLOSE events fired.
+    Action: Close OI-018 and OI-020 (pure absence
+    evidence is sufficient for reconnect / retry-count
+    OIs). Keep OI-019, OI-022, OI-023 as PENDING
+    operational-verification until first real event.
+
+  Case 3 — TRIPWIRE ABORT:
+    One or more tripwires fired.
+    Action: Do NOT close any pending OI. Produce
+    TB00111 Session Log documenting the abort and
+    the observed defect(s). Open TB00112 NSI for
+    change session to diagnose and remediate.
+
+  Case 4 — WINDOW NOT YET 48H:
+    TB00111 runs early.
+    Action: Perform tripwire sweep only. If clean,
+    produce interim session log and defer close
+    decisions to a later TB00111-continuation session
+    run after T+48h.
+
+============================================================
+SECTION 7 — DELIVERABLES EXPECTED FROM TB00111
+============================================================
+
+Minimum (any outcome):
+  TB00111_TothBot_V2_Session_Log_<DATE>_v1_0.txt
+
+Depending on outcome:
+  Case 1: TB00112_NSI_v1_0.txt (if next work planned)
+  Case 2: (same)
+  Case 3: TB00111_NSI_v1_0.txt (for TB00112 change session)
+  Case 4: TB00111_NSI_v1_0.txt (for continuation session
+          after T+48h)
+
+All .txt per DR-001. One batch per DR-003. Full 7-field
+headers per 0311001 v1_1.
+
+============================================================
+SECTION 8 — SCOPE GUARD
+============================================================
+
+TB00111 is an OBSERVATION-CLOSE session, not a change
+session. No code changes. No spec changes. No new code-
+path work unless a tripwire fires and forces TB00112.
+
+If Bill or TB00111 observes new defects during the
+close sweep that would require a code/spec change,
+Parking Lot them and proceed with the close (or abort
+per Case 3). Any discovered defect is evaluated after
+the close completes — not during.
+
+Re-derivation of TB00108 Q1/Q2 design locks or
+TB00110 STEP F-2 service-user finding is FORBIDDEN.
+Those are LOCKED.
+
+============================================================
+SECTION 9 — STANDING RULES REMINDER
+============================================================
+
+  RULE 6  — git add . is PROHIBITED. Explicit per file.
+  RULE 13 — .bat files go to Desktop only. Never in repo.
+  RULE 14 — git push origin master. NEVER origin main.
+  RULE 15 — ONE COMMAND PER COPY BOX. ALWAYS.
+  RULE 16 — .bat files run from cmd.exe only. Never PS.
+  RULE 17 — Complete and correct instructions.
+
+  CODING RULES:
+  NO PATCHES EVER. Full file delivery only. Full DC.
+
+  DELIVERY RULES:
+  DR-001 — All documents as .txt files.
+  DR-002 — 0500000 additionally as .docx and .pdf.
+  DR-003 — ALL documents in ONE BATCH.
+
+  FRESH-DATA RULE (Section 3):
+  Every authoritative question is preceded by
+  project_knowledge_search. No exceptions.
+
+  POWERSHELL / SSH QUOTING (lesson from TB00110):
+  Compound ssh commands with embedded double quotes
+  fail from PowerShell. Prefer interactive SSH to the
+  VPS shell for any grep that needs JSON field
+  matching ("event":"X" or "level":"X"). Plain-string
+  grep works from PowerShell but counts include
+  revision-history and docstring occurrences.
+
+  COMMAND CONCATENATION (lesson from TB00110):
+  Strict adherence to RULE 15 — one command per copy
+  box, always. TB00110 had a C-4.12/C-4.13 paste-
+  without-Enter concatenation that git caught as
+  "pathspec 'git' did not match". Diagnostic git
+  status resolved cleanly; no content damage. Do not
+  repeat.
+
+============================================================
+REVISION HISTORY
+============================================================
+
+  v1_0  04-22-2026  Initial. Next session instructions
+                    for TB00111 to close the dv1_22
+                    observation window opened at
+                    2026-04-22 02:15:21 UTC in TB00110
+                    STEP H. Provides resume points for
+                    STEP F-3/F-4/F-5 (deferred payload
+                    verification), full tripwire sweep
+                    procedure, and close-decision matrix
+                    covering the four possible outcomes
+                    (clean close, quiet close, tripwire
+                    abort, window-too-early). Carries
+                    forward TB00110 Parking Lot
+                    (OI-026 heartbeat spam, OI-027
+                    service-runs-as-root) and the two
+                    TB00110 session lessons (PowerShell
+                    quote nesting; command concatenation
+                    risk).
+
+============================================================
+END — TB00110 NEXT SESSION INSTRUCTIONS v1_0
+============================================================

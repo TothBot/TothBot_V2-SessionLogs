@@ -1,0 +1,690 @@
+DocDCN:     TB00141_NSI
+DocTitle:   Next_Session_Instructions_for_TB00142
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TBXXXXX_Session_Logs\TB00141_Next_Session_Instructions_v1_0.txt
+DocDate:    04-26-2026
+DocTime:    05:35:00 UTC
+
+============================================================
+NEXT SESSION INSTRUCTIONS - TB00142
+POST-PROBE-COMPLETION + ARCHITECTURAL DECISION
+============================================================
+
+PAPER TRADING ONLY. NO REAL MONEY.
+PAPER TRADING MUST MIMIC LIVE TRADING EXACTLY.
+NO PATCHES.
+
+============================================================
+1. WHAT TB00142 DOES
+============================================================
+
+TB00141 closed with the long-window Phase D probe
+still running unattended on VPS (PID 318329,
+--duration 7200, started 04:59:51 UTC, completes
+~06:59:51 UTC). Probe is the empirical foundation
+for the architectural decision retiring PATH 1 in
+favor of PATH 2 (multi-connection batched-subscribe).
+
+TB00142 inherits a SEQUENCED PRIORITY ORDER. The
+first work item is probe-completion verification +
+long Phase D JSON analysis. Subsequent streams
+build on that data.
+
+TB00142 has SEVEN work streams.
+
+STREAM A - STREAM 7 GOVERNANCE FINALIZATION
+            (chat scope, can run in parallel with
+            STREAM 1 - independent of probe data):
+
+  Author and deliver as files the two governance
+  rules drafted but not finalized in TB00141:
+
+    RR-SCOPE-009  No constraint removal without
+                  origin investigation. Closes
+                  OI-061 D-08_INCOMPLETE_FPDP_
+                  CHESTERTONS_FENCE.
+
+                  Placement: TB00000 v2_16 ->
+                  v2_17 §4.3.1 RR-SCOPE family
+                  (per FP/DP - behavioral, every-
+                  response pre-emit scan + self-
+                  catch matches §4.3 enforcement
+                  pattern).
+
+                  Pre-deploy gate (per FP/DP):
+                  origin investigation must be
+                  documented before VPS deploy,
+                  not before commit. Bill explicit
+                  override clears all sub-
+                  requirements with written
+                  waiver.
+
+    DC-PREFLIGHT-006  Rate-limit and resource-
+                      envelope impact analysis.
+                      Closes OI-063 CODE-DEPLOY-
+                      WITHOUT-RATE-LIMIT-ANALYSIS-
+                      GUARDRAIL-MISSING.
+
+                      Placement: 0311002 v1_7 ->
+                      v1_8 §8.2.5 DC-PREFLIGHT
+                      family (per FP/DP -
+                      procedural, session-open
+                      and pre-action checks).
+
+                      Pre-deploy gate (per FP/DP -
+                      consistent with RR-SCOPE-009).
+                      Use neutral RR-VIOL-002
+                      violation language; do not
+                      author DR-007 this session
+                      (defer DR-007 to a future
+                      TB00000 increment if needed).
+
+  Draft text from TB00141 chat record may be used
+  as starting point. Re-validate against current
+  TB00000 v2_16 + 0311002 v1_7 base text and
+  ensure no scope drift.
+
+  Deliverables:
+    TB00000 v2_16 -> v2_17 (.txt)
+    0311002 v1_7 -> v1_8 (.txt)
+
+STREAM 1 - PROBE COMPLETION + LONG PHASE D ANALYSIS
+            (chat scope, immediately after STREAM A
+            or interleaved):
+
+  Verify probe completed cleanly:
+
+    ssh root@87.99.141.44
+    ps -p 318329 -o pid,etime,cmd        # expect: no such process
+    ls -la /tmp/kraken_ws_probe_D_*.json  # expect: new file ~07:00 UTC
+    tail -5 /tmp/kraken_ws_probe_D_long.stdout
+    # expect: "OK: wrote /tmp/kraken_ws_probe_D_<07:00>.json"
+
+  Analyze long-window Phase D JSON:
+    Use python3 inline (no jq on VPS). Extract:
+      - aggregate_disconnects (target: 0)
+      - aggregate_rate_limit_errors (target: 0)
+      - per-connection inbound counts
+      - per-pair msg counts (sample top10/median/
+        bottom10)
+      - any disconnect_events with timestamps
+      - elapsed_s near 7200
+
+  Outcome cases:
+    CLEAN  -> proceed to STREAM 2 ADR with
+              quantitative envelope evidence
+    DISCONNECT but converging  -> document the
+              disconnect, capture in ADR
+              operational-load envelope, proceed
+    REPEATED DISCONNECTS  -> halt; STREAM 2 ADR
+              must address the failure mode
+              before STREAM 3-5 work proceeds
+
+  Optional STREAM 1 follow-up (Bill discretion):
+    - Tighter bisection between 650 and 700 to
+      find precise per-conn ceiling for SAFE
+      margin sizing.
+    - Multi-day Phase D for ceiling drift
+      detection.
+    - Channel-split experiment (one channel per
+      connection) - different N profile, possibly
+      higher per-conn capacity.
+    - Reconnect-under-PATH-2 test (currently no
+      probe phase exists for this; would require
+      kraken_ws_probe.py dv1_1 enhancement in
+      Claude Code).
+
+STREAM 2 - ARCHITECTURAL DECISION RECORD
+            (chat scope, sequenced after STREAM 1):
+
+  Author Architectural Decision Record documenting
+  the PATH 2 (multi-connection batched-subscribe)
+  selection. ADR may be:
+    (a) NEW AA=05 instance document under
+        0510000 anchor, OR
+    (b) Section in 0511001 WS Manager Specification
+        amendment, OR
+    (c) NEW AA=03 governance instance documenting
+        the decision.
+
+  FP/DP placement at TB00142 STREAM 2 open. Likely
+  (b) since 0511001 dv1_4 amendment is required
+  anyway for STREAM 3.
+
+  ADR content (minimum):
+    - Decision summary: PATH 2 over PATH 1, P3,
+      P4.
+    - Empirical basis: Phase A / B / D data
+      summary with citations to TB00141 §3.4-§3.7.
+    - Quantitative thresholds:
+        SYMBOLS_PER_CONN_SAFE = 500 (CIATS-owned
+                                     starting value,
+                                     23-29% safety
+                                     margin under
+                                     measured
+                                     ceiling 650-700)
+        N_conns = ceil(universe_size /
+                       SYMBOLS_PER_CONN_SAFE)
+        Universe re-evaluation cadence: TBD by
+                                        FP/DP at
+                                        STREAM 2.
+    - Operational envelope: aggregate steady-state
+      msg rate from long Phase D data.
+    - Reconnect strategy: TBD - Phase 2 of STREAM 2
+      analysis if probe data does not cover.
+    - Decoupling note: subscribe count decoupled
+      from max_concurrent (CIATS-owned, may grow
+      indefinitely).
+
+STREAM 3 - 0511001 + 1011002 SPEC AMENDMENTS
+            (chat scope, sequenced after STREAM 2):
+
+  Amend 0511001 WS Manager Specification dv1_3 ->
+  dv1_4 with PATH 2 architecture + ADR content.
+  Amend 1011002 WS Manager Coding Spec dv1_23 ->
+  dv1_24 with corresponding implementation
+  contract.
+
+  Both done as governance increments BEFORE any
+  ws_manager.py code is written.
+
+  ALSO incorporate:
+    OI-064-CAND OPS-SCRIPT-DCN-SCHEME (formalize
+                or defer with explicit
+                placeholder).
+    OI-065-CAND WSLIB-VERSION-PIN-MISMATCH
+                (amend WS-LIB-001 import path or
+                pin requirements.txt to >=13.0;
+                FP/DP at STREAM 3 open).
+
+STREAM 4 - ws_manager.py CLEAN-SLATE REWRITE
+            (Claude Code scope, sequenced after
+            STREAM 3):
+
+  ws_manager.py dv1_24 (rate-limit-storm code,
+  retired-in-operational-use, preserved at git
+  hash 0c2ec3b) is RETIRED. ws_manager.py dv1_25
+  is the clean-slate rewrite implementing PATH 2
+  per OI-062.
+
+  Per Bill's TB00140 §3.10 authorization: build a
+  better mousetrap using TB00140 + TB00141
+  lessons. May involve replacing the entire
+  ws_manager.py file rather than surgical edits.
+
+  CRITICAL: dv1_25 must apply RR-SCOPE-009 +
+  DC-PREFLIGHT-006 (authored in STREAM A) to
+  itself. Pre-deploy gate must include rate-
+  limit-impact analysis citing the long Phase D
+  data from TB00142 STREAM 1.
+
+STREAM 5 - DEPLOY + OBSERVATION
+            (Bill scope, sequenced after STREAM 4):
+
+  Bill deploys dv1_25 to VPS via git pull (which
+  also reverses the working-tree drift on
+  ws_manager.py - VPS git tree returns to clean
+  state matching origin master). Restart tothbot
+  service. Observe per Bill standard practice.
+
+  On clean window close: OI-045, OI-046,
+  FINDING-TB00135-001 fully close. OI-018, OI-019,
+  OI-020, OI-028, OI-029, OI-044 also close at
+  this deploy.
+
+STREAM 6 - DC-CLEANUP-003 PHASE 5 + TB00020
+            RE-UPLOAD (Bill scope, parallelizable
+            with STREAM A-4):
+
+  - Re-upload TB00020 v1_0 to Claude.ai project
+    folder (was missing at TB00141 cold-load -
+    Bill provided content via paste; original
+    location should be restored).
+  - Out-of-window cleanup of TB00112,
+    TB00118-TB00133 per DC-CLEANUP-005 - Bill
+    discretion.
+
+STREAM 7 - GOVERNANCE FOLLOW-UPS
+            (chat scope, parallelizable):
+
+  - OI-066-CAND SWEEP-SH-MODE-BIT-DRIFT: commit
+    chmod +x on tothbot_sweep.sh at next
+    sweep.sh-touching session to clean VPS git
+    state.
+  - OI-067-CAND TB00020-MISSING governance
+    amendment to DC-CLEANUP-002 mandating
+    periodic MUST-PRESERVE presence audit during
+    STEP A pre-flight.
+  - OI-068-CAND CLAUDE-META-QUESTION-
+    MISINTERPRETATION: candidate RR-SCOPE-010
+    or NSI-carried lesson text. FP/DP at
+    STREAM 7 open.
+
+TB00142 MUST be opened as a COLD-LOAD NEW
+CLAUDE CHAT.
+
+============================================================
+2. LOCKED DECISIONS - DO NOT RE-ASK
+============================================================
+
+  D-01  Option B (burn window)                   LOCKED
+  D-02  REPAIR (not rewrite)                     LOCKED
+        NOTE: ws_manager.py dv1_25 is the
+        AUTHORIZED EXCEPTION to D-02 per Bill's
+        TB00140 §3.10 clean-slate authorization
+        for ws_manager.py specifically. D-02
+        otherwise stands.
+  D-03  Universe USD + USDC + USDT, no cap       LOCKED
+  D-04  Liquidity filter $500k/day               LOCKED
+  D-05  Starting capital $1,000                  LOCKED
+  D-06  Paper-to-live parity EXACT               LOCKED
+  D-07  NO PATCHES                               LOCKED
+  D-08  Top-N cap retired                        LOCKED
+        Implementation requires PATH 2
+        architecture per TB00141 STREAM 1
+        empirical data. D-08 status unchanged.
+
+If any TB00142 instruction or response would
+contradict D-01 through D-08, Claude STOPS and
+flags the contradiction to Bill before proceeding.
+
+============================================================
+3. MANDATORY READING AT COLD-LOAD
+============================================================
+
+From project folder:
+
+Project instructions + current session context:
+  TB00000 v2_16        Project Instructions
+  TB00141 Session Log  v1_0 (most recent)
+  TB00141 NSI          v1_0 (this document)
+  TB00140 Session Log  v1_1
+  TB00140 NSI          v1_1
+  TB00139 Session Log  v1_0
+  TB00139 NSI          v1_0
+  TB00138 Session Log  v1_0
+  TB00138 NSI          v1_0
+  TB00137 Session Log  v1_0
+  TB00137 NSI          v1_0
+  TB00136 Session Log  v1_1
+  TB00136 NSI          v1_1
+  TB00135 Session Log  v1_0
+  TB00135 NSI          v1_0
+
+Governance:
+  0311001 v1_3         Namespace_Specification
+  0311002 v1_7         Document_Creation_Workflow
+  0311003 v1_1         Versioning_Procedure
+  0311004 v1_2         Document_Creation_and_Approval_Procedure
+  0311005 v1_0         System_Definitions_and_Terminology
+  0311006 dv1_0        Known_Platform_Limitations
+
+Architecture + active spec baseline:
+  0500000 dv1_21       System Architecture Overview
+                       (.txt / .docx / .pdf three-format set)
+  0700000 dv1_1        Strategy
+  0710000 dv1_1        Strategy_Signals_Anchor
+  0711003 dv1_3        Asset Selection Specification
+  0411001 dv1_11       Kraken_WS_v2_Specification
+  0511001 dv1_3        WS Manager Specification
+  0511003 dv1_0        Execution Engine Specification
+  1010000 dv1_17       Trading System Coding Anchor
+  1011001 dv1_7        Engineering Best Practices
+  1011002 dv1_23       WS Manager Coding Spec
+  1011004 dv1_0        Execution Engine Coding Spec
+  1011005 dv1_2        Exit Controller Coding Spec
+  1011009 dv1_1        Selection Controller Coding Spec
+  1011012 dv1_5        Regime Engine Coding Spec
+  0211005 dv1_1        Paper Trading Operations Procedure
+  0611004 dv1_1        Safety Parameter Framework
+  0921001 dv1_1        TothBot V2 Business Plan
+
+For STREAM 1 probe analysis:
+  /tmp/kraken_ws_probe_D_<07:00>.json on VPS
+    (run JSON fetch / analysis remotely via SSH).
+
+For STREAM A governance authoring:
+  TB00141 Session Log §3.8 (RR-SCOPE-009 +
+    DC-PREFLIGHT-006 draft text reference).
+
+MUST-PRESERVE set per DC-CLEANUP-002:
+  TB00001, TB00012, TB00013, TB00014, TB00020.
+  TB00020 was re-uploaded post-TB00141 per Section
+  9 of TB00141 Session Log.
+
+Claude states all documents read and their versions
+before beginning any work. If any version differs
+from the list above, Claude reads the project
+version and notes the discrepancy.
+
+============================================================
+4. PROJECT FOLDER EXPECTED STATE AT TB00142 OPEN
+============================================================
+
+KEPT (current, active):
+
+  TB00000 v2_16 (current authoritative).
+  0311002 v1_7 (current; supersedes v1_5).
+  0311006 dv1_0.
+  All 0* / 1* series at current versions per §3.
+  All .py modules at TB00125 deploy state EXCEPT:
+    ws_manager.py at TB00125 deploy state on VPS
+    via working-tree rollback. TothBot_V2-Code
+    git remote NOW at 2dee1ed (TB00141 STREAM 1
+    commit adding kraken_ws_probe.py). Working-
+    tree drift on VPS preserved across pull.
+    DELIBERATE DRIFT continues - STEP A pre-flight
+    CHECK 2 must flag this as INTENTIONAL not
+    defect.
+  kraken_ws_probe.py dv1_0 NOW at git remote
+    (commit 2dee1ed) and ON VPS at /root/
+    TothBot_V2-Code/operations/kraken_ws_probe.py.
+  TB00135 -> TB00141 session logs + NSIs (current
+    rolling window post-TB00141 close).
+    TB00141 at v1_0 NEW.
+  TB00001, TB00012, TB00013, TB00014, TB00020
+    (MUST-PRESERVE per DC-CLEANUP-002).
+    TB00020 must be re-uploaded by Bill per
+    TB00141 Section 9 (was missing at TB00141
+    open).
+
+ABSENT (already cleaned earlier sessions or
+expected absent):
+
+  TB00000 v2_15 / v2_14.
+  0311002 v1_5 / v1_6.
+  TB00140 v1_0 versions.
+  TB00112, TB00118 -> TB00133 (out-of-window
+    backlog cleanup pending - Bill discretion
+    per TB00140 NSI Section 1 STREAM 6).
+
+DC-CLEANUP-006 COMPLIANCE:
+  KEPT and ABSENT lists provided.
+  MUST-PRESERVE compliance: PASS conditional on
+    Bill TB00020 re-upload action per TB00141
+    Section 9.
+  Pre-cleanup extraction confirmation: TB00141
+    is purely additive; no cleanup proposed at
+    that session close.
+
+STEP A PRE-FLIGHT EXPECTED RESULTS at TB00142
+open:
+  DC-PREFLIGHT-001 (project-folder expected-
+  state): PASS if KEPT list matches /mnt/
+  project/ contents. TB00020 should be present
+  (Bill re-upload).
+  DC-PREFLIGHT-002 (git-state):
+    TothBot_V2-Docs at aee4539 - PASS if matches.
+    TothBot_V2-Code at 2dee1ed - PASS if matches.
+    VPS WORKING-TREE drift at ws_manager.py is
+    EXPECTED, NOT a defect.
+    VPS tothbot_sweep.sh mode-bit drift is
+    EXPECTED, NOT a defect (OI-066-CAND).
+  DC-PREFLIGHT-003 (NSI code-edit-list):
+    N/A for STREAM A (governance authoring,
+    not code edits). N/A for STREAM 1 (analysis,
+    not code edits). STREAM 4 (clean-slate
+    dv1_25) application TBD.
+
+============================================================
+5. PARKING LOT - CARRIED FROM TB00141
+============================================================
+
+PROBE-RUNNING:
+  Long-window Phase D PID 318329 expected to
+  complete cleanly at ~06:59:51 UTC. Result JSON
+  at /tmp/kraken_ws_probe_D_<07:00>.json on VPS.
+  STREAM 1 first work item: verify completion +
+  analyze JSON.
+
+CLOSED in TB00141:
+  None at the session level. STREAM 1 produced
+  empirical foundation for closures of OI-045,
+  OI-046, FINDING-TB00135-001 - those close at
+  STREAM 5 deploy + observation, not at TB00141
+  close.
+
+NEW OI CANDIDATES (TB00141 §5):
+  OI-064-CAND  OPS-SCRIPT-DCN-SCHEME-TBD
+  OI-065-CAND  WSLIB-VERSION-PIN-MISMATCH
+  OI-066-CAND  SWEEP-SH-MODE-BIT-DRIFT
+  OI-067-CAND  TB00020-MISSING-FROM-PROJECT-FOLDER
+  OI-068-CAND  CLAUDE-META-QUESTION-
+               MISINTERPRETATION
+
+CARRIED FORWARD from TB00140 (state unchanged
+unless noted):
+  OI-018 / OI-019 / OI-020 / OI-028 / OI-029  PENDING
+    CLOSE at STREAM 5 dv1_25 deploy.
+  OI-043  Recommend formal closure at TB00142
+    STEP A success after Bill TB00020 re-upload.
+  OI-044  Closes at STREAM 5.
+  OI-045 / OI-046  Reopened TB00140; closure pending
+    STREAM 5.
+  OI-049-CAND / OI-050-CAND / OI-051-CAND  Preserved.
+  OI-055-CAND-D3  Carries forward.
+  OI-058  CLOSED in TB00140.
+  OI-059  RR-SCOPE-005 RECURRENCE TB00140 + TB00141.
+    Pattern recurrence count = 2.
+  OI-060  Empirical resolution complete TB00141;
+    closure pending STREAM 5.
+  OI-061  STREAM A finalizes RR-SCOPE-009.
+  OI-062  STREAM 4 finalizes via dv1_25.
+  OI-063  STREAM A finalizes DC-PREFLIGHT-006.
+  FINDING-TB00135-001  Closure pending STREAM 5.
+  ERROR-PRE-001  Forensic record only.
+  OI-037 RECURRENCE  Pattern BROKEN (seven
+    consecutive session test passes).
+
+ANALYSIS LEDGER STATE (carries to TB00142):
+
+  Q1-Q4   ANSWERED (TB00140).
+  Q5      PARTIALLY RESOLVED. Architectural
+          decision firm. Tighter bisection
+          optional.
+  Q6      CONFIRMED for in-bounds N. Long Phase D
+          completion will further confirm steady-
+          state safety. Reconnect arm under
+          PATH 2 architecturally addressed in
+          STREAM 2 ADR (no probe phase exists for
+          PATH 2 reconnect testing currently).
+  Q7      ANSWERED 748 today; not an upper bound.
+          Architecture must NOT hardcode.
+  Q8      ANSWERED for 120s window; long Phase D
+          extends.
+  Q9      IRRELEVANT under PATH 2.
+
+  Architectural paths:
+    P1 batched single-conn      RETIRED.
+    P2 batched multi-conn       CONFIRMED VIABLE.
+    P3 tiered HOT/WARM           RETIRED.
+    P4 P1 + adaptive backoff    RETIRED.
+
+============================================================
+6. FIRST ACTIONS IN TB00142
+============================================================
+
+1. Cold-load mandatory reading per §3.
+2. State all documents read and their versions
+   before any work.
+3. Execute STEP A pre-flight per 0311002 v1_7
+   §8.2.5 DC-PREFLIGHT-001 through DC-PREFLIGHT-005:
+     CHECK 1 - bash sweep of /mnt/project/;
+       compare to §4 KEPT and ABSENT lists.
+       Verify TB00020 present (Bill re-upload).
+     CHECK 2 - Bill confirms both repos at
+       expected HEAD:
+         TothBot_V2-Docs at aee4539.
+         TothBot_V2-Code at 2dee1ed.
+         VPS local working-tree drifts on
+           ws_manager.py and tothbot_sweep.sh
+           expected and INTENTIONAL.
+     CHECK 3 - N/A for STREAM A and STREAM 1.
+4. Confirm D-01 through D-08 LOCKED per §2.
+   Note D-02 has named exception for ws_manager.py
+   dv1_25 clean-slate per Bill TB00140 §3.10.
+5. Confirm TB00141 v1_0 deliverables (Session
+   Log v1_0, NSI v1_0) successfully ingested in
+   the Claude.ai project folder.
+6. Confirm DC-CLEANUP-002 MUST-PRESERVE
+   compliance (TB00020 re-upload).
+7. Verify probe completion via SSH:
+     ssh root@87.99.141.44
+     ps -p 318329 -o pid,etime,cmd
+     ls -la /tmp/kraken_ws_probe_D_*.json
+     tail -5 /tmp/kraken_ws_probe_D_long.stdout
+8. Determine STREAM scope per Bill direction at
+   session open. Recommended:
+     STREAM A (governance finalization) - chat,
+       independent of probe data, can run first.
+     STREAM 1 (probe analysis) - chat,
+       sequenced before or after STREAM A.
+     STREAM 2 (ADR) - chat, sequenced after
+       STREAM 1.
+     STREAM 3 (spec amendments) - chat,
+       sequenced after STREAM 2.
+     STREAM 4 (dv1_25 clean-slate) - Claude
+       Code, sequenced after STREAM 3.
+     STREAM 5 (deploy + observation) - Bill,
+       sequenced after STREAM 4.
+     STREAM 6-7 - parallelizable.
+9. Apply pre-emit OP-003 grep scan before every
+   file delivery.
+10. Apply DR-004 binary integrity validation
+    before every binary artifact delivery.
+11. Apply DR-006 delivery-turn self-containment
+    on every announcing response.
+12. Apply RR-SCOPE-005 STRICTLY. Pattern
+    recurrence count = 2 after TB00141
+    ERROR-TB00141-01.
+13. Apply RR-SCOPE-007 strictly: no silent
+    narrowing of user-specified scope.
+14. Apply RR-SCOPE-008 strictly: tools-exhaustion
+    before declaring a fact unverifiable. TB00141
+    TB00020-MISSING discovery is the recurrence
+    test - tools-exhaustion was correctly applied
+    in TB00141.
+
+============================================================
+7. STANDING RULES - REINFORCEMENT
+============================================================
+
+ALL TB00000 v2_16 standing rules apply:
+  §4.1 DR-001 / DR-002 / DR-003 / DR-004 / DR-005 /
+       DR-006.
+  §4.2 ABSOLUTE STANDING RULE (OP-001..009).
+  §4.3.1 RR-SCOPE-001..008.
+  §4.3.2 RR-RULE-001..004.
+  §4.3.3 RR-SHELL-001..004.
+  §4.3.4 RR-VIOL-001..002.
+
+All 0311002 v1_7 standing rules apply:
+  §8.2.1 DC-CODE-001..002 code file registry.
+  §8.2.2 DC-CODE-001..002 controlled-document
+         coding files.
+  §8.2.3 DC-SYNC-001..006 post-commit project-
+         folder sync.
+  §8.2.4 DC-CLEANUP-001..007 session-log rolling-
+         window cleanup.
+  §8.2.5 DC-PREFLIGHT-001..005 STEP A pre-flight.
+
+Apply pre-emit OP-003 grep scan before EVERY file
+delivery. Self-catch behavior per OP-004 /
+RR-RULE-004 / RR-SCOPE-006 / DR-006.3.
+
+DR-001: All deliverables as .txt (plus .docx +
+.pdf for 0500000 only).
+DR-002: 0500000 three-format every time it is
+updated.
+DR-003: All deliverables in ONE BATCH at session
+end.
+DR-004: Binary artifact integrity validation -
+file probe + container probe + .docx settings.xml
+validate.py gate.
+DR-005: Canonical naming of three-format
+components.
+DR-006: Delivery-turn self-containment - announce
++ present_files in same response. Pre-emit scan
++ self-catch signal "DR-006 self-caught -
+redrafting."
+
+============================================================
+8. OUT OF SCOPE FOR TB00142
+============================================================
+
+  - Spec authoring beyond Streams listed above.
+  - OI-041 (closed TB00125).
+  - OI-048-CAND (Operator Observer Dashboard -
+    future).
+  - Any CIATS PDCA activity (still pre-200-trade
+    floor).
+  - Emergency live-mode testing.
+  - Re-opening D-01 through D-08 without explicit
+    Bill override (D-02 ws_manager.py named
+    exception already authorized).
+  - 1011004 SPEC content changes (dv1_0 baseline;
+    amendments only via STREAM findings).
+  - Re-extraction sweep across the same session-
+    log set (CLOSED earlier).
+
+============================================================
+9. NOTES FOR BILL POST-TB00141
+============================================================
+
+Post-session Bill actions (consolidated from
+TB00141 Session Log §9):
+
+  (1) Upload TB00141 v1_0 deliverables to
+      Claude.ai project folder:
+        TB00141_TothBot_V2_Session_Log_2026-04-26_
+          v1_0.txt
+        TB00141_Next_Session_Instructions_v1_0.txt
+
+  (2) Re-upload TB00020 v1_0 to Claude.ai project
+      folder (was missing at TB00141 open).
+
+  (3) NO removals required from project folder -
+      TB00141 is purely additive.
+
+  (4) Probe completes unattended at ~06:59:51 UTC
+      while Bill sleeps. No action required.
+
+  (5) TothBot_V2-Code git remote master at 2dee1ed.
+      VPS working-tree drift on ws_manager.py
+      remains intact - production tothbot
+      continues running dv1_23 content.
+
+  (6) TB00142 cold-load when ready. STREAM A
+      (governance finalization) and STREAM 1
+      (probe analysis) are the immediate work
+      items.
+
+============================================================
+REVISION HISTORY
+============================================================
+
+  v1_0  04-26-2026  Initial. NSI for TB00142.
+                    Session paused at Bill
+                    direction with long Phase D
+                    probe still running on VPS.
+                    Probe completion analysis is
+                    TB00142 STREAM 1 first work
+                    item. STREAM 7 governance
+                    drafts (RR-SCOPE-009 +
+                    DC-PREFLIGHT-006) re-instated
+                    as TB00142 STREAM A. Five new
+                    OI candidates (OI-064-CAND
+                    through OI-068-CAND) carried
+                    forward. Architectural path
+                    decided empirically: PATH 2
+                    multi-connection batched-
+                    subscribe; PATH 1 / P3 / P4
+                    retired. ws_manager.py dv1_25
+                    clean-slate rewrite (STREAM 4
+                    Claude Code) is the
+                    implementation target.
+
+============================================================
+END OF NSI
+============================================================

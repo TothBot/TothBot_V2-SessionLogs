@@ -1,0 +1,553 @@
+DocDCN:     TB00208
+DocTitle:   Gate_3_FP_DP_Analysis_Currency_Lag_Reconciliation
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TBXXXXX_Session_Logs\TB00208_Gate_3_FP_DP_Analysis_Currency_Lag_Reconciliation_v1_0.txt
+DocDate:    05-11-2026
+DocTime:    23:30:00 UTC
+
+============================================================
+GATE 3 — FIRST-PRINCIPLES / DATA-POINT ANALYSIS
+CURRENCY-LAG RECONCILIATION (17+ SPECIFICATIONS)
+DEFINITIVE RECOMMENDATION
+============================================================
+
+============================================================
+1. WHAT GATE 3 IS ASKING
+============================================================
+
+The TothBot V2 project has been in active development
+since March 2026. During that time, the master project
+instructions document (TB00000) has been amended 29
+times. Each amendment changed something:
+
+  - Email alerts changed from a singular mailbox name
+    to a plural mailbox name.
+  - Reconnect-attempt limits changed from "10 tries
+    over 2 minutes" to "20 tries over 8 minutes."
+  - Paper-trading mode was added as a first-class
+    architectural concept, with seven new rules
+    distinguishing paper from live behavior.
+  - A parallel-module framework replaced the original
+    single-module design.
+  - The fixed reward-to-risk ratio became a minimum
+    floor with CIATS owning everything above.
+  - Per-module CIATS replaced single shared CIATS.
+  - Per-module wallet funding replaced portfolio-wide
+    sizing.
+
+When these decisions were ratified, the master
+document was updated. But many of the individual
+specification documents (which describe how each
+module of the bot works) were written BEFORE these
+decisions and have not yet been refreshed.
+
+The result: roughly 17 specification documents
+contain text that no longer matches the project's
+current decisions. Reading those specs gives a
+developer outdated information. Coding from those
+specs would produce a system that enforces obsolete
+rules.
+
+This is called "currency lag." The documents have
+lagged behind the project's actual current state.
+
+PROBLEM: 17 specifications across 6 different
+namespace families need their text updated to match
+current decisions. Some lags are minor (a single
+citation pointing to an old version number). Some
+are major (an entire specification authored months
+before paper-trading mode existed and never updated
+to mention it). The Startup/Shutdown specification
+alone has 10 separate places where it's out of date.
+
+Gate 3 asks: pick the best way to bring all 17+ specs
+current, with the fewest mistakes and the least redo
+work.
+
+============================================================
+2. THE THREE OPTIONS BEING WEIGHED
+============================================================
+
+OPTION A — BATCH AMENDMENT.
+
+  Fix every spec at once in a single sequenced
+  amendment cycle. One large work-batch addresses all
+  17 specs in a tightly-coupled sequence.
+
+OPTION B — PHASED AMENDMENT.
+
+  Fix specs in priority order across multiple work
+  sessions. Most-critical specs first, least-critical
+  last. Each phase is a smaller work-batch that fits
+  one or two chat sessions.
+
+  Phase 1 — Coding specifications (the documents that
+            govern the actual Python code that will
+            execute trades). 11 specs.
+  Phase 2 — Operations procedure documents (startup/
+            shutdown, infrastructure). 2 specs.
+  Phase 3 — Architecture diagram cross-references
+            within the master diagram document. 1
+            spec (multiple internal sections).
+  Phase 4 — Risk and trading-system parent
+            specifications. 6 specs.
+
+OPTION C — GOVERNANCE-LAYER FIX.
+
+  Don't fix the existing lag. Instead, amend the
+  Document Creation Workflow document (0311002) to
+  add a check that runs at every future amendment
+  cycle. The check would catch any new amendment
+  that creates downstream lag and force the
+  cascading updates to be authored as part of the
+  same cycle.
+
+  This prevents future lag from accumulating but does
+  not close any current lag. It only works if
+  combined with Option A or Option B.
+
+============================================================
+3. THE 17 SPECIFICATIONS — WHAT'S OUT OF DATE
+============================================================
+
+The 17 specs group by where they live in the project
+structure (their namespace family).
+
+------------------------------------------------------------
+3.1 CODING SPECIFICATIONS (11 specs)
+------------------------------------------------------------
+
+  1011004 — Execution Engine coding spec
+  1011005 — Exit Controller coding spec
+  1011006 — Position Mirror coding spec
+  1011007 — Logger coding spec
+  1011008 — Long Module coding spec
+  1011009 — Selection Controller coding spec
+  1011010 — CIATS coding spec
+  1011011 — Risk Engine coding spec
+  1011012 — Regime Engine coding spec
+  1011013 — VPS Deployment coding spec
+  1011014 — Startup Sequence coding spec
+
+These are the documents Phase 2 of the project will
+read to write the Python code. Outdated text in these
+specs becomes outdated behavior in deployed code. Of
+all the lagged specs, these are the most directly tied
+to the actual trading behavior of the deployed system.
+
+Examples of out-of-date content typical across these
+specs:
+  - References to "the single CIATS instance" before
+    per-module CIATS was adopted.
+  - References to a single trading-wallet sizing rule
+    before per-module operator-funded wallets were
+    adopted.
+  - References to old reconnect-attempt limits.
+  - References to retired parameters.
+
+------------------------------------------------------------
+3.2 OPERATIONS PROCEDURE DOCUMENTS (2 specs)
+------------------------------------------------------------
+
+  0211002 — Operations Infrastructure
+  0211003 — Startup/Shutdown Procedure
+
+0211003 is the LARGEST single-spec lag in the project.
+The document was written 04-05-2026, before paper-
+trading mode was added as a first-class architectural
+concept (05-08-2026). The document contains zero
+paper-mode prose. Its hard rules, pair states, mid-
+session reconnection rules, and related-document
+citations are all paper-mode-unaware in their entirety.
+
+0211002 has nine separate lag classes — references to
+old versions of subordinate specs, missing references
+to the paper-as-master rule set, missing references
+to retired-parameter documentation.
+
+------------------------------------------------------------
+3.3 ARCHITECTURE DIAGRAM (1 spec, multiple sections)
+------------------------------------------------------------
+
+  0500000 — System Architecture Overview
+
+Two internal sections of the master architecture
+diagram have lag:
+
+  - AR-056 prose still cites the old "10 attempts over
+    120 seconds" reconnect-attempt limit. Current
+    canonical is "20 attempts over 481 seconds."
+  - AR-049 prose still cites the old "Call C interval
+    = 1440" pattern for daily regime computation.
+    Current canonical is that the Regime Engine
+    handles daily regime independently and the
+    Startup Sequence does not invoke Call C at
+    interval = 1440 anymore.
+
+------------------------------------------------------------
+3.4 RISK AND TRADING-SYSTEM PARENT SPECIFICATIONS (6 specs)
+------------------------------------------------------------
+
+  0611001 — Position Sizing Rules
+  0611002 — Drawdown and Halt Rules
+  0611003 — Concentration and Exposure Rules
+  0611004 — Safety Parameter Framework
+  0811001 — Long Module specification
+  0811002 — Selection Controller specification
+
+These are the parent architectural specifications.
+They were among the earliest documents written. They
+predate parallel-module framework, per-module CIATS,
+sacred-floor reward-to-risk ratio (versus the prior
+fixed ratio), and per-module operator-funded wallets.
+Most of these specs assume the single-module / single-
+CIATS / fixed-ratio / portfolio-wide-sizing world that
+was retired at v2_29.
+
+============================================================
+4. FIRST-PRINCIPLES ANALYSIS — WHICH OPTION FITS
+============================================================
+
+The decision criterion Bill specified is: least errors
+and rework. The path to fewest errors and least rework
+is the path where every fix is permanent on the first
+attempt AND future amendments don't re-create the
+problem.
+
+4.1 OPTION A ALONE (BATCH AMENDMENT ONLY).
+
+  Fixes current lag in one large work-cycle. Once
+  done, all 17 specs are current.
+
+  Problem: The lag accumulation continues. Every
+  future amendment to TB00000 or to any of the parent
+  specs can again create downstream lag in dependent
+  specs. The same problem re-emerges over time.
+
+  Problem: A single-session batch covering 17 specs
+  exceeds typical chat-session bandwidth. If the
+  session fails midway, some specs are partially
+  amended and some are not. This creates a worse
+  state than "all lagged" — namely, "some lagged in
+  ways no one is tracking."
+
+  Errors created: future lag re-accumulates.
+  Rework created: future amendment cycles must re-do
+  this analysis on new lag. Plus partial-batch
+  cleanup risk if a session fails.
+
+4.2 OPTION B ALONE (PHASED AMENDMENT ONLY).
+
+  Fixes current lag in priority order across multiple
+  sessions. Most-critical specs first.
+
+  Same future-lag problem as Option A. The lag
+  accumulation continues.
+
+  Better than Option A on session-bandwidth grounds —
+  per-phase work is smaller, fits naturally into the
+  one-document-per-turn rule Bill established at
+  TB00207 chat-turn 4. Per-spec checkpoints reduce
+  the partial-failure risk.
+
+  Errors created: future lag re-accumulates.
+  Rework created: future amendment cycles must re-do
+  this analysis on new lag.
+
+4.3 OPTION C ALONE (GOVERNANCE-LAYER FIX ONLY).
+
+  Adds a check at the document workflow level that
+  catches future amendments which create downstream
+  lag and forces cascading updates to be authored
+  at the same time.
+
+  Future lag is prevented. The fence is patched.
+
+  Problem: zero current lag is fixed. All 17 specs
+  remain in their current outdated state. A developer
+  reading any of those specs still gets outdated
+  information.
+
+  Errors prevented: future lag is blocked.
+  Rework created: 17 specs of current lag still must
+  be fixed in some future cycle. Picking Option C
+  alone defers the work, it doesn't eliminate it.
+
+4.4 OPTION A + OPTION C (BATCH + GOVERNANCE).
+
+  Closes current lag in one large work-cycle AND
+  prevents future lag.
+
+  Inherits Option A's session-bandwidth concern. A
+  17-spec batch in one session is high-risk.
+
+  Errors created: partial-batch-failure risk if a
+  session fails halfway.
+  Rework created: cleanup of any partially-amended
+  specs.
+
+4.5 OPTION B + OPTION C (PHASED + GOVERNANCE).
+
+  Closes current lag in priority order across
+  multiple sessions AND prevents future lag.
+
+  No single session attempts a 17-spec batch.
+  Per-phase work fits naturally into the one-
+  document-per-turn rule. Per-spec checkpoints
+  reduce failure risk.
+
+  Future lag prevented at the workflow layer before
+  the phased authoring begins. Any amendment that
+  happens DURING the phased work-cycle is caught
+  by the governance check, so the work-cycle itself
+  doesn't introduce new lag.
+
+  Trade-readiness ordering: coding specs first
+  (Phase 1) means the documents that govern actual
+  trading code get current FIRST. This aligns with
+  the primary mission of loss prevention — the code
+  is where loss happens, so the documents that
+  govern code get priority.
+
+  Errors created: none expected.
+  Rework created: none expected.
+
+============================================================
+5. ERRORS AND REWORK COMPARISON
+============================================================
+
+5.1 OPTION A ALONE.
+
+  Current lag: 17 specs fixed in one batch (0 rework
+    if batch succeeds; significant cleanup if batch
+    fails midway).
+  Future lag: accumulates without check.
+  Cumulative future rework: unbounded — every future
+    amendment cycle must re-do this analysis.
+
+5.2 OPTION B ALONE.
+
+  Current lag: 17 specs fixed in priority phases (0
+    rework on current items).
+  Future lag: accumulates without check.
+  Cumulative future rework: unbounded — same as
+    Option A.
+
+5.3 OPTION C ALONE.
+
+  Current lag: 0 specs fixed (full 17-spec rework
+    deferred to future cycle).
+  Future lag: prevented.
+  Cumulative future rework: 17 specs of current lag
+    still must be addressed somewhere.
+
+5.4 OPTION A + OPTION C.
+
+  Current lag: 17 specs fixed if batch succeeds.
+    Partial-state rework if batch fails midway.
+  Future lag: prevented.
+  Cumulative future rework: 0 if batch succeeds.
+    Moderate cleanup if batch fails.
+
+5.5 OPTION B + OPTION C.
+
+  Current lag: 17 specs fixed in priority phases,
+    per-spec checkpoints, one-document-per-turn
+    cadence.
+  Future lag: prevented during phased work AND
+    afterward.
+  Cumulative future rework: 0.
+
+============================================================
+6. DEFINITIVE RECOMMENDATION
+============================================================
+
+USE OPTION B + OPTION C TOGETHER.
+
+PHASE 0 (FIRST): Enact the governance-layer fix.
+
+  Amend the Document Creation Workflow (0311002) to
+  add a per-amendment cascade-currency-check. From
+  that point forward, any amendment to a parent
+  document that creates downstream lag must include
+  the cascading updates as part of the same
+  amendment cycle. Future lag is blocked at the
+  source.
+
+  This is one document amendment in one session. It
+  must happen BEFORE the phased authoring begins, so
+  that any amendment-during-cleanup that gets
+  triggered is itself caught by the new gate.
+
+PHASE 1 (NEXT): Update the 11 coding specifications
+in priority order.
+
+  One spec per session. Each session amends one
+  coding spec to match the current state of its
+  parent specifications, the current state of
+  TB00000, and the current state of the master
+  architecture diagram. Each amendment cycles
+  through the same checklist:
+    - Update version citations.
+    - Add paper-trading-mode awareness if missing.
+    - Update reconnect-attempt values to current.
+    - Add per-module CIATS references where the
+      old single-CIATS framing existed.
+    - Add per-module wallet sizing references where
+      the old portfolio-wide framing existed.
+    - Update reward-to-risk references from the old
+      fixed ratio to the new minimum floor.
+
+  11 sessions estimated. Each session produces one
+  amended coding spec.
+
+PHASE 2 (THEN): Update the 2 operations procedure
+documents.
+
+  0211003 (Startup/Shutdown Procedure) is the
+  largest single-spec amendment cycle in the
+  project. Two sessions estimated — one for the
+  paper-mode framework amendment, one for the
+  remaining cluster of nine smaller lag classes.
+
+  0211002 (Operations Infrastructure) — one
+  session.
+
+  3 sessions estimated for Phase 2.
+
+PHASE 3 (THEN): Update the architecture diagram
+internal cross-references.
+
+  Two internal sections of the master architecture
+  diagram (AR-049 daily-regime path and AR-056
+  reconnect-attempt prose) get updated. One
+  session.
+
+PHASE 4 (LAST): Update the 6 risk and trading-
+system parent specifications.
+
+  These were the earliest documents in the project
+  and have the most accumulated lag. Six sessions
+  estimated — one spec per session.
+
+TOTAL: approximately 21 sessions across all four
+phases. Aligns with Bill's stated "use as many chat
+sessions as necessary" + "one document per turn"
+operational rules established at TB00207
+chat-turn 4.
+
+============================================================
+7. WHY THIS RECOMMENDATION SERVES THE PRIMARY MISSION
+============================================================
+
+The primary mission is maximize profit, minimize
+loss, with emphasis on minimizing loss. Currency-lag
+in coding specs translates DIRECTLY into loss-
+prevention risk because the coding specs govern the
+code that handles real money.
+
+Examples of current lag-class items that have direct
+loss-prevention implications:
+
+  - Reconnect-attempt limits at the old "10 attempts
+    over 120 seconds" value vs the current "20
+    attempts over 481 seconds": a too-aggressive
+    fatal-halt during a transient Kraken outage
+    could close active positions inappropriately.
+
+  - Paper-mode-unaware startup procedure: if a
+    developer codes from outdated text, the bot
+    could attempt to connect the private (trading)
+    WebSocket connection to Kraken during what is
+    supposed to be a paper-trading session, creating
+    a path for live capital to be placed at risk.
+
+  - Single-CIATS framing in the coding specs that
+    govern the parallel-module framework: per-module
+    statistical pools get contaminated, and the
+    statistical inference CIATS depends on becomes
+    invalid.
+
+  - Singular-mailbox alert routing: critical alerts
+    bounce instead of reaching the operator, hiding
+    the very failures the loss-prevention system is
+    designed to surface.
+
+The Phase 1 priority ordering (coding specs first)
+directly serves loss prevention. The governance fix
+(Phase 0) prevents this lag-accumulation defect from
+re-occurring after the cleanup is done.
+
+Picking Option A alone, or Option B alone, or Option
+C alone, all leave loss-prevention risk on the table
+in some form. Only Option B + Option C closes both
+sides of the gap.
+
+============================================================
+8. WHAT BILL IS BEING ASKED TO RATIFY AT CLOSE-GATE
+============================================================
+
+Bill is being asked to approve:
+
+  (1) Enacting a governance-layer check in the
+      Document Creation Workflow that prevents future
+      amendment cycles from creating downstream lag
+      without addressing the cascade in the same
+      cycle.
+
+  (2) A phased plan to bring the 17 currently-lagged
+      specifications current in priority order
+      (coding specs first, operations docs second,
+      architecture cross-references third, parent
+      specs last).
+
+  (3) Approximately 21 sessions total to complete
+      the phased cleanup, with one specification
+      amendment per session (per the one-document-
+      per-turn rule).
+
+Bill is NOT being asked to:
+
+  - Change any trading behavior.
+  - Add new rules.
+  - Approve any code changes.
+  - Approve any new module designs.
+
+This is a documentation-currency cleanup combined
+with a governance-layer fix to prevent the lag
+problem from recurring.
+
+============================================================
+9. REVISION HISTORY
+============================================================
+
+  v1_0  2026-05-11  Initial. First-Principles / Data-
+                    Point analysis of the currency-lag
+                    reconciliation problem surfaced as
+                    Gate 3 in TB00207 Step 3 Close-
+                    Gate Preliminary Package.
+                    Categorizes the 17 lagged
+                    specifications by namespace family
+                    (coding specs, operations
+                    procedures, architecture cross-
+                    references, parent specifications)
+                    and evaluates the three proposed
+                    options on the decision criterion
+                    of least errors and rework.
+                    Definitive recommendation:
+                    governance-layer fix enacted first
+                    to block future lag, followed by
+                    phased amendment in priority
+                    order to close current lag.
+                    Estimated 21 sessions total at
+                    one-document-per-turn cadence.
+                    Authored per TB00207 SL v1_1 §3.4
+                    + §5.1 carry-forward directives.
+                    Single-document deliverable per
+                    the one-document-per-turn rule
+                    established at TB00207 chat-turn 4.
+
+============================================================
+END OF DOCUMENT
+============================================================

@@ -1,0 +1,578 @@
+DocDCN:     TB00112
+DocTitle:   TothBot_V2_Session_Log_2026-04-22
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TBXXXXX_Session_Logs\TB00112_TothBot_V2_Session_Log_2026-04-22_v1_0.txt
+DocDate:    04-22-2026
+DocTime:    21:30:00 UTC
+
+============================================================
+TOTHBOT V2 SESSION LOG - TB00112
+PROJECT-FOLDER / VPS VERSION DRIFT DISCOVERED
+TB00111 NSI §6 DIAGNOSIS NOT STARTED
+============================================================
+
+PAPER TRADING ONLY. NO REAL MONEY.
+
+============================================================
+1. SESSION IDENTITY
+============================================================
+
+Session date:     2026-04-22
+Session number:   TB00112
+Session type:     Claude Chat - intended as CHANGE session
+                  per TB00111 NSI §6 (diagnose OI-028 WS
+                  reconnect regression, OI-029 SMTP read
+                  timeout, fix OI-030 sweep script pattern).
+                  ACTUAL outcome: pre-flight version check
+                  per TB00111 NSI §5 revealed stale files
+                  in the Claude.ai project folder. Recovery
+                  was started but not completed because
+                  Claude.ai platform returned repeated
+                  "Tool result could not be submitted"
+                  errors and Bill was unable to log out /
+                  force-quit the desktop app to recover.
+                  Session ended before any diagnosis work
+                  was performed. No code changes. No
+                  commits. No deploys. Paper-trading
+                  service continues on VPS at PID 231707,
+                  deploy dv1_22, unchanged.
+Prior session:    TB00111 (2026-04-22, Claude Chat - dv1_22
+                  observation window aborted with three
+                  tripwires).
+Platform:         Claude Chat (desktop app).
+Next session:     TB00113 - RESUME as CHANGE session.
+                  Complete the project-folder sync first,
+                  then execute TB00111 NSI §6 diagnosis.
+
+Documents read this session:
+  TB00000  v2_10   Project Instructions for Claude      read
+  TB00111  v1_0    Session Log (prior session)          read
+  TB00111  v1_0    NSI (prior session instructions)     read
+  0311001  v1_1    Namespace Specification              read
+  0311003  v1_0    Versioning Procedure                 read
+                   (grep-searched for Desktop / scp path
+                   references during OneDrive-path incident)
+
+Fresh-data discipline upheld: project_knowledge_search
+re-queried for file versions before stating any version
+conclusion.
+
+============================================================
+2. WORK COMPLETED THIS SESSION
+============================================================
+
+------------------------------------------------------------
+2.1 Ambiguity resolution at session start
+------------------------------------------------------------
+
+Bill opened the session by asking Claude to verify the
+testing protocol was working and to identify the start
+time of the current testing period (stated as "about 15
+hours ago"). Claude correctly read TB00000 v2_10,
+TB00111 NSI, and TB00111 session log before responding.
+
+Bill provided test output:
+  ssh root@87.99.141.44 \
+    "grep ALERT_SMTP_FAILED /home/tothbot/logs/tothbot.log | tail -2"
+  -> Two ALERT_SMTP_FAILED events at 2026-04-22T14:35:21
+     and 14:57:29 UTC, both level=HIGH, both with error
+     "Connection unexpectedly closed: The read operation
+     timed out".
+
+Claude's analysis: those are the same two historical SMTP
+failures documented in TB00111 §2.4, both pre-dating the
+16:46:14 UTC systemd auto-restart. The grep command
+executed cleanly with no PowerShell->ssh->bash quote-
+escape error. The testing protocol works mechanically.
+
+------------------------------------------------------------
+2.2 Full sweep script executed
+------------------------------------------------------------
+
+Bill ran /root/tothbot_sweep.sh at 2026-04-22 19:29:47
+UTC. Results:
+
+  Service state:
+    Active:     running since 2026-04-22 16:46:14 UTC
+                (2h 43min uptime)
+    PID:        231707
+    Deploy:     dv1_22 (unchanged since TB00108 commit
+                7e744a3 deploy)
+
+  Tripwires:
+    FATAL events:              0  (top-line pattern still
+                                   has OI-030 defect -
+                                   misses level=CRITICAL
+                                   WS_MGR_FATAL)
+    ALERT_SMTP_FAILED:         2  (historical, pre-restart)
+    TRADE_RECORD_WRITE_FAILED: 0
+
+  OI close-decision counters:
+    WS_MGR_FATAL:              10 (6 pre-window historical
+                                   + 4 from aborted window
+                                   - unchanged)
+    MAX_RECONNECT_EXCEEDED:    0
+    ALERT_SENT:                42 (unchanged since TB00111)
+    TRADE_CLOSE:               0
+
+  Expected-values echo still prints stale baseline
+  (PID 223133, Since 02:15:21 UTC). The sweep script
+  needs OI-030 remediation before a new observation
+  window opens.
+
+State is IDENTICAL to TB00111 §2.3 close at 18:19:41 UTC.
+No new events during the 1h 10min gap between the TB00111
+sweep and the TB00112 sweep.
+
+------------------------------------------------------------
+2.3 Testing-period start-time identification
+------------------------------------------------------------
+
+Claude presented two candidates for "THIS testing period
+that started about 15 hours ago":
+
+  A - dv1_22 observation window open
+      2026-04-22 02:15:21 UTC (window opened, PID 223133)
+      Elapsed at sweep: 17h 14min (closest to "about 15
+      hours ago")
+  B - Current service uptime
+      2026-04-22 16:46:14 UTC (systemd auto-restart,
+      PID 231707)
+      Elapsed at sweep: 2h 43min (does not match "15
+      hours ago")
+
+Candidate A is the closer match. Claude asked Bill for
+confirmation; Bill did not return a direct confirmation
+before the session transitioned to version-drift
+recovery. Both candidates are documented here for
+TB00113 close-out.
+
+------------------------------------------------------------
+2.4 CRITICAL DISCOVERY - project-folder / VPS version drift
+------------------------------------------------------------
+
+TB00111 NSI §5 pre-flight checklist required Claude to
+verify VPS code versions match Claude.ai project-folder
+code versions. On executing the check, Claude found:
+
+  ws_manager.py      Project dv1_21   VPS dv1_21   MATCH
+  logger.py          Project dv1_3    VPS dv1_4    MISMATCH
+  startup_sequence.py Project dv1_8   VPS dv1_9    MISMATCH
+
+Complete sweep of all .py files in tothbot/:
+
+  File                  Project   VPS     Status
+  --------------------  --------  ------  --------
+  ciats.py              dv1_6     dv1_6   OK
+  execution_engine.py   dv1_0     dv1_0   OK
+  exit_controller.py    dv1_2     dv1_2   OK
+  __init__.py           dv1_7     dv1_7   OK
+  logger.py             dv1_3     dv1_4   STALE
+  long_module.py        dv1_0     dv1_0   OK
+  __main__.py           dv1_7     dv1_7   OK
+  position_mirror.py    dv1_1     dv1_1   OK
+  regime_engine.py      dv1_4     dv1_4   OK
+  risk_engine.py        dv1_3     dv1_3   OK
+  selection_ctrl.py     dv1_0     dv1_0   OK
+  signal_pipeline.py    dv1_0     dv1_0   OK
+  startup_sequence.py   dv1_8     dv1_9   STALE
+  vps_deployment.py     dv1_5     dv1_5   OK
+  ws_manager.py         dv1_21    dv1_21  OK
+
+VPS HEAD commit (verified via git log -5):
+  7e744a3 TB00108 bundled: OI-023 trades_<YYYY>.jsonl
+          permanent record; OI-022 ALERT_SENT structured
+          event; OI-014 startup_sequence xref cleanup
+
+This commit (7e744a3) is the source of both mismatches.
+It was committed to master on 2026-04-21 and deployed to
+the VPS successfully (logger.py is now dv1_4 on the VPS,
+startup_sequence.py is now dv1_9 on the VPS). However,
+those updated files were never copied back into the
+Claude.ai project folder, so project-folder state
+remained at the pre-TB00108 versions.
+
+------------------------------------------------------------
+2.5 Root cause of the drift (process gap)
+------------------------------------------------------------
+
+The TothBot V2 workflow has a documented path for
+getting code INTO GitHub (commit -> push) and a
+documented path for getting code onto the VPS (pull).
+There is no documented procedure for getting
+post-commit files BACK into the Claude.ai project
+folder. Bill has been doing it by hand. When a
+session ends without that hand-step executing, the
+project folder drifts stale.
+
+The next-session NSI then compounds the defect because
+the author Claude states file versions from memory
+("in repo at 7e744a3") without opening the file at
+that commit to verify. TB00111 NSI stated logger.py
+dv1_3 in repo at 7e744a3. The actual content at that
+commit is dv1_4. All downstream reasoning in TB00111
+NSI §6.4 (OI-029 diagnosis direction, SMTP send-path
+analysis) was therefore anchored to a wrong version
+of logger.py.
+
+This is OI-032 (see Section 4).
+
+------------------------------------------------------------
+2.6 Claude operational errors this session
+------------------------------------------------------------
+
+Two Claude errors occurred. Both are logged here so
+TB00113 starts with accurate history, not a laundered
+one.
+
+Error 1. Desktop-staging scp path proposed.
+
+After discovering the logger.py mismatch, Claude
+proposed this command:
+
+  scp root@87.99.141.44:/root/TothBot_V2-Code/tothbot/logger.py \
+    C:\Users\wstot\OneDrive\Desktop\logger.py
+
+Bill asked: "This file pathway should be in one of
+the 03XXXXX series Document Control Procedures.
+Verify that this is in fact true."
+
+Claude searched 03XXXXX and confirmed the OneDrive
+Desktop path is NOT in any Document Control
+Procedure. The governed path per 0311001 §3 is:
+
+  C:\Users\wstot\GitHub\TothBot\TothBot_V2-Code\
+
+Bill was correct. The scp-to-Desktop approach
+bypassed GitHub as the authoritative source per
+TB00000 §11 and 0311001 §3, and staged a file in
+an uncontrolled location. This is OI-033.
+
+Error 2. Misattribution of the OneDrive path.
+
+Claude, responding to Bill's challenge on the path,
+wrote: "You did NOT type OneDrive." The record shows
+Claude typed OneDrive in the scp command; Bill quoted
+Claude's output verbatim when pasting PowerShell
+results. Claude then doubled down and told Bill what
+Bill had typed, which was wrong. Bill corrected the
+record. Claude accepted the correction.
+
+Both errors are on Claude. Bill followed Claude's
+instructions as written, which is the contract per
+TB00000 §4 ("list actions exactly as Bill needs to
+perform them"). Claude is responsible for giving
+complete, correct, governed instructions.
+
+------------------------------------------------------------
+2.7 Revised recovery path (NOT YET EXECUTED)
+------------------------------------------------------------
+
+The governed recovery path is:
+
+  (a) Delete the stray Desktop file:
+      del C:\Users\wstot\OneDrive\Desktop\logger.py
+
+  (b) Pull the authoritative versions from GitHub
+      into the governed local repo:
+      cd C:\Users\wstot\GitHub\TothBot\TothBot_V2-Code
+      git pull origin master
+
+  (c) Upload logger.py and startup_sequence.py from
+      the governed local repo to the Claude.ai
+      project folder.
+
+These three steps were NOT executed this session.
+
+------------------------------------------------------------
+2.8 Claude.ai platform outage
+------------------------------------------------------------
+
+Repeated occurrences of the error:
+
+  "Tool result could not be submitted. The request may
+  have expired or the connection was interrupted.
+  Refresh the page to continue."
+
+Bill attempted:
+  - F5 refresh (did not resolve)
+  - Shutdown / restart (did not resolve)
+  - Disk Cleanup (did not resolve)
+  - Open a new Claude desktop-app instance (did not
+    resolve)
+
+Anthropic status page was checked and showed green
+for all services. The error continued despite all
+remediation attempts available to Bill.
+
+Claude desktop app does not expose a visible logout
+control for Bill's installation. No profile icon /
+initials circle in bottom-left as expected. Menu
+options for "Log out" could not be located. Bill
+elected to stop the session and document the state
+for continuation next session.
+
+This is logged as OI-034.
+
+============================================================
+3. OBSERVATION WINDOW STATUS
+============================================================
+
+  Status:           ABORTED per TB00111 §3. UNCHANGED.
+  OI-018:           NOT CLOSED
+  OI-019:           NOT CLOSED (original routing fix good;
+                    new SMTP read-timeout failure mode
+                    still to be diagnosed)
+  OI-020:           NOT CLOSED
+  OI-022:           PARTIAL (42 ALERT_SENT fired - payload
+                    not inspected)
+  OI-023:           NO VERIFICATION (zero TRADE_CLOSE)
+  OI-028 / 029 / 030: NOT ADDRESSED this session
+  New window:       NOT opened. Cannot open until code
+                    fixes ship per TB00111 NSI §6.8.
+
+============================================================
+4. NEW OPEN ITEMS THIS SESSION
+============================================================
+
+------------------------------------------------------------
+OI-032  DEFECT-PROJECT-SYNC-DRIFT-001  (HIGH)
+------------------------------------------------------------
+
+Statement:
+  Post-commit source files are not systematically
+  uploaded back to the Claude.ai project folder after
+  each commit to GitHub. Result: the project folder
+  drifts stale. A Claude session reading the project
+  folder during mandatory-reading phase then reasons
+  from the wrong version of the code.
+
+Observed this session:
+  logger.py - project dv1_3 vs VPS/GitHub dv1_4
+  startup_sequence.py - project dv1_8 vs VPS/GitHub dv1_9
+
+Consequence:
+  TB00111 NSI §6.4 SMTP diagnosis direction was
+  anchored to logger.py dv1_3. The actual deployed
+  code is dv1_4. All TB00111 NSI §6.4 line-number
+  references and retry-logic assumptions are therefore
+  suspect until re-verified against dv1_4.
+
+Candidate remediation:
+  Option A - Manual procedure: Bill uploads every file
+             to the Claude.ai project folder after every
+             commit. Same pattern as today but made
+             explicit in the workflow and enforced
+             by checklist.
+  Option B - NSI-pre-flight check: every NSI MUST open
+             with a project-folder-vs-GitHub version
+             sweep. Any drift stops the session and is
+             resolved before any other work.
+  Option C - Both A and B.
+
+Recommendation (deferred to TB00113 for decision):
+  Option C. A alone is insufficient because it fails
+  silently; B alone is insufficient because it catches
+  the drift late; both together catch it at commit
+  time AND at session open.
+
+Severity:         HIGH
+Originating TB:   TB00112
+Owner:            Bill
+
+------------------------------------------------------------
+OI-033  DEFECT-CLAUDE-DESKTOP-STAGING-PATH-001  (LOW)
+------------------------------------------------------------
+
+Statement:
+  Claude proposed an ad-hoc staging path
+  (C:\Users\wstot\OneDrive\Desktop\) that is not
+  in any governed Document Control Procedure.
+  The only governed local paths per 0311001 §3 are
+  the two repo local paths:
+    C:\Users\wstot\GitHub\TothBot\TothBot_V2-Docs\
+    C:\Users\wstot\GitHub\TothBot\TothBot_V2-Code\
+
+Root cause:
+  TB00111 NSI §9 documented the OneDrive Desktop
+  redirection as an operational note for scp from
+  Desktop. Next-session Claude read that note and
+  used it without checking whether it conflicted
+  with governed procedure. The note was never
+  integrated into the 03XXXXX series and should
+  not have been used as authoritative.
+
+Candidate remediation:
+  (a) Remove the OneDrive Desktop note from future
+      NSIs, OR
+  (b) Integrate it into 0311001 explicitly as a
+      non-authoritative operational convenience for
+      files NOT routed through GitHub (e.g., one-off
+      scp sweep scripts that are not controlled
+      documents), with explicit prohibition on using
+      it for controlled code files.
+
+Severity:         LOW
+Originating TB:   TB00112
+Owner:            Bill
+
+------------------------------------------------------------
+OI-034  CLAUDE-AI-PLATFORM-INSTABILITY-001  (LOW)
+------------------------------------------------------------
+
+Statement:
+  Repeated "Tool result could not be submitted"
+  errors in the Claude desktop app during this
+  session. Error persisted across shutdown,
+  restart, Disk Cleanup, and new app instances.
+  Anthropic status page showed green. Desktop app
+  logout control could not be located (no profile
+  icon in bottom-left of app window).
+
+Action required from Claude / Anthropic:
+  None - this is Bill's platform environment.
+  Recording here for traceability.
+
+Action required from Bill:
+  (a) Start TB00113 in web browser (not desktop app)
+      as first resort.
+  (b) If desktop app is preferred, retry after a
+      longer reset window (24h+).
+
+Severity:         LOW
+Originating TB:   TB00112
+Owner:            Bill
+
+============================================================
+5. PARKING LOT - CARRIED FORWARD
+============================================================
+
+Full Parking Lot inherited from TB00111 §5. No items
+closed this session. No items advanced.
+
+  OI-017  PROJECT-PATH-DRIFT (prior)           OPEN
+  OI-018  WM RECONNECT DEFECT                  OPEN (REGRESSION)
+  OI-019  ALERT ROUTING (original fix good;    OPEN
+          new failure mode OI-029)
+  OI-020  KRAKEN RETRY WINDOW                  OPEN
+  OI-021  (prior)                              OPEN
+  OI-022  ALERT_SENT STRUCTURED EVENT          PARTIAL
+  OI-023  TRADE_RECORD VERIFICATION            PENDING
+  OI-024  (prior)                              OPEN
+  OI-025  (prior)                              OPEN
+  OI-026  (prior)                              OPEN
+  OI-027  (prior)                              OPEN
+  OI-028  WM RECONNECT REGRESSION              OPEN (NEW-TB111)
+  OI-029  SMTP READ-TIMEOUT FAILURE MODE       OPEN (NEW-TB111)
+  OI-030  SWEEP SCRIPT FATAL PATTERN           OPEN (NEW-TB111)
+  OI-031  OBS WINDOW SEMANTIC CLARIFICATION    CAND (NEW-TB111)
+  OI-032  PROJECT-VPS SYNC DRIFT               OPEN (NEW-TB112)
+  OI-033  CLAUDE DESKTOP STAGING-PATH DEFECT   OPEN (NEW-TB112)
+  OI-034  CLAUDE.AI PLATFORM INSTABILITY       OPEN (NEW-TB112)
+
+============================================================
+6. SESSION LESSONS
+============================================================
+
+------------------------------------------------------------
+6.1 Pre-flight version sweep MUST be automated
+------------------------------------------------------------
+
+Manual head-of-file version reads caught the logger.py
+and startup_sequence.py drift this session, but only
+after Claude had already written instructions based
+on stale data in TB00111 NSI. A simple bash one-liner
+on VPS and a parallel sweep on the project folder
+would catch all drift in 5 seconds.
+
+Lesson: every future NSI §5 pre-flight MUST run a
+complete DocVersion sweep of both sides and compare
+all files, not just the two or three mentioned by
+name. Stated from first principles: memory-stated
+version numbers are not fresh data.
+
+------------------------------------------------------------
+6.2 Governance paths are authoritative - operational
+    notes in NSIs are not
+------------------------------------------------------------
+
+The OneDrive Desktop path documented in TB00111 NSI §9
+is an operational note, not a governance rule. When
+it conflicts with 03XXXXX procedure (as it did this
+session), the 03XXXXX procedure wins every time.
+
+Lesson: before issuing a command that uses any local
+path, Claude MUST verify that path is in the 03XXXXX
+series. If it is not, Claude MUST use a governed path
+or flag the gap to Bill.
+
+------------------------------------------------------------
+6.3 GitHub is the authoritative source for code - NOT
+    the VPS
+------------------------------------------------------------
+
+Even though the VPS has the same byte-identical files
+as HEAD on GitHub (by virtue of being deployed from
+HEAD), the VPS is downstream of GitHub. Pulling a
+file from VPS and treating it as authoritative
+short-circuits GitHub as the source of truth, which
+is a direct violation of TB00000 §11. The correct
+pattern is always:
+
+  GitHub -> local repo (git pull) -> Claude.ai project
+
+Never:
+
+  VPS -> Desktop -> Claude.ai project
+
+------------------------------------------------------------
+6.4 Claude errors must be logged without laundering
+------------------------------------------------------------
+
+Two Claude operational errors this session (§2.6).
+Both are documented with the specific wrong
+instruction, Bill's correction, and the recovery
+path. Future-session Claude reads this log and sees
+exactly what was wrong. This is consistent with
+TB00000 §4 "be brutally honest".
+
+============================================================
+7. FILE DELIVERABLES THIS SESSION
+============================================================
+
+Per DR-001 (all .txt):
+  TB00112_TothBot_V2_Session_Log_2026-04-22_v1_0.txt
+  TB00112_Next_Session_Instructions_v1_0.txt
+
+Per DR-002 (0500000 formats):
+  Not applicable - 0500000 not updated this session.
+
+Per DR-003 (one batch):
+  Both files delivered in the same response.
+
+No code files updated this session.
+No specification files updated this session.
+No governance files updated this session.
+
+============================================================
+8. REVISION HISTORY
+============================================================
+
+  v1_0  2026-04-22  Initial. Session aborted before
+                    any OI-028 / OI-029 / OI-030
+                    diagnosis could start. Project-
+                    folder / VPS version drift
+                    discovered during pre-flight
+                    (OI-032). Claude operational
+                    errors documented (OI-033).
+                    Claude.ai platform instability
+                    prevented completion (OI-034).
+                    No code changes, no commits,
+                    no deploys. Paper-trading
+                    service unchanged on VPS at
+                    PID 231707 deploy dv1_22.
+
+============================================================
+END OF SESSION LOG - TB00112 v1_0
+============================================================

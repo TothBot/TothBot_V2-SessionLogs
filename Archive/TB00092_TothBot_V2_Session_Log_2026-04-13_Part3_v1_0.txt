@@ -1,0 +1,308 @@
+DocDCN:     TB00092
+DocTitle:   TothBot_V2_Session_Log_2026-04-13_Part3
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\My_TothBot_Stuff\TBXXXXX_Session_Logs\TB00092_TothBot_V2_Session_Log_2026-04-13_Part3_v1_0.txt
+DocDate:    04-13-2026
+DocTime:    23:59:59 UTC
+
+============================================================
+TOTHBOT V2 SESSION LOG — 2026-04-13 PART 3
+============================================================
+
+============================================================
+1. SESSION IDENTITY
+============================================================
+
+Session date:     April 13, 2026 (Part 3)
+Session number:   TB00092
+Session type:     DEFECT-SS-004 fix + OI-NEW-001 fix.
+                  Spec updates first, then code.
+Prior session:    TB00091 (2026-04-13 Part 2)
+
+Documents read this session:
+  TB00000  v2_8    Project Instructions             read
+  TB00091  v1_0    Prior session log                read
+
+============================================================
+2. WORK COMPLETED THIS SESSION
+============================================================
+
+------------------------------------------------------------
+2.1 DEFECT-SS-004 — Root Cause Confirmed
+------------------------------------------------------------
+
+In ws_manager.py, _startup_connect_and_subscribe() paper
+mode path (lines 651–671):
+  - Sets paper balance
+  - Connects public WS
+  - Calls _subscribe_public() (which triggers instrument
+    subscription, which eventually triggers
+    _subscribe_ohlc_channels() via _handle_instrument)
+  - Resets zombie timer
+  - Returns immediately ← ROOT CAUSE
+
+seed_indicators_from_rest() was only called in TWO places:
+  1. Its own definition
+  2. Inside _execute_reconnect_sequence() for gap > 15 min
+
+Never called during startup in either live or paper mode.
+_subscribe_ohlc_channels() sent subscriptions and logged
+OHLC_SUBSCRIBED, then returned. No warm-up launched.
+No pair ever reached WARMUP_READY. Pipeline never fired.
+
+------------------------------------------------------------
+2.2 OI-NEW-001 — Root Cause Confirmed
+------------------------------------------------------------
+
+_subscribe_ohlc_channels() sent TWO separate subscription
+messages: interval=5, then interval=60. Kraken WS v2
+only allows one ohlc interval per symbol per connection.
+interval=60 rejected: "Already subscribed to one ohlc
+interval on this symbol." htf_ema_20/htf_ema_50 never
+received WS incremental updates after REST seed.
+
+------------------------------------------------------------
+2.3 Spec Updates Produced
+------------------------------------------------------------
+
+1011014 dv1_3 → dv1_4:
+  SS-STARTUP-007: Removed ohlc interval=60 from WS
+    subscription. Documented Kraken one-interval-per-symbol
+    constraint (OI-NEW-001).
+  SS-WARMUP-001: Added explicit warm-up trigger mechanism.
+    _subscribe_ohlc_channels() calls
+    asyncio.create_task(_warm_up_all_pairs()) after ohlc(5)
+    subscription sent. Paper mode: identical path.
+  SS-WARMUP-003: Updated to document REST-only 60m HTF
+    sourcing. Removed Call C (interval=1440) from per-pair
+    warm-up — Regime Engine handles daily independently.
+  SS-WARMUP-004/005/006/007/008: Renumbered after removal
+    of old SS-WARMUP-004.
+  SS-WARMUP-008: Added — documents SYSTEM_OPERATIONAL log
+    after warm-up complete.
+  Related documents: 1011002 updated to dv1_14.
+
+1011002 dv1_13 → dv1_14:
+  Section 3 Q1: Removed ohlc(60) WS trigger. Added
+    _warm_up_all_pairs() to functional description.
+  Section 3 Q4: Removed ohlc(60) close event from triggers.
+    Removed Exit Controller ohlc(60) trigger.
+  Section 4.1: Removed ohlc(60) from public WS subscriptions.
+    Added note: 1H HTF sourced from REST only (HR-WM-021).
+  Section 5.2 handle_instrument: Updated to document
+    _warm_up_all_pairs() trigger from _subscribe_ohlc_channels().
+  Section 7.7 ADDED: WM-WARMUP-001 through -003.
+    WM-WARMUP-001: _subscribe_ohlc_channels() triggers
+      asyncio.create_task(_warm_up_all_pairs()) after
+      ohlc(5) subscription sent.
+    WM-WARMUP-002: _warm_up_all_pairs() implementation.
+      asyncio.gather across universe, return_exceptions=True.
+      Logs SYSTEM_OPERATIONAL when ≥1 pair READY.
+    WM-WARMUP-003: seed_indicators_from_rest() per pair.
+      Call A: interval=5 → seeds 5 indicators.
+      sleep(1.1). Call B: interval=60 → seeds HTF EMAs.
+  WM-RECONNECT-005: Removed ohlc(60) from reconnect list.
+  HR-WM-021 ADDED: 60m HTF from REST only. ohlc(60) WS
+    subscription PROHIBITED.
+  Related documents: 1011014 updated to dv1_4.
+    All stale dv1_3 body references updated to dv1_4.
+
+------------------------------------------------------------
+2.4 Code Change — ws_manager.py dv1_13 → dv1_14
+------------------------------------------------------------
+
+CHANGE 1: _subscribe_ohlc_channels()
+  Removed: second subscription message for interval=60.
+  Updated: OHLC_SUBSCRIBED log to show intervals=[5] and
+    note interval=60 not subscribed.
+  Added: asyncio.create_task(self._warm_up_all_pairs())
+    after subscription sent. This is the DEFECT-SS-004 fix.
+
+CHANGE 2: New method _warm_up_all_pairs()
+  Added before seed_indicators_from_rest().
+  Logs WARMUP_REST_STARTED.
+  asyncio.gather(*[seed_indicators_from_rest(s) for s in
+    monitored_universe], return_exceptions=True).
+  After gather: counts READY pairs.
+  Logs WARMUP_REST_COMPLETE with ready_pairs/total_pairs.
+  If ready_count > 0: logs SYSTEM_OPERATIONAL.
+
+startup_sequence.py — NO CHANGES. Already correct.
+
+------------------------------------------------------------
+2.5 DC Compliance Audit
+------------------------------------------------------------
+
+RESULT: CLEAN.
+All three files passed:
+  - 7-field headers correct
+  - DocVersion incremented correctly
+  - DocPath matches filename
+  - DocDate 04-13-2026 / DocTime 23:59:59 UTC
+  - No stale cross-document version references
+  - Parent chain intact
+
+============================================================
+3. OPEN ITEMS
+============================================================
+
+OI-NEW-001 (was PL-NEW-011)  CLOSED — OHLC interval=60
+        rejection fixed. interval=60 WS subscription removed.
+        1H HTF cache now REST-only per HR-WM-021.
+
+DEFECT-SS-004               CLOSED — REST warm-up now
+        triggered from _subscribe_ohlc_channels() via
+        asyncio.create_task(_warm_up_all_pairs()).
+
+PT-ENTRY-008                OPEN PENDING — Awaiting VPS
+        restart and log confirmation. READY must be seen in
+        log before this closes.
+
+OI-006                      OPEN PENDING — same as PT-ENTRY-008.
+
+------------------------------------------------------------
+NEW PARKING LOT ITEMS
+------------------------------------------------------------
+
+PL-NEW-012  HTF EMA incremental updates lost. ohlc(60) WS
+            subscription removed (OI-NEW-001 fix). htf_ema_20
+            and htf_ema_50 are seeded at startup from REST
+            and do NOT update within session. Impact: Gate 4
+            (HTF trend filter) uses stale HTF EMAs after ~1H.
+            For paper trading: acceptable — EMAs change slowly.
+            Post-paper-trading: evaluate options:
+              A) REST poll 60m OHLC every hour via asyncio task
+              B) Aggregate 12x 5m candles to reconstruct 1H close
+              C) Second public WS connection for ohlc(60)
+            CIATS will have data on impact. Defer decision.
+
+PL-NEW-013  Exit Controller ohlc(60) trigger removed.
+            _process_ohlc_60m() will never fire (no WS 60m
+            subscription). EC L1a HTF check (exit on HTF
+            regime reversal) will not trigger on 1H close.
+            For paper trading: acceptable.
+            Post-paper-trading: address together with PL-NEW-012.
+
+============================================================
+4. PENDING BILL ACTIONS
+============================================================
+
+Step 1 — Bill commits to TothBot_V2-Docs (GitHub):
+  git add 10XXXXX_Coding_Specification/1011014_Startup_Sequence_Coding_Spec_dv1_4.txt
+  git add 10XXXXX_Coding_Specification/1011002_WS_Manager_Coding_Spec_dv1_14.txt
+  git commit -m "DEFECT-SS-004 + OI-NEW-001: 1011014 dv1_4 and 1011002 dv1_14"
+  git push origin master
+
+Step 2 — Bill commits to TothBot_V2-Code (GitHub):
+  git add tothbot/ws_manager.py
+  git commit -m "DEFECT-SS-004 + OI-NEW-001: ws_manager.py dv1_14"
+  git push origin master
+
+Step 3 — Bill deploys to VPS:
+  ssh root@87.99.141.44
+  cd ~/TothBot_V2-Code
+  git pull origin master
+
+Step 4 — Bill restarts service:
+  systemctl restart tothbot
+
+Step 5 — Bill confirms READY:
+  grep "READY\|OPERATIONAL\|WARMUP\|SEED\|PAIR_READY\|SYSTEM_OPERATIONAL" \
+    /home/tothbot/logs/tothbot.log | tail -30
+
+Expected in log:
+  WARMUP_REST_STARTED
+  PAIR_WARM_UP_STARTED (per pair)
+  PAIR_READY (per pair as they seed)
+  WARMUP_REST_COMPLETE
+  SYSTEM_OPERATIONAL
+
+If SYSTEM_OPERATIONAL seen: PT-ENTRY-008 DONE. OI-006 CLOSED.
+
+Step 6 — Bill pastes log output to next session for verification.
+
+============================================================
+5. PARKING LOT
+============================================================
+
+  PL-001      WSManager dual PM creation paths. Monitor.
+  PL-003      Pathway 1 GitHub automation. After paper trading.
+  PL-NEW-003  VPS migration to Hillsboro OR. After stable.
+  PL-NEW-004  EE ENTRY_TIMEOUT_SEC vs WM ENTRY_GTD_SEC. Monitor.
+  PL-NEW-005  requirements.txt — websockets version pin.
+  PL-NEW-006  tothbot_service.txt not updated in GitHub. After PT-ENTRY.
+  PL-NEW-007  LOG_FILE path mismatch. After PT-ENTRY.
+  PL-NEW-008  Heartbeat UNKNOWN_MESSAGE_TYPE log spam. After PT-ENTRY.
+  PL-NEW-010  status subscription "Symbol(s) not found". After stable.
+  PL-NEW-012  HTF EMA incremental updates lost (see above).
+  PL-NEW-013  EC ohlc(60) trigger removed (see above).
+
+============================================================
+6. GITHUB COMMIT LOG — THIS SESSION
+============================================================
+
+  No commits this session. Bill to commit per Section 4.
+
+============================================================
+7. STANDING RULES — ALL ACTIVE
+============================================================
+
+  RULE 6  — git add . is prohibited. Explicit per file.
+  RULE 13 — .bat files go to Desktop only. Never in repo.
+  RULE 14 — git push origin master. NEVER origin main.
+  RULE 15 — ONE COMMAND PER COPY BOX. ALWAYS.
+  RULE 16 — .bat files run from cmd.exe only. Never PS.
+
+  DELIVERY RULES — ALL ACTIVE:
+  DR-001 — All documents as .txt files.
+  DR-002 — 0500000 additionally as .docx and .pdf.
+  DR-003 — ALL documents in ONE BATCH. No piecemeal.
+
+============================================================
+8. BILL ACTIONS REQUIRED
+============================================================
+
+Step 1 — Save this session log:
+  C:\Users\wstot\My_TothBot_Stuff\TBXXXXX_Session_Logs\
+
+Step 2 — Upload TB00092 to Claude project folder.
+
+Step 3 — Execute Steps 1-6 in Section 4 above.
+
+Step 4 — Paste log output to next session for verification.
+
+============================================================
+9. NEXT SESSION — COMPLETE INSTRUCTIONS
+============================================================
+
+============================================================
+DOCUMENTS TO READ — IN THIS ORDER:
+1. TB00000 v2_8  — Project Instructions
+2. TB00092 v1_0  — This session log (most recent)
+
+STATE DOCUMENTS READ AND VERSIONS BEFORE ANY WORK.
+============================================================
+
+============================================================
+FIRST TASK — Verify DEFECT-SS-004 fix
+
+Bill will paste the log output from:
+  grep "READY\|OPERATIONAL\|WARMUP\|SEED\|PAIR_READY\|SYSTEM_OPERATIONAL" \
+    /home/tothbot/logs/tothbot.log | tail -30
+
+Expected events in order:
+  WARMUP_REST_STARTED
+  PAIR_WARM_UP_STARTED (per pair)
+  PAIR_READY (per pair)
+  WARMUP_REST_COMPLETE
+  SYSTEM_OPERATIONAL
+
+If SYSTEM_OPERATIONAL confirmed: PT-ENTRY-008 DONE. OI-006 CLOSED.
+
+If system does not reach SYSTEM_OPERATIONAL: diagnose from log.
+============================================================
+
+============================================================
+END OF SESSION LOG TB00092 v1_0
+============================================================

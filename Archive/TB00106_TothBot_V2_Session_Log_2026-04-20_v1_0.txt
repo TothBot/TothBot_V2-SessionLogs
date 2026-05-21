@@ -1,0 +1,573 @@
+DocDCN:     TB00106
+DocTitle:   TothBot_V2_Session_Log_2026-04-20
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TBXXXXX_Session_Logs\TB00106_TothBot_V2_Session_Log_2026-04-20_v1_0.txt
+DocDate:    04-20-2026
+DocTime:    23:00:00 UTC
+
+============================================================
+TOTHBOT V2 SESSION LOG — 2026-04-20 (Claude Code)
+============================================================
+
+============================================================
+1. SESSION IDENTITY
+============================================================
+
+Session date:    April 20, 2026
+Session number:  TB00106 (placeholder — Bill to confirm)
+Session type:    Bundled deploy of AI-1 + AI-2 + AI-3 per
+                 TB00105 Section 2.4 action plan.
+                   AI-1  Close OI-018 (DEFECT-WM-RECONNECT-001).
+                         Governance only.
+                   AI-2  Fix OI-019 (DEFECT-ALERT-ROUTING-001).
+                         Singular alert@tothbot.com → plural
+                         alerts@tothbot.com in 3 code files,
+                         TB00000, 3 affected specs.
+                   AI-3  Fix OI-020 (DEFECT-KRAKEN-TRANSIENT-
+                         API-001). MAX_RECONNECT_ATTEMPTS
+                         10 → 20 in ws_manager.py and 1011002.
+Prior session:   TB00105 v1_0 (2026-04-20, Claude Chat —
+                 observation close-out + action plan)
+Platform:        Claude Code
+Next platform:   TBD (Claude Chat for 24h observation close)
+
+Documents read this session (15 required):
+  TB00000   v2_9     Project Instructions                 read
+  TB00105   v1_0     Prior session log                    read
+  0311001   v1_1     Namespace_Specification              read
+  0311002   v1_2     Document_Creation_Workflow           read
+  0311003   v1_0     Versioning_Procedure                 read
+  0311004   v1_1     Document_Creation_and_Approval       read
+  1011002   dv1_19   WS_Manager_Coding_Spec               read
+  1011007   dv1_2    Logger_Coding_Spec                   read
+  1011013   dv1_4    VPS_Deployment_Coding_Spec           read
+  1011014   dv1_5    Startup_Sequence_Coding_Spec         read
+  1010000   dv1_9    Trading_System_Coding_Anchor         read
+  ws_manager.py        dv1_20     (deployed + verified)   read
+  logger.py            dv1_2      (current)               read
+  startup_sequence.py  dv1_7      (deployed + verified)   read
+  vps_deployment.py    dv1_4      (current)               read
+
+PAPER TRADING ONLY. NO REAL MONEY.
+
+============================================================
+2. WORK COMPLETED THIS SESSION
+============================================================
+
+------------------------------------------------------------
+2.1 AI-1 — OI-018 Formally CLOSED
+------------------------------------------------------------
+
+Status:          CLOSED
+Defect ID:       DEFECT-WM-RECONNECT-001
+Closure basis:   TB00105 Section 2.1 — 42.5-hour observation
+                 window (2026-04-19 01:09:41 → 2026-04-20
+                 19:45:00 UTC), exceeds the 24h minimum by
+                 78%. Stop condition (novel fatal signature)
+                 never tripped. Crash rate dropped from an
+                 estimated 25–50/day pre-deploy to 1.1/day
+                 post-deploy (≈25–50× reduction).
+
+Success-criteria result recap:
+  SC-1 PASS:          Zero novel fatal signatures.
+  SC-2 PARTIAL:       Disconnect rate lower than baseline.
+  SC-3 FAIL:          Every RECONNECT_TRIGGERED exceeded the
+                      retry window — root cause is external
+                      (Kraken EAPI:Invalid key outage), not a
+                      regression of the dv1_20 fix. Addressed
+                      by AI-3 below.
+  SC-4 PARTIAL:       NRestarts=2 across 42.5h — legitimate
+                      responses to external outages.
+  SC-5 PASS:          Gate 3 healthy; DEFECT-SS-009 stable
+                      across every restart cycle.
+
+Documentation actions this session:
+  - 1010000 Section 4.2 ws_manager entry updated: note
+    added recording DEFECT-WM-RECONNECT-001 CLOSED
+    2026-04-20 with verification summary.
+  - 1010000 Section 5.2 ws_manager registry note references
+    the closure.
+  - 1011002 dv1_20 revision history AI-1 paragraph records
+    closure rationale without spec change (the fix spec
+    itself — dv1_19 WM-RECONNECT-016/017/018 — remains the
+    authoritative rule).
+
+No code change for AI-1.
+
+------------------------------------------------------------
+2.2 AI-2 — OI-019 Alert Routing Fix
+------------------------------------------------------------
+
+Status:          FIX APPLIED (pending Bill deploy + verify)
+Defect ID:       DEFECT-ALERT-ROUTING-001
+Root cause:      Code defaults for ALERT_EMAIL_TO across
+                 three call sites targeted singular
+                 alert@tothbot.com. Proton Mail mailbox
+                 exists only at the plural address
+                 alerts@tothbot.com; the singular mailbox
+                 cannot be created because the domain
+                 catch-all reserves the namespace — Proton UI
+                 returns "Address is already taken" on every
+                 create attempt. 100% of post-deploy
+                 CRITICAL/HIGH alerts bounced with
+                 "550 5.1.1 Recipient address rejected"
+                 between 2026-04-19 and 2026-04-20. Bill
+                 detected the live defects (WS_MGR_FATAL,
+                 Kraken EAPI:Invalid key outages) via bounce
+                 notifications only — the live CRITICAL
+                 events were invisible.
+
+Code changes (3 files, 1 line each + DC header + revision
+history):
+
+  tothbot/logger.py                       dv1_2  → dv1_3
+    Line 75:  ALERT_EMAIL module constant.
+    Before:   "alert@tothbot.com"
+    After:    "alerts@tothbot.com"
+
+  tothbot/startup_sequence.py             dv1_7  → dv1_8
+    Line 245: _load_config() ALERT_EMAIL_TO default.
+    Before:   "alert@tothbot.com"
+    After:    "alerts@tothbot.com"
+
+  tothbot/vps_deployment.py               dv1_4  → dv1_5
+    Line 129: send_alert() to_addr default.
+    Before:   "alert@tothbot.com"
+    After:    "alerts@tothbot.com"
+
+Spec / governance changes:
+
+  TB00000                                  v2_9   → v2_10
+    Section 9.7 singular → plural + v2_10 revision history
+    entry with OI-019 FP/DP explanation + Document Status
+    updated (supersedes v2_9).
+
+  1011002 WS_Manager_Coding_Spec           dv1_19 → dv1_20
+    Section 3 Q4 Triggers text updated from singular to
+    plural at the operator-alert line.
+
+  1011007 Logger_Coding_Spec               dv1_2  → dv1_3
+    Section 8 LG-ALERT-001, LG-ALERT-002, LG-ALERT-004
+    updated singular → plural.
+
+  1011013 VPS_Deployment_Coding_Spec       dv1_4  → dv1_5
+    Section 3 Q2 interface table, Section 9 VD-KEY-002
+    env template sample, Section 10 VD-ALT-001 alert
+    routing rule — all updated singular → plural.
+
+  1011014 Startup_Sequence_Coding_Spec     dv1_5  → dv1_6
+    SS-STARTUP-002 (Kraken maintenance alert line) and
+    SS-RECON-015 (fatal reconnect alert recipient) updated
+    singular → plural.
+
+Verification: grep across TothBot_V2-Code confirms zero live
+occurrences of the singular string remain. The only remaining
+in-tree references are revision-history entries that describe
+the fix (required by DC-TMPL-003C — no revision-history entry
+is ever removed).
+
+------------------------------------------------------------
+2.3 AI-3 — OI-020 Kraken Retry Window Extension
+------------------------------------------------------------
+
+Status:          FIX APPLIED (pending Bill deploy + verify)
+Defect ID:       DEFECT-KRAKEN-TRANSIENT-API-001
+Observed data:   TB00105 Section 2.2 / SC-3.
+                   2026-04-19 02:49:21 → 02:51:54 UTC
+                     (~2m 33s, Kraken EAPI:Invalid key)
+                   2026-04-20 06:25:46 → 06:28:18 UTC
+                     (~2m 32s, Kraken EAPI:Invalid key)
+                 Both outages exceeded the N=10 / ~181s
+                 retry window. Each produced WS_MGR_FATAL +
+                 systemd restart rather than RECONNECT_
+                 COMPLETE.
+
+Fix:             MAX_RECONNECT_ATTEMPTS 10 → 20. Base (1s),
+                 cap (30s), factor (2x) unchanged. Worst-case
+                 wall time: 1 + 2 + 4 + 8 + 16 + (30 × 15) =
+                 481s (~8 minutes). Covers observed 2.5–3
+                 minute outages with generous safety margin.
+                 No new failure modes introduced; same proven
+                 exponential curve.
+
+Code change (1 file):
+
+  tothbot/ws_manager.py                    dv1_20 → dv1_21
+    Line 247: MAX_RECONNECT_ATTEMPTS 10 → 20
+    Line 248: RECONNECT_WINDOW_SEC 120 → 481 (docstring
+              constant — not referenced elsewhere)
+    Comment block for WM-RECONNECT-017 backoff schedule
+    updated to reflect N=20 math.
+    _initiate_reconnect() docstring updated (10→20, 120s
+    → ~481s).
+
+Spec changes:
+
+  1011002 WS_Manager_Coding_Spec           dv1_19 → dv1_20
+    WM-RECONNECT-002 (line 1926): "10 attempts over 120s"
+      → "20 attempts over ~481s (~8 minutes)".
+    WM-RECONNECT-017 (lines 2029–2044): attempts value
+      10 → 20; worst-case calculation line updated to
+      1+2+4+8+16+(30×15) = 481s; rationale paragraph
+      added referencing observed TB00105 outages.
+
+  1011014 Startup_Sequence_Coding_Spec     dv1_5  → dv1_6
+    SS-RECON-015 updated to mirror the authoritative rule:
+    "10 attempts spanning 120 seconds" →
+    "20 attempts spanning ~481 seconds (~8 minutes)".
+    Content-only mirror — no startup_sequence.py code
+    change for AI-3.
+
+  1010000 Trading_System_Coding_Anchor     dv1_9  → dv1_10
+    Section 4.2 note records OI-020 extension rationale.
+    Section 5.2 ws_manager registry row SpecVer dv1_19 →
+    dv1_20 with OI-020 note.
+
+------------------------------------------------------------
+2.4 Design-Constraint Verification
+------------------------------------------------------------
+
+  DC-1  NO PATCHES.                                       PASS
+        Every changed file delivered as full .txt per DR-001.
+  DC-2  7-field headers + revision history updated.       PASS
+        All 4 code files + all 6 spec/governance files.
+  DC-3  Preserve all unrelated behavior.                  PASS
+        Only lines / constants / text explicitly in scope
+        were modified. Other code paths unchanged.
+  DC-4  No magic numbers.                                 PASS
+        MAX_RECONNECT_ATTEMPTS remains a module-level
+        constant with comment cross-referencing the rule.
+  DC-5  Every code path emits structured log events.      PASS
+        No change to logging surface area.
+  DC-6  No bare Exception catches added.                  PASS
+        No exception-handling changes in this session.
+  DC-7  1011001 Engineering Best Practices.               PASS
+        7-field headers maintained; Decimal / logging /
+        async patterns untouched.
+  DC-8  No new external dependencies.                     PASS
+        No imports added.
+  DC-9  py_compile passes on all modified .py.            PASS
+        Verified via python -m py_compile for ws_manager.py,
+        logger.py, startup_sequence.py, vps_deployment.py.
+  DC-10 1010000 registry reflects every version bump.     PASS
+        Section 4 status notes + Section 5.2 rows updated
+        for all 4 changed code files.
+
+------------------------------------------------------------
+2.5 Acceptance-Criteria Verification
+------------------------------------------------------------
+
+  AC-1  OI-018 formally closed in session log.            PASS
+  AC-2  3 code files use plural "alerts@tothbot.com".     PASS
+  AC-3  No live singular occurrences in source code.      PASS
+        grep confirms only revision-history descriptive
+        references remain.
+  AC-4  ws_manager.py MAX_RECONNECT_ATTEMPTS = 20.        PASS
+  AC-5  1011002 WM-RECONNECT-017 text updated (N=20 +
+        481s worst-case).                                 PASS
+  AC-6  TB00000 Section 9.7 updated to plural.            PASS
+  AC-7  1010000 registry reflects all version bumps.      PASS
+  AC-8  All .py files pass py_compile.                    PASS
+  AC-9  All .txt files pass 7-field header check.         PASS
+  AC-10 All revision histories reference governing defect
+        IDs and rules.                                    PASS
+
+============================================================
+3. OPEN ITEMS / PARKING LOT — END OF SESSION
+============================================================
+
+OI-018  CLOSED 2026-04-20 — DEFECT-WM-RECONNECT-001.
+        42.5h observation complete. Verified working.
+
+OI-019  FIX APPLIED — DEFECT-ALERT-ROUTING-001 (HIGH).
+        Code + specs updated to plural. Awaiting Bill
+        deploy + post-deploy test alert verification.
+
+OI-020  FIX APPLIED — DEFECT-KRAKEN-TRANSIENT-API-001
+        (HIGH). MAX_RECONNECT_ATTEMPTS 10 → 20 in code
+        and governing spec. Awaiting Bill deploy + 24h
+        observation window.
+
+OI-021  OPEN — DEFECT-ALERT-DUPLICATION-001 (COSMETIC).
+        ~8 bounces per fatal event. Deferred until
+        AI-2 deploys; re-evaluate once alerts deliver
+        to a real mailbox.
+
+OI-017  OPEN — DEFECT-WM-LIQ-001 (LOW).
+        Liquidity refresh empty_result every 4h. Deferred.
+
+OI-014  OPEN — startup_sequence.py stale xrefs (LOW).
+        Deferred.
+
+============================================================
+4. STANDING RULES — ALL ACTIVE
+============================================================
+
+  RULE 6  — git add . is PROHIBITED. Explicit per file.
+  RULE 13 — .bat files go to Desktop only. Never in repo.
+  RULE 14 — git push origin master. NEVER origin main.
+  RULE 15 — ONE COMMAND PER COPY BOX. ALWAYS.
+  RULE 16 — .bat files run from cmd.exe only. Never PS.
+  RULE 17 — Complete and correct instructions.
+
+  CODING RULES — ALL ACTIVE:
+    NO PATCHES EVER. Full file delivery only. Full DC.
+
+  DELIVERY RULES — ALL ACTIVE:
+    DR-001 — All documents as .txt files.
+    DR-002 — 0500000 additionally as .docx and .pdf.
+    DR-003 — ALL documents in ONE BATCH.
+
+============================================================
+5. BILL ACTIONS REQUIRED — THIS SESSION
+============================================================
+
+Actions listed in the exact order Bill executes them.
+See TB00106_Bill_Actions_v1_0.txt for standalone copy.
+
+------------------------------------------------------------
+STEP A — Save all deliverables locally                 PENDING
+------------------------------------------------------------
+
+Deliverable files produced this session (already on disk —
+confirm presence, do not re-create):
+
+  Session logs folder (C:\Users\wstot\GitHub\TothBot\
+                       TBXXXXX_Session_Logs\):
+    TB00106_TothBot_V2_Session_Log_2026-04-20_v1_0.txt
+    TB00106_Bill_Actions_v1_0.txt
+    TB00000_TothBot_V2_Project_Instructions_for_Claude_v2_10.txt
+
+  Code folder (C:\Users\wstot\GitHub\TothBot\
+               TothBot_V2-Code\tothbot\):
+    ws_manager.py        (dv1_21)
+    logger.py            (dv1_3)
+    startup_sequence.py  (dv1_8)
+    vps_deployment.py    (dv1_5)
+
+  Specs folder (C:\Users\wstot\GitHub\TothBot\
+                TothBot_V2-Docs\10XXXXX_Coding_Specification\):
+    1011002_WS_Manager_Coding_Spec_dv1_20.txt
+    1011007_Logger_Coding_Spec_dv1_3.txt
+    1011013_VPS_Deployment_Coding_Spec_dv1_5.txt
+    1011014_Startup_Sequence_Coding_Spec_dv1_6.txt
+    1010000_Trading_System_Coding_Anchor_dv1_10.txt
+
+------------------------------------------------------------
+STEP B — Upload / replace in Claude.ai project         PENDING
+------------------------------------------------------------
+
+Upload:
+  TB00106_TothBot_V2_Session_Log_2026-04-20_v1_0.txt
+  TB00000_TothBot_V2_Project_Instructions_for_Claude_v2_10.txt
+  1011002_WS_Manager_Coding_Spec_dv1_20.txt
+  1011007_Logger_Coding_Spec_dv1_3.txt
+  1011013_VPS_Deployment_Coding_Spec_dv1_5.txt
+  1011014_Startup_Sequence_Coding_Spec_dv1_6.txt
+  1010000_Trading_System_Coding_Anchor_dv1_10.txt
+
+Delete superseded from Claude.ai project:
+  TB00105_TothBot_V2_Session_Log_2026-04-20_v1_0.txt
+  TB00000_TothBot_V2_Project_Instructions_for_Claude_v2_9.txt
+  1011002_WS_Manager_Coding_Spec_dv1_19.txt
+  1011007_Logger_Coding_Spec_dv1_2.txt
+  1011013_VPS_Deployment_Coding_Spec_dv1_4.txt
+  1011014_Startup_Sequence_Coding_Spec_dv1_5.txt
+  1010000_Trading_System_Coding_Anchor_dv1_9.txt
+
+TB00106_Bill_Actions_v1_0.txt stays local only (not uploaded
+to Claude project).
+
+------------------------------------------------------------
+STEP C — Commit to TothBot_V2-Docs (origin master)     PENDING
+------------------------------------------------------------
+
+ONE COMMAND PER COPY BOX. Run from the TothBot_V2-Docs repo
+root (C:\Users\wstot\GitHub\TothBot\TothBot_V2-Docs\):
+
+  git add 10XXXXX_Coding_Specification/1011002_WS_Manager_Coding_Spec_dv1_20.txt
+
+  git add 10XXXXX_Coding_Specification/1011007_Logger_Coding_Spec_dv1_3.txt
+
+  git add 10XXXXX_Coding_Specification/1011013_VPS_Deployment_Coding_Spec_dv1_5.txt
+
+  git add 10XXXXX_Coding_Specification/1011014_Startup_Sequence_Coding_Spec_dv1_6.txt
+
+  git add 10XXXXX_Coding_Specification/1010000_Trading_System_Coding_Anchor_dv1_10.txt
+
+  git commit -m "TB00106 bundled: OI-018 closed; OI-019 alert routing singular->plural; OI-020 retry window N=10->20"
+
+  git push origin master
+
+------------------------------------------------------------
+STEP D — Commit to TothBot_V2-Code (origin master)     PENDING
+------------------------------------------------------------
+
+Run from TothBot_V2-Code repo root
+(C:\Users\wstot\GitHub\TothBot\TothBot_V2-Code\):
+
+  git add tothbot/ws_manager.py
+
+  git add tothbot/logger.py
+
+  git add tothbot/startup_sequence.py
+
+  git add tothbot/vps_deployment.py
+
+  git commit -m "TB00106 bundled: OI-019 alert routing plural; OI-020 MAX_RECONNECT_ATTEMPTS 10->20"
+
+  git push origin master
+
+------------------------------------------------------------
+STEP E — VPS deploy                                    PENDING
+------------------------------------------------------------
+
+SSH to VPS:
+
+  ssh root@87.99.141.44
+
+From the VPS, pull code:
+
+  cd /root/TothBot_V2-Code
+
+  git fetch origin
+
+  git pull origin master
+
+Restart service:
+
+  systemctl restart tothbot
+
+Verify service is running:
+
+  systemctl status tothbot --no-pager
+
+------------------------------------------------------------
+STEP F — VPS cleanup — stale env backup                PENDING
+------------------------------------------------------------
+
+Remove the stale backup env file that contains the obsolete
+singular SMTP user reference:
+
+  rm /root/.tothbot.env.save
+
+------------------------------------------------------------
+STEP G — Post-deploy test-alert verification           PENDING
+------------------------------------------------------------
+
+The next naturally-occurring HIGH or CRITICAL event should
+deliver an email to alerts@tothbot.com (plural) in the
+Proton Mail inbox — NOT bounce.
+
+If Bill wants a deliberate test, trigger a harmless HIGH
+event (any existing path that emits an alert) and confirm
+inbox delivery. If no test path is convenient, wait for
+the next RECONNECT_INITIATED or equivalent HIGH/CRITICAL
+event and check inbox.
+
+Success criteria:
+  (a) Email arrives in Bill's Proton inbox at
+      alerts@tothbot.com.
+  (b) No corresponding bounce notification received.
+  (c) Log entry ALERT_SENT records to=alerts@tothbot.com.
+
+------------------------------------------------------------
+STEP H — 24-hour observation window                    PENDING
+------------------------------------------------------------
+
+Observation start: immediately after STEP E systemctl restart
+                   confirms Active (running).
+Observation end:   start + 24 hours (minimum) or start + 48
+                   hours (preferred, if Bill schedule allows).
+
+Monitor for:
+  (a) Any WS_MGR_FATAL during the window. Any occurrence is
+      a potential regression of the AI-1 closure evidence
+      or the AI-3 extension.
+  (b) Any RECONNECT_COMPLETE event (expected if another
+      Kraken transient EAPI:Invalid key window occurs).
+      RECONNECT_COMPLETE where previously only WS_MGR_FATAL
+      fired is the direct success indicator for AI-3.
+  (c) Any email bounce from the system. None expected
+      post-AI-2.
+
+End-of-window query set (run on VPS):
+  grep -c "WS_MGR_FATAL"           /home/tothbot/logs/tothbot.log
+  grep -c "RECONNECT_TRIGGERED"    /home/tothbot/logs/tothbot.log
+  grep -c "RECONNECT_COMPLETE"     /home/tothbot/logs/tothbot.log
+  grep -c "FATAL_RECONNECT_FAILURE" /home/tothbot/logs/tothbot.log
+  grep -c "ALERT_SENT"             /home/tothbot/logs/tothbot.log
+  systemctl status tothbot --no-pager
+
+Stop condition: if any novel fatal signature appears (signature
+other than the two known pre-existing external-API patterns),
+stop the observation window and open a new defect ID.
+
+============================================================
+6. CURRENT STATE SUMMARY — END OF SESSION
+============================================================
+
+GitHub — TothBot_V2-Docs:
+  Latest commit: 8d41dfa (from TB00104) — pre-this-session.
+  This-session commit: PENDING Bill STEP C.
+  Files staged for commit (7 files):
+    TB00000                v2_9  → v2_10 (in Session Logs;
+                                          NOT in Docs repo)
+    1011002_WS_Manager_Coding_Spec              dv1_20
+    1011007_Logger_Coding_Spec                  dv1_3
+    1011013_VPS_Deployment_Coding_Spec          dv1_5
+    1011014_Startup_Sequence_Coding_Spec        dv1_6
+    1010000_Trading_System_Coding_Anchor        dv1_10
+
+  NOTE: TB00000 is a controlled document OUTSIDE the TothBot
+        V2 Document Control System per TB00000 itself (see
+        Document Status section). It lives in TBXXXXX_
+        Session_Logs and is NOT committed to either repo.
+
+GitHub — TothBot_V2-Code:
+  Latest commit: 8242d1c (from TB00104) — pre-this-session.
+  This-session commit: PENDING Bill STEP D.
+  Files staged for commit (4 files):
+    tothbot/ws_manager.py        dv1_21
+    tothbot/logger.py            dv1_3
+    tothbot/startup_sequence.py  dv1_8
+    tothbot/vps_deployment.py    dv1_5
+
+VPS:
+  Status: RUNNING — PID 192331 since 2026-04-20 06:28:59 UTC
+          (pre-deploy; unchanged since TB00105).
+  Will restart on Bill STEP E.
+
+Open defects:
+  OI-018  CLOSED this session
+  OI-019  FIX APPLIED — pending deploy + verification
+  OI-020  FIX APPLIED — pending deploy + 24h observation
+  OI-021  OPEN — cosmetic, deferred
+  OI-017  OPEN — low, deferred
+  OI-014  OPEN — low, deferred
+
+Closed this session:
+  OI-018  DEFECT-WM-RECONNECT-001
+
+============================================================
+7. REVISION HISTORY
+============================================================
+
+  v1_0  04-20-2026  Initial. Bundled AI-1 + AI-2 + AI-3
+                    deploy prepared. AI-1 OI-018 closed
+                    on governance-only basis (42.5h
+                    observation per TB00105). AI-2 OI-019
+                    singular→plural alert routing applied
+                    across 3 code files + TB00000 + 4
+                    specs. AI-3 OI-020 MAX_RECONNECT_
+                    ATTEMPTS 10 → 20 applied to
+                    ws_manager.py + 1011002 + 1011014
+                    mirror. All 4 .py files pass
+                    py_compile. 1010000 registry updated
+                    for every version bump. Bill actions
+                    STEP A through STEP H documented.
+
+============================================================
+END OF SESSION LOG TB00106 v1_0
+============================================================

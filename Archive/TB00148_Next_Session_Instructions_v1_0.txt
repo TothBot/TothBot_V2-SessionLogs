@@ -1,0 +1,642 @@
+DocDCN:     TB00148
+DocTitle:   Next_Session_Instructions
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TBXXXXX_Session_Logs\TB00148_Next_Session_Instructions_v1_0.txt
+DocDate:    05-04-2026
+DocTime:    05:15:30 UTC
+
+============================================================
+TB00149 NEXT SESSION INSTRUCTIONS
+============================================================
+
+PAPER TRADING ONLY. NO REAL MONEY. NO PATCHES.
+PAPER IS MASTER per TB00000 v2_18 section 4.4 PA-001.
+LIVE MIMICS PAPER except at PA-004 four divergence points.
+UNIVERSE = TOKEN/USD + TOKEN/USDC + TOKEN/USDT (D-03 LOCKED).
+NET 1:1.5 R:R is the only hardcoded constraint.
+
+============================================================
+1. PRIMARY WORK FOR TB00149
+============================================================
+
+TB00149 IS A SPEC-AMENDMENT SESSION — Phase 1, Session 1.
+
+PRIMARY DELIVERABLE:
+  0500000 dv1_21 -> dv1_22  System Architecture Overview
+  NEW SECTION codifying paper-mode dispatch boundary
+  architecture (PA-004 dispatch seam at the system-level).
+  Three-format triplet (.txt + .docx + .pdf per DR-002 +
+  DR-005).
+
+NO CODE EDITS. NO DEPLOY. NO TESTS. Spec authoring only.
+
+------------------------------------------------------------
+1.1 0500000 dv1_22 NEW SECTION — SCOPE
+------------------------------------------------------------
+
+The new section codifies the paper-mode dispatch boundary
+as a first-class architectural element of the TothBot V2
+system. Audit chat 1 (TB00148) established that CLUSTER 1
+defects (paper-mode dispatch seam undefined; findings 09,
+29, 30) cannot be patched at the code layer because the
+boundary is a specification gap at the architectural level,
+not a code defect.
+
+Required content of the new section:
+
+  (a) System diagram update
+      Annotate dispatch flow at the EE -> ws_manager.send()
+      boundary. Show paper_trading_mode flag as a first-
+      class input that gates the physical send. Show the
+      simulated-fill local path for paper mode.
+
+  (b) PA-004 dispatch boundary specification
+      Codify the four permitted divergence points (private
+      WS connection; order dispatch; capital ledger; PM
+      sourcing) at architectural level. State that any new
+      divergence point requires Bill written authorization
+      per PA-006.
+
+  (c) paper_trading_mode flag flow
+      Show the flag flowing from config -> startup_sequence ->
+      WM injection -> EE access -> dispatch decision.
+      Specify that the flag is read at every dispatch
+      decision point (no caching that could go stale).
+
+  (d) Paper synthetic ledger architecture
+      Reference 0211005 dv1_3 PT-MODE-006 paper exits flow
+      and 0511004 dv1_3 section 6A EC-PAPER. Show how the
+      ledger is written by a single owner (avoid the
+      distributed-write defect that finding 15 surfaced for
+      PositionMirror).
+
+  (e) Updated revision history with dv1_22 entry
+      Document the chat-1 audit, Bill OPTION B authorization,
+      and the architectural reason for the new section.
+
+  (f) Three-format triplet update
+      Per DR-002 + DR-005:
+        0500000_System_Architecture_Overview_dv1_22_Claude_Source.txt
+        0500000_System_Architecture_Overview_dv1_22.docx
+        0500000_System_Architecture_Overview_dv1_22.pdf
+      Per DR-004 binary integrity validation: file-type
+      probe + container structural probe + .docx
+      settings.xml validate.py gate. NO DELIVERY without
+      passing all three.
+      Per DR-005.4 version-triplet consistency: all three
+      files at dv1_22 in the project folder simultaneously
+      after delivery.
+
+------------------------------------------------------------
+1.2 SCOPE GUARDRAILS
+------------------------------------------------------------
+
+OUT OF SCOPE FOR TB00149:
+  - Authoring 1011004 (NEW spec) — that is TB00150 work.
+  - Amending any 1011* spec — Phase 1 sessions 2-8.
+  - Amending any AA=04, AA=06, AA=07, AA=08 spec.
+  - Code edits to any .py module.
+  - Deploy.
+  - Tests.
+
+The 0500000 amendment is the PARENT of all 7 AA=10 spec
+amendments that follow. Phase 1 sessions 2-8 cannot proceed
+until 0500000 dv1_22 is committed. TB00149 single-session
+focus on 0500000 dv1_22 is intentional and FP/DP-derived.
+
+============================================================
+2. COLD-LOAD MANDATORY READING
+============================================================
+
+Read all in order. State versions before any work.
+
+TB00000  Project_Instructions_for_Claude       v2_18    project
+TB00148  TothBot_V2_Session_Log_2026-05-04     v1_0     project
+TB00148  Next_Session_Instructions             v1_0     project (this doc)
+0311001  Namespace_Specification               v1_3     project
+0311002  Document_Creation_Workflow            v1_8     project
+0311003  Versioning_Procedure                  v1_1     project
+0311004  Document_Creation_and_Approval        v1_2     project
+0311005  System_Definitions_and_Terminology    v1_0     project
+0311006  Known_Platform_Limitations            dv1_0    project
+0500000  System_Architecture_Overview          dv1_21   project
+                                               (.txt+.docx+.pdf
+                                                triplet — read
+                                                Claude_Source.txt
+                                                for authoring)
+
+Additional spec context for the NEW SECTION authoring:
+0511001  WS_Manager_Specification              dv1_5    project
+0511004  Exit_Controller_Specification         dv1_3    project
+0211005  Paper_Trading_Operations_Procedure    dv1_3    project
+1011002  WS_Manager_Coding_Spec                dv1_26   project
+1011005  Exit_Controller_Coding_Spec           dv1_3    project
+
+============================================================
+3. STEP A PRE-FLIGHT (per 0311002 v1_8 section 8.2.5)
+============================================================
+
+Mandatory at TB00149 session open. ALL THREE checks must
+PASS before any authoring work begins.
+
+  CHECK 1  DC-PREFLIGHT-001  PROJECT-FOLDER EXPECTED-STATE
+    Bash sweep of /mnt/project. Compare to KEPT and ABSENT
+    lists in section 7 below. Flag any drift.
+
+  CHECK 2  DC-PREFLIGHT-002  GIT-STATE
+    Bill executes:
+      cd C:\Users\wstot\GitHub\TothBot\TothBot_V2-Docs
+      git fetch origin
+      git log -1 --oneline
+      git status
+
+      cd C:\Users\wstot\GitHub\TothBot\TothBot_V2-Code
+      git fetch origin
+      git log -1 --oneline
+      git status
+
+    Expected:
+      TothBot_V2-Docs HEAD = e8713d5  (TB00147 cascade close)
+      TothBot_V2-Code HEAD = fb5de32  (paper-canonical,
+                                       untouched)
+
+  CHECK 3  DC-PREFLIGHT-003  NSI CODE-EDIT-LIST
+    N/A. TB00149 makes no code edits.
+
+  CHECK 4  DC-PREFLIGHT-004  THREE-FORMAT TRIPLET
+    Verify 0500000 dv1_21 .txt + .docx + .pdf all present
+    in /mnt/project at same version (no mixed-version
+    triplet).
+
+  CHECK 5  DC-PREFLIGHT-005  ABSENT-LIST
+    Verify all section 7 ABSENT entries are absent.
+
+  CHECK 6  DC-PREFLIGHT-006  ORIGIN INVESTIGATION
+    N/A. TB00149 amendment is constraint-additive. No
+    constraint removal.
+
+============================================================
+4. PHASE 1 SPEC AMENDMENT SEQUENCE
+============================================================
+
+For reference. Phase 1 cascade order. Each amendment
+authored in its own session unless FP/DP at session open
+authorizes batching of adjacent dependent amendments.
+
+  Session 1 (TB00149): 0500000  dv1_21 -> dv1_22
+                       System Architecture Overview
+                       (paper-mode dispatch boundary
+                        NEW SECTION; parent of all)
+
+  Session 2 (TB00150): 1011004  NEW dv1_0
+                       Execution_Engine_Coding_Spec
+                       (NEW spec; closes long-standing
+                        MISSING gap; defines paper-
+                        dispatch contract)
+
+  Session 3 (TB00151): 1011006  dv1_1 -> dv1_2
+                       Position_Mirror_Coding_Spec
+                       (PositionRecord schema:
+                        fees_entry_usd, mae_pct_reached,
+                        vol_regime; HR-PM-005 retirement
+                        with RR-SCOPE-009 four-question
+                        investigation; field naming
+                        reconciliation)
+
+  Session 4 (TB00152): 1011008  dv1_0 -> dv1_1
+                       Long_Module_Coding_Spec
+                       (paper-dispatch contract for IOC
+                        emergency sells)
+
+  Session 5 (TB00153): 1011014  dv1_7 -> dv1_8
+                       Startup_Sequence_Coding_Spec
+                       (module wire-up order;
+                        tradeable_universe; EC -> SC + LM +
+                        PM + WM injection;
+                        paper_trading_mode flag propagation)
+
+  Session 6 (TB00154): 1011007  dv1_5 -> dv1_6
+                       Logger_Coding_Spec
+                       (paper event taxonomy:
+                        PAPER_LEDGER_UPDATED,
+                        PAPER_FILL_SIMULATED,
+                        PAPER_DISPATCH_BLOCKED)
+
+  Session 7 (TB00155): 1011010  dv1_6 -> dv1_7
+                       CIATS_Coding_Spec
+                       (Trade Outcome Bus field naming
+                        reconciliation; vol_regime field
+                        added)
+
+  Session 8 (TB00156): 1011012  dv1_5 -> dv1_6
+                       Regime_Engine_Coding_Spec
+                       (explicit CIATS-owned param list:
+                        atr_percentile_thresh,
+                        htf_ema_periods,
+                        atr_percentile_window,
+                        atr_percentile_min)
+
+PHASE 1 CLOSE GATE:
+  All 8 amendments committed to TothBot_V2-Docs master.
+  Zero outstanding spec-layer findings from the 24-finding
+  catalog (Findings 09-32 per TB00148 SL section 4.1).
+  Phase 2 (Claude Code rebuild) does NOT begin until Phase 1
+  close gate passes.
+
+NOTE on session count: Phase 1 estimate was 6-10 sessions.
+This NSI lists 8 sessions (one per amendment). FP/DP at
+each session open may authorize batching adjacent dependent
+amendments if scope allows. The 6-10 range allows for that.
+The cascade order above is the dependency-correct sequence
+regardless of batching.
+
+============================================================
+5. AUTHORING DISCIPLINE — MANDATORY
+============================================================
+
+Apply to every spec authoring action in TB00149 and all
+subsequent Phase 1 sessions.
+
+------------------------------------------------------------
+5.1 PA-008 PRE-EMIT SCAN — PAPER-AS-MASTER
+------------------------------------------------------------
+
+Before emitting any draft section text, scan against
+PA-001..010:
+
+  PA-001  Paper is master. Live mimics paper.
+  PA-004  Four permitted divergence points only.
+  PA-005  Outside PA-004 list, paper and live are byte-
+          identical.
+  PA-006  No new divergence point without Bill written
+          authorization.
+  PA-007  Paper canonical for parameter values.
+
+If draft text encodes wrong-direction relationship (live
+as canonical with paper as variant), self-catch:
+
+  PA-MASTER self-caught — redrafting.
+
+Discard draft. Re-author with paper as master.
+
+------------------------------------------------------------
+5.2 RR-SCOPE-007 — NO SILENT NARROWING
+------------------------------------------------------------
+
+D-01..D-08 LOCKED decisions are not negotiable. The
+0500000 amendment is constraint-ADDITIVE (new section, new
+flag flow, new architectural element). It does NOT narrow
+the existing locked decisions:
+
+  D-03 LOCKED:  Universe = TOKEN/USD + TOKEN/USDC + TOKEN/USDT.
+                NO USDT exclusion. NO subset filter.
+  D-08 LOCKED:  Top-N cap RETIRED. NO universe cap.
+  D-05 LOCKED:  Paper starting balance $1000.
+
+If draft text appears to constrain D-01..D-08, self-catch:
+
+  RR-SCOPE-007 self-caught — redrafting.
+
+------------------------------------------------------------
+5.3 RR-SCOPE-009 — CHESTERTON'S FENCE
+------------------------------------------------------------
+
+TB00149 is constraint-additive only. No constraint removal
+expected. If during authoring a constraint removal becomes
+necessary, halt and execute four-question origin
+investigation (TB00000 v2_17 section 4.3.1 RR-SCOPE-009)
+BEFORE proceeding.
+
+The Phase 1 amendment that requires RR-SCOPE-009 is
+1011006 dv1_2 (HR-PM-005 retirement, Session 3 / TB00151).
+TB00149 does NOT touch HR-PM-005.
+
+------------------------------------------------------------
+5.4 OP-003 PRE-EMIT GREP — ONEDRIVE BAN
+------------------------------------------------------------
+
+Before delivering any artifact, scan for the prohibited
+string per TB00000 v2_18 section 4.2 OP-003. The string
+appears legitimately in TB00000 section 4.2 rule-stating
+context only. Any other occurrence is a violation requiring
+redraft.
+
+Self-catch signal:
+  OneDrive ban self-caught — redrafting.
+
+------------------------------------------------------------
+5.5 DR-001..006 DELIVERY DISCIPLINE
+------------------------------------------------------------
+
+  DR-001  Deliver as .txt for all corrected docs.
+  DR-002  0500000 ALSO as .docx + .pdf. All three formats.
+          Three-format triplet required for every 0500000
+          version increment.
+  DR-003  All deliverables in ONE BATCH at session close.
+  DR-004  Binary artifact integrity validation:
+            (a) file-type probe (file <path>)
+            (b) container structural probe (unzip -l for
+                .docx; head -c 5 for .pdf)
+            (c) .docx settings.xml validate.py gate
+                (/mnt/skills/public/docx/scripts/office/
+                 validate.py)
+          Failure: do NOT deliver. Remediate or exclude
+          from batch with explicit failure note.
+  DR-005  Canonical naming:
+            .txt:  ..._dv1_22_Claude_Source.txt
+            .docx: ..._dv1_22.docx
+            .pdf:  ..._dv1_22.pdf
+          Version-triplet consistency mandatory.
+  DR-006  Single-turn delivery. Announcement and
+          present_files in same response. Self-catch:
+            DR-006 self-caught — redrafting.
+
+============================================================
+6. CASCADE COMMIT PLAN (TB00149)
+============================================================
+
+Single commit to TothBot_V2-Docs master:
+
+  Commit 1:  0500000 dv1_22 (.txt _Claude_Source + .docx + .pdf)
+             Three files in one commit.
+             Commit message:
+               "0500000 dv1_21 -> dv1_22: NEW SECTION
+                paper-mode dispatch boundary architecture
+                (closes Phase 1 cascade entry; Bill
+                authorization TB00148 OPTION B)."
+
+NO commits to TothBot_V2-Code. NO VPS deploy.
+
+Expected GitHub state at TB00149 close:
+  TothBot_V2-Docs HEAD = (NEW)        — 0500000 dv1_22 commit
+  TothBot_V2-Code HEAD = fb5de32      — UNCHANGED
+
+============================================================
+7. PROJECT FOLDER KEPT/ABSENT LISTS
+============================================================
+
+Bill executes after TB00149 close.
+
+------------------------------------------------------------
+7.1 KEPT IN PROJECT FOLDER (for TB00150 cold-load)
+------------------------------------------------------------
+
+GOVERNANCE:
+  TB00000  v2_18
+  TB00148  Session_Log v1_0
+  TB00148  NSI v1_0
+  TB00149  Session_Log v1_0          (NEW from TB00149)
+  TB00149  NSI v1_0                  (NEW from TB00149)
+  0311001  v1_3
+  0311002  v1_8
+  0311003  v1_1
+  0311004  v1_2
+  0311005  v1_0
+  0311006  dv1_0
+
+DESIGN / SPEC + CODING SPEC:
+  0500000  dv1_22  (.txt _Claude_Source + .docx + .pdf)
+                   NEW from TB00149 — replaces dv1_21
+  0511001  dv1_5
+  0511004  dv1_3
+  0211005  dv1_3
+  1011002  dv1_26
+  1011005  dv1_3
+  1011006  dv1_1
+  1011007  dv1_5
+  1011008  dv1_0
+  1011009  dv1_1
+  1011010  dv1_6
+  1011011  dv1_3
+  1011012  dv1_5
+  1011013  dv1_6
+  1011014  dv1_7
+
+OPERATIONS:
+  0211003  dv1_0
+  0211004  dv1_0
+
+DC-CLEANUP-002 MUST-PRESERVE (per 0311002 v1_8
+DC-PREFLIGHT-001(d)):
+  TB00001
+  TB00012
+  TB00013
+  TB00014
+  TB00020
+
+------------------------------------------------------------
+7.2 ABSENT FROM PROJECT FOLDER
+------------------------------------------------------------
+
+Bill removes after TB00149 SL+NSI uploaded:
+
+  TB00147  Session_Log v1_0           (retired by TB00148
+                                       SL v1_0)
+  TB00147  NSI v1_0                   (retired by TB00148
+                                       NSI v1_0 — this doc)
+  TB00148  HANDOFF_MEMO v1_0          (purpose complete;
+                                       superseded by TB00148
+                                       SL+NSI which it
+                                       bridged to)
+  TB00148  Chat_1st_Part transcript   (audit detail folded
+                                       into TB00148 SL +
+                                       handoff memo; now
+                                       redundant)
+  0500000  dv1_21 (.txt + .docx +     (retired by dv1_22
+           .pdf triplet)               three-format set)
+  TB00119  (very old; out-of-window;  Bill convenience
+           non-blocking)               removal
+
+ABSENT-VERIFY at TB00150 STEP A pre-flight (DC-PREFLIGHT-005).
+
+============================================================
+8. PARKING LOT — CARRIED FORWARD
+============================================================
+
+PL-001  TB00149+ is the spec-amendment session sequence.
+        NO code edits. NO deploy. Code work resumes only
+        AFTER all 8 spec amendments are committed
+        (Phase 1 close gate).
+
+PL-002  Per TB00000 v2_18 section 4.4 PA-008, every spec
+        amendment MUST pre-emit-scan against PA-001..010
+        for wrong-direction (live-as-master) language.
+        Self-catch signal:
+          PA-MASTER self-caught — redrafting.
+        Cumulative violation count = 1
+        (ERROR-TB00145-CHAT-02). OI-073 tracks future
+        recurrence. Zero new occurrences expected if
+        PA-008 discipline is maintained.
+
+PL-003  RR-SCOPE-007 enforcement: spec amendments are
+        constraint-ADDITIVE. No silent narrowing of
+        D-01..D-08 LOCKED decisions:
+          D-03  Universe = USD + USDC + USDT
+          D-05  Paper starting balance $1000
+          D-08  Top-N cap RETIRED
+          1:1.5 R:R sacred (NOT CIATS-owned)
+
+PL-004  RR-SCOPE-009 four-question origin investigation
+        applies before ANY spec REMOVES or RELAXES an
+        existing constraint. Phase 1 amendments are
+        primarily additive but spec retirement of
+        HR-PM-005 in 1011006 dv1_2 (Session 3 / TB00151)
+        requires RR-SCOPE-009 investigation:
+
+          HR-PM-005 was load-bearing for pre-TB00147
+          architecture (it referenced _fire_ciats_outcome
+          path). It is correctly retired because TB00147
+          cascade routed CIATS via EC TRADE_CLOSE log
+          (1011005 dv1_3 EC-TOB-002).
+
+          Investigation pre-completed for TB00151 use:
+            (1) Introduced: pre-TB00147 architecture
+                (1011006 dv1_1).
+            (2) Problem solved: CIATS Trade Outcome Bus
+                data sourcing.
+            (3) Evidence problem is gone: TB00147 cascade
+                commits b98954b, fc03cdb, 57a6aed, e8713d5
+                routed CIATS via EC TRADE_CLOSE log;
+                _fire_ciats_outcome path retired in same
+                cascade.
+            (4) Loss-prevention property preserved:
+                CIATS data sourcing remains intact via
+                the new EC TRADE_CLOSE log path
+                (1011005 dv1_3 EC-TOB-002).
+
+          TB00151 may cite this section by reference
+          rather than re-deriving the four answers.
+
+PL-005  Three .py files NOT audited at TB00148
+        (vps_deployment.py, __main__.py, __init__.py).
+        These will be addressed during Phase 2 code
+        rebuild as peripheral deliverables. No spec
+        action needed in Phase 1.
+
+PL-006  CONCURRENT PAPER + LIVE OPERATION (Bill rabbit
+        TB00145 chat-close). Future architecture
+        decision — when live trading begins, paper +
+        live should run as INDEPENDENT processes. NOT
+        a Phase 1 scope item. Captured for future
+        planning sessions post-Phase 4.
+
+PL-007  3 clean files (risk_engine.py, selection_ctrl.py,
+        logger.py) reused without changes. Verified by
+        TB00148 audit. RE has one targeted edit
+        (kelly_fraction persistence per finding 18) in
+        Phase 2. If Phase 2 rebuild surfaces unexpected
+        interface dependencies on these files, halt and
+        re-audit.
+
+PL-008  Bot at fb5de32 cannot execute end-to-end without
+        the rebuild. Do NOT attempt deploy until full
+        rebuild (Phase 1 + 2 + 3) complete. PT-AC-001..006
+        acceptance criteria per 0211005 dv1_3 govern the
+        paper validation gate at Phase 4.
+
+PL-009  TB00148 HANDOFF MEMO and TB00148 Chat_1st_Part
+        transcript are working bridge documents. After
+        Bill uploads TB00148 SL+NSI to project folder,
+        both bridge documents may be removed. Not part
+        of TB00150+ cold-load.
+
+============================================================
+9. FIRST ACTIONS IN TB00149
+============================================================
+
+(1) Cold-load mandatory reading per section 2.
+
+(2) State all documents read and their versions before
+    any work.
+
+(3) Execute STEP A pre-flight per section 3.
+    All applicable checks must PASS before authoring.
+
+(4) Confirm D-01 through D-08 LOCKED restated (Bill
+    standing reinforcements).
+
+(5) Read 0500000 dv1_21 Claude_Source.txt fully.
+
+(6) Read 0511001 dv1_5, 0511004 dv1_3, 0211005 dv1_3,
+    1011002 dv1_26, 1011005 dv1_3 for paper-mode dispatch
+    boundary context.
+
+(7) Author 0500000 dv1_22 NEW SECTION per section 1.1
+    scope. Apply PA-008 + RR-SCOPE-007 + RR-SCOPE-009 +
+    OP-003 pre-emit scans.
+
+(8) Update 0500000 outer DC header (DocVersion v1_21 ->
+    v1_22; DocDate; DocTime).
+
+(9) Update 0500000 inner DC header (same fields).
+
+(10) Update 0500000 outer revision history with v1_22
+     entry.
+
+(11) Update 0500000 inner revision history with v1_22
+     entry.
+
+(12) Generate three-format triplet:
+       Claude_Source.txt -> docx (via skill) -> pdf (via
+       LibreOffice export).
+     Run DR-004 binary integrity validation (file-type
+     probe + container structural probe + .docx
+     settings.xml validate.py gate).
+     Do NOT deliver any format that fails validation.
+
+(13) Author TB00149 Session Log v1_0.
+
+(14) Author TB00149 Next Session Instructions v1_0
+     (directs TB00150 to author 1011004 NEW dv1_0 spec).
+
+(15) Deliver all five files (0500000 .txt + .docx + .pdf;
+     TB00149 SL; TB00149 NSI) in ONE BATCH per DR-003 +
+     DR-006.
+
+(16) Bill commits 0500000 dv1_22 to TothBot_V2-Docs master.
+
+(17) Bill removes TB00148 HANDOFF_MEMO + TB00148
+     Chat_1st_Part from project folder per PL-009.
+
+(18) Bill uploads TB00149 SL + NSI + 0500000 dv1_22
+     three-format triplet to project knowledge folder.
+
+============================================================
+10. REVISION HISTORY
+============================================================
+
+  v1_0  05-04-2026  Initial.
+                    NSI for TB00149. Directs first
+                    session of Phase 1 spec amendment
+                    cascade per Bill OPTION B Clean-
+                    Slate Rebuild authorization
+                    (TB00148). TB00149 primary work:
+                    0500000 dv1_22 NEW SECTION codifying
+                    paper-mode dispatch boundary
+                    architecture. Single deliverable
+                    (three-format triplet).
+
+                    Phase 1 full sequence enumerated
+                    (8 spec amendments across TB00149
+                    through TB00156 nominally). Phase 2
+                    code rebuild blocked until Phase 1
+                    close gate passes.
+
+                    Discipline reaffirmed: PA-008
+                    paper-as-master pre-emit scan;
+                    RR-SCOPE-007 no silent narrowing of
+                    D-01..D-08 LOCKED; RR-SCOPE-009
+                    Chesterton's Fence (HR-PM-005
+                    retirement investigation
+                    pre-completed in PL-004 for TB00151
+                    use); OP-003 ONEDRIVE ban; DR-001..
+                    006 delivery rules.
+
+                    Project folder KEPT/ABSENT lists
+                    enumerated. Parking Lot carried
+                    forward (9 items).
+
+============================================================
+END OF NSI
+============================================================

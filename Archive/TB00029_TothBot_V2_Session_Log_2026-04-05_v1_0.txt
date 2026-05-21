@@ -1,0 +1,344 @@
+DocDCN:     TB00029
+DocTitle:   TothBot_V2_Session_Log_2026-04-05
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\OneDrive\TothBot\TB00029_TothBot_V2_Session_Log_2026-04-05_v1_0.txt
+DocDate:    04-05-2026
+DocTime:    23:59:59 UTC
+
+============================================================
+TOTHBOT V2 -- SESSION LOG 2026-04-05
+============================================================
+
+Read TB00001 through TB00028 first.
+
+This session: Phase 2 Steps 2.7-2.13 executed. Seven new
+documents written and committed to GitHub. Three criteria
+validation performed. Four defects found and corrected in
+0511004 before commit.
+
+============================================================
+1. SESSION IDENTITY
+============================================================
+
+Session date:     April 5, 2026
+Session type:     Phase 2 Steps 2.7-2.13 execution
+Prior session:    TB00028 (2026-04-04 Part 5)
+
+Documents read:   TB00000 v2_7 (governing)
+                  TB00028 v1_0 (most recent session log)
+                  0311001 v1_0
+                  0311002 v1_0
+                  0500000 dv1_18 (Claude Source -- primary)
+                  0410000 dv1_0 (anchor format reference)
+                  Multiple prior session logs (TB00005,
+                  TB00006, TB00009, TB00010, TB00013,
+                  TB00014) searched for cancel timeout
+                  and MPP retry research
+
+============================================================
+2. WHAT HAPPENED -- COMPLETE RECORD
+============================================================
+
+------------------------------------------------------------
+2.1 Seven Documents Written -- Steps 2.7 through 2.13
+------------------------------------------------------------
+
+All seven documents derived from 0500000 dv1_18 as the
+primary content source. All AR entries and locked
+architectural decisions applied.
+
+  0510000  System_Components_Anchor        dv1_0
+  0511001  WS_Manager_Specification        dv1_0
+  0511002  Signal_Pipeline_Specification   dv1_0
+  0511003  Execution_Engine_Specification  dv1_0
+  0511004  Exit_Controller_Specification   dv1_2 (see 2.2)
+  0511005  Position_Mirror_Specification   dv1_0
+  0511006  Logger_Specification            dv1_0
+
+------------------------------------------------------------
+2.2 Three-Criteria Validation -- Defects Found and Corrected
+------------------------------------------------------------
+
+Bill asked whether all 05XXXXX documents meet three criteria:
+  (1) FP/DP analyzed using all appropriate statistical
+      methodologies to maximize profit and minimize loss.
+  (2) If it can be automated, it is automated.
+  (3) It is owned by CIATS.
+
+CRITERION 1 (FP/DP): MET BY DESIGN. All content inherits
+FP/DP validation from 0500000 dv1_18 (80+ sources, 144+
+total) through AR traceability. Spec documents trace to
+0500000 -- analysis lives in the domain document.
+
+CRITERION 2 (Automation): MET. All deliberate human-in-
+the-loop decisions are architecturally correct. Full Halt
+position management (Bill decides), cancel timeout hold
+(ambiguous order state), unexpected amendment (integrity
+alert) -- all correctly human-in-the-loop.
+
+CRITERION 3 (CIATS ownership): Two apparent gaps identified
+in 0511004 -- cancel_timeout_window and mpp_retry_count.
+
+Investigation of session logs (TB00005, TB00009, TB00010)
+revealed:
+  - cancel_timeout_window: the MECHANISM (I-6) was
+    specified in 0500000 dv1_5. The numeric value was
+    never analyzed and never set. TB00010 OI-003 explicitly
+    lists "cancel timeout" as Phase 5-6 work belonging to
+    0811003 Exit_Controller_Specification.
+  - mpp_retry_count: no count was ever defined. Also
+    explicitly Phase 5-6 work per TB00010 OI-003.
+
+CONCLUSION: Both are not CIATS gaps -- they are deferred
+Phase 5-6 items. They do not belong in 0511004 at all.
+
+ADDITIONAL DEFECTS FOUND IN 0511004:
+
+  DEFECT 1 (CRITICAL -- wrong architecture): MPP retry
+  strategy in 0511004 dv1_0 stated "retry market sell
+  N times." The correct strategy from 0411001 WS-MPP-001
+  through -004 (confirmed TB00009 Search 9, TB00013
+  Search 9, 0311005 System_Definitions_and_Terminology)
+  is: IOC limit at best_bid - 0.2% on MPP rejection.
+  NOT a repeated market sell.
+
+  DEFECT 2: cancel_timeout_window: "10 seconds" was
+  fabricated. No source. Removed. Deferred to 0811003.
+
+  DEFECT 3: Section 2 still said "MPP sell retries"
+  after the strategy correction. Updated to "MPP IOC
+  limit retries."
+
+  DEFECT 4: Section 10 WHAT IT LOGS Layer 2 block was
+  missing IOC_LIMIT_RETRY_SENT, IOC_LIMIT_FILLED, and
+  IOC_LIMIT_EXPIRED log events. Added. MPP_REJECTION
+  fields corrected (bid_price + attempt_number).
+
+0511004 progressed: dv1_0 (initial) -> dv1_1 (defects 1-2)
+-> dv1_2 (defects 3-4). Only dv1_2 was committed.
+
+------------------------------------------------------------
+2.3 GitHub Commits
+------------------------------------------------------------
+
+All seven documents committed to GitHub. Commit order
+enforced: 0510000 (anchor) before 0511001-0511006
+(instance documents). Per-document commits maintained.
+
+  Commit 44aeb35: 0510000 dv1_0  (Step 2.7)
+  Commit 65bee50: 0511001 dv1_0  (Step 2.8)
+  Commit 7d500b4: 0511002 dv1_0  (Step 2.9)
+  Commit eb09d4d: 0511003-0511006 (Steps 2.10-2.13)
+                  0511004 dv1_2 committed (not dv1_0/dv1_1)
+
+PHASE 2: COMPLETE.
+All AA=05 System Architecture instance documents on GitHub.
+
+============================================================
+3. DECISIONS MADE THIS SESSION
+============================================================
+
+  D-001: cancel_timeout_window is Phase 5-6 work.
+         Belongs in 0811003 Exit_Controller_Specification.
+         Not a CIATS Parameter Registry item at this phase.
+         Value requires FP/DP analysis before 0811003 is
+         written. Assigned to OI-003 scope.
+
+  D-002: mpp_retry_count is Phase 5-6 work.
+         Belongs in 0811003. Not a CIATS registry item now.
+         Requires FP/DP analysis before 0811003 is written.
+         Assigned to OI-003 scope.
+
+  D-003: MPP retry strategy for 0511004 is IOC limit at
+         best_bid - 0.2% per 0411001 WS-MPP-001 through
+         -004. NOT repeated market sell. This was confirmed
+         in TB00009, TB00013, and 0311005.
+
+============================================================
+4. ACTIONS COMPLETED THIS SESSION
+============================================================
+
+  + 0510000 dv1_0 written and committed (Step 2.7)
+  + 0511001 dv1_0 written and committed (Step 2.8)
+  + 0511002 dv1_0 written and committed (Step 2.9)
+  + 0511003 dv1_0 written and committed (Step 2.10)
+  + 0511004 dv1_2 written and committed (Step 2.11)
+    (three defect corrections applied before commit)
+  + 0511005 dv1_0 written and committed (Step 2.12)
+  + 0511006 dv1_0 written and committed (Step 2.13)
+  + Three-criteria validation performed on all 05XXXXX docs
+  + Four defects found and corrected in 0511004
+  + Session log TB00029 written
+
+============================================================
+5. ACTIONS NOT YET COMPLETE
+============================================================
+
+  x TB00028 may not yet be uploaded to Claude project
+      (per TB00028 Section 9 action item (a))
+
+  x 0500000 dv1_18 Claude Source may not yet be uploaded
+      to Claude project (per TB00028 Section 9 action (b))
+
+  x TB00029 not yet uploaded to Claude project
+
+============================================================
+6. COMPLETE DOCUMENT INVENTORY -- CURRENT STATE
+============================================================
+
+PHASE 1 DOCUMENTS -- APPROVED AND ON GITHUB (all v1_0):
+  0000000  Ethics_and_Safety                   v1_0  +
+  0100000  Management                          v1_0  +
+  0200000  Operations                          v1_0  +
+  0300000  Governance                          v1_0  +
+  0310000  Governance_Procedures_Anchor        v1_0  +
+  0311001  Namespace_Specification             v1_0  +
+  0311002  Document_Creation_Workflow          v1_0  +
+  0311003  Versioning_Procedure                v1_0  +
+  0311004  Document_Creation_and_Approval      v1_0  +
+  0311005  System_Definitions_and_Terminology  v1_0  +
+
+PHASE 2 AA=04 DOCUMENTS -- ON GITHUB (all dv):
+  0400000  Exchange_Interface                  dv1_0  +
+  0410000  Exchange_Interface_Kraken_Anchor    dv1_0  +
+  0411001  Kraken_WS_v2_Specification          dv1_11 +
+  0411002  Kraken_REST_API_Specification       dv1_0  +
+  0411003  Kraken_Fee_Rate_Limit_Specification dv1_0  +
+
+PHASE 2 AA=05 DOCUMENTS -- ON GITHUB (all dv):
+  0500000  System_Architecture_Overview        dv1_18 +
+           Three formats (docx, pdf, Claude_Source.txt)
+  0510000  System_Components_Anchor            dv1_0  + NEW
+  0511001  WS_Manager_Specification            dv1_0  + NEW
+  0511002  Signal_Pipeline_Specification       dv1_0  + NEW
+  0511003  Execution_Engine_Specification      dv1_0  + NEW
+  0511004  Exit_Controller_Specification       dv1_2  + NEW
+  0511005  Position_Mirror_Specification       dv1_0  + NEW
+  0511006  Logger_Specification                dv1_0  + NEW
+
+WORKING DRAFT CODING SPECS (on GitHub -- WD, premature):
+  1011001  Engineering_Best_Practices          dv1_5
+  1011002  WS_Manager_Coding_Spec              dv1_11
+  1011005  Exit_Controller_Coding_Spec         dv1_1
+  1011007  Logger_Coding_Spec                  dv1_1
+  1011010  CIATS_Coding_Spec                   dv1_4
+  1011011  Risk_Engine_Coding_Spec             dv1_2
+  1011012  Regime_Engine_Coding_Spec           dv1_3
+  1011013  VPS_Deployment_Coding_Spec          dv1_3
+  1011014  Startup_Sequence_Coding_Spec        dv1_2
+
++ = On GitHub
+NEW = Added this session
+
+============================================================
+7. OPEN ITEMS -- CURRENT STATE
+============================================================
+
+  OI-006  CIATS specification -- Phase 3 document writing.
+          Next up: 0210000 Operations_CIATS_Anchor (Step 3.1)
+          then 0211001 CIATS_Specification (Step 3.2).
+
+  OI-007  AA=04 Exchange Interface -- CLOSED (Phase 2).
+
+  OI-008  All AA=10 coding specs -- Phase 8 document writing.
+
+  NOTE: OI-003 scope (cancel_timeout_window, mpp_retry_count)
+  remains as Phase 5-6 work within 0811003. Both require
+  FP/DP analysis before 0811003 is written.
+
+============================================================
+8. PARKING LOT -- CURRENT STATE
+============================================================
+
+  PL-003     TRACKING: Pathway 1 GitHub automation.
+             After Pathway 2 reaches paper trading readiness.
+
+  PL-NEW-001 WD documents prematurely on GitHub.
+             Accepted as-is. Future updates commit correctly.
+
+  PL-NEW-002 git add . prohibited. Standing rule.
+  PL-NEW-003 Multi-line commit -m breaks Windows batch.
+
+============================================================
+9. BILL ACTIONS REQUIRED
+============================================================
+
+  (a) Upload TB00028 to Claude project (if not done).
+
+  (b) Upload 0500000_System_Architecture_Overview_dv1_18_
+      Claude_Source.txt to Claude project (if not done).
+
+  (c) Upload TB00029 (this log) to Claude project.
+
+  (d) Tell Claude: "Phase 2 complete. Begin Phase 3."
+
+============================================================
+10. NEXT SESSION -- WHERE WE PICK UP
+============================================================
+
+Phase 3 per 0311002 Document_Creation_Workflow v1_0:
+
+  STEP 3.1  0210000  Operations_CIATS_Anchor
+            Tier: Sub-Domain Anchor
+            Depends on: 0200000, 0511006 (Logger spec)
+            Both now on GitHub. Step 3.1 is unblocked.
+
+  STEP 3.2  0211001  CIATS_Specification
+            Tier: Instance Document
+            Depends on: 0210000, 0511006
+            Content: Complete CIATS specification.
+            All statistical thresholds and PDCA rules.
+            Mann-Whitney alpha=0.01, Spearman |rho|>0.3,
+            CUSUM k=0.5sigma h=4sigma, PDCA 50-trade
+            interval, Half-Kelly formula and activation,
+            two data streams (EWMA Monitor + Trade
+            Outcome Bus), Proposal Engine, Regime Library.
+            Key governing content: 0500000 dv1_18
+            Section 6 and 0200000 v1_0.
+            WD dv1_4 already exists (1011010 CIATS Coding
+            Spec) -- not a parent document, different DCN.
+
+============================================================
+11. STANDING RULES -- ALL ACTIVE
+============================================================
+
+RULE 1  -- 0500000 must be built with docx-js (Node.js).
+RULE 2  -- 0500000 three-file protocol (txt + docx + pdf).
+RULE 3  -- Diagrams placed immediately after section headings.
+RULE 4  -- DocPath correction = change = version increment.
+RULE 5  -- Never go from memory. Always read project files.
+RULE 6  -- git add . is prohibited. Explicit git add per file.
+RULE 7  -- Multi-line git commit -m breaks Windows batch.
+RULE 8  -- dv -> v is valid (direct promotion).
+RULE 9  -- After any accidental commit, immediately run
+           git rm --cached on each affected file and push.
+           Never defer.
+RULE 10 -- Before running any commit script, Bill runs
+           git status first. If unexpected files appear:
+           stop, do not run the script, tell Claude.
+RULE 11 -- All commit scripts include git status as the
+           first command before any git add.
+RULE 12 -- docx-js ImageRun transformation uses pixels at
+           96dpi. US Letter 1-inch margins: content width
+           = 624px. Never use EMU in ImageRun transformation.
+
+============================================================
+12. REVISION HISTORY
+============================================================
+
+  v1_0  04-05-2026  Initial session log. Phase 2 Steps
+                    2.7-2.13 executed. Seven documents
+                    written. Three-criteria validation
+                    performed. Four defects found and
+                    corrected in 0511004 (MPP strategy,
+                    cancel timeout fabricated value,
+                    Section 2 description, log events).
+                    0511004 reached dv1_2. All seven
+                    documents committed to GitHub in four
+                    commits (44aeb35, 65bee50, 7d500b4,
+                    eb09d4d). Phase 2 COMPLETE.
+
+============================================================
+END OF SESSION LOG
+============================================================

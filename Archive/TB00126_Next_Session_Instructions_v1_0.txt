@@ -1,0 +1,742 @@
+DocDCN:     TB00126_NSI
+DocTitle:   Next_Session_Instructions_for_TB00127
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TBXXXXX_Session_Logs\TB00126_Next_Session_Instructions_v1_0.txt
+DocDate:    04-24-2026
+DocTime:    20:00:00 UTC
+
+============================================================
+NEXT SESSION INSTRUCTIONS - TB00127
+FULL REMEDIATION SESSION
+PAPER-TO-LIVE PARITY + UNIVERSE RESTORATION
+COLD-LOAD NEW CLAUDE CHAT REQUIRED
+============================================================
+
+PAPER TRADING ONLY. NO REAL MONEY.
+
+============================================================
+SECTION 1 - WHAT TB00127 DOES
+============================================================
+
+TB00127 is a FULL REMEDIATION session. Scope is the
+largest remediation package since project initiation.
+Root directive is Bill's TB00126 statement: rewrite the
+program as originally specified; paper trading must mimic
+actual live trading; use the entire universe of Token/USDC
+and Token/USDT pairs; rewrite all code and procedures
+required.
+
+TB00127 MUST be opened as a COLD-LOAD NEW CLAUDE CHAT.
+
+TB00127 is expected to span multiple Claude Chat sessions
+(TB00127, TB00128, possibly TB00129) due to scope size.
+Bill decides at each session close whether to proceed
+directly or split.
+
+------------------------------------------------------------
+1.1 Scope
+------------------------------------------------------------
+
+Three phases, executed in order. Each phase has a gate
+that must be satisfied before the next phase begins.
+
+PHASE 0 - Window Decision (STEP A of work plan)
+  Bill decides at TB00127 open whether to:
+    Option A: preserve current 48h window through T+48h
+              (2026-04-26 02:58:52 UTC) before any
+              remediation deploy. Close OI-018 /
+              OI-019 / OI-020 / OI-028 / OI-029 on
+              evidence first.
+    Option B: burn window. Start remediation at
+              TB00127 open. The five OIs remain pending
+              and re-exercise in a new window after
+              remediation deploy.
+  Recommendation: Option B. Preserving the window adds
+  36+ hours of non-representative paper trading time
+  with zero scientific value for go-live decision. The
+  five WS-layer OIs will be re-exercised in the new
+  window regardless.
+
+PHASE 1 - Systematic scope-drift audit (STEP B)
+  Before authoring any remediation code or spec, audit
+  the entire specification set for OTHER unauthorized
+  scope narrowings. AR-070 demonstrated that batch-AR-
+  closure practice can embed scope restrictions without
+  explicit approval. Assume this pattern has recurred
+  elsewhere until proven otherwise.
+
+  Audit targets (priority order):
+    (1) All ARs in 0500000 dv1_19 (check each for
+        narrowing relative to earlier project intent)
+    (2) 0711001 SSS_Signal_Model (thresholds)
+    (3) 0711002 Regime_Taxonomy (regime definitions,
+        entry permissions)
+    (4) 0611001 Position_Sizing_Rules (tradeable_pct,
+        per_trade_pct, max_concurrent)
+    (5) 0611002 Drawdown_and_Halt_Rules (thresholds)
+    (6) 0611003 Concentration_and_Exposure_Rules
+    (7) 0811001 Long_Module_Specification
+    (8) 0811002 Selection_Controller_Specification
+    (9) 0811003 Exit_Controller_Specification
+    (10) 0411003 Kraken_Fee_Rate_Limit_Specification
+         (fee tier assumption)
+    (11) 0511001 WS_Manager_Specification
+         (connection, ping, keepalive)
+    (12) 0211001 CIATS_Specification (activation
+         thresholds, proposal approval path)
+    (13) 1010000 Trading_System_Coding_Anchor
+         (registry completeness)
+
+  For each spec: identify every constant, threshold,
+  cap, filter, enumeration, or restriction. For each
+  such item: verify Bill approval trail in session
+  logs or flag as UNVERIFIED. UNVERIFIED items are
+  candidates for scope-drift remediation.
+
+  Phase 1 output: audit report added to TB00127 session
+  log §3 with enumeration of all UNVERIFIED scope
+  items. Bill approves remediation scope before Phase 2
+  begins.
+
+PHASE 2 - Full remediation DC package (STEPS C-H)
+  Remediation package covers:
+
+  Mandatory scope (Bill directive):
+    R-01  OI-044: Paper mode universe parity.
+          0511001 §4.2 rewritten. ws_manager.py paper
+          mode startup path rewritten to execute
+          Steps 3-6 (universe population, REST Ticker,
+          volume filter, top-N selection if retained,
+          BTC/USD anchor) identically to live mode.
+          Only private WS subscription and auth steps
+          skipped.
+
+    R-02  OI-045: USDT included in approved quote
+          currencies. 0500000 AR-070 amended. 0711003
+          AS-001 Criterion 1 amended to "USD, USDC,
+          or USDT".
+
+    R-03  OI-046: Universe size disposition. Bill
+          confirms at TB00127 open:
+            R-03a: remove monitored_universe_n cap
+                   entirely (pure ALL qualifying)
+            R-03b: raise cap to value exceeding
+                   total qualifying pair count
+            R-03c: retain cap (Bill explicitly
+                   authorizes a specific cap value)
+
+    R-04  OI-046 companion: Bill confirms at TB00127
+          open the disposition of the $500k liquidity
+          filter:
+            R-04a: retain $500k filter
+            R-04b: lower to specific value
+            R-04c: remove filter entirely
+          Default expectation pending Bill confirmation:
+          retain (required for reliable limit-order
+          execution per 0411003 rationale). Bill may
+          override.
+
+    R-05  Systematic rewrite of all code files touching
+          universe, selection, regime, or paper-mode
+          behavior. Per TB00000 standing rule (NO
+          PATCHES EVER), every touched file is
+          delivered as complete file with full DC
+          header and revision history entry.
+
+    R-06  Systematic rewrite of all governance /
+          procedure documents reflecting the new
+          reality. Per TB00000 Section 3 coding-ready
+          requirements, documents must be complete
+          and unambiguous.
+
+  Bundled scope (pre-existing):
+    R-07  OI-024: CIATS corpus migration from
+          tothbot.log tail to trades_<YYYY>.jsonl.
+          ciats.py rewrite. 1011010 spec update.
+
+    R-08  OI-025: logrotate config path correction.
+          /etc/logrotate.d/tothbot file correction on
+          VPS. 1011013 spec update. Optional: promote
+          to operations/ subfolder as controlled
+          operational script per 0311001 v1_3.
+
+    R-09  OI-047: Slippage tracking instrumentation.
+          exit_controller.py captures bid at market-
+          sell submission. TRADE_CLOSE record gains
+          exit_expected_price and exit_submit_
+          timestamp_utc fields. 1011005, 1011007,
+          0511006 spec updates. 1010000 registry
+          bump.
+
+  Governance scope:
+    R-10  TB00000 v2_13 -> v2_14. Add new Section 4.3
+          rule RR-SCOPE-007 (text in §1.5 below).
+          Bill override continues per standing v2_11
+          authority. Direct increment, no rv state.
+
+Phase 2 gate: all code and specs authored and internally
+consistent; DC package complete; Bill reviews and
+approves before commit and deploy.
+
+PHASE 3 - Deploy and post-deploy verification (STEP I-K)
+  Standard deploy sequence:
+    STEP I   Commit to TothBot_V2-Docs (explicit per
+             RULE 6), push master.
+    STEP J   Commit to TothBot_V2-Code (explicit), push
+             master.
+    STEP K   VPS deploy (git pull + systemctl restart).
+  Post-deploy verification:
+    - Service running, paper mode confirmed
+    - Universe population log events show all
+      Token/USD + Token/USDC + Token/USDT pairs
+      enumerated (AS-004 exercised)
+    - Per-pair warm-up completed for all monitored
+      pairs
+    - Regime computation scheduled for all pairs at
+      next 00:00 UTC
+    - No WS_MGR_FATAL, no RECONNECT errors
+    - 24-hour preliminary observation opens; OI-018 /
+      OI-019 / OI-020 / OI-028 / OI-029 re-enter
+      observation window in the new environment
+    - OI-023 (tax-retention) operational verification
+      awaits first natural TRADE_CLOSE, which is now
+      probabilistically more likely given expanded
+      universe
+
+------------------------------------------------------------
+1.2 Out of scope
+------------------------------------------------------------
+
+Explicit NON-scope for TB00127 (deferred to future
+sessions):
+
+  - Operator Observer Dashboard / UI build
+    (OI-048-CAND - dedicated future session after
+    remediation stabilizes)
+  - Live trading transition (requires successful
+    post-remediation paper trading per 0211005
+    acceptance criteria)
+  - Any CIATS PDCA activity (still pre-200-trade
+    floor)
+  - Emergency live-mode testing or OI-041-style
+    exercises
+  - Any third-party integration or new exchange
+
+------------------------------------------------------------
+1.3 Project folder state expected at TB00127 open
+------------------------------------------------------------
+
+Contingent on Bill's post-TB00126 uploads:
+
+  TB00000 v2_13                     PRESENT
+  TB00126 Session Log v1_0          PRESENT
+  TB00125, TB00124, TB00123, TB00122, TB00121, TB00120
+   session logs + NSIs              PRESENT (7-session
+                                    rolling window)
+  TB00119 Session Log + NSI         REMOVED (drops from
+                                    rolling window)
+
+Governance docs (all current versions):
+  0311001 v1_3
+  0311002 v1_3
+  0311003 v1_1
+  0311004 v1_2
+  0311005 v1_0
+
+Specs in scope for remediation (current versions):
+  0500000 System_Architecture_Overview  dv1_19
+  0711001 SSS_Signal_Model              (any version)
+  0711002 Regime_Taxonomy               (any version)
+  0711003 Asset_Selection               dv1_1
+  0511001 WS_Manager                    dv1_1
+  0511006 Logger                        dv1_1
+  0211005 Paper_Trading_Operations      dv1_0
+  0611001 Position_Sizing               dv1_0
+  0611002 Drawdown_and_Halt             dv1_0
+  0811001, 0811002, 0811003, 0811004
+  0411003 Kraken_Fee_Rate_Limit         dv1_0
+
+Coding specs in scope:
+  1010000 Trading_System_Coding_Anchor  dv1_14
+  1011002 WS_Manager_Coding_Spec        dv1_22
+  1011005 Exit_Controller_Coding_Spec   dv1_2
+  1011007 Logger_Coding_Spec            dv1_5
+  1011009 Selection_Controller_Spec     (any version)
+  1011010 CIATS_Coding_Spec             (any version)
+  1011013 VPS_Deployment_Coding_Spec    dv1_4
+
+Code:
+  ws_manager.py        dv1_23
+  exit_controller.py   (current)
+  selection_ctrl.py    (current)
+  regime_engine.py     (current)
+  startup_sequence.py  dv1_9
+  ciats.py             (current)
+  logger.py            dv1_5
+
+------------------------------------------------------------
+1.4 VPS state expected at TB00127 open
+------------------------------------------------------------
+
+If TB00127 opens before window close (Option B chosen):
+
+  Service: RUNNING from TB00125 deploy 02:58:52 UTC.
+  PID:     259223 (or higher if systemd auto-
+           restarted - investigate if so).
+  SHA:     5d44292.
+  Paper:   true.
+  Window:  open; will be burned by remediation deploy.
+
+If TB00127 opens after window close (Option A chosen):
+
+  Service: RUNNING per above OR restarted if any
+           deploy intervened.
+  Window:  closed at T+48h or later. OI closure
+           evidence collected in TB00127 STEP A-pre.
+
+------------------------------------------------------------
+1.5 Proposed RR-SCOPE-007 text for TB00000 v2_14
+------------------------------------------------------------
+
+Add to TB00000 Section 4.3.1 after RR-SCOPE-006:
+
+  RR-SCOPE-007  Never narrow user-specified scope
+                without explicit approval. Scope
+                restrictions -- additions, exclusions,
+                caps, filters, or limits applied to
+                user-specified inputs, universes, or
+                ranges -- are themselves instructions
+                requiring the same explicit approval
+                as any other user instruction. Batch
+                AR closures, specification updates,
+                and design-decision bundles MUST
+                individually enumerate every item
+                that narrows prior user instruction
+                and flag each for explicit confirmation
+                BEFORE the closure, update, or bundle
+                is presented as "approved" or "closed".
+                Post-hoc rationalization (citing
+                research findings, best practices, or
+                statistical evidence to justify a
+                narrowing after the fact) does not
+                satisfy this rule. The rationale must
+                be presented at proposal time; Bill's
+                explicit approval is required before
+                the narrowing enters any controlled
+                document.
+
+                Pre-emit scan: before emitting any AR,
+                specification section, or design
+                decision, Claude scans the draft for
+                any restriction, cap, filter, or
+                exclusion applied to user-specified
+                scope. If found, Claude enumerates the
+                restriction in the response BEFORE the
+                draft and requests explicit Bill
+                confirmation.
+
+                Self-catch: if Claude detects itself
+                drafting a narrowing of user-specified
+                scope without prior confirmation,
+                Claude stops mid-response, deletes the
+                draft, and emits the literal string:
+
+                  RR-SCOPE-007 self-caught - redrafting.
+
+                Violation is a session-halting defect
+                per RR-VIOL-001. Recurrence count
+                tracked per RR-VIOL-002.
+
+============================================================
+SECTION 2 - MANDATORY READING LIST
+============================================================
+
+TB00127 MUST read ALL of the following at session
+start. Claude states the reading plan BEFORE any read
+per TB00000 discipline. Bill approves. Executed in
+parallel.
+
+------------------------------------------------------------
+2.1 TB00000 and session continuity
+------------------------------------------------------------
+
+  TB00000  v2_13  Project Instructions for Claude
+  TB00126  v1_0   Session Log (this session)
+  TB00126  NSI v1_0  (this document)
+  TB00125  v1_0   Session Log
+  TB00125  NSI v1_0
+  TB00124  v1_0   Session Log
+  TB00124  NSI v1_0
+  TB00123, TB00122, TB00121, TB00120 session logs + NSIs
+  TB00112  v1_0   Session Log (long-retention reference)
+
+------------------------------------------------------------
+2.2 Governance (full current set)
+------------------------------------------------------------
+
+  0311001  Namespace_Specification          v1_3
+  0311002  Document_Creation_Workflow       v1_3
+  0311003  Versioning_Procedure             v1_1
+  0311004  Document_Creation_Approval       v1_2
+  0311005  System_Definitions_Terminology   v1_0
+
+------------------------------------------------------------
+2.3 Primary remediation targets (reading priority HIGH)
+------------------------------------------------------------
+
+  0500000  System_Architecture_Overview     dv1_19
+           (read AR-070 specifically plus full AR list
+           for Phase 1 audit)
+  0711003  Asset_Selection_Specification    dv1_1
+  0511001  WS_Manager_Specification         dv1_1
+  0211005  Paper_Trading_Operations         dv1_0
+  1011009  Selection_Controller_Coding_Spec
+
+------------------------------------------------------------
+2.4 Bundled scope reading
+------------------------------------------------------------
+
+  0511006  Logger_Specification             dv1_1
+  1011007  Logger_Coding_Spec               dv1_5
+  1011005  Exit_Controller_Coding_Spec      dv1_2
+  1011010  CIATS_Coding_Spec
+  1011013  VPS_Deployment_Coding_Spec       dv1_4
+  0411003  Kraken_Fee_Rate_Limit_Spec       dv1_0
+
+------------------------------------------------------------
+2.5 Phase 1 audit reading (FULL SET; priority MED)
+------------------------------------------------------------
+
+All remaining ARs in 0500000. All specifications
+enumerated in TB00126_NSI §1.1 Phase 1 audit targets.
+
+------------------------------------------------------------
+2.6 Code files (read for current state)
+------------------------------------------------------------
+
+  ws_manager.py              dv1_23
+  exit_controller.py         current
+  selection_ctrl.py          current
+  regime_engine.py           current
+  startup_sequence.py        dv1_9
+  ciats.py                   current
+  logger.py                  dv1_5
+
+============================================================
+SECTION 3 - PRE-FLIGHT CHECKS (STEP A)
+============================================================
+
+------------------------------------------------------------
+3.1 Project folder state verification
+------------------------------------------------------------
+
+Claude states project folder expected contents per
+§1.3 above. Bill confirms contents match expectation.
+Any drift flagged before proceeding.
+
+------------------------------------------------------------
+3.2 VPS state verification (no remediation action)
+------------------------------------------------------------
+
+Execute (PowerShell):
+
+  ssh root@87.99.141.44 "/root/tothbot_sweep.sh"
+
+Capture full output. Record PID, uptime, counter values.
+Compare to TB00126 close state.
+
+------------------------------------------------------------
+3.3 Observation window status
+------------------------------------------------------------
+
+Compute T+N at TB00127 open. If T+48h reached AND Bill
+chose Option A: execute window-close evidence collection
+per TB00125 §5 criteria BEFORE remediation work begins.
+If T+48h not reached OR Bill chose Option B: skip to
+§3.4.
+
+------------------------------------------------------------
+3.4 Window decision confirmation
+------------------------------------------------------------
+
+Bill explicitly confirms Option A or Option B (see
+§1.1 PHASE 0). Decision is LOCKED for this session -
+no mid-session changes.
+
+------------------------------------------------------------
+3.5 Universe disposition confirmation
+------------------------------------------------------------
+
+Bill explicitly confirms:
+  R-03 choice (R-03a / R-03b / R-03c)
+  R-04 choice (R-04a / R-04b / R-04c)
+
+Both decisions LOCKED for this session.
+
+============================================================
+SECTION 4 - WORK PLAN STEPS
+============================================================
+
+STEP A  Pre-flight per §3.
+STEP B  Phase 1 audit per §1.1. Deliverable: audit
+        report in TB00127 session log §3.
+STEP C  Remediation DC package design. Deliverable:
+        design document listing every file to be
+        authored or modified, with scope statement
+        per file.
+STEP D  Code file authoring (full files, DC headers,
+        revision histories). Order:
+          ws_manager.py    (paper-mode startup path
+                            rewrite; universe population
+                            parity)
+          startup_sequence.py  (universe loading
+                                behavior if affected)
+          selection_ctrl.py    (universe consumption
+                                if affected)
+          regime_engine.py     (multi-pair regime
+                                computation if affected)
+          exit_controller.py   (OI-047 slippage fields)
+          ciats.py             (OI-024 corpus source
+                                migration)
+          logger.py            (OI-047 TRADE_CLOSE
+                                field additions)
+STEP E  Spec file authoring (full files, DC headers,
+        revision histories). Order:
+          0500000 AR-070 amendment
+          0711003 AS-001 amendment (+ cap disposition
+                   per R-03)
+          0511001 §4.2 paper-mode path rewrite
+          0211005 paper-trading procedure rewrite
+          1011005, 1011007, 0511006 OI-047 field
+                   additions
+          1011009 Selection_Controller_Coding_Spec
+                   universe disposition update
+          1011010 OI-024 corpus source update
+          1011013 OI-025 logrotate path correction
+          1010000 registry bumps
+          TB00000 v2_13 -> v2_14 RR-SCOPE-007 addition
+STEP F  DC package internal consistency review.
+        Verify parent chain, cross-references, and
+        registry entries.
+STEP G  Bill review gate. Bill reviews entire package
+        before any commit. Approval LOCKED before STEP H.
+STEP H  Deploy (STEPS I-K per TB00107 Bill Actions
+        template):
+          STEP H1: Docs repo commit + push
+          STEP H2: Code repo commit + push
+          STEP H3: VPS git pull + systemctl restart
+STEP I  Post-deploy baseline sweep. Verify service
+        running, paper mode, universe log events
+        show expanded universe.
+STEP J  Open new observation window. 24h minimum /
+        48h preferred. T+0 recorded in TB00127
+        Session Log and carried to next NSI.
+STEP K  Session close. TB00127 Session Log and next
+        NSI produced. Batch delivery per DR-003.
+
+============================================================
+SECTION 5 - DELIVERABLES EXPECTED FROM TB00127
+============================================================
+
+Minimum (if Phase 1 audit surfaces no additional
+remediation):
+
+  Code (transport .txt, body copied to .py on deploy):
+    ws_manager.py              (version bump)
+    startup_sequence.py        (if affected)
+    selection_ctrl.py          (if affected)
+    regime_engine.py           (if affected)
+    exit_controller.py         (OI-047)
+    ciats.py                   (OI-024)
+    logger.py                  (OI-047)
+
+  Specs (.txt):
+    0500000_System_Architecture_Overview  dv1_20
+      (+ .docx + .pdf per DR-002)
+    0711003_Asset_Selection_Specification dv1_2
+    0511001_WS_Manager_Specification      dv1_2
+    0211005_Paper_Trading_Operations      dv1_1
+    1011005_Exit_Controller_Coding_Spec   next version
+    1011007_Logger_Coding_Spec            dv1_6
+    0511006_Logger_Specification          dv1_2
+    1011009_Selection_Controller_Coding_Spec  next version
+    1011010_CIATS_Coding_Spec             next version
+    1011013_VPS_Deployment_Coding_Spec    next version
+    1010000_Trading_System_Coding_Anchor  next version
+    TB00000                                v2_14
+
+  Session artifacts:
+    TB00127_TothBot_V2_Session_Log_<DATE>_v1_0.txt
+    TB00127_Next_Session_Instructions_v1_0.txt
+
+Expanded (if Phase 1 audit surfaces additional scope
+drifts): additional specs and code per audit findings.
+
+Session-record artifacts (paste-ins to session log):
+  - Phase 1 audit report (full enumeration of UNVERIFIED
+    scope items)
+  - Pre-flight sweep output
+  - Optional window-close per-OI delta computation
+    (if Option A)
+  - DC package design document
+  - Commit SHAs (docs + code)
+  - VPS deploy confirmation
+  - Post-deploy sweep output
+  - New observation window T+0 record
+
+============================================================
+SECTION 6 - STANDING RULES REMINDER
+============================================================
+
+TB00000 v2_13 applies in full. Key active rules for
+TB00127:
+
+  NO PATCHES EVER. Full file delivery only.
+
+  DR-001, DR-002, DR-003 all active.
+
+  OP-001 through OP-009 (ONEDRIVE PROHIBITION) all
+  active. Pre-emit grep required on every Windows
+  path emission.
+
+  RR-SCOPE-001 through RR-SCOPE-006 all active. Pre-
+  emit scope scan before every response.
+
+  RR-RULE-001 through RR-RULE-004 all active. Pre-
+  emit rule scan.
+
+  RR-SHELL-001 through RR-SHELL-004 all active.
+  PowerShell is session default unless explicitly
+  indicated otherwise.
+
+  RR-VIOL-001, RR-VIOL-002 all active.
+
+  PROPOSED for TB00000 v2_14 this session:
+    RR-SCOPE-007 (see §1.5 above). Not active in
+    TB00127 until the v2_14 document is authored
+    and Bill approves. HOWEVER, the DISCIPLINE
+    applies immediately: Claude must not narrow
+    user-specified scope without explicit
+    confirmation during TB00127 itself.
+
+============================================================
+SECTION 7 - PARKING LOT CARRIED FORWARD
+============================================================
+
+  OI-017  OPEN (LOW)    - liquidity refresh (deferred)
+  OI-018  PENDING CLOSE (HIGH) - window evidence
+  OI-019  PENDING CLOSE (MED)  - window evidence
+  OI-020  PENDING CLOSE (MED)  - window evidence
+  OI-021  OPEN (COSMETIC) - bounces per fatal
+  OI-023  CLOSED (CRITICAL) - op verification pending
+  OI-024  OPEN (MED)    - CIATS corpus migration
+  OI-025  OPEN (LOW)    - logrotate path
+  OI-028  PENDING CLOSE (HIGH) - window evidence
+  OI-029  PENDING CLOSE (MED)  - window evidence
+  OI-036  LOW           - optional
+  OI-037  MED           - v2_13 rules active
+  OI-038  LOW           - optional
+  OI-043  LOW/CAND
+  OI-044  OPEN (HIGH)   - paper mode universe bypass
+                          [SCOPE FOR TB00127]
+  OI-045  OPEN (HIGH)   - USDT exclusion
+                          [SCOPE FOR TB00127]
+  OI-046  OPEN (MED)    - universe size cap
+                          [SCOPE FOR TB00127]
+  OI-047  OPEN (LOW)    - slippage instrumentation
+                          [SCOPE FOR TB00127 bundle]
+  OI-048-CAND           - Dashboard UI scope
+                          (future session)
+
+============================================================
+SECTION 8 - CRITICAL LESSONS
+============================================================
+
+LESSON 1 - Scope narrowing discipline
+  Historical: AR-070 embedded two unauthorized scope
+  narrowings that persisted for ~105 sessions without
+  surface. Root cause: batch-AR-closure practice.
+  Corrective: RR-SCOPE-007 proposed. Phase 1 audit
+  mandatory before any further architectural work.
+
+LESSON 2 - Paper-to-live parity is non-negotiable
+  Historical: 0511001 §4.2 paper mode startup path
+  skips universe population. Paper trading currently
+  tests BTC/USD only while pretending to validate
+  full-system behavior. This would have caused
+  silent go-live failure if undetected. Corrective:
+  OI-044 rewrite.
+
+LESSON 3 - NO GUESSING (TB00000 Response Rule 11)
+  TB00126 §7.2 recurrence: Claude asked "want me to
+  verify?" instead of verifying directly. Corrective:
+  verify first, report facts, never hypothesize.
+
+LESSON 4 - The cost of scope drift is measured in
+  sessions, not tokens
+  AR-070 defect survived from TB00020 to TB00126 - 105
+  sessions, two document versions (0711003 dv1_0 ->
+  dv1_1), zero detections by review. Review gates
+  designed to catch code defects did not catch a scope
+  defect. Future review gates must include scope
+  verification against originating user instruction.
+
+============================================================
+SECTION 9 - POST-SESSION BILL ACTIONS
+============================================================
+
+After TB00127 session close:
+
+  - Upload TB00127 Session Log v1_0 and NSI v1_0 to
+    Claude.ai project folder.
+  - Upload Phase 2 DC package files to project folder
+    per 0311002 v1_3 DC-SYNC-002 after GitHub commits.
+  - Remove TB00120 Session Log + NSI from project
+    folder (7-session rolling window roll-forward).
+  - Remove all superseded spec versions from project
+    folder after verifying new versions arrived.
+  - Remove superseded code files from project folder.
+
+============================================================
+REVISION HISTORY
+============================================================
+
+  v1_0  04-24-2026  Initial. Next-session instructions
+                    for TB00127 FULL REMEDIATION session.
+                    Scope: Bill directive from TB00126
+                    Section 2.9 - rewrite program to
+                    original specification; paper
+                    trading must mimic live trading
+                    using entire universe of Token/USDC
+                    and Token/USDT pairs; rewrite all
+                    code and procedures required. Three
+                    phases: Phase 0 window decision
+                    (preserve or burn), Phase 1
+                    systematic scope-drift audit across
+                    all specifications, Phase 2 full
+                    remediation DC package covering
+                    OI-044 / OI-045 / OI-046 (new) plus
+                    bundled OI-024 / OI-025 / OI-047
+                    (carried) plus TB00000 v2_13 ->
+                    v2_14 with new RR-SCOPE-007 rule.
+                    Reading list comprehensive:
+                    TB00000 v2_13, TB00120-TB00126
+                    session logs + NSIs, full
+                    governance set, all remediation-
+                    target specs, all coding specs in
+                    scope, all code files in scope.
+                    Pre-flight locks Bill's choices on
+                    window disposition (Option A or B),
+                    universe size disposition (R-03a/
+                    b/c), and liquidity filter
+                    disposition (R-04a/b/c) before any
+                    remediation work begins. Standing
+                    rule compliance enforced
+                    throughout. Paper trading only.
+                    No real money. Shell discipline:
+                    PowerShell only.
+
+============================================================
+END - TB00126 NEXT SESSION INSTRUCTIONS v1_0
+============================================================

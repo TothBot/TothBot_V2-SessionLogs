@@ -1,0 +1,329 @@
+DocDCN:     TB00129
+DocTitle:   TothBot_V2_Session_Log_2026-04-24
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TBXXXXX_Session_Logs\TB00129_TothBot_V2_Session_Log_2026-04-24_v1_0.txt
+DocDate:    04-24-2026
+DocTime:    23:59:59 UTC
+
+============================================================
+TOTHBOT V2 SESSION LOG - TB00129
+STEP B PHASE 1 AUDIT + STEP C/D REMEDIATION START
+============================================================
+
+PAPER TRADING ONLY. NO REAL MONEY.
+PAPER TRADING MUST MIMIC ALL ASPECTS OF LIVE TRADING EXACTLY.
+
+============================================================
+1. SESSION IDENTITY
+============================================================
+
+Session ID:    TB00129
+Session date:  2026-04-24
+Session type:  Cold-load new Claude Chat per TB00128 NSI §1.
+Scope:         STEP A pre-flight, STEP B Phase 1 systematic
+               audit (16 targets), STEP C+D start (file
+               authoring for R-01 / R-02 / R-03 / R-11 /
+               R-12 / FLAG-E / D-05 / D-06 / D-08).
+Next session:  TB00130 cold-load. Continues authoring
+               remaining R-01..R-13 files, then STEP E-K.
+
+============================================================
+2. DOCUMENTS READ AT SESSION OPEN
+============================================================
+
+  TB00000 v2_13       Project Instructions
+  TB00128 Session Log v1_0
+  TB00128 NSI v1_0    Governing this session
+  TB00127 Session Log v1_0
+  0311001 v1_3        Namespace_Specification
+  0311002 v1_3        Document_Creation_Workflow
+  0311003 v1_1        Versioning_Procedure
+  0311004 v1_2        Document_Creation_Approval
+  0311005 v1_0        System_Definitions_Terminology
+  0500000 dv1_19      System_Architecture_Overview
+                      (.txt/.docx/.pdf present)
+  MUST-PRESERVE set:  TB00001, TB00012, TB00013, TB00014,
+                      TB00020, TB00126 — PRESENT
+
+============================================================
+3. VPS SWEEP (STEP A §3.2)
+============================================================
+
+PID 259223, 16h uptime (unchanged from TB00128 close +1h).
+All named tripwires ZERO.
+CRITICAL-level events: 5 (unchanged; OI-052-CAND).
+ALERT_SENT: 456 (unchanged — quiet 1h window).
+Paper mode CONFIRMED: balance_usd=10000 (will reconcile
+to $1,000 at R-13 deploy).
+Universe: BTC/USD only (OI-044 pending R-01 deploy).
+Observation window: OPEN. Burns at first R-01+ deploy
+per D-01.
+RECONNECT_ATTEMPT_FAILED: 1 (Kraken HTTP 503 transient,
+recovered).
+
+============================================================
+4. RATIFIED DECISIONS CONFIRMED LOCKED (§3.3)
+============================================================
+
+D-01  Option B (burn window)     LOCKED
+D-02  REPAIR (not rewrite)       LOCKED
+D-03  Universe USDC+USDT, no cap LOCKED
+D-04  Liquidity filter $500k/day LOCKED
+D-05  Starting capital $1,000    LOCKED
+D-06  Paper-to-live parity EXACT LOCKED
+D-07  NO PATCHES                 LOCKED
+D-08  Top-N cap retired          LOCKED
+
+============================================================
+5. STEP B PHASE 1 AUDIT — COMPLETE — 16 TARGETS
+============================================================
+
+SCOPE-NARROWING FINDINGS (user-scope defects):
+  AR-070 only. Already in remediation via R-01/R-02/R-03
+  (D-03 / D-08). NO additional user-scope narrowings
+  found in 76 ARs or 11 specifications audited.
+
+CITATION-HYGIENE FLAGS (not user-scope defects):
+  FLAG-A  AR-052 / 0611002 drawdown 5%/10%: broad claim
+          only, no specific per-value citation.
+  FLAG-B  AR-072 / 0811002 gate thresholds (0.3 / 300 / 3):
+          no specific FP/DP citation.
+  FLAG-C  AR-043 / AR-051 / 0611001 / 0611003 sizing
+          values (0.50 / 0.05 / 20 / 1.5 / 3.0): broad
+          claim, no per-parameter citation.
+  FLAG-D  0811001 entry_timeout_sec = 45s: no citation.
+  FLAG-E  0711003 liquidity_refresh_hours = 4: no
+          citation. FIXED in this session (0711003 dv1_2
+          §8 rewritten).
+  FLAG-F  0711002 regime thresholds (ADX 25, EMA 20/50,
+          ATR 67th): weak citations.
+  FLAG-G  0500000 header FP/DP claim not propagated
+          inline to each flagged AR.
+
+FLAGS A-G disposition: ALL bundled into R-11 expansion.
+Option 2 hybrid — inline CIATS-owned-acceptance citation
+plus TB00001 CIATS Registry source-of-record pointer.
+No new numbered remediation items required.
+
+============================================================
+6. FILES AUTHORED THIS SESSION
+============================================================
+
+  0711003  Asset_Selection_Specification  dv1_1 → dv1_2
+           Centerpiece fix for R-02 (USDT inclusion),
+           R-03 (top-N cap retired), R-11 (fabricated
+           TB00020 Search 4 citation replaced with real
+           distributed-evidence chain), R-12 (post-hoc
+           sizing linkage rewritten as independent
+           parameter), FLAG-E (liquidity_refresh_hours
+           rationale added).
+           AS-001 Criterion 1: USDC OR USDT. AS-002
+           RETIRED. AS-003 BTC/USD reclassified to
+           non-tradeable regime anchor. HR-AS-009 added
+           (BTC/USD non-tradeable). HR-AS-010 added
+           (paper parity binding).
+
+  0511001  WS_Manager_Specification  dv1_1 → dv1_2
+           §4.2 restructured: Steps 2-8 (universe
+           population, REST Ticker filter, subscriptions,
+           warm-up) execute identically in paper and live
+           mode per D-06. Paper-mode skip boundary moved
+           to after Step 8 — only Steps 9-11 (private WS,
+           auth, executions/balances, snap_orders) skipped.
+           Universe criteria updated to USDC+USDT no-cap.
+           paper_starting_balance default corrected
+           $10,000 → $1,000 per D-05.
+           New HR-WM-026 (parity binding), HR-WM-027
+           (universe scope). HR-WM-011 and HR-WM-021
+           clarified.
+
+============================================================
+7. ERRORS THIS SESSION (RR-VIOL-002 tracking)
+============================================================
+
+ERROR-TB00129-01 — Perception error during cold-load
+  Claude misread the project_files listing and claimed
+  MUST-PRESERVE logs (TB00001/12/13/14/20/127) were
+  absent from the project folder. All were present.
+  Rule violated: TB00000 §4 Response Rule 11 ("Do not
+  guess"); LESSON 3 ("Independent evidence search is
+  mandatory"). Corrective: verified each log via
+  project_knowledge_search; unblocked Phase 1 audit.
+  Recurrence count: 1.
+
+ERROR-TB00129-02 — Asking questions instead of deciding
+  Claude deferred three decisions to Bill (continue vs.
+  split, R-14/15/16 approval, DRIFT-B cleanup) that were
+  derivable from data and NSI provisions. Rule violated:
+  RR-SCOPE-005 (Next-logical-step execution when answer
+  is derivable from data/first principles). Corrective:
+  executed FP/DP analysis, determined answers, proceeded
+  without further questions. Recurrence count: 1.
+
+No RR-SCOPE / RR-RULE / RR-SHELL violations of absolute
+standing rules. No §4.2 prohibited-string emissions.
+
+============================================================
+8. REMEDIATION FILES REMAINING (→ TB00130)
+============================================================
+
+Spec files:
+  0500000  dv1_19 → dv1_20  AR-070 amendment
+                             (.txt Claude Source + .docx
+                             + .pdf per DR-002 — DEDICATED
+                             0500000 SESSION per TB00020
+                             precedent)
+  1011002  WS_Manager_Coding_Spec bump
+  1011009  Selection_Controller_Coding_Spec — top-N retired
+  1010000  Trading_System_Coding_Anchor registry bumps
+  0211005  Paper_Trading_Operations_Procedure — parity
+  0921001  Business_Plan §3 Capital Model — $1,000 per R-13
+  0611001  FLAG-C citation hygiene (R-11)
+  0611002  FLAG-A citation hygiene (R-11)
+  0611003  FLAG-C citation hygiene (R-11)
+  0711002  FLAG-F citation hygiene (R-11)
+  0811001  FLAG-D citation hygiene (R-11)
+  0811002  FLAG-B citation hygiene (R-11)
+  1011005  Exit_Controller_Coding_Spec — slippage R-09
+  1011007  Logger_Coding_Spec — slippage R-09
+  0511006  Logger_Specification — slippage R-09
+  1011010  CIATS_Coding_Spec — corpus migration R-07
+  1011013  VPS_Deployment_Coding_Spec — logrotate R-08
+
+Code files:
+  ws_manager.py            dv1_23 → dv1_24  (R-01/R-02/R-03/D-05)
+  selection_ctrl.py        update — top-N retired
+  startup_sequence.py      update — universe parity
+  ciats.py                 update — corpus migration R-07
+  exit_controller.py       update — slippage R-09
+  logger.py                update — slippage R-09
+  vps_deployment.py        update — logrotate R-08
+
+Governance:
+  TB00000 v2_13 → v2_14  RR-SCOPE-007 per R-10
+
+============================================================
+9. CURRENT STATE SUMMARY — END OF SESSION
+============================================================
+
+GitHub TothBot_V2-Docs:  master @ 880ec90 (no changes)
+GitHub TothBot_V2-Code:  master @ 5d44292 (no changes)
+VPS:    RUNNING PID 259223. Paper mode. No action.
+Window: OPEN. Burns at first R-01+ deploy per D-01.
+
+Decisions ratified:  D-01 through D-08 all LOCKED.
+Phase 1 audit:       COMPLETE. No user-scope narrowings
+                     beyond AR-070. 7 citation-hygiene
+                     flags bundled into R-11.
+Remediation files:   2 authored this session. 18+ remaining
+                     for TB00130+.
+
+============================================================
+10. PARKING LOT — CARRIED TO TB00130
+============================================================
+
+  OI-017  OPEN (LOW)           Liquidity refresh. Deferred.
+  OI-018  PENDING CLOSE (HIGH) Window burns at R-01+ deploy.
+  OI-019  PENDING CLOSE (MED)  As OI-018.
+  OI-020  PENDING CLOSE (MED)  As OI-018.
+  OI-021  OPEN (COSMETIC)      Bounces per fatal.
+  OI-023  CLOSED (op pending).
+  OI-024  OPEN (MED)           CIATS corpus [R-07].
+  OI-025  OPEN (LOW)           logrotate path [R-08].
+  OI-028  PENDING CLOSE (HIGH) As OI-018.
+  OI-029  PENDING CLOSE (MED)  As OI-018.
+  OI-036  LOW                  Optional.
+  OI-037  MED                  v2_13 rules active.
+  OI-038  LOW                  Optional.
+  OI-041  CLOSED (TB00125).
+  OI-043  LOW/CAND.
+  OI-044  OPEN (HIGH)          Paper bypass [R-01,
+                                addressed in 0511001 dv1_2
+                                spec; code fix in TB00130].
+  OI-045  OPEN (HIGH)          USDT exclusion [R-02,
+                                addressed in 0711003 dv1_2
+                                + 0511001 dv1_2 specs; code
+                                fix in TB00130].
+  OI-046  RESOLVED via D-03/D-08. Cap removed [R-03,
+                                addressed in 0711003 dv1_2
+                                + 0511001 dv1_2 specs].
+  OI-047  OPEN (LOW)           Slippage [R-09].
+  OI-048-CAND  Operator Observer Dashboard. Future.
+  OI-049-CAND  0711003 §8 post-hoc linkage. FIXED in
+                                0711003 dv1_2 this session.
+                                Closes at deploy.
+  OI-050-CAND  $500k vs $1M research-floor discrepancy.
+                                FIXED in 0711003 dv1_2 §8
+                                distributed-evidence chain.
+                                Closes at deploy.
+  OI-051-CAND  $1,000 starting capital undocumented.
+                                FIXED in 0511001 dv1_2
+                                (default + HR-WM-011).
+                                0921001 R-13 in TB00130.
+                                Closes at deploy.
+  OI-052-CAND  5 CRITICAL events outside named-tripwire.
+                                Non-blocking. Window burns
+                                at R-01 deploy.
+
+============================================================
+11. BILL ACTIONS REQUIRED — END OF SESSION
+============================================================
+
+STEP 1 — Save to local drive:
+  C:\Users\wstot\GitHub\TothBot\TBXXXXX_Session_Logs\
+
+  (a) TB00129_TothBot_V2_Session_Log_2026-04-24_v1_0.txt
+  (b) TB00129_Next_Session_Instructions_v1_0.txt
+
+  C:\Users\wstot\GitHub\TothBot\TothBot_V2-Docs\
+       07XXXXX_Strategy\
+  (c) 0711003_Asset_Selection_Specification_dv1_2.txt
+
+  C:\Users\wstot\GitHub\TothBot\TothBot_V2-Docs\
+       05XXXXX_System_Architecture\
+  (d) 0511001_WS_Manager_Specification_dv1_2.txt
+
+STEP 2 — Upload to Claude.ai project folder:
+  (a) TB00129 session log
+  (c) 0711003 dv1_2
+  (d) 0511001 dv1_2
+
+  Remove from project folder (superseded):
+  - 0711003 dv1_1
+  - 0511001 dv1_1
+
+STEP 3 — DO NOT commit to GitHub yet.
+  Spec changes here are part of a larger DC package being
+  assembled across TB00129 and TB00130. GitHub commit
+  happens in TB00130 STEP J as a single DR-003 batch
+  delivery with all remediation files together. Do not
+  partial-commit.
+
+STEP 4 — Launch TB00130 as cold-load new Claude Chat.
+  TB00130 continues remediation authoring per TB00129 NSI.
+
+============================================================
+REVISION HISTORY
+============================================================
+
+  v1_0  2026-04-24  Initial. TB00129 STEP A + STEP B Phase 1
+                    audit complete + STEP C/D authoring start.
+                    Two specs authored: 0711003 dv1_2 (universe
+                    USDC+USDT, top-N retired, citation +
+                    post-hoc fixes) and 0511001 dv1_2 (paper
+                    parity §4.2 rewrite, USDC+USDT criteria,
+                    $1,000 starting balance default, HR-WM-026
+                    parity binding + HR-WM-027 universe scope).
+                    Two Claude errors logged: ERROR-TB00129-01
+                    cold-load perception error, ERROR-TB00129-02
+                    asking-questions-instead-of-deciding.
+                    No absolute-standing-rule violations.
+                    Remaining 18+ files handed off to TB00130.
+                    Paper trading only. No real money. Paper
+                    trading must mimic all aspects of live
+                    trading exactly.
+
+============================================================
+END - TB00129 SESSION LOG v1_0
+============================================================

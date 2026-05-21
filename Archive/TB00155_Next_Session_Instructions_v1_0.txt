@@ -1,0 +1,436 @@
+DocDCN:     TB00155
+DocTitle:   Next_Session_Instructions
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TBXXXXX_Session_Logs\TB00155_Next_Session_Instructions_v1_0.txt
+DocDate:    05-08-2026
+DocTime:    19:30:00 UTC
+
+============================================================
+TB00155 NEXT SESSION INSTRUCTIONS v1_0
+STAGE B — D1 KRAKEN_API_CONNECTION_ARCHITECTURE
+  REWORK (DR-006 PATH 2 SHARDING + DR-002 / DR-003 /
+  DR-007 / DR-014)
+============================================================
+
+============================================================
+1. PRIMARY MISSION
+============================================================
+
+STAGE B of the 8-stage diagram-rework sequence per
+TB00153_Diagram_Alter_Add_Remove_Plan_v1_0.txt:
+rework D1 Kraken_API_Connection_Architecture
+inline SVG in 0500000_System_Architecture_Overview_
+dv1_25.html -> dv1_26.html. The rework is
+PRIMARILY architectural: PATH 2 multi-shard WS
+topology replacing the single-connection model
+that hit the Kraken WS subscribe rate-limit storm
+in TB00140 (ERROR-TB00140-02; OI-060). PATH 2
+was empirically validated 2 hours clean in TB00141
+Phase D and codified in TB00144 ws_manager.py
+dv1_25 clean-slate rewrite.
+
+This is Stage B of one diagram per session per
+TB00154 default Path A on DEC-003.
+
+Spec amendments are NOT permitted in TB00155
+unless a defect closure surfaces a spec gap that
+blocks Stage B exit. Code authoring REMAINS
+prohibited. RR-SCOPE-002 RELAXED only for D1
+diagram SVG authoring in 0500000.
+
+============================================================
+2. COLD-LOAD MANDATORY READING
+============================================================
+
+Read the following in order before producing any
+deliverable:
+
+§2.1  /mnt/project/TB00000_TothBot_V2_Working_
+      Specification_Index_v2_20.txt
+      (governance + standing rules + PA-001..010)
+
+§2.2  /mnt/project/TB00153_Master_Defect_Register_
+      v1_0.txt
+      (40 defects DR-001 - DR-040; identify which
+      defects this session is committed to closing.
+      Stage B closures: DR-006 CRITICAL + DR-002 +
+      DR-003 + DR-007 (D1 portion) + DR-014.
+      Other defects remain OPEN per Stage B scope.)
+
+§2.3  /mnt/project/TB00153_Diagram_Alter_Add_
+      Remove_Plan_v1_0.txt
+      (Stage B scope; Stage B exit criteria;
+      sequencing of Stages C-H; cross-reference
+      map §6 D1 entry — DR-002 / DR-003 / DR-006 /
+      DR-007 / DR-014).
+
+§2.4  /mnt/project/TB00153_Decision_Register_
+      v1_0.txt
+      (7 open decisions; check at session-open
+      whether Bill has ratified DEC-003 / DEC-004
+      / DEC-007 — these are now cumulative across
+      stages. If still unratified, defaults from
+      TB00154 NSI §5 carry forward unchanged.)
+
+§2.5  /mnt/project/TB00154_TothBot_V2_Session_Log_
+      2026-05-08_v1_0.txt
+      (TB00154 closing state — Stage A complete;
+      Tier 1 Context inserted; 0311001 v1_7
+      published; defect closure log §6 is the
+      current authoritative defect-closure state
+      since DEC-001 unratified.)
+
+§2.6  /mnt/project/0500000_System_Architecture_
+      Overview_dv1_25_Claude_Source.html
+      (target file for amend -> dv1_26; D1 SVG
+      is the diagram to replace.)
+
+§2.7  /mnt/project/0311001_Namespace_Specification_
+      v1_7.txt
+      (root <desc> contract §15.11.6 governs
+      D1 root <desc>; T2P-A and T2P-B apply.
+      §15.11.3 governs D1 labeled-group <desc>.)
+
+§2.8  PATH 2 architecture source documents — read
+      to determine current canonical D1 content:
+        /mnt/project/0511001_*_dv1_5*.txt
+          (PATH 2 multi-shard architecture spec)
+        /mnt/project/1011002_*_dv1_26*.txt
+          (WM-SHARD-* / WM-PACE-* / WM-PS-*
+           contracts including HR-WM-030 silent-
+           pair, HR-WM-032 token bucket)
+        /mnt/project/1011013_*_dv1_6*.txt
+          (VD-SYS-008 systemd StartLimitBurst /
+           StartLimitIntervalSec)
+      If any of these spec versions are absent
+      or at older versions, STOP and report to
+      Bill before authoring D1 — Stage B
+      authoring requires current spec to drive
+      diagram content (RR-SCOPE-009 Chesterton's-
+      fence: do not reproduce dv1_24 D1 content
+      that may be stale against current specs).
+
+§2.9  /mnt/project/TB00141 + TB00142 + TB00143 +
+      TB00144 session-pair logs (paper-trading
+      era).
+      Origin sessions for DR-006 PATH 2
+      empirical findings:
+        TB00141: STREAM 1 kraken_ws_probe.py
+          dv1_0 4 phases + Phase B/C/D probe
+          runs.
+        TB00142: §3.3 long Phase D 2-hour clean
+          run aggregate metrics; §3.4 Rabbit 1
+          silent-pair characterization.
+        TB00143: token-bucket FP/DP three-layer
+          defense.
+        TB00144: ws_manager.py dv1_25 clean-slate
+          rewrite; OI-060 / OI-062 / FINDING-
+          TB00135-001 closure path.
+
+============================================================
+3. COLD-LOAD VERIFICATION (required before authoring)
+============================================================
+
+§3.1  Verify TB00154 deliverables present in
+      /mnt/project/.
+      Files expected:
+        TB00154_TothBot_V2_Session_Log_2026-05-08_
+          v1_0.txt
+        0500000_System_Architecture_Overview_
+          dv1_25_Claude_Source.html
+        0311001_Namespace_Specification_v1_7.txt
+      Report PASS/FAIL.
+
+§3.2  Verify 0500000 dv1_25 .html DR-007.9 well-
+      formedness via Python html.parser.
+      Re-confirm 0/0/0 errors / warnings / unclosed.
+      Re-confirm Tier 1 Context inline <svg>
+      present (figure count = 8).
+
+§3.3  Verify 0311001 at v1_7 (current version
+      after TB00154 amendment).
+
+§3.4  Verify D4/D5/D6/D7 still at 0 labeled groups
+      (T-2+ tagging gap unchanged from TB00154
+      close — DEC-007 deferred to Stages E/F/G/H;
+      Stage B does not close DR-009 for D4-D7).
+
+§3.5  Verify D1 in dv1_25 still at 13 labeled
+      groups (sanity check: D1 was NOT touched
+      in TB00154 Stage A; only Tier 1 added).
+
+§3.6  Verify PATH 2 spec sources at expected
+      versions (see §2.8). If any is at a higher
+      version than expected, surface the delta
+      and incorporate latest before authoring D1.
+
+§3.7  conversation_search "PATH 2 sharding" +
+      "ws_manager dv1_25" — confirm the empirical
+      basis for D1 architectural rewrite is
+      present in project knowledge.
+
+If any §3 check FAILS, STOP and report to Bill
+before authoring. Do not proceed.
+
+============================================================
+4. DELIVERABLES THIS SESSION
+============================================================
+
+§4.1  0500000 dv1_25 -> dv1_26 .html
+      REPLACED: D1 (Image1_T2_R1 -> Image1_T2_R2)
+      Kraken_API_Connection_Architecture inline
+      SVG. R-increment R1 -> R2 reflects the
+      architectural rewrite.
+      Architectural content (per DR-006 PATH 2):
+        - Public WS topology shows TWO shards
+          (shard 0 + shard 1), NOT single
+          connection.
+        - Token-bucket pacing element
+          (SUBSCRIBE_RATE_PER_SEC = 10) per
+          HR-WM-032.
+        - Silent-pair state machine per
+          HR-WM-030 + WM-SHARD-010 + WM-PS-007.
+        - Cross-shard reconnect coordination
+          element.
+        - systemd StartLimitBurst /
+          StartLimitIntervalSec annotation
+          per VD-SYS-008.
+      Defect-amendment content (per DR-002 /
+      DR-003 / DR-007 / DR-014):
+        - DR-002 verify: NO Top-N labels remain
+          (Top-N retired per D-08).
+        - DR-003 verify: universe label reflects
+          USD + USDC + USDT (D-03 expansion).
+        - DR-007 verify: AR-070 amended form
+          reflected in any AR-070 references in
+          D1 labels.
+        - DR-014 restore: G-A4 / G-A5 / G-A6
+          labeled groups carry AR-014 / AR-038 /
+          AR-039 constraint references.
+      Root <desc> structured metadata per 0311001
+      v1_7 §15.11.6 T2P-A:
+        diagram_canonical: 0500000_Image1_T2_R2_
+                           Kraken_API_Connection_
+                           Architecture
+        tier: 2
+        parent_dcn: 0500000
+        parent_diagram: 0500000_Context_T1_R0_
+                        System_Context (the Tier
+                        1 added in TB00154)
+        schema_version: 1.0
+        R-increment: R2
+        governs: <enumerate rule: / ar: tokens
+                  D1 enforces>
+        drill_targets: <Tier 3 components of
+                        Kraken connection
+                        architecture if any
+                        exist; otherwise omit
+                        per T2P-B conditional>
+      Labeled-group <g><desc> blocks per §15.11.3
+      with parent_diagram = Tier 1 Context
+      filename for each labeled group.
+      Validated: DR-007.9 well-formedness re-
+      passes 0/0/0 on dv1_26.
+
+§4.2  TB00155 Session Log
+      Records cold-load verification + work
+      performed + defects closed (DR-006
+      CRITICAL + DR-002 + DR-003 + DR-007 D1
+      portion + DR-014 expected; surface any
+      additional D1-specific defects discovered
+      during authoring).
+
+§4.3  TB00156 NSI
+      Directs Stage C (D2 Trading_Pipeline
+      rework — DR-004 G2 $500k label + DR-005
+      G8->EE dispatch seam + DR-010 paper-mode +
+      DR-015 G-A7..8 AR-005/AR-016 restoration +
+      DR-002 / DR-003 / DR-007 verify).
+
+§4.4  [CONDITIONAL] TB00153_Master_Defect_
+      Register_v1_1.txt — only if DEC-001 has
+      been ratified Path A by TB00155 open. If
+      DEC-001 still unratified, defect-closure
+      status recorded only in TB00155 SL.
+
+============================================================
+5. DEFAULT DECISION DISPOSITION (carry forward
+   from TB00154 NSI v1_0 §5)
+============================================================
+
+If DEC-001 / DEC-003 / DEC-004 / DEC-006 /
+DEC-007 remain unratified at TB00155 session-
+open, the same defaults applied in TB00154
+carry forward:
+
+  DEC-003: Default Path A — one diagram per
+           session. TB00155 = Stage B only.
+           Do NOT bundle Stage C into TB00155.
+
+  DEC-004: Default Path A — bundle 0311001
+           amend into the stage that needs it.
+           Stage B is not expected to require a
+           0311001 amendment (root <desc>
+           contract is in place from §15.11.6).
+           If a gap is discovered, surface to
+           Bill before amending.
+
+  DEC-007: Default Path A — T-2+ tagging
+           bundled into each diagram's stage.
+           D1 is at 13 labeled groups already
+           per dv1_25, so DR-009 is not a Stage
+           B closure target for D1 (D1 is
+           compliant). D4-D7 tagging gap remains
+           DEFERRED to Stages E/F/G/H.
+
+  DEC-001: If unratified, defect-closure status
+           recorded only in TB00155 SL (Path B
+           treatment carries forward). If
+           ratified Path A by Bill at TB00155
+           open, re-publish register as v1_2 at
+           TB00155 close (v1_1 was not produced
+           in TB00154 due to default Path B).
+
+  DEC-006: Default — 50 phantom count carries
+           forward (already adopted; no phantoms
+           remain after Stage A closed Tier 1).
+
+  DEC-002, DEC-005: Not relevant to TB00155
+           scope (DEC-002 affects Stage H only;
+           DEC-005 affects Stage G only).
+
+If Bill provides ratification at TB00155 open
+that differs from any default, follow Bill's
+ratification in preference to default.
+
+============================================================
+6. STANDING RULES IN FORCE
+============================================================
+
+  PA-001 paper-as-master.
+  PA-004 four divergence points.
+  PA-005 byte-identical elsewhere.
+  PA-006 new divergence requires Bill written
+    authorization.
+  PA-008 self-catch on direction-of-mimicry
+    violations.
+  ERROR-TB00151g-01 corrective: NSI baseline
+    lists are NOT authoritative.
+  TB00151f §4.5: PKS hits do NOT prove file
+    presence.
+  DR-006 single-turn delivery on every
+    present_files.
+  RR-SCOPE-002 RELAXED for Stage B: D1 SVG
+    rework permitted for the ONE D1 diagram
+    only. Spec amendments NOT permitted unless
+    a Stage B blocker surfaces. Code authoring
+    REMAINS prohibited.
+  RR-SCOPE-005 execute next logical step when
+    derivable.
+  RR-SCOPE-007 anti-silent-narrowing — D1
+    rework MUST NOT silently drop labels or
+    constraints present in dv1_25 D1; if an
+    element is removed, document the reason
+    in §14 revision history.
+  RR-SCOPE-009 Chesterton's-fence origin
+    investigation — for each D1 element
+    removed or changed, verify the originating
+    spec or session log before action.
+  DCN naming: numbers only.
+  First Principles + Data-Driven + maximize
+    profit / minimize loss (loss minimization
+    paramount).
+
+============================================================
+7. EXIT CRITERIA FOR STAGE B
+============================================================
+
+Per TB00153_Diagram_Alter_Add_Remove_Plan_v1_0.txt
+Stage B exit criteria:
+
+  E-B-1  D1 inline SVG REPLACED in 0500000
+         dv1_26 with PATH 2 multi-shard topology
+         (per DR-006 (a) (b) (c) (d) per master
+         defect register).
+
+  E-B-2  Token-bucket pacing element present
+         (HR-WM-032 SUBSCRIBE_RATE_PER_SEC = 10).
+
+  E-B-3  Silent-pair state machine labels
+         present (HR-WM-030, WM-SHARD-010,
+         WM-PS-007).
+
+  E-B-4  Cross-shard reconnect coordination
+         element present.
+
+  E-B-5  systemd StartLimitBurst /
+         StartLimitIntervalSec annotation
+         present per VD-SYS-008.
+
+  E-B-6  No Top-N residuals (DR-002 verify
+         passes).
+
+  E-B-7  Universe label reflects USD + USDC +
+         USDT (DR-003 verify passes).
+
+  E-B-8  AR-070 references reflect amended
+         form (DR-007 D1 portion).
+
+  E-B-9  G-A4 / G-A5 / G-A6 labeled groups
+         carry AR-014 / AR-038 / AR-039
+         restored (DR-014).
+
+  E-B-10 D1 root <desc> conforms to 0311001
+         v1_7 §15.11.6 T2P-A: parent_diagram =
+         Tier 1 Context filename; tier = 2;
+         schema_version = 1.0; R-increment =
+         R2.
+
+  E-B-11 Labeled-group <g><desc> count >= 13
+         (the dv1_25 D1 baseline). If count
+         drops, RR-SCOPE-007 silent-narrowing
+         flag MUST trigger.
+
+  E-B-12 DR-007.9 well-formedness re-passes
+         0/0/0 on dv1_26.
+
+  E-B-13 Stage A closures (DR-001 + DR-009
+         Tier 1 portion) preserved — Tier 1
+         SVG unchanged in dv1_26.
+
+============================================================
+8. THINGS NOT TO DO THIS SESSION
+============================================================
+
+  - Do NOT author or amend any other diagram
+    (Tier 1 + D2 + D3 + D4 + D5 + D6 + D7).
+    Stage B is D1 ONLY.
+  - Do NOT amend any 10XXXXX coding spec.
+  - Do NOT amend any AA=05 system component
+    spec other than 0500000 (dv1_25 -> dv1_26).
+    0311001 is at v1_7 and not expected to
+    need a Stage B amendment; if a gap
+    surfaces, surface to Bill before amending.
+  - Do NOT author or modify any code in
+    tothbot/ or tothbot_live/.
+  - Do NOT close any defect in the register
+    that is not a direct Stage B exit-criterion
+    defect (DR-002 / DR-003 / DR-006 / DR-007
+    D1-portion / DR-014).
+  - Do NOT introduce new divergence points
+    between paper and live (PA-006).
+  - Do NOT bundle Stage C into TB00155 even
+    if Stage B completes early. Open a fresh
+    chat for TB00156.
+  - Do NOT silently drop any D1 element from
+    dv1_25 baseline. RR-SCOPE-007 anti-silent-
+    narrowing applies; element removals MUST
+    be enumerated in §14 revision history with
+    reason.
+  - Do NOT regress the Tier 1 Context SVG
+    added in TB00154. Stage A closures preserved.
+
+============================================================
+9. END
+============================================================

@@ -1,0 +1,1737 @@
+DocDCN:     TB00197
+DocTitle:   S1EC_Gap_Register_Exit_Controller
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TBXXXXX_Session_Logs\TB00197_S1EC_Gap_Register_Exit_Controller_v1_0.txt
+DocDate:    05-11-2026
+DocTime:    23:30:00 UTC
+
+============================================================
+STEP 3 SUB-STEP S-1 GAP REGISTER — EXIT_CONTROLLER PAIR
+1011005 dv1_3  vs  0511004 dv1_3  +  0811003 dv1_0
+                vs  0500000 dv1_46
+TB00197 — E-S1EC-03 THROUGH E-S1EC-07
+============================================================
+
+============================================================
+1. SCOPE AND METHODOLOGY
+============================================================
+
+1.1 TARGET PAIR — EXTENDED CROSS-NAMESPACE SCOPE.
+  AA=10 side: 1011005 Exit_Controller_Coding_Spec dv1_3
+              (11 sections — §1 Purpose / §2 Parent Chain /
+              §3 Five Coding-Readiness Questions / §4
+              Parameters / §5 Layer 1a / §6 Layer 1b /
+              §7 Layer 2 / §8 Layer 3 / §9 CIATS Trade
+              Outcome Bus / §10 Hard Rules (HR-EC-001..015)
+              + §10A EC-PAPER (EC-PAPER-CODE-001..006) /
+              §11 Revision History; ~65 elements;
+              dv1_3 = TB00147 Tier 2 audit cascade
+              correctives for FINDING-TB00147-07 +
+              FINDING-TB00147-08)
+  AA=05 side: 0511004 Exit_Controller_Specification dv1_3
+              (12 sections + §6A EC-PAPER 5 rules /
+              15 HR-EC-* including HR-EC-013/014/015 NEW
+              dv1_3 cascaded to 1011005)
+  AA=08 side: 0811003 Exit_Controller_Specification dv1_0
+              (17 sections — adds §4 FP/DP DERIVATION for
+              cancel_timeout_window=5.0s + mpp_retry_count=3,
+              §6 Full Halt Behavior batch_cancel detail,
+              §8 MPP IOC Retry Strategy C-1 detail, §13
+              CIATS Parameters list; dv1_0 dated
+              04-05-2026 — pre-dates TB00147 cascade so
+              does NOT contain HR-EC-013/014/015 nor
+              EC-PAPER content; treated as second AA-side
+              parent for parameters + Full Halt + MPP
+              IOC scope only)
+  Architecture canonical: 0500000 dv1_46
+              (8 diagrams; D3 R2 Exit Architecture root
+              <desc> governs list line 2559 enumerates
+              the canonical Exit_Controller binding set;
+              D7 R3 Paper-Mode Dispatch Boundary line
+              5999 binds the paper-mode dispatch context
+              including HR-WM-032/033 + HR-EC-013 paper-
+              live parity rules; D2 R2 Trading Pipeline
+              line 2007-2017 binds Gate 8 -> Execution
+              Engine seam hand-off into Exit Controller
+              via fill events on channel:kraken_ws_
+              executions; D6 R4 Complete System line
+              3970-3985 binds Exit Controller -> Selection
+              Controller wire-up via WS Manager AR-073
+              path per HR-EC-014; D4 R3 Regime Taxonomy
+              line 2874 binds AR-073 per-side SC state
+              management)
+
+1.2 METHODOLOGY (TB00197 NSI §4; unchanged from TB00194 +
+    TB00195 + TB00196).
+  Three-bucket classification per element of 1011005:
+    (a) ARCHITECTURAL RESTATEMENT — duplicates content in
+        0500000 / 0511004 / 0811003 prose or 0500000
+        diagrams; drop at 10XXXXX retirement (S-4).
+    (b) CODING-UNIQUE — implementation-level content
+        (function signatures, types, code snippets, dict
+        layouts, log format strings, decimal-rounding
+        mechanics, rate-cost arithmetic);
+        migrate to 0511004 prose at S-3.
+    (c) ARCHITECTURAL CONTENT NOT IN DIAGRAMS — must be
+        encoded in 0500000 diagram FIRST per DD-003
+        4-step workflow; then 0511004 / 0811003 prose
+        update; then 10XXXXX retirement.
+    (d) UNCLEAR ORIGIN — per NSI §7.4 + RR-SCOPE-009;
+        Chesterton's-fence investigation required before
+        disposition.
+
+1.3 DIAGRAM SOURCE OF TRUTH.
+  Per TB00000 v2_29 §4.5 DD-001/002 diagrams-as-canonical:
+  0500000 dv1_46 inline SVG content + root-<desc> governs
+  list is the authoritative source for "what IS encoded in
+  the diagrams." Prose in 0500000 §3 (architectural
+  reasoning) + §4 (AR registry) + §9 (parameter inventory)
+  is V-038.3 prose-follows-diagram narration. Six
+  parent-AR identifiers + one new dv1_3 hard rule + two
+  CIATS-owned parameters are referenced by 1011005 /
+  0511004 / 0811003 but absent from every diagram root
+  governs list:
+    AR-040 (Pair status adaptation for open positions)
+    AR-019 (batch_cancel for Full Halt multi-order
+            cancellation)
+    AR-041 (cancel_order/batch_cancel behavioral
+            distinction)
+    AR-048 (Exit Controller MAE uses bid price — long-
+            direction; amended dv1_42 for short-direction)
+    AR-052 (Portfolio drawdown formula + per-wallet
+            thresholds)
+    AR-071 (max_hold_candles starting value = 24 candles
+            FP/DP derivation)
+    HR-EC-015 (CIATS-owned parameters MUST be read at
+            use-time via params.get(key, DEFAULT_CONSTANT);
+            module constants serve only as fallback;
+            NEW dv1_3 — completely absent from 0500000
+            dv1_46)
+    param:cancel_timeout_window (5.0s CIATS-owned;
+            NEW identifier — completely absent)
+    param:mpp_retry_count (3 CIATS-owned; NEW identifier
+            — completely absent)
+  Per DD-001/DD-002 diagrams-as-canonical, this is a
+  separate 0500000 internal V-038.3 finding — flagged in
+  §7.1 below, NOT an Exit_Controller-pair gap proper.
+  Sub-cluster C5 (six parent-AR encoding gaps + one new
+  HR + two new param tokens) — analogous to TB00196
+  cluster C5 pattern.
+
+1.4 CROSS-NAMESPACE 0811003 DV1_0 IN-SCOPE DISPOSITION.
+  Per TB00197 NSI §1 CROSS-NAMESPACE NOTE, 0811003 dv1_0
+  in-scope determination was required at cold-load.
+  Derived per RR-SCOPE-005 derivable-decision discipline
+  from data in context:
+    (i)   1011005 dv1_3 §2 Parent Chain explicitly lists
+          BOTH "0811003 Exit_Controller_Specification
+          dv1_0" AND "0511004 Exit_Controller_Specification
+          dv1_2" as parent specifications.
+    (ii)  0811003 dv1_0 §1 Purpose explicitly affirms
+          complementary roles: "0811003 is the trading-
+          rules authority. 0511004 is the system component
+          architecture. They are complementary."
+    (iii) 0811003 dv1_0 contains uniquely authoritative
+          content NOT in 0511004: §4 FP/DP DERIVATION
+          (cancel_timeout_window=5.0s + mpp_retry_count=3),
+          §6 Full Halt batch_cancel detail, §8 MPP IOC
+          Retry Strategy C-1 detail, §13 CIATS Parameters
+          formal list.
+    (iv)  Excluding 0811003 would misclassify 1011005
+          elements whose only authoritative parent source
+          is 0811003 (e.g., the FP/DP-derived parameter
+          values) as (b) CODING-UNIQUE when they are
+          actually (a) ARCHITECTURAL RESTATEMENT of 0811003.
+  Decision: 0811003 dv1_0 in-scope as SECOND AA-side
+  parent counterpart for this audit. Each 1011005 element
+  classified against the UNION of 0511004 dv1_3 +
+  0811003 dv1_0 content as "parent-spec content."
+  Architecture canonical remains 0500000 dv1_46. Form
+  factor unchanged. Citation drift between 1011005 §2
+  (which cites 0511004 dv1_2) and current 0511004 dv1_3
+  noted separately as cluster C6.
+  CURRENCY ASYMMETRY NOTE: 0811003 dv1_0 (04-05-2026)
+  PRE-DATES the TB00147 cascade that produced HR-EC-013/
+  014/015 + §6A EC-PAPER in 0511004 dv1_3 (05-03-2026).
+  0811003 dv1_0 therefore does NOT contain HR-EC-013/
+  014/015 nor any EC-PAPER content. For elements
+  introduced by the TB00147 cascade, the SOLE parent
+  source is 0511004 dv1_3. 0811003 dv1_0 currency lag
+  is a separate finding flagged in §7.4.
+
+============================================================
+2. DIAGRAM COVERAGE BASELINE
+   (What 0500000 dv1_46 diagrams ENCODE for Exit_Controller)
+============================================================
+
+2.1 D3 EXIT ARCHITECTURE (R2; viewBox 1500x1320; line
+    2549-2817). PRIMARY EXIT_CONTROLLER DIAGRAM.
+  Root-<desc> governs list (line 2559) — full canonical
+  binding set for Exit Controller:
+    rule:    HR-EC-013 (paper-live close-path parity),
+             HR-EC-014 (SC state update authority),
+             HR-PM-009 (PM sole-writer pattern via
+             WSManager helpers), Sacred_R_R_1_to_1_5
+    ar:      AR-008 (OTO conditional order REJECTION)
+    mod:     Exit_Controller
+    layer:   L1a_Signal_Exit, L1b_TP_Fill,
+             L2_MAE_Threshold, L3_Emergency_SL
+    channel: kraken_ws_executions, kraken_ws_ticker
+    indicator: ATR_14
+    param:   mae_mult, emergency_sl_mult
+    evt:     TRADE_CLOSE
+    container: Matching_Engine
+    contract: CIATS_Trade_Outcome_Bus
+    pt_mode: PT_MODE_002, PT_MODE_003
+    sacred_constraints: Sacred_R_R_1_to_1_5
+  Visual elements (line 2583-2817):
+    - mod:Exit_Controller header banner (line 2584-2600):
+        <title>mod:Exit_Controller</title>
+        constraints: rule:HR-EC-013, rule:HR-EC-014,
+                     rule:HR-PM-009, ar:AR-008
+        consumes: channel:kraken_ws_executions,
+                  channel:kraken_ws_ticker,
+                  indicator:ATR_14, param:mae_mult
+        produces: evt:TRADE_CLOSE
+        position_mirror_access: read-only via WSManager
+                  helper methods per HR-PM-009
+        Text: "mod:Exit_Controller — owns ALL normal
+              exits (L1a / L1b / L2)"
+        Text: "Off-book emergSL (L3) is crash protection
+              only | OTO conditional orders evaluated and
+              REJECTED (ar:AR-008)"
+    - LAYER 1a column header + tagged group (line
+      2616-2652):
+        <title>layer:L1a_Signal_Exit</title>
+        constraints: rule:HR-EC-013
+        consumes: indicator:SSS, RSI, EMA9, EMA21
+        produces: evt:TRADE_CLOSE
+        Triggers visible: "Signal deterioration"
+            (SSS drops below threshold)
+            "Time-based" (max hold without TP progress)
+            "Momentum loss" (trend breaks on 5m or 1H)
+        Action: "WS cancel_order(TP) + WS market_sell"
+            paper mode note: PT_MODE_002 simulated
+        Exit reasons listed: SIGNAL_DECAY / TIME_EXPIRY /
+            MOMENTUM_LOSS
+        Emits TRADE_CLOSE -> CIATS Trade Outcome Bus
+    - LAYER 1b column header + tagged group (line
+      2654-2689):
+        <title>layer:L1b_TP_Fill</title>
+        constraints: rule:Sacred_R_R_1_to_1_5, ar:AR-007
+        consumes: channel:kraken_ws_executions
+        produces: evt:TRADE_CLOSE
+        Steps visible: "Resting TP limit fills on Kraken
+            on container:Matching_Engine"
+        "EC cancels emergSL after fill confirm
+            (channel:kraken_ws_executions sequence intact
+            A-10)"
+        "R:R FORMULA APPLIES HERE
+            net_gain = net_loss x 1.5
+            (rule:Sacred_R_R_1_to_1_5)"
+        Exit reason: TP_FILL (maker 0.16% fee per ar:AR-007)
+        Paper mode note: maybe_paper_fill simulator
+            (PT_MODE_002)
+    - LAYER 2 column header + tagged group (line
+      2691+ continued):
+        <title>layer:L2_MAE_Threshold</title>
+        constraints: rule:HR-EC-014, rule:HR-PM-009
+        consumes: indicator:ATR_14, param:mae_mult,
+                  channel:kraken_ws_ticker
+        position_mirror_access: read-only via WSManager
+                  helper methods (entry_fill_price + qty
+                  + fees_entry_usd read at MAE-trigger time;
+                  Layer 2 does NOT mutate PM)
+    - LAYER 3 (Emergency SL) — depicted as resting order
+      on container:Matching_Engine (crash protection only;
+      NOT EC's domain in normal operation)
+    - HR-PM-009 sole-writer callout decoration band at
+      figure bottom (R2 addition per DR-011 D3 closure)
+
+2.2 D7 PAPER-MODE DISPATCH BOUNDARY (R3; line 5985-6422).
+    PAPER-MODE BINDING.
+  Root-<desc> governs list (line 5999) — relevant subset:
+    rule:    HR-WM-021, HR-WM-022, HR-WM-023, HR-WM-024,
+             HR-WM-025, HR-WM-026, HR-WM-032 (paper
+             ledger update), HR-WM-033 (paper exits
+             route through Exit Controller), HR-EE-013,
+             HR-PM-009, HR-REGIME-007
+    ar:      PA-001..007, AR-009, AR-072, AR-073
+    decision: D-05_Paper_Starting_Balance, D-06_Paper_
+              Live_Parity
+    pt_mode: PT_MODE_001, PT_MODE_002, PT_MODE_003
+    contract: WSManager_Dispatch_Seam, Synthetic_
+              Capital_Ledger, CIATS_Trade_Outcome_Bus
+    container: Private_WS_v2
+    mod:     WS_Manager, Execution_Engine,
+             Exit_Controller, Long_Module, Short_Module,
+             Signal_Pipeline, Position_Mirror,
+             Startup_Sequence
+    layer:   Configuration_Layer
+    param:   paper_trading_mode, paper_starting_balance
+  Visual elements (relevant subset):
+    - mod:Exit_Controller above-seam labeled group at
+      x=1252 (line 6190-6204):
+        <title>mod:Exit_Controller</title>
+        canonical: mod:Exit_Controller
+        Text label: "mod:Exit_Controller (above-seam
+                     role)"
+    - PA-004 #3 synthetic ledger row + PA-004 #4
+      Position Mirror sourcing row (line 6312-6334):
+        HR-WM-032 paper ledger update binding
+        HR-PM-009 single-owner invariant binding
+    - HR-EC-013 in governs (line 5999) — paper-live byte-
+      identical EE path binding
+    - HR-EC-014 — NOT in D7 governs (only in D3 governs)
+    - HR-EC-015 — NOT in D7 governs (not anywhere in
+      0500000)
+
+2.3 D2 TOTHBOT TRADING PIPELINE (R2; viewBox 1500x1700;
+    line 1995-2466). GATE 8 -> EE SEAM -> ON-FILL
+    HAND-OFF TO EC.
+  Root-<desc> governs list (line 2007-2017) — relevant
+  subset to Exit Controller:
+    ar:      AR-069 (entry limit price formula)
+    rule:    HR-EE-013 (paper-live byte-identical EE
+                        path), Sacred_R_R_1_to_1_5
+    contract: WSManager_Dispatch_Seam, Parameter_Store_
+              Snapshot
+    gate:    G8_Position_Sizer (sizing hand-off into EE)
+    pt_mode: PT_MODE_001, PT_MODE_002, PT_MODE_003
+    mod:     Execution_Engine, Long_Module,
+             Signal_Pipeline
+  Visual elements relevant to Exit Controller (line 2392-
+  2466):
+    - "ON FILL — mod:Execution_Engine — batch_add (TP
+      resting limit + emergSL stop-market — atomic)"
+      labeled group at line 2392-2404. This is the seam
+      where EC takes ownership of TP + emergSL via
+      Position Mirror state read; EC monitors and acts
+      on subsequent fill events.
+    - mod:Exit_Controller NOT in D2 root governs list
+      (Exit Controller is depicted in D3 as the Tier 2
+      leaf detail of post-Gate-8 exit behavior; D2 root
+      governs is Pipeline-scope binding; the seam hand-
+      off is implicit via ON FILL labeled group at line
+      2392 producing the TP + emergSL state that EC
+      subsequently monitors).
+
+2.4 D6 COMPLETE SYSTEM (R4; line 3727-3985 + 4253-4279).
+    EC -> SC WIRE-UP DETAIL.
+  Root-<desc> R-increment R3 -> R4 narrative (line 3727)
+  references the HR-EC-014 SC state update authority via
+  WS Manager AR-073 path. D6 contains the wire-up callout
+  group at figure bottom (line 4253-4258) that depicts:
+    "mod:Exit_Controller"
+    "EC -> mod:Selection_Controller"
+    "-> exit_cooldown_log + consecutive_loss_count
+        updates via WS Manager AR-073 path
+        (HR-EC-014: EC is SOLE updater of SC state —
+        0511004 dv1_3)"
+  mod:Exit_Controller is also in the D6 R3 wire-up
+  callout governs list (line 3920) as a constraint
+  consumer of rule:HR-EC-014.
+  mod:Exit_Controller labeled group in D6 (line 3970-3985)
+  with constraints: rule:HR-EC-013, rule:HR-EC-014,
+  rule:Sacred_R_R_1_to_1_5; produces enumeration includes
+  cancel_order + batch_cancel + market sell add_order
+  instructions to mod:WS_Manager; position clear via
+  WSManager (HR-PM-009 sole-writer); evt:TRADE_CLOSE to
+  mod:Logger; CIATS Trade Outcome Bus records; SC state
+  updates via WS Manager AR-073 path per HR-EC-014.
+
+2.5 D4 REGIME TAXONOMY (R3; line 2873-3255). AR-073
+    PER-SIDE SC STATE.
+  Root-<desc> governs list (line 2874) includes:
+    ar:AR-072 (SC-GATE-1 variant), ar:AR-073 (per-side
+    Selection Controller state management +
+    pair_cache margin_eligible_flag), rule:HR-REGIME-007
+  AR-073 is the canonical identifier for the SC state
+  data structures (long_exit_cooldown_log,
+  short_exit_cooldown_log, long_consecutive_loss_count,
+  short_consecutive_loss_count) that HR-EC-014
+  references. AR-073 is REGISTERED in §15.12.13 — D4
+  binding satisfies the diagram-canonical encoding for
+  the SC state per HR-EC-014 narrative.
+
+2.6 0500000 §9 PARAMETER PROSE (line ~5355-5360).
+  Exit Controller parameters (★ dv1_15 — AR-071) section
+  lists ONLY:
+    max_hold_candles: 24 (maximum hold time = 2 hours,
+                          EC-L1A-003)
+  ABSENT from §9 Exit Controller parameter section:
+    cancel_timeout_window (5.0s — defined in 0811003 §4)
+    mpp_retry_count (3 — defined in 0811003 §4)
+    mae_mult (1.5x ATR — defined in §9 sizing table
+              elsewhere on line 5283 of dv1_46 + D3
+              governs)
+    emergency_sl_mult (3.0x ATR — D3 governs only)
+  This is a §9 prose-staleness finding inherited from
+  TB00194 + TB00195 + TB00196 cluster C1 cascade.
+
+============================================================
+3. ELEMENT-BY-ELEMENT GAP REGISTER
+   (1011005 dv1_3, §1 through §11)
+============================================================
+
+------------------------------------------------------------
+§1 PURPOSE
+------------------------------------------------------------
+
+3.1  Purpose statement: "complete, unambiguous coding
+     contract for the TothBot V2 Exit Controller. It
+     covers all three active exit layers. Code is written
+     from this document and no other. Exit Controller
+     owns all normal position exits. It never opens
+     positions. Layer 3 (emergSL) is a resting order on
+     Kraken's matching engine — Exit Controller only
+     interacts with it during normal exit sequences."
+     CLASSIFICATION: (a) ARCHITECTURAL RESTATEMENT.
+     Sources: 0511004 dv1_3 §1 + §3.4 (Layer 3 crash
+     protection only); 0500000 D3 root governs (Exit
+     Controller owns L1a/L1b/L2/L3) + D3 mod:Exit_
+     Controller banner "owns ALL normal exits".
+
+------------------------------------------------------------
+§2 PARENT CHAIN
+------------------------------------------------------------
+
+3.2  Parent chain: 1000000 -> 1010000 -> 1011005;
+     Parent specs: 0811003 dv1_0 + 0511004 dv1_2.
+     CLASSIFICATION: (a) ARCHITECTURAL RESTATEMENT
+     + (c)-minor CITATION DRIFT.
+     The chain itself is per 0311001 v1_12 §15 structure
+     (a). The "0511004 dv1_2" citation is STALE — current
+     is dv1_3 (TB00147 cascade). Citation drift = minor
+     cluster C6 (analogous to TB00194/195/196 C6).
+     Auto-resolves at S-4 1011005 retirement.
+
+------------------------------------------------------------
+§3 FIVE CODING-READINESS QUESTIONS
+------------------------------------------------------------
+
+3.3  Q1 What does Exit Controller DO?
+     Answer narrative enumerating L1a triggers, L1b TP
+     handling, L2 MAE breach, partial TP amend, CIATS
+     Trade Outcome Bus, Position Mirror update,
+     BoundedSemaphore release.
+     CLASSIFICATION: (a) ARCHITECTURAL RESTATEMENT.
+     Sources: 0511004 dv1_3 §2 Component Summary + §3.1
+     L1a + §3.2 L1b + §3.3 L2 + §7.3 Position Mirror
+     update; 0500000 D3 mod:Exit_Controller banner +
+     L1a/L1b/L2 column groups; D6 EC banner produces
+     enumeration (line 3978).
+
+3.4  Q2 Interfaces (IN/OUT).
+     IN: ohlc(60), Regime Engine regime_cache, bbo
+     ticker, executions, Position Mirror, Parameter
+     Store.
+     OUT: cancel_order, amend_order, add_order market
+     sell, CIATS Trade Outcome Bus, Position Mirror
+     update, BoundedSemaphore release.
+     CLASSIFICATION: (a) ARCHITECTURAL RESTATEMENT.
+     Sources: 0511004 dv1_3 §7 Interfaces 7.1-7.6;
+     0500000 D3 mod:Exit_Controller consumes/produces
+     fields; D6 EC banner produces enumeration.
+
+3.5  Q3 Hard rules summary listing.
+     CLASSIFICATION: (a) ARCHITECTURAL RESTATEMENT of
+     §10 HR-EC-001..015. Sources: 0511004 dv1_3 §8
+     HR-EC-001..015; 0500000 D3 governs (HR-EC-013/014/
+     PM-009); D7 governs (HR-EC-013); D6 mod:Exit_
+     Controller constraints (HR-EC-013/014).
+
+3.6  Q4 What triggers it.
+     CLASSIFICATION: (a) ARCHITECTURAL RESTATEMENT.
+     Sources: 0511004 dv1_3 §9 What Triggers It +
+     0811003 dv1_0 §9 PAIR STATUS ADAPTATION; 0500000
+     D3 layer:L1a/L1b/L2 consumes fields.
+
+3.7  Q5 What does it log.
+     CLASSIFICATION: (a) ARCHITECTURAL RESTATEMENT.
+     Sources: 0511004 dv1_3 §10 What It Logs + 0811003
+     dv1_0 §14 What It Logs; 0500000 D3 layer groups
+     produces evt:TRADE_CLOSE.
+
+------------------------------------------------------------
+§4 PARAMETERS
+------------------------------------------------------------
+
+3.8  cancel_timeout_window: 5.0 seconds CIATS-owned.
+     CLASSIFICATION: (a) restatement of 0811003 dv1_0
+     §4.1 FP/DP derivation + 0511004 dv1_3 §6 (window
+     deferred to 0811003); UNDERLYING (c) sub-cluster
+     C5 — param:cancel_timeout_window is NOT in any
+     0500000 diagram governs list and NOT in §9
+     parameter prose. Diagram-encoding gap.
+
+3.9  mpp_retry_count: 3 attempts CIATS-owned.
+     CLASSIFICATION: (a) restatement of 0811003 dv1_0
+     §4.2 FP/DP derivation + 0511004 dv1_3 §3.3
+     (retry count deferred to 0811003); UNDERLYING
+     (c) sub-cluster C5 — param:mpp_retry_count is
+     NOT in any 0500000 diagram governs list and NOT
+     in §9 parameter prose. Diagram-encoding gap.
+
+3.10 max_hold_candles: 24 candles CIATS-owned.
+     CLASSIFICATION: (a) ARCHITECTURAL RESTATEMENT.
+     Sources: 0511004 dv1_3 §3.1 EC-L1A-003 +
+     0500000 §9 Exit Controller parameters (line 5355)
+     "max_hold_candles: 24" + 0500000 §4 AR registry
+     AR-071 (line 5069).
+
+3.11 mae_mult: 1.5x ATR(14) CIATS-owned.
+     CLASSIFICATION: (a) ARCHITECTURAL RESTATEMENT.
+     Sources: 0511004 dv1_3 §3.3 EC-L2-001 + 0500000
+     D3 root governs (line 2559 — param:mae_mult);
+     mae_mult in D3 mod:Exit_Controller consumes
+     field (line 2592).
+     Note: param:mae_mult is in D3 governs but the
+     starting value 1.5x is in §9 sizing parameter
+     table elsewhere (line 5283) — value cite
+     verifiable.
+
+3.12 Parameter Store snapshot narrative (frozen at
+     pipeline start; EXCEPTION: circuit breaker
+     thresholds read live; time.monotonic() for all
+     timeout tracking).
+     CLASSIFICATION: (a) restatement of 0511004 dv1_3
+     HR-EC-010 + HR-EC-012 + 0500000 contract:
+     Parameter_Store_Snapshot in D2 governs
+     (line 2007-2017).
+     "EXCEPTION: circuit breaker thresholds read live"
+     sub-clause is HR-EC-015 cascade boundary —
+     covered by HR-EC-015 element below.
+
+------------------------------------------------------------
+§5 LAYER 1a — SIGNAL-BASED EXITS
+------------------------------------------------------------
+
+3.13 EC-L1A-SEQ Step 1: Check pair status. If cancel_only
+     or maintenance: log PAIR_CANCEL_ONLY_HOLD or
+     PAIR_MAINTENANCE_HOLD, alert CRITICAL, do NOT
+     proceed.
+     CLASSIFICATION: (a) ARCHITECTURAL RESTATEMENT of
+     AR-040 pair status adaptation. Sources: 0511004
+     dv1_3 §5 Pair Status Adaptation + 0811003 dv1_0
+     §9 PAIR STATUS ADAPTATION + 0500000 §4 AR-040
+     entry (line 4411); UNDERLYING (c) sub-cluster C5
+     — ar:AR-040 is NOT in any 0500000 diagram governs
+     list. AR registry prose only (V-038.3 finding).
+
+3.14 EC-L1A-SEQ Step 2: cancel_order(tp_order_id) via
+     WS Manager. Record req_id. Start cancel_timeout_
+     window timer using time.monotonic().
+     CLASSIFICATION: (a) restatement of HR-EC-002
+     (cancel TP before cancel emergSL) + 0511004 dv1_3
+     §3.3 EC-L2-001 cancel sequence + 0500000 D3
+     layer:L1a action group "cancel_order(TP)".
+     time.monotonic() detail is (b) CODING-UNIQUE
+     migrating to 0511004 prose (PROSE-UPDATE-V).
+
+3.15 EC-L1A-SEQ Step 3: Await TP cancel ACK
+     (exec_type=canceled). If ACK within timeout:
+     proceed. If timeout: check executions state;
+     retry once; second timeout: log CANCEL_TIMEOUT_
+     HOLD CRITICAL, alert, HOLD position, NEVER market
+     sell.
+     CLASSIFICATION: (a) restatement of I-6 cancel
+     timeout fallback. Sources: 0511004 dv1_3 §6
+     Cancel Timeout Fallback + 0811003 dv1_0 §7
+     CANCEL TIMEOUT FALLBACK + HR-EC-001 (never
+     market sell with ambiguous cancel state).
+     Diagram side: D3 visual content references
+     "cancel TP + sell" sequence; I-6 detail in
+     prose only — same V-038.3 prose-encoding
+     pattern, NOT a (c) gap.
+
+3.16 EC-L1A-SEQ Step 4: cancel_order(emergsl_order_id)
+     via WS Manager. Same timeout pattern.
+     CLASSIFICATION: (a) restatement per Step 2 + 3.
+
+3.17 EC-L1A-SEQ Step 5: After both confirmed canceled:
+     market sell at current bid (taker 0.26%);
+     add_order: market/immediate-or-cancel for full qty.
+     CLASSIFICATION: (a) ARCHITECTURAL RESTATEMENT.
+     Sources: 0511004 dv1_3 §3.3 EC-L2-001 + 0411003
+     fee schedule + 0500000 D3 layer:L1a action group
+     "WS market_sell".
+     IOC fill convention detail is (b) CODING-UNIQUE
+     migrating to 0511004 prose (PROSE-UPDATE-V).
+
+3.18 EC-L1A-SEQ Step 6: MPP rejection handling. Retry
+     up to mpp_retry_count (3) times. If all retries
+     fail: log MAE_HOLD_AMBIGUOUS CRITICAL, alert,
+     position remains open with no protection.
+     CLASSIFICATION: (a) restatement of C-1 MPP IOC
+     retry strategy. Sources: 0511004 dv1_3 §3.3 MPP
+     HANDLING + 0811003 dv1_0 §8 MPP IOC RETRY
+     STRATEGY + HR-EC-004 + 0411001 WS-MPP-001..004.
+
+3.19 EC-L1A-SEQ Step 7: On sell fill confirmed: fire
+     CIATS Trade Outcome Bus; clear Position Mirror;
+     release BoundedSemaphore.
+     CLASSIFICATION: (a) restatement of HR-EC-009
+     (Position Mirror cleared ONLY after confirmed
+     close) + 0500000 D3 produces evt:TRADE_CLOSE.
+     BoundedSemaphore release detail cross-references
+     1011004 dv1_0 (Execution Engine) EE-IF-010 +
+     TB00196 cluster C5 cross-pair finding (AR-043
+     BoundedSemaphore — owned by Risk_Engine; consumer
+     side from Exit_Controller is implicit).
+
+3.20 EC-L1A-001 HTF Regime Reversal trigger: 1H EMA(20)
+     crosses BELOW EMA(50). Implementation code block.
+     CLASSIFICATION: (a)/(b) split. The TRIGGER is (a)
+     restatement of 0511004 dv1_3 §3.1 EC-L1A-001 +
+     0500000 D3 layer:L1a "Signal deterioration" /
+     "Momentum loss" panels. The PYTHON CODE BLOCK
+     (async def on_ohlc_60_close(...)) is (b) CODING-
+     UNIQUE migrating to 0511004 prose (PROSE-UPDATE-V).
+
+3.21 EC-L1A-002 checking implementation code block.
+     CLASSIFICATION: (b) CODING-UNIQUE — Python async
+     code body. Migration to 0511004 prose (PROSE-
+     UPDATE-V).
+
+3.22 EC-L1A-003 BASIS: Gate 4 entry requires EMA(20) >
+     EMA(50). Symmetric reversal eliminates the
+     documented edge.
+     CLASSIFICATION: (a) restatement of 0511004 dv1_3
+     §3.1 EC-L1A-001 "Gate 4 symmetry" narrative.
+
+3.23 EC-L1A-006 Daily Regime Downgrade trigger.
+     CLASSIFICATION: (a) restatement of 0511004 dv1_3
+     §3.1 EC-L1A-002 + 0500000 D4 R3 regime taxonomy
+     (TRENDING_NEG regimes) + 0500000 D3 layer:L1a
+     trigger panels.
+
+3.24 EC-L1A-007 checking implementation: async def
+     on_regime_update() Python code body.
+     CLASSIFICATION: (b) CODING-UNIQUE migrating to
+     0511004 prose (PROSE-UPDATE-V).
+
+3.25 EC-L1A-008 BASIS: Gate 3 blocks entries in these
+     regimes.
+     CLASSIFICATION: (a) restatement of 0511004 dv1_3
+     §3.1 EC-L1A-002 "Gate 3 symmetry" narrative.
+
+3.26 EC-L1A-010 Time-Based Exit trigger: held >
+     max_hold_candles 5-min candles (24 = 2 hours)
+     without TP fill.
+     CLASSIFICATION: (a) restatement of 0511004 dv1_3
+     §3.1 EC-L1A-003 + 0500000 D3 layer:L1a "Time-
+     based" panel + AR-071 max_hold_candles=24.
+
+3.27 EC-L1A-011 checking implementation: async def
+     on_candle_close(symbol) Python code body.
+     CLASSIFICATION: (b) CODING-UNIQUE migrating to
+     0511004 prose (PROSE-UPDATE-V).
+
+3.28 EC-L1A-012 candle_count initialized to 0 at
+     position open; incremented on EVERY 5m candle
+     close regardless of pipeline gate outcomes.
+     CLASSIFICATION: (a) restatement of 0511004 dv1_3
+     HR-EC-010 (hold_candle_count maintained in WS
+     Manager state; increments on each ohlc(5m) close;
+     reset to 0 on position close).
+
+------------------------------------------------------------
+§6 LAYER 1b — TP FILL HANDLING
+------------------------------------------------------------
+
+3.29 EC-TP-001 Full TP Fill: trigger exec_type=filled for
+     tp_order_id; cancel emergSL; fire CIATS Trade
+     Outcome Bus; clear Position Mirror; release
+     BoundedSemaphore.
+     CLASSIFICATION: (a) restatement of 0511004 dv1_3
+     §3.2 EC-L1B-001 + 0500000 D3 layer:L1b panels
+     ("Resting TP limit fills" -> "EC cancels emergSL
+     after fill confirm" -> emit TRADE_CLOSE).
+
+3.30 EC-TP-002 Partial TP Fill: trigger exec_type=trade
+     with cum_qty < tp_order_qty. Compute remaining_qty
+     with quantize ROUND_DOWN. If remaining >= qty_min
+     and remaining*bid >= cost_min: amend_order
+     (emergsl_order_id, remaining_qty); update
+     position_mirror qty.
+     CLASSIFICATION: (a) restatement of AR-066 (TP
+     partial fill) + 0511004 dv1_3 §3.2 EC-L1B-002 +
+     0500000 §4 AR-066 (line ~14 mentions).
+     ROUND_DOWN quantization mechanics + qty_min/
+     cost_min check arithmetic are (b) CODING-UNIQUE
+     migrating to 0511004 prose (PROSE-UPDATE-W,
+     analogous to TB00196 PROSE-UPDATE-R).
+
+3.31 EC-TP-003 BELOW-MIN path: cancel emergSL; market
+     sell remaining_qty; clear PM; fire CIATS
+     (exit_reason=TP_FILL); log TP_PARTIAL_FILL_BELOW_
+     MIN_EXIT.
+     CLASSIFICATION: (a) restatement of 0511004 dv1_3
+     §3.2 EC-L1B-002 below-min path.
+
+3.32 EC-TP-004 amend_order rate-cost arithmetic: +2
+     units vs cancel_order + add_order +3 units;
+     saves 1 unit AND preserves queue position.
+     CLASSIFICATION: (b) CODING-UNIQUE — rate-cost
+     arithmetic + queue-position rationale.
+     Migration to 0511004 prose (PROSE-UPDATE-W).
+     Cross-reference: 0411003 Kraken Fee/Rate Limit
+     Spec for the underlying rate-counter unit
+     accounting.
+
+3.33 EC-TP-005 Final fill after partial: same as
+     EC-TP-001 but exit_price = cum_cost /
+     total_cum_qty (weighted avg).
+     CLASSIFICATION: (a)/(b) split. The TP_FILL
+     unified record concept is (a) restatement of
+     HR-EC-009 (CIATS Bus fires ONCE) + 0511004 dv1_3
+     §3.2. The weighted-avg arithmetic formula is
+     (b) CODING-UNIQUE — migrating to 0511004 prose
+     (PROSE-UPDATE-W).
+
+3.34 EC-TP-006 PRIORITY CONFLICT — TP partial + MAE
+     breach simultaneous: Layer 2 takes priority;
+     cancel remaining TP qty; execute Layer 2 exit;
+     use cum_qty filled as partial P/L; one unified
+     CIATS record (exit_reason=MAE_THRESHOLD_BREACH).
+     CLASSIFICATION: (a) restatement of HR-EC-005
+     (Layer 2 priority over L1a, by extension L1b
+     partial) + 0511004 dv1_3 §3.3 EC-L2-001 priority
+     narrative.
+
+------------------------------------------------------------
+§7 LAYER 2 — MAE THRESHOLD EXIT
+------------------------------------------------------------
+
+3.35 EC-L2-001 TRIGGER: MAE >= ATR(14) * mae_mult.
+     MAE = entry_fill_price - bid_price (bid only,
+     AR-048). Checked on EVERY bbo ticker event.
+     CLASSIFICATION: (a) ARCHITECTURAL RESTATEMENT.
+     Sources: 0511004 dv1_3 §3.3 EC-L2-001 + 0500000
+     D3 layer:L2_MAE_Threshold constraints (indicator:
+     ATR_14, param:mae_mult, channel:kraken_ws_ticker)
+     + position_mirror_access read pattern.
+     UNDERLYING (c) sub-cluster C5 — ar:AR-048 (MAE
+     uses bid only — long direction; amended dv1_42
+     for short-direction) is NOT in any 0500000
+     diagram governs list. AR registry prose only.
+
+3.36 EC-L2-002 SEQUENCE: (1) cancel TP (2) cancel
+     emergSL (3) market sell at bid (4) CIATS + clear
+     PM + release semaphore.
+     CLASSIFICATION: (a) restatement of HR-EC-002
+     SEQUENCE CRITICAL + 0511004 dv1_3 §3.3 EC-L2-001
+     four-step sequence + 0500000 D3 layer:L2 visual
+     content.
+
+3.37 EC-L2-003 Layer 2 priority over in-progress L1a.
+     CLASSIFICATION: (a) restatement of HR-EC-005
+     (Layer 2 priority) + 0511004 dv1_3 §3.3 priority
+     narrative.
+
+3.38 EC-L2-004 Log LAYER2_EXIT_TRIGGERED fields:
+     symbol, MAE_pct_reached, bid_price, atr_14.
+     CLASSIFICATION: (a)/(b) split. Log event existence
+     is (a) restatement of 0511004 dv1_3 §10 + 0811003
+     dv1_0 §14 (MAE_BREACH_DETECTED — note: 0511004
+     uses MAE_BREACH_DETECTED; 1011005 uses
+     LAYER2_EXIT_TRIGGERED — minor citation/naming
+     drift, cluster C6 same as TB00196). The field
+     enumeration is (b) CODING-UNIQUE — migrating to
+     0511004 prose (PROSE-UPDATE-AA, analogous to
+     TB00196 PROSE-UPDATE-U for log event field
+     completeness).
+
+------------------------------------------------------------
+§8 LAYER 3 — EMERGENCY SL (NOT EC'S DOMAIN)
+------------------------------------------------------------
+
+3.39 EC-L3-001 Layer 3 description: resting stop-market
+     on Kraken matching engine; fires autonomously if
+     TothBot fails; EC interactions (a)/(b)/(c) — cancel
+     emergSL after TP full fill, cancel before L1a/L2
+     market sell, amend on TP partial fill.
+     CLASSIFICATION: (a) ARCHITECTURAL RESTATEMENT.
+     Sources: 0511004 dv1_3 §3.4 LAYER 3 + HR-EC-001
+     (Layer 3 NEVER fires in normal operation) +
+     0500000 D3 layer:L3_Emergency_SL in root governs
+     (line 2559) + 0500000 D3 container:Matching_Engine
+     in root governs.
+
+3.40 EC-L3-002 emergSL fires autonomously
+     (EMERGENCY_SL_FIRED event): log CRITICAL; alert
+     operator; reconcile PM on next reconnect/startup;
+     system failure event.
+     CLASSIFICATION: (a) restatement of 0511004 dv1_3
+     §3.4 LAYER 3 detection on restart narrative +
+     HR-EC-001 system failure event.
+
+------------------------------------------------------------
+§9 CIATS TRADE OUTCOME BUS
+------------------------------------------------------------
+
+3.41 EC-TOB-001 Fires ONCE per complete position close;
+     log event code TRADE_CLOSE (INFO).
+     CLASSIFICATION: (a) restatement of HR-EC-009
+     (CIATS Bus fires ONCE per complete close) +
+     0511004 dv1_3 §10 CIATS Trade Outcome Bus log
+     section + 0500000 D3 produces evt:TRADE_CLOSE +
+     D3 contract:CIATS_Trade_Outcome_Bus +
+     evt:TRADE_CLOSE in §15.12.7 registry (45 mentions
+     in dv1_46).
+
+3.42 EC-TOB-002 Mandatory fields (22 fields enumeration):
+     ts, event, level, component, symbol,
+     entry_fill_price, exit_price, entry_timestamp_utc,
+     exit_timestamp_utc, hold_candle_count,
+     MAE_pct_reached, fees_entry_usd, fees_exit_usd,
+     fees_total_usd, exit_reason, asset_regime,
+     vol_regime, market_regime, signal_params,
+     actual_RR, net_PL_USD, net_gain_usd, net_loss_usd.
+     CLASSIFICATION: (a)/(b) split. Field PRESENCE is
+     (a) restatement of 0511004 dv1_3 §10 CIATS Trade
+     Outcome Bus field list (~15 fields enumerated) +
+     0511004 §7.5 To CIATS field list. The COMPLETE
+     22-field enumeration including ts/event/level/
+     component metadata + net_gain_usd/net_loss_usd
+     split is (b) CODING-UNIQUE migrating to 0511004
+     prose (PROSE-UPDATE-X — log schema completeness,
+     analogous to TB00196 PROSE-UPDATE-U).
+     0511004 dv1_3 §10 has 15 fields; 1011005 §9 has
+     22. The 7-field delta is the migration scope.
+
+3.43 EC-TOB-003 Partial fill exit_price computation:
+     exit_price = total_exit_proceeds / total_exit_qty
+     in Decimal.
+     CLASSIFICATION: (b) CODING-UNIQUE — weighted-avg
+     arithmetic in Decimal. Migration to 0511004 prose
+     (PROSE-UPDATE-W).
+
+------------------------------------------------------------
+§10 HARD RULES
+------------------------------------------------------------
+
+3.44 HR-EC-001 NEVER issue market sell with ambiguous
+     cancel state.
+     CLASSIFICATION: (a) restatement of 0511004 dv1_3
+     HR-EC-002 (NEVER market sell with ambiguous
+     cancel state — same rule different numbering
+     between dv1_3 of 0511004 and 1011005) + I-6
+     cancel timeout fallback narrative. Note:
+     HR-EC-* numbering between 0511004 and 1011005 is
+     NOT 1:1 — 1011005 HR-EC-001..012 corresponds to
+     0511004 HR-EC-001..012 but with rule reordering;
+     this is a minor citation/structural drift, cluster
+     C6.
+
+3.45 HR-EC-002 ALWAYS cancel TP before canceling
+     emergSL.
+     CLASSIFICATION: (a) restatement of 0511004 dv1_3
+     HR-EC-002 SEQUENCE CRITICAL + 0500000 D3 visual
+     sequence + 0811003 dv1_0 §7 cancel sequence
+     narrative.
+
+3.46 HR-EC-003 cancel_timeout_window 5.0s STARTING
+     CIATS-owned; MUST be read at use-time via
+     self._params.get(...); direct constant usage is
+     a defect (HR-EC-015).
+     CLASSIFICATION: (a)/(c) split. CIATS-owned
+     starting-value statement is (a) restatement of
+     0811003 dv1_0 §4.1 FP/DP derivation + TB00000
+     v2_29 §9.16 Parameter Philosophy.
+     The HR-EC-015 cross-reference (params.get at
+     use-time) is (a) downstream of HR-EC-015 itself.
+     UNDERLYING (c) sub-cluster C5 — param:
+     cancel_timeout_window not in any 0500000 diagram
+     governs list, not in §9 prose. Same diagram-
+     encoding gap as element 3.8.
+
+3.47 HR-EC-004 mpp_retry_count 3 STARTING CIATS-owned;
+     MUST be read at use-time via self._params.get(...);
+     direct constant usage is a defect (HR-EC-015).
+     CLASSIFICATION: same as 3.46. UNDERLYING (c)
+     sub-cluster C5 — param:mpp_retry_count not in
+     any 0500000 diagram governs list, not in §9
+     prose. Same diagram-encoding gap as element 3.9.
+
+3.48 HR-EC-005 Layer 2 MAE breach takes priority over
+     L1a.
+     CLASSIFICATION: (a) restatement of 0511004 dv1_3
+     priority narrative + 0500000 D3 layer:L2_MAE_
+     Threshold (priority context implicit).
+
+3.49 HR-EC-006 TP partial fill: amend emergSL NOT
+     cancel+resubmit.
+     CLASSIFICATION: (a) restatement of AR-066 (TP
+     partial fill) + 0511004 dv1_3 §3.2 EC-L1B-002 +
+     0500000 §4 AR-066 prose (line ~14 mentions). The
+     amend-vs-cancel+resubmit choice is architectural
+     and is implicit in AR-066 narrative.
+
+3.50 HR-EC-007 CIATS Trade Outcome Bus fires ONCE per
+     position.
+     CLASSIFICATION: (a) restatement of 0511004 dv1_3
+     HR-EC-009 + 0500000 D3 produces evt:TRADE_CLOSE +
+     contract:CIATS_Trade_Outcome_Bus.
+
+3.51 HR-EC-008 exit_reason MUST be set on every
+     closure.
+     CLASSIFICATION: (a) restatement of 0511004 dv1_3
+     §10 CIATS Trade Outcome Bus field list (exit_
+     reason required) + per-layer exit reasons in
+     0511004 §3.1-3.3.
+
+3.52 HR-EC-009 Position Mirror cleared ONLY after
+     confirmed close.
+     CLASSIFICATION: (a) restatement of 0511004 dv1_3
+     §7.3 + 0500000 D3 mod:Exit_Controller position_
+     mirror_access field (read-only via WSManager
+     helpers — HR-PM-009 sole-writer pattern).
+
+3.53 HR-EC-010 Parameter Store snapshot governs (except
+     circuit breakers).
+     CLASSIFICATION: (a) restatement of 0500000
+     contract:Parameter_Store_Snapshot in D2 governs +
+     0511004 dv1_3 implicit (frozen at pipeline start
+     pattern).
+
+3.54 HR-EC-011 cancel_only/maintenance: HOLD, alert,
+     no orders.
+     CLASSIFICATION: (a) restatement of AR-040 +
+     0511004 dv1_3 §5 PAIR STATUS ADAPTATION + 0811003
+     dv1_0 §9 PAIR STATUS ADAPTATION + HR-EC-008
+     (0511004 numbering). UNDERLYING (c) sub-cluster
+     C5 — ar:AR-040 not in any 0500000 diagram governs
+     list. Already counted at element 3.13.
+
+3.55 HR-EC-012 time.monotonic() for all timeout tracking
+     (never time.time()).
+     CLASSIFICATION: (b) CODING-UNIQUE — Python time
+     module convention. Migration to 0511004 prose
+     (PROSE-UPDATE-V — timing-mechanics detail,
+     analogous to TB00196 PROSE-UPDATE-Q ISO 8601
+     timestamp normalization).
+
+3.56 HR-EC-013 PAPER-LIVE CLOSE-PATH PARITY (NEW
+     dv1_3). _close_position() byte-identical between
+     paper and live downstream of (exit_price,
+     fees_exit) determination. Same TRADE_CLOSE
+     payload, PM clearing, SC state updates, semaphore
+     release.
+     CLASSIFICATION: (a) restatement of 0511004 dv1_3
+     HR-EC-013 + 0500000 D3 root governs rule:HR-EC-013
+     (line 2559) + D7 root governs rule:HR-EC-013
+     (line 5999) + D6 mod:Exit_Controller constraints
+     (line 3976). DIAGRAM-CANONICAL — present in
+     three diagram governs lists.
+
+3.57 HR-EC-014 SELECTION CONTROLLER STATE UPDATE
+     AUTHORITY (NEW dv1_3). EC is SOLE updater of
+     wm.exit_cooldown_log + wm.consecutive_loss_count
+     in BOTH modes. Retires ws_manager._fire_ciats_
+     outcome path. WIN_EXIT_REASONS / LOSS_EXIT_REASONS
+     sets enumerated; consecutive_loss_count and
+     exit_cooldown_log update rules per AR-073 win/
+     loss classification.
+     CLASSIFICATION: (a) restatement of 0511004 dv1_3
+     HR-EC-014 + 0500000 D3 root governs rule:HR-EC-014
+     (line 2559) + D6 mod:Exit_Controller constraints
+     (line 3976) + D6 wire-up callout (line 4257-4258)
+     + AR-073 in D4 root governs (line 2874).
+     DIAGRAM-CANONICAL — present in two diagram
+     governs lists + D6 visual wire-up + D4 AR-073
+     binding.
+     WIN_EXIT_REASONS / LOSS_EXIT_REASONS set
+     ENUMERATION is (b) CODING-UNIQUE — Python
+     constant set definitions, migration to 0511004
+     prose (PROSE-UPDATE-Y — AR-073 win/loss set
+     enumeration completeness in §6A or §7.6).
+     SUB-FINDING: HR-EC-014 is in D3 root governs
+     but NOT in D7 root governs list (D7 governs
+     enumerates HR-WM-032/033/HR-EE-013/HR-PM-009/
+     HR-REGIME-007 but NOT HR-EC-014). Since D7
+     binds the paper-mode dispatch boundary and
+     HR-EC-014 explicitly applies in BOTH paper and
+     live modes per its text, this is a sub-cluster
+     C5b finding — HR-EC-014 should be added to D7
+     root governs for paper-mode binding parity.
+
+3.58 HR-EC-015 CIATS-OWNED PARAMETERS — NO HARDCODED
+     USAGE (NEW dv1_3). All CIATS-owned starting
+     values (mae_mult, cancel_timeout_window, mpp_
+     retry_count, max_hold_candles, future additions)
+     MUST be read at use-time via self._params.get(
+     key, DEFAULT_CONSTANT). Module-level constants
+     serve ONLY as second argument to params.get();
+     MUST NOT be used directly in business logic.
+     Example BEFORE/AFTER code provided. Failure mode
+     narrative (cross-module CIATS parameter
+     inconsistency: mae_mult 1.5->1.7 risk_engine
+     sizes wider stops, exit_controller still
+     triggers at 1.5x, closes BEFORE new threshold).
+     CLASSIFICATION: (a)/(c) split. Architectural
+     content (HR-EC-015 itself: "CIATS-owned params
+     MUST be read at use-time via params.get()") is
+     (c) CRITICAL ARCHITECTURAL CONTENT NOT IN DIAGRAMS
+     — sub-cluster C5 PRIMARY. rule:HR-EC-015 is
+     COMPLETELY ABSENT from 0500000 dv1_46 — zero
+     matches in any diagram governs list and zero
+     matches in §4 AR registry prose. Same defect
+     class as TB00196 cluster C5 (HR-EE-014/HR-EE-015
+     new dv1_1 not in diagrams). Failure-mode
+     narrative + BEFORE/AFTER code examples are (b)
+     CODING-UNIQUE migrating to 0511004 prose (already
+     present in 0511004 dv1_3 §8 HR-EC-015 — minor
+     citation parity; auto-resolves at S-4).
+
+------------------------------------------------------------
+§10A PAPER MODE EXIT CODING CONTRACT (EC-PAPER)
+------------------------------------------------------------
+
+3.59 EC-PAPER-CODE-001 on_paper_close entry point method
+     signature: async def on_paper_close(self, symbol:
+     str, exit_price: Decimal, exit_reason: str,
+     fees_exit: Decimal, wm: "WSManager") -> None.
+     Method body implementation block.
+     CLASSIFICATION: (b) CODING-UNIQUE — Python method
+     signature + body. Migration to 0511004 prose
+     (PROSE-UPDATE-Z — §6A EC-PAPER paper-mode entry
+     point signature/contract detail). The CONCEPT of
+     on_paper_close being the SOLE paper-mode exit
+     interface is (a) restatement of 0511004 dv1_3
+     EC-PAPER-002 ENTRY POINTS FROM WS MANAGER (which
+     defines this signature). 0511004 already contains
+     the method signature in EC-PAPER-002 — verify and
+     update minor citation drift (e.g., return type
+     None vs not specified in 0511004) at S-3.
+
+3.60 EC-PAPER-CODE-002 dispatch_market_sell RETURN
+     CONTRACT — tuple (exit_price, fees_exit) in BOTH
+     modes; cross-reference 1011002 dv1_26 WM-PAPER-
+     EXIT-004.
+     CLASSIFICATION: (a) restatement of 0511004 dv1_3
+     EC-PAPER-002 "Layer 2 paper" narrative +
+     EC-PAPER-001 byte-identical close path. Tuple
+     return type detail is (b) CODING-UNIQUE migrating
+     to 0511004 prose (PROSE-UPDATE-Z).
+
+3.61 EC-PAPER-CODE-003 _close_position SIGNATURE
+     EXTENSION + method body extension blocks (a)/(b)/
+     (c): read fees_entry_usd from PositionRecord;
+     compute fees_total_usd; add SC state update block
+     per HR-EC-014.
+     CLASSIFICATION: (a)/(b) split. SC state update
+     block PRESENCE is (a) restatement of HR-EC-014 +
+     0500000 D6 wire-up callout. Python code blocks
+     (from tothbot.selection_ctrl import
+     WIN_EXIT_REASONS, LOSS_EXIT_REASONS; if/elif
+     blocks; etc.) are (b) CODING-UNIQUE migrating to
+     0511004 prose (PROSE-UPDATE-Y).
+     fees_entry_usd PositionRecord field consumption
+     is (a) restatement of 0511004 dv1_3 EC-PAPER-004
+     fees_entry_usd CONSUMPTION + 0500000 D3 layer:L2
+     position_mirror_access field (entry_fill_price +
+     qty + fees_entry_usd read from PositionRecord).
+
+3.62 EC-PAPER-CODE-004 TRADE_CLOSE LOG SCHEMA PARITY:
+     identical fields in both paper and live modes;
+     NO mode flag in log record; CIATS log-file
+     polling mode-agnostic; PA-005 byte-identical CIATS
+     data flow holds.
+     CLASSIFICATION: (a) restatement of HR-EC-013
+     (paper-live close-path parity) + 0511004 dv1_3
+     EC-PAPER-003 TRADE_CLOSE LOG RECORD PARITY +
+     TB00000 v2_29 §4.4 PA-005 + 0500000 D7 root
+     governs PA-005.
+
+3.63 EC-PAPER-CODE-005 ws_manager.py CHANGES — cross-
+     reference to 1011002 dv1_26 WM-PAPER-EXIT-005:
+     _fire_ciats_outcome method DELETE; all call sites
+     DELETE; ciats_outcome_bus_fn constructor param
+     REMOVE; direct position_mirror.pop() in paper code
+     paths REPLACE with on_paper_close routing.
+     CLASSIFICATION: (a) restatement of 0511004 dv1_3
+     EC-PAPER-005 RETIREMENT OF ws_manager._fire_ciats_
+     outcome + 1011002 dv1_26 WM-PAPER-EXIT-005 cross-
+     reference. Already a cross-reference per §10A.2
+     "informational cross-reference for the EC-side
+     audit of paper-mode close pathway integrity."
+     No content beyond what 0511004 + 1011002 already
+     state. (a) RESTATEMENT.
+
+3.64 EC-PAPER-CODE-006 Unit tests required: (a)
+     on_paper_close TP_FILL; (b) on_paper_close
+     EMERGENCY_SL; (c) Layer 2 MAE paper mode; (d)
+     multi-trade sequence (5 paper trades); (e) CIATS-
+     owned parameter integration (HR-EC-015); (f)
+     existing test suite regression check.
+     CLASSIFICATION: (b) CODING-UNIQUE — unit test
+     enumeration is implementation-level test scaffolding.
+     Migration to 0511004 prose (PROSE-UPDATE-Z — §6A
+     EC-PAPER test coverage detail, OR keep in 1011005
+     as paper-mode test contract). Test scope
+     enumeration may stay coding-side if 0511004 prose
+     keeps it abbreviated. PROSE-UPDATE optional.
+
+------------------------------------------------------------
+§11 REVISION HISTORY
+------------------------------------------------------------
+
+3.65 §11 dv1_3 / dv1_2 / dv1_1 / dv1_0 revision history
+     metadata.
+     CLASSIFICATION: (a) metadata — auto-resolves at
+     S-4 retirement. No action required.
+
+============================================================
+4. ROLL-UP TOTALS
+============================================================
+
+Total elements classified: 65 (across 11 sections +
+§10A subsections).
+
+  (a) ARCHITECTURAL RESTATEMENT:   approx 48 elements
+      Sources: 0511004 dv1_3 prose / 0811003 dv1_0
+      prose / 0500000 D3+D4+D6+D7+D2 diagrams + §4 AR
+      registry + §9 parameter prose.
+
+  (b) CODING-UNIQUE:                approx 13 elements
+      Python code blocks (async def bodies; if/elif
+      structures; method signatures), tuple return
+      types, Decimal arithmetic formulas, log event
+      field enumerations (delta beyond 0511004
+      abbreviated list), Python module-import
+      statements, time.monotonic() convention, ROUND_
+      DOWN quantization mechanics, qty_min/cost_min
+      check arithmetic, weighted-avg exit_price
+      computation, rate-cost arithmetic (+2 / +3
+      units), unit test enumeration, WIN/LOSS_EXIT_
+      REASONS set definitions.
+      Migration target: 0511004 dv1_3 prose at S-3
+      via PROSE-UPDATE-V through PROSE-UPDATE-AA
+      (6-7 new updates).
+
+  (c) ARCHITECTURAL CONTENT NOT IN DIAGRAMS:
+                                    sub-cluster C5
+      ZERO genuinely-new architectural rules invented
+      by 1011005 dv1_3. The (c) sub-cluster C5 is
+      the 9 parent-AR + 1 new HR-EC-015 + 2 new
+      param tokens identified at §1.3 (AR-040 / AR-019
+      / AR-041 / AR-048 / AR-052 / AR-071 / HR-EC-015 /
+      cancel_timeout_window / mpp_retry_count). All
+      9 items are referenced by 1011005 / 0511004 /
+      0811003 but absent from every 0500000 diagram
+      root governs list. Single AMENDMENT-9 closure
+      path (D3 + D7 governs additions + D7 govern
+      adds for HR-EC-014 paper-mode parity per §3.57
+      sub-finding).
+
+  (d) UNCLEAR ORIGIN:               0 elements
+      No Chesterton-fence investigation triggered
+      this audit. All elements have clear origin in
+      0511004 dv1_3, 0811003 dv1_0, 0500000 dv1_46,
+      or 1011005 dv1_3 self.
+
+  CITATION DRIFT (cluster C6):
+      Minor: 1011005 §2 cites 0511004 dv1_2 (current
+        is dv1_3) — auto-resolves at S-4.
+      Minor: 1011005 HR-EC-001..012 baseline rule
+        numbering differs from 0511004 dv1_3
+        HR-EC-001..012 numbering (rules in different
+        positions). Same content, different ordering.
+        Auto-resolves at S-4.
+      Minor: 1011005 §7 EC-L2-004 log event name
+        "LAYER2_EXIT_TRIGGERED" vs 0511004 §10
+        "MAE_BREACH_DETECTED" — naming drift.
+        S-3 PROSE-UPDATE-AA resolves.
+      Minor: 1011005 §5 EC-L1A-001..012 numbering
+        sparse (skips 004, 005, 009) — internal
+        numbering consistency only. Auto-resolves.
+
+============================================================
+5. DOWNSTREAM QUEUE
+============================================================
+
+5.1 S-2 DIAGRAM AMENDMENTS — NEW THIS SESSION.
+
+    AMENDMENT-9 NEW. Exit_Controller cluster C5
+      closure — 9 root governs list additions:
+        D3 root governs ADD ar:AR-040 (Pair status
+          adaptation) + ar:AR-048 (MAE bid-only) +
+          ar:AR-066 (TP partial fill — already
+          referenced in §15.12; verify D3 governs
+          inclusion) + ar:AR-071 (max_hold_candles
+          FP/DP). param:max_hold_candles + param:
+          cancel_timeout_window + param:mpp_retry_count
+          ADD to D3 governs.
+        D7 root governs ADD rule:HR-EC-014 (per §3.57
+          sub-cluster C5b sub-finding — HR-EC-014
+          paper-mode parity binding) + rule:HR-EC-015
+          (CIATS-owned no hardcoded usage; applies in
+          both paper and live; per HR-EC-015 affects
+          mae_mult/cancel_timeout_window/mpp_retry_
+          count/max_hold_candles which are CIATS-owned).
+        D5 CIATS Architecture (or D6) root governs
+          ADD ar:AR-052 (drawdown formula + per-wallet
+          thresholds — CIATS scope) + ar:AR-019 +
+          ar:AR-041 (batch_cancel Full Halt — could
+          go on D6 Complete System governs as cross-
+          module batch-cancel binding; S-2 author
+          selects D5 vs D6 vs D3 based on architectural
+          intent — drawdown formula is CIATS-scope so
+          D5 preferred; batch_cancel for Full Halt is
+          system-scope so D6 preferred).
+      No SVG byte change required — root <desc>
+      governs list additions only. Same closure
+      pattern as TB00196 AMENDMENT-7.
+      Closes Exit_Controller cluster C5.
+
+    AMENDMENT-INHERIT-3 NEW (scope-extension carry
+      forward). Per TB00194 AMENDMENT-1 +
+      AMENDMENT-INHERIT-1 (TB00195) + AMENDMENT-INHERIT-
+      2 (TB00196) cascade: 0500000 §9 prose
+      reconciliation + verify D3/D5 governs-list
+      parameter additions for Exit Controller
+      parameters (cancel_timeout_window=5.0s, mpp_
+      retry_count=3, mae_mult starting value cross-
+      referenced into §9 if missing). Scope extended
+      this audit to include Exit Controller §9 prose
+      parameter additions. Closes Exit_Controller
+      sub-cluster C1 cascade contribution.
+
+    CUMULATIVE QUEUE AT TB00197 CLOSE (8 confirmed +
+    1 candidate + carry-forwards from TB00194 + TB00195
+    + TB00196):
+      AMENDMENT-1   0500000 §9 prose reconciliation
+                    (now with Exit Controller §9 prose
+                    parameter additions per AMENDMENT-
+                    INHERIT-3 scope extension).
+      AMENDMENT-2   D7 (or D6) per-wallet drawdown-
+                    machine encoding. Closes TB00194
+                    cluster C2.
+      AMENDMENT-3   D5 (or D6) R:R-driven sizing
+                    curve form factor. Closes TB00194
+                    cluster C3.
+      AMENDMENT-4   D1 ar:AR-068 (SSS indicator
+                    seeding at startup). TB00195 C3.
+      AMENDMENT-5   D1 ar:AR-056 (mid-session WS
+                    reconnect with pipeline-no-fire).
+                    TB00195 C4.
+      AMENDMENT-6   D2 ar:AR-067 (SSS Signal Engine
+                    direction-symmetric scoring).
+                    TB00195 §7.1 separate finding.
+      AMENDMENT-7   D1/D2/D5/D7 governs additions for
+                    EE parent-AR set + new HR-EE-014/
+                    015. TB00196 C5.
+      AMENDMENT-8 CANDIDATE
+                    D2 R-increment mod:Short_Module
+                    addition. TB00196 §7.3.
+      AMENDMENT-9   NEW THIS SESSION. D3/D7/D5(D6)
+                    governs additions for EC parent-AR
+                    set + new HR-EC-015 + 3 param
+                    tokens. Closes TB00197 cluster C5.
+
+5.2 S-3 AA=05 PROSE UPDATES — NEW THIS SESSION.
+
+    PROSE-UPDATE-V (NEW). 0511004 dv1_3 §3.1/§3.2/
+      §3.3 + §6 cancel timeout + §8 hard rules:
+      enumerate (b) CODING-UNIQUE migrating items:
+      time.monotonic() timeout-tracking convention
+      (currently in 1011005 HR-EC-012); async def
+      method body templates for EC-L1A-001/002/003
+      checking patterns; IOC fill convention detail
+      for market sell at bid (currently in 1011005
+      EC-L1A-SEQ Step 5). Coding-relevant
+      implementation patterns.
+
+    PROSE-UPDATE-W (NEW). 0511004 dv1_3 §3.2 TP
+      partial fill + §3.3 EC-L2-001: add ROUND_DOWN
+      quantization mechanics for remaining_qty
+      compute + qty_min/cost_min check arithmetic
+      formula + amend_order vs cancel+resubmit rate-
+      cost arithmetic narrative (+2 vs +3 units)
+      currently absent from 0511004 prose (coding-
+      relevant per EC-TP-002 + EC-TP-004). Add
+      weighted-avg exit_price formula for partial
+      fills (currently in 1011005 EC-TP-005 +
+      EC-TOB-003) currently absent. Analogous to
+      TB00196 PROSE-UPDATE-R.
+
+    PROSE-UPDATE-X (NEW). 0511004 dv1_3 §10 CIATS
+      Trade Outcome Bus log section: enumerate the
+      full 22-field log schema (currently 15 fields
+      enumerated in §10; 7 more fields in 1011005
+      §9 EC-TOB-002 — ts, event, level, component,
+      net_gain_usd, net_loss_usd, signal_params
+      structure). Cross-reference 0511006 dv1_1
+      Logger Specification for log schema canonical.
+      Analogous to TB00196 PROSE-UPDATE-U.
+
+    PROSE-UPDATE-Y (NEW). 0511004 dv1_3 §6A
+      EC-PAPER-004 fees_entry_usd CONSUMPTION + §8
+      HR-EC-014 SC state update authority: add full
+      WIN_EXIT_REASONS / LOSS_EXIT_REASONS set
+      enumeration:
+        WIN_EXIT_REASONS = {"TP_FILL",
+                            "TP_PARTIAL_FILL_REMAINDER"}
+        LOSS_EXIT_REASONS = {"MAE_THRESHOLD_BREACH",
+                             "TIME_EXPIRY",
+                             "HTF_REGIME_REVERSAL",
+                             "DAILY_REGIME_DOWNGRADE",
+                             "SIGNAL_DECAY",
+                             "MOMENTUM_LOSS",
+                             "EMERGENCY_SL"}
+      Currently 0511004 dv1_3 HR-EC-014 cites the
+      sets by name only; 1011005 §10 HR-EC-014
+      enumerates them. Coding-relevant for SC state
+      update logic. Gated on S-2 AMENDMENT-9 closure
+      for diagram-side AR-073 + HR-EC-014 + D6
+      wire-up encoding (already present per §3.57 —
+      gated on HR-EC-014 D7 governs addition).
+
+    PROSE-UPDATE-Z (NEW). 0511004 dv1_3 §6A
+      EC-PAPER-002 + EC-PAPER-004: add the
+      on_paper_close method signature canonical
+      detail (return type: -> None; parameter ordering;
+      Optional[WSManager] hint) currently abbreviated
+      in 0511004 §6A vs 1011005 §10A.1; add the
+      dispatch_market_sell tuple return contract
+      (exit_price, fees_exit) detail currently in
+      1011005 EC-PAPER-CODE-002 explicit but cross-
+      referenced only in 0511004 §6A.
+
+    PROSE-UPDATE-AA (NEW). 0511004 dv1_3 §10 log
+      event taxonomy: harmonize log event names
+      between 0511004 (MAE_BREACH_DETECTED) and
+      1011005 (LAYER2_EXIT_TRIGGERED) — naming drift
+      cluster C6. Adopt one canonical name across
+      both specs (recommend MAE_BREACH_DETECTED per
+      0511004 § dv1_2 ratified usage; 1011005 §7
+      EC-L2-004 conform at S-4). Add IOC_LIMIT_RETRY_
+      SENT, IOC_LIMIT_FILLED, IOC_LIMIT_EXPIRED log
+      events (already in 0511004 dv1_2) to 1011005
+      §10 hard rules cross-reference list — auto
+      resolves at S-4.
+
+    Total NEW from TB00197: 6 prose updates (V, W,
+    X, Y, Z, AA) to 0511004. PROSE-UPDATE-V/W/X
+    are independent of S-2 AMENDMENT-9; PROSE-UPDATE-Y
+    is gated on S-2 AMENDMENT-9 D7 HR-EC-014 governs
+    addition (DD-003 4-step prereq). PROSE-UPDATE-Z
+    is independent. PROSE-UPDATE-AA bundles cluster
+    C6 citation drift resolution at S-4 retirement.
+
+5.3 S-4 1011005 RETIREMENT.
+    Gated on S-2 AMENDMENT-9 (cluster C5) +
+    AMENDMENT-INHERIT-3 (cluster C1 §9 prose
+    extension scope) + S-3 PROSE-UPDATE-V through
+    PROSE-UPDATE-AA closure. Retire 1011005 dv1_3
+    in full once 0511004 dv1_4 (post-S-3) contains
+    all (b) migrated content + cluster C5 diagram-
+    side and prose-side closures complete.
+    Note: 0811003 dv1_0 retirement is OUT OF
+    SCOPE for this audit — 0811003 lifecycle handled
+    separately per AA=08 namespace governance.
+    0811003 dv1_0 currency lag (separate finding
+    §7.4) may trigger a 0811003 dv1_1 revision at
+    a future cycle.
+
+5.4 CROSS-PAIR DEPENDENCIES.
+    Sub-cluster C5 (six parent-AR + one new HR-EC +
+    two new param tokens — diagram-encoding gaps)
+    cross-cuts:
+      AR-040 (Pair status adaptation) — referenced
+        by 0511001 WS_Manager (instrument channel
+        status events feed Exit Controller per
+        §7.1 + §9 triggers).
+      AR-019 / AR-041 (batch_cancel Full Halt) —
+        referenced by 0611002 Drawdown_and_Halt_
+        Rules + 1011002 WS_Manager_Coding_Spec
+        (batch_cancel WS Manager dispatch).
+        Cross-cuts WS_Manager + Risk_Engine audits.
+      AR-048 (MAE bid only — long; amended dv1_42
+        short) — referenced by 0511005 Position_
+        Mirror (bid price source) + 1011002 dv1_26
+        (bbo ticker handler). Cross-cuts WS_Manager
+        + Position_Mirror audits.
+      AR-052 (Portfolio drawdown formula + per-
+        wallet thresholds) — referenced by 0611002
+        Drawdown_and_Halt_Rules + 1011011 Risk_
+        Engine_Coding_Spec + 1011002 dv1_26 paper-
+        mode drawdown computation (HR-WM-032 +
+        spot_usd_balance evolution). Cross-cuts
+        Risk_Engine + WS_Manager + CIATS audits.
+      AR-071 (max_hold_candles = 24 FP/DP) —
+        referenced by 0511001 WS_Manager
+        (hold_candle_count maintained in WS Manager
+        state per HR-EC-010). Cross-cuts WS_Manager
+        audit (already complete at TB00194; no
+        action required).
+      HR-EC-015 (CIATS-owned no hardcoded usage) —
+        cross-cuts EVERY module that consumes
+        CIATS-owned parameters: Signal_Pipeline
+        (rsi_long_low/high), Risk_Engine
+        (per_trade_size_usd, per_trade_ceiling_pct),
+        Regime_Engine (adx_threshold, atr_percentile_
+        thresh, htf_ema_periods), CIATS itself.
+        Likely cluster impact on Risk_Engine,
+        Regime_Engine, Signal_Pipeline S-1 audits
+        (already complete) — verify retrospectively
+        whether any of those audits surfaced
+        equivalent HR-XX-XXX "CIATS-owned no
+        hardcoded usage" rule. If not, the pattern
+        may need elevation to a system-wide
+        contract (e.g., contract:CIATS_Parameter_
+        Read_Discipline) rather than module-local
+        HR-XX-NNN rules — but that is a downstream
+        finding for AMENDMENT-7 / -9 S-2 author.
+      cancel_timeout_window / mpp_retry_count (CIATS-
+        owned params new identifiers) — referenced
+        by 1011002 WS_Manager dispatch (cancel ACK
+        timeout handling), 1011004 Execution_Engine
+        (entry-order cancel timeout handling). Both
+        prior audits used module constants rather
+        than CIATS-owned params for cancel/order
+        timeout — possible downstream finding for
+        AMENDMENT-9 S-2 author re: scope of
+        cancel_timeout_window to be Exit-Controller-
+        only or system-wide.
+    Cluster C2 (parallel-module direction-symmetric)
+    surfaced minimally in Exit Controller because
+    Exit Controller is direction-AGNOSTIC at the
+    L1a / L1b / L2 sequence layer (exit a long is
+    same close mechanics as exit a short; AR-048
+    has an amended dv1_42 short-direction variant
+    that handles MAE formula direction-symmetry).
+    Short_Module exit support inherits from EC base
+    sequence with direction-symmetric AR-048 +
+    AR-073 per-side SC state. No direction-symmetric
+    PROSE-UPDATE addition required for 0511004 at
+    this audit.
+    Cluster C1 (max_concurrent retirement +
+    parameter foundation) confirmed cross-cut with
+    Exit Controller via mae_mult / cancel_timeout_
+    window / mpp_retry_count / max_hold_candles
+    CIATS-owned starting values. AMENDMENT-INHERIT-3
+    extends AMENDMENT-1 §9 prose scope to include
+    Exit Controller parameters.
+
+============================================================
+6. AMBIGUITY-SURFACE FINDINGS (per NSI §7)
+============================================================
+
+6.1 §7.3 VOLUME-OF-(c)-GAPS HIGH FINDING — BELOW
+    THRESHOLD.
+    One (c) cluster surfaced (C5: 9 diagram-encoding
+    gaps in a single cluster) + minor cluster C6
+    (citation drift, auto-resolves at S-4). Below
+    §7.3 "10+" high-volume threshold. Cluster C5
+    closure is a single AMENDMENT-9 with multiple
+    governs-list additions — same closure pattern as
+    TB00196 AMENDMENT-7. No surface to Bill required
+    — derivable per RR-SCOPE-005 + NSI §3.5 anti-
+    cadence-misread.
+
+6.2 §7.4 RR-SCOPE-009 CHESTERTON'S-FENCE — ZERO
+    INVESTIGATIONS + ZERO TRIPS.
+    No (d) UNCLEAR-ORIGIN bucket elements identified
+    this audit. All 1011005 elements have clear
+    origin in 0511004 dv1_3 / 0811003 dv1_0 /
+    0500000 dv1_46 / 1011005 dv1_3 self. No
+    constraint-removal proposals — AMENDMENT-9 is
+    constraint ENCODING (adding governs-list items
+    for already-asserted parent-AR / HR / param
+    content), not removal. RR-SCOPE-009 four-question
+    investigation NOT triggered.
+
+6.3 §7.1 GAP CLASSIFICATION AMBIGUITY — ZERO ITEMS
+    AT SESSION CLOSE.
+    All ~65 elements classified to clean (a)/(b)/(c)
+    buckets after parent-spec + diagram-side governs-
+    list verification. Boundary cases handled at
+    element level:
+      §3.13 EC-L1A-SEQ Step 1 pair status check — (a)
+        with embedded (c) sub-finding for AR-040
+        diagram-encoding gap.
+      §3.42 EC-TOB-002 22-field enumeration — (a)/(b)
+        split; the field PRESENCE is (a); the
+        completeness DELTA beyond 0511004's 15
+        fields is (b).
+      §3.55 HR-EC-012 time.monotonic() — (b) coding
+        convention; not architectural.
+      §3.57 HR-EC-014 — (a) diagram-canonical in D3
+        + D6 but D7 governs gap is sub-cluster C5b
+        finding for paper-mode parity.
+      §3.58 HR-EC-015 — (a)/(c) split; rule itself
+        (c) PRIMARY sub-cluster C5; failure-mode
+        narrative + example code (b).
+      §3.61 EC-PAPER-CODE-003 _close_position
+        extension — (a)/(b) split; SC state update
+        block PRESENCE (a) restatement of HR-EC-014
+        + D6 wire-up; Python code (b) coding-unique.
+    No surface to Bill required.
+
+6.4 §7.5 FILESYSTEM-STATE ASSERTION WITHOUT BASH SWEEP
+    — NO RECURRENCE. TB00197 chat-turn 1 ran
+    bash_tool sweep FIRST per NSI §3.3. ls -la /mnt/
+    project/ output confirmed 0500000 dv1_46.html
+    presence at 850,653 bytes + all session-specific
+    reading files present.
+
+6.5 §7.2 TARGET-DIAGRAM IDENTIFICATION GAP — ZERO
+    AMBIGUITY POST-FP/DP.
+    Cluster C5 target diagrams identified:
+    C5 -> D3 (AR-040/048/066/071 + param:max_hold_
+              candles + param:cancel_timeout_window +
+              param:mpp_retry_count) — primary EC
+              binding.
+    C5 -> D7 (HR-EC-014 paper-mode parity + HR-EC-015
+              CIATS-owned read discipline) — paper-
+              live parity binding.
+    C5 -> D5 or D6 (AR-052 drawdown formula CIATS-
+              scope -> D5; AR-019/041 batch_cancel
+              Full Halt system-scope -> D6). S-2
+              author selects per architectural intent.
+    No genuinely-new-diagram surfaces. No new Tier 2
+    diagram required.
+
+6.6 §7.6 STALE PARAMETER REFERENCE HANDLING — CASCADE
+    PATTERN CONFIRMED.
+    1011005 dv1_3 §4 parameter table references
+    mae_mult / cancel_timeout_window / mpp_retry_
+    count / max_hold_candles. Of these, only max_hold_
+    candles is in 0500000 §9 Exit Controller parameter
+    prose (line 5355). mae_mult is in D3 root governs
+    but starting-value not in §9. cancel_timeout_window
+    + mpp_retry_count completely absent.
+    NSI §7.6 classification framework applied:
+    max_hold_candles -> already in 0500000 §9 + D3
+      ATR_14 indicator binding -> (a) ARCHITECTURAL
+      RESTATEMENT.
+    mae_mult -> in D3 root governs; starting-value
+      (1.5x) cite in §9 sizing parameter table verified
+      -> (a) ARCHITECTURAL RESTATEMENT.
+    cancel_timeout_window + mpp_retry_count -> NOT in
+      any 0500000 location -> (c) ARCHITECTURAL
+      CONTENT NOT IN DIAGRAMS, sub-cluster C5
+      diagram-encoding gap.
+
+6.7 §7.7 DD-011 DERIVABLE-DECISION DISCIPLINE — ZERO
+    RATIFICATION-QUESTION RECURRENCE.
+    Per NSI §3.5 + §7.7 reinforcement: every
+    classification decision, cluster surface, queue
+    addition, and separate-finding surface this audit
+    derived from cold-load context per RR-SCOPE-005.
+    The 0811003 in-scope determination (§1.4) was
+    surfaced as ENACTED decision with derivation chain
+    shown, NOT as a Bill ratification question.
+    Cumulative DD-011 count at TB00197 close = 6
+    (UNCHANGED). Post-v2_27 enactment count = 2
+    (UNCHANGED). Pattern continues for three
+    consecutive sessions (TB00195 + TB00196 + TB00197)
+    SUCCESSFUL.
+
+6.8 §7.8 CROSS-PAIR DEPENDENCY VERIFICATION.
+    Per TB00196 §5.4 forward-declared cross-pair
+    item: AR-018 amend_order primary affects exit
+    placement (EC-side consumer). VERIFIED THIS
+    AUDIT: 1011005 §6 EC-TP-002 + EC-TP-003 reference
+    amend_order(emergsl_order_id, remaining_qty) for
+    TP partial fill. AR-018 is the architectural
+    parent-AR for amend_order primary (TB00196
+    cluster C5). TB00197 confirms EC-side consumer
+    binding. Closure via TB00196 AMENDMENT-7 (D1/D2
+    governs additions for AR-018) ALSO closes the
+    EC-side architectural reference. No additional
+    EC-side amendment required for AR-018.
+
+============================================================
+7. SEPARATE 0500000 INTERNAL FINDINGS
+============================================================
+
+7.1 SUB-CLUSTER C5 — DIAGRAM-ENCODING GAPS FOR
+    EXIT_CONTROLLER PARENT-AR + NEW HR-EC + CIATS-OWNED
+    PARAM SET.
+    Per §1.3 + §3 element classifications. Nine items
+    referenced by 1011005 / 0511004 / 0811003 but
+    absent from every 0500000 dv1_46 diagram root
+    governs list:
+      AR-040 — Pair status adaptation for open positions
+      AR-019 — batch_cancel for Full Halt multi-order
+      AR-041 — cancel_order/batch_cancel distinction
+      AR-048 — Exit Controller MAE uses bid price (long)
+      AR-052 — Portfolio drawdown formula + per-wallet
+               thresholds
+      AR-071 — max_hold_candles starting = 24 (FP/DP)
+      HR-EC-015 — CIATS-owned parameters no hardcoded
+                  usage (NEW dv1_3 — completely absent
+                  from dv1_46)
+      param:cancel_timeout_window (5.0s CIATS-owned)
+      param:mpp_retry_count (3 CIATS-owned)
+    Closure path: AMENDMENT-9 — D3 + D7 + D5/D6 root
+    governs additions only; NO SVG visual byte change.
+    Same closure mechanism as TB00196 AMENDMENT-7.
+    SUB-CLUSTER C5b — HR-EC-014 in D3 governs but NOT
+    in D7 governs. Paper-mode dispatch boundary (D7)
+    needs HR-EC-014 binding because EC is the SOLE
+    updater of SC state in BOTH paper and live modes
+    per the rule's text. Bundle into AMENDMENT-9.
+
+7.2 §9 PROSE STALENESS CARRY-FORWARD — CLUSTER C1
+    CASCADE EXTENSION.
+    0500000 §9 Exit Controller parameters section
+    (line 5355) lists ONLY max_hold_candles. Missing
+    starting-value cites for:
+      cancel_timeout_window: 5.0 seconds (CIATS-owned)
+      mpp_retry_count:       3 attempts (CIATS-owned)
+      mae_mult:              1.5x ATR(14) (cited in §9
+                             sizing parameter table at
+                             line 5283 — verify cross-
+                             reference adequacy)
+      emergency_sl_mult:     3.0x ATR(14) (D3 governs
+                             only; not in §9 parameter
+                             prose)
+    Closure path: AMENDMENT-INHERIT-3 — extends
+    AMENDMENT-1 §9 prose reconciliation scope to
+    include the four Exit Controller parameter
+    starting-values not yet in §9 prose.
+
+7.3 0811003 DV1_0 CURRENCY LAG — SEPARATE FINDING
+    (NOT IN-SCOPE FOR THIS S-1 AUDIT).
+    0811003 dv1_0 is dated 04-05-2026. The TB00147
+    cascade (HR-EC-013/014/015 + §6A EC-PAPER in
+    0511004 dv1_3 dated 05-03-2026) has NOT been
+    reflected back into 0811003. The AA=08 trading-
+    rules spec is currency-lagged behind the AA=05
+    system spec by ~28 days.
+    Disposition: AA=08 namespace lifecycle is OUT OF
+    SCOPE for the S-1 audit (which targets the AA=10
+    coding spec retirement gate). Future Stage K+
+    (or Stage M+ at Bill's discretion) may direct a
+    0811003 dv1_0 -> dv1_1 cycle to reconcile the
+    HR-EC-013/014/015 + §6A EC-PAPER cascade into
+    the AA=08 layer. Flag this finding for forward-
+    session pickup.
+    NO ACTION REQUIRED THIS AUDIT.
+
+7.4 CLUSTER C6 — MINOR CITATION DRIFT (AUTO-RESOLVES
+    AT S-4).
+    Four minor citation-drift items:
+      (i)   1011005 §2 cites 0511004 dv1_2; current
+            is dv1_3.
+      (ii)  1011005 HR-EC-001..012 numbering vs 0511004
+            dv1_3 HR-EC-001..012 numbering not 1:1
+            (same content, different positions).
+      (iii) 1011005 §7 EC-L2-004 uses log event name
+            "LAYER2_EXIT_TRIGGERED" vs 0511004 §10 +
+            0811003 §14 "MAE_BREACH_DETECTED" — naming
+            drift, harmonize via PROSE-UPDATE-AA.
+      (iv)  1011005 §5 EC-L1A-* numbering sparse
+            (001/002/003/006/007/008/010/011/012 —
+            skips 004/005/009). Internal coding-spec
+            numbering consistency only.
+    Closure: auto-resolves at S-4 1011005 retirement +
+    PROSE-UPDATE-AA log name harmonization.
+
+============================================================
+8. EXIT CRITERIA STATUS
+============================================================
+
+  E-S1EC-01   COMPLETE — Cold-load + bash sweep +
+              0500000 dv1_46 presence verified at
+              850,653 bytes.
+  E-S1EC-02   COMPLETE — End-to-end read of 1011005
+              dv1_3 + 0511004 dv1_3 + 0811003 dv1_0 +
+              relevant D2/D3/D4/D6/D7 + §4 AR registry
+              + §9 parameter prose regions of 0500000
+              dv1_46. 0811003 dv1_0 in-scope
+              determination recorded (§1.4 derived
+              per RR-SCOPE-005).
+  E-S1EC-03   COMPLETE — Gap register §3.1-3.65
+              element-by-element classification
+              authored.
+  E-S1EC-04   COMPLETE — Three-bucket (a)/(b)/(c)
+              classification applied; (d) Chesterton-
+              fence bucket = 0 elements; roll-up in §4.
+  E-S1EC-05   COMPLETE — Cluster C5 target diagrams
+              identified per §6.5 (D3 primary;
+              D7 paper-parity sub-finding C5b;
+              D5/D6 for drawdown + batch_cancel).
+  E-S1EC-06   COMPLETE — S-2 + S-3 + S-4 downstream
+              queue derived (cumulative TB00194 +
+              TB00195 + TB00196 + TB00197 queues per
+              §5).
+  E-S1EC-07   PENDING BILL APPROVAL GATE per NSI §2.3.
+  E-S1EC-08   COMPLETE THIS TURN — TB00197 SL + TB00198
+              NSI + OCS trio per DR-008.6/.7/.8/.9.
+  E-S1EC-09   COMPLETE THIS TURN — S-1 next-module-
+              pair sequencing recorded in TB00198 NSI
+              §1.
+
+============================================================
+9. REVISION HISTORY
+============================================================
+
+  v1_0  2026-05-11  Initial TB00197 Exit_Controller
+                    S-1 Gap Register. Step 3 sub-step
+                    S-1 fourth module pair. Methodology
+                    inherited from TB00194 + TB00195 +
+                    TB00196 form-factor precedent per
+                    RR-SCOPE-005 derivable execution
+                    (no per-session re-ratification
+                    needed; methodology stabilized
+                    across three consecutive precedent
+                    audits). Form factor: discrete
+                    controlled-doc, 9 sections matching
+                    TB00194 / TB00195 / TB00196
+                    structure. Cross-namespace 0811003
+                    dv1_0 in-scope determination
+                    derived per RR-SCOPE-005 from
+                    1011005 §2 explicit parent-chain
+                    citation + 0811003 §1 complementary-
+                    role affirmation; enacted directly
+                    (not surfaced as Bill ratification
+                    question per DD-011 + NSI §3.5
+                    anti-surface-derivable
+                    reinforcement). Three-bucket
+                    classification across ~65 elements:
+                    (a) ~48 ARCHITECTURAL RESTATEMENT /
+                    (b) ~13 CODING-UNIQUE / (c)
+                    sub-cluster C5 (9 diagram-encoding
+                    gaps in single cluster) +
+                    sub-cluster C5b (HR-EC-014 D7
+                    governs gap for paper-mode parity)
+                    + AMENDMENT-INHERIT-3 §9 prose
+                    cascade extension / (d) 0
+                    elements. AMENDMENT-9 NEW (D3 + D7
+                    + D5/D6 governs additions; no SVG
+                    byte change). PROSE-UPDATE-V
+                    through PROSE-UPDATE-AA NEW (6
+                    prose updates to 0511004 at S-3).
+                    Cluster C6 minor citation-drift
+                    items auto-resolve at S-4. 0811003
+                    dv1_0 currency lag flagged as
+                    separate §7.3 finding NOT IN
+                    SCOPE for S-1 audit. Cluster C2
+                    direction-symmetric scope: minimal
+                    EC contribution (EC base sequence
+                    is direction-agnostic; AR-048
+                    handles direction-symmetric MAE
+                    formula via amended dv1_42). DD-011
+                    pre-emit scan SUCCESSFUL: zero
+                    ratification-question pattern
+                    surfaced; cumulative count
+                    unchanged at 6 (post-v2_27 = 2).
+                    Single-turn DR-006 delivery
+                    enforced (gap register + SL + NSI
+                    + OCS in one chat-turn).
+                    Methodology continues to validate
+                    for application to next module
+                    pair (Position_Mirror at TB00198
+                    per TB00197 NSI §6.1 minus
+                    Exit_Controller).
+
+============================================================
+END OF TB00197 S1EC GAP REGISTER v1_0
+============================================================

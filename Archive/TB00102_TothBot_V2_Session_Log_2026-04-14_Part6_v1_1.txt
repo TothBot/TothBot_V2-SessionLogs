@@ -1,0 +1,548 @@
+DocDCN:     TB00102
+DocTitle:   TothBot_V2_Session_Log_2026-04-14_Part6
+DocVersion: v1_1
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\My_TothBot_Stuff\TBXXXXX_Session_Logs\TB00102_TothBot_V2_Session_Log_2026-04-14_Part6_v1_1.txt
+DocDate:    04-14-2026
+DocTime:    23:59:59 UTC
+
+============================================================
+TOTHBOT V2 SESSION LOG — 2026-04-14 PART 6
+============================================================
+
+============================================================
+1. SESSION IDENTITY
+============================================================
+
+Session date:     April 14, 2026 (Part 6)
+Session number:   TB00102
+Session type:     DEFECT-SS-009 diagnosis and fix.
+                  DEFECT-RE-002 Fix 2 confirmed partially
+                  working but incomplete. Root cause found.
+Prior session:    TB00101 v1_0 (2026-04-14 Part 5)
+
+Documents read this session:
+  TB00000  v2_8    Project Instructions             read
+  TB00101  v1_0    Prior session log                read
+  0311001  v1_1    Namespace_Specification          read
+  0311002  v1_2    Document_Creation_Workflow       read
+  0311003  v1_0    Versioning_Procedure             read
+  0311004  v1_1    Document_Creation_Approval_Proc  read
+
+============================================================
+2. WORK COMPLETED THIS SESSION
+============================================================
+
+------------------------------------------------------------
+2.1 Fix 2 Deployment Verification — Partial Failure Found
+------------------------------------------------------------
+
+PAPER TRADING ONLY. NO REAL MONEY.
+
+After VPS deployment of ws_manager.py dv1_19 (TB00101),
+regime startup seed sequence confirmed in log:
+
+  WARMUP_REST_COMPLETE (18:07:53)
+  REGIME_STARTUP_SEED_STARTED (18:07:53)
+  REGIME_STARTUP_SEED_COMPLETE (18:07:54) ← 1.25 seconds
+  SYSTEM_OPERATIONAL (18:07:54)
+
+DEFECT confirmed: seed completed in 1.25 seconds for 50 pairs.
+Expected: ~55 seconds (50 pairs × 1.1s stagger per RE-RL-002).
+Conclusion: an exception being silently caught OR regime
+computed for far fewer than 50 pairs.
+
+Gate 3 check confirmed: all pairs still failing NO_REGIME_DATA
+at 18:35–18:37 UTC, 27 minutes after startup. Fix 2 had
+no effect on trading readiness.
+
+------------------------------------------------------------
+2.2 Root Cause Analysis — DEFECT-SS-009
+------------------------------------------------------------
+
+DEFECT-SS-009 (CRITICAL — CONFIRMED AND FIXED)
+
+Root cause: _regime_wrapper in startup_sequence.py called
+  rge.run_daily_computation() with no universe argument.
+  run_daily_computation() uses self._universe when no
+  universe is passed. rge._universe is set at RegimeEngine
+  construction time from _load_universe(config).
+  _load_universe() returns ["BTC/USD"] only (TOTHBOT_UNIVERSE
+  env var not set; default is "BTC/USD").
+
+  The full 50-pair monitored universe is built by WSManager
+  at runtime from the Kraken instrument snapshot — it is NOT
+  available at construction time. rge._universe = ["BTC/USD"]
+  for the lifetime of the process.
+
+  Result: regime computed for 1 pair (BTC/USD) only.
+  All 49 other monitored pairs had NO_REGIME_DATA.
+  Gate 3 blocked all non-BTC entries for the entire session.
+  This also affects the daily 00:00 UTC regime refresh —
+  same wrapper, same defect.
+
+  Evidence:
+    REGIME_STARTUP_SEED_COMPLETE in ~1.25s (BTC/USD: 1.1s
+    stagger + ~0.15s REST fetch = ~1.25s correct for 1 pair).
+    All non-BTC pairs showing GATE_3_FAIL NO_REGIME_DATA
+    27 minutes after SYSTEM_OPERATIONAL.
+
+Fix: _regime_wrapper now passes list(wm.monitored_universe)
+  to rge.run_daily_computation(universe=universe). Python
+  closures capture wm by reference — at call time,
+  wm.monitored_universe contains the full ranked 50-pair
+  universe. Guard: if wm.monitored_universe else None.
+
+------------------------------------------------------------
+2.3 DEFECT-SS-009 Fix — Documents Updated
+------------------------------------------------------------
+
+Governing spec: 1011014 dv1_5 SS-WIRE-001 (new rule).
+Code file: startup_sequence.py dv1_6 → dv1_7.
+
+startup_sequence.py change (one line + comments):
+
+  BEFORE (dv1_6):
+    async def _regime_wrapper(candles, symbol: str) -> None:
+        await rge.run_daily_computation()
+
+  AFTER (dv1_7):
+    async def _regime_wrapper(candles, symbol: str) -> None:
+        universe = (
+            list(wm.monitored_universe)
+            if wm.monitored_universe else None
+        )
+        await rge.run_daily_computation(universe=universe)
+
+------------------------------------------------------------
+2.4 Document Control — All Requirements Met
+------------------------------------------------------------
+
+Per 0311001, 0311002, 0311003, 0311004:
+
+  startup_sequence.py
+    dv1_6 → dv1_7
+    7-field header updated. Revision history updated.
+    DEFECT-SS-009 fix documented.
+
+  1011014_Startup_Sequence_Coding_Spec
+    dv1_4 → dv1_5
+    Section 12 (Component Wiring Rules) added.
+    SS-WIRE-001 (new rule): _regime_wrapper must pass
+    wm.monitored_universe. Related documents updated.
+    Revision history entry added.
+
+  1010000_Trading_System_Coding_Anchor
+    dv1_7 → dv1_8 (note: dv1_7 committed earlier this
+    session for ws_manager.py registry update)
+    Code File Registry: startup_sequence.py SpecVer
+    updated dv1_3 → dv1_5. Revision history updated.
+
+============================================================
+3. OPEN ITEMS / PARKING LOT
+============================================================
+
+OI-016  OPEN — DEFECT-WM-CRASH-001 root cause unknown.
+        Fix 1 (ws_manager.py dv1_19) deployed. Next crash
+        will log actual sub-exception. Must review after
+        next crash. ExceptionGroup logging is now in place.
+
+OI-017  OPEN — DEFECT-WM-LIQ-001. Liquidity refresh
+        returning empty_result every 4 hours. Non-blocking.
+        Investigate after OI-016 root cause is confirmed.
+
+OI-014  OPEN — startup_sequence.py stale cross-references
+        and ohlc sequence review. Post paper-trading stable.
+
+============================================================
+4. STANDING RULES — ALL ACTIVE
+============================================================
+
+  RULE 6  — git add . is prohibited. Explicit per file.
+  RULE 13 — .bat files go to Desktop only. Never in repo.
+  RULE 14 — git push origin master. NEVER origin main.
+  RULE 15 — ONE COMMAND PER COPY BOX. ALWAYS.
+  RULE 16 — .bat files run from cmd.exe only. Never PS.
+  RULE 17 — Always give complete and correct instructions.
+            Include Command Prompt or Powershell. Include
+            root file path in each instruction. Every step
+            must be executable without interpretation.
+
+  CODING RULES — ALL ACTIVE:
+  NO PATCHES EVER. Full file delivery only. Full document
+  control. Every code change = new version = full file
+  delivered as .txt per DR-001.
+
+  DELIVERY RULES — ALL ACTIVE:
+  DR-001 — All documents as .txt files.
+  DR-002 — 0500000 additionally as .docx and .pdf.
+  DR-003 — ALL documents in ONE BATCH. No piecemeal.
+
+============================================================
+5. BILL ACTIONS REQUIRED — THIS SESSION
+============================================================
+
+------------------------------------------------------------
+STEP 1 — Save session log                        COMPLETE
+------------------------------------------------------------
+TB00102 v1_1 saved to:
+  C:\Users\wstot\My_TothBot_Stuff\TBXXXXX_Session_Logs\
+
+------------------------------------------------------------
+STEP 2 — Upload to Claude project folder         COMPLETE
+------------------------------------------------------------
+TB00102 v1_1 uploaded to Claude project folder.
+TB00101 v1_0 deleted from Claude project folder.
+
+------------------------------------------------------------
+STEP 3 — Download documents                      COMPLETE
+------------------------------------------------------------
+All four documents downloaded.
+
+------------------------------------------------------------
+STEP 4 — Place in Docs repo                      COMPLETE
+------------------------------------------------------------
+Files placed in:
+  C:\Users\wstot\GitHub\TothBot\TothBot_V2-Docs\
+    10XXXXX_Coding_Specification\
+
+------------------------------------------------------------
+STEP 5 — Commit TothBot_V2-Docs                  COMPLETE
+------------------------------------------------------------
+Commit hash: f882a81
+Message: TB00102: 1011014 dv1_5 SS-WIRE-001; 1010000 dv1_8
+         registry update; remove superseded dv1_17
+Files:
+  renamed:  1010000 dv1_6 → dv1_8 (96% similarity)
+  deleted:  1011002_WS_Manager_Coding_Spec_dv1_17.txt
+  new file: 1011014_Startup_Sequence_Coding_Spec_dv1_5.txt
+
+------------------------------------------------------------
+STEP 6 — Place startup_sequence.py in Code repo  COMPLETE
+------------------------------------------------------------
+startup_sequence.py (dv1_7) placed in:
+  C:\Users\wstot\GitHub\TothBot\TothBot_V2-Code\tothbot\
+
+------------------------------------------------------------
+STEP 7 — Commit TothBot_V2-Code                  COMPLETE
+------------------------------------------------------------
+Commit hash: 6d75479
+Message: TB00102: startup_sequence.py dv1_7
+         DEFECT-SS-009 _regime_wrapper pass monitored_universe
+Files: tothbot/startup_sequence.py (29 insertions, 5 deletions)
+
+------------------------------------------------------------
+STEP 8 — Deploy to VPS                           PENDING
+------------------------------------------------------------
+
+This is the only remaining action. Run each command
+separately. Copy exactly as written.
+
+Open Command Prompt or SSH terminal and connect to VPS:
+```
+ssh root@87.99.141.44
+```
+
+Pull the latest code (startup_sequence.py dv1_7):
+```
+cd /root/TothBot_V2-Code && git pull
+```
+
+Expected pull output — confirm startup_sequence.py updated:
+  From https://github.com/TothBot/TothBot_V2-Code
+  c723410..6d75479  master -> origin/master
+  Fast-forward
+  tothbot/startup_sequence.py | 29 +++ (29 insertions, 5 deletions)
+
+Restart the service:
+```
+sudo systemctl restart tothbot
+```
+
+Wait 75 seconds for full 50-pair regime computation to
+complete (~55 seconds at 1.1s per pair), then check log:
+```
+sleep 75 && grep -E "REGIME_STARTUP_SEED|WARMUP_REST_COMPLETE|SYSTEM_OPERATIONAL|WS_MGR_FATAL|GATE_3_FAIL" /home/tothbot/logs/tothbot.log | tail -15
+```
+
+WHAT TO LOOK FOR — SUCCESS:
+  (a) REGIME_STARTUP_SEED_STARTED present
+  (b) REGIME_STARTUP_SEED_COMPLETE present
+      Elapsed time from START to COMPLETE: ~55 seconds.
+      If elapsed is ~1.25 seconds — fix did NOT deploy
+      correctly. Stop and investigate before proceeding.
+  (c) SYSTEM_OPERATIONAL present after SEED_COMPLETE
+  (d) GATE_3_FAIL events after SYSTEM_OPERATIONAL should
+      show "rejection":"REGIME_BLOCKED" (valid regime
+      reason — TRENDING_NEGATIVE or NON_DIR+ELEVATED)
+      NOT "rejection":"NO_REGIME_DATA"
+  (e) WS_MGR_FATAL absent
+
+WHAT TO LOOK FOR — FAILURE:
+  If SEED_COMPLETE appears in ~1.25 seconds:
+    DEFECT-SS-009 fix did not take effect.
+    Run: grep "startup_sequence" /root/TothBot_V2-Code/tothbot/startup_sequence.py | head -5
+    Confirm file shows dv1_7.
+
+  If WS_MGR_FATAL appears:
+    Run: grep -A 3 "WS_MGR_FATAL" /home/tothbot/logs/tothbot.log | tail -20
+    Paste output to Claude next session — Fix 1 logging
+    will now show the actual sub-exception.
+
+  If GATE_3_FAIL still shows NO_REGIME_DATA after ~60s:
+    Run: grep "REGIME" /home/tothbot/logs/tothbot.log | tail -20
+    Paste to Claude for diagnosis.
+
+Confirm service is running:
+```
+systemctl status tothbot
+```
+
+Expected: Active: active (running), restart counter = 0
+(or 1 from the prior session restart — either is acceptable
+as long as no new restart has occurred since this deploy).
+
+Paste full output of the sleep/grep command to Claude
+at the start of the next session.
+
+============================================================
+6. NEXT SESSION — COMPLETE INSTRUCTIONS
+============================================================
+
+============================================================
+DOCUMENTS TO READ — IN THIS ORDER:
+1. TB00000  v2_8    — Project Instructions
+2. TB00102  v1_1    — This session log (most recent)
+STATE ALL DOCUMENTS READ AND VERSIONS BEFORE ANY WORK.
+============================================================
+
+============================================================
+FIRST TASK — Report VPS deployment result
+============================================================
+
+PAPER TRADING ONLY. NO REAL MONEY.
+
+Paste to Claude:
+  (a) Full output of the sleep/grep command from Step 8.
+  (b) Output of: systemctl status tothbot
+
+Claude will confirm:
+  — DEFECT-SS-009 fixed (regime seed ~55 seconds)
+  — System operational with full 50-pair regime coverage
+  — OI-016 monitoring plan for DEFECT-WM-CRASH-001
+
+============================================================
+CURRENT STATE SUMMARY — END OF SESSION
+============================================================
+
+GitHub — TothBot_V2-Docs:
+  Latest commit: f882a81 (531b447 prior)
+  1011014 dv1_5: SS-WIRE-001 added
+  1010000 dv1_8: startup_sequence.py registry updated
+  All superseded specs removed
+
+GitHub — TothBot_V2-Code:
+  Latest commit: 6d75479 (c723410 prior)
+  startup_sequence.py dv1_7: DEFECT-SS-009 fix
+
+VPS:
+  Status: RUNNING — OLD CODE (startup_sequence.py dv1_6)
+  Pending: git pull + systemctl restart (Step 8 above)
+  Known issue: Gate 3 failing NO_REGIME_DATA for all
+    non-BTC pairs until Step 8 is executed.
+
+Open defects:
+  OI-016  DEFECT-WM-CRASH-001 — crash root cause unknown.
+          Fix 1 logging in place. Next crash will reveal
+          actual sub-exception.
+  OI-017  DEFECT-WM-LIQ-001 — liquidity refresh empty_result
+          every 4 hours. Non-blocking. Deferred.
+  OI-014  startup_sequence.py stale cross-references.
+          Post paper-trading stable.
+
+============================================================
+REVISION HISTORY
+============================================================
+
+  v1_1  04-14-2026  Updated after GitHub commits completed.
+                    Steps 1-7 marked COMPLETE with commit
+                    hashes. Step 8 VPS deployment detailed
+                    with success/failure criteria. Current
+                    state summary added. Next session
+                    instructions updated.
+
+  v1_0  04-14-2026  Initial. DEFECT-SS-009 diagnosed and
+                    fixed. Root cause: _regime_wrapper not
+                    passing monitored_universe to
+                    run_daily_computation(). Three documents
+                    updated with full DC compliance per
+                    0311001, 0311002, 0311003, 0311004.
+
+============================================================
+END OF SESSION LOG TB00102 v1_1
+============================================================
+
+------------------------------------------------------------
+STEP 1 — Save session log
+------------------------------------------------------------
+```
+C:\Users\wstot\My_TothBot_Stuff\TBXXXXX_Session_Logs\
+```
+Save: TB00102_TothBot_V2_Session_Log_2026-04-14_Part6_v1_0.txt
+
+------------------------------------------------------------
+STEP 2 — Upload to Claude project folder
+------------------------------------------------------------
+Upload TB00102 v1_0 to Claude project folder.
+Delete TB00101 v1_0 from Claude project folder.
+
+------------------------------------------------------------
+STEP 3 — Download documents from this session
+------------------------------------------------------------
+Download all four documents:
+  startup_sequence.py (dv1_7)
+  1011014_Startup_Sequence_Coding_Spec_dv1_5.txt
+  1010000_Trading_System_Coding_Anchor_dv1_8.txt
+  TB00102_TothBot_V2_Session_Log_2026-04-14_Part6_v1_0.txt
+
+------------------------------------------------------------
+STEP 4 — Place coding spec and anchor in Docs repo
+------------------------------------------------------------
+Place in:
+  C:\Users\wstot\GitHub\TothBot\TothBot_V2-Docs\10XXXXX_Coding_Specification\
+
+  1011014_Startup_Sequence_Coding_Spec_dv1_5.txt
+    (replace dv1_4 — delete old version)
+
+  1010000_Trading_System_Coding_Anchor_dv1_8.txt
+    (replace dv1_7 — delete old version)
+
+------------------------------------------------------------
+STEP 5 — Commit TothBot_V2-Docs
+------------------------------------------------------------
+Open Command Prompt:
+```
+cd C:\Users\wstot\GitHub\TothBot\TothBot_V2-Docs
+```
+```
+git status
+```
+Verify only the two updated spec files show as changes.
+```
+git add 10XXXXX_Coding_Specification/1011014_Startup_Sequence_Coding_Spec_dv1_5.txt
+```
+```
+git add 10XXXXX_Coding_Specification/1010000_Trading_System_Coding_Anchor_dv1_8.txt
+```
+```
+git commit -m "TB00102: 1011014 dv1_5 SS-WIRE-001; 1010000 dv1_8 registry update"
+```
+```
+git push origin master
+```
+Report the commit hash.
+
+------------------------------------------------------------
+STEP 6 — Place startup_sequence.py in Code repo
+------------------------------------------------------------
+Rename to startup_sequence.py (remove .txt if needed).
+Place in:
+  C:\Users\wstot\GitHub\TothBot\TothBot_V2-Code\tothbot\
+
+------------------------------------------------------------
+STEP 7 — Commit TothBot_V2-Code
+------------------------------------------------------------
+Open Command Prompt:
+```
+cd C:\Users\wstot\GitHub\TothBot\TothBot_V2-Code
+```
+```
+git status
+```
+Verify only tothbot/startup_sequence.py shows as changed.
+```
+git add tothbot/startup_sequence.py
+```
+```
+git commit -m "TB00102: startup_sequence.py dv1_7 DEFECT-SS-009 _regime_wrapper pass monitored_universe"
+```
+```
+git push origin master
+```
+Report the commit hash.
+
+------------------------------------------------------------
+STEP 8 — Deploy to VPS
+------------------------------------------------------------
+```
+ssh root@87.99.141.44
+```
+```
+cd /root/TothBot_V2-Code && git pull
+```
+Confirm startup_sequence.py updated in pull output.
+```
+sudo systemctl restart tothbot
+```
+```
+sleep 75 && grep -E "REGIME_STARTUP_SEED|WARMUP_REST_COMPLETE|SYSTEM_OPERATIONAL|GATE_3_FAIL|WS_MGR_FATAL" /home/tothbot/logs/tothbot.log | tail -20
+```
+75 second sleep to allow full 50-pair regime computation (~55s).
+
+Confirm:
+  (a) REGIME_STARTUP_SEED_STARTED present
+  (b) REGIME_STARTUP_SEED_COMPLETE present — ~55s after START
+  (c) SYSTEM_OPERATIONAL present after SEED_COMPLETE
+  (d) GATE_3_FAIL absent OR showing REGIME_BLOCKED (not
+      NO_REGIME_DATA) after SYSTEM_OPERATIONAL
+  (e) No WS_MGR_FATAL
+
+Elapsed time between SEED_STARTED and SEED_COMPLETE
+should be approximately 55 seconds (50 pairs × 1.1s).
+
+============================================================
+6. NEXT SESSION — COMPLETE INSTRUCTIONS
+============================================================
+
+============================================================
+DOCUMENTS TO READ — IN THIS ORDER:
+1. TB00000  v2_8    — Project Instructions
+2. TB00102  v1_0    — This session log (most recent)
+STATE ALL DOCUMENTS READ AND VERSIONS BEFORE ANY WORK.
+============================================================
+
+============================================================
+TASK — Confirm DEFECT-SS-009 fix deployed and working
+============================================================
+
+PAPER TRADING ONLY. NO REAL MONEY.
+
+Tell Claude:
+  (a) Commit hashes from Steps 5 and 7 above.
+  (b) VPS deployment output (Step 8).
+
+Confirm REGIME_STARTUP_SEED_COMPLETE appears ~55 seconds
+after REGIME_STARTUP_SEED_STARTED.
+
+Confirm GATE_3_FAIL events after SYSTEM_OPERATIONAL show
+REGIME_BLOCKED (valid regime reason) rather than
+NO_REGIME_DATA (missing regime data).
+
+If confirmed: paper trading is operational with full
+regime coverage. Monitor for DEFECT-WM-CRASH-001 root
+cause from next crash (OI-016).
+
+============================================================
+REVISION HISTORY
+============================================================
+
+  v1_0  04-14-2026  Initial. DEFECT-SS-009 diagnosed and
+                    fixed. Root cause: _regime_wrapper not
+                    passing monitored_universe to
+                    run_daily_computation(). Three documents
+                    updated with full DC compliance per
+                    0311001, 0311002, 0311003, 0311004.
+
+============================================================
+END OF SESSION LOG TB00102 v1_0
+============================================================

@@ -1,0 +1,613 @@
+DocDCN:     TB00118
+DocTitle:   TothBot_V2_Session_Log_2026-04-23
+DocVersion: v1_1
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TBXXXXX_Session_Logs\TB00118_TothBot_V2_Session_Log_2026-04-23_v1_1.txt
+DocDate:    04-23-2026
+DocTime:    05:15:00 UTC
+
+============================================================
+TOTHBOT V2 SESSION LOG - TB00118
+CHANGE SESSION — OI-028 / OI-029 / OI-030 DC PACKAGE
+OI-039 FORMAL CLOSE
+============================================================
+
+PAPER TRADING ONLY. NO REAL MONEY.
+
+============================================================
+1. SESSION IDENTITY
+============================================================
+
+Session date:     2026-04-23 UTC
+Session number:   TB00118
+Session type:     Claude Chat - cold load. Part 2 CHANGE
+                  session four-times-deferred through TB00115,
+                  TB00116, TB00117. Pre-flight pass-with-
+                  qualification (one superseded file
+                  0311001 v1_2 discovered still present in
+                  project folder at cold-load; Bill to remove
+                  post-session before OI-039 formal close
+                  commits). VPS STEP A extended sweep confirmed
+                  OI-028 Candidate (A) with refinement. DC
+                  package assembled per TB00117 NSI §7.
+Prior session:    TB00117 (2026-04-23 UTC, Claude Chat -
+                  OI-028 / OI-029 / OI-030 diagnosis 80%
+                  complete, cut short by Claude Chat errors).
+Platform:         Claude Chat.
+Next session:     TB00119 - CLEANUP session. Commit / push /
+                  deploy TB00118 DC package. Open 48-hour
+                  observation window. Verify sweep output
+                  with corrected patterns. Run manual SMTP
+                  alert test to exercise OI-029 retry path
+                  on a live transient.
+
+Documents read this session:
+  TB00000   v2_12   Project Instructions for Claude       read
+                    (NOTE: Bill session-opening reminder
+                    referenced v2_11; §2 Reading Rule
+                    applied — read project version v2_12
+                    and noted discrepancy.)
+  TB00117   v1_0    Session Log                           read
+  TB00117   v1_0    NSI                                   read
+  0311001   v1_3    Namespace Specification               read
+  0311002   v1_3    Document Creation Workflow            read
+  0311003   v1_1    Versioning Procedure                  read
+  0311004   v1_2    Document Creation and Approval        read
+  0311005   v1_0    System Definitions and Terminology    read
+  1010000   dv1_12  Trading System Coding Anchor          read
+  0500000   dv1_19  System Architecture Overview          referenced
+
+  ws_manager.py  dv1_21  targeted read: header, revhist,
+                         _execute_reconnect_sequence,
+                         _startup_connect_and_subscribe,
+                         _initiate_reconnect loop, all
+                         paper_mode references
+  logger.py      dv1_4   targeted read: header, constants
+                         block, _alert_operator_direct SMTP
+                         send path + except block, imports
+  1011002        dv1_19  targeted read: §2 parent chain,
+                         §15 WM-RECONNECT rules, §19 revhist
+  1011007        dv1_4   targeted read: §6 registry, §8
+                         LG-ALERT-004/005, §12 revhist
+  0511001        dv1_1   targeted read: paper-mode statements
+                         in lines 82-84 and 128-129 (no
+                         update needed — spec was correct)
+  0511006        dv1_1   targeted read: §7 alert routing,
+                         §8.4 operator interface (no update
+                         needed — spec is behavior-level)
+
+Fresh-data discipline upheld: every version claim in this
+log is from direct file read or bash verification this
+session.
+
+============================================================
+2. WORK COMPLETED THIS SESSION
+============================================================
+
+------------------------------------------------------------
+2.1 Pre-flight version sweep (per 0311002 v1_3 DC-SYNC-003)
+------------------------------------------------------------
+
+RESULT: PASS with one qualification.
+
+  TB00000 v2_12 present; v2_11 absent              PASS
+  13 mandatory session log / NSI files present     PASS
+    (TB00111 through TB00117 inclusive)
+  0311001 v1_3 present                             PASS
+  0311001 v1_2 absent                              FAIL
+    (still present in project folder —
+     3 prohibited-string occurrences. Bill to
+     remove post-session. Does not block STEP A
+     or DC package assembly. Does block OI-039
+     formal close until removed.)
+  0311003 v1_1 present; v1_0 absent                PASS
+  1010000 dv1_12 present; dv1_11 absent            PASS
+  Active-governance prohibited-string count = 0    PASS
+    (TB00000 v2_12 has 7 all in §4.2 ban-rule
+     text + rev history — acceptable per
+     TB00115 FP/DP Option C design)
+  0500000 three-format set (dv1_19)                PASS
+
+------------------------------------------------------------
+2.2 VPS extended sweep (STEP A, per TB00117 NSI §6)
+------------------------------------------------------------
+
+Initial attempt: Claude produced a cmd.exe one-liner with
+three-layer `\"` nesting which broke cmd.exe quoting and
+caused pipe segments to execute locally. Second attempt:
+cmd.exe + script-over-ssh-stdin approach — still cmd.exe.
+Bill corrected the shell platform: PowerShell was the
+established shell for this project, not cmd.exe. Third
+attempt: PowerShell + scp file + ssh-bash execution —
+SUCCESS.
+
+WORKING PATTERN (recorded for all future STEP A sweeps):
+
+  # Create sweep script locally (Notepad, save as .sh)
+  scp "C:\...\TB00NNN_sweep.sh" root@87.99.141.44:/tmp/TB00NNN_sweep.sh
+  ssh root@87.99.141.44 "tr -d '\r' < /tmp/TB00NNN_sweep.sh | bash"
+
+  The `tr -d '\r'` inline strip is REQUIRED because
+  Windows Notepad writes CRLF line endings. Without the
+  strip, bash on the VPS sees \r at end of every line and
+  the script fails on the shebang interpretation.
+
+RAW OUTPUT (edited for brevity — see full PowerShell
+transcript):
+
+  SERVICE: active (running) since 2026-04-23 04:01:52 UTC
+  PID 237599. Main process systemd auto-restart counter=9.
+
+  EVENT COUNTS (cumulative in rolling log):
+    RECONNECT_INITIATED:              15
+    RECONNECT_COMPLETE:                0    <-- SMOKING GUN
+    RECONNECT_ATTEMPT_FAILED:        240
+    RECONNECT_TRIGGERED:              28
+    FATAL_RECONNECT_FAILURE:          15
+    WS_MGR_FATAL:                     15
+    ALERT_SMTP_FAILED:                 2
+    PAPER_BALANCE_SET:                17
+
+  LAST 20 RECONNECT_ATTEMPT_FAILED ERROR STRINGS (all
+  identical):
+    "error":"GetWebSocketsToken error: ['EAPI:Invalid key']"
+
+  PAPER MODE CONFIRM (from log):
+    {"event":"PAPER_BALANCE_SET","balance_usd":"10000",
+     "note":"Private WS skipped — paper mode active"}
+
+NO REAL-MONEY RISK. PAPER MODE CONFIRMED.
+
+------------------------------------------------------------
+2.3 OI-028 root cause — REFINED and LOCKED
+------------------------------------------------------------
+
+TB00117 §2.5 Candidate (A) was CORRECT at the architectural
+level (reconnect path does not honor paper-mode private-WS
+skip) but MIS-IDENTIFIED the failure locus.
+
+TB00117 hypothesis: failure at Step 2b (private WS connect).
+Reality:           failure at Step 1 (REST auth token).
+
+The Kraken API key installed on the VPS is currently being
+rejected by Kraken with `EAPI:Invalid key`. In paper mode
+the key is not exercised anywhere else (order dispatch
+suppressed, balance static from config, executions channel
+unused) — so the rejection is operationally harmless AS
+LONG AS the code does not attempt to use the key.
+
+`_execute_reconnect_sequence` unconditionally calls
+`_rest_get_ws_token()` at Step 1 before any branching. That
+call signs the request with the rejected private key and
+Kraken returns EAPI:Invalid key. The call raises; the
+reconnect-loop catches the exception as
+RECONNECT_ATTEMPT_FAILED, consumes an attempt, and retries.
+Every attempt fails identically. After
+MAX_RECONNECT_ATTEMPTS (20) consecutive identical failures,
+the loop exhausts and emits FATAL_RECONNECT_FAILURE →
+WS_MGR_FATAL → systemd restart.
+
+This is a persistent-failure class, not transient. The
+dv1_21 budget extension from N=10 to N=20 did not help
+because extending a budget does not change a deterministic
+fail-every-attempt outcome.
+
+ROOT CAUSE: `_execute_reconnect_sequence` lacks the paper-
+mode early-return branch that `_startup_connect_and_subscribe`
+has (FIX-WM-PT-001, dv1_14). The private-WS-skip is
+implemented on the startup path but not on the reconnect
+path. 0511001 dv1_1 §82-84 and §128-129 already stated the
+intended behavior at the specification level; the code was
+out of compliance with the spec.
+
+------------------------------------------------------------
+2.4 NEW OI-041 opened (MED) — PARKING LOT
+------------------------------------------------------------
+
+OI-041  Kraken API key rejected with EAPI:Invalid key on
+        REST `GetWebSocketsToken`. Paper-mode fix
+        eliminates operational impact but the underlying
+        key problem MUST be resolved before transitioning
+        to live trading. Sub-causes to investigate:
+          - Key revoked / expired / IP-whitelist drift
+          - System clock drift causing nonce rejection
+          - Code bug in signature generation
+          - Key/secret swapped or truncated in .env
+        Deferred. Does not block TB00118 / TB00119 scope.
+
+------------------------------------------------------------
+2.5 OI-029 fix — LOCKED (per TB00117 §2.6 vector)
+------------------------------------------------------------
+
+logger.py `_alert_operator_direct` SMTP conversation now
+bounded-retry wrapped:
+
+  Constants:
+    ALERT_SMTP_TIMEOUT_SEC        5 → 20
+    ALERT_SMTP_MAX_ATTEMPTS       new: 2
+    ALERT_SMTP_RETRY_BACKOFF_SEC  new: 1
+
+  Behavior:
+    for attempt in range(1, ALERT_SMTP_MAX_ATTEMPTS+1):
+        try: <full SMTP conversation>; sent=True; break
+        except Exception as attempt_exc:
+            last_exc = attempt_exc
+            if attempt < ALERT_SMTP_MAX_ATTEMPTS:
+                time.sleep(ALERT_SMTP_RETRY_BACKOFF_SEC)
+    if not sent: raise last_exc
+
+  ALERT_SMTP_FAILED emits only on all-attempts-fail.
+  Event surface unchanged. Anti-recursion semantics
+  preserved.
+
+Worst-case wall time: 20+1+20 = 41s. Off hot path.
+
+------------------------------------------------------------
+2.6 OI-030 fix — LOCKED and DELIVERED
+------------------------------------------------------------
+
+operations/tothbot_sweep.sh dv1_0 created from scratch.
+First-class controlled document per TB00000 v2_12 §3.4.2 /
+§3.4.3 HR-TP004 and 0311001 v1_3 HR-DC-001. Event-name
+patterns derived by codebase grep, not paraphrased from
+session-log text.
+
+Two pattern defects corrected vs uncontrolled predecessor:
+  (1) '"level":"FATAL"' (never emitted)
+      → '"level":"CRITICAL"'
+  (2) MAX_RECONNECT_ATTEMPTS_EXCEEDED (never emitted)
+      → FATAL_RECONNECT_FAILURE
+
+Plus structural improvements: grouped tripwire /
+reconnect-diagnostic / observability / fatal-detail /
+error-string / paper-mode-confirm / log-footprint sections
+for operator-friendliness.
+
+1010000 dv1_13 §5.7 registers the script as first entry.
+§5.6 operations/.gitkeep retired (superseded).
+
+------------------------------------------------------------
+2.7 OI-039 formal close — READY PENDING BILL ACTION
+------------------------------------------------------------
+
+TB00117 §2.7 stated OI-039 was ready to close at TB00118
+STEP A pending pre-flight confirmation. TB00118 §2.1
+pre-flight confirmed active-governance prohibited-string
+count = 0 — PASS for closure criterion. However
+0311001 v1_2 was discovered still present in the project
+folder (expected absent per TB00117 §7.3 post-session
+action). OI-039 formal-close state:
+
+  STATUS:  READY PENDING BILL ACTION
+  BLOCKER: 0311001 v1_2 still present in Claude.ai project
+           folder. Bill to remove (same action as TB00117
+           post-session but not fully executed).
+  CLOSE:   TB00119 STEP A pre-flight, after Bill confirms
+           0311001 v1_2 absent.
+
+============================================================
+3. CLAUDE ERRORS THIS SESSION
+============================================================
+
+Documented per TB00000 §4 "be brutally honest". These are
+on Claude.
+
+------------------------------------------------------------
+3.1 Claude emitted a cmd.exe one-liner instead of
+    PowerShell
+------------------------------------------------------------
+
+STEP A sweep command in TB00117 NSI §6 was a pre-written
+cmd.exe one-liner. Claude rendered it verbatim rather than
+recognizing the project's established shell (PowerShell)
+and translating. cmd.exe tried to run `tail` locally and
+failed. Bill: "You had me using PowerShield for a long while.
+You recently changed to Command window and now everything
+is all fucked up. FUCKING FIX IT AND GET YOUR SHIT
+TOGETHER."
+
+Root cause: Claude followed the literal text of TB00117
+NSI §6 without first verifying what shell was actually in
+use. The NSI text was itself wrong. Fresh-data discipline
+failed — the live project state (PowerShell) was the
+authoritative source, not the NSI text.
+
+Lesson: When a prior-session artifact prescribes a shell
+or command form, Claude re-verifies against the current
+operational reality before emitting. If the user has been
+running one shell for the session, Claude stays in that
+shell. No silent shell changes.
+
+OI candidate: promote to OI-042 if recurrence observed.
+
+------------------------------------------------------------
+3.2 Claude produced a cmd.exe `type | ssh "tr | bash"`
+    recovery that compounded the quoting problem
+------------------------------------------------------------
+
+After the cmd.exe one-liner failed, Claude's first
+correction stayed in cmd.exe and added `type | ssh
+"tr -d '\r' | bash"`. This maintained the wrong-shell
+choice and added a quoting layer. Bill had to explicitly
+state "give me the correct commands" and then "you had me
+using PowerShell" before Claude re-based on PowerShell.
+
+Root cause: Claude anchored on "fix the pipe quoting" as
+the problem, missing the higher-order problem (wrong
+shell). Incremental fix applied to an incorrect foundation.
+
+Lesson: When a command fails, FIRST verify that the
+execution context (shell, CWD, environment) matches the
+user's established working environment. THEN address the
+mechanics of the command.
+
+============================================================
+4. DOCUMENT CONTROL VERIFICATION
+============================================================
+
+All document control version and location discrepancies
+verified this session (per Bill's opening directive).
+
+------------------------------------------------------------
+4.1 Project-folder active governance (post-session-open)
+------------------------------------------------------------
+
+  TB00000    v2_12       present     CORRECT
+  0311001    v1_3        present     CORRECT
+  0311001    v1_2        present     DISCREPANCY (Bill
+                                     to remove post-session)
+  0311002    v1_3        present     CORRECT
+  0311003    v1_1        present     CORRECT
+  0311004    v1_2        present     CORRECT
+  0311005    v1_0        present     CORRECT
+  1010000    dv1_12      present     CORRECT
+  0500000    dv1_19      .txt/.docx/.pdf all three present
+                         DR-002 COMPLIANT
+
+------------------------------------------------------------
+4.2 Mandatory session log / NSI retention (13 files)
+------------------------------------------------------------
+
+  TB00111 Session Log v1_0       present
+  TB00111 NSI v1_0               present
+  TB00112 Session Log v1_0       present
+  TB00113 Session Log v1_0       present
+  TB00113 NSI v1_0               present
+  TB00114 Session Log v1_0       present
+  TB00114 NSI v1_0               present
+  TB00115 Session Log v1_0       present
+  TB00115 NSI v1_0               present
+  TB00116 Session Log v1_0       present
+  TB00116 NSI v1_0               present
+  TB00117 Session Log v1_0       present
+  TB00117 NSI v1_0               present
+
+Total: 13 TB files + TB00000 = 14.
+
+------------------------------------------------------------
+4.3 Prohibited-string audit
+------------------------------------------------------------
+
+  Active governance (v1_3 / v1_1 / dv1_12 / v2_12):
+    0311001 v1_3:      0
+    0311002 v1_3:      0
+    0311003 v1_1:      0
+    0311004 v1_2:      0
+    0311005 v1_0:      0
+    1010000 dv1_12:    0
+    0500000 dv1_19:    0
+    TB00000 v2_12:     7  (all §4.2 + rev hist — OK per
+                            TB00115 FP/DP Option C)
+
+  Superseded files still in project folder:
+    0311001 v1_2:      3  <-- Bill to remove post-session
+
+============================================================
+5. OIs STATE AT END OF TB00118
+============================================================
+
+------------------------------------------------------------
+5.1 OIs opened this session
+------------------------------------------------------------
+
+  OI-041  MED   Kraken API key rejected (EAPI:Invalid key)
+                on REST GetWebSocketsToken. Must resolve
+                before live trading. PARKING LOT.
+
+  OI-042  CANDIDATE   Promote if shell-context-mismatch
+                recurs in TB00119. Captures the cmd.exe
+                vs PowerShell shell-drift observed this
+                session.
+
+------------------------------------------------------------
+5.2 OIs advanced this session
+------------------------------------------------------------
+
+  OI-028  HIGH    Root cause refined and LOCKED. Failure
+                  locus at Step 1 (REST token) not Step 2b
+                  (private WS connect). Fix applied:
+                  paper-mode early-return branch in
+                  _execute_reconnect_sequence. DC package
+                  in this session.
+
+  OI-029  MED     Fix applied per TB00117 §2.6 LOCKED
+                  vector. Constants raised. Retry loop
+                  wrapped. DC package in this session.
+
+  OI-030  LOW     Fix applied. Full sweep script rewrite.
+                  Promoted to first-class controlled
+                  document. DC package in this session.
+
+  OI-039  MED     Ready to close pending Bill removal of
+                  0311001 v1_2 from project folder.
+
+------------------------------------------------------------
+5.3 OIs unchanged this session
+------------------------------------------------------------
+
+  OI-018 (HIGH)     deferred - closes with OI-028 fix
+                    verification at T+48h
+  OI-019 (MED)      deferred - closes with OI-029 fix
+                    verification at T+48h + one ALERT_SENT
+  OI-020 (MED)      deferred - closes with OI-028 fix
+                    verification at T+48h
+  OI-031 (LOW)      deferred
+  OI-036 (LOW)      deferred
+  OI-037 (MED)      deferred (four-session recurrence
+                    carries forward to TB00119)
+  OI-038 (LOW)      deferred
+
+============================================================
+6. DELIVERABLES PRODUCED THIS SESSION
+============================================================
+
+Per DR-001 (.txt) and DR-003 (one batch):
+
+DC package (6 files):
+
+  ws_manager.py                              dv1_22
+  logger.py                                  dv1_5
+  operations/tothbot_sweep.sh                dv1_0  (NEW)
+  1011002 WS_Manager_Coding_Spec             dv1_21
+  1011007 Logger_Coding_Spec                 dv1_5
+  1010000 Trading_System_Coding_Anchor       dv1_13
+
+Session documents (2 files):
+
+  TB00118_TothBot_V2_Session_Log_2026-04-23_v1_0.txt
+    (this document)
+
+  TB00118_Next_Session_Instructions_v1_0.txt
+    (companion to this document)
+
+Per DR-002 (0500000 formats):
+  Not applicable - 0500000 not updated this session.
+
+No commits this session. All commits executed in TB00119
+per TB00118 NSI §4 deploy plan.
+
+============================================================
+7. CURRENT STATE AT END OF TB00118
+============================================================
+
+------------------------------------------------------------
+7.1 VPS state (pre-deploy — no change this session)
+------------------------------------------------------------
+
+  Service:     active (running) since 2026-04-23 04:01:52
+               UTC (systemd auto-restart counter=9)
+  Deploy:      dv1_21 (commit 7e744a3 — unchanged)
+  PID:         237599 (verify fresh in TB00119)
+  Mode:        paper trading (NO REAL MONEY)
+               paper_balance: 10000 USD
+  Positions:   none open
+
+Expected behavior between TB00118 close and TB00119 open:
+systemd auto-restart loop continues at ~57-minute cadence
+until TB00119 deploy breaks the loop. Restart counter
+will increment. No real-money risk. Paper mode confirmed.
+
+------------------------------------------------------------
+7.2 Repo state (pre-deploy — no change this session)
+------------------------------------------------------------
+
+  Docs repo (TothBot_V2-Docs):  master @ b5ca306
+  Code repo (TothBot_V2-Code):  master @ 7e744a3
+
+------------------------------------------------------------
+7.3 Project folder state (post-session Bill actions)
+------------------------------------------------------------
+
+Bill to execute post-session:
+
+  ACTION 1 - Remove 0311001 v1_2 from Claude.ai project
+             folder. (Still pending from TB00117 post-
+             session.) Required before TB00119 STEP A
+             pre-flight will PASS cleanly and OI-039 can
+             formally close.
+
+  ACTION 2 - Upload TB00118 Session Log v1_0
+  ACTION 3 - Upload TB00118 NSI v1_0
+
+DC package files are NOT yet uploaded to the project
+folder. They will be uploaded after TB00119 commits them
+to GitHub, per 0311002 v1_3 DC-SYNC-002 (post-commit
+upload).
+
+============================================================
+8. REVISION HISTORY
+============================================================
+
+  v1_1  2026-04-23  Post-v1_0-delivery amendment. Bill
+                    identified a local-disk 1011002 dv1_20
+                    file dated 04-20-2026 (never uploaded
+                    to Claude.ai project folder) when
+                    moving TB00118 deliverables into the
+                    docs repo working tree. The v1_0 DC
+                    package had authored a new 1011002
+                    dv1_20 that collided with the local
+                    orphan. Resolution: new spec renumbered
+                    to dv1_21, preserving the local-disk
+                    dv1_20 as superseded-but-retained per
+                    0311003 v1_1 VP-010.
+
+                    Cascading changes:
+                    - 1011002 renamed dv1_20 → dv1_21;
+                      header, §2 parent chain, §15 WM-
+                      RECONNECT-019 inline reference, and
+                      §19 revhist updated. New dv1_21
+                      revhist entry documents version skip
+                      and the orphan dv1_20 relationship.
+                    - ws_manager.py dv1_22 revhist: one
+                      "Governed by 1011002 dv1_20" cross-
+                      reference updated to "dv1_21".
+                    - 1010000 dv1_13: §4.2 Current version
+                      pointer for 1011002 advanced dv1_20
+                      → dv1_21; §5.2 ws_manager.py registry
+                      entry SpecVer advanced dv1_20 →
+                      dv1_21 with TB00118 note; dv1_13
+                      revhist §3 amended to reflect dv1_20
+                      → dv1_21 path rather than dv1_19 →
+                      dv1_20.
+                    - 1011007, logger.py, tothbot_sweep.sh:
+                      no cascade (no 1011002 references).
+                    - Session log and NSI both bumped to
+                      v1_1 with filename / version /
+                      reference updates.
+
+                    No code logic changes. No substantive
+                    spec changes. Pure version-cascade
+                    correction.
+
+  v1_0  2026-04-23  Initial. Claude Chat cold-load
+                    session. Pre-flight pass-with-
+                    qualification (0311001 v1_2 still
+                    present). VPS STEP A extended sweep
+                    confirmed OI-028 Candidate (A) with
+                    refinement: failure at Step 1 (REST
+                    token) not Step 2b (private WS
+                    connect). All 20 RECONNECT_ATTEMPT_
+                    FAILED errors identical
+                    (GetWebSocketsToken EAPI:Invalid key).
+                    RECONNECT_COMPLETE=0 across rolling
+                    log confirms persistent-failure class.
+                    NEW OI-041 opened (MED) for Kraken key
+                    rejection. DC package assembled:
+                    ws_manager.py dv1_21→dv1_22, logger.py
+                    dv1_4→dv1_5, operations/
+                    tothbot_sweep.sh dv1_0 (NEW), 1011002
+                    dv1_19→dv1_20, 1011007 dv1_4→dv1_5,
+                    1010000 dv1_12→dv1_13. No commits this
+                    session — commit/push/deploy scoped to
+                    TB00119. OI-039 formal close ready
+                    pending Bill removal of 0311001 v1_2
+                    from project folder. Two Claude errors
+                    documented: (1) cmd.exe one-liner
+                    instead of PowerShell, (2) compound
+                    cmd.exe recovery attempt. (Superseded
+                    by v1_1 for 1011002 dv1_20 → dv1_21
+                    renumber cascade.)
+
+============================================================
+END OF TB00118 SESSION LOG
+============================================================

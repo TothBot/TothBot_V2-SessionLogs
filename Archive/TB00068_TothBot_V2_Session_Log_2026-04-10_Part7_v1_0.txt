@@ -1,0 +1,273 @@
+DocDCN:     TB00068
+DocTitle:   TothBot_V2_Session_Log_2026-04-10_Part7
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\My_TothBot_Stuff\TBXXXXX_Session_Logs\TB00068_TothBot_V2_Session_Log_2026-04-10_Part7_v1_0.txt
+DocDate:    04-10-2026
+DocTime:    21:45:31 UTC
+
+============================================================
+TOTHBOT V2 SESSION LOG — 2026-04-10 PART 7
+============================================================
+
+============================================================
+1. SESSION IDENTITY
+============================================================
+
+Session date:     April 10, 2026
+Session number:   TB00068
+Session type:     Phase 11 — ws_manager.py corrected file
+                  delivered. Session log only. No commit.
+                  Next session: full line-by-line verification
+                  of ws_manager.py in project folder.
+Prior session:    TB00067 (2026-04-10 Part 6)
+
+Documents read:
+  TB00000  v2_8   Project Instructions              checked
+  TB00067  v1_0   Most recent session log           checked
+  TB00066  v1_0   Session log                       checked
+  TB00065  v1_0   Session log                       checked
+  TB00064  v1_0   Session log                       checked
+  TB00063  v1_0   Session log                       checked
+  TB00062  v1_0   Session log                       checked
+
+============================================================
+2. WORK COMPLETED THIS SESSION
+============================================================
+
+------------------------------------------------------------
+2.1 ws_manager.py Corrected File Delivered
+------------------------------------------------------------
+
+Source: /mnt/project/ws_manager.py (pre-paper-trading version,
+        2,485 lines — project snapshot from session start).
+
+All 13 changes applied programmatically via Python str.replace()
+with assert verification on every change:
+
+  TB00063 §2.4 Paper Trading Changes (9 changes):
+    C1  PositionRecord: tp_price + emergsl_price fields added
+    C2  WSManager.__init__: paper_mode bool added
+    C3  add_order(): paper gate + _simulate_entry_fill() added
+    C4  batch_add(): paper gate added
+    C5  cancel_order(): paper gate added
+    C6  amend_order(): paper gate added
+    C7  batch_cancel(): paper gate added
+    C8  dispatch_market_sell(): paper gate added
+    C9  _handle_ticker(): paper fill detection added
+
+  DEFECT-WM-PT-002 Fixes (4 changes):
+    FIX-WM-PT-001  _startup_connect_and_subscribe(): paper gate
+                   Skip token + private WS in paper mode.
+                   Set spot_usd_balance and portfolio_baseline_USD
+                   from config (default $10,000).
+                   Log PAPER_BALANCE_SET. Connect public only.
+    FIX-WM-PT-002  _main_loop(): paper gate
+                   Skip _recv_loop_private() in paper mode.
+    FIX-WM-PT-003  _ping_loop(): guard private ping
+                   if self._ws_private is not None:
+    FIX-WM-PT-004  _zombie_monitor(): guard private zombie check
+                   if self._ws_private is not None:
+
+All 13 asserts passed. Syntax verified with ast.parse(): PASS.
+Output: 2,686 lines. 12 paper_mode references.
+
+Delivered as: ws_manager.py.txt (DR-001 compliant).
+
+------------------------------------------------------------
+2.2 Project Folder Verification Attempted — INCONCLUSIVE
+------------------------------------------------------------
+
+Claude attempted to verify the project folder ws_manager.py
+after Bill uploaded the corrected file mid-session.
+
+Result: Project folder showed 2,485 lines, 0 paper_mode refs.
+
+Reason: Claude.ai project filesystem is a snapshot taken at
+session start. Files uploaded mid-session are NOT visible to
+Claude during that same session. They ARE visible at the
+start of the NEXT session.
+
+Bill confirmed the uploaded file is correct (the ws_manager.py.txt
+delivered this session, renamed to ws_manager.py and uploaded).
+
+Verification of correctness is deferred to next session where
+Claude can read the freshly uploaded version at session start.
+
+============================================================
+3. CURRENT STATE AT END OF SESSION
+============================================================
+
+  GitHub:       commit 6e0843c — ws_manager.py is TB00066
+                paper trading version WITHOUT the 4 fixes.
+                DEFECT-WM-PT-002 still present in GitHub.
+
+  VPS code:     commit 6e0843c — same defective version.
+                Service STOPPED.
+
+  Project folder ws_manager.py: Bill has uploaded the corrected
+                file (2,686 lines, all 13 changes). Will be
+                visible at next session start.
+
+  Service:      STOPPED.
+
+  VPS env files:
+    /root/.tothbot.env               — PAPER_TRADING_MODE=true
+    /root/TothBot_V2-Code/.tothbot.env — PAPER_TRADING_MODE=true
+
+  PT-ENTRY STATUS:
+    PT-ENTRY-001  All unit tests pass             DONE
+    PT-ENTRY-002  All integration tests pass      DONE
+    PT-ENTRY-003  VPS deployed per 1011013        PENDING
+    PT-ENTRY-004  logrotate configured            DONE (PL)
+    PT-ENTRY-005  IP whitelist confirmed          DONE
+    PT-ENTRY-006  Alert email confirmed           DONE
+    PT-ENTRY-007  systemd auto-restart confirmed  PENDING
+    PT-ENTRY-008  Startup sequence confirmed      PENDING
+
+============================================================
+4. DEFECT LOG
+============================================================
+
+  DEFECT-WM-PT-001  FIXED — commit 6e0843c
+  DEFECT-WM-PT-002
+    Status:  FIXED in delivered ws_manager.py.txt.
+             NOT YET committed to GitHub.
+             NOT YET deployed to VPS.
+
+============================================================
+5. NEXT SESSION — ONE AND ONLY ONE FUNCTION
+============================================================
+
+  ============================================================
+  Read TB00000 v2_8 and TB00068 before any work.
+
+  ONE FUNCTION THIS SESSION:
+
+  Read EVERY LINE of /mnt/project/ws_manager.py and verify:
+
+  (1) It is the corrected paper trading version (2,686 lines).
+      STOP if line count is not approximately 2,686.
+      STOP if paper_mode references are zero.
+
+  (2) PositionRecord contains tp_price and emergsl_price fields
+      after emergsl_cl_ord_id.
+
+  (3) WSManager.__init__ contains:
+        self.paper_mode: bool = bool(config.get("paper_trading_mode", False))
+      after self._ciats_params.
+
+  (4) _startup_connect_and_subscribe() contains paper mode gate:
+        if self.paper_mode:
+            paper_balance = Decimal(str(...))
+            self.spot_usd_balance = paper_balance
+            self.portfolio_baseline_USD = paper_balance
+            ... PAPER_BALANCE_SET log ...
+            self._ws_public = await self._ws_connect(PUBLIC_WS_URI)
+            await self._subscribe_public()
+            return
+      followed by the unchanged live path.
+
+  (5) _main_loop() contains paper mode gate:
+        if self.paper_mode:
+            async with asyncio.TaskGroup() as tg:
+                tg.create_task(self._recv_loop_public())
+                tg.create_task(self._ping_loop())
+                tg.create_task(self._zombie_monitor())
+            return
+      followed by the unchanged live path with all 4 tasks.
+
+  (6) _ping_loop() private section is guarded:
+        if self._ws_private is not None:
+            if self._awaiting_pong_priv: ...
+            else: ... send ping ...
+
+  (7) _zombie_monitor() private section is guarded:
+        if self._ws_private is not None:
+            if now - self._last_real_data_private > ...: ...
+
+  (8) add_order() contains paper gate BEFORE _send_private:
+        if self.paper_mode:
+            ... PAPER_ORDER_SIMULATED log ...
+            asyncio.create_task(_simulate_entry_fill(...))
+            return
+
+  (9) _simulate_entry_fill() method exists.
+
+  (10) batch_add() contains paper gate BEFORE _send_private:
+        if self.paper_mode:
+            pos.tp_price = tp_price
+            pos.emergsl_price = sl_trigger
+            pos.tp_order_id = f"PAPER_TP_{...}"
+            pos.emergsl_order_id = f"PAPER_SL_{...}"
+            ... PAPER_BATCH_ADD_SIMULATED log ...
+            return
+
+  (11) cancel_order() contains paper gate at top:
+        if self.paper_mode:
+            ... PAPER_CANCEL_SIMULATED log ...
+            return
+
+  (12) amend_order() contains paper gate at top:
+        if self.paper_mode:
+            ... PAPER_AMEND_SIMULATED log ...
+            return
+
+  (13) batch_cancel() contains paper gate after prohibition check:
+        if self.paper_mode:
+            ... PAPER_CANCEL_SIMULATED log ...
+            return
+
+  (14) dispatch_market_sell() contains paper gate at top:
+        if self.paper_mode:
+            ... PAPER_MARKET_SELL_SIMULATED log ...
+            return
+
+  (15) _handle_ticker() contains paper fill detection:
+        if self.paper_mode and symbol in self.position_mirror:
+            ... paper TP detection ...
+            ... paper emergSL detection ...
+
+  (16) Syntax verify with ast.parse() — MUST PASS.
+
+  AFTER VERIFICATION:
+
+  If ALL 16 checks PASS — report VERIFIED and provide
+  GitHub commit and VPS deploy steps per TB00067 §5.
+
+  If ANY check FAILS — report exactly which check failed,
+  what was found, what was expected, and STOP.
+  Do NOT proceed to commit. Do NOT attempt to fix.
+  Report the finding and wait for Bill's instruction.
+
+  NO OTHER WORK THIS SESSION. VERIFICATION ONLY.
+  ============================================================
+
+============================================================
+6. PARKING LOT
+============================================================
+
+  PL-001      WSManager dual PM creation paths. Monitor.
+  PL-003      Pathway 1 GitHub automation. After paper trading.
+  PL-NEW-003  VPS migration to Hillsboro OR. After stable.
+  PL-NEW-004  EE ENTRY_TIMEOUT_SEC vs WM ENTRY_GTD_SEC. Monitor.
+  PL-NEW-005  requirements.txt — websockets>=13.0.
+  PL-NEW-006  tothbot.service not updated. After PT-ENTRY.
+  PL-NEW-007  LOG_FILE path mismatch. After PT-ENTRY.
+  PL-NEW-008  Heartbeat UNKNOWN_MESSAGE_TYPE spam. After PT-ENTRY.
+  PL-NEW-009  Untracked files in TothBot_V2-Code repo. After PT-ENTRY.
+
+============================================================
+7. REVISION HISTORY
+============================================================
+
+  v1_0  04-10-2026  Initial. Corrected ws_manager.py delivered
+                    as ws_manager.py.txt. 2,686 lines. All 13
+                    changes applied. Syntax PASS. Project folder
+                    verification inconclusive (mid-session upload
+                    not visible). Next session: line-by-line
+                    verification only.
+
+============================================================
+END OF SESSION LOG
+============================================================

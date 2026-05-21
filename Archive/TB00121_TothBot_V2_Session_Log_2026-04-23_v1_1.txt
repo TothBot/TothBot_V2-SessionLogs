@@ -1,0 +1,544 @@
+DocDCN:     TB00121
+DocTitle:   TothBot_V2_Session_Log_2026-04-23
+DocVersion: v1_1
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TBXXXXX_Session_Logs\TB00121_TothBot_V2_Session_Log_2026-04-23_v1_1.txt
+DocDate:    04-23-2026
+DocTime:    23:00:00 UTC
+
+============================================================
+TOTHBOT V2 SESSION LOG - TB00121
+PART 1 / PART 2 DEFERRAL SESSION
+PRECONDITION FAILURE + PROJECT FOLDER DRIFT
+============================================================
+
+PAPER TRADING ONLY. NO REAL MONEY.
+
+============================================================
+1. SESSION IDENTITY
+============================================================
+
+Session date:     2026-04-23 UTC
+Session number:   TB00121
+Session type:     Claude Chat - cold load. Opened per TB00120
+                  NSI v1_1 §1 scope (Part 1 observation-window-
+                  close + Part 2 DEFECT-WM-REST-SIGN-001 fix).
+                  Session closed without authoring Part 2 on
+                  Bill direction after preconditions / project-
+                  folder state evaluated. Part 1 + Part 2
+                  bundled forward to TB00122 at/after
+                  2026-04-25 06:11:04 UTC.
+
+Prior session:    TB00120 (2026-04-23 UTC, Claude Chat - cold
+                  load, optional-scope execution that delivered
+                  TB00000 v2_13 and locked DEFECT-WM-REST-SIGN-
+                  001 root cause).
+
+Platform:         Claude Chat. PowerShell sole shell (no shell
+                  commands issued this session — only project
+                  folder reads).
+
+Next session:     TB00122 - OBSERVATION-WINDOW-CLOSE + DEFECT-
+                  WM-REST-SIGN-001 FIX session. Cold-load new
+                  Claude Chat. Opens at/after 2026-04-25
+                  06:11:04 UTC. Executes Part 1 + Part 2
+                  bundled per TB00121 NSI v1_0.
+
+Documents read:
+  TB00000   v2_13    Project Instructions for Claude    read
+  TB00120   v1_1     Session Log                        read
+  TB00120   v1_1     NSI                                read
+
+Project folder listing verified at session start. No
+further reads performed this session because Part 2
+authoring did not execute.
+
+============================================================
+2. SESSION WORK
+============================================================
+
+------------------------------------------------------------
+2.1 Pre-flight verification (STEP A of TB00120 NSI v1_1)
+------------------------------------------------------------
+
+TB00120 NSI v1_1 §7.3 expected state at TB00121 open:
+
+  TB00000 v2_13                         PRESENT
+  TB00000 v2_12                         ABSENT
+  TB00120 Session Log v1_1              PRESENT
+  TB00120 NSI v1_1                      PRESENT
+  TB00111 Session Log + NSI             ABSENT
+  7 mandatory TB retained:
+    TB00114-TB00120 logs/NSIs + TB00112 log
+
+Observed state at TB00121 cold-load (project folder
+mount-time snapshot):
+
+  TB00000 v2_13                         PRESENT  ✓
+  TB00000 v2_12                         STILL PRESENT (discrepancy)
+  TB00120 Session Log v1_1              PRESENT  ✓
+  TB00120 NSI v1_1                      PRESENT  ✓
+  TB00113 Session Log + NSI             STILL PRESENT (discrepancy)
+  TB00114-TB00120 logs/NSIs + TB00112   PRESENT  ✓
+
+Project folder content (Part 2 relevant):
+
+  1011002 WS_Manager_Coding_Spec        MISSING ENTIRELY
+                                        (expected dv1_21)
+  ws_manager.py                         dv1_21 in project
+                                        folder (VPS runs
+                                        dv1_22 per TB00118
+                                        deploy)
+  1010000 Trading_System_Coding_Anchor  dv1_12 in project
+                                        folder (expected
+                                        dv1_13)
+  1011007 Logger_Coding_Spec            dv1_4 in project
+                                        folder (expected
+                                        dv1_5 — not needed
+                                        Part 2)
+  0411002 Kraken_REST_API_Specification dv1_1   ✓
+  0511001 WS_Manager_Specification      dv1_1   ✓
+  1011001 Engineering_Best_Practices    dv1_7   ✓
+
+Root cause of drift: TB00118 and TB00119 post-session
+DC-SYNC-002 uploads remained pending (same as TB00120
+§2.1 pre-flight flagged). TB00120 added its own post-
+session action pending (TB00000 v2_12 removal, v2_13
+upload-verify). Net: three consecutive DC packages of
+post-session Bill actions had accumulated.
+
+------------------------------------------------------------
+2.2 Part 1 precondition evaluation
+------------------------------------------------------------
+
+TB00120 NSI v1_1 §1 explicit precondition:
+
+  "TB00121 MUST be opened at or after 2026-04-25
+   06:11:04 UTC to satisfy the window T+48h minimum."
+
+Observation window T+0:   2026-04-23 06:11:04 UTC
+T+48h target:             2026-04-25 06:11:04 UTC
+TB00121 open (est):       2026-04-23 ~22:00 UTC (T+~16h)
+Time remaining to window: approximately 32 hours
+
+Conclusion: Part 1 cannot execute. Running the VPS
+sweep at T+16h and computing deltas against the
+T+0 baseline would produce premature results that
+do not satisfy the T+48h closure criterion stated
+in TB00120 NSI v1_1 §1.
+
+OIs unable to close this session:
+
+  OI-018 (HIGH)   WS_MGR_FATAL window
+  OI-019 (MED)    ALERT routing window
+  OI-020 (MED)    FATAL_RECONNECT_FAILURE window
+  OI-028 (HIGH)   reconnect-complete evidence
+  OI-029 (MED)    SMTP retry-path evidence
+
+All five defer to TB00122 window-close evaluation.
+
+------------------------------------------------------------
+2.3 Part 2 blocker identification
+------------------------------------------------------------
+
+Part 2 scope per TB00120 NSI v1_1 §5-6:
+
+  Code file:
+    tothbot/ws_manager.py            dv1_22 -> dv1_23
+
+  Coding specs:
+    1011002 WS_Manager_Coding_Spec   dv1_21 -> dv1_22
+      New rules WM-REST-SIGN-001 through -00N
+
+  Parent anchor:
+    1010000 Trading_System_Coding_Anchor dv1_13 -> dv1_14
+      §5.2 registry entry ws_manager.py SpecVer bump
+
+  Optional (decision deferred):
+    0511001 dv1_1 -> dv1_2 (likely no change)
+    0411002 dv1_1 -> dv1_2 (likely no change)
+
+BLOCKERS:
+
+  1011002 dv1_21 NOT PRESENT in project folder.
+  Authoring 1011002 dv1_22 requires reading dv1_21 as
+  base. Claude does not fabricate spec content per
+  Section 4 Response Rule "Never guess."
+
+  ws_manager.py dv1_22 NOT PRESENT in project folder.
+  Project folder has dv1_21. Authoring dv1_23 requires
+  dv1_22 as base because dv1_22 added paper-mode skip
+  branches that dv1_23 must preserve. Working from
+  dv1_21 would silently regress those branches.
+
+  1010000 dv1_13 NOT PRESENT in project folder. Project
+  folder has dv1_12. Authoring dv1_14 requires dv1_13
+  as base because dv1_12->dv1_13 content (TB00119 scope)
+  would otherwise be lost.
+
+Conclusion: Part 2 authoring CANNOT proceed this
+session without Bill uploading the three blocker
+files first.
+
+------------------------------------------------------------
+2.4 Bill upload + session-closure direction
+------------------------------------------------------------
+
+Claude reported blockers to Bill and requested upload
+of the three files. Bill acknowledged upload completed.
+
+Claude verified: mount-time snapshot at session start
+does not refresh mid-session. Bill's uploads are in
+the actual Claude.ai project folder but are not
+visible to Claude in this chat. TB00122 cold-load
+will verify.
+
+Bill directed: "Create session log and next session
+instructions and verify that documentation is up to
+date and correct before proceeding."
+
+Interpretation: close TB00121 cleanly with Session Log
++ NSI deliverables; defer Part 2 authoring to TB00122
+where Part 1 (window close) and Part 2 (fix) execute
+bundled per TB00120 NSI v1_1 §1 default.
+
+------------------------------------------------------------
+2.5 FP/DP analysis that determined deferral plan
+------------------------------------------------------------
+
+Claude's initial response to Bill's session-opening
+direction offered three A/B/C options. This violated
+RR-SCOPE-005 (next-logical-step execution). Bill
+rejected the options and demanded an FP/DP-derived
+plan. Claude re-ran the analysis:
+
+GIVENS:
+  (1) Part 1 T+48h precondition fails today (~T+16h).
+  (2) Part 2 has no timing precondition.
+  (3) Part 2 is HIGH-severity live-trading blocker.
+  (4) Deploying Part 2 mid-window restarts the
+      service -> PID/uptime change -> contaminates
+      Part 1 closure evidence (NSI §3 requires
+      investigating PID drift before closing any OI).
+  (5) Commit and deploy are separable. Authoring +
+      committing does NOT require a VPS deploy.
+  (6) NSI §1 explicitly permits splitting Part 1 /
+      Part 2 across sessions.
+
+DERIVATION (as proposed in TB00121 response):
+  - Idling 32h to bundle = zero gain, one full day
+    of unfixed HIGH-severity blocker sitting in repo.
+  - Deploying Part 2 now = breaks observation window
+    = requires new T+48h window = net 48h+ delay.
+  - Authoring + committing Part 2 this session,
+    deploying at TB00122 after window closes =
+    Part 2 documented + committed immediately;
+    observation window preserved; deploy + Part 1
+    closure execute cleanly together in TB00122.
+
+Claude proposed this plan. Bill approved "Proceed
+with step 1." Step 1 (cold-load reads for Part 2
+authoring base material) exposed the missing
+1011002 / stale ws_manager.py / stale 1010000
+blockers above.
+
+With Part 2 authoring blocked, the deferral plan
+reverts to: TB00122 performs Part 1 + Part 2
+bundled on the TB00120 NSI v1_1 default path.
+Net effect on schedule: Part 2 authoring delayed
+one session (~32h) relative to the "author now,
+deploy later" plan; but no live-trading harm
+accrues because the defect is symptom-masked
+by dv1_22 paper-mode skip branches and the system
+is in paper mode per standing mandate.
+
+------------------------------------------------------------
+2.6 Bill upload verification via project_knowledge_search
+------------------------------------------------------------
+
+After initial session-log + NSI delivery (both v1_0),
+Bill directed Claude to re-verify project folder uploads
+within this session despite Claude's earlier claim that
+mid-session verification was impossible.
+
+Claude's earlier claim was INCOMPLETE. Correction:
+
+  /mnt/project/ filesystem mount is frozen at chat-
+  session start. Mid-session uploads by Bill are NOT
+  visible there. Claude correctly reported this.
+
+  project_knowledge_search tool queries the LIVE project
+  knowledge index, which reflects Bill's uploads (subject
+  to indexing latency). Claude did NOT use this tool in
+  the initial verification. That was an oversight.
+
+Re-verification using project_knowledge_search:
+
+  1011002 WS_Manager_Coding_Spec dv1_21
+    Search hit filename and revision history content.
+    UPLOADED ✓
+
+  1010000 Trading_System_Coding_Anchor dv1_13
+    Search hit filename and revision history content.
+    UPLOADED ✓
+
+  1011007 Logger_Coding_Spec dv1_5
+    Search hit filename and revision history content.
+    UPLOADED ✓
+
+  ws_manager.py
+    Search returned current project-folder header:
+      DocDCN:     1011002
+      DocTitle:   WS_Manager
+      DocVersion: dv1_21    <-- expected dv1_22
+      DocDate:    04-20-2026
+    NOT UPDATED to dv1_22. STILL AT dv1_21.
+
+  TB00000 v2_12 removal
+    Search for v2_12-unique phrasing returned v2_13 as
+    top match. Weak indication v2_12 may have been
+    removed; not definitive (v2_13 contains similar
+    text in its Document Status block).
+
+  TB00113 / 1010000 dv1_12 / 1011007 dv1_4 removals
+    Cannot reliably verify removals via search alone.
+
+Verification summary:
+
+  UPLOADED    1011002 dv1_21, 1010000 dv1_13,
+              1011007 dv1_5
+  PENDING     ws_manager.py dv1_22 (still at dv1_21)
+  UNVERIFIED  Removals of v2_12, TB00113, and superseded
+              1010000 dv1_12 / 1011007 dv1_4
+
+ws_manager.py dv1_22 source availability (per TB00120
+Session Log v1_1 §1):
+
+  VPS filesystem:       /home/tothbot/... (running)
+  GitHub TothBot_V2-Code master @ ea18b83 (committed
+                                           TB00118)
+  Either source is authoritative. Bill must upload to
+  Claude.ai project folder for TB00122 Part 2 authoring.
+
+------------------------------------------------------------
+2.7 Updated deferral plan for TB00122
+------------------------------------------------------------
+
+With three of four blocker files uploaded, the TB00122
+pre-flight STEP A now has only one pending file to
+verify: ws_manager.py dv1_22. If dv1_22 is present at
+TB00122 cold-load, Part 2 proceeds. If still dv1_21,
+TB00122 halts Part 2 and requests upload before
+proceeding.
+
+No change to Part 1 plan. Part 1 still executes at
+TB00122 open at/after 2026-04-25 06:11:04 UTC.
+
+============================================================
+3. CLAUDE ERRORS THIS SESSION
+============================================================
+
+Per TB00000 v2_13 §4.3 RR-VIOL-002 recurrence tracking.
+
+3.1 RR-SCOPE-005 violation (opening turn)
+    Rule: Next-logical-step execution. Claude does NOT
+          ask Bill A/B/C/D decision questions when the
+          choice can be derived from data.
+    Defect: Claude's first response offered three A/B/C
+            options for how to proceed given Part 1
+            precondition failure, instead of deriving
+            the FP/DP-determined plan (Part 2 authoring
+            + commit now, deploy + Part 1 at TB00122).
+    Corrective: Bill rejected the options and demanded
+                FP/DP analysis. Claude re-ran analysis
+                and produced the deterministic plan.
+    Recurrence count: 1 (this session). Total OI-037
+                      recurrences under v2_13 §4.3.1:
+                      1 (first recurrence since rule
+                      enactment in TB00120).
+    Governing rule: TB00000 v2_13 §4.3.1 RR-SCOPE-005.
+
+3.2 Tool-selection oversight (§2.6 correction turn)
+    Defect: Claude declared "I cannot directly verify
+            your uploads from within this session"
+            after checking only /mnt/project/ filesystem
+            (frozen at session start). Claude failed to
+            try project_knowledge_search, which queries
+            the live project knowledge index and WOULD
+            have found Bill's uploads. Bill had to
+            explicitly re-direct Claude to re-verify
+            before Claude reached for the correct tool.
+    Corrective: After Bill's redirect, Claude used
+                project_knowledge_search and verified
+                three of four blocker uploads.
+    Classification: Not an RR-* rule violation per se.
+                    Closest fit is Section 4 Response
+                    Rule "Never guess. If something
+                    cannot be found, say so." Claude
+                    said "cannot verify" before
+                    exhausting available tools — a
+                    premature dead-end declaration.
+    Recommendation: TB00122 Critical Lessons should
+                    capture: BEFORE declaring a fact
+                    cannot be verified, exhaust all
+                    available tools (filesystem mount +
+                    project_knowledge_search +
+                    conversation_search + recent_chats).
+                    Track as carried lesson, not new OI.
+
+No other RR-* violations detected this session.
+
+============================================================
+4. OPEN ITEMS STATUS
+============================================================
+
+CLOSING CRITERIA UNCHANGED (all defer to TB00122):
+
+  OI-018 (HIGH)   Defer to TB00122 Part 1 window close.
+  OI-019 (MED)    Defer to TB00122 Part 1 window close.
+  OI-020 (MED)    Defer to TB00122 Part 1 window close.
+  OI-028 (HIGH)   Defer to TB00122 Part 1 window close.
+  OI-029 (MED)    Defer to TB00122 Part 1 window close.
+
+  OI-041 (HIGH)   DEFECT-WM-REST-SIGN-001. Fix authored
+                  + committed + deployed in TB00122
+                  Part 2. Closes at Part 2 STEP I on
+                  VPS evidence: zero EAPI:Invalid key
+                  events post-deploy.
+
+CARRIED FORWARD (unchanged from TB00120 NSI v1_1 §7.4):
+
+  OI-017 (prior)                       OPEN
+  OI-021 (prior)                       OPEN
+  OI-022 (MED)                         PARTIAL
+  OI-023 (prior)                       PENDING
+  OI-024 (prior)                       OPEN
+  OI-025 (prior)                       OPEN
+  OI-026 (prior)                       OPEN
+  OI-027 (prior)                       OPEN
+  OI-031 (LOW)                         optional close
+  OI-034                               Claude.ai platform
+  OI-042 (CAND)                        dormant
+
+NEW THIS SESSION:
+
+  OI-043 (LOW)   PROJECT-FOLDER-DRIFT-ACCUMULATION.
+                 Three consecutive DC packages (TB00118,
+                 TB00119, TB00120) had pending post-
+                 session Bill actions (uploads,
+                 removals) that accumulated into a
+                 state where TB00121 could not
+                 execute Part 2 without a mid-session
+                 upload from Bill.
+                 Root cause: no governance mechanism
+                 that tracks or reminds post-session
+                 Bill actions across sessions.
+                 Recommendation: TB00122 evaluates
+                 whether 0311002 DC-SYNC-002 should
+                 gain a pre-flight reconciliation step
+                 that compares NSI §7.3 expected state
+                 to observed state and blocks session
+                 start on missing mandatory files.
+                 SEVERITY: LOW (operational friction,
+                 not safety-critical).
+
+CLOSED IN TB00120 (unchanged):
+
+  OI-036 / OI-037 / OI-038 closed by TB00000 v2_13 §4.3.
+
+============================================================
+5. DELIVERABLES THIS SESSION
+============================================================
+
+  TB00121_TothBot_V2_Session_Log_2026-04-23_v1_0.txt
+  TB00121_Next_Session_Instructions_v1_0.txt
+
+No code changes. No DC package. No VPS deploy.
+No commit.
+
+============================================================
+6. POST-SESSION BILL ACTIONS
+============================================================
+
+VERIFIED COMPLETE (per §2.6 project_knowledge_search
+re-verification):
+
+  [x] 1011002 WS_Manager_Coding_Spec dv1_21 uploaded
+  [x] 1010000 Trading_System_Coding_Anchor dv1_13
+      uploaded
+  [x] 1011007 Logger_Coding_Spec dv1_5 uploaded
+
+STILL PENDING:
+
+  1. Upload TB00121 Session Log v1_1 to Claude.ai
+     project folder.
+
+  2. Upload TB00121 NSI v1_1 to Claude.ai project folder.
+
+  3. Upload ws_manager.py dv1_22 to Claude.ai project
+     folder. Source:
+       GitHub: github.com/TothBot/TothBot_V2-Code
+               master @ ea18b83
+       VPS:    /home/tothbot/... (running deploy)
+     Either source is authoritative. Without this
+     upload, TB00122 STEP A pre-flight halts Part 2
+     and requests the upload.
+
+  4. Remove superseded versions from project folder
+     (if not already removed):
+       - 1010000 dv1_12
+       - 1011007 dv1_4
+
+  5. Remove TB00000 v2_12 from project folder (if not
+     already removed).
+
+  6. Remove TB00113 Session Log + NSI from project
+     folder (if not already removed).
+
+  7. Optionally open TB00122 cold-load at/after
+     2026-04-25 06:11:04 UTC.
+
+============================================================
+7. NEXT SESSION
+============================================================
+
+See TB00121 NSI v1_0 (companion deliverable this
+session).
+
+TB00122:
+  - Cold-load new Claude Chat.
+  - Opens at/after 2026-04-25 06:11:04 UTC.
+  - Executes Part 1 (observation-window close) +
+    Part 2 (DEFECT-WM-REST-SIGN-001 fix with full DC
+    package per NO PATCHES rule).
+  - Paper trading only. No real money.
+
+============================================================
+8. REVISION HISTORY
+============================================================
+
+  v1_1  04-23-2026 23:00 UTC
+    Bill direction to re-verify project folder uploads
+    within session after v1_0 delivery. §2.6 added
+    documenting use of project_knowledge_search to
+    confirm three of four blocker uploads present
+    (1011002 dv1_21, 1010000 dv1_13, 1011007 dv1_5)
+    and one still pending (ws_manager.py dv1_22 still
+    at dv1_21 in project folder). §2.7 added updating
+    TB00122 pre-flight STEP A expectation. §3.2 added
+    capturing Claude's tool-selection oversight that
+    required Bill's redirect to reach the correct
+    verification tool. §6 Post-Session Bill Actions
+    rewritten with verified-complete markers and
+    reduced pending-item list (ws_manager.py dv1_22
+    upload now the only code/spec blocker remaining).
+
+  v1_0  04-23-2026 22:30 UTC
+    Initial. Session-closure deliverable documenting
+    Part 1 precondition failure, Part 2 project-folder-
+    drift blockers, deferral plan, RR-SCOPE-005
+    recurrence, and OI-043 origination.
+
+============================================================
+END - TB00121 SESSION LOG v1_1
+============================================================

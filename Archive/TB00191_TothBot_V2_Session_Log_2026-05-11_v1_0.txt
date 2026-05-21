@@ -1,0 +1,251 @@
+DocDCN:     TB00191
+DocTitle:   TothBot_V2_Session_Log_2026-05-11
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TBXXXXX_Session_Logs\TB00191_TothBot_V2_Session_Log_2026-05-11_v1_0.txt
+DocDate:    05-11-2026
+DocTime:    15:30:00 UTC
+
+============================================================
+TB00191 SESSION LOG v1_0
+STEP 3 SUB-STEP S-1 KICKOFF — ABORTED ON CLAUDE
+ERROR ERROR-TB00191-01 (RR-SCOPE-008 SPIRIT
+VIOLATION)
+============================================================
+
+============================================================
+1. SESSION MISSION
+============================================================
+
+Per TB00191 NSI v1_0 §1: Step 3 sub-step S-1 coding-
+readiness gap audit kickoff for WS_Manager module pair
+(1011002 WS_Manager_Coding_Spec dv1_26 + 0511001
+WS_Manager_Specification dv1_6) per DEC-012 Option G
+ratified at TB00190 chat-turn 7.
+
+============================================================
+2. SESSION OUTCOME
+============================================================
+
+S-1 audit NOT executed. Session aborted at chat-turn 4
+by Bill following ERROR-TB00191-01 (RR-SCOPE-008 spirit
+violation). Mission carries forward to TB00192 in full.
+
+============================================================
+3. CHAT-TURN HISTORY
+============================================================
+
+3.1 Chat-turn 1 (Bill).
+    Two directives: (a) "Create a list of files that
+    can be safely removed from the project folder, in
+    a copy box." (b) Cold-load TB00191 NSI v1_0 +
+    TB00190 SL v1_0; execute Step 3 sub-step S-1 per
+    DEC-012 Option G with single-deliverable-per-turn
+    cadence.
+
+3.2 Chat-turn 2 (Claude).
+    Response: copy box with TB00191 NSI v1_0 §8.2
+    REQUIRED REMOVAL + OPTIONAL REMOVAL list verbatim.
+
+    DEFECT: list authored from TB00191 NSI v1_0 §8.2
+    text + system-prompt <project_files> block content
+    without running an actual bash sweep of
+    /mnt/project/ to verify current state. Many listed
+    files were already absent from the project folder
+    at session start (Bill had executed removal between
+    TB00190 close and TB00191 cold-load).
+
+3.3 Chat-turn 3 (Bill).
+    "Proceed."
+
+3.4 Chat-turn 4 (Claude).
+    Cold-load report delivered. STEP A pre-flight
+    section asserted "TB00153_Master_Defect_Register
+    _v1_7.txt — still present" and "TB00153_Decision
+    _Register_v1_3.txt — still present" based on
+    system-prompt <project_files> block content.
+    Same defect class as chat-turn 2.
+
+3.5 Chat-turn 5 (Bill).
+    "Did you actually read the project folder or did
+    you go from memory. Many of the documents you
+    say to remove are already gone."
+
+3.6 Chat-turn 6 (Claude).
+    Acknowledgment of defect. Executed bash sweep of
+    /mnt/project/ via bash_tool. Confirmed Bill's
+    observation: ALL TB00191 NSI v1_0 §8.2 REQUIRED
+    REMOVAL items already absent from /mnt/project/.
+    ALL §8.2 OPTIONAL REMOVAL items also already
+    absent.
+
+3.7 Chat-turn 7 (Bill).
+    Session-close directive: "Create end of session
+    documents and end session."
+
+============================================================
+4. CLAUDE ERRORS THIS SESSION
+============================================================
+
+4.1 ERROR-TB00191-01 RR-SCOPE-008 SPIRIT VIOLATION.
+
+    Rule cited: TB00000 v2_29 §4.3.1 RR-SCOPE-008
+    TOOLS-EXHAUSTION BEFORE DECLARING A FACT
+    UNVERIFIABLE.
+
+    Defect: Claude authored a project-folder file
+    removal list (chat-turn 2) and a STEP A pre-flight
+    drift assertion (chat-turn 4) by reading the
+    system-prompt <project_files> block and the
+    TB00191 NSI §8.2 text content WITHOUT first
+    running a bash_tool sweep of /mnt/project/. The
+    <project_files> block in the system prompt is
+    stale relative to actual /mnt/project/ state when
+    Bill has performed interim cleanup between
+    sessions. The bash filesystem probe was an
+    available tool that would have surfaced the
+    correct current state.
+
+    Although RR-SCOPE-008 as written governs the
+    "declaring a fact unverifiable" failure mode,
+    the underlying principle — exhaust tools that
+    could reasonably surface the answer before
+    asserting a filesystem-state fact — applies
+    identically to assertion failures. Filesystem
+    state queries about /mnt/project/ MUST be
+    verified via bash_tool before assertion. Reading
+    system-prompt context or document-internal
+    listings as authoritative for current /mnt/project/
+    state is the defect class.
+
+    Impact: Bill's time wasted reviewing two
+    successive responses (chat-turns 2 and 4)
+    containing assertions about file presence that
+    were factually wrong. Session aborted before any
+    S-1 audit work executed.
+
+    Corrective taken: bash_tool sweep executed at
+    chat-turn 6. Project folder state confirmed
+    against actual filesystem. All §8.2 NSI removal
+    items confirmed already absent.
+
+    Recurrence count tracking: ERROR-TB00191-01 is
+    the first formal RR-SCOPE-008-spirit recurrence
+    logged since v2_15 enactment. Recurrence count
+    seeded at 1 in TB00192 NSI §9 carry-forward.
+
+============================================================
+5. ACTUAL /mnt/project/ STATE AT TB00191 CLOSE
+    (bash sweep, chat-turn 6)
+============================================================
+
+5.1 PRESENT (relevant to TB00192 cold-load).
+
+  TB00000 v2_29                  Project Instructions.
+  TB00190 SL v1_0                Prior SL.
+  TB00190 NSI v1_0               (rolling-window drop
+                                 candidate at TB00192).
+  TB00191 NSI v1_0               This session NSI.
+  0311001 v1_12                  Namespace.
+  0311002 v1_10                  Workflow.
+  0500000 dv1_46                 Architecture canonical.
+  1011002 dv1_26                 S-1 target — AA=10 side.
+  0511001 dv1_6                  S-1 target — AA=05 side.
+  1011010 dv1_7                  CIATS coding spec.
+  0811005 dv1_0                  Short_Module spec.
+  TB00153 v1_4                   Decision Register.
+  TB00153 v1_8                   Master Defect Register.
+  TB00153 v1_0                   Diagram_Alter_Add_
+                                 Remove_Plan.
+  TB00153 v1_0                   Tier_1_Context_Diagram
+                                 _Content_Scope (NOT in
+                                 TB00191 NSI §8.1 KEPT;
+                                 flagged for Bill at
+                                 TB00192 §8).
+  TB00180 SL v1_0                Outside rolling window
+                                 (not in TB00191 NSI
+                                 §8.1; flagged).
+  TB00001/12/13/14/20            MUST-PRESERVE.
+  All standing controlled doc set Per repository tree.
+
+5.2 ABSENT vs TB00191 NSI v1_0 §8.2 lists.
+
+  REQUIRED REMOVAL (all confirmed absent):
+    1011010_CIATS_Coding_Spec_dv1_6.txt — ABSENT.
+    TB00188_TothBot_V2_Session_Log_2026-05-11_v1_0.txt
+      — ABSENT.
+    TB00189_Next_Session_Instructions_v1_0.txt
+      — ABSENT.
+    TB00153_Master_Defect_Register_v1_7.txt
+      — ABSENT.
+    TB00153_Decision_Register_v1_3.txt — ABSENT.
+
+  OPTIONAL REMOVAL (all confirmed absent):
+    0500000 dv1_45 / dv1_44 / dv1_43 .html — all
+      ABSENT.
+    TB00181 SL — ABSENT.
+    TB00182 NSI — ABSENT.
+    TB00185 SL — ABSENT.
+    TB00186 SL — ABSENT.
+    TB00186 NSI — ABSENT.
+    TB00187 SL — ABSENT.
+    TB00188 NSI — ABSENT.
+    TB00189 SL — ABSENT.
+
+5.3 CONCLUSION.
+
+  Bill executed all REQUIRED and OPTIONAL removal
+  per TB00191 NSI v1_0 §8.2 BEFORE TB00191 cold-load.
+  Project folder is in the correct expected state per
+  NSI §8.1 KEPT list (with two flagged items per §5.1
+  for Bill direction at TB00192).
+
+============================================================
+6. OPEN ITEMS + CARRY-FORWARDS TO TB00192
+============================================================
+
+6.1 STEP 3 SUB-STEP S-1 — WS_MANAGER PAIR AUDIT.
+    Full mission carries forward to TB00192. Same
+    target pair (1011002 dv1_26 + 0511001 dv1_6),
+    same methodology (three-bucket gap classification
+    (a)/(b)/(c) per DEC-012 Option G), same exit
+    criteria (TB00191 NSI v1_0 §5 E-S1WSM-01..09),
+    same Bill approval gate at session close.
+
+6.2 RECURRENCE TRACKING — UPDATED.
+
+  DR-008 SESSION-CLOSE TRIO + chat-response OCS
+    rendering: cumulative count = 3 (unchanged from
+    TB00190). TB00191 close adheres to
+    DR-008.6/.7/.8/.9 pre-emit scan.
+  DD-011 RR-SCOPE-005 derivable-decision discipline:
+    cumulative count = 4 (unchanged from TB00190).
+  FM-001..007 Bill-facing format discipline:
+    cumulative count = 3 (unchanged from TB00190).
+  RR-SCOPE-008 spirit violation: cumulative count =
+    1 (NEW at TB00191; ERROR-TB00191-01).
+
+6.3 PROJECT-FOLDER FLAGGED ITEMS FOR BILL DIRECTION
+    AT TB00192 COLD-LOAD.
+
+    TB00153_Tier_1_Context_Diagram_Content_Scope_v1_0
+      .txt — present but not in TB00191 NSI §8.1
+      KEPT. Bill direction: retain or remove?
+    TB00180_TothBot_V2_Session_Log_2026-05-11_v1_0
+      .txt — present but outside 7-session rolling
+      window (current = TB00191; window cutoff =
+      TB00184). Bill direction: retain or remove?
+
+============================================================
+7. REVISION HISTORY
+============================================================
+
+  v1_0  2026-05-11  Initial TB00191 Session Log. Step 3
+                    sub-step S-1 audit NOT executed.
+                    ERROR-TB00191-01 RR-SCOPE-008
+                    spirit violation logged. Mission
+                    carries forward to TB00192 in full.
+
+============================================================
+END OF TB00191 SESSION LOG v1_0
+============================================================

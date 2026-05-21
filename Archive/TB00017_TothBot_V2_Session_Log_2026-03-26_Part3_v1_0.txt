@@ -1,0 +1,534 @@
+DocDCN:     TB00017
+DocTitle:   TothBot_V2_Session_Log_2026-03-26_Part3
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\OneDrive\TothBot\TB00017_TothBot_V2_Session_Log_2026-03-26_Part3_v1_0.txt
+DocDate:    03-26-2026
+DocTime:    23:59:59 UTC
+
+============================================================
+TOTHBOT V2 — SESSION LOG 2026-03-26 PART 3
+============================================================
+
+Read TB00001 through TB00016 first.
+
+This session is the ninth 10-search FP/DP organism
+validation. Focus: entry order execution flow, order
+lifecycle events, WS reconnect behavior, Dead Man's Switch.
+Three new findings. Strong convergence confirmed.
+Finding rate: 8 → 6 → 3. Architecture approaching
+zero-finding state on the Kraken API interface layer.
+
+============================================================
+1. SESSION IDENTITY
+============================================================
+
+Session date:     March 26, 2026 (Part 3)
+Session type:     9th 10-Search FP/DP Organism Validation
+                  3 findings, all resolved immediately.
+                  0 parking lot additions.
+Prior session:    TB00016 (2026-03-26 Part 2)
+
+Documents read:   TB00000 v2_5, TB00016 v1_0
+                  0311001 dv1_2, 0311002 dv1_7
+                  0500000 dv1_12 (Claude Source)
+
+============================================================
+2. TEN SEARCHES — COMPLETE RECORD
+============================================================
+
+~300 unique references total across all 9 sessions.
+~40 new unique references this session.
+
+------------------------------------------------------------
+SEARCHES 1-3 — cancel_order, add_order response,
+batch_add response, cl_ord_id tracking
+------------------------------------------------------------
+
+Sources: Cancel Order WS v2 docs (full), Add Order WS v2
+docs (full), Batch Add WS v2 docs, executions channel
+(full), WS v2 intro, WS v2 reference, amend_order,
+edit_order, node-kraken-api source (cancel_order stream),
+Execution Report FIX, Kraken Advanced API FAQ.
+Unique references: ~20 new
+
+FINDINGS:
+S1-F1: CONFIRMED — cancel_order returns individual
+       responses streamed per order. Each has its own
+       req_id echo. AR-041 confirmed correct.
+
+S1-F2: CONFIRMED — executions channel `cl_ord_id` field
+       is returned on ALL order events for orders that
+       had cl_ord_id set. Enables reliable Pending Order
+       Registry tracking (AR-053) via cl_ord_id.
+
+S1-F3: CONFIRMED — batch_add response returns array of
+       {order_id, cl_ord_id} per order in same sequence
+       as submitted. TP and emergSL order_ids/cl_ord_ids
+       captured from batch_add response. Prior sessions.
+
+S1-F4: CONFIRMED — order_status:true sends ALL status
+       transitions: pending_new, new, trade, filled,
+       canceled, expired, restated, status. AR-026 correct.
+
+S1-F5: ★ NEW-15 DISCOVERED — executions exec_type values
+       "expired" and "canceled" can arrive with
+       cum_qty > 0 (partial fills before termination).
+       Current dispatch only triggers TP/emergSL batch_add
+       on exec_type == "filled". Partial fill + expiry
+       creates unprotected open position. CRITICAL gap.
+
+S1-F6: CONFIRMED — `reason` field on executions events
+       (not deprecated `cancel_reason`). For GTD expiry:
+       exec_type == "expired". For post_only rejection:
+       exec_type == "canceled". Both can have cum_qty > 0.
+
+------------------------------------------------------------
+SEARCHES 4-6 — GTD post_only rejection, partial fill
+handling, order lifecycle edge cases
+------------------------------------------------------------
+
+Sources: Add Order docs (TIF, post_only), GTD behavior,
+Other order options Kraken support, Kraken exchange trading
+rules, post_only order analysis (cube.exchange), partial
+fill explanation, Open Orders (futures for reason codes),
+Open Orders (spot v2 for executions reason field),
+executions example data (partially_filled example),
+Spot Atomic Amends guide.
+Unique references: ~15 new
+
+FINDINGS:
+S4-F1: CONFIRMED — GTD orders have precision to seconds.
+       expire_time up to 1 month in future. For entry
+       orders: 30-60 seconds. On expiry: exec_type=expired.
+
+S4-F2: CONFIRMED — post_only with GTD:
+       If order would take liquidity on arrival: canceled
+       immediately with reason code. If order posts
+       passively: rests on book until GTD expires.
+       During that window, partial fills are possible.
+
+S4-F3: ★ NEW-15 CONFIRMED (from partial fill example):
+       exec_type="trade" with order_status="partially_filled"
+       shows cum_qty > 0 but order still open.
+       Then exec_type="expired" closes the order with
+       cum_qty = whatever was filled.
+       TothBot's current dispatch: "trade" events go to
+       CIATS/Logger only. "filled" events trigger
+       batch_add. "expired" events NOT handled at all.
+       Position exists after expired with cum_qty > 0.
+
+S4-F4: CONFIRMED — avg_price field in executions gives
+       cumulative average fill price across all trades
+       on the order. This is the correct price to use
+       for TP/emergSL calculations on partial fills.
+
+S4-F5: CONFIRMED — The Kraken TP/SL bracket order docs
+       state: "Regardless of whether the Primary order
+       executes partially or fully, it will trigger the
+       TP/SL." This confirms Kraken's own conditional
+       orders handle this. TothBot implements its own
+       bracket logic (not Kraken's OTO) so must handle
+       partial fill + expiry explicitly.
+
+------------------------------------------------------------
+SEARCHES 7-8 — Dead Man's Switch analysis
+------------------------------------------------------------
+
+Sources: Cancel on Disconnect WS v2 docs (full), Cancel
+All Orders After REST docs, node-kraken-api DMS
+documentation, Kraken DMS recommendation (15-30s / 60s),
+Platform outage options guide, systemd watchdog analysis.
+Unique references: ~5 new
+
+FINDINGS:
+S7-F1: CONFIRMED — cancel_all_orders_after (DMS):
+       Kraken recommends every 15-30s heartbeat, 60s
+       timeout. If timer expires, ALL orders cancelled.
+
+S7-F2: ★ NEW-16 CRITICAL — DMS use decision missing from
+       spec. If TothBot uses DMS and crashes: ALL orders
+       including emergSL orders on open positions would
+       be cancelled → positions completely unprotected.
+       DMS must be EXPLICITLY prohibited in TothBot V2.
+       Rationale: emergSL IS the per-position DMS (L3).
+       systemd watchdog handles process restart. GTD
+       entry orders self-cancel. DMS is harmful here.
+
+S7-F3: CONFIRMED — DMS is for protecting against total
+       loss of API connectivity. TothBot handles this via:
+       (1) GTD self-expiry for entry orders (30-60s)
+       (2) emergSL resting on Kraken for open positions
+       (3) systemd WatchdogSec=120 for process restart
+       DMS would cancel (2) which is worse than nothing.
+
+------------------------------------------------------------
+SEARCHES 9-10 — Reconnect sequence analysis
+------------------------------------------------------------
+
+Sources: WS v2 intro reconnect guidance, snap_orders on
+executions channel, Cancel on Disconnect docs, asyncio
+reconnect patterns, Kraken status channel.
+Unique references: ~5 new
+
+FINDINGS:
+S9-F1: CONFIRMED — WS reconnect: instantly attempt a
+       handful of times on random disconnect; 5s interval
+       after maintenance/extended downtime.
+
+S9-F2: CONFIRMED — snap_orders on executions channel
+       gives all current open orders. This is used in
+       Startup Step 6. Same mechanism serves reconnect.
+
+S9-F3: ★ NEW-17 CRITICAL — Mid-session WS reconnect
+       sequence is NOT the same as startup sequence.
+       1011014 specifies startup only. Key differences:
+       (1) ATR warm-up NOT needed (cache is valid if
+           gap was < 15 minutes)
+       (2) portfolio_baseline_USD NOT reset
+       (3) OHLC REST warm-up NOT needed if gap is short
+       (4) Pending Order Registry must be reconciled
+           (orders placed before disconnect that now
+           appear in snap_orders as open → remove from
+           pending; those NOT in snap_orders expired or
+           were never accepted → clear from registry)
+       (5) Positions closed during gap (TP/emergSL fired
+           while disconnected) must be detected via
+           comparing pre-disconnect Position Mirror vs
+           snap_orders, and CIATS Trade Outcome Bus must
+           be fired for any closed positions with trade
+           data from snap_trades (last 50 fills)
+       (6) Drawdown baseline PRESERVED (not reset)
+       This requires a separate reconnect section in
+       1011014 dv1_1.
+
+============================================================
+3. COMPLETE FINDINGS SUMMARY
+============================================================
+
+------------------------------------------------------------
+NEW FINDINGS (3 — all resolved immediately):
+------------------------------------------------------------
+
+NEW-15: Entry order partial fill + GTD expiry creates
+        unprotected position.
+        exec_type=="expired" OR exec_type=="canceled" with
+        cum_qty > 0 means position opened without TP/emergSL.
+        Resolution: extend dispatch table to handle these
+        cases. Dispatch batch_add TP+emergSL using cum_qty
+        and avg_price from the event. Update Position Mirror.
+        Clear Pending Order Registry.
+        → New AR-054. Amend 1011002 dispatch table.
+
+NEW-16: Dead Man's Switch (cancel_all_orders_after) use
+        decision missing from spec.
+        Resolution: EXPLICITLY PROHIBIT use of DMS in
+        TothBot V2. It would cancel emergSL orders
+        protecting open positions. DMS is harmful here.
+        → New AR-055. Add HR (Hard Rule) to 1011002 and
+        0411001.
+
+NEW-17: Mid-session WS reconnect sequence not specified.
+        Distinct from startup: no ATR warm-up, no baseline
+        reset, Pending Order Registry reconciliation,
+        detect positions closed during gap, preserve
+        drawdown baseline.
+        → New AR-056. Amend 1011014 to add Section 2.
+
+------------------------------------------------------------
+CONFIRMED (20+ items):
+------------------------------------------------------------
+
+  C-01  cancel_order returns individual ACKs per order
+  C-02  cl_ord_id present on all order events
+  C-03  batch_add returns order_id+cl_ord_id per order
+  C-04  order_status:true sends all transitions
+  C-05  `reason` field replaces cancel_reason
+  C-06  GTD expiry fires exec_type=expired
+  C-07  post_only rejection fires exec_type=canceled
+  C-08  avg_price is cumulative average fill price
+  C-09  exec_type=trade = partial fill (order still open)
+  C-10  exec_type=filled = complete fill
+  C-11  WS reconnect: instant few times, then 5s
+  C-12  snap_orders on reconnect gives open orders
+  C-13  DMS cancels ALL orders including emergSL
+  C-14  systemd watchdog provides process restart protection
+  C-15  GTD entry orders self-cancel on expiry (30-60s)
+  C-16  No new Kraken API changes
+  C-17  executions channel sequence numbers confirmed
+  C-18  AR-041 cancel_order individual responses confirmed
+  C-19  AR-026 order_status:true confirmed
+  C-20  AR-038 startup Kraken status check confirmed
+
+============================================================
+4. NEW ARCHITECTURAL DECISIONS
+============================================================
+
+AR-054 — PARTIAL FILL + EXPIRY/CANCEL POSITION HANDLING:
+  Execution dispatch table MUST handle these cases for
+  entry orders (identified by cl_ord_id in pending_orders):
+
+  CASE A: exec_type == "expired" AND cum_qty > 0:
+    This is a partially-filled entry order that expired.
+    A real position exists. Must protect it immediately.
+    1. Remove cl_ord_id from Pending Order Registry (AR-053)
+    2. Compute actual position parameters:
+       qty = Decimal(str(event.cum_qty))
+       entry_price = Decimal(str(event.avg_price))
+    3. Recalculate TP and emergSL prices using actual
+       entry_price (not original limit_price):
+       mae_dist = ATR(14) × mae_mult
+       emergSL_dist = ATR(14) × emergency_sl_mult
+       net_loss = mae_dist / entry_price + 0.0016 + 0.0026
+       net_gain = net_loss × 1.5
+       gross_tp = entry_price × (1 + net_gain + 0.0016)
+       tp_price = gross_tp.quantize(price_incr, ROUND_UP)
+       emergSL_trigger = (entry_price - emergSL_dist)
+                         .quantize(price_incr, ROUND_DOWN)
+    4. Validate R:R still net 1:1.5 (it will be, since
+       ATR values haven't changed)
+    5. Verify qty >= qty_min and qty × entry_price >= cost_min
+       If not: do NOT dispatch TP/emergSL. Instead:
+         Issue market sell for cum_qty immediately.
+         Log PARTIAL_FILL_BELOW_MINIMUM.
+         Fire CIATS Trade Outcome Bus with trade data.
+    6. dispatch batch_add:
+       Order 1: take-profit limit, sell, qty, tp_price
+       Order 2: stop-loss (emergSL), sell, qty,
+                trigger=emergSL_trigger, reference=last
+    7. Add position to Position Mirror with cum_qty, entry_price
+    8. Log ENTRY_PARTIAL_FILL_PROTECTED.
+
+  CASE B: exec_type == "canceled" AND cum_qty > 0:
+    Same as Case A. Possible reason: post_only rejected
+    after partial fill (edge case). Same treatment.
+
+  CASE C: exec_type == "expired" OR "canceled" AND cum_qty == 0:
+    Entry order expired/canceled with no fill.
+    Remove from Pending Order Registry. Log. No position.
+
+  NOTE: exec_type == "filled" (complete fill) handling
+  is unchanged. No partial fill concern for "filled".
+
+  Assign: 1011002 WM-DISP-020 through -028.
+
+AR-055 — DEAD MAN'S SWITCH: EXPLICITLY PROHIBITED:
+  TothBot V2 MUST NOT call cancel_all_orders_after at
+  any time during normal operation or shutdown.
+  RATIONALE:
+    DMS cancels ALL orders in account when timer expires.
+    This includes emergSL orders protecting open positions
+    (Layer 3 crash protection). Canceling emergSL leaves
+    open positions completely unprotected during VPS/
+    TothBot/internet outage — exactly the scenario
+    emergSL is designed to protect against.
+    DMS removes the protection it is meant to provide.
+  PROTECTION ACHIEVED WITHOUT DMS:
+    Entry order protection: GTD self-expiry in 30-60s.
+    Open position protection: emergSL resting on Kraken.
+    Process crash protection: systemd WatchdogSec=120.
+    Network breakdown: emergSL remains on Kraken exchange.
+  HARD RULE: No call to cancel_all_orders_after is
+  permitted in TothBot V2 code under any circumstance.
+  Code review must reject any PR containing this call.
+  Assign: HR-DMS-001 in 1011002 and 0411001.
+
+AR-056 — MID-SESSION WS RECONNECT SEQUENCE:
+  Add Section 2 to 1011014 Startup_Sequence_Coding_Spec.
+  This is distinct from startup (Section 1).
+
+  Trigger: private WS connection drops during live
+  operation. WS Manager detects via asyncio exception
+  or timeout.
+
+  Reconnect steps:
+  Step R1: Close broken WS connection cleanly.
+  Step R2: Wait — if first few retries, instant;
+           if extended outage, 5s interval.
+  Step R3: Re-request GetWebSocketsToken (token may
+           have expired during gap).
+  Step R4: Re-connect private WS.
+  Step R5: Re-subscribe executions (snap_orders:true,
+           snap_trades:true, order_status:true,
+           ratecounter:true).
+  Step R6: Process snap_orders:
+    a) Compare snap_orders open orders vs Position Mirror.
+    b) For each cl_ord_id in Position Mirror but NOT
+       in snap_orders (position closed during gap):
+       Find corresponding trade in snap_trades by order_id.
+       Fire CIATS Trade Outcome Bus. Update Position Mirror.
+       Log POSITION_CLOSED_DURING_GAP.
+    c) For each order in snap_orders but NOT in Position
+       Mirror (order placed by error/manual): alert only.
+    d) For orders in Pending Order Registry: if now in
+       snap_orders as open → remove from registry (placed
+       before disconnect, now confirmed live).
+       If NOT in snap_orders → clear from registry
+       (expired or never placed). Log PENDING_ORDER_LOST.
+  Step R7: Re-subscribe balances channel (snapshot:true).
+    Update spot_asset_balances from new snapshot.
+    DO NOT update portfolio_baseline_USD.
+  Step R8: Re-subscribe to public channels:
+    instrument, status, ohlc(5m), ohlc(60m).
+    Update pair cache from new instrument snapshot.
+  Step R9: Re-subscribe ticker for all open positions
+    (event_trigger:bbo for each active pair).
+  Step R10: If gap > 15 minutes:
+    Re-run OHLC REST warm-up for stale pairs only.
+    Check if ATR/EMA caches are stale (> 15 min since
+    last update). If stale → re-warm affected pairs.
+    If gap <= 15 minutes: skip REST warm-up.
+  Step R11: Resume pipeline. Set all WARM_UP pairs to
+    READY (if not stale). Log RECONNECT_COMPLETE.
+
+  KEY INVARIANTS (must be preserved across reconnect):
+  - portfolio_baseline_USD: NEVER reset during reconnect.
+  - drawdown state: PRESERVED.
+  - ATR/EMA caches: PRESERVED unless stale.
+  - Position Mirror: updated by reconciliation only.
+
+  Assign: 1011014 Section 2. 1011002 WM-RECONNECT-001
+  through -015.
+
+============================================================
+5. DOCUMENTS PRODUCED THIS SESSION
+============================================================
+
+  1011002  WS_Manager_Coding_Spec     dv1_9  ★
+           (WM-DISP-020 through -028,
+            HR-DMS-001, WM-RECONNECT-001 through -015)
+  1011014  Startup_Sequence_Coding_Spec  dv1_1  ★
+           (Section 2: Mid-Session Reconnect Sequence)
+  0411001  Kraken_WS_v2_Specification  dv1_8  ★
+           (HR-DMS-001 cross-reference)
+  TB00017  This session log              v1_0  ★
+  0500000  AR-054 through AR-056 pending
+           (add to 0500000 dv1_13 change list)
+
+============================================================
+6. 0500000 dv1_13 CHANGE SPECIFICATION (UPDATED)
+============================================================
+
+All TB00015 changes (AR-044 through AR-049) carry forward.
+All TB00016 changes (AR-050 through AR-053 + AR-047 amend).
+New additions from TB00017:
+
+CHANGE 12 — New AR-054:
+  Partial fill + expiry/cancel creates unprotected position.
+  Extend dispatch table: expired/canceled with cum_qty > 0
+  → compute TP/emergSL from actual avg_price, dispatch
+  batch_add, enter Position Mirror.
+
+CHANGE 13 — New AR-055:
+  DMS explicitly prohibited. DO NOT use
+  cancel_all_orders_after. Hard rule.
+
+CHANGE 14 — New AR-056:
+  Mid-session WS reconnect sequence. 11-step process.
+  Distinct from startup. Preserves portfolio_baseline_USD,
+  reconciles Position Mirror vs snap_orders.
+
+Total 0500000 pending changes: 14 (text-only, no diagrams).
+All require a dedicated 0500000 update session.
+
+============================================================
+7. VALIDATION STATUS AND TREND
+============================================================
+
+  TB00014 (Session 7):  5 findings
+  TB00015 (Session 8):  8 findings (startup gap was large)
+  TB00016 (Session 9):  6 findings (converging)
+  TB00017 (Session 10): 3 findings (strong convergence)
+
+ASSESSMENT: The Kraken API interface is fully validated.
+The remaining gaps found are in TothBot's INTERNAL logic:
+  - Entry order lifecycle edge cases (NEW-15)
+  - Safety rule completeness (NEW-16)
+  - Operational procedure completeness (NEW-17)
+
+These are NOT API interface gaps. They are system design
+completeness issues. The architecture is sound.
+
+RECOMMENDATION: One more targeted validation pass focused
+specifically on:
+  - Exit Controller Layer 1 triggers (OI-003)
+  - CIATS Trade Outcome Bus field specification
+  - Logger async queue field specification
+  - Any remaining operational edge cases
+
+After that pass, if zero findings → architecture layer
+is complete and coding can begin.
+
+============================================================
+8. OPEN ITEMS — CURRENT STATE
+============================================================
+
+  OI-001  SSS signal generation — Phase 5-6 work
+  OI-002  Asset selection universe — Phase 5-6 work
+  OI-003  Exit Controller Layer 1 full spec — Phase 5-6
+  OI-004  Entry limit placement — Phase 5-6 work
+  OI-005  Selection Controller 6-gate spec — Phase 5-6
+  Nothing in Phase 1-4 blocked.
+
+============================================================
+9. PARKING LOT — CURRENT STATE
+============================================================
+
+  PL-003  TRACKING: Pathway 1 GitHub automation.
+  All other items: Resolved. Zero new additions.
+
+============================================================
+10. BILL ACTIONS REQUIRED
+============================================================
+
+  (nn) Download TB00017.
+  (oo) Apply to 1011002 dv1_9:
+       WM-DISP-020 through -028 (partial fill dispatch)
+       HR-DMS-001 (DMS prohibition)
+       WM-RECONNECT-001 through -015 (reconnect sequence)
+  (pp) Apply to 1011014 dv1_1:
+       Section 2: Mid-Session Reconnect Sequence (AR-056)
+  (qq) Apply to 0411001 dv1_8:
+       HR-DMS-001 cross-reference
+  (rr) Approve all documents.
+  (ss) Upload everything to Claude project for next session.
+  (tt) 0500000 dv1_13 now has 14 pending changes
+       (AR-044 through AR-056 + AR-047 amendment).
+       Apply at dedicated session when ready.
+
+MANDATORY UPLOAD FOR NEXT SESSION:
+  TB00001 through TB00017 (all session logs)
+  All Phase 1 documents (0000000 through 0311005)
+  0411001 dv1_8 (this session)
+  1011001 dv1_4
+  1011002 dv1_9 (this session)
+  1011010 dv1_2
+  1011011 dv1_1
+  1011012 dv1_3
+  1011013 dv1_2
+  1011014 dv1_1 (this session)
+  0500000_System_Architecture_Overview_dv1_12_Claude_Source.txt
+
+============================================================
+11. REVISION HISTORY
+============================================================
+
+  v1_0  03-26-2026  Initial session log. Ninth 10-search
+                    FP/DP validation. 3 new findings, all
+                    immediately resolved. 20+ confirmations.
+                    0 parking lot additions. Finding rate
+                    converging strongly: 8 → 6 → 3.
+                    New ARs: 054-056.
+                    Documents: 1011002 dv1_9, 1011014 dv1_1,
+                    0411001 dv1_8, TB00017.
+                    Critical findings: partial fill + expiry
+                    creates unprotected position (NEW-15),
+                    Dead Man's Switch must be prohibited
+                    (NEW-16), mid-session reconnect sequence
+                    not specified (NEW-17).
+                    Architecture approaching zero-finding
+                    state on Kraken API interface layer.
+
+============================================================
+END OF SESSION LOG
+============================================================

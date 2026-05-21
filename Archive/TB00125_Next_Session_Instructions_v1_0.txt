@@ -1,0 +1,466 @@
+DocDCN:     TB00125_NSI
+DocTitle:   Next_Session_Instructions_for_TB00126
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TBXXXXX_Session_Logs\TB00125_Next_Session_Instructions_v1_0.txt
+DocDate:    04-24-2026
+DocTime:    03:10:00 UTC
+
+============================================================
+NEXT SESSION INSTRUCTIONS - TB00126
+OBSERVATION-WINDOW-CLOSE SESSION
+CLOSE OI-018 / OI-019 / OI-020 / OI-028 / OI-029 ON EVIDENCE
+COLD-LOAD NEW CHAT REQUIRED
+============================================================
+
+PAPER TRADING ONLY. NO REAL MONEY.
+
+============================================================
+SECTION 1 - WHAT THIS SESSION DOES
+============================================================
+
+TB00126 is an OBSERVATION-WINDOW-CLOSE session.
+TB00125 shipped the DEFECT-WM-REST-SIGN-001 fix
+(ws_manager.py dv1_23 + 1011002 dv1_22 + 1010000
+dv1_14) AND reset the observation window to a new
+T+0 at 2026-04-24 02:58:52 UTC. OI-041 already closed
+in TB00125 via live-mode verification. TB00126
+evaluates window evidence at T+48h and closes five
+remaining OIs on evidence.
+
+TB00126 scope, in this order:
+
+  STEP A  Pre-flight. Cold-load verification of
+          project-folder state per §7.3 below.
+
+  STEP B  Run /root/tothbot_sweep.sh on VPS. Record
+          T+N counters (N = hours since
+          2026-04-24 02:58:52 UTC; at TB00126 open
+          N >= 48).
+
+  STEP C  Compare T+N counters against T+0 baseline
+          in §4 below. DELTAS NEW TO WINDOW are the
+          closure evidence:
+            WS_MGR_FATAL              (OI-018)
+            ALERT_SMTP_FAILED         (OI-019,
+                                       OI-029)
+            ALERT_SENT                (OI-019)
+            FATAL_RECONNECT_FAILURE   (OI-020,
+                                       OI-028)
+            RECONNECT_COMPLETE        (OI-028)
+
+  STEP D  Close OIs on evidence.
+
+  STEP E  TB00126 Session Log + TB00126 NSI.
+
+OPTIONAL SCOPE (Bill decides at open):
+
+  - Evaluate OI-043 (project-folder-drift-
+    accumulation) and decide whether 0311002
+    DC-SYNC-002 needs a pre-flight reconciliation
+    step. TB00122 / TB00123 / TB00124 addressed
+    the symptomatic accumulation; TB00125 cleared
+    the orphan-deletion class symptom via VP-010
+    cleanup commit. Governance-level remediation
+    remains open.
+
+TB00126 MUST be opened as a COLD-LOAD NEW CHAT. Claude
+reads all mandatory documents directly from the
+Claude.ai project folder. No reliance on mid-session
+memory permitted. Per TB00000 v2_13 §4.3 RR-RULE-001
+/ RR-RULE-003, Claude re-reads every rule before emit.
+
+TB00126 MUST be opened at or after 2026-04-26 02:58:52
+UTC to satisfy the window T+48h minimum.
+
+============================================================
+SECTION 2 - MANDATORY READING (MUST BE FIRST, COLD-LOAD)
+============================================================
+
+TB00126 reads every document below directly from the
+Claude.ai project folder. Claude states the version
+read before doing any work. Do NOT paraphrase
+content - quote or cite by section where applicable.
+
+Governance and standing rules:
+
+  TB00000                       v2_13
+    Project Instructions. ALWAYS FIRST. §4.2 ABSOLUTE
+    STANDING RULE governs prohibited-string handling.
+    §4.3 ABSOLUTE STANDING RULES govern Claude
+    behavior (RR-SCOPE / RR-RULE / RR-SHELL /
+    RR-VIOL / RR-RAT). Cold-load verify presence.
+
+  0311001                       v1_3
+    Namespace. §3.1 HR-PATH rules.
+
+  0311002                       v1_3
+    Workflow. STEP 8.2.3 DC-SYNC rules.
+
+  0311003                       v1_1
+    Versioning Procedure. VP-003 code-file revhist.
+    VP-010 superseded documents.
+
+  0311004                       v1_2
+    Document Creation and Approval.
+
+  0311005                       v1_0
+    System_Definitions_and_Terminology. Reference
+    only.
+
+Session history (last 7 plus TB00112):
+
+  TB00125 Session Log           v1_0
+    PRIOR session. Part 2 authoring + deploy +
+    live-mode verification. OI-041 closed. Window
+    reset to new T+0. THIS NSI was its companion.
+
+  TB00125 NSI                   v1_0
+    THIS document.
+
+  TB00124 Session Log           v1_0
+    Scope-reevaluation session. Resolved three
+    drift items via Bill mid-session uploads.
+
+  TB00124 NSI                   v1_0
+    Prior NSI.
+
+  TB00123 Session Log           v1_0
+    Scope-reevaluation session.
+
+  TB00123 NSI                   v1_0
+    Prior NSI.
+
+  TB00122 Session Log           v1_0
+    Scope-reevaluation session documenting TB00121
+    project-folder drift.
+
+  TB00122 NSI                   v1_0
+    Prior NSI.
+
+  TB00121 Session Log           v1_1
+    Part 1 / Part 2 deferral session.
+
+  TB00121 NSI                   v1_1
+    Prior NSI.
+
+  TB00120 Session Log           v1_1
+    §2.6 DEFECT-WM-REST-SIGN-001 ROOT CAUSE LOCKED.
+    Reference only - the defect is CLOSED as of
+    TB00125.
+
+  TB00120 NSI                   v1_1
+    Original observation-window-close + fix scope
+    source.
+
+  TB00119 Session Log           v1_0
+    PRIOR DC package commit / deploy / 48h window
+    open (superseded T+0 baseline - see §4 below
+    for AUTHORITATIVE T+0 from TB00125 §2.9).
+
+  TB00119 NSI                   v1_0
+    Window closure criteria (format reference for
+    STEP D).
+
+  TB00112 Session Log           v1_0
+    Retained per long-standing retention reason.
+
+Architecture and code (reference, not modification):
+
+  0500000   System_Architecture_Overview   dv1_19
+    Full-system reference.
+
+  0411002   Kraken_REST_API_Specification  dv1_1
+    REST-AUTH-001 / REST-AUTH-003 signing contract.
+
+  1011002   WS_Manager_Coding_Spec         dv1_22
+    WM-REST-SIGN-001 / WM-REST-SIGN-002 /
+    WM-REST-SIGN-003 + HR-WM-023 (new in TB00125).
+
+  1010000   Trading_System_Coding_Anchor   dv1_14
+    Registry reflects ws_manager.py SpecVer
+    dv1_22 (new in TB00125).
+
+  ws_manager.py                 dv1_23
+    OI-041 fix deployed TB00125.
+
+  logger.py                     dv1_5
+
+  operations/tothbot_sweep.sh   dv1_0
+
+  1011001   Engineering_Best_Practices     dv1_7
+
+============================================================
+SECTION 3 - PART 1 COMMAND SEQUENCE
+============================================================
+
+STEP B sweep command (PowerShell, single copy box):
+
+  ssh root@87.99.141.44 "/root/tothbot_sweep.sh"
+
+Record full output in TB00126 Session Log §2.x.
+Compare to §4 T+0 baseline to compute deltas.
+
+Also record service PID and uptime from the SERVICE
+block of the sweep. If PID differs from 259223 or
+uptime is less than 48 hours, investigate auto-
+restart root cause before closing any OI.
+
+============================================================
+SECTION 4 - T+0 BASELINE (FROM TB00125 §2.9)
+============================================================
+
+  Window start:        2026-04-24 02:58:52 UTC
+  T+48h close:         2026-04-26 02:58:52 UTC
+  Service PID:         259223  (may differ at
+                       TB00126 open if systemd
+                       auto-restarted - investigate
+                       if so)
+  Code deploy SHA:     5d44292
+  Docs deploy SHA:     880ec90
+  Paper mode:          PAPER_TRADING_MODE=true
+                       (CONFIRMED PAPER_BALANCE_SET
+                       at 02:58:52.562890 UTC)
+
+  Counters at T+0:
+    CRITICAL:                     5
+    FATAL_RECONNECT_FAILURE:      0
+    WS_MGR_FATAL:                 0
+    WSMGR_FATAL_PROPAGATED:       0
+    ALERT_SMTP_FAILED:            0
+    TRADE_RECORD_WRITE_FAILED:    0
+    WARMUP_REST_FAILED:           0
+    RECONNECT_INITIATED:          14
+    RECONNECT_TRIGGERED:          219
+    RECONNECT_ATTEMPT_FAILED:     1  (HTTP 503)
+    RECONNECT_COMPLETE:           14
+    ALERT_SENT:                   448
+    TRADE_CLOSE:                  0
+    PAPER_BALANCE_SET:            4
+    SYSTEM_OPERATIONAL:           12
+
+Closure criteria (deltas NEW to window, i.e.
+T+48h count minus T+0 count):
+
+  OI-018 closes if:
+    delta WS_MGR_FATAL == 0
+
+  OI-019 closes if:
+    delta ALERT_SMTP_FAILED == 0
+    AND delta ALERT_SENT > 0 (alert path exercised
+                              at all)
+
+  OI-020 closes if:
+    delta FATAL_RECONNECT_FAILURE == 0
+
+  OI-028 closes if:
+    delta FATAL_RECONNECT_FAILURE == 0
+    AND delta RECONNECT_INITIATED ==
+        delta RECONNECT_COMPLETE
+    AND paper_mode persists throughout window
+        (no silent toggle).
+
+  OI-029 closes if:
+    delta ALERT_SMTP_FAILED == 0
+    (same condition as OI-019 ALERT_SMTP_FAILED leg)
+
+============================================================
+SECTION 5 - REPO AND VPS STATE
+============================================================
+
+------------------------------------------------------------
+5.1 Repo state
+------------------------------------------------------------
+
+  Docs repo:  master @ 880ec90
+    (1497c6e OI-041 spec + 880ec90 VP-010 cleanup
+     applied TB00125)
+  Code repo:  master @ 5d44292
+    (OI-041 fix applied TB00125)
+
+------------------------------------------------------------
+5.2 VPS state expected at TB00126 open
+------------------------------------------------------------
+
+If service has been untouched for 48h:
+
+  PID:          259223  (may differ if systemd auto-
+                restart occurred - INVESTIGATE before
+                closing OIs)
+  Uptime:       >= 48h
+  Code SHA:     5d44292
+  Paper mode:   true
+  Env file:     /root/.tothbot.env (600 perms)
+
+If PID differs or uptime < 48h, STEP B sweep will
+surface it and STEP D pauses until root cause known.
+
+============================================================
+SECTION 6 - NOT-IN-SCOPE ITEMS
+============================================================
+
+TB00126 is window-close only. Explicitly out of scope:
+
+  - Any code change.
+  - Any DC package.
+  - Any real-money trading / live-mode toggle.
+    (OI-041 already closed in TB00125 via bounded
+    live-mode verification. No further live-mode
+    execution is justified in TB00126.)
+  - OI-043 governance-level remediation (may be
+    picked up at Bill discretion as optional
+    scope).
+
+============================================================
+SECTION 7 - PROJECT FOLDER STATE
+============================================================
+
+------------------------------------------------------------
+7.1 Governance and spec files expected at TB00126 open
+------------------------------------------------------------
+
+  TB00000 v2_13                         PRESENT
+  TB00000 v2_12                         ABSENT
+  0311001 v1_3                          PRESENT
+  0311002 v1_3                          PRESENT
+  0311003 v1_1                          PRESENT
+  0311004 v1_2                          PRESENT
+  0311005 v1_0                          PRESENT
+  0500000 dv1_19 .txt/.docx/.pdf        PRESENT (all 3)
+  0411002 dv1_1                         PRESENT
+  1010000 dv1_14                        PRESENT  (NEW)
+  1010000 dv1_13                        ABSENT   (removed
+                                                  per
+                                                  VP-010)
+  1011001 dv1_7                         PRESENT
+  1011002 dv1_22                        PRESENT  (NEW)
+  1011002 dv1_21                        ABSENT   (removed
+                                                  per
+                                                  VP-010)
+  1011007 dv1_5                         PRESENT
+  1011007 dv1_4                         ABSENT
+  ws_manager.py dv1_23                  PRESENT  (NEW)
+  logger.py dv1_5                       PRESENT
+  operations/tothbot_sweep.sh dv1_0     PRESENT
+
+------------------------------------------------------------
+7.2 Session history files expected at TB00126 open
+------------------------------------------------------------
+
+  TB00125 Session Log v1_0              PRESENT (after
+                                        Bill upload)
+  TB00125 NSI v1_0                      PRESENT (after
+                                        Bill upload)
+  TB00124 Session Log v1_0              PRESENT
+  TB00124 NSI v1_0                      PRESENT
+  TB00123 Session Log v1_0              PRESENT
+  TB00123 NSI v1_0                      PRESENT
+  TB00122 Session Log v1_0              PRESENT
+  TB00122 NSI v1_0                      PRESENT
+  TB00121 Session Log v1_1              PRESENT
+  TB00121 NSI v1_1                      PRESENT
+  TB00120 Session Log v1_1              PRESENT
+  TB00120 NSI v1_1                      PRESENT
+  TB00119 Session Log v1_0              PRESENT
+  TB00119 NSI v1_0                      PRESENT
+  TB00112 Session Log v1_0              PRESENT
+
+Optional cleanup at Bill discretion (TB00117 drops
+from 7-session rolling window as TB00125 enters):
+
+  TB00117 Session Log v1_0
+  TB00117 NSI v1_0
+  TB00118 Session Log v1_0 (if still present -
+    superseded by v1_1)
+
+------------------------------------------------------------
+7.3 Pre-flight STEP A uses project_knowledge_search
+------------------------------------------------------------
+
+Per TB00121 §2.6 lesson, filesystem mount alone is
+frozen at session start and cannot confirm uploads
+made after prior session close. STEP A MUST use
+project_knowledge_search (live index), not only
+/mnt/project/ filesystem listing, to verify upload
+state.
+
+If any REQUIRED file is missing at pre-flight,
+HALT and request Bill upload. Missing OPTIONAL
+cleanup items are non-halting.
+
+============================================================
+SECTION 8 - BLOCKERS AND PROHIBITIONS
+============================================================
+
+The following actions MUST NOT occur in TB00126
+without explicit Bill authorization in-session:
+
+  - Any code change.
+  - Any partial-file / unified-diff delivery (per
+    NO PATCHES RULE).
+  - Any real-money trading / live-mode toggle.
+  - Using ANY Windows file path not in TB00000 §11
+    authoritative tree.
+  - Emitting the §4.2-prohibited string per TB00000
+    v2_13 §4.2 OP-001 through OP-009.
+  - Violating any §4.3 RR-* rule (per v2_13 §4.3
+    RR-VIOL-001 any violation is a session-halting
+    defect).
+  - Silent shell switches from PowerShell to cmd.exe.
+
+============================================================
+SECTION 9 - DELIVERABLES EXPECTED FROM TB00126
+============================================================
+
+Minimum:
+
+  TB00126_TothBot_V2_Session_Log_<DATE>_v1_0.txt
+  TB00126_Next_Session_Instructions_v1_0.txt
+
+Session-record artifacts (paste-ins to session log):
+
+  - Pre-flight sweep output
+  - T+N VPS sweep output (full)
+  - Per-OI delta computation
+  - Per-OI closure statement
+  - Observation-window close timestamp
+
+Post-session Bill actions:
+
+  - Upload TB00126 Session Log v1_0 and NSI v1_0 to
+    Claude.ai project folder.
+  - Remove TB00118 Session Log + NSI from project
+    folder (drops from 7-session rolling window as
+    TB00126 enters).
+
+============================================================
+REVISION HISTORY
+============================================================
+
+  v1_0  2026-04-24  Initial. Next-session instructions
+                    for TB00126 OBSERVATION-WINDOW-CLOSE
+                    session. Scope: close OI-018 /
+                    OI-019 / OI-020 / OI-028 / OI-029
+                    on 48h evidence vs §4 T+0 baseline.
+                    Window T+0 = 2026-04-24 02:58:52
+                    UTC (TB00125 deploy). Window
+                    T+48h minimum = 2026-04-26
+                    02:58:52 UTC. OI-041 already
+                    closed in TB00125 via live-mode
+                    verification - no Part 2 carryover.
+                    Reading list: TB00119 - TB00125
+                    + TB00112 (7-session rolling
+                    window; TB00117 drops, TB00118
+                    Session Log v1_0 drops if present).
+                    Section 7.3 §7.3 reflects all
+                    TB00125 DC package changes:
+                    ws_manager.py dv1_23, 1011002
+                    dv1_22, 1010000 dv1_14 all
+                    PRESENT; superseded dv1_21 /
+                    dv1_13 ABSENT per VP-010. Paper
+                    trading only. No real money.
+                    Shell discipline: PowerShell only.
+
+============================================================
+END - TB00125 NEXT SESSION INSTRUCTIONS v1_0
+============================================================

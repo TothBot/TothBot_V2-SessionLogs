@@ -1,0 +1,1101 @@
+DocDCN:     TB00140
+DocTitle:   TothBot_V2_Session_Log_2026-04-26
+DocVersion: v1_1
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TBXXXXX_Session_Logs\TB00140_TothBot_V2_Session_Log_2026-04-26_v1_1.txt
+DocDate:    04-26-2026
+DocTime:    01:30:00 UTC
+
+============================================================
+TOTHBOT V2 SESSION LOG — TB00140
+============================================================
+
+PAPER TRADING ONLY. NO REAL MONEY.
+PAPER TRADING MUST MIMIC LIVE TRADING EXACTLY.
+NO PATCHES.
+
+============================================================
+1. SESSION CONTEXT
+============================================================
+
+Session number:   TB00140
+Session date:     2026-04-25 UTC
+Session type:     Cold-load. Combined Claude Code (STREAM 1)
+                  + chat scope (STREAM 3-A + STREAM 3-B).
+Prior session:    TB00139 (2026-04-25 UTC, chat) — closed
+                  DC-CLEANUP-003 extraction sweep for
+                  Findings 1 and 2; deferred Findings 3
+                  and 4 to TB00140.
+
+Session purpose:
+  Per TB00139 NSI §1, four optional STREAMs available.
+  Bill direction at session open: Option 3 (STREAM 3-A +
+  STREAM 3-B combined chat-scope batch). Bill subsequently
+  authorized STREAM 1 (ws_manager.py dv1_24 cascade) in
+  parallel via Claude Code, with chat work proceeding
+  concurrently.
+
+Session sequencing:
+  (1) STREAM 1 executed in Claude Code (separate Claude
+      instance) — code cascade resulting in
+      ws_manager.py dv1_24 commit 0c2ec3b.
+  (2) STREAM 3-A + 3-B executed in chat (this session) —
+      governance increments resulting in 0311002 v1_6,
+      v1_7, and TB00000 v2_16.
+
+============================================================
+2. MANDATORY READING — DOCUMENTS READ THIS SESSION
+============================================================
+
+Per TB00000 v2_15 §2 Mandatory Reading rule:
+
+  Doc                                  Version  Source
+  TB00000                              v2_15    project
+  TB00139 Session Log                  v1_0     project
+  TB00139 NSI                          v1_0     project
+  0311001 Namespace_Specification      v1_3     project
+  0311002 Document_Creation_Workflow   v1_5     project
+  0311006 Known_Platform_Limitations   dv1_0    project
+  0500000 System_Architecture_Overview dv1_21   project
+                                       (.txt + .docx + .pdf)
+
+Reading rule satisfied: all listed at start of session;
+no version drift; no project-folder discrepancy.
+
+Additional reads supporting STREAM 3-B:
+  TB00121 Session Log (OI-043 origin §3.2 + §4.2)
+  TB00131 Session Log (ERROR-TB00131-01 origin §12)
+
+============================================================
+3. WORK COMPLETED THIS SESSION
+============================================================
+
+3.1 STEP A PRE-FLIGHT — PASS
+
+Per TB00139 NSI §6 First Actions:
+
+  Project folder bash sweep (/mnt/project/):
+    PASS. State matches TB00139 NSI §4 expected state.
+    TB00000 v2_14 absent (Bill removed at TB00139 close).
+    TB00000 v2_15 present.
+    0311006 dv1_0 present.
+    Rolling window TB00133-TB00139 all present.
+    TB00132, TB00112, TB00118-TB00131 backlog all present.
+    MUST-PRESERVE (TB00001/12/13/14/20) all present. PASS.
+    0500000 three-format dv1_21 (.txt+.docx+.pdf). PASS.
+
+  Git-state pre-flight (Bill executed via PowerShell):
+    TothBot_V2-Docs HEAD = 5bb0bd5 (TB00139 0311006
+      commit). Working tree clean. PASS.
+    TothBot_V2-Code HEAD = 5d44292 (TB00125 deploy).
+      Working tree clean. PASS at session open.
+
+  D-01 through D-08 LOCKED: confirmed.
+  Standing rules active: §4.1 DR-001..005, §4.2
+    OP-001..009, §4.3.1 RR-SCOPE-001..008, §4.3.2
+    RR-RULE-001..004, §4.3.3 RR-SHELL-001..004,
+    §4.3.4 RR-VIOL-001..002.
+
+3.2 STREAM SELECTION
+
+Bill direction: Option 3 — STREAM 3-A + STREAM 3-B
+combined chat-scope batch. Subsequently extended to
+include STREAM 1 in parallel via Claude Code. STREAM 2
+(execution_engine.py conformance review) deferred to
+a future session.
+
+3.3 STREAM 1 — ws_manager.py CODE CASCADE
+    (Claude Code instance, parallel to chat)
+
+Bill launched Claude Code from C:\Users\wstot\GitHub\TothBot
+and pasted the chat-issued STREAM 1 prompt.
+
+RR-SCOPE-007 self-catch fired at STREAM 1 open. The NSI
+three-edit list (carried forward verbatim TB00136 NSI §4
+-> TB00137 NSI §1 -> TB00138 NSI §1 -> TB00139 NSI §1)
+was under-enumerated by THREE additional sites:
+
+  L3098  ("USD","USDC") quote filter in
+         seed_indicators_from_rest() Step 0 liquidity-
+         fetch candidate set.
+  L3165  [:UNIVERSE_TOP_N] slice in re-rank step.
+  L3168  if len(top_symbols) >= UNIVERSE_TOP_N: guard
+         in BTC/USD carve-out branch at re-rank.
+
+Claude Code halted before any edit, reported the gap,
+and presented three options. Bill selected Option A
+(full six-site D-03/D-08 enforcement).
+
+Claude Code applied six edits:
+  Edit 1a — L508: deleted UNIVERSE_TOP_N: int = 50
+  Edit 1b — L1757: docstring update USD/USDC/USDT
+  Edit 1c — L1764: quote filter add USDT
+  Edit 1d — L1773-1776: removed Top-N slice
+  Edit 2a — L3155+L3159: comment + Step 0 filter
+  Edit 2b — L3225: removed [:UNIVERSE_TOP_N] slice
+  Edit 2c — L3227-3228: removed slot-management
+            two-branch; collapsed to single append
+
+Validation:
+  grep UNIVERSE_TOP_N: ZERO hits. PASS.
+  grep ("USD","USDC") without USDT: ZERO hits. PASS.
+  grep USDT: present at L1764, L3159. PASS.
+  python -m py_compile tothbot/ws_manager.py: PASS.
+  Read-back of all six regions: EXACT MATCH. PASS.
+
+Version header:
+  dv1_23 -> dv1_24
+  04-24-2026 02:00:00 UTC -> 04-25-2026 22:13:03 UTC
+
+Git commit + push:
+  Hash: 0c2ec3b40a24c8c5703ffc971e298c977f2a75d5
+  Branch: master
+  Push: 5d44292..0c2ec3b master -> master
+  Commit message: per NSI verbatim ("TB00140 STREAM 1:
+    ws_manager.py dv1_23 -> dv1_24 — D-03 USDT
+    inclusion + D-08 Top-N cap full retirement across
+    both _build_monitored_universe() and
+    seed_indicators_from_rest() (six-site fix per
+    RR-SCOPE-007 self-catch; closes OI-045, OI-046,
+    FINDING-TB00135-001 at code deploy)")
+
+STREAM 1 closed at code-deploy boundary. OI-045 / OI-046 /
+FINDING-TB00135-001 ready for full closure pending Bill
+VPS deploy + observation window.
+
+3.4 STREAM 3-A — 0311002 INTERIM REGISTER RETIREMENT
+    (chat scope)
+
+Per 0311006 dv1_0 §6.4 migration plan, the interim KPL
+register established in 0311002 v1_5 §8.2.4
+DC-CLEANUP-004 (housing KPL-001 / KPL-002 / KPL-003 as
+full text) was retired and replaced with a brief
+reference to 0311006 as the canonical KPL repository.
+
+Edits applied:
+  - DocVersion v1_5 -> v1_6, DocPath updated, DocDate
+    + DocTime updated.
+  - DC-CLEANUP-004 entry rewritten: 110-line interim
+    register replaced with 22-line reference block.
+  - Forward references block updated:
+    "(PROPOSED — DCN reserved; document not yet
+    authored. KPL-* register currently lives in this
+    STEP under DC-CLEANUP-004 as interim home)" ->
+    "(AUTHORED at TB00139 — dv1_0). Canonical KPL
+    repository per §6.4 migration plan. The interim
+    KPL register formerly housed in this STEP under
+    DC-CLEANUP-004 has been RETIRED at 0311002 v1_6."
+  - Revision history v1_6 entry added above v1_5.
+
+Output: 0311002 v1_5 -> v1_6.
+
+OP-003 grep: 0 prohibited-string occurrences. PASS.
+
+3.5 STREAM 3-B FINDING 3 + STREAM 1 OI —
+    STEP A PRE-FLIGHT FORMALIZATION
+    (chat scope)
+
+Two converging governance gaps closed in a single
+0311002 increment:
+
+  Finding 3: OI-043 PROJECT-FOLDER-DRIFT-ACCUMULATION
+    upload-drift component never formalized.
+    git-state component closed TB00138 via TB-by-TB
+    practice but also never formalized.
+
+  STREAM 1 OI: NSI carry-forward edit-list
+    under-enumeration surfaced TB00140 STREAM 1 via
+    RR-SCOPE-007 self-catch. No procedural pre-flight
+    check existed to detect this class of gap
+    systematically.
+
+FP/DP analysis: both gaps belong in a single
+formalization of STEP A pre-flight as a procedural
+checkpoint. STEP A was previously referenced in
+DC-CLEANUP-005 step 5 and DC-CLEANUP-006 paragraph
+without formal definition. New §8.2.5 establishes
+the formal definition.
+
+Edits applied:
+  - DocVersion v1_6 -> v1_7, DocPath updated, DocDate
+    + DocTime updated.
+  - New §8.2.5 STEP A — SESSION-OPEN PRE-FLIGHT
+    VALIDATION inserted after STEP 8.2.4 close.
+    Five mandatory rules:
+      DC-PREFLIGHT-001  CHECK 1 project-folder
+                        expected-state validation
+                        (closes OI-043 upload-drift).
+      DC-PREFLIGHT-002  CHECK 2 git-state pre-flight
+                        (formalizes TB00138
+                        corrective).
+      DC-PREFLIGHT-003  CHECK 3 NSI code-edit-list
+                        validation against deployed
+                        code (closes OI-058).
+      DC-PREFLIGHT-004  STEP A reporting summary.
+      DC-PREFLIGHT-005  Violation handling.
+  - Revision history v1_7 entry added above v1_6.
+
+Output: 0311002 v1_6 -> v1_7.
+
+OP-003 grep: 0 prohibited-string occurrences. PASS.
+
+3.6 STREAM 3-B FINDING 4 — DR-006 DELIVERY-TURN
+    SELF-CONTAINMENT
+    (chat scope)
+
+ERROR-TB00131-01 (TB00131 §12 origin, surfaced TB00139
+STREAM 3 as Finding 4) governance gap closed via
+TB00000 §4.1 DR-006.
+
+FP/DP analysis: §4.1 DR-* rules govern file-delivery
+mechanics. §4.3.3 RR-SHELL rules govern shell command
+self-containment. ERROR-TB00131-01 is fundamentally
+about delivery turn structure, not shell mechanics.
+Semantic fit governs. Option A (DR-006) accepted over
+Option B (RR-SHELL-005).
+
+Edits applied:
+  - DocVersion v2_15 -> v2_16, DocPath updated,
+    DocDate + DocTime updated.
+  - Document Status block updated: supersedes v2_15.
+  - DR-006 inserted after DR-005 close. Five sub-rules
+    (DR-006.1 single-turn rule, DR-006.2 pre-emit
+    scan, DR-006.3 self-catch behavior, DR-006.4
+    scope, DR-006.5 violation handling).
+  - Self-catch signal: "DR-006 self-caught —
+    redrafting."
+  - Revision history v2_16 entry added above v2_15.
+
+Output: TB00000 v2_15 -> v2_16.
+
+OP-003 grep: 9 occurrences, all in §4.2 OP-001..009
+rule-stating context, §4.3 reference to §4.2, or
+revision-history reference to §4.2 entries. All
+OP-008-exception territory. PASS.
+
+3.7 ws_manager.py dv1_24 VPS DEPLOY ATTEMPT — FAILED
+
+After STREAM 1 + STREAM 3-A + 3-B closure and successful
+GitHub commit (0311002 v1_7 + TB00000 v2_16), Bill
+proceeded with VPS deploy of ws_manager.py dv1_24 per
+TB00140 NSI §1 STREAM 1 closure plan.
+
+Deploy sequence executed cleanly:
+  - SSH to root@87.99.141.44.
+  - cd /root/TothBot_V2-Code; git pull origin master.
+    Result: 5d44292 -> 0c2ec3b fast-forward, ws_manager.py
+    file updated to dv1_24.
+  - systemctl stop tothbot. Service stopped cleanly
+    (Active: inactive (dead); 4min 39.550s CPU consumed
+    in prior dv1_23 lifetime).
+  - systemctl start tothbot. Service started
+    (Active: active (running); PID 307076).
+
+Initial 60-sec window: NORMAL. No NameError, no
+ConnectionResetError, no startup tracebacks. The six-site
+fix was syntactically and semantically correct. dv1_24
+process initialization completed successfully. Universe
+expansion confirmed working: pairs deep in the volume
+ranking (ZEUS/USD, ZIG/USD, USDC/USD, etc.) were observed
+in liquidity-seed log records — these would NOT have been
+in the dv1_23 Top-50 universe.
+
+3.8 PRODUCTION FAILURE — WS SUBSCRIBE RATE-LIMIT STORM
+
+Within 90 seconds of dv1_24 startup, the system entered
+a non-converging reconnect loop:
+
+  PATTERN OBSERVED:
+    - LOGGER QUEUE FULL warnings dropping records every
+      2-3 seconds.
+    - WS reconnect events (RECONNECT_INITIATED /
+      RECONNECT_TRIGGERED / SEND_DISCONNECT) firing every
+      8-10 seconds.
+    - Kraken-side rejection messages observed:
+        {"error":"Exceeded msg rate","method":"subscribe",
+         "success":false}
+      Multiple instances at 00:18:32, 00:18:39, 00:18:41,
+      00:18:46, 00:18:52, 00:19:01.
+    - uvloop ConnectionResetError tracebacks at 00:14:52
+      (SSL handshake-complete failures during reconnect).
+    - Recursive failure mode: each reconnect re-issued
+      the full expanded-universe subscribe sequence ->
+      Kraken rate-limit rejection -> disconnect -> repeat.
+      Each rate-limit-triggered reconnect generated
+      RECONNECT_INITIATED alerts -> alerts dispatched ->
+      ALERT_SENT records logged -> logger queue overflow ->
+      records dropped.
+
+  ROOT CAUSE (FP/DP):
+    Kraken WS v2 enforces a per-connection message rate
+    limit (per Kraken docs: "varies depending upon the
+    load on the system"; published threshold not
+    available). dv1_24 expanded the monitored universe
+    from ~50 (dv1_23 Top-50 cap + USD/USDC only) to ~200+
+    (USD + USDC + USDT, no cap). ws_manager.py issues
+    subscribe messages at the rate produced by the
+    initialization loop; for ~200+ pairs, this exceeded
+    Kraken's dynamic threshold and triggered the
+    rejection cascade.
+
+  PRODUCTION-IMPACT ASSESSMENT:
+    - Trading logic effectively offline (no clean WS
+      connection to receive 5-min candle close events).
+    - CIATS data integrity compromised (logger queue
+      overflow dropped INFO-level ALERT_SENT records and
+      DEBUG-level LIQUIDITY_SEEDED_DETAIL records).
+    - HIGH-level alert emails were emitted for each
+      reconnect but the corresponding ALERT_SENT log
+      records were dropped, creating evidence gaps.
+    - Paper-to-live parity violated (production-grade
+      stability is the D-06 requirement; system was not
+      stable).
+
+  DECISION: emergency rollback to dv1_23.
+
+3.9 EMERGENCY ROLLBACK — VPS ws_manager.py dv1_24 -> dv1_23
+
+  Rollback sequence executed:
+    systemctl stop tothbot
+    git checkout 5d44292 -- tothbot/ws_manager.py
+    grep DocVersion tothbot/ws_manager.py | head -1
+      -> DocVersion: dv1_23 (verified)
+    systemctl start tothbot
+    systemctl status tothbot --no-pager
+      -> Active: active (running); PID 308683
+
+  POST-ROLLBACK STATE:
+    - VPS local working tree: tothbot/ws_manager.py at
+      dv1_23 file content (via git checkout against
+      5d44292 commit).
+    - VPS git status: ws_manager.py shows as modified
+      (working-tree drift from origin/master 0c2ec3b).
+    - This is a DELIBERATE drift, not a defect. Rollback
+      was applied via working-tree-only checkout, NOT via
+      git revert + push, to keep the dv1_24 commit on
+      record at the GitHub remote for forensic reference
+      and to leave a clean architectural redesign path
+      open. The dv1_24 commit (0c2ec3b) at TothBot_V2-Code
+      master is RETIRED in operational use but
+      preserved as historical record.
+    - Service stable on dv1_23 (dv1_23 had been running
+      stable for 20+ hours prior to TB00140 deploy).
+
+  POST-ROLLBACK VERIFICATION:
+    Log inspection at 01:05:46 - 01:06:22 UTC showed
+    clean dv1_23 operational pattern:
+      - WS heartbeat every ~1 sec (healthy).
+      - Single connection_id 7588155552401623877
+        (no reconnect storm).
+      - PING/PONG latency 80.994 ms (normal).
+      - CANDLE_CLOSE events flowing (LINK/USD,
+        ETH/USDC, TRX/USD).
+      - Signal pipeline executing (SSS_RESULT,
+        GATE_4_FAIL — pipeline rejecting normally,
+        not failing).
+      - Zero LOGGER QUEUE FULL records.
+      - Zero "Exceeded msg rate" rejections.
+
+  Bill verified post-rollback stability and approved
+  proceeding with theory investigation.
+
+3.10 ROOT CAUSE INVESTIGATION + ARCHITECTURAL THEORY
+
+Bill identified the Top-N=50 cap in dv1_23 may have
+served as a de facto Kraken WS subscribe rate-limit
+protective mechanism, even though no spec document
+recorded that rationale. FP/DP analysis confirmed
+this hypothesis:
+
+  EVIDENCE:
+    - 0711003 dv1_3 §AS-002 retirement rationale states
+      verbatim: "The prior monitored_universe_n = 50 cap
+      was never FP/DP-validated. It was asserted in
+      0500000 AR-070 rationale without dedicated
+      research. TB00128 Ratified Decision D-08 retires
+      the cap."
+    - D-08 was made on the basis of "no documented
+      rationale -> remove" without considering empirical
+      operational constraints.
+    - dv1_23 ran 20+ hours stable with 50 subscribed
+      pairs and zero rate-limit errors. dv1_24 with
+      ~200+ pairs hit rate-limit immediately.
+
+  GOVERNANCE LESSON (Chesterton's Fence pattern):
+    Removing a constraint without investigating WHY the
+    constraint was originally introduced is unsafe.
+    "No documented rationale" is NOT equivalent to "no
+    operational rationale."
+
+Bill's secondary hypothesis (theory under investigation):
+the Kraken msg rate limit will not be a problem in
+STEADY STATE — only during startup and reconnect bursts.
+FP/DP analysis supported this:
+
+  - Kraken msg rate counter measures CLIENT-OUTBOUND
+    messages (subscribe, addOrder, cancelOrder, ping).
+    Server-outbound messages (data, snapshots,
+    heartbeats Kraken pushes TO us) are not counted
+    against client rate limit.
+  - Steady-state outbound message rate for TothBot is
+    extremely low: ~1 ping/30sec, ~20 add/cancel/day,
+    heartbeat replies. Well below any plausible
+    threshold.
+  - dv1_23 empirically confirmed steady-state rate-
+    limit safety at 50 pairs. Theory predicts same at
+    200+ pairs.
+
+Bill authorized clean-slate ws_manager.py rewrite if
+needed. The original dv1_22-and-earlier code base is
+considered tainted by undocumented Claude-introduced
+universe constraints; the Top-N cap was the most
+visible but may not be the only one. Clean-slate
+rewrite is permitted; "build a better mousetrap" using
+the lessons learned.
+
+Bill chose Option (a): proceed with empirical probe
+script to verify the steady-state-safe theory before
+committing to a specific architectural path.
+
+3.11 INVESTIGATION SUMMARY — FOUR ARCHITECTURAL PATHS
+
+Three sequential web searches against Kraken docs
+established the architectural option space:
+
+  PATH 1  Batched subscribe (single subscribe message
+          per channel containing all pairs in the
+          symbol[] array). Eliminates max_concurrent
+          dependency. Low complexity. STRONGEST
+          candidate.
+
+  PATH 2  Multiple WS connections, batched subscribes
+          per connection. Fallback if PATH 1 hits an
+          undocumented per-message symbol-count cap.
+
+  PATH 3  Tiered HOT/WARM (subscribe only active-
+          position pairs). RETIRED. Adds complexity for
+          no benefit when batched subscribes decouple
+          subscription count from position count.
+
+  PATH 4  PATH 1 + adaptive backoff on "Exceeded msg
+          rate" rejections. Pairs with PATH 1 or PATH 2
+          for resilience.
+
+Architectural decision deferred to TB00141+ pending
+empirical probe-script results.
+
+============================================================
+4. CLAUDE ERRORS THIS SESSION
+============================================================
+
+ERROR-TB00140-01  RR-SCOPE-005 violation. Three
+                  decisions presentable as Bill A/B
+                  options when FP/DP analysis would
+                  have yielded the answer
+                  deterministically.
+
+                  Q1 (0311002 increment structure) —
+                  asked A/B when NSI specified the
+                  plan and FP/DP supported it.
+                  Q2 (STREAM 1 OI placement) — asked
+                  A/B when scope-fit analysis (single-
+                  check vs. self-catch architecture)
+                  derived the answer.
+                  Q3 (Finding 4 placement) — asked
+                  A/B when semantic-fit analysis
+                  (delivery vs. shell rule class)
+                  derived the answer.
+
+                  Bill identified the violation
+                  directly: "Why do you keep asking
+                  questions that can be answered by
+                  using a FP/DP analysis? Use a FP/DP
+                  analysis to determine the correct
+                  action and instructed in the Project
+                  Instructions."
+
+                  CORRECTIVE: applied FP/DP analysis
+                  in next response, determined three
+                  conclusions, proceeded with drafting
+                  immediately. No further A/B questions
+                  asked in remainder of session.
+
+                  RECURRENCE TRACKING per RR-VIOL-002:
+                  this is the first RR-SCOPE-005
+                  violation logged after TB00139 noted
+                  pattern BROKEN with FIVE consecutive
+                  session test passes (TB00135-TB00139).
+                  Pattern recurrence count resets to 1.
+
+ERROR-TB00140-02  HIGH    DEPLOYED CODE WITHOUT
+                  SUBSCRIBE-RATE ANALYSIS.
+
+                  ws_manager.py dv1_24 was authored,
+                  validated (six-site fix per
+                  RR-SCOPE-007), committed, and
+                  deployed to VPS without any
+                  evaluation of whether the universe
+                  expansion (USD+USDC+USDT, no Top-N
+                  cap) would exceed Kraken's WS
+                  subscribe message rate limit. The
+                  rate limit was never investigated
+                  during STREAM 1 design, despite
+                  being a documented Kraken
+                  constraint reachable via web search
+                  in 30 seconds.
+
+                  Root governance gap: D-08 LOCKED
+                  retired the Top-N=50 cap on the
+                  basis of "no FP/DP-validated
+                  rationale recorded for it" — but
+                  did not investigate WHY the cap
+                  existed (Chesterton's Fence
+                  violation). The cap was almost
+                  certainly serving as a de facto
+                  Kraken WS subscribe rate-limit
+                  protective mechanism set
+                  empirically by the original code
+                  author.
+
+                  Production impact:
+                    - Trading offline ~50 minutes
+                      (00:19:05 UTC dv1_24 stop ->
+                      ~01:06:22 UTC dv1_23 stable).
+                    - CIATS data integrity
+                      compromised (logger queue
+                      overflow during storm).
+                    - Forensic record of dv1_24
+                      behavior preserved in
+                      journalctl + tothbot.log.
+                    - No financial loss (paper
+                      trading only).
+
+                  Corrective:
+                    - Emergency rollback to dv1_23
+                      via working-tree git checkout
+                      (preserves dv1_24 commit at
+                      TothBot_V2-Code master for
+                      forensic reference).
+                    - OI-060 opened for ws_manager
+                      architectural redesign.
+                    - OI-061 opened for D-08
+                      governance lesson.
+                    - TB00141 STREAM 1 redirected
+                      to empirical probe script
+                      design before any new code
+                      deploy.
+
+                  Recurrence prevention:
+                    Future code-deploy decisions
+                    that change WS-traffic profile
+                    (universe size, subscription
+                    pattern, message rate) MUST
+                    include a documented rate-
+                    limit impact analysis before
+                    deploy. Tracked as
+                    OI-062-CAND. Candidate for
+                    DC-PREFLIGHT-006 or new RR-
+                    rule at TB00141+.
+
+ERROR-TB00140-03  MEDIUM   GIT CONSOLIDATION
+                  DEVIATION FROM NSI PLAN.
+
+                  TB00140 NSI §1 STREAM 3-A and
+                  STREAM 3-B specified two separate
+                  0311002 increments (v1_5 -> v1_6
+                  -> v1_7). Bill's actual git
+                  workflow consolidated into a
+                  single commit (5d44292..aee4539
+                  v1_5 -> v1_7). The intermediate
+                  v1_6 file was authored and
+                  delivered but never committed to
+                  git. The file 0311002 v1_6.txt
+                  exists in the deliverable batch
+                  but is not in TothBot_V2-Docs git
+                  history.
+
+                  Cause: Bill chose single-commit
+                  efficiency over two-commit audit-
+                  trail granularity. Within Bill's
+                  authority. Documented for
+                  TB00141 STEP A pre-flight
+                  awareness.
+
+                  Impact: NONE. v1_7 contains all
+                  v1_6 + v1_7 content. Audit trail
+                  is preserved in v1_7's revision-
+                  history section (v1_6 entry +
+                  v1_7 entry both present).
+                  Rollback granularity slightly
+                  reduced (rollback of v1_7 alone
+                  is not possible at git level
+                  without manual diff).
+
+                  No corrective required.
+
+No OP-001..OP-009 violations detected.
+No RR-RULE violations detected.
+No RR-SHELL violations detected.
+No DR-001..DR-005 violations detected.
+DR-006 not yet enacted at time of any delivery
+checkpoint this session (rule itself authored this
+session); applied prospectively from this point.
+
+============================================================
+5. OPEN ITEMS STATE AT END OF TB00140
+============================================================
+
+5.1 OIs OPENED this session
+
+  OI-058  NSI-CARRY-FORWARD-EDIT-LIST-UNVALIDATED.
+          Originated TB00140 STREAM 1 RR-SCOPE-007
+          self-catch. Pattern: NSI three-edit list
+          carried forward TB00136 -> TB00139 without
+          re-validation against deployed code.
+          CLOSED same session via 0311002 v1_7
+          DC-PREFLIGHT-003.
+
+  OI-059  RR-SCOPE-005 RECURRENCE TB00140.
+          See ERROR-TB00140-01. Pattern recurrence
+          count = 1. Continued multi-session
+          verification required.
+
+  OI-060  WS_SUBSCRIBE_RATE_LIMIT_STORM.
+          ws_manager.py architectural defect: at
+          universe sizes greater than Kraken's
+          (undocumented, dynamic) WS subscribe
+          message rate threshold, the system enters
+          a non-converging reconnect loop. Surfaced
+          empirically at TB00140 dv1_24 deploy.
+          REMEDIATION REQUIRED: clean-slate
+          architectural redesign of subscribe
+          sequence (PATH 1 batched-subscribe being
+          investigated; PATH 2 / PATH 4 fallbacks).
+          OPEN. Scoped for TB00141 probe-script
+          investigation -> TB00141+ spec amendment ->
+          TB00141+ ws_manager.py dv1_25 implementation
+          -> TB00141+ deploy + observe.
+
+  OI-061  D-08_INCOMPLETE_FPDP_CHESTERTONS_FENCE.
+          Governance defect: D-08 LOCKED retirement
+          of the Top-N=50 cap was made on the basis
+          of "no documented rationale" without
+          investigating whether the cap was serving
+          an undocumented operational function.
+          Empirical evidence (TB00140 dv1_24 deploy
+          failure) confirms the cap WAS protecting
+          against Kraken WS subscribe rate-limit
+          storms.
+          REMEDIATION REQUIRED:
+            (a) Update D-08 disposition: still
+                LOCKED on principle (universe should
+                not be arbitrarily capped) but the
+                implementation MUST respect Kraken's
+                operational constraints.
+            (b) Author a new RR-rule (RR-SCOPE-009
+                CHESTERTONS_FENCE candidate?) or
+                DC-PREFLIGHT enhancement: removing
+                a constraint requires investigating
+                why the constraint was originally
+                introduced, not just whether it has
+                documented rationale.
+          OPEN. Scoped for TB00141+ governance work.
+
+  OI-062  WS_MANAGER_CLEAN_SLATE_REWRITE_AUTHORIZED.
+          Bill authorized ws_manager.py clean-slate
+          architectural redesign at TB00140 §3.10.
+          Original code base may contain other
+          undocumented Claude-introduced
+          constraints beyond the Top-N cap. Clean-
+          slate path will be designed from first
+          principles using TB00140 lessons.
+          REMEDIATION PATH:
+            (1) TB00141 STREAM 1 — empirical probe
+                script (Claude Code authored, deployed
+                to VPS, observed for 1+ hour).
+            (2) TB00141+ — architectural decision
+                (PATH 1 / 2 / 4) based on probe
+                results.
+            (3) TB00141+ — 0511001 + 1011002 spec
+                amendments per chosen architecture.
+            (4) TB00141+ — ws_manager.py dv1_25
+                clean-slate implementation.
+            (5) TB00141+ — deploy + observation
+                window.
+          OPEN. Multi-session work.
+
+  OI-063  CODE-DEPLOY-WITHOUT-RATE-LIMIT-ANALYSIS-
+          GUARDRAIL-MISSING.
+          See ERROR-TB00140-02 corrective. No
+          procedural pre-flight or RR-rule currently
+          requires rate-limit-impact analysis before
+          deploying code that changes the WS-traffic
+          profile (universe size, subscription
+          pattern, message rate). Candidate for
+          DC-PREFLIGHT-006 or new RR-rule.
+          OPEN. Scoped for TB00141+ governance.
+
+5.2 OIs CLOSED this session
+
+  OI-058  Closed same session via DC-PREFLIGHT-003.
+  Finding 3 (OI-043 upload-drift component) CLOSED
+    at SPEC level via 0311002 v1_7 DC-PREFLIGHT-001.
+  Finding 4 (ERROR-TB00131-01 delivery sequencing)
+    CLOSED at SPEC level via TB00000 v2_16 DR-006.
+
+5.2.1 OIs REOPENED this session (rollback consequence)
+
+  OI-045  USDT exclusion. Code-level closure was
+          achieved at commit 0c2ec3b but VPS rollback
+          to working-tree dv1_23 reverts USDT
+          inclusion at runtime. REOPEN. Closure
+          deferred to dv1_25 deploy + observation.
+  OI-046  Top-N cap retired. Same as OI-045 — code-
+          level closure reverted at runtime by VPS
+          rollback. REOPEN. Closure deferred to
+          dv1_25 deploy + observation.
+  FINDING-TB00135-001  D-03 + D-08 AA=10 cascade.
+          Same — closure deferred to dv1_25 deploy.
+
+5.3 OIs ADVANCED this session
+
+  OI-043  git-state component formalized via
+          0311002 v1_7 DC-PREFLIGHT-002 (was TB-by-TB
+          practice; now mandatory rule).
+  OI-018, OI-019, OI-020, OI-028, OI-029  No change.
+          Remain pending close at R-01+ deploy.
+  OI-044  Paper-mode bypass. No change. Closes at
+          code deploy.
+
+5.4 OIs DEFERRED to TB00141
+
+  STREAM 2 — execution_engine.py conformance review
+    against 1011004 dv1_0. Claude Code scope.
+  STREAM 4 — DC-CLEANUP-003 Phase 5 execution. Bill-
+    only action. Eligible for ALL out-of-window TBs
+    now that Findings 3 and 4 are CLOSED.
+    Cleanup-eligible session set: TB00112, TB00118,
+    TB00119, TB00120, TB00121, TB00122, TB00123,
+    TB00124, TB00125, TB00126, TB00127, TB00128,
+    TB00129, TB00130, TB00131, TB00132 (just dropped
+    out of window at TB00140 close). NOT eligible
+    (rolling window): TB00133-TB00140. NOT eligible
+    (MUST-PRESERVE): TB00001, TB00012, TB00013,
+    TB00014, TB00020.
+
+5.5 PARKING LOT — CARRIED FROM TB00139
+
+  TB00139 Parking Lot items all CLOSED this session
+  except STREAM 2 (deferred TB00141) and STREAM 4
+  (eligible TB00141 for Bill action).
+
+============================================================
+6. DELIVERABLES PRODUCED THIS SESSION
+============================================================
+
+  1. 0311002 v1_5 -> v1_7 (consolidated)
+       STREAM 3-A interim register retirement +
+       STREAM 3-B Finding 3 + STREAM 1 OI:
+       STEP A pre-flight formalization
+       (DC-PREFLIGHT-001 through DC-PREFLIGHT-005).
+       File: 0311002_Document_Creation_Workflow_v1_7.txt
+       Git: commit aee4539 on TothBot_V2-Docs master.
+       Note: NSI plan was two separate increments
+       (v1_5 -> v1_6 -> v1_7); Bill consolidated into
+       single git commit per ERROR-TB00140-03. v1_6
+       file authored and delivered but never committed.
+       v1_7 contains all v1_6 + v1_7 content.
+
+  2. TB00000 v2_15 -> v2_16
+       STREAM 3-B Finding 4: DR-006 delivery-turn
+       self-containment.
+       File: TB00000_TothBot_V2_Project_Instructions_for_Claude_v2_16.txt
+       Git: not a git-tracked document (lives in
+       TBXXXXX_Session_Logs).
+
+  3. ws_manager.py dv1_23 -> dv1_24 (DEPLOYED, FAILED, ROLLED BACK)
+       STREAM 1 six-site cascade (D-03 USDT inclusion +
+       D-08 Top-N cap full retirement).
+       Git: commit 0c2ec3b on TothBot_V2-Code master.
+       VPS deploy: ATTEMPTED 23:35:53 UTC, FAILED via
+       Kraken WS subscribe rate-limit storm, EMERGENCY
+       ROLLBACK to dv1_23 working-tree state at
+       00:19:05 UTC.
+       Effective end-state: VPS running dv1_23 file
+       content; TothBot_V2-Code git remote at
+       0c2ec3b (dv1_24, retired-in-operational-use
+       but preserved for forensic reference).
+
+  4. TB00140 Session Log v1_1 (this document; supersedes v1_0)
+
+  5. TB00140 NSI v1_1 (supersedes v1_0)
+
+Total: 5 governance/session deliverables. 1 code
+deliverable (0c2ec3b) committed but rolled back at
+runtime.
+
+All deliverables .txt format per DR-001. No 0500000
+update this session, so DR-002 not in scope. All five
+files delivered in single batch per DR-003. No binary
+artifacts produced, so DR-004 not in scope. DR-005
+not in scope. DR-006 enacted this session, applied
+prospectively from this point.
+
+CODE DELIVERABLE (STREAM 1, separate Claude Code
+session, committed to git directly):
+  ws_manager.py dv1_24 (commit 0c2ec3b on
+  TothBot_V2-Code master).
+
+============================================================
+7. PROJECT FOLDER EXPECTED STATE AT TB00140 CLOSE
+============================================================
+
+KEPT (current, active):
+
+  TB00000 v2_16 (NEW current authoritative).
+  0311002 v1_7 (NEW; supersedes v1_5 and v1_6).
+    Note: v1_6 is an intermediate increment within
+    this session; only v1_7 is uploaded to project
+    folder. v1_6 lives only as a git commit.
+  0311006 dv1_0 (unchanged).
+  All other 0* / 1* series at current versions.
+  ws_manager.py dv1_24 (committed; project-folder
+    upload deferred to next Bill upload cycle per
+    DC-SYNC-002).
+  All other .py modules at TB00125 deploy state.
+  TB00134-TB00140 session logs + NSIs (current
+    rolling window post-TB00140 close — TB00133
+    drops out at TB00140 close).
+  TB00112, TB00118-TB00132 (out-of-window backlog —
+    NOW cleanup-eligible per Findings 3+4 closure).
+  TB00001, TB00012, TB00013, TB00014, TB00020
+    (MUST-PRESERVE per DC-CLEANUP-002).
+
+ABSENT (cleaned this session):
+
+  TB00000 v2_15 (superseded by v2_16, to be removed
+    by Bill at TB00140 close).
+  0311002 v1_5 (superseded by v1_7, to be removed
+    by Bill at TB00140 close).
+
+ABSENT (cleanup-eligible per Findings 3+4 closure —
+recommended for Bill removal at TB00140 close per
+DC-CLEANUP-001 rolling-window discipline):
+
+  Bill discretion. Removal of out-of-window backlog
+  (TB00112, TB00118-TB00132) is now unblocked.
+  TB00141 NSI will list specific files for Bill
+  action.
+
+DC-CLEANUP-006 COMPLIANCE:
+  KEPT and ABSENT lists provided.
+  MUST-PRESERVE compliance: TB00001/12/13/14/20 ALL
+    present in KEPT list. PASS.
+  Pre-cleanup extraction confirmation: Findings 1+2
+    CLOSED at TB00139. Findings 3+4 CLOSED at
+    TB00140. Out-of-window backlog now cleanup-
+    eligible.
+
+============================================================
+8. GOVERNANCE LEDGER — D-01..D-08 CURRENT STATE
+============================================================
+
+  D-01  Option B (burn window)                   LOCKED
+  D-02  REPAIR (not rewrite)                     LOCKED
+  D-03  Universe USD + USDC + USDT, no cap       LOCKED
+        Code: ws_manager.py dv1_24 (commit 0c2ec3b)
+        deploys this. Full enforcement at VPS deploy.
+  D-04  Liquidity filter $500k/day               LOCKED
+  D-05  Starting capital $1,000                  LOCKED
+  D-06  Paper-to-live parity EXACT               LOCKED
+  D-07  NO PATCHES                               LOCKED
+  D-08  Top-N cap retired                        LOCKED
+        Code: ws_manager.py dv1_24 (commit 0c2ec3b)
+        deploys this. Full enforcement at VPS deploy.
+
+No D-01..D-08 violations detected this session.
+
+============================================================
+9. POST-SESSION BILL ACTIONS
+============================================================
+
+(1) Upload to Claude.ai project folder:
+      TB00000_TothBot_V2_Project_Instructions_for_Claude_v2_16.txt
+        (already uploaded earlier this session)
+      0311002_Document_Creation_Workflow_v1_7.txt
+        (already uploaded earlier this session)
+      TB00140_TothBot_V2_Session_Log_2026-04-26_v1_1.txt
+        (NEW — supersedes v1_0)
+      TB00140_Next_Session_Instructions_v1_1.txt
+        (NEW — supersedes v1_0)
+
+(2) Remove from Claude.ai project folder (superseded):
+      TB00000_TothBot_V2_Project_Instructions_for_Claude_v2_15.txt
+        (already removed earlier this session)
+      0311002_Document_Creation_Workflow_v1_5.txt
+        (already removed earlier this session)
+      TB00140_TothBot_V2_Session_Log_2026-04-25_v1_0.txt
+        (NEW removal — superseded by v1_1)
+      TB00140_Next_Session_Instructions_v1_0.txt
+        (NEW removal — superseded by v1_1)
+
+(3) v1_6 file disposition:
+      0311002_Document_Creation_Workflow_v1_6.txt was
+      delivered in the v1_0 batch but was never
+      committed to git per Bill's consolidated single-
+      commit workflow (ERROR-TB00140-03). The v1_6
+      file is now obsolete operationally. Bill may
+      retain or discard at discretion. No git action
+      required.
+
+(4) 0311002 git state:
+      Already complete. TothBot_V2-Docs master at
+      commit aee4539 (consolidated v1_5 -> v1_7).
+      No further action.
+
+(5) VPS state — DELIBERATE WORKING-TREE DRIFT:
+      VPS is running ws_manager.py dv1_23 file content
+      (rolled back at 00:19:05 UTC via working-tree
+      git checkout). Working-tree drift from
+      origin/master 0c2ec3b is INTENTIONAL. No git
+      action on VPS. Do NOT commit the rolled-back
+      ws_manager.py to TothBot_V2-Code; the dv1_24
+      commit at GitHub master is preserved as
+      forensic record of the rate-limit-storm
+      failure pattern.
+
+(6) TothBot_V2-Code git remote:
+      master = 0c2ec3b (dv1_24, retired-in-
+      operational-use). Will be superseded by
+      ws_manager.py dv1_25 commit at TB00141+ deploy
+      boundary, after probe-script investigation
+      determines the architectural path. Until then,
+      master HEAD is technically broken in
+      operational use (would re-trigger the rate-
+      limit storm if deployed). Documented in
+      TB00141 NSI for STEP A pre-flight awareness.
+
+(7) TB00000 v2_16 lives in the session-log tree per
+      TB00000 v2_16 Section 11 storage rules — NOT a
+      git repo. No GitHub commit required.
+
+(8) Out-of-window session-log cleanup per TB00140 NSI
+      v1_1 §1 STREAM 4 (Bill discretion). The 16-
+      session backlog (TB00112, TB00118-TB00133) is
+      cleanup-eligible.
+
+(9) TB00141 cold-load when ready. STREAM 1 priority
+      is empirical probe-script design via Claude
+      Code per TB00140 NSI v1_1 §1.
+
+============================================================
+REVISION HISTORY
+============================================================
+
+  v1_1  2026-04-26  TB00140 SESSION CONTINUED.
+                    Post-STREAM-1-deploy events
+                    documented:
+                      §3.7 dv1_24 VPS deploy
+                      attempted, initial 60 sec
+                      normal startup confirmed.
+                      §3.8 PRODUCTION FAILURE -
+                      Kraken WS subscribe rate-
+                      limit storm triggered by
+                      universe expansion (~200+
+                      pairs vs dv1_23 ~50 pairs).
+                      Non-converging reconnect
+                      loop, logger queue overflow,
+                      "Exceeded msg rate"
+                      rejections from Kraken.
+                      §3.9 EMERGENCY ROLLBACK to
+                      dv1_23 via working-tree
+                      checkout (preserves dv1_24
+                      commit 0c2ec3b at GitHub
+                      remote for forensic
+                      reference; VPS local
+                      working-tree-drift
+                      INTENTIONAL).
+                      §3.10 Root cause analysis +
+                      Bill's steady-state-safe
+                      theory developed; clean-
+                      slate ws_manager.py rewrite
+                      authorized.
+                      §3.11 Four architectural
+                      paths surfaced via 3-search
+                      Kraken docs sweep
+                      (P1 batched, P2 multi-
+                      connection, P3 tiered
+                      RETIRED, P4 batched +
+                      adaptive backoff).
+                    NEW errors logged:
+                      ERROR-TB00140-02 HIGH (deploy
+                      without rate-limit analysis;
+                      Chesterton's Fence violation).
+                      ERROR-TB00140-03 MEDIUM
+                      (git consolidation deviation
+                      from NSI plan; within Bill
+                      authority, no impact).
+                    NEW OIs opened:
+                      OI-060 WS_SUBSCRIBE_RATE_
+                      LIMIT_STORM (architectural
+                      defect; remediation via
+                      probe -> spec -> dv1_25
+                      multi-session work).
+                      OI-061 D-08_INCOMPLETE_FPDP_
+                      CHESTERTONS_FENCE (governance
+                      lesson).
+                      OI-062 WS_MANAGER_CLEAN_
+                      SLATE_REWRITE_AUTHORIZED.
+                      OI-063 CODE-DEPLOY-WITHOUT-
+                      RATE-LIMIT-ANALYSIS-
+                      GUARDRAIL-MISSING.
+                    OIs REOPENED (rollback
+                    consequence): OI-045, OI-046,
+                    FINDING-TB00135-001 (closure
+                    deferred to dv1_25 deploy).
+                    TB00141 NSI redirected: STREAM
+                    1 = empirical probe-script
+                    design via Claude Code.
+                    Direct increment v1_0 -> v1_1
+                    per Bill's standing
+                    document-control override.
+                    Paper trading only. Trading
+                    offline ~50 minutes during
+                    storm + rollback. No financial
+                    loss (paper trading only). All
+                    findings documented per NO
+                    PATCHES rule. D-01 through
+                    D-08 all LOCKED (D-08
+                    governance refinement queued
+                    for TB00141+).
+
+  v1_0  2026-04-25  Initial. TB00140 session log.
+                    Combined session: STREAM 1
+                    (Claude Code) + STREAM 3-A +
+                    STREAM 3-B (chat). Six-site
+                    ws_manager.py dv1_24 cascade
+                    (closes OI-045 / OI-046 /
+                    FINDING-TB00135-001 at code
+                    deploy). Three governance
+                    deliverables: 0311002 v1_5 ->
+                    v1_6 (interim register
+                    retirement), 0311002 v1_6 ->
+                    v1_7 (STEP A pre-flight
+                    formalization with five
+                    DC-PREFLIGHT-* rules), TB00000
+                    v2_15 -> v2_16 (DR-006
+                    delivery-turn self-containment).
+                    OI-058 opened and closed same
+                    session. OI-059 opened (RR-SCOPE-
+                    005 recurrence). All Findings 1
+                    through 4 from TB00139 extraction
+                    sweep CLOSED at governance layer.
+                    D-01 through D-08 all LOCKED.
+                    Paper trading only. No real
+                    money. Paper trading must mimic
+                    all aspects of live trading
+                    exactly. No patches.
+
+============================================================
+END — TB00140 SESSION LOG v1_0
+============================================================

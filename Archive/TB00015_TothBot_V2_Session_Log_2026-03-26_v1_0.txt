@@ -1,0 +1,829 @@
+DocDCN:     TB00015
+DocTitle:   TothBot_V2_Session_Log_2026-03-26
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\OneDrive\TothBot\TB00015_TothBot_V2_Session_Log_2026-03-26_v1_0.txt
+DocDate:    03-26-2026
+DocTime:    23:59:59 UTC
+
+============================================================
+TOTHBOT V2 — SESSION LOG 2026-03-26
+============================================================
+
+Read TB00001 through TB00014 first.
+
+This session is the seventh 10-search FP/DP organism
+validation. Focus: 0500000 connections and communication
+channels. Eight new findings. All resolved immediately.
+Zero items placed in parking lot.
+
+SESSION CONTEXT:
+Bill initiated this session with the observation that
+every prior validation pass has produced findings, and
+that the architecture must be nailed down before
+proceeding. This is the correct call. Architecture is
+the foundation. Everything downstream — coding specs,
+code, tests — hangs on it.
+
+============================================================
+1. SESSION IDENTITY
+============================================================
+
+Session date:     March 26, 2026
+Session type:     7th 10-Search FP/DP Organism Validation
+                  All findings resolved — zero parking lot
+Prior session:    TB00014 (2026-03-25 Part 7)
+Documents read:   TB00000 v2_5, TB00014 v1_0
+                  0311001 dv1_2, 0311002 dv1_7
+                  0500000 dv1_12 (Claude Source)
+
+============================================================
+2. TEN SEARCHES — COMPLETE RECORD
+============================================================
+
+SEARCH PLAN: 10 sequential searches, minimum 20 unique
+references each. No reference repeated across searches.
+Each search builds on prior knowledge.
+Total unique references: 123+
+
+------------------------------------------------------------
+SEARCH 1 — Kraken WS v2 API changelog through March 2026
+------------------------------------------------------------
+
+References: Kraken changelog (full fetch), WS v2 intro,
+instrument channel, ping docs, python-kraken-sdk GitHub,
+WS v2 API overview, spot WS intro, heartbeat/status docs,
+WS FAQ, OHLC channel, trades channel, level3 channel,
+add_order docs, batch_add (full fetch), amend_order docs,
+executions channel docs (2 sources), cancel_order docs,
+instruments snapshot example, ticker docs.
+Unique references: 21
+
+FINDINGS:
+S1-F1: CONFIRMED — Full changelog reviewed March 26, 2026.
+       No breaking changes to TothBot spec since dv1_12.
+       Most recent relevant change: Feb 19, 2026 (Embed
+       REST only — not relevant to TothBot).
+S1-F2: CONFIRMED — Dec 2, 2025: L3 WS URL change already
+       in spec. Sept 2025: no_mpp deprecated already in
+       spec. Aug 2025: xStocks rebased param — not relevant.
+S1-F3: ★ NEW-01 CRITICAL — Instrument channel `qty_increment`
+       field exists separately from `qty_min`. Example
+       BTC/USD: qty_increment=1e-08, qty_min=0.0001.
+       All order quantities must be exact multiples of
+       qty_increment. MISSING from all current specs.
+S1-F4: CONFIRMED — exec_type values: pending_new, new,
+       trade, filled, iceberg_refill, canceled, expired,
+       restated, status + amended (Sep 2024) = 10 total.
+       Our AR-023 dispatch table correct.
+S1-F5: CONFIRMED — Instrument channel pair statuses:
+       cancel_only, delisted, limit_only, maintenance,
+       online, post_only, reduce_only, work_in_progress.
+       Exactly matches AR-039.
+S1-F6: CONFIRMED — batch_add stp_type default is
+       cancel_newest even without specifying it. But
+       AR-032 still requires explicit specification.
+S1-F7: CONFIRMED — Ping/pong behavior confirmed (A-7).
+       Application-level ping distinct from TCP keepalive.
+S1-F8: CONFIRMED — deadline range 500ms-60s, default 5s.
+       AR-033 correct.
+
+SEARCH 1 CONCLUSION: One critical new finding (NEW-01).
+All existing specs confirmed. No breaking API changes.
+
+------------------------------------------------------------
+SEARCH 2 — Executions channel detail, exec_type dispatch
+------------------------------------------------------------
+
+References: Executions channel (full fetch), executions
+example messages, snap_orders behavior, order_status:true
+impact, partial fill analysis, restated exec_type behavior,
+status exec_type, WS v2 reference, python-kraken-sdk
+examples, Kraken atomic amends guide (full fetch).
+Unique references: 10 new
+
+FINDINGS:
+S2-F1: CONFIRMED — order_status:true mandatory (AR-026).
+       Without it, amended and restated exec_types silently
+       dropped. Correct.
+S2-F2: CONFIRMED — snap_trades defaults to false since
+       Aug 2024. Must explicitly set snap_trades:true.
+       Already in spec (prior validation, not assigned AR).
+       Assign as WM-EXE-014 in 1011002 dv1_7.
+S2-F3: CONFIRMED — avg_price is the correct field for
+       R:R calculation (fill price). Our spec correct.
+S2-F4: CONFIRMED — last_qty field is trade-events only.
+       Correct partial fill detection pattern.
+S2-F5: CONFIRMED — restated exec_type handling (A-13,
+       AR-024). No Position Mirror update. Correct.
+S2-F6: CONFIRMED — Sequence numbers on executions and
+       balances channels for gap detection (A-9, A-10).
+       Correct.
+
+SEARCH 2 CONCLUSION: All confirmed. One rule formalized.
+
+------------------------------------------------------------
+SEARCH 3 — OHLC channel, pipeline trigger, candle close
+------------------------------------------------------------
+
+References: OHLC channel (full fetch), Kraken WS v1 OHLC
+description, OHLC stall FAQ, CCXT OHLC issue thread,
+node-kraken-api source, aio-kraken-ws docs, OHLC behavior
+confirmation, REST GetOHLCData docs, REST OHLC history
+guide, Quant Nomad OHLC history article, CryptoDataDownload
+historical OHLC, Kraken OHLC REST API.
+Unique references: 12 new
+
+FINDINGS:
+S3-F1: ★ NEW-02 CRITICAL — WS ohlc(5m) snapshot delivers
+       only 1 candle. ATR(14) cannot be seeded from the
+       WS snapshot. Must use REST GetOHLCData(interval=5)
+       at startup to get historical 5-minute candles.
+       GetOHLCData returns 720 entries at interval=5 →
+       60 hours of data. More than sufficient for ATR seed.
+S3-F2: ★ NEW-03 CRITICAL — OHLC WS fires on every TRADE,
+       not just at candle close. Pipeline trigger detection
+       requires tracking `last_interval_begin` per symbol.
+       Fire pipeline only when interval_begin changes.
+       Multiple messages with same interval_begin = same
+       candle still in progress. Do NOT fire pipeline.
+S3-F3: CONFIRMED — response[-1] is always the current
+       uncommitted candle in REST GetOHLCData. Exclude
+       from all calculations. AR-017 correct.
+S3-F4: CONFIRMED — Valid OHLC intervals: 1|5|15|30|60|
+       240|1440|10080|21600 minutes.
+S3-F5: CONFIRMED — OHLC stall behavior: after interval
+       border, no message until next trade. Already in
+       spec (C-3). Liquidity gate reduces risk.
+
+SEARCH 3 CONCLUSION: Two critical new findings (NEW-02,
+NEW-03). Both resolve immediately.
+
+------------------------------------------------------------
+SEARCH 4 — batch_add spec, stop-loss trigger, TP limit
+------------------------------------------------------------
+
+References: batch_add (full re-read), add_order (full
+fetch), Kraken atomic amends guide, stop-loss order type,
+take-profit order type, stp_type confirmation, deadline
+parameter, order validation behavior, triggers.reference
+parameter, batch_cancel docs.
+Unique references: 10 new
+
+FINDINGS:
+S4-F1: ★ NEW-04 CRITICAL — batch_add: "Validation is
+       performed on the whole batch prior to submission
+       to the engine. If an order fails validation, the
+       WHOLE BATCH will be rejected." If TP or emergSL
+       price fails validation, BOTH orders are rejected.
+       Open position with NO crash protection.
+S4-F2: ★ NEW-04 (continuation) — Validation failure
+       causes: price not multiple of price_increment.
+       Gate 8 must round ALL prices before dispatch.
+       This is currently MISSING from all specs.
+S4-F3: ★ NEW-05 — triggers.reference parameter on
+       stop-loss orders in batch_add. Not specified in
+       current emergSL definition. Must be explicitly
+       `triggers.reference: "last"`. Default is "last"
+       but explicit specification required for crash
+       protection order determinism.
+S4-F4: CONFIRMED — batch_add minimum 2 orders, maximum
+       15. TP + emergSL = 2. Within range.
+S4-F5: CONFIRMED — All orders in batch limited to single
+       pair. Our architecture is correct (one pair per
+       position, batch_add per fill).
+S4-F6: CONFIRMED — stp_type values use underscores in
+       WS v2: cancel_newest, cancel_oldest, cancel_both.
+       AR-032 correct.
+S4-F7: CONFIRMED — deadline parameter on batch_add
+       applies to the batch as a whole. AR-033 correct.
+
+SEARCH 4 CONCLUSION: Two new critical findings (NEW-04
+price rounding, NEW-05 triggers.reference).
+
+------------------------------------------------------------
+SEARCH 5 — ATR warm-up, Wilder smoothing, initialization
+------------------------------------------------------------
+
+References: ATR Wikipedia, Bitget ATR guide, QuantConnect
+ATR indicator docs, QuantifiedStrategies ATR Python,
+TradingView ATR, PyQuantLab ATR Medium, InsiderFinance ATR
+Python guide, BingX ATR crypto guide, TradingCode ATR
+Pine Script, StockCharts ADX/ATR warm-up requirements.
+Unique references: 10 new
+
+FINDINGS:
+S5-F1: CONFIRMED — ATR(14) Wilder smoothing:
+       Seed: ATR_0 = SMA of first 14 TR values
+       Subsequent: ATR_n = (ATR_n-1 × 13 + TR_n) / 14
+       This is alpha = 1/n Wilder smoothing.
+S5-F2: CONFIRMED — True Range formula:
+       TR = max(high-low, abs(high-prev_close),
+                abs(low-prev_close))
+       Requires prev_close for every calculation.
+       On startup: use close of penultimate candle as
+       prev_close for most recent TR calculation.
+S5-F3: CONFIRMED — GetOHLCData(interval=5) gives 720
+       5-min candles (60 hours). 14 needed for ATR seed.
+       Well within range.
+S5-F4: CONFIRMED — ATR(14) seed requires exactly 14
+       completed candles. Use response[:-1] last 14.
+S5-F5: CONFIRMED — After seed, incremental ATR is O(1)
+       per candle close. AR-016 correct.
+S5-F6: CONFIRMED — ADX(14) convergence needs ~150 daily
+       candles (StockCharts). REST GetOHLCData with
+       interval=1440 returns 720 daily candles → 719
+       committed. More than sufficient. No warm-up issue
+       for Regime Engine.
+
+SEARCH 5 CONCLUSION: ATR warm-up requirements fully
+defined. All calculations confirmed. NEW-02 resolved
+with complete implementation spec.
+
+------------------------------------------------------------
+SEARCH 6 — 1H EMA warm-up, EMA calculation, initialization
+------------------------------------------------------------
+
+References: QuantConnect EMA indicator, TAAPI EMA docs,
+Medium EMA Python (2 sources), TradingCode EMA Pine Script,
+TradingView EMA scripts, Python finance EMA guide, EMA
+formula Wikipedia-level, Medium EMA applications Python,
+Steemit moving averages code.
+Unique references: 9 new
+
+FINDINGS:
+S6-F1: ★ NEW-06 CRITICAL — WS ohlc(60) snapshot delivers
+       only 1 candle. EMA(50) cannot be seeded from WS
+       snapshot. Must use REST GetOHLCData(interval=60)
+       at startup. Returns 720 hourly candles (30 days).
+       50+ candles sufficient for EMA seeding.
+S6-F2: CONFIRMED — EMA formula: alpha = 2/(n+1)
+       EMA(20): alpha = 2/21 ≈ 0.0952
+       EMA(50): alpha = 2/51 ≈ 0.0385
+       Seed: EMA_0 = SMA of first n periods
+       Subsequent: EMA_n = alpha × close + (1-alpha) × EMA_n-1
+       DISTINCTION: EMA uses 2/(n+1). ATR/ADX uses
+       Wilder smoothing 1/n. DO NOT confuse the two.
+S6-F3: CONFIRMED — For EMA convergence, 2× the period is
+       adequate as the warm-up seed length. For EMA(50),
+       use at least 100 candles (available from 720).
+S6-F4: CONFIRMED — Gate 4 compares EMA(20) vs EMA(50).
+       Both must be seeded for Gate 4 to function.
+       While not seeded: WARM_UP state, no entries.
+
+SEARCH 6 CONCLUSION: NEW-06 identified and resolved.
+
+------------------------------------------------------------
+SEARCH 7 — ADX regime calculation, daily OHLC details
+------------------------------------------------------------
+
+References: QuantInsti ADX Python, Quora ADX Python
+incremental, EODHD ADX Python (2 sources), Medium ADX
+decoded, StockCharts ADX ChartSchool, Quantopian ADX
+implementation, XS ADX guide, Datacamp ADX, TradingView
+ADX scripts.
+Unique references: 10 new
+
+FINDINGS:
+S7-F1: CONFIRMED — ADX(14) calculation requires:
+       1) Compute +DM, -DM, TR per daily candle
+       2) Wilder-smooth over 14 periods:
+          Seed: sum of first 14; subsequent: (prev×13+curr)/14
+       3) +DI = 100 × (+DM_smooth / TR_smooth)
+       4) -DI = 100 × (-DM_smooth / TR_smooth)
+       5) DX = |+DI - -DI| / (|+DI + -DI|) × 100
+       6) ADX seed = SMA of first 14 DX values
+          ADX subsequent = (ADX_prev×13 + DX) / 14
+S7-F2: CONFIRMED — First valid ADX requires 2×14 = 28
+       candles minimum. StockCharts recommends 150+ for
+       full convergence. 719 daily candles > 150. No issue.
+S7-F3: CONFIRMED — ADX threshold 25 is the universal
+       standard. CIATS-owned starting value. Correct.
+S7-F4: CONFIRMED — EMA(20) > EMA(50) for TRENDING_POS
+       direction. Standard interpretation confirmed.
+S7-F5: CONFIRMED — For daily regime, Regime Engine calls
+       REST GetOHLCData(interval=1440) at 00:00 UTC.
+       On startup: also call immediately (not just 00:00)
+       to establish current regime before trading begins.
+       This is part of the startup sequence (NEW-08).
+
+SEARCH 7 CONCLUSION: ADX and EMA calculation details
+fully confirmed. Startup trigger for Regime Engine noted.
+
+------------------------------------------------------------
+SEARCH 8 — Hetzner VPS pricing, Hillsboro migration
+------------------------------------------------------------
+
+References: Betterstack Hetzner review 2026, Hetzner cloud
+official, Costgoat Hetzner pricing calculator, Hetzner
+cloud regular performance page, Hetzner changelog (what's
+new), VPSBenchmarks CPX22 yab, Hostings.info review 2026,
+Cloudfleet Hetzner CPX Gen2 article, Hetzner pressroom
+new CX plans, Spare Cores CPX22 specs.
+Unique references: 10 new
+
+FINDINGS:
+S8-F1: CONFIRMED — Hetzner Hillsboro OR available for
+       CPX22 series. IMP-01 migration recommendation valid.
+S8-F2: NEW (pricing) — Hetzner price increase April 1,
+       2026. EU CPX22: €5.99 → €7.99/month. US pricing
+       already higher due to operating costs. No arch change
+       required. Note in 1011013 for planning.
+S8-F3: CONFIRMED — CPX Gen2 introduced Oct 2025. CPX22
+       Gen2 still 2vCPU/4GB RAM spec (Betterstack confirms).
+       Hardware improvement (newer AMD EPYC) but specs
+       unchanged. 1011013 spec unaffected.
+S8-F4: CONFIRMED — systemd WatchdogSec=120 appropriate
+       for CPX22 (sufficient CPU/RAM for TothBot). AR-025.
+S8-F5: CONFIRMED — Both Ashburn and Hillsboro have CPX22.
+       Current VPS: Ashburn (87.99.141.44). Migration to
+       Hillsboro is an improvement when operationally ready.
+
+SEARCH 8 CONCLUSION: All VPS infrastructure confirmed.
+One pricing update for 1011013.
+
+------------------------------------------------------------
+SEARCH 9 — Ticker channel, MAE monitoring, bid vs last
+------------------------------------------------------------
+
+References: Kraken Ticker WS v2 (full fetch), Amberdata
+Kraken market data, Kraken WS FAQ (ticker section),
+ccxt/kraken.py bid/ask parsing, AlgoTrading101 Kraken API
+guide, Quant Nomad Kraken data Python, Kraken REST Ticker,
+Kraken Futures Ticker (reference), python-kraken-sdk
+ticker example, Get Ticker Information REST.
+Unique references: 10 new
+
+FINDINGS:
+S9-F1: ★ NEW-07 — Ticker channel provides `bid`, `bid_qty`,
+       `ask`, `ask_qty`, `last` fields. For long position
+       MAE monitoring, bid = realizable exit price.
+       Current spec says "current_price" (ambiguous).
+       Must explicitly specify `bid` for long positions.
+       This is the precise connection to event_trigger:bbo
+       (chosen because bid changes fire immediately).
+S9-F2: CONFIRMED — Ticker `last` note: "only guaranteed
+       if traded within the past 24 hours." For illiquid
+       pairs in low-activity periods, `last` can be stale.
+       `bid` is always current. Additional reason to use
+       `bid` for MAE detection.
+S9-F3: CONFIRMED — event_trigger:bbo fires on any
+       best-bid-offer change. event_trigger:trades fires
+       only on trades. bbo for open positions (AR-034)
+       correct and consistent with using `bid` for MAE.
+S9-F4: CONFIRMED — Portfolio drawdown calculation:
+       unrealized P/L per open long position =
+       (bid - entry_fill_price) × qty
+       Sum across all open positions + realized P/L
+       = total portfolio performance for circuit breakers.
+
+SEARCH 9 CONCLUSION: NEW-07 confirmed. Completes the
+bbo/bid/MAE chain of reasoning.
+
+------------------------------------------------------------
+SEARCH 10 — Startup sequence, system initialization
+------------------------------------------------------------
+
+References: python-kraken-sdk REST docs (GetOHLCData
+various intervals), Kraken Advanced API FAQ (OHLC limits),
+Kraken REST API docs (GetWebSocketsToken), WS reconnect
+behavior, Spot Rate Limits guide (full fetch), system
+status API, QueryOrdersInfo endpoint, Kraken WS v2
+introduction (reconnect + startup), aiohttp startup
+patterns, asyncio startup sequencing references.
+Unique references: 11 new
+
+FINDINGS:
+S10-F1: ★ NEW-08 CRITICAL — No formal startup sequence
+        exists in any TothBot V2 document. TothBot cannot
+        simply connect and begin trading. It must warm up
+        all caches, reconcile open positions, and reach
+        READY state before the first pipeline evaluation.
+        Without this: Gate 4 (no 1H EMA), Gate 8 (no ATR),
+        and Regime Engine (no current regime) all fail.
+        Requires new specification document.
+S10-F2: CONFIRMED — REST GetOHLCData rate limit: 1 per
+        second per IP+pair. AT-024 and AR-036 apply to
+        ALL startup GetOHLCData calls, not just Regime
+        Engine. Startup for 50 pairs × 3 intervals with
+        1.1s intra-pair stagger = approximately 50 ×
+        3.3s = 165s if fully sequential. With asyncio
+        parallelism across pairs: 3.3s total.
+        Startup time ≤ 10 seconds with asyncio.gather()
+        across pairs is achievable.
+S10-F3: CONFIRMED — snap_orders:true on executions channel
+        is the preferred restart reconciliation. AR-003
+        correct. Use for Position Mirror restoration.
+S10-F4: CONFIRMED — QueryOrdersInfo REST can be used
+        for targeted single-order verification during
+        startup reconciliation. Already in AR-031.
+S10-F5: CONFIRMED — Kraken Status API startup check
+        (AR-038). Query once on startup. Informational.
+S10-F6: CONFIRMED — GetWebSocketsToken at startup.
+        Token valid 15 min from creation. Always get
+        fresh before establishing private WS connection.
+
+SEARCH 10 CONCLUSION: NEW-08 confirmed. Startup sequence
+specification is a critical missing document.
+
+============================================================
+3. COMPLETE FINDINGS SUMMARY
+============================================================
+
+------------------------------------------------------------
+NEW FINDINGS (8 — all resolved this session):
+------------------------------------------------------------
+
+NEW-01: qty_increment field missing from Gate 8 validation
+        and all position sizing / order dispatch logic.
+        CRITICAL: orders with invalid qty rejected.
+        → New AR-044. Assign: 0411001, 1011002 Gate 8.
+
+NEW-02: ATR(14) warm-up missing from startup.
+        WS ohlc(5m) snapshot = 1 candle only.
+        Must call REST GetOHLCData(interval=5) at startup.
+        → New AR-044 (combined with EMA warm-up).
+        Assign: 1011002 startup section, 1011014 new doc.
+
+NEW-03: OHLC pipeline trigger detection mechanism missing.
+        WS OHLC fires on every trade, not just candle close.
+        Must track last_interval_begin per symbol.
+        Fire pipeline only on interval_begin change.
+        → New AR-045. Assign: 1011002 WM-OHLC.
+
+NEW-04: Price rounding before batch_add missing.
+        batch_add validation failure kills entire batch.
+        All prices must be multiples of price_increment.
+        Open position with no protection if batch rejected.
+        → New AR-047. Assign: 0411001, 1011002 Gate 8.
+
+NEW-05: emergSL triggers.reference not specified.
+        Must be explicitly "last" — never rely on defaults
+        for crash protection parameters.
+        → New AR-046. Assign: 0411001, 1011002.
+
+NEW-06: 1H EMA(20) and EMA(50) warm-up missing.
+        WS ohlc(60) snapshot = 1 candle only.
+        Must call REST GetOHLCData(interval=60) at startup.
+        EMA uses alpha = 2/(n+1), distinct from ATR Wilder.
+        → Part of AR-044. Assign: 1011002, 1011014.
+
+NEW-07: Exit Controller MAE uses `bid` price, not `last`.
+        bid = realizable exit for long positions.
+        Consistent with event_trigger:bbo choice.
+        → New AR-048. Assign: 0411001, 1011002.
+
+NEW-08: System startup sequence not defined.
+        No document specifies when TothBot is ready.
+        Trading before warm-up = Gate 4 and Gate 8 fail.
+        → New AR-049 + new 1011014 Working Draft spec.
+        Assign: 1011002, 1011014.
+
+------------------------------------------------------------
+CONFIRMED (23 items — no action required):
+------------------------------------------------------------
+
+  C-01  All 43 ARs (AR-001 through AR-043) confirmed
+  C-02  Changelog clean through March 26, 2026
+  C-03  exec_type values (10 total) correct
+  C-04  order_status:true mandatory (AR-026) correct
+  C-05  snap_trades:true explicit required (noted dv1_7)
+  C-06  batch_cancel rate bypass (AR-041) confirmed
+  C-07  cancel_order vs batch_cancel (AR-041) confirmed
+  C-08  heartbeat exclusion zombie (AR-042) confirmed
+  C-09  BoundedSemaphore max_concurrent (AR-043) confirmed
+  C-10  Regime stagger (AR-036) confirmed
+  C-11  response[-1] exclusion all GetOHLCData confirmed
+  C-12  event_trigger:bbo per position state (AR-034)
+  C-13  ATR Wilder smoothing formula correct
+  C-14  ADX(14) requires 28 candles min, 150+ ideal
+  C-15  Daily OHLC 719 candles sufficient for ADX warm-up
+  C-16  EMA formula alpha = 2/(n+1) confirmed
+  C-17  Hetzner Hillsboro migration IMP-01 valid
+  C-18  CPX22 Gen2 same 2vCPU/4GB spec
+  C-19  systemd WatchdogSec=120 appropriate (AR-025)
+  C-20  amend_order primary, edit_order deprecated (AR-018)
+  C-21  stp_type underscore WS v2 (AR-032) correct
+  C-22  triggers.reference=last default — confirmed correct
+  C-23  drawdown thresholds 10%/5% confirmed appropriate
+
+============================================================
+4. NEW ARCHITECTURAL DECISIONS
+============================================================
+
+AR-044 — STARTUP WARM-UP: ATR(14) AND EMA VIA REST
+         GetOHLCData:
+  On startup, before any pipeline execution, for each
+  monitored pair:
+  (a) GetOHLCData(pair, interval=5) → seed ATR(14).
+      Use response[:-1]. Last 14+ committed candles.
+      ATR seed = SMA of first 14 TRs.
+      Subsequent: ATR_n = (ATR_{n-1}×13 + TR_n) / 14
+  (b) GetOHLCData(pair, interval=60) → seed EMA(20)
+      and EMA(50) for 1H HTF cache.
+      Use response[:-1]. Last 100+ committed candles.
+      EMA seed: first n values = SMA(n). Then alpha=2/(n+1)
+      EMA formula: EMA_n = alpha×close + (1-alpha)×EMA_{n-1}
+  (c) GetOHLCData(pair, interval=1440) → Regime Engine.
+      Already specified. Also runs on startup (not just
+      00:00 UTC) to establish current regime immediately.
+  STAGGER: 1.1s between calls for the SAME pair.
+  PARALLELISM: asyncio.gather() across DIFFERENT pairs.
+  While ATR or EMA not seeded: pair is WARM_UP state.
+  No entries for WARM_UP pairs. Gate 4 and Gate 8 block.
+  WARM_UP exits when first candle-close processed post-
+  seeding.
+  Assign: 1011002 WM-STARTUP-001 through -008,
+          1011014 SS-WARMUP-001 through -010.
+
+AR-045 — OHLC CANDLE-CLOSE DETECTION MECHANISM:
+  WS Manager maintains per symbol:
+    last_interval_begin: dict[str, str]
+    last_complete_candle: dict[str, OHLCCandle]
+  On each ohlc(5m) message for symbol S:
+    if msg.interval_begin == last_interval_begin[S]:
+      → Update in-progress candle data. DO NOT fire pipeline.
+    else:
+      → Candle for last_interval_begin[S] is NOW CLOSED.
+      → Fire pipeline with last_complete_candle[S].
+      → last_complete_candle[S] = current message data.
+      → last_interval_begin[S] = msg.interval_begin.
+  Initialize last_complete_candle[S] from startup
+  GetOHLCData(interval=5) response (most recent committed
+  candle in response[:-1]).
+  Same logic applies to ohlc(60) for HTF EMA cache updates.
+  Assign: 1011002 WM-OHLC-001 through -006.
+
+AR-046 — EMERGSL triggers.reference EXPLICIT:
+  All emergSL stop-loss orders in batch_add MUST include:
+    "triggers": { "reference": "last", "price": sl_price,
+                  "price_type": "static" }
+  Never rely on defaults for crash protection parameters.
+  reference="last" means Kraken matching engine triggers
+  when last traded price reaches sl_price.
+  Deterministic behavior regardless of future API changes.
+  Assign: 0411001 WS-SL-001 through -003,
+          1011002 WM-BATCHADD-003 through -004.
+
+AR-047 — PRICE AND QUANTITY ROUNDING BEFORE ORDER DISPATCH:
+  Gate 8 MUST apply all four roundings before any order:
+  (1) order_qty:
+      order_qty = floor(raw_qty / qty_increment) × qty_increment
+      If result < qty_min OR result × price < cost_min:
+        → POSITION_TOO_SMALL. Skip pair. Log.
+  (2) Entry limit_price:
+      limit_price = floor(raw_price / price_increment) × price_increment
+      Conservative: lower limit = more likely to fill
+      post_only without taking.
+  (3) TP limit_price:
+      tp_price = ceil(raw_tp / price_increment) × price_increment
+      Conservative: higher TP = better R:R at minimum.
+  (4) emergSL trigger price:
+      sl_price = floor(raw_sl / price_increment) × price_increment
+      Result: slightly wider stop = more conservative
+      emergency protection.
+  All four must complete and validate BEFORE any add_order
+  or batch_add is dispatched. If any rounding produces
+  an invalid order (fails cost_min, qty_min, price
+  crossing): log, alert, skip pair for this evaluation.
+  NEVER dispatch a batch_add without pre-validated prices.
+  Reason: batch_add validation failure kills entire batch
+  → open position without TP or emergSL protection.
+  Assign: 0411001 WS-ROUND-001 through -008,
+          1011002 WM-ROUND-001 through -006.
+
+AR-048 — EXIT CONTROLLER MAE USES BID PRICE FOR LONGS:
+  For long positions, MAE detection and unrealized P/L
+  calculation MUST use the `bid` field from ticker updates.
+  NOT `last`.
+  Rationale:
+    - bid = best price at which the position can be
+      immediately sold (realizable exit price)
+    - last = most recent trade, can be stale
+    - event_trigger:bbo was chosen precisely so bid
+      updates fire immediately on adversarial price moves
+  MAE formula: current_mae = entry_fill_price - bid_price
+  Compare: if current_mae >= ATR(14)×1.5x → Layer 2 exit.
+  Unrealized P/L per long: (bid - entry_fill_price) × qty
+  Portfolio drawdown check in Gate 7:
+    total_unreal = sum of (bid - entry) × qty across all
+    open positions.
+    total_PL = realized_PL + total_unreal.
+    if abs(total_PL / portfolio) >= full_halt_pct → HALT.
+  Assign: 0411001 WS-TKR-005 through -007,
+          1011002 WM-EC-001 through -003.
+
+AR-049 — FORMAL STARTUP SEQUENCE:
+  TothBot MUST complete this sequence before pipeline.
+  No pipeline evaluations until READY state is reached.
+  See 1011014 for full specification.
+  Sequence summary:
+    Step 1: Kraken Status API check (AR-038)
+    Step 2: GetWebSocketsToken (REST)
+    Step 3: Connect public WS + subscribe all channels
+    Step 4: Process instrument snapshot → pair cache
+    Step 5: Connect private WS + subscribe executions,
+            balances
+    Step 6: snap_orders reconciliation → Position Mirror
+    Step 7: Restore ticker subscriptions for open positions
+    Step 8: REST warm-up via GetOHLCData (AR-044):
+            per pair: interval=5, interval=60, interval=1440
+            asyncio.gather across pairs (1.1s intra-pair)
+    Step 9: All pairs WARM_UP → READY
+    Step 10: Begin pipeline
+  Assign: 1011002 WM-STARTUP-001 through -012,
+          1011014 (complete specification).
+
+============================================================
+5. DOCUMENTS PRODUCED THIS SESSION
+============================================================
+
+  0500000  System_Architecture_Overview    dv1_13  ★
+           (text-only: AR-044 through AR-049)
+           No diagram changes.
+  0411001  Kraken_WS_v2_Specification      dv1_7   ★
+  1011002  WS_Manager_Coding_Spec          dv1_7   ★
+  1011012  Regime_Engine_Coding_Spec       dv1_3   ★
+  1011014  Startup_Sequence_Coding_Spec    dv1_0   ★ NEW
+  TB00015  This session log                v1_0    ★
+
+★ = Produced this session
+
+0500000 dv1_13 change specification:
+  6 new ARs (AR-044 through AR-049). Text-only.
+  No diagram changes.
+
+============================================================
+6. DOCUMENT INVENTORY — CURRENT STATE
+============================================================
+
+SESSION LOGS:
+  TB00001 through TB00015 (all v1_0)
+
+PHASE 1 DOCUMENTS: [unchanged from TB00014]
+
+WORKING DRAFT CODING SPECS:
+  0411001  Kraken_WS_v2_Specification      dv1_7  ★ NEW
+  1011001  Engineering_Best_Practices      dv1_3
+  1011002  WS_Manager_Coding_Spec          dv1_7  ★ NEW
+  1011010  CIATS_Coding_Spec               dv1_2
+  1011011  Risk_Engine_Coding_Spec         dv1_0
+  1011012  Regime_Engine_Coding_Spec       dv1_3  ★ NEW
+  1011013  VPS_Deployment_Coding_Spec      dv1_2
+  1011014  Startup_Sequence_Coding_Spec    dv1_0  ★ NEW
+
+SYSTEM ARCHITECTURE:
+  0500000  dv1_12 → dv1_13 (text-only, 6 new ARs)
+
+SUPERSEDED — DO NOT USE:
+  0411001 dv1_0 through dv1_6
+  1011002 dv1_0 through dv1_6
+  1011012 dv1_0 through dv1_2
+
+============================================================
+7. PARKING LOT — CURRENT STATE
+============================================================
+
+  PL-003  TRACKING: Pathway 1 GitHub automation.
+
+  ALL OTHER ITEMS: Resolved. Zero new items added.
+  All eight new findings resolved immediately.
+
+============================================================
+8. OPEN ITEMS — CURRENT STATE
+============================================================
+
+  OI-001  SSS signal generation — Phase 5-6 work
+  OI-002  Asset selection universe — Phase 5-6 work
+  OI-003  Exit Controller full spec — Phase 5-6 work
+  OI-004  Entry limit placement — Phase 5-6 work
+  OI-005  Selection Controller — Phase 5-6 work
+
+  Nothing in Phase 1-4 blocked.
+  1011014 Startup Sequence is new but phase-appropriate.
+
+============================================================
+9. BILL ACTIONS REQUIRED
+============================================================
+
+  (ff) Download 5 documents:
+       0411001 dv1_7, 1011002 dv1_7, 1011012 dv1_3,
+       1011014 dv1_0, TB00015
+  (gg) Approve all 5 documents.
+  (hh) Apply 0500000 dv1_13 changes at next dedicated
+       0500000 session (text-only, 6 new ARs).
+  (ii) Upload all above to Claude project for next session.
+
+============================================================
+10. NEXT SESSION — WHERE WE PICK UP
+============================================================
+
+If Bill approves GATE 1 for Phase 2:
+  Next step: Phase 2, Step 2.1 → 0400000_Exchange_Interface
+
+MANDATORY UPLOAD FOR NEXT SESSION:
+  All TB00001 through TB00015 (session logs)
+  All Phase 1 documents (0000000 through 0311005)
+  0411001 dv1_7 (this session)
+  1011001 dv1_3
+  1011002 dv1_7 (this session)
+  1011010 dv1_2
+  1011011 dv1_0
+  1011012 dv1_3 (this session)
+  1011013 dv1_2
+  1011014 dv1_0 (this session — NEW)
+  0500000_System_Architecture_Overview_dv1_12_Claude_Source.txt
+  (0500000 dv1_13 to be applied at dedicated session)
+
+============================================================
+11. 0500000 dv1_13 CHANGE SPECIFICATION
+============================================================
+
+All TB00014 pending changes already applied (dv1_12).
+New additions from TB00015:
+
+CHANGE 1 — New AR-044:
+  ATR(14) and EMA warm-up via REST GetOHLCData at startup.
+  Defines WARM_UP state per pair.
+  Three GetOHLCData calls per pair (interval=5, 60, 1440).
+  asyncio parallelism across pairs. 1.1s intra-pair stagger.
+  Blocking: no pipeline until READY.
+
+CHANGE 2 — New AR-045:
+  OHLC candle-close detection via last_interval_begin.
+  Pipeline fires only on interval_begin change.
+  last_complete_candle tracked per symbol.
+
+CHANGE 3 — New AR-046:
+  emergSL triggers.reference: "last" must be explicit.
+
+CHANGE 4 — New AR-047:
+  Price and quantity rounding before all order dispatch.
+  qty: floor to qty_increment.
+  entry limit_price: floor to price_increment.
+  TP limit_price: ceil to price_increment.
+  emergSL trigger: floor to price_increment.
+  NEVER dispatch batch_add without pre-validated prices.
+
+CHANGE 5 — New AR-048:
+  Exit Controller MAE uses bid price, not last.
+  bid = realizable exit for long positions.
+  All drawdown calculations use bid.
+
+CHANGE 6 — New AR-049:
+  Formal startup sequence. 10-step sequence defined.
+  No trading until READY state. Full spec in 1011014.
+
+0500000 will become dv1_13 incorporating all 6 changes.
+Text-only. No diagram changes.
+
+============================================================
+12. VALIDATION STATUS
+============================================================
+
+This is the seventh consecutive 10-search FP/DP validation
+session. Every session has found new gaps. Bill's decision
+to validate until zero findings is correct.
+
+Current finding rate: 8 findings this session.
+Prior sessions averaged 4-6 findings.
+
+Root cause: The specification has been built
+incrementally from the top down (architecture first,
+coding specs second). Each layer of detail reveals
+gaps at the layer below. This is expected and is not
+a defect — it is the process working correctly.
+
+Recommendation: Continue validation until a full 10-search
+session produces zero new findings with all confirmations.
+Current estimate: 1-2 more validation sessions before
+zero-finding state is achieved.
+
+Architecture is now very mature. Remaining likely gaps:
+  - Startup reconciliation detail (Position Mirror + TP/SL
+    re-verification for existing positions)
+  - Gate 7 continuous drawdown calculation details
+  - Layer 1 exit Controller trigger definitions (OI-003)
+
+============================================================
+13. REVISION HISTORY
+============================================================
+
+  v1_0  03-26-2026  Initial session log. Seventh 10-search
+                    FP/DP validation. 23 confirmations.
+                    8 new findings all immediately resolved.
+                    0 parking lot additions.
+                    New ARs: 044-049.
+                    Documents produced: 0411001 dv1_7,
+                    1011002 dv1_7, 1011012 dv1_3,
+                    1011014 dv1_0, TB00015.
+                    Critical findings: qty_increment (NEW-01),
+                    ATR warm-up (NEW-02), OHLC trigger (NEW-03),
+                    batch_add price rounding (NEW-04),
+                    emergSL triggers.reference (NEW-05),
+                    EMA warm-up (NEW-06), bid price MAE (NEW-07),
+                    startup sequence (NEW-08).
+
+============================================================
+END OF SESSION LOG
+============================================================

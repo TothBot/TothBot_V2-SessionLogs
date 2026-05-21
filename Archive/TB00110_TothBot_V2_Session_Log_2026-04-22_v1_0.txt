@@ -1,0 +1,528 @@
+DocDCN:     TB00110
+DocTitle:   TothBot_V2_Session_Log_2026-04-22
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TBXXXXX_Session_Logs\TB00110_TothBot_V2_Session_Log_2026-04-22_v1_0.txt
+DocDate:    04-22-2026
+DocTime:    02:40:00 UTC
+
+============================================================
+TOTHBOT V2 SESSION LOG — TB00110
+dv1_22 DEPLOY COMPLETE — OBSERVATION WINDOW OPEN
+============================================================
+
+PAPER TRADING ONLY. NO REAL MONEY.
+
+============================================================
+1. SESSION IDENTITY
+============================================================
+
+Session date:     April 22, 2026
+Session number:   TB00110
+Session type:     Claude Chat — DEPLOY WALKTHROUGH RESUMPTION.
+                  Resumed TB00108 Bill Actions at STEP C-4
+                  (where TB00109 stopped pending fresh-data
+                  verification of VP-010). Walked Bill
+                  through STEP C-4 through STEP H and
+                  opened the dv1_22 observation window.
+Prior session:    TB00109 (2026-04-21, Claude Chat — partial
+                  deploy walkthrough stopped at STEP C-3).
+Platform:         Claude Chat.
+Next session:     TB00111 (Claude Chat — dv1_22 observation
+                  window close, OI-018/019/020 close
+                  decisions, OI-022/023 operational
+                  verification finalization).
+
+Documents read this session:
+  TB00000  v2_10   Project Instructions for Claude     read
+  TB00109  v1_0    Session Log                         read
+  TB00109  v1_0    NSI (Next Session Instructions)     read
+  0311003  v1_0    Versioning_Procedure — VP-010       re-queried
+                                                       fresh via
+                                                       project_
+                                                       knowledge_
+                                                       search
+                                                       per NSI §3
+                                                       fresh-data
+                                                       rule
+
+VP-010 authoritative rule (fresh-queried and stated back
+to Bill at session start):
+  "In GitHub, superseded versions are managed through
+  git history. The _Archive folder holds only explicitly
+  retired (rt) documents — not merely superseded ones."
+
+============================================================
+2. WORK COMPLETED THIS SESSION
+============================================================
+
+------------------------------------------------------------
+2.1 PRE-FLIGHT CHECKLIST — TB00109 NSI Section 5
+------------------------------------------------------------
+
+  ITEM 1  TB00109 Session Log + NSI uploaded to        PASS
+          Claude.ai project folder (session read both)
+  ITEM 2  VP-010 re-queried from project knowledge;    PASS
+          authoritative rule stated back to Bill
+  ITEM 3  VPS untouched at dv1_21 / PID 217309 /       PASS
+          since 2026-04-21 18:07:58 UTC
+  ITEM 4  Set-Location to Docs repo                    PASS
+  ITEM 5  Docs git status: 11 deleted + 4 untracked,   PASS
+          nothing else modified, origin/master at
+          9528097
+
+All pre-flight checks PASS. Authorized to resume STEP C-4.
+
+------------------------------------------------------------
+2.2 STEP C — DOCS REPO COMMIT AND PUSH
+------------------------------------------------------------
+
+STEP C-4  — 15 explicit staging commands (RULE 6)
+            11 git rm commands for superseded/stale
+               deleted files
+             4 git add commands for new spec files
+          One intermediate PowerShell command
+          concatenation error (C-4.12 and C-4.13 pasted
+          on single line) caught by diagnostic git
+          status; no content corruption, 4 adds
+          re-issued cleanly.                           PASS
+
+STEP C-5  git status verification                      PASS
+          Expected 15 staged operations. Git detected
+          4 of them as renames (dv_N -> dv_N+1 of same
+          DCN: 0511006, 1010000, 1011007, 1011014) and
+          7 as pure deletions. Cosmetic only — content
+          identical to what was staged.
+
+STEP C-6  git commit — amended message per NSI §6.3    PASS
+          Commit hash: 802f920
+          Message: "TB00108 bundled: OI-023 permanent
+          trade record; OI-022 ALERT_SENT/ALERT_SMTP_
+          FAILED events; OI-014 xref cleanup; VP-010
+          supersession cleanup of 11 stale spec
+          versions"
+          Delta: 11 files changed, +1042 / -7030
+
+STEP C-7  git push origin master (RULE 14)             PASS
+          9528097..802f920 master -> master
+
+------------------------------------------------------------
+2.3 STEP D — CODE REPO COMMIT AND PUSH
+------------------------------------------------------------
+
+STEP D-1  Code repo pre-verification per NSI §4.4:
+          (a) logger.py exists                         PASS
+          (b) logger.py DocVersion: dv1_4              PASS
+          (c) startup_sequence.py exists               PASS
+          (d) startup_sequence.py DocVersion: dv1_9    PASS
+          Bill's earlier manual file moves confirmed
+          correct. Copy-Item commands not required.
+
+STEP D-2  Set-Location to Code repo                    PASS
+
+STEP D-3  git status — exactly 2 modified files        PASS
+          tothbot/logger.py and tothbot/startup_sequence.py
+          No stray transport .txt files. Clean.
+
+STEP D-4  Header spot-check folded into D-1.2 / D-1.4  PASS
+
+STEP D-5  2 explicit staging commands (RULE 6)         PASS
+          git add tothbot/logger.py
+          git add tothbot/startup_sequence.py
+
+STEP D-6  git status verification — 2 staged files     PASS
+
+STEP D-7  git commit                                   PASS
+          Commit hash: 7e744a3
+          Message: "TB00108 bundled: OI-023 trades_
+          <YYYY>.jsonl permanent record; OI-022
+          ALERT_SENT structured event; OI-014
+          startup_sequence xref cleanup"
+          Delta: 2 files changed, +375 / -38
+
+STEP D-8  git push origin master                       PASS
+          ebc93cf..7e744a3 master -> master
+
+------------------------------------------------------------
+2.4 STEP E — VPS DEPLOY
+------------------------------------------------------------
+
+STEP E-1  ssh root@87.99.141.44                        PASS
+STEP E-2  cd /root/TothBot_V2-Code                     PASS
+STEP E-3  git fetch + log check                        PASS
+          Exactly 1 pending commit: 7e744a3
+STEP E-4  git pull                                     PASS
+          Fast-forward ebc93cf..7e744a3 applied
+          Delta: 2 files, +375 / -38 (matches D-7)
+STEP E-5  Header verification on VPS
+          logger.py DocVersion: dv1_4                  PASS
+          startup_sequence.py DocVersion: dv1_9        PASS
+STEP E-6  grep TRADES_RECORD_DIR tothbot/logger.py     PASS
+          5 matches — OI-023 payload present
+          (constant, path construction, makedirs,
+          revision history x2)
+STEP E-7  systemctl restart tothbot                    PASS
+          POINT OF NO RETURN for dv1_21 window —
+          dv1_22 observation window OPENED
+STEP E-8  systemctl status verification                PASS
+          Main PID: 223133 (was 217309 — new process)
+          Since:    Wed 2026-04-22 02:15:21 UTC
+          Active:   running
+          Memory:   59.4M, CPU: 1.877s
+STEP E-9  tail -n 20 /home/tothbot/logs/tothbot.log    PASS
+          with one observed log-noise anomaly
+          (OI-026 candidate — Parking Lot)
+
+          Healthy signs:
+            CANDLE_CLOSE DAI/USD with full ATR(14)
+            PIPELINE_START -> SSS_RESULT -> PIPELINE_FAIL
+              (SSS gate correctly rejecting DAI/USD)
+            PING_SENT / PONG_RECEIVED latency 87.9ms
+            No FATAL / CRITICAL / RECONNECT events
+
+          Anomaly (OI-026 candidate):
+            UNKNOWN_MESSAGE_TYPE WARN firing ~1/sec
+            for {"channel":"heartbeat"} messages.
+            WS_MGR dispatch table appears to lack a
+            handler for bare channel=heartbeat payload.
+            LOW severity — log noise only (~86k/day).
+            Regression vs latent unknown without
+            dv1_21 pre-deploy log diff.
+
+------------------------------------------------------------
+2.5 STEP F — AI-1 (OI-023) VERIFICATION
+------------------------------------------------------------
+
+STEP F-1  ls -la /home/tothbot/records/                PASS
+          Directory exists, created 2026-04-22 02:15
+          UTC matching dv1_22 startup. Empty
+          (trades_2026.jsonl appears on first
+          TRADE_CLOSE — none fired in session).
+
+STEP F-2  stat /home/tothbot/records                   PASS
+          Result: 755 root root (not tothbot:tothbot
+          as TB00108 Q2 assumed).
+
+          Diagnostic — ps -o user -p 223133:
+            USER=root, CMD=/root/tothbot_env/bin/
+            python3 -m tothbot
+
+          Conclusion: tothbot service runs as ROOT on
+          this VPS, not as a dedicated `tothbot` user.
+          Therefore root:root ownership is functionally
+          correct — service can write. NOT a defect.
+
+          Governance observation (OI-027 candidate —
+          Parking Lot): TB00108 Q2 design language and
+          certain specs reference a `tothbot` user
+          that does not exist. Least-privilege best
+          practice suggests migrating to a dedicated
+          service user, but no functional impact.
+
+STEP F-3  deferred per NSI §6.8 F-6 (no TRADE_CLOSE
+          fired during session — defer to observation
+          close in TB00111)
+STEP F-4  deferred (same reason)
+STEP F-5  deferred (same reason)
+
+------------------------------------------------------------
+2.6 STEP G — POST-DEPLOY BASELINE
+------------------------------------------------------------
+
+Baseline captured at T+~6min post dv1_22 restart:
+
+  G-1  grep -c '"event":"ALERT_SENT"'             = 0  PASS
+  G-2  grep -c '"event":"ALERT_SMTP_FAILED"'      = 0  PASS
+  G-3  grep -c '"event":"TRADE_RECORD_WRITE_FAILED"' = 0 PASS
+  G-4  grep -c '"level":"FATAL"'                  = 0  PASS
+  G-5  Proton alerts@tothbot.com inbox           = 0   PASS
+       (Bill confirmed — consistent with ALERT_SENT=0)
+
+------------------------------------------------------------
+2.7 STEP H — OBSERVATION WINDOW OPENED
+------------------------------------------------------------
+
+Window parameters locked at STEP E-7 execution:
+
+  Window start:       2026-04-22 02:15:21 UTC
+  Minimum duration:   48 hours
+  Earliest close:     2026-04-24 02:15:21 UTC
+  Deploy version:     dv1_22
+  Main PID at start:  223133
+  Binary:             /root/tothbot_env/bin/python3 -m tothbot
+  Code repo HEAD:     7e744a3
+  Docs repo HEAD:     802f920
+
+Tripwire conditions (ANY triggers abort to change session):
+  1. Any FATAL event
+  2. ALERT_SMTP_FAILED > 0
+  3. TRADE_RECORD_WRITE_FAILED > 0
+  4. Unplanned service restart (not Bill-initiated)
+
+Pending OI closes (pending observation pass):
+  OI-018  WM reconnect (CLOSE PENDING)
+  OI-019  Alert routing (CLOSE PENDING)
+  OI-020  Kraken retry window (CLOSE PENDING)
+
+Pending operational verifications (pending first TRADE_CLOSE):
+  OI-022  ALERT_SENT structured event (baseline 0 — verified
+          on first real alert firing during observation)
+  OI-023  trades_<YYYY>.jsonl permanent record (infrastructure
+          verified F-1/F-2; payload verification on first
+          TRADE_CLOSE)
+
+------------------------------------------------------------
+2.8 MONITORING CADENCE (BILL REFERENCE)
+------------------------------------------------------------
+
+Recommended check intervals during observation:
+  T+1h   2026-04-22 03:15 UTC  tripwire sweep
+  T+12h  2026-04-22 14:15 UTC  baseline delta
+  T+24h  2026-04-23 02:15 UTC  mid-window health
+  T+48h  2026-04-24 02:15 UTC  earliest close decision
+
+Monitoring commands per check (4 plain ssh commands —
+PowerShell/ssh/bash quote nesting is fragile; use
+individual commands, not chained &&):
+
+  ssh root@87.99.141.44 "systemctl status tothbot --no-pager | head -5"
+  ssh root@87.99.141.44 "grep -c FATAL /home/tothbot/logs/tothbot.log"
+  ssh root@87.99.141.44 "grep -c ALERT_SMTP_FAILED /home/tothbot/logs/tothbot.log"
+  ssh root@87.99.141.44 "grep -c TRADE_RECORD_WRITE_FAILED /home/tothbot/logs/tothbot.log"
+
+NOTE: plain-string grep (above) includes revision history
+and comment occurrences in addition to structured log
+events. Baseline of FATAL as plain string = 18 (revision
+history + docstrings in logger.py at runtime import —
+verify during TB00111 by inspecting actual log entries,
+not raw counts).
+
+For precise event-only counts, SSH to the VPS shell and
+run grep with single quotes:
+  ssh root@87.99.141.44
+  grep -c '"level":"FATAL"' /home/tothbot/logs/tothbot.log
+
+============================================================
+3. SESSION ANOMALIES AND LESSONS
+============================================================
+
+------------------------------------------------------------
+3.1 PowerShell -> ssh -> bash quote escaping is fragile
+------------------------------------------------------------
+
+Observation: Compound ssh commands with embedded double
+quotes (for JSON field matching like "event":"FATAL")
+fail from PowerShell because the backslash-escape syntax
+does not survive the multi-shell transit cleanly.
+Symptom: "grep: Trailing backslash" error followed by
+the && chain short-circuiting.
+
+Lesson: during observation monitoring from Desktop
+PowerShell, use either:
+  (a) Individual ssh commands with plain-string grep
+      (fast, slightly less precise)
+  (b) Interactive SSH to VPS shell, then grep with
+      single-quote wrapping (precise, extra step)
+  (c) A one-time tothbot_check.sh script on disk,
+      invoked via:  ssh root@<ip> "bash -s" < script
+
+Did NOT escalate to OI because it is a Desktop tooling
+artifact, not a system defect.
+
+------------------------------------------------------------
+3.2 PowerShell command concatenation risk
+------------------------------------------------------------
+
+Observation: C-4.12 and C-4.13 git add commands were
+pasted on the same PowerShell line without Enter between
+them. Git interpreted the concatenation as a single
+command with `git` as a pathspec and failed with
+"fatal: pathspec 'git' did not match any files".
+
+Diagnostic: git status caught the state immediately.
+No content corruption. All 4 intended adds were re-issued
+cleanly one command at a time.
+
+Lesson for TB00111 and beyond: strict adherence to
+RULE 15 (one command per copy box). When supplying
+commands, always put a visible gap/break between
+commands so paste-without-Enter concatenation is
+self-evident.
+
+------------------------------------------------------------
+3.3 Fresh-data discipline — UPHELD this session
+------------------------------------------------------------
+
+Per TB00109 NSI Section 3, this session upheld the
+fresh-data rule at session start by re-querying
+project_knowledge_search on "0311003 VP-010 superseded
+documents git history" before executing any git add.
+VP-010 rule was stated back to Bill verbatim before
+staging began. No TB00109-type violation occurred
+this session.
+
+============================================================
+4. CURRENT STATE AT END OF TB00110
+============================================================
+
+------------------------------------------------------------
+4.1 Deploy progress snapshot
+------------------------------------------------------------
+
+  TB00107 NSI pre-flight:                       COMPLETE
+  TB00107 NSI launch Claude Code:               COMPLETE
+  TB00108 Claude Code file production (8 files):COMPLETE
+  TB00108 Bill Actions STEP A:                  COMPLETE
+  TB00108 Bill Actions STEP B:                  COMPLETE
+  TB00108 Bill Actions STEP C-1 through C-7:    COMPLETE
+  TB00108 Bill Actions STEP D-1 through D-8:    COMPLETE
+  TB00108 Bill Actions STEP E-1 through E-9:    COMPLETE
+  TB00108 Bill Actions STEP F-1, F-2:           COMPLETE
+  TB00108 Bill Actions STEP F-3, F-4, F-5:      DEFERRED
+                                                to observation
+                                                close (TB00111)
+  TB00108 Bill Actions STEP G-1 through G-5:    COMPLETE
+  TB00108 Bill Actions STEP H-1 through H-4:    COMPLETE
+                                                (window opened)
+
+------------------------------------------------------------
+4.2 Repo state at end of TB00110
+------------------------------------------------------------
+
+Docs repo   (TothBot_V2-Docs):  master @ 802f920
+                                Clean, synced with origin
+Code repo   (TothBot_V2-Code):  master @ 7e744a3
+                                Clean, synced with origin
+VPS         (87.99.141.44):     RUNNING dv1_22
+                                PID 223133
+                                Since 2026-04-22 02:15:21 UTC
+
+------------------------------------------------------------
+4.3 Observation window
+------------------------------------------------------------
+
+OPEN as of 2026-04-22 02:15:21 UTC. Earliest close
+permitted 2026-04-24 02:15:21 UTC. Close criteria:
+no tripwire fires AND at least 48 hours elapsed AND
+(preferably) at least one TRADE_CLOSE event to
+operationally verify OI-022 and OI-023 payloads.
+
+============================================================
+5. OPEN ITEMS — UPDATED THIS SESSION
+============================================================
+
+  OI-014  CLOSED (TB00108)         — stale xrefs
+  OI-017  OPEN                     — liquidity refresh
+                                     (deferred)
+  OI-018  PENDING CLOSE            — WM reconnect
+                                     (observation-pending)
+  OI-019  PENDING CLOSE            — alert routing
+                                     (observation-pending)
+  OI-020  PENDING CLOSE            — Kraken retry window
+                                     (observation-pending)
+  OI-021  OPEN                     — 8 bounces per fatal
+                                     (re-evaluate TB00111)
+  OI-022  CLOSED (TB00108)         — ALERT_SENT event
+                                     (operational
+                                     verification pending
+                                     TB00111 on first
+                                     alert firing)
+  OI-023  CLOSED (TB00108)         — trades_<YYYY>.jsonl
+                                     (operational
+                                     verification pending
+                                     TB00111 on first
+                                     TRADE_CLOSE)
+  OI-024  OPEN                     — CIATS corpus migration
+  OI-025  OPEN                     — logrotate path mismatch
+  OI-026  OPEN (NEW this session)  — UNKNOWN_MESSAGE_TYPE
+                                     heartbeat spam
+                                     (log noise, LOW
+                                     severity)
+  OI-027  OPEN (NEW this session)  — service runs as root
+                                     instead of dedicated
+                                     tothbot user
+                                     (least-privilege
+                                     concern, LOW severity)
+
+NEW OIs opened this session: OI-026, OI-027.
+Both noted to Parking Lot per NSI §8 Scope Guard
+(observation in progress — no change session).
+
+============================================================
+6. STANDING RULES — ALL ACTIVE
+============================================================
+
+  RULE 6  — git add . is PROHIBITED. Explicit per file.
+  RULE 13 — .bat files go to Desktop only. Never in repo.
+  RULE 14 — git push origin master. NEVER origin main.
+  RULE 15 — ONE COMMAND PER COPY BOX. ALWAYS.
+            (Concatenation risk observed this session —
+             §3.2 lesson.)
+  RULE 16 — .bat files run from cmd.exe only. Never PS.
+  RULE 17 — Complete and correct instructions.
+
+  CODING RULES:
+  NO PATCHES EVER. Full file delivery only. Full DC.
+
+  DELIVERY RULES:
+  DR-001 — All documents as .txt files.
+  DR-002 — 0500000 additionally as .docx and .pdf.
+  DR-003 — ALL documents in ONE BATCH.
+
+  FRESH-DATA RULE:
+  Every authoritative question is preceded by
+  project_knowledge_search. No exceptions.
+
+============================================================
+7. DELIVERABLES PRODUCED THIS SESSION
+============================================================
+
+Two files, delivered in one batch per DR-003:
+
+  TB00110_TothBot_V2_Session_Log_2026-04-22_v1_0.txt
+    (this file)
+
+  TB00110_Next_Session_Instructions_v1_0.txt
+    (detailed instructions for TB00111 — observation
+    window close, OI-022/023 payload verification,
+    OI-018/019/020 close decisions)
+
+Both files land locally in:
+  C:\Users\wstot\GitHub\TothBot\TBXXXXX_Session_Logs\
+
+============================================================
+REVISION HISTORY
+============================================================
+
+  v1_0  04-22-2026  Initial. Claude Chat deploy-walkthrough
+                    resumption session. Resumed TB00108
+                    Bill Actions at STEP C-4 after TB00109
+                    stopped at C-3. Walked Bill through
+                    STEP C (Docs commit 802f920 + push),
+                    STEP D (Code commit 7e744a3 + push),
+                    STEP E (VPS pull, header verify,
+                    TRADES_RECORD_DIR verify, restart to
+                    PID 223133 / 2026-04-22 02:15:21 UTC),
+                    STEP F-1/F-2 (records dir exists,
+                    755 root:root — service runs as root,
+                    not tothbot user; F-3/F-4/F-5 deferred
+                    pending first TRADE_CLOSE),
+                    STEP G (baseline all zeros + Proton
+                    inbox 0), STEP H (dv1_22 observation
+                    window opened). Two new OIs captured
+                    to Parking Lot: OI-026
+                    (UNKNOWN_MESSAGE_TYPE heartbeat spam)
+                    and OI-027 (service-runs-as-root).
+                    One mid-session PowerShell
+                    concatenation slip on C-4.12/C-4.13
+                    caught by diagnostic git status, no
+                    corruption. Fresh-data discipline
+                    upheld at session start via
+                    project_knowledge_search re-query of
+                    VP-010. Session artifacts: this log
+                    plus TB00110 NSI v1_0 for TB00111 to
+                    close the observation window.
+
+============================================================
+END OF SESSION LOG TB00110 v1_0
+============================================================

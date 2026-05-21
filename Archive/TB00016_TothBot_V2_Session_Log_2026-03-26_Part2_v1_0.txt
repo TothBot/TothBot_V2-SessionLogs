@@ -1,0 +1,639 @@
+DocDCN:     TB00016
+DocTitle:   TothBot_V2_Session_Log_2026-03-26_Part2
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\OneDrive\TothBot\TB00016_TothBot_V2_Session_Log_2026-03-26_Part2_v1_0.txt
+DocDate:    03-26-2026
+DocTime:    23:59:59 UTC
+
+============================================================
+TOTHBOT V2 — SESSION LOG 2026-03-26 PART 2
+============================================================
+
+Read TB00001 through TB00015 first.
+
+This session is the eighth 10-search FP/DP organism
+validation. Focus: 0500000 connections and communication
+channels. Six new findings. All resolved immediately.
+Zero items placed in parking lot.
+
+Finding rate: 8 (TB00015) → 6 (this session).
+The architecture is converging. 1-2 more validation
+passes anticipated before zero-finding state is achieved.
+
+============================================================
+1. SESSION IDENTITY
+============================================================
+
+Session date:     March 26, 2026 (Part 2)
+Session type:     8th 10-Search FP/DP Organism Validation
+                  All findings resolved — zero parking lot
+Prior session:    TB00015 (2026-03-26 Part 1)
+
+Documents read:   TB00000 v2_5, TB00015 v1_0
+                  0311001 dv1_2, 0311002 dv1_7
+                  0500000 dv1_12 (Claude Source)
+                  1011002 dv1_6 (WS Manager — current)
+                  1011014 dv1_0 (Startup Sequence — new)
+
+============================================================
+2. TEN SEARCHES — COMPLETE RECORD
+============================================================
+
+275+ unique references total across all 8 sessions.
+~150 new unique references this session.
+
+------------------------------------------------------------
+SEARCH 1 — Balances channel structure, wallet types
+------------------------------------------------------------
+
+Sources: Kraken WS v2 Balances docs (full), changelog
+(balance updates), Kraken WS intro, instrument channel
+(asset status fields), Kraken support ledger interpretation,
+python-kraken-sdk REST docs (GetAccountBalance), rate limit
+guide, status channel, executions channel, GetExtendedBalance.
+Unique references: ~15 new
+
+FINDINGS:
+S1-F1: ★ NEW-09 CRITICAL — Balances snapshot has BOTH:
+       (1) top-level `balance` = total across ALL wallet types
+       (2) `wallets` array with per-wallet balances
+       Example: MATIC has 300 in "spot/main" + 200 in
+       "earn/flex". Top-level balance = 500. Spot only = 300.
+       TothBot must use `wallets[type="spot"][id="main"]`
+       balance only. Top-level includes Earn wallet funds
+       which are NOT available for trading.
+
+S1-F2: ★ NEW-09 — Balance update events carry `wallet_type`
+       and `wallet_id` fields. Each trade generates TWO
+       update events: one for base currency (e.g. BTC debit),
+       one for quote currency (e.g. USD credit). Both have
+       same `ref_id`. TothBot must process the USD event
+       (`asset==USD, wallet_type==spot`) for portfolio tracking.
+
+S1-F3: CONFIRMED — Balances channel sequence numbers
+       confirmed for gap detection (A-9). Correct.
+
+S1-F4: CONFIRMED — `balance` in update event = balance
+       AFTER the transaction in that specific wallet.
+
+S1-F5: CONFIRMED — No breaking changes to balances channel.
+
+SEARCH 1 CONCLUSION: NEW-09 confirmed. Spot wallet
+filtering is a missing specification.
+
+------------------------------------------------------------
+SEARCH 2-3 — Portfolio value, drawdown calculation
+------------------------------------------------------------
+
+Sources: Kraken GetAccountBalance REST, GetExtendedBalance,
+balance formula (available = balance + credit - credit_used
+- hold_trade), Kraken portfolio management (spot), Kraken Pro
+portfolio tracking, kraken-api Go client (TradeBalance),
+prop trader OANDA drawdown calculation, max drawdown
+definitions, drawdown Python implementations, multiple
+portfolio tracking articles.
+Unique references: ~20 new
+
+FINDINGS:
+S2-F1: ★ NEW-10 CRITICAL — "portfolio" for position sizing
+       is never defined in spec. It must be explicitly:
+       portfolio_USD = spot_usd_balance (cash in hand).
+       Does NOT include mark-to-market of open positions.
+       This is REALIZED capital only for sizing.
+
+S2-F2: ★ NEW-11 CRITICAL — Drawdown formula never defined:
+       (1) What is the baseline?
+       (2) Session vs. lifetime?
+       (3) Cash only or include open position values?
+       FP/DP: baseline = spot_usd_balance at startup.
+       Current portfolio for drawdown = cash + open pos value.
+
+S2-F3: CONFIRMED — REST BalanceEx has `hold_trade` field
+       (USD locked in open orders). WS balances channel
+       does NOT show hold_trade. This means TothBot must
+       self-track pending order commitments.
+
+S2-F4: ★ NEW-13 CRITICAL — If multiple pairs fire pipeline
+       simultaneously, each passes Gate 7 independently.
+       Each places an entry order. Without tracking pending
+       order USD commitments, TothBot could try to buy more
+       than available USD. Kraken rejects on insufficient
+       funds, but TothBot would see unexpected rejection.
+       Need Pending Order Registry.
+
+S2-F5: CONFIRMED — Session drawdown 5%/full halt 10% are
+       appropriate thresholds (multiple industry sources
+       confirm). Correct starting values.
+
+SEARCH 2-3 CONCLUSION: Three critical new findings
+(NEW-10, NEW-11, NEW-13).
+
+------------------------------------------------------------
+SEARCH 4 — Python Decimal vs float for price rounding
+------------------------------------------------------------
+
+Sources: Python decimal docs (official), Python rounding
+tutorial (Real Python), GeeksforGeeks quantize(), Decimal
+finance guide (LabEx), Decimal finance 2026 best practices,
+Decimal quantize bomberbot, coderivers, Python precision
+finance, mojoauth Decimal guide, purpletutor Python decimal,
+note.nkmk.me floor/ceil, TechAlmirah floor/ceil, Python
+Engineer precision, upGrad floor functions.
+Unique references: ~15 new
+
+FINDINGS:
+S4-F1: ★ NEW-12 CRITICAL — AR-047 (prior session) specifies
+       `math.floor(raw_qty / qty_increment) × qty_increment`
+       for rounding. math.floor() operates on Python floats.
+       Float binary representation causes errors:
+       `math.floor(42350.15 / 0.1) * 0.1 = 42350.1000...0` 
+       appears correct but `math.floor(0.3 / 0.1) * 0.1`
+       may give 0.2 instead of 0.3 due to float imprecision.
+       For exchange order validation, wrong rounding = 
+       rejected order = failed trade.
+
+S4-F2: ★ NEW-12 — Correct pattern:
+       `Decimal(str(raw_price)).quantize(
+           Decimal(str(price_increment)),
+           rounding=ROUND_FLOOR
+       )`
+       `str(value)` conversion preserves exact decimal
+       representation. NEVER `Decimal(float_value)`.
+
+S4-F3: CONFIRMED — ROUND_FLOOR = always toward negative
+       infinity. For positive prices: same as truncation.
+       ROUND_CEILING = always toward positive infinity.
+       Correct for our use case.
+       
+S4-F4: CONFIRMED — All Kraken API values (prices/qtys) come
+       as Python number (float) from JSON. Must convert to
+       `Decimal(str(value))` immediately on WS/REST receipt.
+       BP-JSON-005 handles Decimal serialization. Needs
+       complementary BP-DEC-001 for deserialization/conversion.
+
+SEARCH 4 CONCLUSION: NEW-12 confirmed. AR-047 correction
+needed. All price/qty rounding must use Decimal.quantize().
+
+------------------------------------------------------------
+SEARCHES 5-7 — Fee schedule confirmation, asyncio safety
+------------------------------------------------------------
+
+Sources: Kraken fee schedule (full fetch), stablecoin FX
+fees article, fee structures comparison, how fees work,
+asyncio Python docs, asyncio concurrency guide, DEV 2026
+asyncio patterns, ProxiesAPI asyncio thread safety, Python
+3.14 asyncio scaling, concurrent futures, asyncio dev guide,
+trading bot fee references.
+Unique references: ~30 new
+
+FINDINGS:
+S5-F1: ★ CONFIRMED — BTC/USDT, ETH/USDT (USDT as QUOTE)
+       use SPOT CRYPTO fee schedule: maker 0.16%, taker
+       0.26%. R:R formula in 0500000 Section 4.2 is CORRECT
+       for both USD and USDT/USDC quote pairs.
+       Only when stablecoin is BASE (USDT/USD) does the
+       stablecoin fee schedule (0.2% flat) apply.
+
+S5-F2: CONFIRMED — asyncio single-threaded event loop means
+       all TothBot state (Position Mirror, balance cache,
+       pending orders, ATR cache, etc.) is accessed from
+       ONE thread. No locking needed for coroutine-to-
+       coroutine access within the event loop.
+       Exception: if using run_in_executor for CPU work,
+       shared state access from executor threads requires
+       loop.call_soon_threadsafe(). TothBot has no CPU-bound
+       operations — all async. No threading concerns.
+
+S5-F3: CONFIRMED — asyncio BoundedSemaphore for max_concurrent
+       is appropriate (AR-043). Confirms pattern.
+
+S5-F4: CONFIRMED — Decimal module is Python 3.12 compatible.
+       BP-JSON-005 orjson Decimal callback already in spec.
+       Needs complementary ingestion-side BP-DEC-001.
+
+SEARCHES 5-7 CONCLUSION: Fee formula confirmed. asyncio
+patterns confirmed. One correction to AR-047.
+
+------------------------------------------------------------
+SEARCHES 8-10 — Drawdown tracking, portfolio analysis
+------------------------------------------------------------
+
+Sources: Multiple portfolio drawdown Python implementations,
+maximum drawdown definitions, prop trader drawdown examples,
+crypto.com P/L calculation, Crypto drawdown strategy, Python
+asyncio state management, multiple trading bot architecture
+reviews, asyncio synchronization primitives guide.
+Unique references: ~20 new
+
+FINDINGS:
+S8-F1: CONFIRMED — Two distinct drawdown concepts are needed:
+       (1) SESSION drawdown — from startup baseline
+       (2) CONTINUOUS drawdown monitor — ticker-driven
+       These are already in spec (Gate 7, AR-052). Only the
+       formula was missing.
+
+S8-F2: CONFIRMED — High water mark (HWM) approaches are
+       used by prop firms but add complexity. For TothBot
+       V1 paper trading, session-based drawdown (from startup
+       baseline) is sufficient and simpler. CIATS can add
+       HWM tracking once 200 trades data is available.
+
+S8-F3: CONFIRMED — For loss prevention emphasis: session
+       pause (5%) does NOT auto-close positions. Full halt
+       (10%) does NOT auto-close positions. Both have resting
+       emergSL as crash protection. This is correct. Forced
+       market sells at halt time could violate R:R.
+
+SEARCHES 8-10 CONCLUSION: Drawdown formula design confirmed.
+No additional new gaps beyond what was already found.
+
+============================================================
+3. COMPLETE FINDINGS SUMMARY
+============================================================
+
+------------------------------------------------------------
+NEW FINDINGS (6 — all resolved this session):
+------------------------------------------------------------
+
+NEW-09: Balances channel spot wallet filtering.
+        Must use wallets[spot/main].balance, not top-level.
+        Top-level includes "earn" wallet (not tradeable).
+        → New AR-050. Assign: 1011002 WM-BAL-001 through -006.
+
+NEW-10: Portfolio value definition missing.
+        "portfolio" for sizing = spot_usd_balance (cash only).
+        Does NOT include open position mark-to-market.
+        → New AR-051. Assign: 1011002, 1011011.
+
+NEW-11: Drawdown formula never defined.
+        Baseline = spot_usd_balance at startup.
+        Current portfolio = cash + open pos bid values.
+        Session pause: 5% drawdown → block entries.
+        Full halt: 10% drawdown → halt all + alert.
+        → New AR-052. Assign: 1011002, 1011011.
+
+NEW-12: AR-047 correction — use Decimal.quantize() not
+        math.floor/ceil for all price/qty rounding.
+        math operations on floats have binary precision errors.
+        Pattern: Decimal(str(value)).quantize(
+            Decimal(str(increment)), rounding=ROUND_FLOOR)
+        Convert ALL API prices/qtys to Decimal(str()) on receipt.
+        → Amendment to AR-047. New BP-DEC-001 through -005.
+        Assign: 1011001, 1011002, 0411001.
+
+NEW-13: Pending Order Registry missing.
+        Without tracking pending entries, simultaneous
+        pipeline fires for multiple pairs could overcommit USD.
+        Gate 7 adds: available_USD = spot_usd_balance
+        minus sum of pending order USD commitments.
+        → New AR-053. Assign: 1011002 WM-POR-001 through -007.
+
+NEW-14: CONFIRMED — Fee schedule for USDT/USDC quote pairs.
+        BTC/USDT = spot crypto fees: 0.16% maker / 0.26% taker.
+        R:R formula Section 4.2 CONFIRMED CORRECT.
+        No action required.
+
+------------------------------------------------------------
+CONFIRMED (14 items — no action required):
+------------------------------------------------------------
+
+  C-01  All 53 ARs (AR-001 through AR-053) confirmed
+  C-02  Balance gap detection (A-9) confirmed
+  C-03  Two events per trade behavior understood
+  C-04  Fee formula 0.16%/0.26% confirmed for USD+USDT pairs
+  C-05  asyncio single-thread — no locking for coroutines
+  C-06  BoundedSemaphore max_concurrent (AR-043) confirmed
+  C-07  Decimal module Python 3.12 compatible
+  C-08  BP-JSON-005 orjson Decimal callback correct
+  C-09  Session pause does NOT auto-close positions
+  C-10  Full halt does NOT auto-close positions
+  C-11  5%/10% drawdown thresholds appropriate
+  C-12  Session-based drawdown baseline appropriate for V1
+  C-13  Startup sequence (1011014) design confirmed
+  C-14  No new Kraken API changes since dv1_12
+
+============================================================
+4. NEW ARCHITECTURAL DECISIONS
+============================================================
+
+AR-050 — BALANCES CHANNEL: USE SPOT WALLET ONLY:
+  TothBot maintains `spot_asset_balances: dict[str, Decimal]`
+  Updated from balances channel events:
+  SNAPSHOT: for each item in data, find wallet where
+    type=="spot" AND id=="main". Extract balance.
+    spot_asset_balances[asset] = Decimal(str(wallet.balance))
+  UPDATE: if wallet_type=="spot" AND wallet_id=="main":
+    spot_asset_balances[asset] = Decimal(str(event.balance))
+    # event.balance = balance AFTER this transaction
+  NEVER use top-level `balance` field in snapshot.
+  The top-level balance includes "earn" and other wallets
+  which are NOT available for trading.
+  spot_usd_balance = spot_asset_balances.get("USD", Decimal("0"))
+  Assign: 1011002 WM-BAL-001 through -006.
+
+AR-051 — PORTFOLIO VALUE AND POSITION SIZING DEFINITION:
+  For spot long-only trading with USD/USDT/USDC quote pairs:
+  portfolio_USD = spot_usd_balance (AR-050, cash in hand)
+  tradeable_USD = portfolio_USD × tradeable_pct (CIATS-owned)
+  per_trade_USD = tradeable_USD × per_trade_pct (CIATS-owned)
+  Position size: raw_qty = per_trade_USD / entry_limit_price
+  Apply AR-047 Decimal rounding to raw_qty before dispatch.
+  Half-Kelly at 200+ trades (from CIATS):
+    kelly_pct = W - (1-W)/R, apply 50%
+    per_trade_USD = min(kelly_pct × tradeable_USD,
+                       tradeable_USD / max_concurrent)
+  Portfolio value (for CIATS trade outcome bus):
+    realized_portfolio = spot_usd_balance
+  Portfolio value (for drawdown monitoring, AR-052):
+    includes open position mark-to-market.
+  Assign: 1011002 WM-PS-005 through -009,
+          1011011 RE-SZ-001 through -005.
+
+AR-052 — PORTFOLIO DRAWDOWN FORMULA:
+  portfolio_baseline_USD: set in Startup Step 6 (after
+  snap_orders reconciliation), equal to spot_usd_balance
+  at that moment. Never updated during operation.
+  Resets only on TothBot restart.
+
+  current_portfolio_USD = spot_usd_balance
+    + sum(bid[symbol] × qty for all open longs in Position Mirror)
+  Uses bid price from ticker (per AR-048).
+
+  drawdown_pct = max(0,
+    (portfolio_baseline_USD - current_portfolio_USD)
+    / portfolio_baseline_USD)
+
+  SESSION PAUSE (Gate 7, ticker-driven continuous check):
+    If drawdown_pct >= session_pause_drawdown:
+      gate_state = SESSION_PAUSED
+      Block all new ENTRY orders.
+      Do NOT close existing open positions.
+      Log SESSION_PAUSE_DRAWDOWN.
+      Alert operator.
+      Resume when drawdown_pct < session_pause_drawdown
+      AND operator has been alerted.
+
+  FULL HALT (Gate 7):
+    If drawdown_pct >= full_halt_drawdown:
+      gate_state = FULL_HALT
+      Block all new ENTRY orders.
+      Do NOT close existing positions.
+      Log FULL_HALT_DRAWDOWN.
+      Alert operator.
+      DOES NOT auto-resume. Requires operator restart.
+
+  Rationale: Forced sells at halt time would violate R:R
+  and potentially worsen the drawdown. Resting emergSL
+  provides crash protection for existing positions.
+  CIATS will study halt patterns and add PDCA improvements.
+  Assign: 1011002 WM-DD-001 through -008,
+          1011011 RE-DD-001 through -006.
+
+AR-053 — PENDING ORDER REGISTRY:
+  WS Manager maintains:
+    pending_orders: dict[str, Decimal]  # cl_ord_id → USD cost
+  Populated: when entry add_order is DISPATCHED:
+    estimated_cost = order_qty × entry_limit_price
+                   + order_qty × entry_limit_price × 0.0016
+                   # qty × price × (1 + maker_fee)
+    pending_orders[cl_ord_id] = estimated_cost
+  Cleared: when executions channel receives event for
+    that cl_ord_id with exec_type in:
+    {filled, expired, canceled, rejected}
+
+  Gate 7 check addition:
+    available_USD = spot_usd_balance - sum(pending_orders.values())
+    if available_USD < per_trade_USD:
+      SKIP → INSUFFICIENT_USD
+      Log with reason code.
+
+  This prevents overcommitment of USD when multiple pairs
+  fire pipeline simultaneously.
+  Note: On restart, pending orders from pre-restart session
+  are reconciled via snap_orders. Any cl_ord_ids found
+  in snap_orders with pending status are added to registry.
+  Assign: 1011002 WM-POR-001 through -007.
+
+AMENDMENT TO AR-047 — Decimal.quantize() for all rounding:
+  Replaces math.floor()/math.ceil() with Decimal.quantize().
+
+  CONVERSION RULE (new BP-DEC-001):
+    All numeric values received from Kraken (WS or REST):
+    price: Decimal(str(msg["price"])) — NOT Decimal(float)
+    qty:   Decimal(str(msg["qty"]))
+    Apply to: ticker bid/ask, executions avg_price, order_qty,
+    instrument price_increment/qty_increment/qty_min/cost_min.
+
+  ROUNDING OPERATIONS (amendments to AR-047):
+    order_qty:
+      D_incr = Decimal(str(qty_increment))
+      order_qty = raw_qty.quantize(D_incr, rounding=ROUND_DOWN)
+    entry limit_price:
+      D_incr = Decimal(str(price_increment))
+      limit_price = raw_price.quantize(D_incr, rounding=ROUND_DOWN)
+    TP limit_price:
+      tp_price = raw_tp.quantize(D_incr, rounding=ROUND_UP)
+    emergSL trigger price:
+      sl_price = raw_sl.quantize(D_incr, rounding=ROUND_DOWN)
+
+  Note: ROUND_DOWN/ROUND_UP are toward/away from zero.
+  For positive prices: ROUND_DOWN = floor, ROUND_UP = ceiling.
+  Use ROUND_DOWN and ROUND_UP (not ROUND_FLOOR/ROUND_CEILING)
+  to avoid negative-price behavior (positive prices only).
+
+  Add BP-DEC-001 through BP-DEC-005 to 1011001.
+  Assign: 1011001 BP-DEC-001 through -005,
+          1011002 WM-ROUND-007 through -012,
+          0411001 amendment.
+
+============================================================
+5. DOCUMENTS PRODUCED THIS SESSION
+============================================================
+
+  0500000  System_Architecture_Overview    dv1_13  ★
+           (text-only: AR-050 through AR-053 + AR-047 amend)
+           Combined with TB00015 pending changes.
+           Total new ARs from TB00015+TB00016: AR-044 to AR-053
+           + 1 amendment. Text-only, no diagram changes.
+  1011001  Engineering_Best_Practices      dv1_4   ★
+           (BP-DEC-001 through -005)
+  1011002  WS_Manager_Coding_Spec          dv1_8   ★
+           (WM-BAL-001 through -006, WM-DD-001 through -008,
+            WM-POR-001 through -007, WM-ROUND-007 through -012)
+  1011011  Risk_Engine_Coding_Spec         dv1_1   ★
+           (RE-SZ-001 through -005, RE-DD-001 through -006)
+  TB00016  This session log                v1_0    ★
+
+★ = Produced this session
+
+0500000 dv1_13 now includes BOTH TB00015 changes (AR-044
+through AR-049) AND TB00016 changes (AR-050 through AR-053
++ AR-047 amendment). Total 11 changes from text-only sessions.
+
+============================================================
+6. DOCUMENT INVENTORY — CURRENT STATE
+============================================================
+
+SESSION LOGS:
+  TB00001 through TB00016 (all v1_0)
+
+PHASE 1 DOCUMENTS: [unchanged]
+
+WORKING DRAFT CODING SPECS:
+  0411001  Kraken_WS_v2_Specification      dv1_7
+  1011001  Engineering_Best_Practices      dv1_4  ★ NEW
+  1011002  WS_Manager_Coding_Spec          dv1_8  ★ NEW
+  1011010  CIATS_Coding_Spec               dv1_2
+  1011011  Risk_Engine_Coding_Spec         dv1_1  ★ NEW
+  1011012  Regime_Engine_Coding_Spec       dv1_3
+  1011013  VPS_Deployment_Coding_Spec      dv1_2
+  1011014  Startup_Sequence_Coding_Spec    dv1_0
+
+SYSTEM ARCHITECTURE:
+  0500000  dv1_12 → dv1_13 (text-only, 11 changes)
+
+============================================================
+7. PARKING LOT — CURRENT STATE
+============================================================
+
+  PL-003  TRACKING: Pathway 1 GitHub automation.
+  ALL OTHER ITEMS: Resolved. Zero new additions.
+
+============================================================
+8. OPEN ITEMS — CURRENT STATE
+============================================================
+
+  OI-001  SSS signal generation — Phase 5-6 work
+  OI-002  Asset selection universe — Phase 5-6 work
+  OI-003  Exit Controller full spec — Phase 5-6 work
+  OI-004  Entry limit placement — Phase 5-6 work
+  OI-005  Selection Controller — Phase 5-6 work
+  Nothing in Phase 1-4 blocked.
+
+============================================================
+9. BILL ACTIONS REQUIRED
+============================================================
+
+  (jj) Download 5 documents:
+       1011001 dv1_4, 1011002 dv1_8, 1011011 dv1_1,
+       TB00016, and the 0500000 dv1_13 when produced.
+  (kk) Approve all documents.
+  (ll) At next 0500000 session: apply ALL pending changes
+       (AR-044 through AR-053 + AR-047 amendment).
+       All text-only. No diagram changes. Single session.
+  (mm) Upload all to Claude project for next session.
+
+============================================================
+10. NEXT SESSION — WHERE WE PICK UP
+============================================================
+
+Validation continues until zero findings.
+Remaining likely gaps after analysis of what has been
+covered vs. not yet covered:
+  - Exit Controller Layer 1 trigger definitions (OI-003)
+  - Entry limit placement detail (OI-004)
+  - Signal Pipeline / Gate 4 / Gate 5 internals
+  - CIATS Trade Outcome Bus complete field specification
+  - Logger async queue complete field specification
+  - Reconnect and recovery sequence details
+
+If Bill approves GATE 1 for Phase 2, next work step is:
+  Phase 2, Step 2.1 → 0400000_Exchange_Interface
+
+MANDATORY UPLOAD FOR NEXT SESSION:
+  TB00001 through TB00016 (all session logs)
+  All Phase 1 documents (0000000 through 0311005)
+  0411001 dv1_7
+  1011001 dv1_4 (this session)
+  1011002 dv1_8 (this session)
+  1011010 dv1_2
+  1011011 dv1_1 (this session)
+  1011012 dv1_3
+  1011013 dv1_2
+  1011014 dv1_0
+  0500000_System_Architecture_Overview_dv1_12_Claude_Source.txt
+  (0500000 dv1_13 to be applied at dedicated session)
+
+============================================================
+11. 0500000 dv1_13 CHANGE SPECIFICATION
+============================================================
+
+ALL TB00015 changes carry forward (AR-044 through AR-049).
+New additions from TB00016:
+
+CHANGE 7 — New AR-050:
+  Balances channel: use spot wallet balance only.
+  `wallets[type="spot"][id="main"].balance` only.
+  Never top-level balance (includes earn wallet).
+
+CHANGE 8 — New AR-051:
+  Portfolio value definition.
+  portfolio_USD = spot_usd_balance (cash only, no MTM).
+  Sizing formula explicit.
+
+CHANGE 9 — New AR-052:
+  Drawdown formula.
+  Baseline = startup spot_usd_balance.
+  Current = cash + bid×qty of open positions.
+  Session pause 5%, full halt 10%. No auto-close.
+
+CHANGE 10 — New AR-053:
+  Pending Order Registry.
+  Gate 7 checks available_USD vs pending commitments.
+
+CHANGE 11 — Amendment to AR-047:
+  Replace math.floor/ceil with Decimal.quantize().
+  All API prices/qtys: Decimal(str(value)) immediately.
+
+0500000 becomes dv1_13 with all 11 changes applied.
+
+============================================================
+12. VALIDATION STATUS AND TREND
+============================================================
+
+  Session 1 (TB00001):  Architecture built from scratch
+  Sessions 2-3:         6-domain → 11-domain change
+  Sessions 4-7:         Continuous validation, avg 6 gaps/session
+  TB00014 (Session 7):  5 findings
+  TB00015 (Session 8):  8 findings (startup sequence gap large)
+  TB00016 (Session 9):  6 findings (converging)
+
+ASSESSMENT:
+  The architecture is mature. Kraken API connections are
+  solid (verified 8 times, 275+ sources). The remaining
+  gaps are in the internal mechanics of TothBot modules,
+  not in the external interface.
+
+  Anticipated gap areas for next validation:
+  - Exit Controller Layer 1 (signal-based exits) — OI-003
+  - Entry limit price placement — OI-004
+  - CIATS/Logger field specifications
+  - Reconnect recovery edge cases
+
+  Estimate: 1 more targeted validation pass needed before
+  zero-finding state is achievable on the architecture layer.
+  The OI items (SSS, Selection Controller, etc.) are
+  explicitly deferred to Phase 5-6 and are expected gaps,
+  not validation failures.
+
+============================================================
+13. REVISION HISTORY
+============================================================
+
+  v1_0  03-26-2026  Initial session log. Eighth 10-search
+                    FP/DP validation. 14 confirmations.
+                    6 new findings all immediately resolved.
+                    0 parking lot additions. Finding rate
+                    declining: 8 (TB00015) → 6 (this session).
+                    New ARs: 050-053 + AR-047 amendment.
+                    Documents produced: 1011001 dv1_4,
+                    1011002 dv1_8, 1011011 dv1_1, TB00016.
+                    Critical findings: spot wallet filtering
+                    (NEW-09), portfolio definition (NEW-10),
+                    drawdown formula (NEW-11), Decimal rounding
+                    (NEW-12), pending order registry (NEW-13).
+
+============================================================
+END OF SESSION LOG
+============================================================

@@ -1,0 +1,774 @@
+DocDCN:     TB00149
+DocTitle:   TothBot_V2_Session_Log_2026-05-04
+DocVersion: v1_1
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TBXXXXX_Session_Logs\TB00149_TothBot_V2_Session_Log_2026-05-04_v1_1.txt
+DocDate:    05-04-2026
+DocTime:    18:30:00 UTC
+
+============================================================
+TB00149 SESSION LOG
+============================================================
+
+============================================================
+1. SESSION IDENTITY AND SCOPE
+============================================================
+
+Session:   TB00149
+Span:      2026-05-04 17:00 UTC -> 2026-05-04 17:35 UTC
+Type:      Spec authoring (Phase 1 Session 1 of OPTION B
+           Clean-Slate Rebuild)
+
+PAPER TRADING ONLY. NO REAL MONEY. NO PATCHES.
+PAPER IS MASTER per TB00000 v2_18 section 4.4 PA-001.
+LIVE MIMICS PAPER except at PA-004 four divergence points.
+UNIVERSE = TOKEN/USD + TOKEN/USDC + TOKEN/USDT (D-03 LOCKED).
+NET 1:1.5 R:R is the only hardcoded constraint.
+
+PRIMARY DELIVERABLE EXECUTED:
+  0500000 dv1_21 -> dv1_22  System Architecture Overview
+  NEW SECTION 12 codifying paper-mode dispatch boundary
+  architecture as a first-class architectural element.
+  Three-format triplet (.txt + .docx + .pdf) generated and
+  validated.
+
+OUT OF SCOPE FOR TB00149 (deferred to TB00150+):
+  - 1011004 NEW spec authoring (TB00150 Phase 1 Session 2)
+  - All other Phase 1 spec amendments (TB00151-TB00156)
+  - Phase 2 code rebuild
+  - Phase 3 testing
+  - Phase 4 paper-mode deploy + observation
+
+============================================================
+2. STEP A PRE-FLIGHT (per 0311002 v1_8 §8.2.5)
+============================================================
+
+  DC-PREFLIGHT-001  KEPT-LIST                       PASS
+    All TB00148 NSI v1_0 §7.1 KEPT entries present at
+    expected versions in /mnt/project/. TB00148 SL v1_0 +
+    NSI v1_0 confirmed present. 0500000 dv1_21 triplet
+    confirmed present. DC-CLEANUP-002 MUST-PRESERVE set
+    (TB00012, TB00013, TB00014, TB00020) confirmed
+    present. TB00001 absent (listed in MUST-PRESERVE per
+    NSI but not currently uploaded — non-blocking for
+    TB00149 work).
+
+  DC-PREFLIGHT-002  GIT-STATE                       N/A
+    No commits this session. TB00149 produces dv1_22
+    triplet for Bill local commit per NSI §6 cascade
+    plan. Expected GitHub state at TB00149 close:
+      TothBot_V2-Docs HEAD = (NEW)  -- 0500000 dv1_22
+                                       commit (Bill action).
+      TothBot_V2-Code HEAD = fb5de32 -- UNCHANGED
+                                       (paper-canonical).
+
+  DC-PREFLIGHT-003  NSI CODE-EDIT-LIST              N/A
+    TB00149 makes no code edits. Spec authoring only.
+
+  DC-PREFLIGHT-004  THREE-FORMAT TRIPLET            PASS
+    0500000 dv1_21 triplet present at session open.
+    DR-005.4 version-triplet consistency verified.
+    dv1_22 triplet generated this session passes DR-005.4
+    consistency at delivery.
+
+  DC-PREFLIGHT-005  ABSENT-LIST                     PARTIAL
+    Stale session-log files present in project folder
+    (TB00133-TB00142 SL+NSI files; TB00119 SL).
+    Non-blocking for TB00149 authoring. Bill cleanup at
+    session close per Section 8 instructions.
+
+  DC-PREFLIGHT-006  ORIGIN INVESTIGATION            N/A
+    TB00149 is constraint-additive only. No constraint
+    removal. New Section 12 explicitly preserves D-01..
+    D-08 LOCKED decisions per RR-SCOPE-007 in §12.9.
+
+============================================================
+3. PRIMARY WORK EXECUTED
+============================================================
+
+------------------------------------------------------------
+3.1 0500000 dv1_22 NEW SECTION 12 — AUTHORED
+------------------------------------------------------------
+
+NEW Section 12: Paper-Mode Dispatch Boundary Architecture.
+Authored as first-class architectural element of TothBot V2.
+Existing Section 12 (Open Items) renumbered to Section 13.
+Existing Section 13 (Revision History) renumbered to
+Section 14. Cross-references in renumbered sections were
+not present in the existing Sections 12 and 13 bodies, so
+no in-text reference updates required.
+
+Section 12 sub-organization:
+
+  12.0  Architectural Status — First-Class System Element
+        Establishes that paper IS the master, live mimics
+        paper. Cites empirical validation chain (TB00141 /
+        TB00142 / TB00143 / TB00144 STREAM 4) and audit
+        origin (TB00148 chat 1 cluster 1 defects).
+
+  12.1  PA-004 Permitted Divergence Points (Paper vs Live)
+        Restates the four divergence points from TB00000
+        v2_18 §4.4 PA-004 verbatim with "Why" clauses and
+        downstream binding citations:
+          (1) Private WS connection
+          (2) Order dispatch
+          (3) Capital ledger
+          (4) Position Mirror sourcing
+        Asserts byte-identical operation outside the four
+        points (PA-005). Restates PA-006 prohibition on
+        new divergence points without Bill written
+        authorization.
+
+  12.2  paper_trading_mode Flag — Definition and Lifecycle
+        Codifies the flag as start-time-immutable.
+        EnvironmentFile -> startup_sequence -> WSManager
+        __init__ injection -> self.paper_mode (HR-WM-021).
+        Read once. Never mutated. Never cached elsewhere.
+        Enumerates which modules read it (WSManager only)
+        and which do NOT (EE, LM, EC, all others — HR-EE-013
+        no-mode-conditional-branching).
+
+  12.3  The Dispatch Seam — WSManager as Sole Gatekeeper
+        Names the six gated methods. Specifies gate
+        behavior in paper vs live. Specifies caller
+        contract (callers are mode-opaque). Prohibits
+        direct private-WS access from any other module
+        and identifies that prohibition as the
+        architectural fix for cluster 1 defects (TB00148
+        findings 09, 29, 30).
+
+  12.4  Synthetic Capital Ledger — Single-Owner Architecture
+        WSManager is sole writer of spot_usd_balance.
+        Initialization, entry-fill debit, exit-fill credit
+        formulas specified. Fee parity with live asserted.
+        Single-writer-by-design eliminates the multi-writer
+        defect class identified TB00148 finding 15.
+
+  12.5  Paper Exit Routing Through Exit Controller
+        All paper exits route through Exit Controller's
+        _close_position() close sequence. 10-step flow
+        (paper) and corresponding live flow specified.
+        CIATS data-flow parity (PA-005) explicitly stated.
+        Bind chain to 0511001 dv1_5, 0511004 dv1_3,
+        1011002 dv1_26, 1011005 dv1_3, 0211005 dv1_3.
+
+  12.6  Paper Telemetry Event Taxonomy
+        12 paper-mode Logger events enumerated with
+        payload schema notes. PAPER_DISPATCH_BLOCKED
+        defensive event specified as the canary that
+        confirms boundary integrity. CIATS polling parity
+        with live BALANCE_UPDATE asserted. Bind to 1011007
+        dv1_5 paper event taxonomy extension (TB00154
+        Phase 1 Session 6 scope).
+
+  12.7  Architectural Diagram — Dispatch Boundary
+        (Text-Mode)
+        ASCII diagram showing config layer ->
+        startup_sequence -> WSManager seam -> paper/live
+        branch -> rejoin at Exit Controller -> CIATS Trade
+        Outcome Bus. Five key architectural observations
+        called out below the diagram.
+
+  12.8  Compliance Mapping to Downstream Specifications
+        Enumerates all downstream specs (AA=04 0411001;
+        AA=05 0511001 / 0511004; AA=08 0811001 / 0811003;
+        AA=10 1011002 / 1011004 / 1011005 / 1011007 /
+        1011008 / 1011014; AA=02 0211005) with the
+        specific HR-* / AR-* / PT-MODE-* rules each must
+        satisfy. Phase 1 close gate enumerated.
+
+  12.9  Architectural Reasons This Section Exists
+        Three architectural reasons stated (defect
+        prevention by construction; loss prevention
+        priority per TB00000 §3; CIATS data validity).
+        Explicit RR-SCOPE-007 NOTE preserving
+        D-01..D-08 LOCKED. Explicit RR-SCOPE-009 NOTE
+        confirming no constraint retirement.
+
+------------------------------------------------------------
+3.2 PRE-EMIT SCAN COMPLIANCE
+------------------------------------------------------------
+
+  PA-008 paper-as-master scan:    PASS
+    Section encodes paper as master and live as mimic at
+    every assertion. No wrong-direction language detected.
+    PA-001 invocation in §12.0 lead. PA-005 byte-identical
+    operation invoked in §12.1, §12.5, §12.6. No
+    PA-MASTER self-catch fires.
+
+  RR-SCOPE-007 no-silent-narrowing scan:   PASS
+    Section is constraint-additive only. D-03 universe,
+    D-08 Top-N retirement, D-05 paper starting balance,
+    D-06 paper-to-live parity all explicitly preserved
+    in §12.9. No RR-SCOPE-007 self-catch fires.
+
+  RR-SCOPE-009 Chesterton's Fence scan:    PASS
+    Section retires no constraints. Pure addition. No
+    four-question origin investigation required. No
+    RR-SCOPE-009 self-catch fires.
+
+  OP-003 ONEDRIVE scrub:   PASS
+    Initial author-pass emitted the prohibited string
+    once in the dv1_22 inner revision history entry
+    where Claude was describing OP-003 scan compliance.
+    OP-004 self-catch fired:
+      "OneDrive ban self-caught — redrafting."
+    Redrafted text uses §4.2 reference instead of literal
+    string. Final triplet count of the §4.2 prohibited string = 0 across all
+    three formats.
+
+  RR-RULE / RR-SHELL self-catches:  zero fires.
+
+  DR-006 self-containment:  COMPLIANT (delivery is
+    single-turn with present_files immediately following
+    announcement in this session response).
+
+------------------------------------------------------------
+3.3 ERROR-PRE-001 PERSISTENT RECURRENCE — ADDRESSED
+------------------------------------------------------------
+
+DR-004 binary integrity probes during dv1_22 authoring
+revealed that the dv1_21 .docx and .pdf in the project
+folder were both DEFECTIVE:
+
+  dv1_21 .docx:  `file` returns "Unicode text, UTF-8
+                 text". Plain text masquerading as binary
+                 Office container. FAILS DR-004.1
+                 file-type probe.
+
+  dv1_21 .pdf:   First five bytes are "PK\003\004\024"
+                 (ZIP archive signature) instead of
+                 "%PDF-". FAILS DR-004.2 magic-byte
+                 probe.
+
+This is ERROR-PRE-001 (TB00134 origin) recurring. Per
+DR-004.4, neither dv1_21 binary could be used as the
+base for dv1_22. Cleared dv1_22 fresh-generation path:
+
+  (1) dv1_22 .txt: surgical edits to dv1_21 .txt source.
+      Real text, real source-of-truth. Already valid.
+  (2) dv1_22 .docx: generated from .txt via docx-js.
+      Real binary Office Open XML. Validated via:
+        DR-004.1 PASS  ("Microsoft Word 2007+")
+        DR-004.2 PASS  ([Content_Types].xml,
+                       word/document.xml,
+                       word/settings.xml all present)
+        DR-004.3 PASS  (validate.py "All validations
+                       PASSED!"; 2405 paragraphs)
+  (3) dv1_22 .pdf: generated via LibreOffice export
+      of dv1_22.docx. Real PDF v1.7, 39 pages.
+      DR-004.1 PASS  ("PDF document, version 1.7,
+                     39 page(s)")
+      DR-004.2 PASS  ("%PDF-" magic bytes confirmed)
+
+The 6 embedded SVG diagrams remain in the .txt Claude
+Source as plain-text source-of-truth. They are referenced
+in the .docx via a stub note pointing to the canonical
+.txt location. The dv1_22 text-mode dispatch boundary
+diagram (§12.7) appears in all three formats.
+
+This matches the existing dv1_21 visual baseline which
+also lacked real embedded images (the prior .docx was
+plain text).
+
+------------------------------------------------------------
+3.4 OUTER + INNER REVISION HISTORY UPDATES
+------------------------------------------------------------
+
+Inner revision history (Section 14, was 13): dv1_22 entry
+authored covering all changes, FP/DP basis, scope guardrail
+compliance, and Bill override reference. Existing dv1_21
+entry preserved.
+
+Outer revision history (Claude Source wrapper, end of
+file): dv1_22 entry authored covering same content.
+Existing dv1_21 entry preserved. Includes ERROR-PRE-001
+remediation note describing why dv1_22 binaries were
+generated fresh rather than edited from dv1_21 base.
+
+============================================================
+4. DELIVERABLES PRODUCED
+============================================================
+
+THREE-FORMAT TRIPLET (single 0500000 dv1_22 amendment):
+
+  0500000_System_Architecture_Overview_dv1_22_Claude_Source.txt
+    243,156 bytes
+    Canonical Claude source. Contains full document text
+    including new Section 12, renumbered Sections 13 and
+    14, both DC headers updated, both revision histories
+    updated, all 6 embedded SVG diagrams preserved.
+
+  0500000_System_Architecture_Overview_dv1_22.docx
+    70,098 bytes
+    Real binary Office Open XML container. Generated via
+    docx-js from the .txt body. Bill-facing Word copy.
+    Passes DR-004 file-type, container, settings.xml
+    gates.
+
+  0500000_System_Architecture_Overview_dv1_22.pdf
+    481,753 bytes, 39 pages
+    Real PDF v1.7. Generated via LibreOffice export of
+    dv1_22.docx. Bill-facing PDF copy. Passes DR-004
+    magic-byte probe.
+
+SESSION DOCUMENTATION:
+
+  TB00149_TothBot_V2_Session_Log_2026-05-04_v1_0.txt
+    This document.
+
+  TB00149_Next_Session_Instructions_v1_0.txt
+    Directs TB00150 to author 1011004 NEW dv1_0
+    (Execution_Engine_Coding_Spec; closes long-standing
+    MISSING gap; defines paper-dispatch contract).
+
+============================================================
+5. OPEN ITEMS
+============================================================
+
+------------------------------------------------------------
+5.1 NEW THIS SESSION
+------------------------------------------------------------
+
+None.
+
+------------------------------------------------------------
+5.2 CARRIED FORWARD FROM TB00148
+------------------------------------------------------------
+
+  OI-077  REBUILD-AUTHORIZED-OPTION-B
+    Status: OPEN. Phase 1 Session 1 (this session)
+    advances scope. 1 of 8 spec amendments complete.
+    Remaining: 7 spec amendments (TB00150-TB00156).
+    Closure: when Phase 4 completes (paper observation
+             window passes PT-AC-001..006).
+
+  OI-078  AUDIT-FINDING-CATALOG-24
+    Status: OPEN at all four layers as of TB00149 close.
+    Spec-layer progress: Cluster 1 (findings 09, 29, 30 —
+    paper-mode dispatch seam undefined) closed at parent-
+    spec layer via 0500000 dv1_22 §12. Downstream
+    coding-spec closure pending Phase 1 Sessions 2-8.
+
+  OI-079  3-FILE-REUSE-VERIFIED
+    Status: OPEN. Closure: end of Phase 3.
+
+  OI-073  PAPER-AS-MASTER VIOLATION RECURRENCE TRACKING
+    Status: OPEN. Cumulative violation count = 1
+    (ERROR-TB00145-CHAT-02). No new violations this
+    session. PA-008 pre-emit scan PASS.
+
+  OI-074  RE-MAE-PCT-NEVER-ASSIGNED
+  OI-075  TRADE-OUTCOME-BUS-FIELD-NAMING-DRIFT
+  OI-076  CIATS-LOG-POLLING-CADENCE
+    All three: spec-layer closure pending Phase 1 Session
+    7 (TB00155 1011010 dv1_7) and Session 8 (TB00156
+    1011012 dv1_6).
+
+  OI-061  CHESTERTON'S FENCE
+    Status: CLOSED at governance layer (TB00000 v2_17
+    RR-SCOPE-009). RR-SCOPE-009 pre-emit scan applied
+    this session: PASS (no constraint retirement in
+    TB00149).
+
+  OI-060  WS_SUBSCRIBE_RATE_LIMIT_STORM
+    Status: empirical resolution complete. Code-deploy
+    closure pending Phase 2 ws_manager.py rebuild.
+
+  OI-045, OI-046  USDT exclusion / Top-N cap retirement
+    Status: spec-layer CLOSED. Code-deploy closure
+    subsumed by Phase 2 rebuild.
+
+============================================================
+6. SESSION CLOSE — STATE AT TB00149 END
+============================================================
+
+GITHUB STATE (UNCHANGED — TB00149 produces local
+              dv1_22 triplet for Bill commit):
+  TothBot_V2-Docs HEAD = e8713d5  (TB00147 cascade close)
+                                   Bill action: commit
+                                   dv1_22 to advance HEAD.
+  TothBot_V2-Code HEAD = fb5de32  (paper-canonical,
+                                   untouched since TB00146)
+  VPS                  = UNTOUCHED (no deploy)
+
+DELIVERABLES STATUS:
+  [X] STEP A pre-flight (Section 2)
+  [X] 0500000 dv1_22 .txt Claude Source authored
+  [X] 0500000 dv1_22 .docx generated (DR-004 PASS)
+  [X] 0500000 dv1_22 .pdf generated (DR-004 PASS)
+  [X] DR-005.4 version-triplet consistency
+  [X] OP-003 §4.2 prohibited-string scrub on all three formats
+  [X] PA-008 / RR-SCOPE-007 / RR-SCOPE-009 / OP-003
+      pre-emit scans
+  [X] Inner revision history updated
+  [X] Outer revision history updated
+  [X] TB00149 Session Log v1_0 (this document)
+  [X] TB00149 Next Session Instructions v1_0 (companion)
+
+TB00150 PRIMARY WORK (per TB00149 NSI v1_0):
+  Phase 1 Session 2: 1011004 NEW dv1_0
+  Execution_Engine_Coding_Spec authored from scratch.
+  Closes the long-standing 1011004 MISSING gap.
+  Defines paper-dispatch contract per 0500000 dv1_22
+  §12.3 caller contract and HR-EE-013 mode-opaque
+  caller pattern.
+
+============================================================
+7. CLAUDE ERRORS THIS SESSION
+============================================================
+
+ERROR-TB00149-01  OP-003 PROHIBITED-STRING TRANSIENT
+                  EMISSION (TWO OCCURRENCES, BOTH
+                  SELF-CAUGHT BEFORE DELIVERY)
+  Severity:       LOW (both self-caught before delivery)
+  Rule cited:     OP-001 / OP-003 / OP-004
+                  (TB00000 v2_18 §4.2)
+  Defect 1:       Initial author-pass of dv1_22 inner
+                  revision history entry (where Claude
+                  was describing OP-003 scan
+                  compliance) emitted the prohibited
+                  string once. Detected by post-write
+                  grep verification.
+  Defect 2:       Initial author-pass of TB00149 SL
+                  status-report sentences (e.g.,
+                  "<string> count = 0") and TB00149
+                  NSI documentation emitted the
+                  prohibited string in status-report
+                  contexts that did NOT qualify as
+                  OP-008 exception territory (only
+                  literal self-catch signals and
+                  rule-stating contexts qualify).
+                  Detected by pre-delivery batch scan.
+  Corrective:     OP-004 self-catch fired both times:
+                    "OneDrive ban self-caught —
+                     redrafting."
+                  Defect 1: dv1_22 revision history
+                  rewrite replaced literal string with
+                  reference to TB00000 §4.2 by section
+                  number. Final dv1_22 triplet
+                  prohibited-string count = 0 across
+                  all three formats.
+                  Defect 2: SL + NSI status-report
+                  sentences rewritten to use phrase
+                  "§4.2 prohibited string" instead of
+                  the literal token. Final SL count =
+                  2 (both literal self-catch signals,
+                  OP-008 exception). Final NSI count =
+                  1 (literal self-catch signal,
+                  OP-008 exception).
+  Recurrence:     Counts toward OI-036 cumulative
+                  prohibited-string emission tracking
+                  (two events this session). Self-
+                  catch worked both times; guard fired
+                  correctly.
+
+PA-008 self-catch signals: zero fires this session.
+RR-SCOPE / RR-RULE / RR-SHELL self-catches: zero fires.
+DR-006 self-containment: compliant.
+
+ERROR-TB00149-02  SVG-DROP-IN-BINARY-GENERATION
+  Severity:       HIGH (information loss in delivered
+                  binaries; recurring pattern across
+                  multiple prior versions; root-cause
+                  governance defect spanning three
+                  documents)
+  Rule cited:     TB00000 v2_18 §4.1 DR-002 + DR-004
+                  (insufficient governance), 0311001
+                  v1_3 §15 (incomplete authoring
+                  architecture), 0311002 v1_8 §8.2.5
+                  (no asset-inventory or binary-
+                  content session-open check)
+  Defect:         The 0500000 dv1_22 .docx and .pdf
+                  binaries delivered in TB00149 SL
+                  v1_0 final batch were missing all
+                  6 SVG diagrams present in the .txt
+                  Claude Source. Bill detected the
+                  defect on first review of the
+                  delivered package. Investigation
+                  surfaced four contributing causes:
+
+                  (1) The dv1_22 .txt source contains
+                      6 inline `<svg>` XML embeds in
+                      violation of 0311001 v1_3 §15.4
+                      (which mandates external SVG
+                      files) — but §15 did not
+                      explicitly PROHIBIT inline
+                      embeds, so the violation went
+                      undetected.
+
+                  (2) The fresh-generation rendering
+                      pipeline (docx-js script
+                      authored in /home/claude/work/)
+                      treated the SVG section header
+                      as a stripped block and
+                      substituted a stub note rather
+                      than rasterizing each SVG to
+                      PNG and embedding it. No
+                      pipeline-design rule
+                      prohibited stub substitution.
+
+                  (3) DR-004 binary integrity
+                      validation PASSED on the
+                      content-incomplete dv1_22
+                      binaries because DR-004
+                      validates structural soundness
+                      (file is a valid .docx
+                      container) but not content
+                      completeness (file contains
+                      the rendered SVG diagrams).
+                      No DR-007 content-completeness
+                      gate existed.
+
+                  (4) The dv1_19, dv1_20, dv1_21
+                      binaries in /mnt/project/
+                      were also defective per
+                      KPL-002 plain-text mislabel,
+                      meaning the diagram-loss
+                      defect has been invisible
+                      since at least 04-11-2026
+                      (~23 days). No session-open
+                      DC-PREFLIGHT check existed
+                      for binary content
+                      completeness.
+
+  Corrective
+  (governance):   Three-document governance
+                  rewrite this session:
+
+                  TB00000 v2_18 -> v2_19. Full
+                    rewrite of §4.1 to "DOCUMENT
+                    DELIVERY AND CONTENT
+                    INTEGRITY RULES". New PR-1
+                    through PR-5 foundational
+                    principles. New DR-007 (six-
+                    check content-completeness
+                    validation). New CI-001
+                    through CI-012 (information
+                    preservation across the
+                    entire document lifecycle).
+                    New 4.1.4 six-step Pre-
+                    Delivery Validation
+                    Procedure. Self-catch
+                    enforcement matching §4.2/
+                    §4.3/§4.4 pattern.
+
+                  0311001 v1_3 -> v1_4. Full
+                    rewrite of §15 to "EMBEDDED
+                    ASSET ARCHITECTURE". New
+                    §15.3 asset type taxonomy
+                    (all asset types, not just
+                    diagrams). New §15.6
+                    canonical reference syntax
+                    "[Asset file: filename]"
+                    (with deprecated alias for
+                    backward compatibility).
+                    New V-026 through V-030
+                    validation rules. New §15.8
+                    rendering contract RC-1
+                    through RC-6. New §15.9
+                    five-step migration
+                    procedure for existing
+                    inline-embed documents.
+                    New §15.10 prohibited
+                    patterns PP-1 through PP-10.
+
+                  0311002 v1_8 -> v1_9. STEP A
+                    §8.2.5 extension. DC-
+                    PREFLIGHT-007 ASSET
+                    INVENTORY VALIDATION (NEW).
+                    DC-PREFLIGHT-008 BINARY-IN-
+                    FOLDER CONTENT-COMPLETENESS
+                    VALIDATION (NEW). Both fire
+                    at session open against
+                    /mnt/project/ contents.
+
+  Corrective
+  (artifact):     The dv1_22 .docx and .pdf
+                  delivered in v1_0 are HELD
+                  (not retracted, since they are
+                  better than dv1_21 binaries
+                  which are KPL-002 defective,
+                  but flagged as content-
+                  incomplete pending TB00150
+                  STREAM A remediation).
+                  TB00150 STREAM A applies the
+                  new governance to dv1_22:
+                  extract 6 inline SVGs to
+                  separate files per new §15.5;
+                  rewrite dv1_22 .txt to use
+                  §15.6 reference syntax;
+                  regenerate .docx with
+                  rasterized PNG embeds at
+                  reference points; regenerate
+                  .pdf; validate per new DR-007;
+                  re-deliver compliant triplet.
+
+  Recurrence:     OPENS OI-080 CONTENT-INTEGRITY
+                  VIOLATION RECURRENCE TRACKING.
+                  Initial cumulative count = 1
+                  (this defect). Future
+                  recurrence tracked at OI-080.
+                  Earlier instances of the same
+                  pattern (dv1_19/dv1_20/dv1_21
+                  diagram-loss) are also rolled
+                  up as one cumulative defect
+                  class instance under OI-080
+                  since they share the same root
+                  cause (inline embeds + no
+                  rendering contract + no
+                  content-completeness gate).
+
+============================================================
+8. REVISION HISTORY
+============================================================
+
+  v1_1  05-04-2026  v1_0 superseded mid-session.
+
+                    Bill identified during v1_0 final
+                    review that the 0500000 dv1_22
+                    .docx and .pdf delivered in the
+                    v1_0 batch were missing all 6 SVG
+                    diagrams present in the .txt
+                    Claude Source. Investigation
+                    surfaced ERROR-TB00149-02 SVG-
+                    DROP-IN-BINARY-GENERATION as a
+                    governance-architecture defect
+                    spanning three documents:
+
+                      TB00000 §4.1 — DR-004 binary
+                        integrity validation gate
+                        validates structural soundness
+                        but not content completeness.
+                        Gap allowed structurally
+                        sound binaries with silently
+                        dropped content to pass
+                        delivery.
+                      0311001 §15 — covered diagram-
+                        type assets only, lacked
+                        rendering contract for
+                        derived formats, lacked
+                        prohibition of inline embeds,
+                        lacked migration procedure.
+                      0311002 §8.2.5 — STEP A pre-
+                        flight had no asset-inventory
+                        check (DC-PREFLIGHT-007 gap)
+                        and no binary-content-
+                        completeness check (DC-
+                        PREFLIGHT-008 gap).
+
+                    Bill explicit directive: "Rewrite
+                    the entire section to be CLEAR,
+                    UNAMBIGUOUS, AND CORRECT. Do not
+                    just add a patch. Redo the entire
+                    section in ALL REQUIRED DOCUMENTS
+                    to ensure this does not continue
+                    to happen. Make sure it is not
+                    only this situation, but make
+                    sure NO INFORMATION is ever lost
+                    by accident or drift."
+
+                    GOVERNANCE WORK COMPLETED THIS
+                    SESSION (added to v1_0 scope):
+                    TB00000 v2_18 -> v2_19 — full
+                      rewrite of §4.1 DOCUMENT
+                      DELIVERY AND CONTENT INTEGRITY
+                      RULES. New sub-structure
+                      4.1.0 through 4.1.7. Five
+                      foundational principles (PR-1
+                      through PR-5). Seven Document
+                      Delivery Rules (DR-001 through
+                      DR-007; DR-007 NEW). Twelve
+                      Content Integrity Rules
+                      (CI-001 through CI-012; ALL
+                      NEW). Six-step Pre-Delivery
+                      Validation Procedure. Self-
+                      catch enforcement matching
+                      §4.2/§4.3/§4.4 pattern.
+                    0311001 v1_3 -> v1_4 — full
+                      rewrite of §15 EMBEDDED ASSET
+                      ARCHITECTURE (was "DIAGRAM
+                      ASSET SPECIFICATION"). Covers
+                      all asset types (.svg, .png,
+                      .jpg, .jpeg, .csv, .wav,
+                      .mp3, .mp4). Eleven
+                      Validation Rules (V-020
+                      through V-030). Six-rule
+                      Rendering Contract (RC-1
+                      through RC-6). Ten
+                      Prohibited Patterns (PP-1
+                      through PP-10). Five-step
+                      Migration Procedure for
+                      existing inline embeds.
+                    0311002 v1_8 -> v1_9 — STEP A
+                      §8.2.5 extension. DC-
+                      PREFLIGHT-007 ASSET INVENTORY
+                      VALIDATION (NEW). DC-
+                      PREFLIGHT-008 BINARY-IN-
+                      FOLDER CONTENT-COMPLETENESS
+                      VALIDATION (NEW).
+
+                    DEFERRED TO TB00150 STREAM A:
+                    The dv1_22 binary remediation
+                    itself (extract 6 inline SVG
+                    XML embeds from dv1_22 .txt
+                    into separate SVG files per
+                    new §15.5; rewrite dv1_22 .txt
+                    to use §15.6 reference syntax;
+                    regenerate .docx with
+                    rasterized PNG embeds;
+                    regenerate .pdf; validate per
+                    new TB00000 §4.1 DR-007). The
+                    governance is in place first;
+                    the application of the
+                    governance to dv1_22 is the
+                    TB00150 first-stream work.
+
+                    SECOND ERROR THIS SESSION:
+                    ERROR-TB00149-02 SVG-DROP-IN-
+                    BINARY-GENERATION. CLOSED at
+                    governance layer via three-
+                    document update above.
+                    Operational verification at
+                    every future binary delivery
+                    action. Tracked under OI-080
+                    CONTENT-INTEGRITY VIOLATION
+                    RECURRENCE TRACKING (NEW;
+                    initial cumulative count = 1).
+
+                    Companion deliverable:
+                    TB00149 NSI v1_0 -> v1_1
+                    (supersedes; STREAM A scope
+                    revised to apply new
+                    governance to dv1_22).
+
+                    Bill override per standing
+                    document-control override
+                    scope.
+
+  v1_0  05-04-2026  Initial.
+                    TB00149 close. Phase 1 Session 1 of
+                    Bill OPTION B Clean-Slate Rebuild
+                    authorized TB00148. Single primary
+                    deliverable: 0500000 dv1_22 three-
+                    format triplet codifying paper-mode
+                    dispatch boundary as first-class
+                    architectural element.
+                    No GitHub commits this session
+                    (dv1_22 triplet awaiting Bill local
+                    commit). No VPS deploy. No code
+                    edits. No tests.
+                    ERROR-PRE-001 binary integrity
+                    recurrence on dv1_21 .docx + .pdf
+                    addressed at dv1_22 by fresh
+                    generation through docx-js + LibreOffice
+                    pipeline. All three dv1_22 formats
+                    pass DR-004 strict checks.
+                    One Claude error (ERROR-TB00149-01
+                    transient §4.2 prohibited-string emission, self-
+                    caught and redrafted before delivery).
+                    Companion deliverable: TB00149 NSI v1_0.
+
+============================================================
+END OF SESSION LOG
+============================================================

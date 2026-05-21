@@ -1,0 +1,1250 @@
+DocDCN:     TB00209
+DocTitle:   Gate_4_FP_DP_Analysis_Per_Finding
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TBXXXXX_Session_Logs\TB00209_Gate_4_FP_DP_Analysis_Per_Finding_v1_0.txt
+DocDate:    05-11-2026
+DocTime:    23:30:00 UTC
+
+============================================================
+GATE 4 — FIRST-PRINCIPLES / DATA-POINT ANALYSIS
+PER-FINDING DISPOSITIONS (8 DISCRETE FINDINGS)
+DEFINITIVE RECOMMENDATIONS
+============================================================
+
+============================================================
+1. WHAT GATE 4 IS ASKING
+============================================================
+
+Gates 1 through 3 in the close-gate package handle
+issues that affect many places at once (the 17
+diagram amendments, the 6 hard-rule registration
+occurrences, the 17-spec currency-lag cluster).
+Gate 4 is different. Gate 4 collects 8 individual
+findings that each need their own decision because
+each one stands alone — no joint resolution
+applies, no universal pattern fits.
+
+Each of the 8 findings has its own facts, its own
+options, and its own correct answer. The job of
+this analysis is to walk through each finding,
+explain in plain English what the problem actually
+is, weigh the options against the decision
+criterion, and recommend a specific disposition.
+
+The decision criterion is uniform across all eight
+findings: pick the option that produces the fewest
+errors and the least redo work AND keeps the
+canonical architecture diagram telling the truth
+about how the system works.
+
+The eight findings:
+
+  F-01  When the trading bot tries to exit a
+        position but the remaining amount is below
+        Kraken's minimum order size, two
+        specifications disagree on whether CIATS
+        (the continuous improvement engine) should
+        be told about the event.
+
+  F-03  Two specifications give two different names
+        to the same internal data structure that
+        tracks how long pairs must wait after an
+        exit before being eligible again. The
+        architecture diagram uses one of the names.
+
+  F-04  Two specifications give two different
+        function signatures to the callback that
+        fires when a position closes. One uses a
+        boolean (win or loss). The other uses an
+        enum (the actual exit reason).
+
+  F-07 + F-15  Two specifications cite incomplete
+        parent chains. The Risk Engine coding spec
+        cites three of its four AA=06 parent specs
+        instead of all four. The Operations
+        Infrastructure parent spec is not cited
+        anywhere in the architecture diagram even
+        though VPS Deployment is built from it.
+
+  F-12  Two cells in diagram D2 (the per-pair
+        pipeline diagram) contain prose that
+        predates the project's adoption of the
+        directional-cascade regime framework and
+        the v2_29 parameter-registry rewrite.
+
+  F-16  Four places in the Operations
+        Infrastructure spec route alerts to a
+        singular mailbox name that does not exist
+        at the mail provider. Alerts sent to that
+        address bounce. The plural name (which is
+        what actually works) has already been
+        adopted everywhere else.
+
+  F-18  The Operations Infrastructure spec cites
+        four other documents by version number,
+        and three of those version numbers are
+        stale.
+
+  F-24  The VPS Deployment coding spec defines the
+        condition under which the bot announces
+        itself READY to the operating system, and
+        two parts of that condition are
+        inconsistent with three canonical sources.
+
+============================================================
+2. DECISION CRITERION
+============================================================
+
+Each finding's recommendation is judged against
+the same five criteria:
+
+  (i)   Correctness against the diagrams-as-
+        canonical principle. The architecture
+        diagram (0500000) is the authoritative
+        source. When prose, code, or specs
+        contradict the diagram, the diagram
+        governs.
+
+  (ii)  Architectural-spec precedence. When an
+        AA=08 architectural specification and an
+        AA=10 coding specification disagree, the
+        AA=08 spec governs unless the AA=10 spec
+        documents an explicit, ratified
+        amendment.
+
+  (iii) Loss prevention. Where a choice affects
+        the bot's ability to detect or prevent
+        loss, the loss-prevention path wins. This
+        is the primary mission.
+
+  (iv)  Information richness for CIATS. CIATS
+        improves the system by analyzing data.
+        More information per trade outcome means
+        CIATS can detect more problems sooner.
+        Where a choice affects what information
+        CIATS receives, the richer path wins
+        unless it costs loss-prevention.
+
+  (v)   Fewest errors and least rework. Pick the
+        option that closes the finding on the
+        first pass with no follow-up cycle.
+
+Each per-finding analysis below walks through
+these criteria explicitly.
+
+============================================================
+3. PER-FINDING ANALYSES
+============================================================
+
+------------------------------------------------------------
+3.1 F-01 — PARTIAL-FILL-BELOW-MINIMUM CIATS CONTRADICTION
+------------------------------------------------------------
+
+WHAT THE FINDING IS.
+
+The Long Module specification (0811001) describes
+what happens when the bot tries to scale out of a
+position but the remaining amount is below Kraken's
+minimum order size. The spec says: dispatch a market
+sell immediately, log the event as
+PARTIAL_FILL_BELOW_MINIMUM, and fire the CIATS
+Trade Outcome Bus so CIATS sees the event.
+
+The Long Module coding specification (1011008) says
+the opposite: do not fire CIATS for below-minimum
+exits, because "insufficient trade data."
+
+The two documents directly contradict each other.
+Neither contradiction has diagram authority backing
+(the architecture diagram doesn't currently encode
+either form).
+
+OPTION A — FIRE CIATS on below-minimum partial
+fills.
+
+OPTION B — Do not fire CIATS on below-minimum
+partial fills.
+
+ANALYSIS.
+
+Criterion (i) diagrams-canonical: neither option
+is currently in the diagram. Whichever option wins
+becomes the canonical form and gets registered in
+the diagram. Both options score equal on this
+criterion.
+
+Criterion (ii) AA=08 over AA=10: the AA=08
+architectural specification (0811001) says FIRE
+CIATS. The AA=10 coding spec says don't. By
+default AA=08 governs. Option A wins on this
+criterion unless an explicit, ratified amendment
+overrides — and no such amendment exists. The
+coding spec's "insufficient trade data" reasoning
+is not documented as an origin-investigated
+constraint per RR-SCOPE-009 (no constraint removal
+without origin investigation); it appears to be
+post-hoc reasoning.
+
+Criterion (iii) loss prevention: a partial fill
+that drops below minimum is a real fill that
+produced real P&L. The bot has spent real capital
+(or real synthetic paper capital). Hiding that
+event from CIATS hides loss data. If a particular
+pair or regime regularly produces
+below-minimum-residual exits, CIATS needs to see
+that pattern. The "insufficient trade data"
+argument is weak because below-minimum events are
+themselves a data class CIATS should learn about —
+not noise to be discarded.
+
+Criterion (iv) information richness: firing CIATS
+gives CIATS more data. Suppressing CIATS gives
+CIATS less data. CIATS is designed to handle
+small-sample data (EWMA is valid at 50 candles for
+monitoring; CUSUM detects shifts on a few
+observations). The threshold for parameter-change
+decisions is 200 trades, not 200 below-minimum
+events. Adding below-minimum events to the trade
+pool moves the pool toward 200 faster — which
+serves loss prevention by making CIATS effective
+sooner.
+
+Criterion (v) rework cost: either option needs
+one document amendment and one diagram update.
+Option A amends 1011008 to remove the suppression
+rule. Option B amends 0811001 to remove the
+fire-CIATS instruction. Both are single-pass
+fixes. Tie on rework cost.
+
+Three of the five criteria point to Option A
+(AA=08 precedence, loss prevention, information
+richness). Two are ties. No criterion points to
+Option B.
+
+RECOMMENDATION.
+
+Option A — FIRE CIATS on partial fills that drop
+below minimum. Specifically:
+
+  - 0811001 §5.5 LM-019(2) text retained
+    unchanged (this is now the canonical form).
+  - 1011008 §8 LM-PARTIAL-BELOW-MIN-001 amended
+    to align: remove the "no CIATS" rule;
+    replace with "fire CIATS Trade Outcome Bus
+    with event tag PARTIAL_FILL_BELOW_MINIMUM."
+  - Architecture diagram registers a new rule
+    token (rule:LM-PARTIAL-BELOW-MIN-FIRES-CIATS)
+    in the Long Module governs list at the next
+    diagram revision.
+
+WHY THIS DECISION IS DERIVABLE WITHOUT BILL
+JUDGMENT.
+
+AA=08-over-AA=10 precedence is a project standing
+rule. Loss prevention is the project's primary
+mission. CIATS data sufficiency is a CIATS design
+property, not a Bill business choice. The
+recommendation follows from these existing
+canonical sources without Bill judgment. Per
+RR-SCOPE-005 (derivable-decision execution),
+Option A is presented as the recommendation
+without three-option enumeration.
+
+------------------------------------------------------------
+3.2 F-03 — STATE-DICTIONARY NAMING MISMATCH
+------------------------------------------------------------
+
+WHAT THE FINDING IS.
+
+The Selection Controller manages an internal data
+structure that records when each trading pair
+finished its most recent exit, so the pair can be
+kept out of selection for a cooldown period
+before becoming eligible again.
+
+Three places name this data structure:
+
+  - The architectural specification (0811002 §6.1
+    SC-019) calls it "exit_cooldown_log."
+  - The coding specification (1011009 §4
+    SC-STATE-001) calls it "cooldown_registry."
+  - The architecture diagram (0500000 D6 R4 +
+    D3 R2) calls it "exit_cooldown_log."
+
+The architectural spec and the diagram agree on
+"exit_cooldown_log." Only the coding spec is the
+outlier.
+
+OPTION X — Align the coding spec name to match
+the architectural spec and the diagram. Rename
+"cooldown_registry" to "exit_cooldown_log" in
+1011009.
+
+OPTION Y — Invert the alignment. Rename
+"exit_cooldown_log" to "cooldown_registry" in
+the architectural spec and in the diagram.
+
+ANALYSIS.
+
+Criterion (i) diagrams-canonical: the diagram
+currently uses "exit_cooldown_log." Option X
+preserves the diagram. Option Y requires a
+diagram amendment (changing a cell text string
+in D6 R4 and D3 R2), which is real work and
+introduces SVG-byte-change risk for those two
+cells. Option X scores higher.
+
+Criterion (ii) AA=08 over AA=10: AA=08 says
+"exit_cooldown_log." AA=10 says
+"cooldown_registry." AA=08 governs. Option X
+matches AA=08. Option Y inverts the precedence
+rule — would require explicit Bill override of
+the precedence rule, which is not in evidence.
+Option X scores higher.
+
+Criterion (iii) loss prevention: this is a
+naming choice with zero behavioral impact on
+loss-prevention rules. Tie.
+
+Criterion (iv) information richness: zero impact.
+Tie.
+
+Criterion (v) rework cost: Option X amends one
+document (1011009) in one place — change the
+identifier string and any references to it.
+Option Y amends two architectural artifacts
+(0811002 and 0500000 dv1_46) plus all downstream
+references — at least 3-4 places, with diagram
+amendment overhead. Option X is dramatically
+cheaper.
+
+Three criteria favor Option X. Two are ties.
+None favors Option Y.
+
+RECOMMENDATION.
+
+Option X — Align the coding spec to the
+architectural spec and the diagram. Specifically:
+
+  - 1011009 §4 SC-STATE-001 amended to rename
+    the data structure from "cooldown_registry"
+    to "exit_cooldown_log."
+  - All other references in 1011009 to
+    "cooldown_registry" updated to
+    "exit_cooldown_log" (search-and-replace
+    scope).
+  - 0811002 §6.1 SC-019 unchanged (already
+    canonical).
+  - Diagram D6 R4 + D3 R2 unchanged (already
+    canonical).
+
+WHY THIS DECISION IS DERIVABLE WITHOUT BILL
+JUDGMENT.
+
+The AA=08-over-AA=10 precedence rule plus the
+diagrams-as-canonical principle make Option X
+the mechanical outcome. No Bill business
+judgment is required.
+
+------------------------------------------------------------
+3.3 F-04 — on_position_closed CALLBACK SIGNATURE
+            MISMATCH
+------------------------------------------------------------
+
+WHAT THE FINDING IS.
+
+When a position closes in the trading system, the
+Exit Controller fires a callback into the
+Selection Controller so the Selection Controller
+can update its internal state (mark the pair as
+cooled-down, etc.). Two specifications give two
+different function signatures for this callback:
+
+  - The coding spec (1011009 SC-STATE-004) uses:
+    on_position_closed(symbol, was_win: bool).
+    The Exit Controller passes a boolean
+    indicating win or loss.
+
+  - The architectural spec (0811002 §6.2 SC-024)
+    uses:
+    on_position_closed(symbol, exit_reason: enum).
+    The Exit Controller passes an enum value
+    naming the exit type (signal-based exit,
+    take-profit, MAE breach, emergency stop-loss,
+    etc.).
+
+OPTION X — boolean signature, win/loss
+classification performed inside the Exit
+Controller before the callback fires.
+
+OPTION Y — enum signature, exit-reason
+classification performed in the Exit Controller
+and passed through; Selection Controller derives
+win/loss locally if needed.
+
+ANALYSIS.
+
+Criterion (i) diagrams-canonical: the
+architecture diagram does not currently encode
+the callback signature in any cell text. The
+diagram is neutral on signature form. Tie on
+diagram-correctness.
+
+Criterion (ii) AA=08 over AA=10: AA=08 says enum.
+AA=10 says boolean. AA=08 governs. Option Y
+matches AA=08. Option Y scores higher.
+
+Criterion (iii) loss prevention: an enum carries
+strictly more information than a boolean. A
+boolean answers one question: did this trade
+make money or not. An enum answers two questions:
+which of the bot's four exit layers fired
+(Layer 1a signal, Layer 1b take-profit, Layer 2
+MAE breach, Layer 3 emergency stop), AND
+implicitly, what was the outcome. Knowing which
+layer fired is a loss-prevention signal — if
+Layer 2 MAE breaches start clustering on a
+particular regime, that is data CIATS needs to
+adjust MAE multiplier. The boolean form discards
+this information. Option Y scores higher.
+
+Criterion (iv) information richness for CIATS:
+the enum form carries exit-layer information
+through to CIATS via downstream logging. The
+boolean form loses it (or requires CIATS to
+derive it from a separate event source — extra
+coupling and extra failure modes). Option Y
+scores higher.
+
+Criterion (v) rework cost: either option amends
+one document. Option X amends 0811002 to switch
+from enum to boolean and to add a paragraph
+explaining where exit-reason classification now
+lives. Option Y amends 1011009 SC-STATE-004 to
+switch from boolean to enum and to add the enum
+value list. Both are single-pass fixes. Tie on
+rework cost.
+
+Three criteria favor Option Y (AA=08 precedence,
+loss prevention via exit-layer information,
+information richness for CIATS). Two are ties.
+None favors Option X.
+
+RECOMMENDATION.
+
+Option Y — enum signature. Specifically:
+
+  - 1011009 SC-STATE-004 amended to change the
+    signature from on_position_closed(symbol,
+    was_win: bool) to on_position_closed(symbol,
+    exit_reason: enum).
+  - The enum value set is the existing Exit
+    Controller exit-layer taxonomy
+    (SIGNAL_EXIT, TP_HIT, MAE_BREACH,
+    EMERGENCY_SL plus any sub-layer values
+    already in 0511004 Exit Controller spec).
+  - 0811002 §6.2 SC-024 unchanged (already
+    canonical).
+  - Selection Controller derives win/loss
+    locally from the enum when it needs to (a
+    one-line helper).
+
+WHY THIS DECISION IS DERIVABLE WITHOUT BILL
+JUDGMENT.
+
+AA=08-over-AA=10 precedence plus information-
+richness for CIATS plus the empirical observation
+that the enum form is strictly more informative
+make Option Y the mechanical outcome. No Bill
+business judgment is required.
+
+------------------------------------------------------------
+3.4 F-07 + F-15 — PARENT-CHAIN-COMPLETENESS RULE
+------------------------------------------------------------
+
+WHAT THE FINDING IS.
+
+These two findings raise the same question from two
+different angles.
+
+F-07: The Risk Engine coding spec (1011011 dv1_3
+§2 Parent Chain) cites three of its four AA=06
+parent specifications: 0611001 Position Sizing
+Rules, 0611002 Drawdown and Halt Rules, 0611003
+Concentration and Exposure Rules. It does NOT
+cite 0611004 Safety_Parameter_Framework. The
+coding spec actually USES content from 0611004
+(its §5.3 RE-CIATS-001 rule references the
+Parameter Store, which is defined in 0611004) —
+but doesn't formally cite 0611004 as a parent.
+
+F-15: The Operations Infrastructure spec
+(0211002) is the AA=02 parent for the VPS
+Deployment coding spec (1011013). 1011013 §2
+correctly cites 0211002 as its parent. But
+0211002 is not cited anywhere in the
+architecture diagram (0500000 dv1_46). The
+diagram is silent about the VPS Deployment
+module's parent spec.
+
+Both findings are asking the same question: when
+a coding spec or architectural artifact has
+multiple parent documents, must EVERY parent be
+cited, or is "most of them" acceptable?
+
+OPTION (confirm 4-parent canonical requirement)
+— Every parent spec that a child document
+implements rules from MUST be cited in the
+child's parent chain. Missing citations are
+defects requiring fix.
+
+OPTION (accept 3-parent) — Citations are
+informational; missing one is acceptable if the
+omission is benign.
+
+ANALYSIS.
+
+Criterion (i) diagrams-canonical: the
+diagrams-as-canonical principle requires that
+the canonical architecture diagram tell the truth
+about every module's parent chain. A missing
+parent citation breaks this — the diagram (or
+the linked coding spec) no longer fully reflects
+the spec dependency graph. Accept-3-parent
+weakens the diagram's truth-telling power.
+Confirm-4-parent preserves it. Confirm scores
+higher.
+
+Criterion (ii) AA=08 over AA=10: this criterion
+doesn't directly apply here — the question is
+about parent-citation completeness, not about
+AA=08-vs-AA=10 content. Slight edge to confirm
+because the missing parent (in F-07) is an AA=06
+parent that the AA=10 coding spec is bound to
+follow.
+
+Criterion (iii) loss prevention: 0611004
+Safety_Parameter_Framework defines the Parameter
+Store and the safety rules around CIATS-owned
+parameter values. The Risk Engine coding spec
+implements rules that depend on the Parameter
+Store. If a developer reads 1011011 §2 Parent
+Chain and sees only three of four parents, they
+might miss a 0611004 safety constraint when
+amending the Risk Engine. That is a loss-
+prevention risk. Confirm-4-parent eliminates the
+risk. Accept-3-parent leaves it open. Confirm
+scores higher.
+
+Criterion (iv) information richness: complete
+parent chains give downstream readers (and
+downstream Claude sessions during cold-load) a
+full picture of dependencies. Incomplete chains
+hide dependencies. Confirm scores higher.
+
+Criterion (v) rework cost: confirming 4-parent
+canonical means amending two documents (1011011
+parent chain to add 0611004; 0500000 architecture
+prose to add a reference to 0211002 as the
+Operations Infrastructure parent for VPS
+Deployment). Both are mechanical citation
+additions. Accepting 3-parent means accepting
+ongoing audit drift — every future audit pass
+will surface these as findings again. Confirm is
+cheaper over time.
+
+Four of the five criteria favor confirm.
+Criterion (ii) is a tie or weak edge for confirm.
+None favors accept.
+
+RECOMMENDATION.
+
+Confirm the 4-parent canonical requirement.
+Establish parent-chain-completeness as a
+documented rule: every coding specification cites
+every parent spec whose rules it implements;
+every architectural artifact cites every parent
+spec whose module it depicts. Specifically:
+
+  - 1011011 §2 Parent Chain amended to add
+    0611004 Safety_Parameter_Framework as the
+    fourth parent citation. Verify that all
+    RE-CIATS-* rules in 1011011 correctly cite
+    0611004 content where they reference the
+    Parameter Store.
+  - 0500000 dv1_46 prose amended to cite 0211002
+    Operations_Infrastructure as the AA=02
+    parent for the VPS Deployment module
+    depicted in the diagram.
+  - The parent-chain-completeness rule itself
+    formalized at the next 0311002 amendment
+    cycle (this is a governance-layer item that
+    follows the close-gate ratification and may
+    bundle into the DC-PREFLIGHT-NEW per-
+    amendment cascade-currency-check from Gate 3).
+
+WHY THIS DECISION IS DERIVABLE WITHOUT BILL
+JUDGMENT.
+
+Diagrams-as-canonical + loss-prevention via
+dependency-visibility + RR-SCOPE-009 (no
+constraint removal without origin investigation
+— including no acceptance of an architectural
+gap without investigation) make confirm-4-parent
+the mechanical outcome. No Bill business
+judgment is required.
+
+------------------------------------------------------------
+3.5 F-12 — DIAGRAM D2 R2 G3 + G6 CELL-PROSE UPDATE
+------------------------------------------------------------
+
+WHAT THE FINDING IS.
+
+Two cells in the per-pair pipeline diagram (D2
+revision 2) contain prose text that has fallen
+behind the project's current architecture:
+
+CELL G3 currently encodes:
+  "TRENDING_NEG (any vol) → STOP"
+
+This reflects the pre-Stage-M-3 framing where
+trending-negative regimes blocked all trade
+activity. The project has since adopted the
+directional-cascade framework (Hard Rule
+HR-REGIME-007). Under directional cascade:
+TRENDING_NEG blocks LONG entries but PERMITS
+SHORT entries via the Short Module. The
+companion diagram D4 R3 was updated when the
+amendment was ratified. D2 R2 was not. The
+diagrams are currently inconsistent with each
+other.
+
+CELL G6 currently consumes the parameter
+"per_trade_pct." That parameter was retired at
+TB00000 v2_29. The current v2_29 §9.17
+parameter registry replaced it with two
+CIATS-owned parameters: per_trade_size_usd
+(starting at Kraken's per-pair minimum, about
+$0.50) and per_trade_ceiling_pct (starting at
+25% of the module wallet). G6 still references
+the retired name.
+
+OPTION (RATIFY specific wording) — Adopt
+specific replacement text for both cells that
+matches the current canonical sources.
+
+OPTION (REVISE) — Bill specifies alternate
+wording.
+
+ANALYSIS.
+
+Criterion (i) diagrams-canonical: the goal of
+this finding IS to restore the diagram's truth-
+telling. Either option meets the criterion in
+principle; the question is which wording is
+correct.
+
+Criterion (ii) AA=08 over AA=10: G3 wording must
+match HR-REGIME-007 (defined in 0711002 dv1_1,
+the AA=07 Regime Taxonomy spec). G6 wording
+must match v2_29 §9.17 (the canonical parameter
+registry in TB00000). Both canonical sources
+exist and are unambiguous.
+
+Criterion (iii) loss prevention: leaving the
+stale wording in place means the diagram lies
+about how the bot handles trending-negative
+regimes (it does NOT stop trading; it stops
+LONG trading and permits SHORT trading via the
+Short Module). A developer or auditor relying
+on the stale wording could mis-implement a
+loss-prevention boundary. The retired-parameter
+reference could similarly cause confusion in
+sizing-curve discussions. Fix is loss-prevention
+positive.
+
+Criterion (iv) information richness: the
+directional-cascade wording carries more
+information than the blanket "STOP" wording (it
+names both directions and the Short Module
+dispatch). The current-parameter wording names
+the actual CIATS-owned controls instead of a
+retired single parameter. More information in
+both cases.
+
+Criterion (v) rework cost: cell-text strings
+only. SVG visual elements unchanged. Standard
+diagram-amendment cost (one cell text edit per
+cell, two cells total).
+
+RECOMMENDATION.
+
+Ratify specific wording. The replacements:
+
+  G3 cell — replace
+    "TRENDING_NEG (any vol) → STOP"
+  with
+    "TRENDING_NEG: LONG blocked; SHORT permitted
+    via mod:Short_Module (HR-REGIME-007
+    directional cascade)."
+
+  G6 cell — replace the "consumes:
+    param:per_trade_pct" reference with
+    "consumes: param:per_trade_size_usd +
+    param:per_trade_ceiling_pct (v2_29 §9.17
+    R:R-driven sizing curve)."
+
+Both replacements are derived directly from the
+current canonical sources (HR-REGIME-007 in
+0711002 dv1_1; v2_29 §9.17 in TB00000) without
+new design content. The amendment is included
+in AMENDMENT-15 in the close-gate package.
+
+WHY THIS DECISION IS DERIVABLE WITHOUT BILL
+JUDGMENT.
+
+Both replacement strings are the mechanical
+output of substituting current canonical content
+for retired content. No new design content is
+introduced. RR-SCOPE-005 (derivable-decision
+execution) applies — surface as ratification
+not as revision question.
+
+------------------------------------------------------------
+3.6 F-16 — PLURAL-ALERT PROPAGATION GAP
+------------------------------------------------------------
+
+WHAT THE FINDING IS.
+
+The bot sends alerts (drawdown halts, WS failures,
+emergency stops, etc.) by email. There are two
+candidate destination addresses:
+
+  - "alert@tothbot.com" (singular) — does not
+    exist at the mail provider. Proton Mail's
+    domain catch-all reserves the singular form
+    so the mailbox cannot be created. Every
+    email sent here bounces with "550 5.1.1
+    Recipient address rejected."
+
+  - "alerts@tothbot.com" (plural) — exists.
+    Emails sent here are delivered.
+
+In April 2026 (TB00115) Bill discovered that
+between 04-19 and 04-20 every CRITICAL/HIGH
+alert had bounced — the only signal that
+anything was wrong was a bounce notification.
+The fix (OI-019) renamed every code default
+from singular to plural. The 1011013 dv1_5
+amendment ratified that change at the VPS
+Deployment coding-spec layer.
+
+The Operations Infrastructure parent spec
+(0211002) still has four places that route
+alerts to the singular name:
+
+  - §5 IN-NET-001 (network failure alert)
+  - §7 IN-ALT-001 (alert routing rule)
+  - §7 IN-ALT-003 (alert escalation rule)
+  - §8 IN-LOG-003 (alert log entry)
+
+The parent spec predates the OI-019 fix and was
+never refreshed.
+
+OPTION (AUTHORIZE PROSE-UPDATE-BR(a)) — change
+all four references from singular to plural.
+
+ANALYSIS.
+
+Criterion (i) diagrams-canonical: the
+architecture diagram doesn't directly encode
+the alert recipient string; it references the
+operational spec. Update the operational spec
+and the diagram's truth-telling improves
+indirectly.
+
+Criterion (ii) AA=08 over AA=10: this is an
+AA=02 parent spec versus an AA=10 child spec
+question, not AA=08-vs-AA=10. Under normal
+precedence the AA=02 parent would govern — but
+in this case the AA=10 child carries the
+ratified fix (OI-019), and the parent has
+fallen behind. The AA=10 fix has documented
+empirical justification (bounce evidence) and
+explicit operator ratification. The AA=02
+parent needs to be brought current — not
+inverted.
+
+Criterion (iii) loss prevention: the singular
+mailbox bounces. Alerts to a bouncing mailbox
+are invisible alerts. Invisible alerts mean
+the operator cannot intervene during a crisis.
+This is a direct, active, ongoing loss-
+prevention failure for the part of 0211002
+that still references singular. Fix is
+urgent.
+
+Criterion (iv) information richness: zero
+impact on information content; this is purely
+a routing-correctness issue.
+
+Criterion (v) rework cost: four mechanical
+string replacements in one document. RR-SCOPE-
+005 derivable (the answer is unambiguous —
+plural is the only one that works).
+
+Five criteria. Three favor fix unambiguously
+(i, iii, v). Criterion (ii) has a wrinkle that
+resolves toward fix anyway. Criterion (iv) is
+a tie.
+
+RECOMMENDATION.
+
+Authorize PROSE-UPDATE-BR(a). Amend 0211002
+in all four places (IN-NET-001, IN-ALT-001,
+IN-ALT-003, IN-LOG-003) to replace
+"alert@tothbot.com" with "alerts@tothbot.com."
+
+The amendment is bundled into AMENDMENT-16 in
+the close-gate package.
+
+WHY THIS DECISION IS DERIVABLE WITHOUT BILL
+JUDGMENT.
+
+The empirical evidence (singular mailbox does
+not exist; alerts bounce) plus the existing
+ratified fix at the AA=10 layer plus the active
+loss-prevention failure make this a confirmation,
+not a decision. Per RR-SCOPE-005, surface as
+recommended authorization rather than as
+question for Bill to decide.
+
+------------------------------------------------------------
+3.7 F-18 — 0211002 §11 MULTI-CITATION VERSION-LAG
+------------------------------------------------------------
+
+WHAT THE FINDING IS.
+
+Operations Infrastructure §11 (the Related
+Documents section) lists four documents by name
+and version number. Three of those version
+numbers are stale:
+
+  - Cites 1011013 dv1_3. Current is dv1_6
+    (lag of 3 versions).
+  - Cites 0500000 dv1_18. Current is dv1_46
+    (lag of 28 versions).
+  - Cites 0511001 dv1_0. Current is dv1_6
+    (lag of 6 versions).
+  - Cites 0511006 dv1_0. Current is dv1_1
+    (lag of 1 version).
+  - Cites 0211001 dv1_0. Current. No change
+    needed.
+
+This is mechanical citation refresh — replace
+old version numbers with current version
+numbers.
+
+OPTION (AUTHORIZE PROSE-UPDATE-BR(d)) —
+mechanical refresh of all four lagged citations.
+
+ANALYSIS.
+
+Criterion (i) diagrams-canonical: citation
+freshness is not a diagram-canonical issue
+directly. Indirect — fresh citations make the
+document graph more navigable.
+
+Criterion (ii) AA=08 over AA=10: not
+applicable.
+
+Criterion (iii) loss prevention: stale
+citations don't directly cause loss, but they
+do cause downstream readers (including future
+Claude sessions during cold-load) to follow
+links to outdated content. This costs cold-load
+accuracy. Fix is preventive.
+
+Criterion (iv) information richness: fresh
+citations point to current authoritative
+content. Stale citations point to retired or
+superseded content. Fresh is richer.
+
+Criterion (v) rework cost: four mechanical
+version-number replacements in one section of
+one document. RR-SCOPE-005 derivable.
+
+RECOMMENDATION.
+
+Authorize PROSE-UPDATE-BR(d). Refresh the four
+citations in 0211002 §11:
+
+  1011013 dv1_3 → 1011013 dv1_6
+  0500000 dv1_18 → 0500000 dv1_46
+  0511001 dv1_0 → 0511001 dv1_6
+  0511006 dv1_0 → 0511006 dv1_1
+  0211001 dv1_0 → unchanged (already current)
+
+The amendment is bundled into AMENDMENT-16 in
+the close-gate package.
+
+WHY THIS DECISION IS DERIVABLE WITHOUT BILL
+JUDGMENT.
+
+Each replacement is the mechanical output of
+substituting the current version number. No
+business judgment is needed. Per RR-SCOPE-005,
+surface as recommended authorization.
+
+------------------------------------------------------------
+3.8 F-24 — VPS DEPLOYMENT READY-CRITERION
+            AMENDMENT
+------------------------------------------------------------
+
+WHAT THE FINDING IS.
+
+When the bot starts up on the VPS, it tells the
+operating system "I am READY" via the sd_notify
+mechanism. The condition under which the bot
+declares itself READY is defined in the VPS
+Deployment coding spec (1011013 dv1_6 §7 rule
+VD-WD-004) as four sub-conditions, all of
+which must be met:
+
+  (a) All WS channels subscribed.
+  (b) All pairs in READY state.
+  (c) Position Mirror reconciled.
+  (d) Kraken Status API check complete.
+
+Two of the four sub-conditions are wrong.
+
+PROBLEM WITH (b) — "All pairs in READY state."
+
+Three canonical sources unanimously specify "at
+least one pair in READY state" as the trigger:
+
+  - 1011014 dv1_8 (Startup_Sequence coding
+    spec) SS-STARTUP-022/026.
+  - 0211003 dv1_0 (Startup/Shutdown procedure)
+    SS-START-009.
+  - 0500000 dv1_46 (architecture diagram)
+    AR-049 step (9).
+
+"All pairs in READY state" is operationally
+infeasible. Pairs can remain in BLOCKED state
+(failed indicator warmup, insufficient
+liquidity, etc.) or in WARM_UP state
+(insufficient candle history) indefinitely.
+Waiting for ALL pairs to become READY would
+mean the bot might NEVER become READY — even
+when many pairs are perfectly tradeable. This
+defeats the entire first-READY-pair startup
+design that the three canonical sources
+encode.
+
+PROBLEM WITH (c) — "Position Mirror reconciled."
+
+This sub-condition is correct in live mode.
+Position Mirror reconciliation happens at
+startup Step 6 (snap_orders) and ensures the
+bot's view of open positions matches Kraken's
+view. But in paper mode, Step 6 is skipped per
+SS-PAPER-004 (paper mode does not connect to
+the private WebSocket; there are no real
+Kraken positions to reconcile). Without a
+paper-mode exception clause, paper mode could
+never satisfy sub-condition (c) and could
+never become READY.
+
+OPTION (RATIFY CA-1 (b) wording change AND
+CA-2 (c) paper-mode exception clause).
+
+ANALYSIS.
+
+Criterion (i) diagrams-canonical: the
+architecture diagram already specifies "at
+least one pair READY" via AR-049 step (9).
+Sub-condition (b) currently contradicts the
+diagram. CA-1 brings the coding spec back into
+agreement with the diagram. CA-2 makes the
+paper-mode behavior explicit; the diagram
+already encodes paper-mode skipping of Step 6
+elsewhere (paper-mode-canonical principle from
+TB00000 §4.4). Both fixes restore diagram-
+canonical agreement.
+
+Criterion (ii) AA=08 over AA=10: 1011013 is
+an AA=10 coding spec. The three canonical
+sources include the AA=08 architectural
+position (via 0500000 diagram) and the AA=02
+operational procedure (0211003). Both senior
+layers say "at least one pair." CA-1 brings
+the AA=10 spec into compliance with the
+senior layers.
+
+Criterion (iii) loss prevention: a bot that
+never becomes READY cannot trade. Cannot
+trade means cannot make money — but also
+means cannot LOSE money via active trading.
+However, a bot that fails to become READY is
+also a bot that produces ZERO data for CIATS,
+ZERO trade observations, ZERO regime-engine
+validation, and a frustrated operator who may
+work around the issue in unsafe ways. The
+correct behavior (start trading once SOMETHING
+is ready) is loss-prevention positive over
+the project lifetime. CA-2 prevents paper-
+mode total stall, which has its own data-loss
+costs (paper-trading IS the master per §4.4
+PA-001; if paper can't run, the project
+can't make progress).
+
+Criterion (iv) information richness: not
+directly applicable.
+
+Criterion (v) rework cost: two mechanical
+edits in one document. CA-1 changes one word
+("All" → "At least one"). CA-2 adds a short
+clause to sub-condition (c). Single-pass fix.
+
+All applicable criteria favor RATIFY.
+
+RECOMMENDATION.
+
+Ratify CA-1 and CA-2 together.
+
+CA-1 — Amend 1011013 §7 VD-WD-004 sub-condition
+(b):
+
+  Replace
+    "All pairs in READY state."
+  with
+    "At least one pair in READY state."
+
+CA-2 — Amend 1011013 §7 VD-WD-004 sub-condition
+(c):
+
+  Replace
+    "Position Mirror reconciled."
+  with
+    "Position Mirror reconciled (skipped in
+    paper mode per SS-PAPER-004)."
+
+The amendments are bundled into AMENDMENT-17 in
+the close-gate package.
+
+WHY THIS DECISION IS DERIVABLE WITHOUT BILL
+JUDGMENT.
+
+The three canonical sources unanimously specify
+the "at least one pair READY" form. The paper-
+mode skip of Step 6 is already canonical
+elsewhere. Both fixes are mechanical alignment
+to existing canonical sources. No Bill business
+judgment is needed. Per RR-SCOPE-005, surface
+as recommended ratification.
+
+============================================================
+4. CUMULATIVE DISPOSITIONS SUMMARY
+============================================================
+
+The eight findings resolve to eight definitive
+recommendations. Seven of the eight are
+mechanical alignment to existing canonical
+sources; one (F-01) is governed by the AA=08-
+over-AA=10 precedence rule combined with the
+loss-prevention mission.
+
+  F-01  FIRE CIATS on partial-fill-below-minimum.
+        Amend 1011008 §8 to remove the
+        suppression rule; align with 0811001
+        §5.5 LM-019(2).
+
+  F-03  Align coding spec to architectural spec.
+        Amend 1011009 §4 SC-STATE-001 to rename
+        "cooldown_registry" to "exit_cooldown_log."
+
+  F-04  Use enum signature. Amend 1011009
+        SC-STATE-004 to change on_position_closed
+        signature from was_win:bool to
+        exit_reason:enum.
+
+  F-07  Add 0611004 to 1011011 parent chain.
+        Plus formalize the parent-chain-
+        completeness rule.
+
+  F-15  Add 0211002 reference to 0500000 dv1_46
+        prose. Companion to F-07 parent-chain-
+        completeness rule.
+
+  F-12  Update D2 R2 G3 cell to directional-
+        cascade wording. Update D2 R2 G6 cell to
+        v2_29 §9.17 sizing-curve parameters.
+
+  F-16  Update 0211002 §5 IN-NET-001 + §7
+        IN-ALT-001 + §7 IN-ALT-003 + §8
+        IN-LOG-003 to plural alerts@tothbot.com.
+
+  F-18  Refresh 0211002 §11 four stale version
+        citations to current versions.
+
+  F-24  Ratify CA-1 (b) "at least one pair READY"
+        + CA-2 (c) paper-mode exception clause.
+
+All eight recommendations are derivable from
+existing canonical sources without Bill business
+judgment. Per the TB00207 SL v1_1 §3.5 verbatim
+Bill directive ("not three options for Bill to
+choose between"), each finding is presented as
+a definitive recommendation rather than as an
+option-set requiring Bill selection.
+
+The seven non-F-01 recommendations are
+mechanical citation alignments, naming
+alignments, prose updates, or version refreshes.
+F-01 is the only finding that depended on a
+project-rule precedent (AA=08 over AA=10) plus
+the loss-prevention mission to derive — but
+both inputs were unambiguous from existing
+project standing rules.
+
+============================================================
+5. WHY THIS RECOMMENDATION SERVES THE PRIMARY
+   MISSION
+============================================================
+
+The primary mission is maximize profit, minimize
+loss, with emphasis on minimizing loss.
+
+These eight recommendations serve the mission in
+five ways:
+
+  (1) They restore truth-telling to the canonical
+      architecture diagram. Diagrams that contradict
+      specs that contradict code is the failure
+      mode that diagrams-as-canonical was adopted
+      to prevent (TB00152 SL §5.1 Bill verbatim
+      from before TB00149; reaffirmed TB00163
+      chat-turn 4). Every recommendation above
+      restores agreement between diagram, parent
+      spec, and coding spec.
+
+  (2) They eliminate active loss-prevention
+      failures (F-16 plural-alert, F-24 READY-
+      criterion). F-16 closes a known-bouncing
+      alert path that has demonstrably hidden
+      CRITICAL events in the past. F-24 closes
+      a paper-mode startup-stall path that
+      blocks the paper-as-master data pipeline.
+
+  (3) They increase the information density of
+      data flowing to CIATS (F-01 fire-CIATS,
+      F-04 enum signature). More data and richer
+      data both serve loss-prevention by letting
+      CIATS detect parameter problems sooner.
+
+  (4) They close cross-document drift before it
+      compounds (F-03 naming, F-07/F-15 parent
+      chains, F-12 retired-parameter prose,
+      F-18 version citations). Drift that
+      accumulates becomes harder to close. Each
+      of these recommendations closes a small
+      drift before it grows.
+
+  (5) They produce zero redo work on the first
+      pass. Every recommendation is derived from
+      existing canonical sources and is
+      authorizable without Bill business judgment.
+      The work to execute these amendments will
+      not require a second pass to repair a
+      first-pass error.
+
+============================================================
+6. WHAT BILL IS BEING ASKED TO RATIFY
+============================================================
+
+Eight discrete dispositions. Each ratifiable
+independently. Each derivable without Bill
+business judgment per RR-SCOPE-005, but each
+requires Bill's explicit ratification to enter
+the post-Step-3-close authoring queue (S-2
+diagram amendments, S-3 prose updates).
+
+The ratification checklist:
+
+  [ ] F-01  FIRE CIATS on partial-fill-below-
+            minimum (Option A).
+
+  [ ] F-03  Align 1011009 to 0811002 + diagram
+            (Option X).
+
+  [ ] F-04  Use exit_reason:enum signature
+            (Option Y).
+
+  [ ] F-07 + F-15  Confirm 4-parent canonical
+            requirement.
+
+  [ ] F-12  Ratify D2 R2 G3 + G6 cell-prose
+            wording per §3.5 above.
+
+  [ ] F-16  Authorize PROSE-UPDATE-BR(a)
+            plural-alert refresh.
+
+  [ ] F-18  Authorize PROSE-UPDATE-BR(d)
+            version-citation refresh.
+
+  [ ] F-24  Ratify CA-1 (b) "at least one pair
+            READY" + CA-2 (c) paper-mode
+            exception clause.
+
+Bill may ratify the eight items together (one
+batch ratification) or individually (item-by-
+item review). Per the close-gate package §7
+ratification flow, the eight dispositions feed
+the post-Step-3 S-2 / S-3 authoring queue
+alongside the Gates 1, 2, and 3 dispositions.
+
+If Bill REVISES any of the eight rather than
+ratifying, Claude produces a revised disposition
+for the affected finding in a subsequent turn
+and re-surfaces for ratification.
+
+============================================================
+7. REVISION HISTORY
+============================================================
+
+  v1_0  2026-05-11  Initial. First-Principles /
+                    Data-Point analysis of the 8
+                    discrete Gate 4 findings from
+                    the TB00207 Step 3 Close-Gate
+                    Preliminary Package. Each
+                    finding analyzed against five
+                    criteria (diagrams-canonical
+                    correctness, AA=08 over AA=10
+                    precedence, loss prevention,
+                    information richness for
+                    CIATS, fewest errors and
+                    least rework). All eight
+                    recommendations derivable
+                    from existing canonical
+                    sources without Bill business
+                    judgment per RR-SCOPE-005
+                    derivable-decision discipline.
+                    Definitive recommendations
+                    delivered without three-
+                    option enumeration per
+                    TB00207 SL v1_1 §3.5 verbatim
+                    Bill directive. Authored
+                    under one-document-per-turn
+                    rule established at TB00207
+                    chat-turn 4. Single work-
+                    product deliverable this
+                    turn. Gate 5 plain-language
+                    explanation deferred to
+                    next turn per TB00209 NSI
+                    v1_0 §3.2.
+
+============================================================
+END OF DOCUMENT
+============================================================

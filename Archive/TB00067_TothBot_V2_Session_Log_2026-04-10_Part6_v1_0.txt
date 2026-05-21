@@ -1,0 +1,582 @@
+DocDCN:     TB00067
+DocTitle:   TothBot_V2_Session_Log_2026-04-10_Part6
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\My_TothBot_Stuff\TBXXXXX_Session_Logs\TB00067_TothBot_V2_Session_Log_2026-04-10_Part6_v1_0.txt
+DocDate:    04-10-2026
+DocTime:    21:06:21 UTC
+
+============================================================
+TOTHBOT V2 SESSION LOG — 2026-04-10 PART 6
+============================================================
+
+============================================================
+1. SESSION IDENTITY
+============================================================
+
+Session date:     April 10, 2026
+Session number:   TB00067
+Session type:     Phase 11 — ws_manager.py GitHub commit,
+                  VPS deploy, service start, crash diagnosis.
+                  Root cause identified. Fix specified.
+                  Fix NOT delivered — project file visibility
+                  limitation prevented reading paper trading
+                  source mid-session.
+Prior session:    TB00066 (2026-04-10 Part 5)
+
+Documents read:
+  TB00000  v2_8   Project Instructions              checked
+  TB00066  v1_0   Most recent session log           checked
+  TB00065  v1_0   Session log                       checked
+  TB00064  v1_0   Session log                       checked
+  TB00063  v1_0   FP/DP analysis / impl spec        checked
+  TB00062  v1_0   Session log                       checked
+
+============================================================
+2. WORK COMPLETED THIS SESSION
+============================================================
+
+------------------------------------------------------------
+2.1 ws_manager.py Committed to GitHub and Deployed to VPS
+------------------------------------------------------------
+
+Bill downloaded ws_manager.py (TB00066 paper trading version,
+2,652 lines, 25 paper_mode references) and uploaded to project
+folder. File copied to GitHub working copy and committed.
+
+Git operations executed:
+  cd C:\Users\wstot\GitHub\TothBot\TothBot_V2-Code
+  git add tothbot/ws_manager.py
+  git commit -m "Feat: implement paper trading mode"
+  — Initial push rejected (remote had work not in local)
+  git stash
+  — stash saved startup_sequence.py unstaged changes
+  git pull --rebase origin master
+  — rebased successfully
+  git stash pop
+  — popped: startup_sequence.py restored as modified
+    (untracked files also surfaced: .gitignore, README.md,
+     config/, deploy/, scripts/, tests/, tothbot/__init__.py,
+     tothbot/execution_engine.py.txt, tatus, test_output.txt)
+  git push origin master
+  — Commit: 6e0843c
+  — 1 file changed, 81 insertions(+), 106 deletions(-)
+
+VPS pull:
+  ssh -i C:\Users\wstot\.ssh\id_ed25519 root@87.99.141.44
+  source /root/tothbot_env/bin/activate
+  cd /root/TothBot_V2-Code
+  git pull origin master
+  — Fast-forward confirmed
+  — tothbot/ws_manager.py: 81 insertions(+), 106 deletions(-)
+
+Env vars verified:
+  grep PAPER /root/.tothbot.env
+  → PAPER_TRADING_MODE=true ✓
+  grep PAPER /root/TothBot_V2-Code/.tothbot.env
+  → PAPER_TRADING_MODE=true ✓
+
+------------------------------------------------------------
+2.2 Service Started — Crash Loop on EAPI:Invalid key
+------------------------------------------------------------
+
+systemctl start tothbot — service entered crash loop.
+
+Log output (tail -50):
+  TOTHBOT_STARTING           ← startup sequence fired
+  PAPER_TRADING_MODE_ON      ← paper mode detected correctly
+  KRAKEN_STATUS_CLEAN        ← VPS check passed
+  COMPONENTS_WIRED           ← all components instantiated
+  CIATS_STARTED              ← CIATS task started
+  WS_MGR_FATAL: GetWebSocketsToken error: ['EAPI:Invalid key']
+  WSMGR_FATAL_PROPAGATED     ← systemd restarting
+  (repeats every ~5-8 seconds)
+
+Service stopped: systemctl stop tothbot
+
+------------------------------------------------------------
+2.3 Root Cause Analysis — Full Code Deep Dive
+------------------------------------------------------------
+
+Full ws_manager.py code audit performed.
+
+Root cause confirmed: _startup_connect_and_subscribe() calls
+_rest_get_ws_token() unconditionally at line 590 of the
+pre-paper version (same line in paper trading version).
+No paper_mode gate exists on this call.
+
+In paper trading mode:
+  - Order dispatch is suppressed (add_order, batch_add,
+    cancel_order, amend_order, batch_cancel,
+    dispatch_market_sell all have paper_mode gates)
+  - Fills are simulated via _simulate_entry_fill()
+  - Paper TP/emergSL detection via ticker handler
+  - BUT: the private WS is still connected at startup
+  - AND: GetWebSocketsToken is still called at startup
+  - AND: _recv_loop_private() is still started
+  - AND: _ping_loop() still pings private WS
+  - AND: _zombie_monitor() still monitors private WS
+
+The TRADE API key on VPS is either:
+  (a) Invalid / expired
+  (b) Not set or set incorrectly in .tothbot.env
+
+In paper mode, the TRADE API key is irrelevant — no real
+orders are dispatched. The private WS should not be
+connected in paper mode at all.
+
+------------------------------------------------------------
+2.4 Fix Required — 4 Methods in ws_manager.py
+------------------------------------------------------------
+
+None of the 10 TB00063 §2.4 paper trading changes touched
+these 4 methods. All 4 require paper mode gates.
+
+FIX-WM-PT-001: _startup_connect_and_subscribe()
+  Current (broken):
+    async def _startup_connect_and_subscribe(self) -> None:
+        """
+        Execute startup connection and subscription sequence.
+        Steps 1-5 per 1011014. Indicator seeding (7a/7b)
+        called separately.
+        """
+        # Step 1: Acquire WS auth token
+        self._ws_token = await self._rest_get_ws_token()
+
+        # Steps 2-3: Connect public and private WS
+        self._ws_public = await self._ws_connect(PUBLIC_WS_URI)
+        self._ws_private = await self._ws_connect(PRIVATE_WS_URI)
+
+        # Step 4: Subscribe all channels
+        await self._subscribe_public()
+        await self._subscribe_private()
+
+  Required (corrected):
+    async def _startup_connect_and_subscribe(self) -> None:
+        """
+        Execute startup connection and subscription sequence.
+        Steps 1-5 per 1011014. Indicator seeding (7a/7b)
+        called separately.
+        Paper mode: skip private WS entirely — no auth needed.
+        """
+        if self.paper_mode:
+            # Paper mode: private WS not needed.
+            # Order dispatch suppressed — no auth required.
+            # Set paper trading balance from config (default $10,000).
+            paper_balance = Decimal(str(
+                self._config.get("paper_trading_balance", "10000")
+            ))
+            self.spot_usd_balance = paper_balance
+            self.portfolio_baseline_USD = paper_balance
+            self._logger.info(log_record({
+                "event": "PAPER_BALANCE_SET",
+                "level": "INFO",
+                "component": "WS_MGR",
+                "balance_usd": str(paper_balance),
+                "note": "Private WS skipped — paper mode",
+            }))
+            # Connect public WS only
+            self._ws_public = await self._ws_connect(PUBLIC_WS_URI)
+            await self._subscribe_public()
+            return
+
+        # Step 1: Acquire WS auth token
+        self._ws_token = await self._rest_get_ws_token()
+
+        # Steps 2-3: Connect public and private WS
+        self._ws_public = await self._ws_connect(PUBLIC_WS_URI)
+        self._ws_private = await self._ws_connect(PRIVATE_WS_URI)
+
+        # Step 4: Subscribe all channels
+        await self._subscribe_public()
+        await self._subscribe_private()
+
+FIX-WM-PT-002: _main_loop()
+  Current (broken):
+    async def _main_loop(self) -> None:
+        """
+        Run concurrent receive loops + health monitoring tasks.
+        """
+        async with asyncio.TaskGroup() as tg:
+            tg.create_task(self._recv_loop_public())
+            tg.create_task(self._recv_loop_private())
+            tg.create_task(self._ping_loop())
+            tg.create_task(self._zombie_monitor())
+
+  Required (corrected):
+    async def _main_loop(self) -> None:
+        """
+        Run concurrent receive loops + health monitoring tasks.
+        Paper mode: private recv loop omitted (_ws_private
+        is None).
+        """
+        if self.paper_mode:
+            async with asyncio.TaskGroup() as tg:
+                tg.create_task(self._recv_loop_public())
+                tg.create_task(self._ping_loop())
+                tg.create_task(self._zombie_monitor())
+            return
+        async with asyncio.TaskGroup() as tg:
+            tg.create_task(self._recv_loop_public())
+            tg.create_task(self._recv_loop_private())
+            tg.create_task(self._ping_loop())
+            tg.create_task(self._zombie_monitor())
+
+FIX-WM-PT-003: _ping_loop() — private ping section
+  Current (broken):
+    # Ping private
+    if self._awaiting_pong_priv:
+        if (self._ping_sent_priv and
+                now - self._ping_sent_priv > PING_TIMEOUT_SEC):
+            self._logger.critical(log_record({
+                "event": "PING_TIMEOUT",
+                "level": "CRITICAL",
+                "component": "WS_MGR",
+                "connection_id": self.connection_id_private,
+            }))
+            await self._initiate_reconnect()
+            return
+    else:
+        priv_req_id = self._next_req_id()
+        self._ping_req_id_priv = priv_req_id
+        self._ping_sent_priv = now
+        self._awaiting_pong_priv = True
+        await self._send_private({
+            "method": "ping",
+            "req_id": priv_req_id,
+        })
+        self._logger.debug(log_record({
+            "event": "PING_SENT",
+            "level": "DEBUG",
+            "component": "WS_MGR",
+            "connection_id": self.connection_id_private,
+            "req_id": priv_req_id,
+        }))
+
+  Required (corrected):
+    # Ping private — skipped in paper mode (_ws_private is None)
+    if self._ws_private is not None:
+        if self._awaiting_pong_priv:
+            if (self._ping_sent_priv and
+                    now - self._ping_sent_priv > PING_TIMEOUT_SEC):
+                self._logger.critical(log_record({
+                    "event": "PING_TIMEOUT",
+                    "level": "CRITICAL",
+                    "component": "WS_MGR",
+                    "connection_id": self.connection_id_private,
+                }))
+                await self._initiate_reconnect()
+                return
+        else:
+            priv_req_id = self._next_req_id()
+            self._ping_req_id_priv = priv_req_id
+            self._ping_sent_priv = now
+            self._awaiting_pong_priv = True
+            await self._send_private({
+                "method": "ping",
+                "req_id": priv_req_id,
+            })
+            self._logger.debug(log_record({
+                "event": "PING_SENT",
+                "level": "DEBUG",
+                "component": "WS_MGR",
+                "connection_id": self.connection_id_private,
+                "req_id": priv_req_id,
+            }))
+
+FIX-WM-PT-004: _zombie_monitor() — private zombie section
+  Current (broken):
+    if now - self._last_real_data_private > ZOMBIE_THRESHOLD_SEC:
+        elapsed = now - self._last_real_data_private
+        self._logger.critical(log_record({
+            "event": "ZOMBIE_CONNECTION_DETECTED",
+            "level": "CRITICAL",
+            "component": "WS_MGR",
+            "connection_id": self.connection_id_private,
+            "elapsed_seconds": Decimal(str(round(elapsed, 1))),
+        }))
+        _alert_operator_direct(
+            f"ZOMBIE connection detected (private). "
+            f"No real data for {elapsed:.0f}s. Reconnecting."
+        )
+        await self._initiate_reconnect()
+        return
+
+  Required (corrected):
+    # Private zombie check — skipped in paper mode
+    # (_ws_private is None)
+    if self._ws_private is not None:
+        if now - self._last_real_data_private > ZOMBIE_THRESHOLD_SEC:
+            elapsed = now - self._last_real_data_private
+            self._logger.critical(log_record({
+                "event": "ZOMBIE_CONNECTION_DETECTED",
+                "level": "CRITICAL",
+                "component": "WS_MGR",
+                "connection_id": self.connection_id_private,
+                "elapsed_seconds": Decimal(str(round(elapsed, 1))),
+            }))
+            _alert_operator_direct(
+                f"ZOMBIE connection detected (private). "
+                f"No real data for {elapsed:.0f}s. Reconnecting."
+            )
+            await self._initiate_reconnect()
+            return
+
+------------------------------------------------------------
+2.5 Fix NOT Delivered — Project File Visibility Limitation
+------------------------------------------------------------
+
+The paper trading ws_manager.py (TB00066 version, 2,652 lines,
+25 paper_mode references) was uploaded to the project folder
+mid-session. Claude cannot see files uploaded to the project
+during an active session. The project filesystem snapshot is
+taken at session start and does not refresh mid-session.
+
+The /mnt/project/ws_manager.py visible to Claude this session
+was the pre-paper-trading version (2,485 lines, 0 paper_mode
+references — the Apr 10 20:34 UTC snapshot).
+
+Claude cannot apply str_replace to the pre-paper version to
+produce the paper trading version + 4 fixes. The paper trading
+source is required as the base.
+
+Fix delivery deferred to next session. Bill must ensure the
+paper trading ws_manager.py is in the project folder BEFORE
+the next session starts.
+
+------------------------------------------------------------
+2.6 Additional Finding — Untracked Files in GitHub Repo
+------------------------------------------------------------
+
+git stash pop surfaced untracked files in TothBot_V2-Code:
+  .gitignore
+  README.md
+  config/
+  deploy/
+  scripts/
+  tatus              ← likely a typo artifact ("git status")
+  test_output.txt
+  tests/integration/
+  tests/paper_trading/
+  tests/unit/
+  tothbot/__init__.py
+  tothbot/execution_engine.py.txt
+
+These are not committed. They are not blocking.
+Address after PT-ENTRY complete.
+Parking Lot: PL-NEW-009.
+
+============================================================
+3. CURRENT STATE AT END OF SESSION
+============================================================
+
+  GitHub:       commit 6e0843c — ws_manager.py is the TB00066
+                paper trading version (2,652 lines).
+                BUT: _startup_connect_and_subscribe(),
+                _main_loop(), _ping_loop(), _zombie_monitor()
+                have no paper mode gates — DEFECTIVE.
+
+  VPS code:     commit 6e0843c — same defective version.
+                Service STOPPED.
+
+  Project folder ws_manager.py: UNKNOWN — Bill uploaded the
+                paper trading version mid-session but Claude
+                cannot confirm it is visible yet. Will be
+                confirmed at next session start.
+
+  Project folder startup_sequence.py: matches 7ae8cf5 ✓
+
+  Service:      STOPPED
+
+  VPS env files:
+    /root/.tothbot.env               — PAPER_TRADING_MODE=true ✓
+    /root/TothBot_V2-Code/.tothbot.env — PAPER_TRADING_MODE=true ✓
+
+  PT-ENTRY STATUS:
+    PT-ENTRY-001  All unit tests pass             DONE
+    PT-ENTRY-002  All integration tests pass      DONE
+    PT-ENTRY-003  VPS deployed per 1011013        PENDING
+                  (service crashes — DEFECT-WM-PT-002)
+    PT-ENTRY-004  logrotate configured            DONE (PL)
+    PT-ENTRY-005  IP whitelist confirmed          DONE
+    PT-ENTRY-006  Alert email confirmed           DONE
+    PT-ENTRY-007  systemd auto-restart confirmed  PENDING
+    PT-ENTRY-008  Startup sequence confirmed      PENDING
+
+============================================================
+4. DEFECT LOG
+============================================================
+
+  DEFECT-SS-001
+    File:       startup_sequence.py
+    Status:     FIXED — commit 7ae8cf5
+
+  DEFECT-WM-PT-001
+    File:       ws_manager.py
+    Status:     FIXED — commit 6e0843c
+    Note:       Paper trading order gates implemented.
+                10 changes per TB00063 §2.4 confirmed.
+
+  DEFECT-WM-PT-002
+    File:       ws_manager.py
+    Defect:     _startup_connect_and_subscribe() calls
+                _rest_get_ws_token() unconditionally.
+                In paper mode, private WS auth is not needed
+                and must not be called.
+                Three additional methods also unguarded:
+                _main_loop() starts _recv_loop_private()
+                unconditionally.
+                _ping_loop() pings _ws_private unconditionally.
+                _zombie_monitor() monitors _ws_private
+                unconditionally.
+    Root cause: TB00063 §2.4 paper trading spec did not
+                include gates on these 4 infrastructure
+                methods. Spec gap, not an implementation
+                error.
+    Fix:        FIX-WM-PT-001 through FIX-WM-PT-004 (§2.4
+                above). Complete corrected ws_manager.py
+                to be delivered next session.
+    Status:     OPEN — fix specified, not yet delivered.
+
+============================================================
+5. NEXT SESSION OPENING INSTRUCTIONS
+============================================================
+
+  ============================================================
+  MANDATORY: Read TB00000 v2_8 and TB00067 before any work.
+
+  CONFIRM FIRST:
+    grep -c "paper_mode" /mnt/project/ws_manager.py
+    MUST return a non-zero count.
+    If it returns 0, the project file is the pre-paper
+    version. STOP. Tell Bill. Do not proceed until the
+    paper trading ws_manager.py is in the project folder.
+
+  TASK: Deliver complete corrected ws_manager.py as .txt
+  per DR-001 and DR-003.
+
+  SOURCE: /mnt/project/ws_manager.py
+    (must be the paper trading version — 2,652 lines,
+     25+ paper_mode references, confirmed by grep above)
+
+  CHANGES TO APPLY — 4 changes, all in §2.4 of this log:
+    FIX-WM-PT-001: _startup_connect_and_subscribe()
+      Add paper mode gate. Skip token + private WS.
+      Set paper_balance from config (default $10,000).
+      Set spot_usd_balance and portfolio_baseline_USD.
+      Log PAPER_BALANCE_SET. Connect public WS only.
+      Return early. Live path unchanged.
+
+    FIX-WM-PT-002: _main_loop()
+      Add paper mode gate. Skip _recv_loop_private().
+      Paper path: public + ping + zombie only.
+      Live path: all 4 tasks unchanged.
+
+    FIX-WM-PT-003: _ping_loop() private section
+      Wrap entire private ping block in:
+        if self._ws_private is not None:
+      Indent private ping block one level.
+      Public ping unchanged.
+
+    FIX-WM-PT-004: _zombie_monitor() private section
+      Wrap private zombie check block in:
+        if self._ws_private is not None:
+      Indent private zombie block one level.
+      Public zombie check unchanged.
+
+  DELIVERY RULES (DR-001, DR-003):
+    Deliver complete corrected ws_manager.py as:
+      ws_manager.py.txt
+    Syntax-verify with ast.parse() before delivery.
+    Deliver in ONE BATCH.
+    No patches. No diffs. Complete file only.
+
+  AFTER DELIVERY — Bill actions:
+    Step 1: Download ws_manager.py.txt
+    Step 2: Rename to ws_manager.py
+    Step 3: Copy to:
+      C:\Users\wstot\GitHub\TothBot\TothBot_V2-Code\tothbot\ws_manager.py
+    Step 4:
+      cd C:\Users\wstot\GitHub\TothBot\TothBot_V2-Code
+    Step 5:
+      git add tothbot/ws_manager.py
+    Step 6:
+      git commit -m "Fix: paper trading private WS gate"
+    Step 7:
+      git push origin master
+    Step 8:
+      ssh -i C:\Users\wstot\.ssh\id_ed25519 root@87.99.141.44
+    Step 9:
+      source /root/tothbot_env/bin/activate
+    Step 10:
+      cd /root/TothBot_V2-Code
+    Step 11:
+      git pull origin master
+    Step 12:
+      systemctl start tothbot
+    Step 13:
+      sleep 5 && tail -50 /home/tothbot/logs/tothbot.log
+      MUST see: PAPER_TRADING_MODE_ON
+      MUST see: PAPER_BALANCE_SET
+      MUST see: WS_CONNECTED (public only)
+      MUST NOT see: WS_MGR_FATAL
+      MUST NOT see: crash loop (TOTHBOT_STARTING repeating)
+    Step 14:
+      systemctl status tothbot
+      MUST show: active (running)
+
+  AFTER SERVICE CONFIRMED RUNNING:
+    Complete PT-ENTRY checklist:
+      PT-ENTRY-003: VPS deployed and paper mode active
+      PT-ENTRY-007: systemd auto-restart confirmed
+      PT-ENTRY-008: Startup sequence confirmed, pairs READY
+
+  ============================================================
+
+============================================================
+6. PARKING LOT
+============================================================
+
+  PL-001      WSManager dual PM creation paths. Monitor.
+
+  PL-003      Pathway 1 GitHub automation. After paper trading.
+
+  PL-NEW-003  VPS migration to Hillsboro OR. After stable.
+
+  PL-NEW-004  EE ENTRY_TIMEOUT_SEC vs WM ENTRY_GTD_SEC.
+              Monitor during paper trading.
+
+  PL-NEW-005  requirements.txt — websockets>=13.0.
+
+  PL-NEW-006  tothbot.service in GitHub not updated.
+              Type=simple, no WatchdogSec. After PT-ENTRY.
+
+  PL-NEW-007  LOG_FILE path mismatch. After PT-ENTRY.
+
+  PL-NEW-008  Heartbeat UNKNOWN_MESSAGE_TYPE log spam.
+              After PT-ENTRY.
+
+  PL-NEW-009  Untracked files in TothBot_V2-Code repo:
+              .gitignore, README.md, config/, deploy/,
+              scripts/, tatus, test_output.txt, tests/,
+              tothbot/__init__.py,
+              tothbot/execution_engine.py.txt.
+              Review and commit or .gitignore after PT-ENTRY.
+
+============================================================
+7. REVISION HISTORY
+============================================================
+
+  v1_0  04-10-2026  Initial. ws_manager.py committed to
+                    GitHub (6e0843c) and deployed to VPS.
+                    Service crash: EAPI:Invalid key.
+                    Root cause: private WS called
+                    unconditionally in paper mode.
+                    4 fixes specified (FIX-WM-PT-001 through
+                    FIX-WM-PT-004). Fix not delivered due to
+                    project file visibility limitation.
+                    Service stopped. Deferred to next session.
+
+============================================================
+END OF SESSION LOG
+============================================================

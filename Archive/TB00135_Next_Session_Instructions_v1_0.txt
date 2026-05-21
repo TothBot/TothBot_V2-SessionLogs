@@ -1,0 +1,522 @@
+DocDCN:     TB00135_NSI
+DocTitle:   Next_Session_Instructions_for_TB00136
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TBXXXXX_Session_Logs\TB00135_Next_Session_Instructions_v1_0.txt
+DocDate:    04-24-2026
+DocTime:    23:59:59 UTC
+
+============================================================
+NEXT SESSION INSTRUCTIONS — TB00136
+ws_manager.py dv1_23 → dv1_24 CODE CASCADE
++ THREAD B (OI-055-CAND) + OPTIONAL THREAD C
+============================================================
+
+PAPER TRADING ONLY. NO REAL MONEY.
+PAPER TRADING MUST MIMIC LIVE TRADING EXACTLY.
+NO PATCHES.
+
+============================================================
+1. WHAT TB00136 DOES
+============================================================
+
+TB00135 closed FINDING-TB00135-001 (D-03 + D-08 AA=10
+cascade gap) at the SPEC level. 1011002 dv1_23 spec
+authored. 1010000 dv1_16 registry cascade authored.
+Code cascade for ws_manager.py is the remaining work
+to fully close the finding.
+
+TB00136 has THREE possible work streams. Bill directs
+which (or all) at session open.
+
+STREAM 1 — ws_manager.py CODE CASCADE (Claude Code scope):
+
+  Increment ws_manager.py dv1_23 → dv1_24 to conform
+  to 1011002 dv1_23. Three edits:
+
+    Edit 1 — Line ~1702 quote filter:
+      Was:  if quote not in ("USD", "USDC"):
+      Now:  if quote not in ("USD", "USDC", "USDT"):
+
+    Edit 2 — Remove Top-N constant and slice:
+      Line ~446: delete UNIVERSE_TOP_N: int = 50
+      Lines ~1711-1715: remove top_n =
+        candidates[:UNIVERSE_TOP_N] slice; pass full
+        candidates list as monitored_universe.
+        Preserve BTC/USD always-include carve-out.
+
+    Edit 3 — Line ~1695 header comment:
+      Was: "Filter: USD/USDC, online, volume >= $500k.
+            Top N=50. BTC/USD always in."
+      Now: "Filter: USD/USDC/USDT, online, volume >=
+            $500k. NO Top-N cap (D-08 retired).
+            BTC/USD always in."
+
+  Per TB00130 directive: code authoring proceeds in
+  Claude Code, not in chat. TB00136 chat session can
+  optionally check Claude Code progress, review
+  diffs, or stay focused on STREAM 2 / STREAM 3.
+
+STREAM 2 — THREAD B (OI-055-CAND ACTION PLAN):
+
+  Carried forward from TB00134 NSI (unchanged).
+  Awaits Bill resolution-policy selection (Option
+  i / ii / iii). FP/DP-recommended Option (iii) —
+  add cross-reference mapping table in 1010000
+  §10.7 (note: TB00135 added §10.4 FINDING-
+  TB00135-001 but did not occupy §10.5 / §10.6 /
+  §10.7 — Thread B authoring can use §10.7 as
+  originally planned, or §10.6, depending on what
+  is cleanest in the dv1_16 baseline).
+
+  Authoring scope per selection (carried verbatim
+  from TB00134 NSI §4):
+    Option (i)   — 0500000 dv1_21 → dv1_22 + ~8 AR
+                   text edits. Three-format delivery.
+    Option (ii)  — Major content rewrite of 1011001,
+                   1011002, 1011009, 1011013. NOT
+                   RECOMMENDED.
+    Option (iii) — 1010000 dv1_16 → dv1_17 with new
+                   cross-reference mapping table.
+                   RECOMMENDED.
+
+STREAM 3 — THREAD C (OPTIONAL DEFERRED GOVERNANCE):
+
+  Authorize only if Bill explicitly opens at session
+  open.
+
+    OI-053-CAND  Session-log cleanup rule for 0311002.
+    OI-054-CAND  TB00000 v2_13 amendment scope —
+                 DR-002 governance refinement
+                 (canonical naming + integrity
+                 validation).
+
+TB00136 MUST be opened as a COLD-LOAD NEW CLAUDE
+CHAT.
+
+============================================================
+2. LOCKED DECISIONS — DO NOT RE-ASK
+============================================================
+
+  D-01  Option B (burn window)                   LOCKED
+  D-02  REPAIR (not rewrite)                     LOCKED
+  D-03  Universe USD + USDC + USDT, no cap       LOCKED
+  D-04  Liquidity filter $500k/day               LOCKED
+  D-05  Starting capital $1,000                  LOCKED
+  D-06  Paper-to-live parity EXACT               LOCKED
+  D-07  NO PATCHES                               LOCKED
+  D-08  Top-N cap retired                        LOCKED
+        AA=10 SPEC COVERAGE NOW COMPLETE per
+        TB00135 (1011002 dv1_23 + 1010000 dv1_16).
+        Code coverage pending ws_manager.py dv1_24.
+
+If any TB00136 instruction or response would
+contradict D-01 through D-08, Claude STOPS and
+flags the contradiction to Bill before proceeding.
+
+============================================================
+3. MANDATORY READING AT COLD-LOAD
+============================================================
+
+From project folder:
+
+Project instructions + current session context:
+  TB00000 v2_13       Project Instructions (system prompt)
+  TB00135 Session Log v1_0
+  TB00135 NSI v1_0    (this document)
+  TB00134 Session Log v1_0
+  TB00134 NSI v1_0
+  TB00133 Session Log v1_0
+  TB00133 NSI v1_0
+  TB00132 Session Log v1_0
+  TB00132 NSI v1_0
+  TB00131 Session Log v1_0
+  TB00131 NSI v1_0
+
+Governance:
+  0311001 v1_3  Namespace_Specification
+  0311002 v1_3  Document_Creation_Workflow
+  0311003 v1_1  Versioning_Procedure
+  0311004 v1_2  Document_Creation_and_Approval_Procedure
+  0311005 v1_0  System_Definitions_and_Terminology
+
+Architecture + active spec baseline (post-TB00135):
+  0500000 dv1_21  System Architecture Overview
+                  (.txt / .docx / .pdf three-format set)
+  0711003 dv1_3   Asset Selection Specification
+  0511001 dv1_3   WS Manager Specification
+  1011002 dv1_23  WS Manager Coding Spec  (NEW BASELINE
+                  replacing dv1_22 — D-03 + D-08
+                  cascade complete)
+  1011009 dv1_1   Selection Controller Coding Spec
+  1011012 dv1_5   Regime Engine Coding Spec
+  0211005 dv1_1   Paper Trading Operations Procedure
+  0611004 dv1_1   Safety Parameter Framework
+  0921001 dv1_1   TothBot V2 Business Plan
+  1010000 dv1_16  Trading System Coding Anchor (NEW
+                  BASELINE replacing dv1_15 — registry
+                  cascade complete)
+
+If STREAM 1 (code cascade) opens in chat for review:
+  ws_manager.py (current deployed code at TB00125
+                 deploy 5d44292 — must read line ~446,
+                 ~1695, ~1702, ~1711-1715 to plan
+                 dv1_24 edits)
+
+If STREAM 2 Option (i) authorized, additional read:
+  1011001 dv1_7
+  1011002 dv1_23 (new baseline this session)
+  1011009 dv1_1
+  1011013 dv1_4
+
+MUST-PRESERVE set (TB00128 §5.1):
+  TB00001, TB00012, TB00013, TB00014, TB00020,
+  TB00131 → TB00135 session logs + NSIs.
+
+Claude states all documents read and their versions
+before beginning any work. If any version differs
+from the list above, Claude reads the project
+version and notes the discrepancy.
+
+============================================================
+4. STREAM 1 WORK QUEUE — ws_manager.py dv1_23 → dv1_24
+============================================================
+
+Per TB00130 standing directive: code authoring is
+Claude Code scope. TB00136 chat session does NOT
+author the .py edits unless Bill explicitly directs
+otherwise.
+
+If Bill chooses to do code review in chat:
+
+------------------------------------------------------------
+4.1 EDIT BLOCK 1 — QUOTE FILTER LINE ~1702
+------------------------------------------------------------
+
+Before:
+  for ws_name, spec in self.pair_cache.items():
+      quote = spec.get("quote_currency", "")
+      if not quote:
+          continue
+      if quote not in ("USD", "USDC"):
+          continue
+
+After:
+  for ws_name, spec in self.pair_cache.items():
+      quote = spec.get("quote_currency", "")
+      if not quote:
+          continue
+      if quote not in ("USD", "USDC", "USDT"):
+          continue
+
+Governing rule: 1011002 dv1_23 WM-PS-002 criterion (1).
+
+------------------------------------------------------------
+4.2 EDIT BLOCK 2 — TOP-N RETIREMENT
+------------------------------------------------------------
+
+Delete (line ~446):
+  UNIVERSE_TOP_N: int = 50
+
+Replace at lines ~1711-1715:
+  Before:
+    top_n = candidates[:UNIVERSE_TOP_N]
+    if "BTC/USD" not in top_n and "BTC/USD" in self.pair_cache:
+        top_n.append("BTC/USD")
+    self.monitored_universe = top_n
+
+  After:
+    monitored = list(candidates)
+    if "BTC/USD" not in monitored and "BTC/USD" in self.pair_cache:
+        monitored.append("BTC/USD")
+    self.monitored_universe = monitored
+
+Governing rule: 1011002 dv1_23 WM-PS-003.
+
+------------------------------------------------------------
+4.3 EDIT BLOCK 3 — HEADER COMMENT LINE ~1695
+------------------------------------------------------------
+
+Before:
+  # Filter: USD/USDC, online, volume >= $500k. Top N=50.
+  # BTC/USD always in.
+
+After:
+  # Filter: USD/USDC/USDT, online, volume >= $500k.
+  # NO Top-N cap (D-08 retired). BTC/USD always in.
+
+------------------------------------------------------------
+4.4 ws_manager.py HEADER UPDATE
+------------------------------------------------------------
+
+Update file 7-field DC header:
+  DocVersion: dv1_23 → dv1_24
+  DocPath:    update file name reference if present
+  DocDate:    04-25-2026 (or session date)
+  DocTime:    update to UTC
+
+Add dv1_24 entry to the in-file revision history
+documenting the three edits and citing the governing
+spec (1011002 dv1_23 WM-PS-002 / WM-PS-003).
+
+------------------------------------------------------------
+4.5 TEST AND DEPLOY
+------------------------------------------------------------
+
+Per 1021003 Paper Trading Test Specification:
+  - Unit tests for the new filter (USDT pairs accepted)
+  - Universe-size assertion (no Top-N cap; expect
+    significantly more than 50 pairs once Kraken
+    USDT pairs satisfy $500k volume threshold)
+  - BTC/USD always-include preserved
+  - LIQUIDITY_SEEDED log entry includes all three
+    quote-currency tiers
+
+Deploy to VPS via git pull from TothBot_V2-Code repo.
+Closes OI-045 (USDT inclusion), OI-046 (Top-N cap
+retired), and FINDING-TB00135-001 fully on T+48h
+observation window.
+
+============================================================
+5. STREAM 2 WORK QUEUE — THREAD B (OI-055-CAND)
+============================================================
+
+Carried forward from TB00134 NSI §4 unchanged.
+
+GATE B-1 — RESOLUTION POLICY SELECTION:
+First action after STREAM 1 disposition (or in
+parallel if STREAM 1 is fully Claude Code scope):
+pause for Bill resolution-policy selection. Single
+question: Option (i), (ii), or (iii)?
+
+FP/DP recommendation: Option (iii) (unchanged).
+
+Option (iii) authoring scope (refined for dv1_16
+baseline):
+  Increment 1010000 dv1_16 → dv1_17. Add new §10.7
+  "AR-* to Implementation Rule-ID Cross-Reference"
+  table with rows per defect group from TB00133
+  Phase 4 (D1, D2, D3, D4, D5, F1). Single-spec
+  edit. No content change to 0500000. No content
+  change to AA=10 implementation specs.
+
+GATE B-2 — Bill review of Thread B deliverable.
+Closes OI-055-CAND if Bill approves.
+
+============================================================
+6. STREAM 3 WORK QUEUE — THREAD C (OPTIONAL)
+============================================================
+
+Authorize only if Bill explicitly opens at session
+open.
+
+  OI-053-CAND  Session-log cleanup rule for 0311002
+               Document Creation Workflow.
+  OI-054-CAND  TB00000 v2_13 amendment scope —
+               DR-002 governance refinement.
+
+============================================================
+7. OUT OF SCOPE FOR TB00136
+============================================================
+
+  - Spec authoring beyond Stream 2 / Stream 3 listed
+    above (no other deferred work).
+  - OI-041 (closed TB00125).
+  - OI-048-CAND (Operator Observer Dashboard —
+    future).
+  - Any CIATS PDCA activity (still pre-200-trade
+    floor).
+  - Emergency live-mode testing.
+  - Re-opening D-01 through D-08 without explicit
+    Bill override.
+
+============================================================
+8. STANDING RULES — REINFORCEMENT
+============================================================
+
+ALL TB00000 v2_13 standing rules apply unchanged:
+  §4.2 ABSOLUTE STANDING RULE (OP-001..009)
+  §4.3.1 RR-SCOPE-001..006
+  §4.3.2 RR-RULE-001..004
+  §4.3.3 RR-SHELL-001..004
+  §4.3.4 RR-VIOL-001..002
+
+Apply pre-emit OP-003 grep scan before EVERY file
+delivery. Self-catch behavior per OP-004 / RR-RULE-
+004 / RR-SCOPE-006.
+
+DR-001: All deliverables as .txt (plus .docx +
+.pdf for 0500000 only).
+DR-002: 0500000 three-format every time it is
+updated. Real binary artifacts (validated via
+file + ZIP-extraction checks) per ERROR-PRE-001
+lesson.
+DR-003: All deliverables in ONE BATCH at session
+end.
+
+CARRY-FORWARD LESSON FROM TB00135:
+
+  RR-SCOPE-005 (next-logical-step execution) was
+  violated turn 1 of TB00135 (gate question after
+  FP/DP analysis already determined the answer)
+  and arguably violated turn 2 (premature
+  "tool-use exhausted" claim). Section 4.3
+  RR-SCOPE rules in TB00000 v2_13 — the absolute
+  standing rules enacted to terminate the OI-037
+  recurrence pattern — did not prevent the TB00135
+  recurrence. This is the SEVENTH consecutive
+  OI-037 recurrence (TB00114 through TB00119, now
+  TB00135 — the gap from TB00120 through TB00134
+  is presumed clean but was not specifically
+  audited against this rule in those session
+  logs).
+
+  CARRY-FORWARD DIRECTIVE:
+  When the FP/DP analysis in a Claude turn
+  recommends a course of action and Bill has not
+  explicitly authorized a different path, Claude
+  EXECUTES the FP/DP-recommended path. Asking
+  "should I execute now or defer?" after stating
+  "FP/DP recommends execute now" is a
+  RR-SCOPE-005 violation. The next-logical-step
+  IS the FP/DP recommendation when Bill has not
+  contradicted it.
+
+  When Claude has tool-use budget remaining and
+  Bill has not paused or redirected, Claude
+  CONTINUES execution to completion. Claude does
+  NOT pause to "request continuation" unless tool
+  budget is genuinely exhausted (verified by
+  attempted call failure, not estimation).
+
+============================================================
+9. PROJECT FOLDER EXPECTED STATE AT TB00136 OPEN
+============================================================
+
+KEPT:
+  TB00000 v2_13.
+  All 0* series at current versions. 0500000 dv1_21
+    three-format set unchanged.
+  All 1* series at current versions, with NEW
+    BASELINES this session:
+      1011002 dv1_23 (replaces dv1_22)
+      1010000 dv1_16 (replaces dv1_15)
+  All .py modules at TB00125 deploy state (5d44292).
+    ws_manager.py STALE under 1011002 dv1_23 spec —
+    pending dv1_24 cascade.
+  TB00131 → TB00135 session logs + NSIs.
+  TB00001, TB00012, TB00013, TB00014, TB00020
+    (MUST-PRESERVE per TB00128 §5.1).
+
+ABSENT:
+  1011002 dv1_22 (superseded).
+  1010000 dv1_15 (superseded).
+  TB00130 session log + NSI (Bill discretion).
+  1011004 STILL MISSING (carried gap; not in
+    TB00136 scope).
+
+TB00136 STEP A pre-flight should confirm this state
+via bash sweep of /mnt/project/ and flag any drift.
+
+============================================================
+10. PARKING LOT — CARRIED FROM TB00135
+============================================================
+
+CLOSED in TB00135 (at SPEC level — code closure
+pending):
+  FINDING-TB00135-001  AA=10 spec coverage CLOSED.
+                       Code closure pending
+                       ws_manager.py dv1_24.
+  OI-056-CAND          NEW + closed-within-session
+                       at AA=10 spec level. Code
+                       closure pending.
+
+REMAINING OPEN:
+
+  OI-018, OI-019, OI-020, OI-028, OI-029  PENDING
+    CLOSE at R-01+ deploy.
+  OI-044  Paper-mode bypass. Spec coverage COMPLETE.
+    Closes at code deploy.
+  OI-045  USDT exclusion. AA=10 spec coverage now
+    COMPLETE. Closes at code deploy.
+  OI-046  Top-N cap retired. AA=10 spec coverage
+    now COMPLETE. Closes at code deploy.
+  OI-049-CAND, OI-050-CAND, OI-051-CAND  Preserved
+    in Phase 1 deliverables; close at deploy.
+  OI-053-CAND  STREAM 3 if authorized.
+  OI-054-CAND  STREAM 3 if authorized.
+  OI-055-CAND  STREAM 2 — Bill resolution-policy
+    required.
+
+  ERROR-PRE-001  Forensic record only.
+
+  OI-037 RECURRENCE  Seventh consecutive recurrence
+    in TB00135. Section 4.3 RR-SCOPE rules not
+    sufficient. Future governance escalation may be
+    required at Bill discretion.
+
+============================================================
+11. FIRST ACTIONS IN TB00136
+============================================================
+
+1. Cold-load mandatory reading per §3.
+2. State all documents read and their versions
+   before any work.
+3. Execute STEP A pre-flight: bash sweep of
+   project folder; confirm §9 expected state;
+   flag any drift.
+4. Confirm D-01 through D-08 LOCKED per §2.
+5. Confirm TB00135 deliverables (1011002 dv1_23,
+   1010000 dv1_16) successfully ingested in the
+   Claude.ai project folder. If still showing
+   dv1_22 / dv1_15, halt and request Bill
+   confirmation.
+6. Determine STREAM scope per Bill direction at
+   session open:
+   - STREAM 1 alone: confirm code cascade is in
+     Claude Code scope. Chat-side action limited
+     to review/diff-checking.
+   - STREAM 2 alone: pause for Bill resolution-
+     policy selection (Option i / ii / iii).
+   - STREAM 3 alone: author per Bill direction.
+   - Multiple streams: execute in priority order
+     (STREAM 1 closure most urgent because two
+     LOCKED-decision violations remain in
+     deployed code).
+7. Apply pre-emit OP-003 grep scan before every
+   file delivery.
+8. Apply RR-SCOPE-005 strictly — do NOT ask Bill
+   gate questions when FP/DP analysis has already
+   determined the answer.
+
+============================================================
+REVISION HISTORY
+============================================================
+
+  v1_0  2026-04-24  Initial. NSI for TB00136.
+                    TB00135 closed FINDING-TB00135-001
+                    at AA=10 SPEC level via 1011002
+                    dv1_22 → dv1_23 (six surgical
+                    edits) and 1010000 dv1_15 →
+                    dv1_16 (registry cascade).
+                    ws_manager.py code cascade
+                    (dv1_23 → dv1_24) is the
+                    remaining work to fully close.
+                    TB00136 scope: STREAM 1 (code
+                    cascade, Claude Code scope),
+                    STREAM 2 (Thread B OI-055-CAND
+                    Bill resolution-policy required),
+                    STREAM 3 (optional Thread C
+                    deferred governance). RR-SCOPE-005
+                    seventh recurrence acknowledged
+                    (carry-forward directive in §8).
+                    D-01 through D-08 all LOCKED.
+                    Standing rules all active.
+                    Paper trading only. No real
+                    money. Paper trading must mimic
+                    all aspects of live trading
+                    exactly. No patches.
+
+============================================================
+END — TB00135 NEXT SESSION INSTRUCTIONS v1_0
+============================================================

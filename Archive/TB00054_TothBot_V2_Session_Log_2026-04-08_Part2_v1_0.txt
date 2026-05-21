@@ -1,0 +1,373 @@
+DocDCN:     TB00054
+DocTitle:   TothBot_V2_Session_Log_2026-04-08_Part2
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\My_TothBot_Stuff\TBXXXXX_Session_Logs\TB00054_TothBot_V2_Session_Log_2026-04-08_Part2_v1_0.txt
+DocDate:    04-08-2026
+DocTime:    23:59:59 UTC
+
+============================================================
+TOTHBOT V2 — SESSION LOG 2026-04-08 PART 2
+============================================================
+
+============================================================
+1. SESSION IDENTITY
+============================================================
+
+Session date:     April 8, 2026 (Part 2)
+Session type:     Phase 11 — VPS deployment attempt
+                  FAILED — session ended without deliverables
+Prior session:    TB00053 (2026-04-08)
+
+Documents read:   TB00000  v2_8   (governing)
+                  TB00053  v1_0   (most recent session log)
+                  1011013  dv1_4  (VPS_Deployment_Coding_Spec)
+                  0211005  dv1_0  (Paper_Trading_Operations_Procedure)
+
+============================================================
+2. WHAT HAPPENED — COMPLETE RECORD
+============================================================
+
+------------------------------------------------------------
+2.1 VPS State Confirmed
+------------------------------------------------------------
+
+SSH to VPS confirmed clean baseline state:
+  VPS:       87.99.141.44, Ubuntu 24.04.4 LTS
+  OS:        Pending restart (*** System restart required ***)
+  Service:   tothbot.service NOT installed
+  Repo:      /root/TothBot_V2-Code present, HEAD at 2f95c3b
+  Python:    3.12.3 confirmed
+  Repo contents confirmed:
+    tothbot/  — all 14 module .py files present
+    tests/    — conftest.py only, test_integration.py MISSING
+    tothbot.service, requirements.txt, pytest.ini present
+
+------------------------------------------------------------
+2.2 Pre-Existing Defects Discovered — CRITICAL
+------------------------------------------------------------
+
+Code audit of the VPS repo revealed multiple critical defects
+that will cause TothBot to crash on the first trade attempt.
+These defects were present before this session and were NOT
+caught by the 95 unit tests (unit tests mock these
+interactions).
+
+DEFECT-001: execution_engine.py — create_record crash
+  Location:  tothbot/execution_engine.py line 255
+  Code:      self._pm.create_record(symbol, cl_ord_id,
+                                    entry_limit_price, entry_qty)
+  Problem:   PositionMirror class has no create_record() method.
+             The method is named create() with a completely
+             different signature.
+  Impact:    AttributeError crash on EVERY entry dispatch.
+             TothBot cannot execute a single trade.
+  Severity:  CRITICAL — blocks all paper trading.
+
+DEFECT-002: execution_engine.py — clear_record crash
+  Location:  tothbot/execution_engine.py lines 505 and 538
+  Code:      self._pm.clear_record(symbol)
+  Problem:   PositionMirror class has no clear_record() method.
+  Impact:    AttributeError crash on every entry cancel or
+             GTD expiry with no fill.
+  Severity:  CRITICAL.
+
+DEFECT-003: execution_engine.py — pair_specs does not exist
+  Location:  tothbot/execution_engine.py line ~198
+  Code:      pair_spec = self._wm.pair_specs.get(symbol, {})
+  Problem:   WSManager attribute is pair_cache, not pair_specs.
+  Impact:    AttributeError crash before any order is sent.
+  Severity:  CRITICAL — blocks all paper trading.
+
+DEFECT-004: WSManager._handle_filled — wrong event format
+  Location:  tothbot/ws_manager.py _handle_filled() method
+  Code:      await self._exec_engine_fn(
+                 {"symbol": symbol, "entry_fill_price": avg_price,
+                  "qty": cum_qty, "fees_entry_usd": fees}, self)
+  Problem:   Event dict has no cl_ord_id or exec_type field.
+             LongModule.on_execution_event() looks for cl_ord_id
+             to route to EE. Gets "" → ctx is None → returns.
+             EE._on_entry_filled() is never called.
+  Impact:    TP and emergSL orders are NEVER placed after any
+             entry fill. Every open position has NO protection.
+  Severity:  CRITICAL — catastrophic risk to open positions.
+
+DEFECT-005: batch_add ACK never handled
+  Location:  tothbot/ws_manager.py _channel_dispatch dict
+  Problem:   Kraken WS v2 batch_add ACK returns with
+             method="batch_add". This is not in _channel_dispatch.
+             WSManager logs UNKNOWN_MESSAGE_TYPE and discards it.
+             EE.on_batch_add_response() is never called.
+  Impact:    wm.position_mirror[symbol].tp_order_id and
+             emergsl_order_id remain empty string on EVERY fill.
+             ExitController cancel calls use empty string order IDs.
+             Layer 1a, 1b, and Layer 2 exits cannot cancel orders.
+  Severity:  CRITICAL.
+
+DEFECT-006: RiskEngine MTM uses wrong position_mirror
+  Location:  tothbot/risk_engine.py lines 205, 254
+  Code:      self._pm.all_records  and  self._pm.open_count
+  Problem:   self._pm is the standalone PositionMirror object.
+             Runtime positions are in wm.position_mirror (dict).
+             PositionMirror._mirror is never populated at runtime
+             because EE's create_record call crashes (DEFECT-001).
+  Impact:    Drawdown MTM is always 0 regardless of open
+             positions. Circuit breakers do not fire correctly.
+  Severity:  HIGH — affects loss prevention.
+
+DEFECT-007: test_integration.py never committed to GitHub
+  Evidence:  git log --all --full-history -- tests/test_integration.py
+             returned nothing. File does not exist in any commit.
+  Impact:    The 8 integration tests from TB00052 exist only in
+             Claude session history. They are not in the repo.
+             Phase 10 completion claim of 103/103 tests is
+             incorrect. Actual: 95 unit tests only.
+  Severity:  HIGH — Phase 10 must be retroactively corrected.
+
+------------------------------------------------------------
+2.3 Paper Trading Mode Not Implemented
+------------------------------------------------------------
+
+Confirmed: no implementation of paper_trading_mode in any
+.py file in the repo. grep -rn "paper_trading" returned
+nothing. This is a gap, not a defect — it was not in the
+coding specs (1011004, 1011005) but is required by 0211005
+Paper_Trading_Operations_Procedure dv1_0 before any live
+capital is deployed.
+
+------------------------------------------------------------
+2.4 Claude Failures This Session
+------------------------------------------------------------
+
+The following failures by Claude caused the session to
+produce no usable deliverables:
+
+FAILURE-001: Delivered patch scripts instead of .txt files
+  Rule violated: DR-001 — ALL documents delivered as .txt files.
+  What happened: Claude generated Python patch scripts and
+  attempted to have Bill SCP them to the VPS. SCP requires
+  knowledge Bill does not have and was never explained.
+  Correct action: Deliver complete .txt source files per
+  DR-001 for Bill to save to local repo and commit normally.
+
+FAILURE-002: Assumed Bill knew how to SCP files
+  Rule violated: TB00000 Section 4 — "Bill is not here to
+  learn." Instructions must be complete with no assumed
+  knowledge.
+  What happened: Claude gave SCP commands without explaining
+  what SCP is, what window to run it in, or that two windows
+  were needed.
+
+FAILURE-003: Assumed Bill knew where /root/TothBot_V2-Code/ is
+  Rule violated: Same as above.
+  What happened: Told Bill to "copy files to
+  /root/TothBot_V2-Code/" without explaining this is a path
+  ON THE VPS, not on his local PC.
+
+FAILURE-004: Asked Bill to choose between options
+  Rule violated: TB00000 Section 5 — FP/DP analysis should
+  produce a decision. Section 4 — Get it done efficiently.
+  What happened: Claude repeatedly asked "Do you want me to
+  do X?" instead of doing FP/DP analysis and executing.
+  Correct action: Analyze, decide, execute. Never ask.
+
+FAILURE-005: Excessive pre-coding reads without delivering
+  What happened: Claude spent the entire session reading code
+  from the VPS (30+ commands) and discovered defects but
+  produced zero committed code changes. The session ended
+  with no files delivered.
+
+FAILURE-006: Generated files that depended on stale project
+  files instead of authoritative VPS versions
+  What happened: The ws_manager.py patch was written against
+  the local project copy (2485 lines) when the VPS has 2441
+  lines. The two differ. Any patch using the wrong base
+  would corrupt the file.
+
+============================================================
+3. DEFECT SUMMARY — WHAT NEXT SESSION MUST FIX
+============================================================
+
+The following defects must be fixed before paper trading
+can start. They are listed in fix order (dependencies):
+
+Priority 1 — Crash fixes (TothBot cannot run without these):
+  DEFECT-001  execution_engine.py: create_record → wm.add_order()
+  DEFECT-002  execution_engine.py: clear_record → wm.position_mirror.pop()
+  DEFECT-003  execution_engine.py: pair_specs → pair_cache
+
+Priority 2 — Silent failures (TothBot runs but trades wrong):
+  DEFECT-004  ws_manager.py: fix _handle_filled exec_engine_fn call
+  DEFECT-005  ws_manager.py: add batch_add ACK handler
+  DEFECT-006  risk_engine.py: fix MTM to use wm.position_mirror
+
+Priority 3 — Paper trading mode (required before PT-ENTRY-008):
+  Add PAPER_TRADING_MODE env var to startup_sequence.py
+  Add paper_mode to WSManager (intercept add_order, batch_add,
+    cancel_order, dispatch_market_sell)
+  Add tp_price/emergsl_price to WSManager PositionRecord
+  Add paper TP/emergSL ticker detection
+  Add paper_trade field to TRADE_CLOSE log record
+
+Priority 4 — Missing tests:
+  DEFECT-007  Recreate and commit test_integration.py (8 tests)
+
+============================================================
+4. WHAT NEXT SESSION MUST DO
+============================================================
+
+Step 1: Read TB00000 v2_8 and TB00054.
+
+Step 2: Read the authoritative VPS versions of all files
+that need to be changed by running cat on the VPS BEFORE
+writing any code. Do not use local project files as base
+for ws_manager.py — the VPS version differs.
+
+Step 3: Write complete corrected .txt files per DR-001 for:
+  tothbot/execution_engine.py  — all 3 crash fixes + delegations
+  tothbot/ws_manager.py        — _handle_filled fix, batch_add ACK,
+                                  paper mode, PositionRecord fields
+  tothbot/risk_engine.py       — MTM fix
+  tothbot/startup_sequence.py  — PAPER_TRADING_MODE env var
+  tothbot/exit_controller.py   — paper_trade in TRADE_CLOSE
+  tests/test_integration.py    — recreate 8 integration tests
+
+Step 4: Deliver ALL files in ONE BATCH per DR-003 as .txt files.
+
+Step 5: Give Bill exact save instructions:
+  execution_engine.py → save as .py to
+    C:\Users\wstot\GitHub\TothBot\TothBot_V2-Code\tothbot\
+  ws_manager.py → same folder
+  risk_engine.py → same folder
+  startup_sequence.py → same folder
+  exit_controller.py → same folder
+  test_integration.py → save as .py to
+    C:\Users\wstot\GitHub\TothBot\TothBot_V2-Code\tests\
+
+Step 6: Give Bill exact git commands to run in LOCAL command
+prompt (NOT SSH) at C:\Users\wstot\GitHub\TothBot\TothBot_V2-Code\:
+
+  git add tothbot/execution_engine.py
+  git add tothbot/ws_manager.py
+  git add tothbot/risk_engine.py
+  git add tothbot/startup_sequence.py
+  git add tothbot/exit_controller.py
+  git add tests/test_integration.py
+  git commit -m "Phase 11: Fix 6 critical defects + paper trading mode"
+  git push origin master
+
+Step 7: Give Bill exact VPS command to pull:
+  git pull
+
+Step 8: Run tests on VPS:
+  python3.12 -m pytest tests/ -q
+
+Step 9: Complete PT-ENTRY-003 through PT-ENTRY-008 per
+1011013 VD-DEPLOY-001.
+
+============================================================
+5. VPS CURRENT STATE (as of end of this session)
+============================================================
+
+  Repo:       /root/TothBot_V2-Code
+  HEAD:       2f95c3b — "Phase 10: Fix 3 test files"
+  Service:    NOT installed
+  Venv:       NOT created
+  .tothbot.env: NOT created
+  logrotate:  NOT configured
+  Tests:      95 unit tests pass, 0 integration tests
+
+  No changes were made to any file this session.
+  Repo is clean.
+
+============================================================
+6. PARKING LOT
+============================================================
+
+  PL-001  WSManager dual PM creation paths. Monitor during
+          paper trading. Do not chase until problem confirmed.
+
+  PL-003  Pathway 1 GitHub automation. After paper trading.
+
+  PL-NEW-001  RiskEngine MTM uses wrong position_mirror (DEFECT-006).
+              Fix in next session with other defects.
+
+  PL-NEW-002  VPS pending OS restart (*** System restart required ***).
+              Run: reboot — then reconnect via SSH before deploying.
+              Do this BEFORE starting deployment sequence.
+
+  PL-NEW-003  VPS migration to Hillsboro OR (VD-VPS-002).
+              Evaluate after paper trading is stable.
+
+============================================================
+7. OPEN ITEMS
+============================================================
+
+  All PT-ENTRY criteria (003 through 008) remain PENDING.
+
+  DEFECT-001 through DEFECT-007: all open, all blocking.
+
+============================================================
+8. BILL ACTIONS REQUIRED
+============================================================
+
+Step 1 — Save this session log:
+
+  Save TB00054 to:
+  C:\Users\wstot\My_TothBot_Stuff\TBXXXXX_Session_Logs\
+
+Step 2 — Upload to Claude project:
+
+  Upload TB00054 to Claude project.
+
+Step 3 — Start next session with the instruction in
+          Section 9 below.
+
+============================================================
+9. NEXT SESSION OPENING INSTRUCTION
+============================================================
+
+  ============================================================
+  Read TB00000 v2_8 and TB00054. Phase 11 failed this session
+  — no code delivered. Seven critical defects found in the
+  repo that must be fixed before paper trading can start.
+
+  RULE: Deliver ALL corrected files as .txt files in ONE
+  BATCH per DR-001 and DR-003. No patch scripts. No options.
+  No assumed knowledge. Complete step-by-step instructions.
+
+  Before writing any code, read the authoritative VPS versions
+  of files to change using: cat /root/TothBot_V2-Code/tothbot/<file>
+
+  Defects to fix (full detail in TB00054 Section 3):
+    DEFECT-001  execution_engine.py: create_record crash
+    DEFECT-002  execution_engine.py: clear_record crash
+    DEFECT-003  execution_engine.py: pair_specs → pair_cache
+    DEFECT-004  ws_manager.py: _handle_filled wrong event format
+    DEFECT-005  ws_manager.py: batch_add ACK never handled
+    DEFECT-006  risk_engine.py: MTM uses wrong position_mirror
+    DEFECT-007  tests/test_integration.py: never committed
+
+  After defect fixes, add paper trading mode per 0211005.
+  Then complete PT-ENTRY-003 through PT-ENTRY-008.
+
+  VPS: ssh root@87.99.141.44
+  Repo: /root/TothBot_V2-Code
+  Python: 3.12.3
+  RULE 14: git push origin master. Always.
+  RULE 15: One command per copy box. Always.
+  RULE 6:  git add . is prohibited. Always.
+  RULE 4:  cd to repo root first. Always.
+  ============================================================
+
+============================================================
+10. REVISION HISTORY
+============================================================
+
+  v1_0  04-08-2026  Session log for Phase 11 attempt.
+                    Seven critical defects documented.
+                    Zero code delivered. Session failed.
+
+============================================================
+END OF SESSION LOG
+============================================================

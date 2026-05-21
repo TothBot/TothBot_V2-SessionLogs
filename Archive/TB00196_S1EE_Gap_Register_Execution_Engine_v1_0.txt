@@ -1,0 +1,1962 @@
+DocDCN:     TB00196
+DocTitle:   S1EE_Gap_Register_Execution_Engine
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TBXXXXX_Session_Logs\TB00196_S1EE_Gap_Register_Execution_Engine_v1_0.txt
+DocDate:    05-11-2026
+DocTime:    23:30:00 UTC
+
+============================================================
+STEP 3 SUB-STEP S-1 GAP REGISTER — EXECUTION_ENGINE PAIR
+1011004 dv1_0  vs  0511003 dv1_1  vs  0500000 dv1_46
+TB00196 — E-S1EE-03 THROUGH E-S1EE-07
+============================================================
+
+============================================================
+1. SCOPE AND METHODOLOGY
+============================================================
+
+1.1 TARGET PAIR.
+  AA=10 side: 1011004 Execution_Engine_Coding_Spec dv1_0
+              (14 sections / 13 HR-EE-* / 18 EE-PH1-* /
+              6 EE-OUT-* / 10 EE-PH2-* / 10 EE-IF-*)
+  AA=05 side: 0511003 Execution_Engine_Specification dv1_1
+              (11 sections + §5A EE-PAPER 5 rules /
+              15 HR-EE-* including HR-EE-013/014/015 NEW
+              dv1_1)
+  Architecture canonical: 0500000 dv1_46
+              (8 diagrams; D2 TothBot Trading Pipeline
+              encodes Gate 8 -> mod:Execution_Engine
+              dispatch seam at PA-004(2); D7 Paper-Mode
+              Dispatch Boundary encodes mod:Execution_
+              Engine above-seam mode-blind; D1 Kraken
+              API Connection Architecture encodes AR-006/
+              007/008/032/033/046/047/HR-WM-022/023; D3
+              Exit Architecture encodes mod:Exit_Controller
+              EE-side interface via fill events but does
+              NOT include mod:Execution_Engine in governs
+              because EE does NOT participate in exits per
+              HR-EE-005)
+
+1.2 METHODOLOGY (TB00196 NSI §4; unchanged from TB00194 +
+    TB00195).
+  Three-bucket classification per element of 1011004:
+    (a) ARCHITECTURAL RESTATEMENT — duplicates content in
+        0500000 / 0511003 prose or 0500000 diagrams; drop
+        at 10XXXXX retirement (S-4).
+    (b) CODING-UNIQUE — implementation-level content
+        (function signatures, types, dict layouts, log
+        format strings, decimal-rounding mechanics);
+        migrate to 0511003 prose at S-3.
+    (c) ARCHITECTURAL CONTENT NOT IN DIAGRAMS — must be
+        encoded in 0500000 diagram FIRST per DD-003
+        4-step workflow; then 0511003 prose update;
+        then 10XXXXX retirement.
+    (d) UNCLEAR ORIGIN — per NSI §7.4 + RR-SCOPE-009;
+        Chesterton's-fence investigation required before
+        disposition.
+
+1.3 DIAGRAM SOURCE OF TRUTH.
+  Per TB00000 v2_29 §4.5 DD-001/002 diagrams-as-canonical:
+  0500000 dv1_46 inline SVG content + root-<desc> governs
+  list is the authoritative source for "what IS encoded in
+  the diagrams." Prose in 0500000 §3 + §4 AR registry is
+  V-038.3 prose-follows-diagram narration. Eight ARs +
+  two new HRs are referenced by 1011004 / 0511003 but
+  absent from every diagram root governs list:
+    AR-018 (amend_order primary; edit_order deprecated)
+    AR-028 (qty_min/cost_min validation before dispatch)
+    AR-043 (BoundedSemaphore concurrency ceiling)
+    AR-053 (Pending Order Registry; amended dv1_43 per-
+            module)
+    AR-054 (Entry partial-fill protection; amended dv1_43
+            direction-symmetric)
+    AR-055 (cancel_all_orders_after prohibition / DMS)
+    HR-EE-014 (NO DIRECT PRIVATE-WS ACCESS; new dv1_1)
+    HR-EE-015 (MODE-OPAQUE CALLER CONTRACT; new dv1_1)
+  Per DD-001/DD-002 diagrams-as-canonical, this is a
+  separate 0500000 internal V-038.3 finding — flagged in
+  §7.1 below, NOT an Execution_Engine-pair gap proper.
+
+============================================================
+2. DIAGRAM COVERAGE BASELINE
+   (What 0500000 dv1_46 diagrams ENCODE for Execution_Engine)
+============================================================
+
+2.1 D2 TOTHBOT TRADING PIPELINE (R2; viewBox 1500x1700;
+    line 1995-2466).
+  Root-<desc> governs list (line 2007-2017) — relevant to
+  Execution_Engine:
+    ar:    AR-069 (entry limit price formula)
+    rule:  HR-EE-013 (paper-live byte-identical EE path),
+           Sacred_R_R_1_to_1_5 (net 1:1.5 R:R sacred floor)
+    contract: WSManager_Dispatch_Seam (PA-004(2)
+              gatekeeper), Parameter_Store_Snapshot
+    gate:  G8_Position_Sizer (sizing handoff into EE)
+    pt_mode: PT_MODE_001, PT_MODE_002, PT_MODE_003
+    mod:   Execution_Engine (above-seam mode-blind
+           module), Long_Module, Signal_Pipeline
+    sacred_constraints: Net 1:1.5 R:R hardcoded
+  Visual elements (relevant subset):
+    - "Gate 8 Position Sizer" band exiting to mod:
+      Execution_Engine on PASS (gate:G8_Position_Sizer +
+      rule:HR-SP-006; "MAE = ATR(14) x 1.5x | emergSL =
+      ATR(14) x 3.0x | TP = R:R formula"; SACRED 1:1.5
+      banner)
+    - mod:Execution_Engine "ENTRY DISPATCH (PA-004(2)
+      boundary)" labeled group at line 2352-2360:
+        <title>contract:WSManager_Dispatch_Seam</title>
+        constraints: rule:HR-EE-013, ar:AR-006,
+                     decision:D-06_Paper_Live_Parity,
+                     pt_mode:PT_MODE_001/002/003
+        drill_targets: mod:WS_Manager, mod:Execution_Engine,
+                       0500000_Image7_T2_R0_Paper_Mode_
+                       Dispatch_Boundary
+    - WSManager_Dispatch_Seam at PA-004(2) boundary (paper
+      LEFT column / live RIGHT column) — line 2336
+        <title>contract:WSManager_Dispatch_Seam</title>
+        constraints: rule:HR-EE-013, ar:AR-007
+    - mod:Execution_Engine ON FILL band at line 2392-2404:
+        <title>mod:Execution_Engine</title>
+        canonical: mod:Execution_Engine
+        constraints: ar:AR-007, ar:AR-008
+        Text label: "ON FILL — mod:Execution_Engine —
+                     batch_add (TP resting limit +
+                     emergSL stop-market — atomic)"
+    - Legend footer: PA-001 paper-master + D-08 retired +
+      D-03 universe + D-04 liquidity floor
+
+2.2 D7 PAPER-MODE DISPATCH BOUNDARY (R3; line 5985-6422).
+  Root-<desc> governs list (line 5999) — relevant subset:
+    rule:  HR-WM-021, HR-WM-022 (PT-MODE-003 paper private
+           WS suppression), HR-WM-023 (paper-mode dispatch
+           isolation), HR-WM-024, HR-WM-025, HR-WM-026,
+           HR-WM-032, HR-WM-033, HR-EE-013, HR-PM-009,
+           HR-REGIME-007
+    ar:    PA-001, PA-002, PA-003, PA-004, PA-005, PA-006,
+           PA-007, AR-009, AR-072, AR-073
+    decision: D-05_Paper_Starting_Balance, D-06_Paper_
+              Live_Parity
+    pt_mode: PT_MODE_001, PT_MODE_002, PT_MODE_003
+    contract: WSManager_Dispatch_Seam, Synthetic_Capital_
+              Ledger, CIATS_Trade_Outcome_Bus
+    container: Private_WS_v2
+    mod:   WS_Manager, Execution_Engine, Exit_Controller,
+           Long_Module, Short_Module, Signal_Pipeline,
+           Position_Mirror, Startup_Sequence
+    layer: Configuration_Layer
+    param: paper_trading_mode, paper_starting_balance
+  Visual elements (relevant subset):
+    - Line 6099: "TothBot Module Layer · ABOVE-SEAM CALLERS
+      — MODE-BLIND (rule:HR-EE-013 and equivalents)"
+    - Line 6135: above-seam mod row constraints "ar:PA-005,
+      rule:HR-EE-013 (LM emergency-IOC MUST traverse seam
+      — TB00148 F30; never call ws_private direct)"
+    - mod:Short_Module sibling band added R2->R3
+      (line 6156): "rule:HR-EE-013 (SM emergency-IOC
+      margin-position close MUST traverse seam — mirrors
+      LM TB00148 F30; never call ws_private direct)"
+    - WSManager_Dispatch_Seam header band (paper LEFT,
+      live RIGHT) with PA-004(2) order-dispatch divergence
+      detail per drill_target from D2
+
+2.3 D1 KRAKEN API CONNECTION ARCHITECTURE (R2; line 1353).
+  Root-<desc> governs list (line 1365) — relevant subset:
+    rule:  HR-WM-021..034 (full WS_Manager rule set
+           including HR-WM-022 paper private WS suppression
+           + HR-WM-023 paper-mode dispatch isolation)
+    contract: WM-PACE-001/002, WM-SHARD-001/010,
+              WM-RECONNECT-016, VD-SYS-008
+    decision: D-03, D-06, D-08
+    ar:    AR-001, AR-002, AR-006 (entry order:
+           limit/post_only/GTD/cl_ord_id/stp_type:
+           cancel_newest/deadline:now+5s), AR-007 (TP
+           placement: resting limit via batch_add on
+           fill), AR-008 (Emergency SL: stop-market via
+           batch_add atomic with TP; OTO rejected),
+           AR-010, AR-011, AR-014, AR-022..024, AR-026,
+           AR-029..031, AR-032 (stp_type underscore),
+           AR-033 (deadline 5s), AR-035, AR-038, AR-039,
+           AR-046 (emergSL triggers.reference="last"),
+           AR-047 (Decimal(str()) rounding), AR-058..060,
+           AR-064, AR-066, AR-070 amended, AR-072
+    container: Kraken_Zone, TothBot_Zone, CIATS_Zone
+    pt_mode: PT_MODE_001, PT_MODE_002, PT_MODE_004
+  D1 is the canonical encoding location for the Kraken WS
+  v2 wire-contract AR family (AR-006/007/008/032/033/046/
+  047). All Execution_Engine WS v2 message-construction
+  rules trace through D1 governs.
+
+2.4 D3 EXIT ARCHITECTURE (R2; line 2546-2817).
+  Root-<desc> governs list (line 2559):
+    rule:  HR-EC-013, HR-EC-014, HR-PM-009, Sacred_R_R_
+           1_to_1_5
+    ar:    AR-008 (OTO rejection — used by Phase 2
+           rationale)
+    mod:   Exit_Controller (NOTE: mod:Execution_Engine is
+           NOT in D3 governs — D3 is Exit_Controller-
+           owned; EE delegates ON FILL via the executions
+           channel + WSManager dispatch table per
+           HR-EE-005)
+    layer: L1a_Signal_Exit, L1b_TP_Fill (TP fills routed
+           via executions channel; Exit_Controller
+           consumes), L2_MAE_Threshold, L3_Emergency_SL
+    channel: kraken_ws_executions, kraken_ws_ticker
+    indicator: ATR_14
+    param: mae_mult, emergency_sl_mult
+    evt:   TRADE_CLOSE
+    container: Matching_Engine
+    contract: CIATS_Trade_Outcome_Bus
+    pt_mode: PT_MODE_002, PT_MODE_003
+  D3 + D2 jointly encode the EE -> EC seam: EE dispatches
+  batch_add (TP + emergSL); EE exits the picture; TP fills
+  arrive via channel:kraken_ws_executions and are consumed
+  by mod:Exit_Controller (Layer 1b) per D3.
+
+2.5 D5 CIATS ARCHITECTURE (R3; line 3260-3700+).
+  Root-<desc> governs list (line 3332) — relevant subset:
+    CIATS-touched params from Execution_Engine perspective:
+    param:entry_timeout_sec ✓ in D5 governs (canonical
+    per TB00000 v2_29 §9.17 CIATS-OWNED).
+    Stale params still in D5 governs (CLUSTER C1 CASCADE
+    overlapping TB00194 + TB00195 cluster C1):
+      param:tradeable_pct (RETIRED v2_29 §9.17)
+      param:per_trade_pct (RETIRED v2_29 §9.17)
+      param:max_concurrent (RETIRED v2_29 §9.17 — count
+                            emerges from wallet ÷
+                            per_trade_size_usd
+                            arithmetic; no artificial
+                            ceiling)
+      param:half_kelly_applied_pct (RETIRED v2_29 §9.17)
+    Missing from D5 governs (cluster C1 cascade per
+    TB00194 + TB00195):
+      param:per_trade_size_usd, param:per_trade_ceiling_
+      pct, per-module wallet params, per-wallet drawdown
+      variants.
+
+2.6 D6 + TIER 1.
+  D6 Complete System Organism shows mod:Execution_Engine
+  as one of the parallel-module framework siblings inside
+  TothBot_Zone. Tier 1 Context shows TothBot_Zone with
+  Execution_Engine as a contained module.
+
+============================================================
+3. ELEMENT-BY-ELEMENT GAP REGISTER
+   (Organized by 1011004 dv1_0 section structure)
+============================================================
+
+------------------------------------------------------------
+§1-§3 PURPOSE / PARENT CHAIN / FIVE CODING-READINESS
+------------------------------------------------------------
+
+3.1 §1 Purpose statement.
+    Restates the module purpose (owns all order dispatch
+    to Kraken for entry + TP/emergSL placement; receives
+    Gate 8 sizing output; does not select/size/exit).
+    Counterpart: 0511003 dv1_1 §1 + §2 + 0500000 §3
+    (Trading Pipeline narrative).
+    Classification: (a) ARCHITECTURAL RESTATEMENT.
+    Retirement: S-4 drop entirely; D2 figcaption + 0500000
+    §3 + 0511003 §1/§2 encode module purpose.
+
+3.2 §2 Parent chain citations.
+    Cites 1000000 + 1010000 + parent specs 0511003 +
+    0411001 + 0411003 + sibling AA=10 specs 1011001..
+    1011007. Boilerplate doc-control content.
+    Classification: (a) ARCHITECTURAL RESTATEMENT.
+    Retirement: S-4 drop; parent chain is namespace-spec
+    mandate per 0311001, not module-spec content.
+    NOTE — STALE SIBLING-VERSION CITATIONS: 1011002 dv1_23
+    cited (current dv1_26); 1011005 dv1_2 cited (current
+    dv1_3); 1011010 dv1_6 cited (current dv1_7). Citation
+    staleness is a (b) doc-control mechanics issue per
+    NSI §7.6 — not a 0500000 diagram-encoding gap. Will
+    be auto-resolved at S-4 retirement (1011004 itself
+    retires; sibling references become moot).
+
+3.3 §3 Five coding-readiness questions.
+    Answers TB00000 §3.2 governance-mandated five
+    questions. Restates 0511003 §1/§2/§8/§9/§10 +
+    0500000 §3 + diagram-encoded G8 -> EE dispatch flow.
+    Classification: (a) ARCHITECTURAL RESTATEMENT.
+    Retirement: S-4 drop; governance-spec mandate.
+
+------------------------------------------------------------
+§4 PARAMETERS (4 elements)
+------------------------------------------------------------
+
+3.4 entry_timeout_sec (30-60s CIATS-owned range).
+    1011004 dv1_0 PROSE: read from parameter_store
+    snapshot, frozen at pipeline start; specific value
+    selected per regime by upstream Signal Pipeline at
+    Gate 8.
+    CANONICAL (TB00000 v2_29 §9.17 CIATS-OWNED + D5 root
+    governs list line 3332): entry_timeout_sec listed
+    as CIATS-OWNED with 30-60s starting range, per-module
+    instantiated.
+    Classification: (a) ARCHITECTURAL RESTATEMENT.
+    Retirement: S-4 drop; D5 governs is canonical.
+
+3.5 max_concurrent (20 positions CIATS-owned starting).
+    1011004 dv1_0 PROSE: §4 parameters table lists
+    max_concurrent = 20 positions; §5.2 EE-PH1-004 +
+    EE-PH1-005 implement BoundedSemaphore ceiling
+    enforcement against max_concurrent.
+    CANONICAL (TB00000 v2_29 §9.17 RETIRED ENTRY):
+    "max_concurrent (20 positions) — concurrent-position
+    count emerges from wallet_balance ÷ per_trade_size_usd
+    arithmetic. No artificial ceiling." Per the parallel-
+    module framework + R:R-driven sizing curve, the
+    static 20-position cap is RETIRED in favor of dynamic
+    wallet-budget-based concurrency.
+    Classification: (a) ARCHITECTURAL RESTATEMENT WITH
+                    STALENESS — cluster C1 cascade
+                    (CLUSTER C1 overlap with TB00194 +
+                    TB00195 C1 — parameter foundation
+                    transition). Retirement: S-4 +
+                    prerequisite S-3 prose update to
+                    0511003 §3.3 + S-3 AR-043 amendment
+                    (BoundedSemaphore ceiling reframed
+                    as wallet-budget-derived dynamic
+                    cap; AR-043 itself remains valid as
+                    the concurrency-protection
+                    mechanism).
+
+3.6 maker_fee_rate (per pair, read from Kraken; not
+    CIATS-owned).
+    1011004 dv1_0 PROSE: read from pair_cache; used in
+    EE-PH1-013 Pending Order Registry cost computation.
+    CANONICAL (0411003 Kraken_Fee_Rate_Limit_Specification
+    + 0500000 §4 AR-007 prose "TP placement — resting
+    limit via batch_add on fill. Actual fill price for
+    R:R" + maker-fee mention at 0500000 §3 D2 visual at
+    line 2682 "TP_FILL (maker 0.16% fee per ar:AR-007)").
+    AR-007 is in D1 root governs ✓.
+    Classification: (a) ARCHITECTURAL RESTATEMENT.
+    Retirement: S-4 drop.
+
+3.7 net_R_R_ratio = 1.5 (HARDCODED — not CIATS-owned).
+    1011004 dv1_0 PROSE: hardcoded sacred constraint per
+    HR-EE-009 + Sacred_R_R_1_to_1_5.
+    CANONICAL (TB00000 v2_29 §9.10 SACRED CONSTRAINT
+    EXPANSION — Net 1:1.5 R:R is the MINIMUM floor, not
+    a fixed ratio; CIATS owns the sizing curve ABOVE the
+    floor + 0500000 D2 root governs rule:Sacred_R_R_1_
+    to_1_5 + D3 root governs rule:Sacred_R_R_1_to_1_5).
+    Classification: (a) ARCHITECTURAL RESTATEMENT.
+    HR-EE-009 wording "net_gain = net_loss * 1.5 is
+    HARDCODED" remains valid (1.5 is the floor; CIATS
+    may propose larger TP/sizing curves above it). No
+    staleness for the floor itself.
+    Retirement: S-4 drop.
+
+------------------------------------------------------------
+§5 PHASE 1 — ENTRY ORDER DISPATCH (18 elements)
+------------------------------------------------------------
+
+3.8 EE-PH1-001 TRIGGER: Gate 8 output dict.
+    Specifies the 8-field input dict structure (symbol,
+    entry_limit_price, entry_qty, tp_price,
+    sl_trigger_price, entry_timeout_sec, regime_context,
+    signal_params). D2 encodes the G8 -> EE handoff via
+    gate:G8_Position_Sizer -> mod:Execution_Engine
+    labeled-group flow with constraints ar:AR-006 +
+    rule:HR-EE-013.
+    Classification: (a) for architectural fact;
+                    (b) for the specific 8-field dict
+                    structure.
+    Retirement: S-4 drop architectural fact;
+                migrate (b) dict structure to 0511003
+                §2 Component Summary or §3.1 prose
+                (0511003 §2 already lists the 8 fields
+                — no migration needed).
+
+3.9 EE-PH1-002 Pair status check before dispatch.
+    Specifies pair_cache[symbol]["status"] check against
+    cancel_only / maintenance / reduce_only / work_in_
+    progress / delisted / limit_only with block + log
+    ENTRY_BLOCKED_PAIR_STATUS. Canonical via ar:AR-039
+    (per-pair instrument channel status check) in D1
+    root governs ✓ + ar:AR-039 amended dv1_43 per-module
+    routing.
+    NOTE: This duplicates the Signal_Pipeline
+    SP-PRE-003 PER-PAIR STATUS CHECK (TB00195 §3.6).
+    SP-PRE-003 fires at Pre-Gate 1; EE-PH1-002 fires at
+    dispatch time as defense-in-depth. Both architectural
+    facts canonical via AR-039 in D1 governs.
+    Classification: (a) ARCHITECTURAL RESTATEMENT.
+    Retirement: S-4 drop.
+
+3.10 EE-PH1-003 Minimum validation per HR-EE-010.
+     Specifies entry_qty_quantized >= qty_min AND
+     entry_qty * limit_price >= cost_min validation
+     before dispatch (failure: log
+     ENTRY_MIN_VALIDATION_FAIL + skip dispatch).
+     CANONICAL (0500000 §4 AR-028): AR-028 IS in §4 AR
+     registry prose but NOT in any diagram root governs
+     list — separate finding §7.1 below (cluster C5).
+     HR-EE-010 is the parent-spec hard rule (0511003
+     §8 HR-EE-010 ✓).
+     Classification: (a) for architectural fact (HR-EE-
+                     010 prose canonical via 0511003 §8);
+                     parent-AR diagram-encoding gap is
+                     §7.1 finding.
+                     For cluster C5 cascade tracking,
+                     this element is impacted.
+     Retirement: S-4 drop after AR-028 -> D1 governs
+                 amendment (cluster C5) + S-3 0511003
+                 prose verification.
+
+3.11 EE-PH1-004 BoundedSemaphore acquisition (AR-043).
+     Specifies entry_semaphore.acquire(blocking=False)
+     before dispatch; failure logs ENTRY_BLOCKED_MAX_
+     CONCURRENT + skip.
+     CANONICAL (0500000 §4 AR-043 prose "max_concurrent
+     position limit enforced by asyncio.BoundedSemaphore"
+     + line 4433): AR-043 is in §4 AR registry prose but
+     NOT in any diagram root governs list — separate
+     finding §7.1 below (cluster C5).
+     Compound staleness: max_concurrent itself RETIRED
+     at v2_29 (cluster C1). The semaphore concurrency-
+     protection mechanism remains valid; the ceiling
+     source must reframe to wallet_balance ÷
+     per_trade_size_usd dynamic computation per the
+     parallel-module framework.
+     Classification: (a) for architectural fact + (a)
+                     staleness in max_concurrent
+                     ceiling source. Cluster C1
+                     cascade (ceiling source) + Cluster
+                     C5 diagram-encoding gap (AR-043
+                     parent-AR encoding).
+     Retirement: S-4 drop after (i) cluster C1 closure
+                 reframes ceiling source + (ii) AR-043
+                 -> D5 governs (with optional revised
+                 description binding to dynamic wallet-
+                 budget ceiling).
+
+3.12 EE-PH1-005 CIATS max_concurrent update handling.
+     Specifies BoundedSemaphore recreation on parameter
+     update + re-acquire for all open positions.
+     ValueError on over-release is intentional.
+     COMPOUND STALENESS: same as 3.11 — max_concurrent
+     itself RETIRED at v2_29. Mechanism reframes to
+     wallet-budget-derived dynamic recalculation on
+     wallet_balance change OR per_trade_size_usd
+     update.
+     Classification: (a) ARCHITECTURAL RESTATEMENT WITH
+                     STALENESS — cluster C1 cascade.
+                     Retirement: same as 3.11.
+
+3.13 EE-PH1-006 cl_ord_id format and constraints.
+     Specifies <symbol_prefix><timestamp_ms> format,
+     <= 18 chars, unique per order, slash-removed symbol
+     prefix, monotonically-increasing timestamp_ms from
+     time.time_ns() // 1_000_000.
+     Classification: (b) CODING-UNIQUE (specific format
+                     mechanics + timestamp conversion
+                     code). The architectural fact "EE
+                     assigns cl_ord_id at dispatch
+                     BEFORE Kraken response" is canonical
+                     via HR-EE-006 + AR-006 (D1 governs).
+                     The specific 18-char format and
+                     timestamp_ns mechanics are
+                     implementation-level.
+     Migration: S-3 amend 0511003 §3.1 to add cl_ord_id
+                format details (already partially
+                present — "Suggested format: symbol
+                prefix + timestamp in ms" at §3.1).
+
+3.14 EE-PH1-007 cl_ord_id assigned BEFORE Kraken response.
+     Restates HR-EE-006 + A-2 record-at-dispatch rule.
+     Canonical via 0511003 §3.1 + §8 HR-EE-006 + D2
+     mod:Execution_Engine constraints ar:AR-007 + ar:AR-008
+     (line 2398) + rule:HR-EE-013.
+     Classification: (a) ARCHITECTURAL RESTATEMENT.
+     Retirement: S-4 drop.
+
+3.15 EE-PH1-008 req_id Assignment.
+     Specifies req_id = next(req_id_counter) where
+     req_id_counter = itertools.count() initialized at
+     WS Manager startup.
+     Classification: (b) CODING-UNIQUE (itertools.count()
+                     pattern is implementation choice).
+                     Architectural fact "each outbound
+                     message carries req_id (unique
+                     integer per session)" canonical via
+                     0511003 §3.2.
+     Migration: S-3 amend 0511003 §3.2 already adequate.
+                Itertools pattern can be (b) reference
+                in §3.2 or remain implementation choice.
+
+3.16 EE-PH1-009 WS Manager req_id_registry population.
+     Specifies registry schema {method, timestamp,
+     symbol} keyed by req_id + purge on response OR
+     10-minute fallback expiry.
+     Classification: (b) CODING-UNIQUE (specific dict
+                     schema + 10-minute timeout
+                     value); plus (a) for the
+                     architectural fact (registry
+                     exists; used for I-6 cancel
+                     timeout fallback + response
+                     correlation).
+                     Architectural fact canonical via
+                     0511003 §3.2.
+     Migration: S-3 amend 0511003 §3.2 to add 10-minute
+                fallback expiry detail (currently absent
+                from 0511003).
+
+3.17 EE-PH1-010 add_order construction (all fields
+     REQUIRED).
+     Canonical: AR-006 IS in D1 root governs ✓ + 0511003
+     §3.3 contains full message structure.
+     Classification: (a) for architectural fact (all
+                     fields required + post_only=True
+                     mandatory + GTD self-expire) — D1
+                     governs has AR-006;
+                     (b) for the specific Python dict
+                     construction syntax.
+     Retirement: S-4 drop architectural fact; (b)
+                 syntax already adequately in 0511003
+                 §3.3.
+
+3.18 EE-PH1-011 add_order field rules table.
+     Restates per-field rules: order_type "limit", side
+     "buy" — Long Module only [STALE per parallel-module
+     framework], symbol slash form, limit_price/order_qty
+     str(Decimal), post_only True, time_in_force "gtd",
+     expire_time ISO 8601 UTC, cl_ord_id, stp_type
+     "cancel_newest" UNDERSCORE (AR-032), deadline UTC+5s
+     (AR-033), req_id.
+     STALENESS: "side: buy — Long Module only" pre-dates
+     parallel-module framework codified at TB00000 v2_29
+     §9.3 + DEC-011 Stage M ratification + 0811005 dv1_0
+     Short_Module Specification. Canonical per AR-009
+     amended dv1_41 (Kraken margin trading enables short-
+     side) + AR-072 amended dv1_43 + AR-073 amended dv1_43
+     (per-module): side is "buy" for Long_Module entries
+     and "sell" (reduce-only-style margin short open) for
+     Short_Module entries.
+     Classification: (a) ARCHITECTURAL RESTATEMENT WITH
+                     STALENESS — cluster C2 cascade
+                     (parallel-module direction-symmetric
+                     framework). Closure path: S-3 prose
+                     update to 0511003 §3.3 to add
+                     direction-symmetric variants (no
+                     S-2 diagram amendment needed; AR-009
+                     + AR-072 + AR-073 already in D7
+                     governs ✓; mod:Short_Module added to
+                     D7 R3 ✓; D2 still has only Long_Module
+                     in governs but D2 R-increment per
+                     parallel-module framework is on the
+                     S-2 queue per cumulative carry-
+                     forward — verify at S-2 cycle).
+
+3.19 EE-PH1-012 ISO 8601 ".replace('+00:00', 'Z')"
+     transformation.
+     Specifies the Python datetime.isoformat -> Kraken
+     WS v2 "Z" suffix conversion REQUIRED + validation
+     test mandate.
+     Classification: (b) CODING-UNIQUE (Python-specific
+                     string manipulation).
+     Migration: S-3 amend 0511003 §3.3 to add the
+                ".replace('+00:00', 'Z')" requirement
+                (currently absent from 0511003 prose,
+                a coding-relevant detail Bill's coder
+                needs).
+
+3.20 EE-PH1-013 Pending Order Registry population
+     (AR-053).
+     Specifies estimated_cost = entry_qty_quantized *
+     entry_limit_price * (Decimal("1") + maker_fee_rate)
+     + pending_orders[cl_ord_id] = estimated_cost +
+     Gate 7 capital-overcommitment prevention semantics.
+     CANONICAL (0500000 §4 AR-053 amended dv1_43 per-
+     module routing prose): AR-053 IS in §4 AR registry
+     prose but NOT in any diagram root governs list —
+     separate finding §7.1 below (cluster C5).
+     COMPOUND STALENESS: AR-053 amended dv1_43 to per-
+     module — long_pending_orders[] and short_pending_
+     orders[] are separate per-module registries.
+     1011004 dv1_0 uses generic pending_orders[]; STALE
+     per parallel-module framework.
+     Classification: (a) ARCHITECTURAL RESTATEMENT WITH
+                     STALENESS — cluster C2 (per-module)
+                     + cluster C5 (parent-AR diagram-
+                     encoding gap).
+     Retirement: S-4 drop after AR-053 -> diagram
+                 governs amendment + per-module routing
+                 prose update.
+
+3.21 EE-PH1-014 Decimal arithmetic only (AR-047).
+     AR-047 IS in D1 root governs ✓.
+     Classification: (a) ARCHITECTURAL RESTATEMENT.
+     Retirement: S-4 drop.
+
+3.22 EE-PH1-015 Position Mirror entry created at
+     dispatch (A-2).
+     Specifies 14-field position_mirror[symbol] dict
+     created at dispatch with cl_ord_id, prices,
+     placeholders, regime_context, signal_params,
+     entry_timestamp_utc, state="ENTRY_PENDING".
+     CANONICAL: HR-EE-006 (cl_ord_id at dispatch) ✓
+     in D2 mod:Execution_Engine constraints; HR-PM-009
+     (Position Mirror sole-writer = WSManager) ✓ in D3
+     root governs + D7 root governs. The specific
+     14-field schema is implementation-level.
+     COMPOUND STALENESS: per parallel-module framework
+     + AR-073 amended dv1_43 (per-side state
+     management), Position Mirror is conceptually
+     per-module — long_position_mirror[] and
+     short_position_mirror[]. 1011004 dv1_0 uses
+     generic position_mirror[]. STALE.
+     Classification: (a) ARCHITECTURAL RESTATEMENT WITH
+                     STALENESS (per-module dispatch
+                     routing) — cluster C2 cascade;
+                     (b) for the specific 14-field
+                     dict schema.
+     Migration: S-3 0511003 §3.4 prose to add per-
+                module Position Mirror routing
+                clarification + (b) 14-field schema
+                detail (currently 0511003 §5.2 lists
+                fewer fields than 1011004 §5.7).
+
+3.23 EE-PH1-016 Position Mirror canonical state +
+     WS Manager as physical writer.
+     Restates HR-PM-009 sole-writer architectural
+     pattern (Exit Controller + EE provide data via
+     interface call; WSManager is the physical writer).
+     CANONICAL: HR-PM-009 IS in D3 root governs ✓ +
+     D7 root governs ✓.
+     Classification: (a) ARCHITECTURAL RESTATEMENT.
+     Retirement: S-4 drop.
+
+3.24 EE-PH1-017 add_order rate counter cost (+1 fixed).
+     Restates Kraken rate counter accounting; CIATS
+     rate_counter_by_pair update on every dispatch.
+     CANONICAL (0411003 Kraken_Fee_Rate_Limit_
+     Specification): not a 0500000 diagram element
+     directly. Mode-agnostic per EE-PAPER-001 (0511003
+     §5A).
+     Classification: (a) ARCHITECTURAL RESTATEMENT.
+     Retirement: S-4 drop.
+
+3.25 EE-PH1-018 RATE_COUNTER_WARNING threshold (80%).
+     Specifies ratecount >= maxratecount * Decimal("0.80")
+     log threshold. CIATS feed mechanics.
+     Classification: (b) CODING-UNIQUE (specific 0.80
+                     threshold value is starting choice;
+                     could be CIATS-owned but is not
+                     currently in TB00000 v2_29 §9.17
+                     registry — flagging for (d)
+                     Chesterton-fence check).
+     Chesterton-fence investigation (RR-SCOPE-009 four-
+     question):
+       (1) Introduced: 1011004 dv1_0 04-25-2026 origin.
+       (2) Problem: provide early warning before
+           rate-limit ceiling hit (avoid +6/+8 high-cost
+           cancel-cancel rate penalties).
+       (3) Evidence: no empirical evidence that 0.80 is
+           optimal vs 0.75 / 0.90. Threshold serves a
+           genuine loss-prevention function (early
+           warning).
+       (4) Loss-prevention property: rate-limit ceiling
+           breach causes Kraken to reject orders,
+           potentially losing trading opportunities.
+           Must preserve.
+     Disposition: (b) CODING-UNIQUE retained; threshold
+                  value (0.80) candidate for CIATS-OWNED
+                  status in future v2_30 parameter
+                  amendment. Not blocking S-4 retirement.
+
+------------------------------------------------------------
+§6 ENTRY ORDER OUTCOMES (6 elements)
+------------------------------------------------------------
+
+3.26 EE-OUT-001 exec_type=filled (full fill).
+     Specifies 6-step response sequence: extract qty +
+     entry_fill_price, update Position Mirror
+     entry_fill_price + qty + state="ENTRY_FILLED",
+     clear pending_orders, log ENTRY_FILLED, trigger
+     Phase 2.
+     CANONICAL (0511003 §4.1): full handler sequence
+     present; identical content. Mode-opaque per
+     EE-PAPER-004 (live: executions channel; paper:
+     _simulate_entry_fill callback).
+     Classification: (a) ARCHITECTURAL RESTATEMENT.
+     Retirement: S-4 drop.
+
+3.27 EE-OUT-002 exec_type=trade (partial while open).
+     Specifies hold pending_orders + no Phase 2
+     dispatch + log ENTRY_PARTIAL_TRADE.
+     CANONICAL (0511003 §4.2): identical content.
+     Classification: (a) ARCHITECTURAL RESTATEMENT.
+
+3.28 EE-OUT-003 exec_type=expired (GTD elapsed).
+     Specifies cum_qty==0 cleanup path AND cum_qty>0
+     CRITICAL AR-054 partial-fill-protection trigger
+     via WS Manager.
+     CANONICAL (0511003 §4.3 + 0500000 §4 AR-054 prose):
+     AR-054 amended dv1_43 direction-symmetric. AR-054
+     IS in §4 AR registry prose but NOT in any diagram
+     root governs list — separate finding §7.1 below
+     (cluster C5).
+     Classification: (a) ARCHITECTURAL RESTATEMENT —
+                     core handler logic canonical via
+                     0511003 §4.3. Parent-AR encoding
+                     gap is §7.1 finding (cluster C5).
+     Retirement: S-4 drop after AR-054 -> diagram
+                 governs amendment.
+
+3.29 EE-OUT-004 exec_type=canceled.
+     Identical pattern to EE-OUT-003 (cum_qty==0
+     cleanup + cum_qty>0 AR-054 trigger).
+     Classification: (a) ARCHITECTURAL RESTATEMENT.
+     Cluster C5 cascade overlap with EE-OUT-003.
+
+3.30 EE-OUT-005 exec_type=canceled + reason=post_only
+     (rejection).
+     Specifies rejection handling + CIATS
+     rejection_rate_by_regime increment. Canonical via
+     0511003 §4.6 + 1011010 CIATS_Coding_Spec.
+     Classification: (a) ARCHITECTURAL RESTATEMENT.
+     Retirement: S-4 drop.
+
+3.31 EE-OUT-006 exec_type=new (accepted on book).
+     Specifies state update to "ENTRY_RESTING" + log
+     ENTRY_ACCEPTED_ON_BOOK.
+     CANONICAL (0511003 §4.5): identical.
+     Classification: (a) ARCHITECTURAL RESTATEMENT.
+
+------------------------------------------------------------
+§7 PHASE 2 — TP + EMERGSL PLACEMENT (10 elements)
+------------------------------------------------------------
+
+3.32 EE-PH2-001 TP and emergSL cl_ord_id assignment.
+     Specifies tp_cl_ord_id = "<sym_prefix>TP<ts_ms>"
+     + emergSL_cl_ord_id = "<sym_prefix>SL<ts_ms>",
+     both <= 18 chars.
+     Classification: (b) CODING-UNIQUE (specific format
+                     "TP" / "SL" infix). Architectural
+                     fact (two new cl_ord_ids at Phase
+                     2 + HR-EE-006 record-at-dispatch)
+                     canonical.
+
+3.33 EE-PH2-002 batch_add construction (full message
+     structure).
+     Canonical: AR-007 + AR-008 in D1 root governs ✓ +
+     D2 mod:Execution_Engine ON FILL band constraints
+     ar:AR-007 + ar:AR-008 ✓.
+     Classification: (a) for architectural fact (atomic
+                     2-leg batch_add per AR-007);
+                     (b) for specific Python dict
+                     construction.
+     Retirement: S-4 drop architectural fact.
+
+3.34 EE-PH2-003 TP and emergSL price RECOMPUTATION at
+     entry_fill_price (preserves Sacred R:R).
+     Specifies risk_per_unit = entry_fill_price -
+     sl_trigger_price_recomputed + tp_price_recomputed
+     = entry_fill_price + (risk_per_unit *
+     Decimal("1.5")) + quantization direction.
+     CANONICAL: rule:Sacred_R_R_1_to_1_5 ✓ in D2 root
+     governs + D3 root governs. AR-008 commentary
+     (D2 line 1869 + 2795 "all calculations use
+     ACTUAL fill price — never limit price — why
+     OTO conditional orders are rejected per ar:AR-008")
+     in D2 visual content. Recomputation logic
+     canonical via 0511003 §5.1 + §5A.
+     Classification: (a) for architectural fact
+                     (recomputation against fill_price
+                     mandatory);
+                     (b) for ROUND_UP/ROUND_DOWN
+                     quantization mechanics.
+     Migration: S-3 verify 0511003 §5.1 quantization
+                direction prose (currently absent —
+                a coding-relevant detail).
+
+3.35 EE-PH2-004 TP leg field rules.
+     Restates per-field rules for TP limit leg:
+     order_type "limit", side "sell" [STALE — per
+     parallel-module framework, Short_Module TP is
+     side "buy" reduce-only], limit_price Decimal,
+     order_qty entry fill cum_qty, post_only True,
+     cl_ord_id, stp_type underscore, deadline 5s.
+     STALENESS: "side: sell (closing a long)" pre-dates
+     parallel-module framework per AR-007 amended dv1_42
+     ("M-2 short-direction" per 0500000 §4 line 4296):
+     "AR-007 (amended dv1_42 — M-2 short-direction): TP
+     placement — resting limit via batch_add on fill.
+     Actual fill price for R:R." Direction-symmetric.
+     Classification: (a) ARCHITECTURAL RESTATEMENT WITH
+                     STALENESS — cluster C2 cascade
+                     (parallel-module direction-symmetric).
+                     Closure: S-3 prose update to 0511003
+                     §5.1 + §5 batch_add construction
+                     to add direction-symmetric variants.
+                     No S-2 needed (AR-007 amended IS in
+                     §4 prose; D1 governs has AR-007;
+                     verify D2/D7 governs context).
+
+3.36 EE-PH2-005 emergSL leg field rules.
+     Restates per-field rules for emergSL stop-loss
+     leg: order_type "stop-loss", side "sell" [STALE
+     same as 3.35], order_qty cum_qty, cl_ord_id,
+     stp_type underscore, deadline 5s, triggers block
+     REQUIRED with reference="last" + price_type
+     "static".
+     CANONICAL: AR-046 (triggers.reference="last") ✓
+     in D1 root governs + AR-008 (emergSL stop-market
+     atomic with TP) amended dv1_42 ✓ in D1 + D2 + D3
+     + D6 governs.
+     STALENESS: "side: sell" — same cluster C2 cascade
+     as 3.35.
+     Classification: (a) ARCHITECTURAL RESTATEMENT WITH
+                     STALENESS — cluster C2 cascade.
+
+3.37 EE-PH2-006 batch_add rate counter cost (+1 fixed,
+     n/2=1).
+     Restates 2-leg batch_add costs +1 unit per Kraken
+     docs. CIATS rate_counter_by_pair updated.
+     Classification: (a) ARCHITECTURAL RESTATEMENT.
+     Retirement: S-4 drop.
+
+3.38 EE-PH2-007 Position Mirror update at Phase 2
+     dispatch.
+     Specifies 5-field update at dispatch:
+     tp_cl_ord_id, emergSL_cl_ord_id, tp_price,
+     sl_trigger_price, state="FULLY_PROTECTED_PENDING_ACK".
+     CANONICAL: HR-EE-006 + HR-PM-009 ✓ in diagram
+     governs. The 5-field write itself is implementation
+     mechanics around the architectural record-at-
+     dispatch rule.
+     Classification: (a) for architectural fact;
+                     (b) for the specific 5-field write
+                     schema (already partially in
+                     0511003 §5.2 — full schema not
+                     enumerated).
+     Migration: S-3 amend 0511003 §5.2 to enumerate
+                the 5-field Phase 2 dispatch write.
+
+3.39 EE-PH2-008 batch_add ACK handling (tp_order_id +
+     emergSL_order_id extraction).
+     Specifies extraction of Kraken-assigned order IDs
+     from ACK + state update to "FULLY_PROTECTED" +
+     log TP_EMGSL_CONFIRMED.
+     CANONICAL: mode-opaque per EE-PAPER-003 (0511003
+     §5A) — paper mode populates synthetic
+     "PAPER_TP_*"/"PAPER_SL_*" prefixed IDs; live mode
+     populates Kraken-assigned IDs. Both via
+     pm.update_resting_orders() pathway.
+     Classification: (a) ARCHITECTURAL RESTATEMENT.
+     Retirement: S-4 drop. (NOTE: paper-mode synthetic-
+                 ID convention is canonical via 0511001
+                 dv1_6 §13.2 + 0500000 dv1_46 §12 —
+                 paper-mode dispatch boundary
+                 architecture.)
+
+3.40 EE-PH2-009 batch_add failure handling.
+     Specifies TP_EMGSL_DISPATCH_FAILED CRITICAL log +
+     AR-054 partial-fill protection trigger via WS
+     Manager + state "PROTECTION_FAILED_EXIT_PENDING"
+     + no retry.
+     CANONICAL (0511003 §4.3 + 0500000 §4 AR-054):
+     AR-054 amended dv1_43. Same cluster C5 (AR-054
+     diagram-encoding gap) as 3.28.
+     Classification: (a) ARCHITECTURAL RESTATEMENT —
+                     parent-AR encoding gap is §7.1
+                     finding.
+
+3.41 EE-PH2-010 Single-leg ACK atomicity violation
+     handling.
+     Specifies "should be impossible per batch_add
+     docs" + treat as full failure (EE-PH2-009 path)
+     + alert operator.
+     Classification: (a) ARCHITECTURAL RESTATEMENT.
+     Retirement: S-4 drop. Defensive-coding pattern;
+                 documented behavior under impossible-
+                 by-design conditions.
+
+------------------------------------------------------------
+§8 RATE COUNTER SUMMARY
+------------------------------------------------------------
+
+3.42 §8 Full rate counter table (add_order +1,
+     batch_add +1, cancel_order tiers +1/+6/+8,
+     amend_order tiers +1..+4, ceiling = maxratecount,
+     decay 2.34 u/s).
+     CANONICAL (0411003 Kraken_Fee_Rate_Limit_
+     Specification + 0511003 §6): identical content;
+     0411003 is the canonical source per parent chain.
+     Note in 1011004 §8 "cancel_order and amend_order
+     are dispatched by Exit Controller (1011005) and
+     WS Manager (1011002) respectively, not by
+     Execution Engine" — this is architectural fact
+     (delegation pattern); EE reads ratecount from
+     ACKs to feed CIATS rate_counter_by_pair.
+     Classification: (a) ARCHITECTURAL RESTATEMENT.
+     Retirement: S-4 drop.
+
+------------------------------------------------------------
+§9 INTERFACES (10 elements)
+------------------------------------------------------------
+
+3.43 EE-IF-001 From Signal Pipeline.
+     Gate 8 output dict; one Gate 8 pass = one Phase 1
+     dispatch attempt. Canonical via 0511003 §7.1 +
+     D2 G8 -> mod:Execution_Engine edge.
+     Classification: (a) ARCHITECTURAL RESTATEMENT.
+
+3.44 EE-IF-002 From WS Manager (executions channel).
+     Specifies routed exec_type events filtered by
+     cl_ord_id membership in pending_orders or
+     position_mirror[*].
+     CANONICAL: channel:kraken_ws_executions ✓ in D1
+     governs + D3 governs + dispatch table O(1)
+     routing per D1 visual (line 1595).
+     Mode-opacity per EE-PAPER-004 (paper:
+     _simulate_entry_fill; live: executions channel).
+     Classification: (a) ARCHITECTURAL RESTATEMENT.
+
+3.45 EE-IF-003 Read pair_cache (WSManager-owned).
+     Reads qty_min, cost_min, qty_increment,
+     price_increment, maker_fee_rate, pair status.
+     Pair cache canonical owner = WS Manager (HR-WM
+     family in D1 governs).
+     Classification: (a) ARCHITECTURAL RESTATEMENT.
+     Retirement: S-4 drop.
+
+3.46 EE-IF-004 To WS Manager (constructed WS v2
+     messages).
+     Specifies EE returns constructed messages
+     (add_order, batch_add) for WSManager dispatch
+     seam transmission.
+     CANONICAL: contract:WSManager_Dispatch_Seam ✓ in
+     D1 + D2 + D7 governs + HR-EE-013 ✓ + HR-EE-014
+     (new dv1_1) + HR-EE-015 (new dv1_1) — HR-EE-014/015
+     are §7.1 finding (cluster C5 — new dv1_1 hard
+     rules not yet in diagram governs).
+     Classification: (a) ARCHITECTURAL RESTATEMENT —
+                     core seam-delegation pattern.
+                     Parent rules HR-EE-014 + HR-EE-015
+                     diagram-encoding gap is §7.1
+                     finding (cluster C5).
+
+3.47 EE-IF-005 To WS Manager (req_id_registry +
+     rate_counter feed).
+     Reports dispatch attempt to WS Manager
+     req_id_registry; reports ratecount readings from
+     ACKs to rate counter monitor.
+     Classification: (a) ARCHITECTURAL RESTATEMENT.
+     Retirement: S-4 drop.
+
+3.48 EE-IF-006 To Position Mirror (via WSManager).
+     Updates Position Mirror at every dispatch (Phase 1
+     and Phase 2). WSManager is physical writer.
+     CANONICAL: HR-PM-009 sole-writer ✓ in D3 + D7
+     governs.
+     Classification: (a) ARCHITECTURAL RESTATEMENT.
+
+3.49 EE-IF-007 To Logger (non-blocking).
+     All dispatch events + fill confirmations +
+     rejections + rate counter warnings via Logger.
+     Non-blocking per BP-LOG-001 / AR-014.
+     CANONICAL: AR-014 (Logger async bounded queue) ✓
+     in D1 governs.
+     Classification: (a) ARCHITECTURAL RESTATEMENT.
+
+3.50 EE-IF-008 To CIATS (rate_counter_by_pair).
+     Updates on every add_order / batch_add ACK with
+     {ratecount, timestamp}.
+     CANONICAL: 0211001 CIATS_Specification + 1011010
+     CIATS_Coding_Spec + contract:CIATS_Trade_Outcome_
+     Bus ✓ in D3 + D7 governs.
+     Classification: (a) ARCHITECTURAL RESTATEMENT.
+
+3.51 EE-IF-009 To CIATS (rejection_rate_by_regime).
+     Increments on every ENTRY_POST_ONLY_REJECTED with
+     regime_context value.
+     Classification: (a) ARCHITECTURAL RESTATEMENT.
+
+3.52 EE-IF-010 To Risk Engine / BoundedSemaphore.
+     Acquires entry_semaphore at Phase 1; release by
+     Exit Controller on close (EC-TOB-001) OR by EE
+     directly on timeout/rejection with cum_qty==0.
+     COMPOUND STALENESS: same as 3.11/3.12 — semaphore
+     ceiling source must reframe to wallet-budget
+     dynamic per cluster C1.
+     Classification: (a) ARCHITECTURAL RESTATEMENT WITH
+                     STALENESS — cluster C1 cascade
+                     (ceiling source) + cluster C5
+                     (AR-043 parent-AR encoding gap).
+
+------------------------------------------------------------
+§10 HARD RULES (13 elements: HR-EE-001 through HR-EE-013)
+------------------------------------------------------------
+
+3.53 HR-EE-001 post_only=True on ALL entry add_order.
+     Source: AR-006 (D1 governs ✓).
+     CANONICAL (0511003 §8 HR-EE-001): identical.
+     Classification: (a) ARCHITECTURAL RESTATEMENT.
+
+3.54 HR-EE-002 stp_type="cancel_newest" UNDERSCORE.
+     Source: AR-032 (D1 governs ✓).
+     CANONICAL (0511003 §8 HR-EE-002): identical.
+     Classification: (a) ARCHITECTURAL RESTATEMENT.
+
+3.55 HR-EE-003 deadline = UTC now + 5 seconds.
+     Source: AR-033 (D1 governs ✓).
+     CANONICAL (0511003 §8 HR-EE-003): identical.
+     Classification: (a) ARCHITECTURAL RESTATEMENT.
+
+3.56 HR-EE-004 triggers.reference="last" on emergSL.
+     Source: AR-046 (D1 governs ✓).
+     CANONICAL (0511003 §8 HR-EE-004): identical.
+     Classification: (a) ARCHITECTURAL RESTATEMENT.
+
+3.57 HR-EE-005 TP+emergSL via batch_add atomic + OTO
+     PROHIBITED.
+     Source: AR-007 + AR-008 (D1 governs ✓ + D2 group
+     constraints ✓ + D3 governs ✓).
+     CANONICAL (0511003 §8 HR-EE-005): identical.
+     Classification: (a) ARCHITECTURAL RESTATEMENT.
+
+3.58 HR-EE-006 cl_ord_id at dispatch + Position Mirror
+     no-async-gap (A-2).
+     CANONICAL: HR-EE-006 itself is in D2 mod:
+     Execution_Engine constraints (via ar:AR-006 +
+     ar:AR-007 chain). HR-PM-009 sole-writer ✓ in D3
+     + D7 governs.
+     Classification: (a) ARCHITECTURAL RESTATEMENT.
+
+3.59 HR-EE-007 Pending Order Registry population +
+     clearing semantics.
+     Source: AR-053 (NOT in any diagram governs;
+     cluster C5 finding) + AR-054 reference (NOT in
+     any diagram governs; cluster C5).
+     CANONICAL (0511003 §8 HR-EE-007 + 0500000 §4
+     AR-053 amended dv1_43 per-module prose):
+     direction-symmetric per-module routing canonical
+     via §4 prose; diagram-encoding gap §7.1.
+     Classification: (a) ARCHITECTURAL RESTATEMENT WITH
+                     STALENESS (per-module routing) —
+                     cluster C2 (per-module) + cluster
+                     C5 (parent-AR encoding gap).
+
+3.60 HR-EE-008 Decimal(str()) on all WS numeric fields.
+     Source: AR-047 (D1 governs ✓).
+     CANONICAL (0511003 §8 HR-EE-008): identical.
+     Classification: (a) ARCHITECTURAL RESTATEMENT.
+
+3.61 HR-EE-009 net_gain = net_loss * 1.5 HARDCODED.
+     Source: rule:Sacred_R_R_1_to_1_5 ✓ in D2 + D3
+     governs.
+     CANONICAL (0511003 §8 HR-EE-009 + TB00000 v2_29
+     §9.10): 1.5 is the SACRED MINIMUM FLOOR; CIATS
+     owns the sizing curve ABOVE the floor (trades
+     with expected R:R above 1.5 may receive larger
+     allocations). HR-EE-009 floor wording remains
+     valid.
+     Classification: (a) ARCHITECTURAL RESTATEMENT.
+
+3.62 HR-EE-010 qty_min + cost_min validation before
+     dispatch.
+     Source: AR-028 (NOT in any diagram governs; cluster
+     C5 finding).
+     CANONICAL (0511003 §8 HR-EE-010): identical.
+     Classification: (a) ARCHITECTURAL RESTATEMENT —
+                     parent-AR encoding gap §7.1.
+
+3.63 HR-EE-011 amend_order primary + edit_order
+     PROHIBITED.
+     Source: AR-018 (NOT in any diagram governs;
+     cluster C5 finding).
+     CANONICAL (0511003 §8 HR-EE-011): identical.
+     Classification: (a) ARCHITECTURAL RESTATEMENT —
+                     parent-AR encoding gap §7.1.
+
+3.64 HR-EE-012 cancel_all_orders_after PROHIBITED.
+     Source: AR-055 (NOT in any diagram governs;
+     cluster C5 finding).
+     CANONICAL (0511003 §8 HR-EE-012): identical.
+     Classification: (a) ARCHITECTURAL RESTATEMENT —
+                     parent-AR encoding gap §7.1.
+
+3.65 HR-EE-013 Paper-live behavioral parity EXACT (NO
+     mode-conditional branching).
+     CANONICAL: HR-EE-013 ✓ in D2 root governs + D7
+     root governs + D2 mod:Execution_Engine constraints
+     ar:AR-006 + decision:D-06 ✓. PA-005 byte-identical
+     paper-live in D7 governs ✓. STRONG diagram-side
+     encoding.
+     COMPOUND STALENESS: 1011004 dv1_0 HR-EE-013 source
+     citation is "D-06 LOCKED, 0211005 dv1_1 PT-MODE-005,
+     HR-PT-008." This pre-dates TB00000 v2_20 §4.4
+     PA-001..010 PAPER-AS-MASTER absolute standing
+     rule + 0500000 dv1_24 §12 Paper-Mode Dispatch
+     Boundary Architecture (later evolved to dv1_46
+     §12). 0511003 dv1_1 §5A.3 explicitly notes:
+     "A future 1011004 cascade may update HR-EE-013's
+     source citation from D-06 / PT-MODE-005 / HR-PT-008
+     to v2_20 §4.4 PA-001..010 + 0500000 dv1_24 §12 —
+     that binding update is OUT OF SCOPE for this
+     amendment per RR-SCOPE-002 scope-constrictor."
+     This staleness is "source-citation drift", not
+     architectural-content drift — the rule itself
+     remains correct; only the citation path is
+     stale.
+     Classification: (a) ARCHITECTURAL RESTATEMENT WITH
+                     CITATION-STALENESS — cluster C6
+                     (NEW; minor source-citation drift
+                     class).
+     Retirement: S-4 drop — citation drift resolved at
+                 retirement (1011004 itself retires;
+                 0511003 §5A.3 already captures the
+                 forward citation).
+
+------------------------------------------------------------
+§11-§14 TRIGGERS / LOGS / RELATED DOCS / REVISION HISTORY
+------------------------------------------------------------
+
+3.66 §11 What triggers it (7 trigger sources enumerated).
+     Restates Gate 8 + exec_type variants + batch_add
+     ACK as trigger sources.
+     CANONICAL (0511003 §9): identical (with mode-
+     opacity callback per EE-PAPER-004).
+     Classification: (a) ARCHITECTURAL RESTATEMENT.
+
+3.67 §12 What it logs (16 distinct log event types).
+     ENTRY_DISPATCHED, ENTRY_ACCEPTED, ENTRY_FILLED,
+     ENTRY_PARTIAL_TRADE, ENTRY_EXPIRED_*,
+     ENTRY_CANCELED_*, ENTRY_POST_ONLY_REJECTED,
+     ENTRY_ACCEPTED_ON_BOOK, ENTRY_BLOCKED_*,
+     ENTRY_MIN_VALIDATION_FAIL, TP_EMGSL_DISPATCHED,
+     TP_EMGSL_CONFIRMED, TP_EMGSL_DISPATCH_FAILED,
+     RATE_COUNTER_WARNING + per-entry fields.
+     CANONICAL (0511003 §10): event taxonomy identical
+     + 0511003 §10 closes "All EE log records are
+     mode-agnostic. PAPER_* telemetry events are
+     emitted by the WSManager dispatch seam per
+     0500000 dv1_24 §12.6 — NOT by the Execution
+     Engine."
+     Classification: (a) for architectural fact (event
+                     taxonomy + mode-agnostic
+                     EE-emitter pattern);
+                     (b) for per-event field-list
+                     enumeration (specific field names).
+     Migration: S-3 verify 0511003 §10 field-list
+                completeness (currently abbreviated
+                compared to 1011004 §12).
+
+3.68 §13 Related documents (15 sibling citations).
+     Boilerplate citation block. STALE VERSION CITATIONS
+     same as §2 (see 3.2 above).
+     Classification: (a) ARCHITECTURAL RESTATEMENT.
+     Retirement: S-4 drop with 1011004; sibling
+                 references become moot.
+
+3.69 §14 Revision history.
+     dv1_0 04-25-2026 entry (TB00137 recovery authoring
+     under Bill directive "Close out the following
+     issues"; cite-list of OI-053-CAND / OI-054-CAND /
+     OI-055-CAND-D3 historical context).
+     Classification: (a) ARCHITECTURAL RESTATEMENT.
+     Retirement: §14 retains as historical record in
+     the retired 1011004 document per 0311001 §11
+     retirement-archive convention.
+
+============================================================
+4. ROLL-UP TOTALS
+============================================================
+
+Bucket counts across 13 HR-EE-* + 18 EE-PH1-* + 6 EE-OUT-*
++ 10 EE-PH2-* + 10 EE-IF-* + §1-§4 / §8 / §11-§14 metadata:
+
+  (a) ARCHITECTURAL RESTATEMENT (drop with retirement):
+      ~57 elements
+      - §1 / §2 / §3 / §11 / §13 / §14 metadata
+      - All HR-EE-001 through HR-EE-013 (some with
+        compound cluster overlap; HR-EE-009 sacred
+        floor unchanged; HR-EE-013 with citation-
+        drift cluster C6)
+      - EE-PH1-001/002/003/007/010/011/014/015/016/017
+        Phase 1 architectural facts
+      - EE-OUT-001..006 entry outcome handler logic
+      - EE-PH2-002/003/004/005/006/008/009/010/011 Phase 2
+        architectural facts
+      - EE-IF-001..010 interface architectural facts
+      - §4 entry_timeout_sec + maker_fee_rate +
+        net_R_R_ratio
+      - §8 rate counter summary
+      - §12 log event taxonomy (mode-agnostic + emitter
+        pattern)
+
+  (b) CODING-UNIQUE (migrate to 0511003 at S-3):
+      ~12 elements
+      - EE-PH1-006 cl_ord_id format mechanics
+      - EE-PH1-008 itertools.count() req_id counter
+      - EE-PH1-009 req_id_registry schema + 10-minute
+        fallback
+      - EE-PH1-012 ".replace('+00:00', 'Z')" ISO 8601
+        transformation
+      - EE-PH1-018 RATE_COUNTER_WARNING 0.80 threshold
+        (compound: also (d)-investigated and disposed
+        as (b) retained)
+      - EE-PH2-001 TP/SL cl_ord_id "TP"/"SL" infix
+      - EE-PH2-003 ROUND_UP/ROUND_DOWN quantization
+        directions
+      - EE-PH2-007 5-field Phase 2 dispatch write
+      - EE-PH1-015 14-field Position Mirror schema
+        (architectural fact split: (a) for record-at-
+        dispatch + (b) for specific schema)
+      - §12 per-event field-list enumeration
+      - Sub-pseudocode for Decimal arithmetic (e.g.,
+        Decimal("1") + maker_fee_rate idiom)
+      - Sub-pseudocode for monotonic clock + timezone-
+        aware UTC time construction
+
+  (c) ARCHITECTURAL CONTENT NOT IN DIAGRAMS:
+      3 distinct gap-clusters (impact-counted, not
+      element-counted):
+
+      C1. STALE max_concurrent + RETIRED SIZING
+          PARAMETERS in 0511003 + 1011004.
+          1011004 §4 parameters table lists
+          max_concurrent = 20 (CIATS-owned starting).
+          §5.2 EE-PH1-004 + EE-PH1-005 enforce
+          BoundedSemaphore ceiling against
+          max_concurrent. §9.4/§9.5 reference
+          max_concurrent for CIATS update handling.
+          CANONICAL per TB00000 v2_29 §9.17 RETIRED
+          ENTRY: "max_concurrent (20 positions) —
+          concurrent-position count emerges from
+          wallet_balance ÷ per_trade_size_usd
+          arithmetic. No artificial ceiling."
+          Diagram-side encoding status: D5 root governs
+          (line 3332) still lists max_concurrent (cluster
+          C1-cascade root cause — confirmed overlap
+          with TB00194 + TB00195 cluster C1).
+          AR-043 BoundedSemaphore mechanism remains
+          architecturally valid; ceiling source must
+          reframe from static max_concurrent to
+          dynamic wallet_balance ÷ per_trade_size_usd
+          arithmetic.
+          Cascaded affected elements: EE-PH1-004 (3.11),
+          EE-PH1-005 (3.12), EE-IF-010 (3.52), §4
+          parameters table.
+
+      C2. STALE LONG-ONLY DIRECTION + GENERIC POSITION
+          STATE in 0511003 + 1011004.
+          1011004 §5.5 EE-PH1-011 field rules table:
+          "side: 'buy' — Long Module only".
+          §7.2 EE-PH2-004 TP leg + EE-PH2-005 emergSL
+          leg: side "sell (closing a long)".
+          §5.7 EE-PH1-015 Position Mirror generic
+          single-module position_mirror[].
+          §5.6 EE-PH1-013 Pending Order Registry
+          generic pending_orders[].
+          CANONICAL per 0500000 §4 AR-009 amended dv1_41
+          (Kraken margin trading enables short-side) +
+          AR-007 amended dv1_42 + AR-008 amended dv1_42
+          + AR-053 amended dv1_43 + AR-054 amended dv1_43
+          + AR-072 amended dv1_43 + AR-073 amended dv1_43
+          + TB00000 v2_29 §9.3 parallel-module framework
+          + 0811005 dv1_0 Short_Module Specification:
+          per-module direction-symmetric — Long_Module
+          uses side="buy" entry / side="sell" TP/exit;
+          Short_Module uses side="sell" margin-open
+          entry / side="buy" reduce-only TP/exit; per-
+          module long_pending_orders + short_pending_
+          orders + long_position_mirror + short_position_
+          mirror.
+          Diagram-side encoding status: AR-009 + AR-072
+          + AR-073 + mod:Short_Module ARE in D7 root
+          governs ✓ (added at D7 R2->R3 per parallel-
+          module framework codification). AR-007 amended
+          + AR-008 amended ARE in §4 AR registry prose
+          and AR-007/008 (pre-amendment) IS in D1 + D2
+          + D3 + D6 governs. NO S-2 diagram amendment
+          needed for AR-007/008/009/072/073 (already in
+          governs). D2 R-increment to add mod:Short_Module
+          to above-seam Long_Module-only group MAY be
+          required at S-2 cycle — note D2 governs at
+          line 2014 currently lists "mod: Long_Module,
+          Signal_Pipeline, Execution_Engine" (no
+          Short_Module). Verify at S-2 author session
+          whether D2 R-increment for Short_Module
+          parallel encoding is needed.
+          Closure path: PRIMARILY S-3 prose update to
+          0511003 §3.3 + §3.4 + §3.5 + §5.1 + §5.2 to
+          add direction-symmetric per-module variants.
+          Potential cross-pair dependency: D2 sibling-
+          band add for mod:Short_Module (verify §5.4).
+          Cascaded affected elements: EE-PH1-011 (3.18),
+          EE-PH1-013 (3.20), EE-PH1-015 (3.22), EE-PH2-
+          004 (3.35), EE-PH2-005 (3.36), HR-EE-007 (3.59),
+          EE-IF-010 (3.52 — semaphore per-module
+          instance question).
+
+      C5. EIGHT PARENT-AR + TWO NEW HR-EE DIAGRAM-
+          ENCODING GAPS NOT IN ANY ROOT GOVERNS LIST.
+          Eight Architectural Reasoning entries + two
+          new (dv1_1) hard rules defined in 0500000 §4
+          AR registry / 0511003 §8 but absent from
+          every diagram's root governs list:
+            AR-018 (amend_order PRIMARY; edit_order
+              DEPRECATED) — referenced by HR-EE-011
+            AR-028 (qty_min/cost_min validation
+              before dispatch) — referenced by
+              HR-EE-010 + EE-PH1-003
+            AR-043 (BoundedSemaphore concurrency
+              ceiling enforcement) — referenced by
+              HR-EE-004 (sic — actually EE-PH1-004/005
+              + EE-IF-010 + §4 max_concurrent
+              parameter)
+            AR-053 (Pending Order Registry; amended
+              dv1_43 per-module) — referenced by
+              HR-EE-007 + EE-PH1-013
+            AR-054 (Entry partial-fill protection;
+              amended dv1_43 direction-symmetric) —
+              referenced by EE-OUT-003/004 + EE-PH2-009
+            AR-055 (cancel_all_orders_after / DMS
+              prohibition) — referenced by HR-EE-012
+            HR-EE-014 (NO DIRECT PRIVATE-WS ACCESS;
+              new dv1_1) — referenced by EE-IF-004
+            HR-EE-015 (MODE-OPAQUE CALLER CONTRACT;
+              new dv1_1) — referenced by EE-PAPER-002
+              + EE-PAPER-003 + EE-PAPER-004
+          Per DD-001/DD-002 diagrams-as-canonical: AR
+          / HR entries in §4 prose or §8 prose are
+          V-038.3 prose narration; canonical encoding
+          requires inclusion in at least one diagram's
+          root governs list. Eight of these ARs are
+          referenced by Execution_Engine elements
+          (HR-EE-007/010/011/012 + EE-PH1-003/004/005/
+          013 + EE-OUT-003/004 + EE-PH2-009 + §4
+          parameters) AND by sibling-module elements
+          (AR-018 + AR-043 likely WS_Manager + Exit_
+          Controller cross-cuts; AR-053 + AR-054 +
+          AR-055 system-wide). Cross-pair dependencies
+          surfaced in §5.4 below.
+          Diagram-target candidates:
+            AR-018 -> D1 root governs (Kraken WS v2
+              wire-contract family, parallel to
+              AR-006/007/008).
+            AR-028 -> D1 root governs (per-pair
+              validation, parallel to AR-039 status
+              check).
+            AR-043 -> D5 root governs (CIATS
+              concurrency-protection mechanism; or
+              D1 governs as Risk Engine concurrency
+              ceiling).
+            AR-053 -> D2 root governs (Pending Order
+              Registry sits in pipeline-state-
+              management band; or D1 if treated as
+              capital-commitment infrastructure).
+            AR-054 -> D2 root governs (partial-fill
+              protection sits in Phase 1/2 outcome
+              handler band).
+            AR-055 -> D1 root governs (DMS is Kraken
+              API command; parallel to other WS v2
+              wire-contract ARs).
+            HR-EE-014 -> D7 root governs (paper-mode
+              dispatch boundary architecture). NOTE:
+              D7 already has rule:HR-EE-013; adding
+              HR-EE-014 + HR-EE-015 is natural
+              extension.
+            HR-EE-015 -> D7 root governs (mode-opaque
+              caller contract; parallel to HR-EE-013).
+          Single S-2 amendment can add all eight to
+          appropriate governs lists (no SVG byte change
+          required if added only to root <desc> governs
+          lists).
+          Affected: EE-IF-004 (3.46), EE-PH1-003 (3.10),
+          EE-PH1-004 (3.11), EE-PH1-005 (3.12), EE-PH1-
+          013 (3.20), EE-OUT-003 (3.28), EE-OUT-004
+          (3.29), EE-PH2-009 (3.40), HR-EE-007 (3.59),
+          HR-EE-010 (3.62), HR-EE-011 (3.63), HR-EE-012
+          (3.64), EE-IF-010 (3.52). Plus likely
+          WS_Manager + Exit_Controller cross-pair
+          impacts surfaced in §5.4.
+
+      C6. (NEW MINOR) HR-EE-013 SOURCE-CITATION DRIFT
+          in 1011004 §10.
+          1011004 dv1_0 HR-EE-013 cites "D-06 LOCKED,
+          0211005 dv1_1 PT-MODE-005, HR-PT-008" as
+          source. 0511003 dv1_1 §5A.3 explicitly notes
+          this citation pre-dates TB00000 v2_20 §4.4
+          PA-001..010 + 0500000 dv1_24 §12 (now dv1_46
+          §12) and flags it as "future 1011004 cascade
+          may update ... that binding update is OUT
+          OF SCOPE for this amendment per RR-SCOPE-002
+          scope-constrictor."
+          This is "source-citation drift", not
+          architectural-content drift. The rule itself
+          remains correct; only the citation path is
+          stale.
+          Diagram-side encoding status: HR-EE-013
+          itself IS in D2 + D7 root governs ✓; the
+          drift is internal to 1011004 §10 prose and
+          will be auto-resolved at S-4 retirement
+          (1011004 itself retires; 0511003 §5A.3
+          already captures the forward-looking
+          citation).
+          Closure path: S-4 drop (no separate S-2 or
+          S-3 needed). Logged here for completeness
+          of cluster inventory.
+
+  (d) UNCLEAR ORIGIN (RR-SCOPE-009 Chesterton's-fence
+      gate): 1 element investigated and disposed.
+      - EE-PH1-018 RATE_COUNTER_WARNING 0.80 threshold:
+        four-question origin investigation per §3.25
+        above (origin clear, problem clear, no
+        empirical optimal-value evidence available,
+        loss-prevention property preserved). Disposed
+        as (b) CODING-UNIQUE retained; threshold value
+        candidate for CIATS-OWNED status in future
+        v2_30 parameter amendment. Not blocking S-4
+        retirement.
+
+============================================================
+5. DOWNSTREAM QUEUE
+============================================================
+
+5.1 S-2 DIAGRAM AMENDMENTS NEEDED.
+    Per DEC-003 Path A one-diagram-per-session cadence.
+    NEW S-2 amendments surfaced by this audit (in
+    addition to TB00194 + TB00195 inheritance already
+    queued):
+
+    AMENDMENT-7 (NEW from TB00196). 0500000 D1 root
+      governs list ADD ar:AR-018, ar:AR-028, ar:AR-055.
+      Plus D5 root governs list ADD ar:AR-043 (or D1
+      if treated as Risk Engine concurrency-ceiling
+      infrastructure — S-2 author selects). Plus D2
+      root governs list ADD ar:AR-053 + ar:AR-054. Plus
+      D7 root governs list ADD rule:HR-EE-014 +
+      rule:HR-EE-015 (parallel to existing HR-EE-013
+      in D7 governs).
+      Single S-2 amendment closes all eight parent-AR
+      + two new HR-EE diagram-encoding gaps in
+      cluster C5. No SVG byte change required if added
+      only to root <desc> governs lists. Closes cluster
+      C5.
+
+    AMENDMENT-8 (CANDIDATE from TB00196 — verify at
+      S-2 cycle). 0500000 D2 R-increment to add
+      mod:Short_Module to above-seam module governs
+      list (currently D2 governs at line 2014 lists
+      only "mod: Long_Module, Signal_Pipeline,
+      Execution_Engine"). D7 R3 already encodes
+      mod:Short_Module sibling band; D2 alignment
+      with D7 R3 + 0811005 dv1_0 parallel-module
+      framework + TB00000 v2_29 §9.3 may require D2
+      governs list update. This is a SIBLING
+      EQUIVALENCE finding — D2 and D7 should
+      symmetrically encode the parallel-module
+      framework. Verify at S-2 author session whether
+      D2 R-increment is needed for parallel-module
+      consistency. If confirmed, closes cluster C2 at
+      diagram level (currently cluster C2 closure is
+      prose-only per §4 above).
+
+    AMENDMENT-INHERIT-1 (TB00194 + TB00195 carry-
+      forward, now Execution_Engine-pair-confirmed).
+      0500000 §9 prose reconciliation + verify D5/D6/D7
+      governs-list parameter additions per TB00000
+      v2_29 §9.17. EXTENDED SCOPE for Execution_Engine
+      contribution: ADD param:per_trade_size_usd (used
+      by §4 max_concurrent reframing per cluster C1)
+      + verify per-module wallet params already in
+      AMENDMENT-INHERIT-1 scope from TB00194 + TB00195.
+      REMOVE param:max_concurrent from D5 root governs.
+      Closes cluster C1 (Execution_Engine contribution
+      to TB00194 + TB00195 C1).
+
+    Total NEW from TB00196: 1 confirmed S-2 amendment
+    (AMENDMENT-7) + 1 candidate amendment (AMENDMENT-
+    8 — verify at S-2 cycle). TB00194 + TB00195
+    AMENDMENT-INHERIT-1 carry-forward extended scope
+    (max_concurrent removal + per_trade_size_usd
+    addition per Execution_Engine contribution).
+    Cumulative S-2 queue: 7 amendments (TB00194 -1/-2/
+    -3 + TB00195 -4/-5/-6 + TB00196 -7) + 1 candidate
+    (AMENDMENT-8 conditional on S-2 author verification).
+
+5.2 S-3 AA-PROSE GAP-FILL (0511003 dv1_1 -> dv1_2).
+    Affected: bucket (b) migration + clusters C1 + C2
+    + C5 prose corrections.
+
+    PROSE-UPDATE-P (NEW). 0511003 §3.3 + §3.5 + §5.1
+      + §5.2 add direction-symmetric per-module
+      variants: Long_Module side="buy" entry +
+      side="sell" TP/exit; Short_Module side="sell"
+      margin-open entry + side="buy" reduce-only TP/
+      exit. Add per-module Position Mirror routing
+      (long_position_mirror / short_position_mirror)
+      + per-module Pending Order Registry
+      (long_pending_orders / short_pending_orders).
+      Gated on cluster C2 closure path per §4 (S-2
+      AMENDMENT-8 verification optional; AR-007/008/009/
+      072/073 already in governs).
+
+    PROSE-UPDATE-Q (NEW). 0511003 §3.3 Phase 1 add_order
+      construction: add ".replace('+00:00', 'Z')" ISO
+      8601 transformation requirement (currently absent
+      from 0511003 prose; coding-relevant per EE-PH1-012).
+
+    PROSE-UPDATE-R (NEW). 0511003 §5.1 batch_add
+      construction: add ROUND_UP / ROUND_DOWN
+      quantization direction prose (currently absent;
+      coding-relevant per EE-PH2-003).
+
+    PROSE-UPDATE-S (NEW). 0511003 §3.4 + §5.2 Position
+      Mirror update: enumerate full 14-field Phase 1
+      dispatch write schema + full 5-field Phase 2
+      dispatch update schema (currently abbreviated
+      in 0511003). Update reflects per-module routing
+      from PROSE-UPDATE-P.
+
+    PROSE-UPDATE-T (NEW). 0511003 §3.5 BoundedSemaphore
+      acquisition: reframe ceiling source from static
+      max_concurrent to dynamic wallet_balance ÷
+      per_trade_size_usd arithmetic per TB00000 v2_29
+      §9.17 RETIRED entry. Add per-module semaphore
+      instance pattern (long_entry_semaphore /
+      short_entry_semaphore) per parallel-module
+      framework. Gated on S-2 AMENDMENT-INHERIT-1
+      closure per DD-003 4-step workflow.
+
+    PROSE-UPDATE-U (NEW). 0511003 §10 log event
+      taxonomy: enumerate per-event field lists
+      (currently abbreviated; 1011004 §12 has the
+      full enumeration). Verify all 16 distinct log
+      event types present in 0511003 §10.
+
+    Total NEW from TB00196: 6 prose updates (P, Q, R,
+    S, T, U) to 0511003. All six enable retirement
+    of 1011004 dv1_0 at S-4. PROSE-UPDATE-T is gated
+    on S-2 AMENDMENT-INHERIT-1 (DD-003 4-step prereq).
+
+5.3 S-4 1011004 RETIREMENT.
+    Gated on S-2 AMENDMENT-7 (cluster C5) +
+    AMENDMENT-INHERIT-1 (cluster C1) + optionally
+    AMENDMENT-8 (cluster C2 D2 verification) +
+    S-3 PROSE-UPDATE-P through PROSE-UPDATE-U closure.
+    Retire 1011004 dv1_0 in full once 0511003 dv1_2
+    (post-S-3) contains all (b) migrated content +
+    cluster C1/C2/C5/C6 diagram-side and prose-side
+    closures complete.
+
+5.4 CROSS-PAIR DEPENDENCIES.
+    Cluster C5 (eight parent-AR + two new HR-EE
+    diagram-encoding gaps) cross-cuts multiple
+    sibling modules:
+      AR-018 (amend_order primary) — referenced by
+        1011002 WS_Manager + 1011005 Exit_Controller
+        (amend_order is the primary order-modification
+        method; both modules dispatch it).
+      AR-028 (qty_min/cost_min) — referenced by
+        1011003 Signal_Pipeline (TB00195 SP-G5-005
+        SC-GATE-5 prerequisite) + 1011002 WS_Manager
+        (pair_cache validation).
+      AR-043 (BoundedSemaphore) — referenced by
+        1011011 Risk_Engine (BoundedSemaphore owner)
+        + 1011010 CIATS (max_concurrent CIATS update
+        consumer — now RETIRED per cluster C1).
+      AR-053 (Pending Order Registry) — referenced by
+        1011003 Signal_Pipeline Gate 7 (Risk Guard
+        reads pending_orders for available_USD
+        computation).
+      AR-054 (partial-fill protection) — implemented
+        by 1011002 WS_Manager dispatch path; triggered
+        by 1011004 Execution_Engine. Cross-pair
+        dependency confirmed.
+      AR-055 (DMS prohibition) — system-wide; no
+        module sends cancel_all_orders_after.
+      HR-EE-014 + HR-EE-015 (NEW dv1_1) — central to
+        WSManager dispatch seam single-gatekeeper
+        architecture (0500000 §12 + 1011002 dv1_26
+        §16A). Likely cluster impact on 1011002
+        WS_Manager audit (TB00194 §5.4 noted
+        WSManager dispatch seam contracts but
+        HR-EE-014/015 NEW dv1_1 likely surfaced
+        post-TB00194 audit timing per dv1_1 5/7/2026
+        amendment date).
+    Verify at AMENDMENT-7 author session whether
+    these eight additions cascade-close items in
+    upcoming S-1 audits for Risk_Engine, Position_
+    Mirror, Logger (next S-1 queue per TB00196 NSI
+    §6.1).
+    Cluster C2 (parallel-module direction-symmetric)
+    cross-cuts WS_Manager (1011002 cluster C1 +
+    TB00194 close) and will surface fully when
+    Short_Module is implemented (DEC-011 Stage M
+    sequencing). The Execution_Engine prose update
+    PROSE-UPDATE-P is the EE-side cascade; sibling
+    cascades for WS_Manager + Exit_Controller + Risk_
+    Engine S-3 prose updates will surface in their
+    respective S-1 audits.
+    Cluster C1 (max_concurrent retirement) confirmed
+    cross-cut with 1011011 Risk_Engine (Risk_Engine
+    is the BoundedSemaphore owner per 0511003 §7.6
+    + 1011004 EE-IF-010); Risk_Engine S-1 audit will
+    surface companion prose updates.
+
+============================================================
+6. AMBIGUITY-SURFACE FINDINGS (per NSI §7)
+============================================================
+
+6.1 §7.3 VOLUME-OF-(c)-GAPS HIGH FINDING — BELOW
+    THRESHOLD.
+    Three (c) gap clusters (C1, C2, C5) surfaced in
+    Execution_Engine pair plus minor cluster C6
+    (citation drift) — below §7.3 "10+" high-volume
+    threshold. Cluster C1 + C2 overlap with TB00194 +
+    TB00195 cluster C1 + C2 cascades (parameter
+    foundation + per-module state — same pattern as
+    Signal_Pipeline pair). Cluster C5 (parent-AR
+    diagram-encoding gaps) is NEW from TB00196 but
+    same defect class as TB00195 §7.1 separate
+    finding (AR-067 / AR-068 / AR-056 not in any
+    diagram governs) — eight more parent-AR
+    encoding gaps + two new HR-EE rules. Cluster C6
+    is a minor citation-drift finding (0511003 dv1_1
+    §5A.3 already flagged it as future-cascade scope).
+    No surface to Bill required — derivable per
+    RR-SCOPE-005 + NSI §3.5 anti-cadence-misread.
+
+6.2 §7.4 RR-SCOPE-009 CHESTERTON'S-FENCE — ONE
+    INVESTIGATION + ZERO TRIPS.
+    One (d) bucket element investigated: EE-PH1-018
+    RATE_COUNTER_WARNING 0.80 threshold value. Four-
+    question origin investigation completed at §3.25:
+    origin clear (1011004 dv1_0 04-25-2026), problem
+    clear (early warning before rate-limit ceiling
+    breach), no empirical optimal-value evidence
+    available, loss-prevention property preserved.
+    Disposed as (b) CODING-UNIQUE retained; threshold
+    value candidate for CIATS-OWNED status in future
+    parameter amendment. Not a "trip" — Chesterton-
+    fence preserved (constraint retained).
+    Cluster C1 ceiling-source reframing (static
+    max_concurrent -> dynamic wallet_balance ÷
+    per_trade_size_usd) is parameter-foundation
+    cascade per TB00179 STAGE M-2 — clear origin,
+    clear evidence, AR-043 BoundedSemaphore
+    mechanism itself preserved.
+
+6.3 §7.1 GAP CLASSIFICATION AMBIGUITY — ZERO ITEMS
+    AT SESSION CLOSE.
+    All ~57 elements classified to clean (a)/(b)/(c)
+    buckets after diagram-side governs-list
+    verification. Boundary cases (EE-PH1-006 cl_ord_id
+    format mechanics; EE-PH1-009 req_id_registry
+    schema; EE-PH1-015 14-field Position Mirror dict;
+    EE-PH2-001 TP/SL cl_ord_id "TP"/"SL" infix;
+    EE-PH2-007 5-field Phase 2 dispatch write;
+    EE-PH1-018 RATE_COUNTER_WARNING threshold split
+    between (a) architectural and (b) implementation
+    detail) handled at element-level per TB00195
+    precedent. No surface to Bill required.
+
+6.4 §7.5 FILESYSTEM-STATE ASSERTION WITHOUT BASH SWEEP
+    — NO RECURRENCE. TB00196 chat-turn 1 ran bash_tool
+    sweep FIRST per NSI §3.3.
+
+6.5 §7.2 TARGET-DIAGRAM IDENTIFICATION GAP — ZERO
+    AMBIGUITY POST-FP/DP.
+    All (c) cluster target diagrams identified:
+    C1 -> D5 (CIATS Architecture parameter governs
+    list — via AMENDMENT-INHERIT-1 carry-forward
+    extended scope for Execution_Engine contribution).
+    C2 -> PRIMARILY S-3 PROSE-UPDATE-P (no S-2 needed;
+    AR-007/008/009/072/073 + mod:Short_Module already
+    in D7 governs); D2 R-increment to add mod:Short_
+    Module is OPTIONAL parallel-module-consistency
+    amendment (AMENDMENT-8 candidate; S-2 author
+    verifies).
+    C5 -> D1 (AR-018/028/055) + D2 (AR-053/054) + D5
+    or D1 (AR-043) + D7 (HR-EE-014/015) — single
+    AMENDMENT-7 with multiple governs-list updates.
+    C6 -> NO S-2 NEEDED (citation drift internal to
+    1011004 §10; auto-resolved at S-4 retirement).
+    No genuinely-new-diagram surfaces. No new Tier 2
+    diagram required.
+
+6.6 §7.6 STALE PARAMETER REFERENCE HANDLING (CARRIED
+    FORWARD FROM TB00193/TB00194/TB00195).
+    The cascade pattern from TB00194 + TB00195
+    cluster C1 confirmed at Execution_Engine:
+    1011004 dv1_0 references retired parameter
+    (max_concurrent) directly in §4 parameters table
+    + EE-PH1-004/005 + EE-IF-010. The cascade
+    extends with Execution_Engine-specific stale
+    reference (max_concurrent itself) NOT in TB00194
+    + TB00195's specific C1 element list but in same
+    overall cluster.
+    NSI §7.6 classification framework applied
+    verbatim:
+    max_concurrent retired parameter -> NOT yet
+    reflected in 0500000 §9 prose OR D5 param
+    governs list (cluster C1 cascade extension; same
+    diagram-encoding gap class as TB00194 + TB00195
+    C1).
+    per_trade_size_usd / per_trade_ceiling_pct
+    canonical parameters -> Same C1 cluster
+    (TB00194 + TB00195 inheritance).
+
+6.7 §7.7 DD-011 DERIVABLE-DECISION DISCIPLINE.
+    Pre-emit-scan applied at every classification
+    decision and every cluster surface. All three
+    (c) cluster classifications + one (d) Chesterton-
+    fence investigation + all six PROSE-UPDATE
+    additions + one NEW S-2 amendment + one CANDIDATE
+    S-2 amendment + AMENDMENT-INHERIT-1 scope
+    extension are derivable from cold-load context
+    per RR-SCOPE-005. No items surfaced to Bill as
+    ratification questions. No DD-011 violation in
+    this gap register.
+
+6.8 §7.8 CROSS-PAIR DEPENDENCY SURFACING.
+    Cross-pair dependencies surfaced in §5.4 above:
+    AR-018 / AR-028 / AR-043 / AR-053 / AR-054 /
+    AR-055 / HR-EE-014 / HR-EE-015 cross-cut at
+    least three other module pairs (WS_Manager,
+    Exit_Controller, Risk_Engine) plus Signal_Pipeline
+    (AR-028 Gate 5 prerequisite). Cluster C2 cross-
+    cuts WS_Manager + Exit_Controller + Risk_Engine
+    when Short_Module is fully implemented per
+    DEC-011 Stage M sequencing. Cluster C1 cross-cuts
+    Risk_Engine (BoundedSemaphore owner) directly.
+    All cross-pair dependencies logged for forward-
+    session verification per TB00195 §5.4 precedent.
+
+============================================================
+7. SEPARATE 0500000 INTERNAL FINDINGS
+   (Surfaced during audit; NOT Execution_Engine-pair
+   gaps proper)
+============================================================
+
+7.1 EIGHT PARENT-AR + TWO NEW HR-EE DIAGRAM-ENCODING
+    GAPS NOT IN ANY DIAGRAM ROOT GOVERNS LIST.
+    Cluster C5 above is the consolidated finding.
+    Detailed per-element scope per AMENDMENT-7
+    in §5.1:
+      AR-018 (amend_order PRIMARY; edit_order
+        DEPRECATED) -> D1 root governs
+      AR-028 (qty_min/cost_min validation before
+        dispatch) -> D1 root governs
+      AR-043 (BoundedSemaphore concurrency-ceiling)
+        -> D5 or D1 root governs (S-2 author
+        selects per concurrency-protection-mechanism
+        location preference)
+      AR-053 (Pending Order Registry amended dv1_43
+        per-module) -> D2 root governs
+      AR-054 (Entry partial-fill protection amended
+        dv1_43 direction-symmetric) -> D2 root
+        governs
+      AR-055 (cancel_all_orders_after / DMS
+        prohibition) -> D1 root governs
+      HR-EE-014 (NO DIRECT PRIVATE-WS ACCESS; new
+        dv1_1) -> D7 root governs (parallel to
+        existing HR-EE-013 already in D7 governs)
+      HR-EE-015 (MODE-OPAQUE CALLER CONTRACT; new
+        dv1_1) -> D7 root governs (parallel to
+        existing HR-EE-013 already in D7 governs)
+    These eight items are referenced by Execution_
+    Engine elements (HR-EE-007/010/011/012 +
+    EE-PH1-003/004/005/013 + EE-OUT-003/004 +
+    EE-PH2-009 + EE-IF-004/010 + §4 parameters) and
+    by sibling-module elements (cross-pair
+    dependencies per §5.4 above).
+    Per DD-001/DD-002 diagrams-as-canonical: AR/HR
+    entries in §4 / §8 prose are V-038.3 prose
+    narration; canonical encoding requires inclusion
+    in at least one diagram's root governs list.
+    Closure: S-2 AMENDMENT-7 — single amendment with
+    multiple governs-list updates across D1, D2, D5,
+    D7. No SVG byte change required if added only to
+    root <desc> governs lists. Single-line additions
+    per governs list per element. Estimated effort:
+    one S-2 cycle.
+    Per TB00194 + TB00195 §7.1 precedent, log this
+    as separate finding for tracking via S-2 queue
+    without new MDR DR entry. The S-2 queue IS the
+    tracking mechanism for prose-vs-diagram
+    reconciliation work.
+
+7.2 0500000 §9 CIATS PARAMETER REGISTRY PROSE-SIDE
+    V-038.3 STALENESS — UNCHANGED FROM TB00194 +
+    TB00195 §7.1/§7.2.
+    Confirmed at TB00196 cold-load: 0500000 dv1_46
+    §9 prose still lists retired tradeable_pct /
+    per_trade_pct / max_concurrent / half_kelly_
+    applied_pct / per-portfolio drawdowns. Same
+    finding as TB00194 §7.1 + TB00195 §7.2. Tracked
+    via S-2 AMENDMENT-INHERIT-1 queue position. No
+    new MDR DR-* entry required (S-2 queue IS the
+    audit trail).
+
+7.3 D2 PARALLEL-MODULE FRAMEWORK GOVERNS-LIST GAP —
+    NEW (CANDIDATE).
+    Confirmed at TB00196 cold-load via grep of D2
+    root governs (line 2014): "mod: Long_Module,
+    Signal_Pipeline, Execution_Engine" — no
+    mod:Short_Module. D7 R3 (line 5999) lists
+    mod:Short_Module. The two diagram governs lists
+    are asymmetric on parallel-module framework
+    encoding.
+    Status: CANDIDATE finding — D2 may not need
+    Short_Module in governs because D2 depicts the
+    Long_Module trading pipeline specifically; D7
+    depicts the parallel-module framework as the
+    canonical diagram for that architectural element.
+    If D2 is intended to depict Long_Module
+    specifically AND Short_Module is intended to
+    have its own future diagram (e.g., D2-mirror or
+    extended D2 with explicit per-module bands),
+    then no D2 amendment is needed. If D2 is
+    intended to be the canonical multi-module
+    pipeline diagram, then D2 R-increment to add
+    mod:Short_Module to governs list (and possibly
+    a sibling band) is required.
+    Disposition: Logged as AMENDMENT-8 CANDIDATE
+    in §5.1 above; S-2 author verifies architectural
+    intent at S-2 cycle. Does NOT block 1011004
+    retirement (cluster C2 closure is primarily
+    prose-update; D2 amendment is parallel-module-
+    consistency amendment, not Execution_Engine-pair-
+    closure-blocking).
+
+============================================================
+8. EXIT CRITERIA STATUS
+============================================================
+
+  E-S1EE-01   COMPLETE (TB00196 chat-turn 1 cold-load
+              + bash sweep + 0500000 dv1_46 presence
+              verified at 850,653 bytes).
+  E-S1EE-02   COMPLETE (end-to-end read of 1011004
+              dv1_0 + 0511003 dv1_1 + D1 + D2 + D3 +
+              D7 relevant regions of 0500000 dv1_46 +
+              §4 AR registry entries for AR-006/007/
+              008/009/018/028/032/033/043/046/047/053/
+              054/055/069/072/073).
+  E-S1EE-03   COMPLETE — element-by-element gap
+              register authored above (§3.1-3.69
+              coverage of 1011004 dv1_0 §1-§14).
+  E-S1EE-04   COMPLETE — three-bucket classification
+              (a/b/c) applied to every element; one
+              (d) Chesterton-fence investigation
+              disposed; roll-up in §4 above.
+  E-S1EE-05   COMPLETE — (c) gap target-diagram
+              identified per §4 cluster C1 (D5 via
+              AMENDMENT-INHERIT-1) / C2 (S-3 prose-
+              only; D2 R-increment AMENDMENT-8
+              candidate) / C5 (D1 + D2 + D5 + D7 via
+              AMENDMENT-7) / C6 (no S-2 needed).
+              Separate §7.1 finding AR-018/028/043/
+              053/054/055 + HR-EE-014/015 -> single
+              AMENDMENT-7 closure path. §7.3 finding
+              D2 parallel-module governs gap -> S-2
+              AMENDMENT-8 candidate (S-2 author
+              verifies).
+  E-S1EE-06   COMPLETE — S-2 + S-3 + S-4 downstream
+              queue derived in §5. NEW from TB00196:
+              AMENDMENT-7 confirmed + AMENDMENT-8
+              candidate + PROSE-UPDATE-P through
+              PROSE-UPDATE-U. Carry-forward from
+              TB00194 + TB00195: AMENDMENT-INHERIT-1/
+              -2/-3 with scope extended for
+              Execution_Engine parameter contributions
+              (max_concurrent removal +
+              per_trade_size_usd addition).
+  E-S1EE-07   COMPLETE — Bill approval gate enacted
+              via pre-session OCS directive "deliver
+              gap register and full session-close
+              trio without stopping for 'Proceed.'
+              between cold-load and execution."
+  E-S1EE-08   COMPLETE (this turn — TB00196 SL +
+              TB00197 NSI + OCS trio per
+              DR-008.6/.7/.8/.9; single-turn delivery
+              per DR-006).
+  E-S1EE-09   COMPLETE — TB00197 NSI §1 sequences
+              next S-1 module pair per TB00196 NSI
+              §6.1 remaining-pairs queue (next:
+              1011005 dv1_3 + 0511004 dv1_3 Exit_
+              Controller, OR per Bill direction).
+
+ALL NINE EXIT CRITERIA COMPLETE.
+
+============================================================
+9. REVISION HISTORY
+============================================================
+
+  v1_0  2026-05-11  Initial S-1 gap register for
+                    Execution_Engine pair (1011004
+                    dv1_0 + 0511003 dv1_1 vs 0500000
+                    dv1_46). Authored at TB00196
+                    chat-turn 1 per NSI §2.1 form
+                    factor (discrete controlled-doc
+                    per TB00194 + TB00195 precedent
+                    Bill-ratified via implicit
+                    single-turn-delivery OCS pre-
+                    authorization). Three-bucket
+                    classification applied to ~70
+                    elements across 1011004 dv1_0
+                    §1-§14 (13 HR-EE-* + 18 EE-PH1-*
+                    + 6 EE-OUT-* + 10 EE-PH2-* + 10
+                    EE-IF-* + §1-§4/§8/§11-§14
+                    metadata). Bucket counts: (a)
+                    ~57, (b) ~12, (c) 4 clusters
+                    (C1/C2/C5/C6 — C5 is the new
+                    parent-AR diagram-encoding-gap
+                    cluster, C6 is a minor citation-
+                    drift cluster), (d) 1 element
+                    investigated and disposed.
+                    Cluster C1 (max_concurrent
+                    retirement + sizing parameters)
+                    overlaps TB00194 + TB00195 C1
+                    cascade. Cluster C2 (long-only
+                    direction + generic single-
+                    module state) overlaps TB00194
+                    + TB00195 C2 cascade. Cluster
+                    C5 NEW — eight parent-AR (AR-018,
+                    AR-028, AR-043, AR-053, AR-054,
+                    AR-055) + two new dv1_1 hard
+                    rules (HR-EE-014, HR-EE-015) not
+                    in any diagram root governs list
+                    — single S-2 AMENDMENT-7 closure.
+                    Cluster C6 minor citation-drift
+                    in 1011004 §10 HR-EE-013 source
+                    citation; auto-resolved at S-4
+                    retirement (0511003 §5A.3
+                    already captures forward
+                    citation). Separate §7.1 finding
+                    consolidated cluster C5 details.
+                    Separate §7.3 candidate finding
+                    D2 parallel-module governs-list
+                    gap -> AMENDMENT-8 candidate.
+                    Total S-2 queue at TB00196 close:
+                    7 confirmed amendments (TB00194
+                    -1/-2/-3 + TB00195 -4/-5/-6 +
+                    TB00196 -7) + 1 candidate
+                    (AMENDMENT-8). Total S-3 queue
+                    at TB00196 close: 10 (TB00194) +
+                    5 (TB00195) + 6 (TB00196 P/Q/R/
+                    S/T/U) = 21 prose updates across
+                    0511001 + 0511002 + 0511003.
+                    Pre-emit DD-011 derivable-
+                    decision discipline applied
+                    throughout per NSI §3.5 + §7.7 —
+                    zero items surfaced as
+                    ratification questions; all
+                    dispositions enacted directly
+                    per RR-SCOPE-005. Methodology
+                    continues to validate for
+                    application to next module pair
+                    per TB00196 NSI §6.1 remaining
+                    S-1 queue (9 pairs remaining).
+
+============================================================
+END OF TB00196 S-1 EXECUTION_ENGINE GAP REGISTER v1_0
+============================================================

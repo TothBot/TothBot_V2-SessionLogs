@@ -1,0 +1,451 @@
+DocDCN:     TB00119_NSI
+DocTitle:   Next_Session_Instructions_for_TB00120
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TBXXXXX_Session_Logs\TB00119_Next_Session_Instructions_v1_0.txt
+DocDate:    04-23-2026
+DocTime:    07:00:00 UTC
+
+============================================================
+NEXT SESSION INSTRUCTIONS - TB00120
+OBSERVATION-WINDOW-CLOSE SESSION
+CLOSE OI-018 / OI-019 / OI-020 / OI-028 / OI-029 ON EVIDENCE
+============================================================
+
+PAPER TRADING ONLY. NO REAL MONEY.
+
+============================================================
+SECTION 1 - WHAT THIS SESSION DOES
+============================================================
+
+TB00120 is an OBSERVATION-WINDOW-CLOSE session. TB00119
+deployed the OI-028 / OI-029 / OI-030 DC package and
+opened a 48-hour observation window at
+2026-04-23 06:11:04 UTC. TB00120 evaluates window
+evidence at T+48h (2026-04-25 06:11:04 UTC minimum) and
+closes five OIs on evidence. OI-030 already closed in
+TB00119.
+
+TB00120 scope, in this order:
+
+  STEP A  Pre-flight. Cold-load verification of TB00000
+          v2_12 presence; 17 mandatory TB files
+          (TB00111 through TB00119 = 17 session log/
+          NSI files) + TB00000 = 18 total; active-
+          governance prohibited-string count = 0; DC
+          package files present in project folder
+          (1011002 dv1_21, 1011007 dv1_5, 1010000
+          dv1_13); superseded dv1_4 / dv1_12 absent.
+
+  STEP B  Run /root/tothbot_sweep.sh on VPS. Record
+          T+N counters (N = hours since 2026-04-23
+          06:11:04 UTC).
+
+  STEP C  Compare T+N counters against T+0 baseline
+          from TB00119 Session Log Section 2.7.
+          DELTAS NEW TO WINDOW are the closure
+          evidence:
+            WS_MGR_FATAL                 (OI-018)
+            ALERT_SMTP_FAILED            (OI-019,
+                                          OI-029)
+            ALERT_SENT                   (OI-019)
+            FATAL_RECONNECT_FAILURE      (OI-020,
+                                          OI-028)
+            RECONNECT_COMPLETE           (OI-028)
+
+  STEP D  Close OIs on evidence. Closure criteria per
+          TB00118 NSI Section 9:
+            OI-018 closes if delta WS_MGR_FATAL = 0
+            OI-019 closes if delta ALERT_SENT >= 1 AND
+                   delta ALERT_SMTP_FAILED = 0
+                   (Section 2.9 of TB00119 Session Log
+                   satisfies the ALERT_SENT partial
+                   pre-window - service-emitted
+                   ALERT_SENT counts for this one)
+            OI-020 closes if delta
+                   FATAL_RECONNECT_FAILURE = 0
+            OI-028 closes if delta
+                   FATAL_RECONNECT_FAILURE = 0 AND
+                   delta RECONNECT_COMPLETE >= 1
+                   (if no natural reconnect in
+                   window: close on absence-of-FATAL
+                   and schedule follow-up window
+                   check on first natural reconnect)
+            OI-029 closes if delta ALERT_SMTP_FAILED
+                   from service = 0 (TB00119 STEP G
+                   email-arrival satisfies retry-path
+                   partial)
+
+  STEP E  TB00120 Session Log and TB00120 NSI.
+
+OPTIONAL SCOPE (Bill decides at open):
+
+  - OI-041 investigation (Kraken API key EAPI:Invalid
+    key). Candidate root causes in TB00118 Section
+    2.4. Prioritize: clock-drift check
+    (systemctl status systemd-timesyncd), key/secret
+    validation from .tothbot.env, IP-whitelist check
+    from Kraken dashboard. MUST RESOLVE BEFORE LIVE
+    TRADING.
+
+  - TB00000 v2_13 for OI-036 / OI-037 / OI-038
+    Claude-behavior rules. OI-037 now at SIX-session
+    recurrence (TB00114 / 115 / 116 / 117 / 118 /
+    119). Escalation STRONGLY WARRANTED.
+
+============================================================
+SECTION 2 - MANDATORY READING (MUST BE FIRST)
+============================================================
+
+TB00120 reads every document below and states the version
+read before doing any work.
+
+  TB00000                       v2_12
+  TB00119 Session Log           v1_0  (THIS SESSION'S
+                                       PRIOR CHAT)
+  TB00119 NSI                   v1_0  (THIS document)
+  TB00118 Session Log           v1_1
+  TB00118 NSI                   v1_1
+  TB00117 Session Log + NSI     v1_0
+  TB00116 Session Log + NSI     v1_0
+  TB00115 Session Log + NSI     v1_0
+  TB00114 Session Log + NSI     v1_0
+  TB00113 Session Log + NSI     v1_0
+  TB00112 Session Log           v1_0
+  TB00111 Session Log + NSI     v1_0
+  0311001                       v1_3
+  0311002                       v1_3
+  0311003                       v1_1
+  0311004                       v1_2
+  1010000                       dv1_13
+  1011002                       dv1_21
+  1011007                       dv1_5
+  ws_manager.py                 dv1_22
+  logger.py                     dv1_5
+  operations/tothbot_sweep.sh   dv1_0
+  0500000                       dv1_19
+
+Fresh-data discipline: every version claim in TB00120
+session log must be from direct file read this session,
+not from this NSI's text.
+
+============================================================
+SECTION 3 - SHELL DISCIPLINE
+============================================================
+
+PowerShell is the established shell for this project.
+TB00120 emits PowerShell commands for all local-Windows
+operations unless Bill explicitly requests cmd.exe or
+WSL. No silent shell switches.
+
+VPS-side commands go through ssh from PowerShell.
+Complex VPS-side scripts use the scp+tr CRLF-strip
+pattern from TB00118 Session Log Section 2.2; do NOT
+attempt multi-layer (PowerShell / ssh / bash / python)
+quote escaping.
+
+============================================================
+SECTION 4 - CLAUDE INSTRUCTION DISCIPLINE (TB00119 LESSON)
+============================================================
+
+Single-command operator actions get emitted as a single
+code block with MINIMAL preamble. No section headers
+labeled "STEP N - <activity>". No bullet list of
+expected outputs BEFORE the command. If explanation
+is warranted, it goes AFTER the command, not before.
+
+Multi-command sequences: one code block per command,
+back-to-back, with one short prose line above the
+first block identifying what the sequence accomplishes.
+
+Do NOT say "Then verify by running:" as a prose line
+followed by another code block. Just emit the block.
+
+OI-037 recurrence is now at SIX sessions. Bill
+pre-authorized carrying this behavior forward; v2_13
+rule is deferred but the discipline applies NOW.
+
+============================================================
+SECTION 5 - OBSERVATION WINDOW STATE AT TB00120 OPEN
+============================================================
+
+------------------------------------------------------------
+5.1 T+0 Baseline (from TB00119 Session Log Section 2.7)
+------------------------------------------------------------
+
+  Window start:   2026-04-23 06:11:04 UTC
+  T+48h close:    2026-04-25 06:11:04 UTC
+  Service PID:    239919 (may differ at TB00120 open
+                  if systemd auto-restarted)
+  Deploy:         ea18b83
+
+  Counters at T+0:
+    CRITICAL-level events:              1
+    FATAL_RECONNECT_FAILURE:            0
+    WS_MGR_FATAL:                       0
+    WSMGR_FATAL_PROPAGATED:             0
+    ALERT_SMTP_FAILED:                  0
+    TRADE_RECORD_WRITE_FAILED:          0
+    WARMUP_REST_FAILED:                 0
+    RECONNECT_INITIATED:                0
+    RECONNECT_TRIGGERED:                0
+    RECONNECT_ATTEMPT_FAILED:           0
+    RECONNECT_COMPLETE:                 0
+    ALERT_SENT:                         1
+    TRADE_CLOSE:                        0
+    PAPER_BALANCE_SET:                  1
+    SYSTEM_OPERATIONAL:                 1
+
+------------------------------------------------------------
+5.2 Closure criteria per OI
+------------------------------------------------------------
+
+All deltas are NEW-TO-WINDOW (T+N counter minus T+0).
+
+  OI-018 (HIGH)  delta WS_MGR_FATAL = 0
+  OI-019 (MED)   delta ALERT_SENT >= 1 AND
+                 delta ALERT_SMTP_FAILED = 0
+  OI-020 (MED)   delta FATAL_RECONNECT_FAILURE = 0
+  OI-028 (HIGH)  delta FATAL_RECONNECT_FAILURE = 0
+                 AND delta RECONNECT_COMPLETE >= 1
+                 (fallback: close on absence-of-FATAL
+                  and schedule follow-up if no
+                  natural reconnect in window)
+  OI-029 (MED)   delta ALERT_SMTP_FAILED = 0
+                 (retry-path partial already
+                  satisfied by TB00119 STEP G email
+                  arrival)
+
+============================================================
+SECTION 6 - STEP B SWEEP COMMAND
+============================================================
+
+Single copy box (PowerShell):
+
+  ssh root@87.99.141.44 "/root/tothbot_sweep.sh"
+
+Record full output in TB00120 Session Log Section 2.x.
+Compare to Section 5.1 above to compute deltas.
+
+Also record service PID and uptime from the SERVICE
+block of the sweep - if PID differs from 239919 or
+uptime is less than 48 hours, investigate
+auto-restart root cause before closing any OI.
+
+============================================================
+SECTION 7 - SCOPE GUARD
+============================================================
+
+TB00120 is an OBSERVATION-WINDOW-CLOSE session.
+Permitted:
+
+  - Pre-flight verification
+  - Run sweep + compute deltas + close OIs on
+    evidence
+  - Document closure in TB00120 Session Log
+  - Schedule follow-up reconnect check if OI-028
+    cannot close fully
+
+NOT permitted without Bill's explicit approval:
+
+  - Any code change
+  - Any DC package
+  - Any commit / push / deploy
+  - Reopening closed OIs (OI-030, OI-039)
+  - TB00000 v2_13 without Bill approval
+
+Forbidden:
+
+  - Patches (must be full files if any changes arise)
+  - Any real-money trading
+  - Using ANY Windows file path not in TB00000
+    Section 11 authoritative tree
+  - Emitting the Section-4.2-prohibited string
+  - Silent shell switches from PowerShell to cmd.exe
+
+============================================================
+SECTION 8 - DELIVERABLES EXPECTED FROM TB00120
+============================================================
+
+Minimum:
+
+  TB00120_TothBot_V2_Session_Log_<DATE>_v1_0.txt
+  TB00120_Next_Session_Instructions_v1_0.txt
+
+Session-record artifacts (paste-ins to session log):
+
+  - Pre-flight sweep output
+  - T+N VPS sweep output (full)
+  - Per-OI delta computation
+  - Per-OI closure statement
+  - Observation-window close timestamp
+
+Post-session Bill actions:
+
+  - Upload TB00120 Session Log v1_0 and NSI v1_0 to
+    Claude.ai project folder.
+  - Remove TB00111 Session Log + NSI from project
+    folder (7-session retention window rolls
+    forward).
+
+============================================================
+SECTION 9 - CURRENT STATE AT TB00120 OPEN
+============================================================
+
+------------------------------------------------------------
+9.1 VPS state (from TB00119 Section 4.1)
+------------------------------------------------------------
+
+  Service:         active (running) - likely same
+                   PID 239919 if no auto-restart
+                   occurred in window
+  Deploy:          ea18b83
+  Mode:            paper trading (NO REAL MONEY)
+  Paper balance:   10000 USD
+  Positions:       none open
+
+------------------------------------------------------------
+9.2 Repo state
+------------------------------------------------------------
+
+  Docs repo:  master @ cdc1a47
+  Code repo:  master @ ea18b83
+
+------------------------------------------------------------
+9.3 Project folder expected state at TB00120 open
+------------------------------------------------------------
+
+Expected (contingent on Bill's post-TB00119 uploads):
+
+  TB00119 Session Log v1_0 + NSI v1_0 PRESENT
+  1011002 dv1_21 PRESENT; dv1_19 PRESENT (retained
+    per VP-010)
+  1011007 dv1_5 PRESENT; dv1_4 ABSENT (removed by
+    Bill post-session per TB00119 Section 7)
+  1010000 dv1_13 PRESENT; dv1_12 ABSENT (removed
+    by Bill post-session per TB00119 Section 7)
+
+Mandatory retention at TB00120 open:
+  TB00111 through TB00119 session logs + NSIs =
+  17 TB files + TB00000 = 18 total
+
+------------------------------------------------------------
+9.4 Parking Lot carried forward
+------------------------------------------------------------
+
+CLOSING THIS SESSION (pending evidence):
+  OI-018 (HIGH)   closes at STEP D on evidence
+  OI-019 (MED)    closes at STEP D on evidence
+  OI-020 (MED)    closes at STEP D on evidence
+  OI-028 (HIGH)   closes at STEP D on evidence
+                  (fallback available)
+  OI-029 (MED)    closes at STEP D on evidence
+
+CARRIED FORWARD:
+  OI-031 (LOW)    observation-window semantic
+                  clarification - optional close
+  OI-036 (LOW)    Claude new-rule self-application
+                  - v2_13 consideration
+  OI-037 (MED)    Claude instruction-style
+                  recurrence - SIX-session
+                  recurrence. v2_13 rule addition
+                  STRONGLY WARRANTED. Deferred per
+                  Bill direction. Claude Section 4
+                  discipline applies NOW
+                  regardless.
+  OI-038 (LOW)    Claude shell-context split -
+                  v2_13 consideration
+  OI-041 (MED)    Kraken API key EAPI:Invalid key -
+                  must resolve before live
+                  trading. Optional TB00120 scope
+                  per Bill decision.
+  OI-042 (CAND)   shell-context-mismatch - dormant;
+                  did NOT recur in TB00119
+
+CLOSED IN TB00119:
+  OI-030 (LOW)    sweep script FATAL pattern
+  OI-039 (MED)    prohibited-string governance
+                  residual
+
+============================================================
+SECTION 10 - CRITICAL LESSONS CARRIED FORWARD
+============================================================
+
+NO PATCHES RULE:
+  All code changes delivered as complete files. No
+  unified diffs. No partial files.
+
+FRESH DATA:
+  Every version claim in TB00120 session log from
+  direct file read this session.
+
+FP/DP DISCIPLINE - NEXT-LOGICAL-STEP EXECUTION:
+  When the next step follows deterministically from
+  data, Claude executes. No A/B/C/D decision
+  questions to Bill when the choice is data-
+  determined.
+
+SHELL DISCIPLINE:
+  PowerShell only. No silent cmd.exe switches. For
+  complex VPS-side work go directly to scp+tr
+  pattern.
+
+CODE-EMISSION AUDIT:
+  Derive sweep patterns, grep patterns, event-name
+  lists by reading code emission points. Never
+  paraphrase from NSI text.
+
+SHELL-CONTEXT COMPLETENESS (OI-038):
+  Every copy box contains every shell-state element
+  required to execute it, including cd at top.
+
+CLAUDE INSTRUCTION STYLE (OI-037 - new this NSI):
+  Single-command operator actions get a single code
+  block with minimal preamble. No section headers
+  labeled "STEP N - <activity>". No
+  expected-outputs bullet list before the command.
+  Explanation, if any, goes AFTER the block.
+
+ENVIRONMENT-SOURCE VERIFICATION:
+  Before replicating a running-service code path in
+  a standalone script, read the service's
+  EnvironmentFile (systemd) or equivalent config
+  source first.
+
+SINGLE-LINE REINFORCEMENT (TB00000 v2_12 Section
+4.2 OP-007):
+  Bill may paste this line at the top of any session
+  message:
+
+    ONEDRIVE BAN ACTIVE per TB00000 Section 4.2:
+    do not emit the string in any path, command,
+    or response. Self-catch before emit.
+
+============================================================
+REVISION HISTORY
+============================================================
+
+  v1_0  2026-04-23  Initial. Next-session
+                    instructions for TB00120
+                    OBSERVATION-WINDOW-CLOSE session
+                    executing evidence-based closure
+                    of OI-018 / OI-019 / OI-020 /
+                    OI-028 / OI-029 at T+48h
+                    (minimum close 2026-04-25
+                    06:11:04 UTC). OI-030 and OI-039
+                    already closed in TB00119.
+                    OI-037 SIX-session recurrence
+                    documented; Section 4
+                    instruction-style discipline
+                    applies NOW regardless of v2_13
+                    deferral. OI-041 investigation
+                    and TB00000 v2_13 are OPTIONAL
+                    TB00120 scope per Bill's
+                    TB00119-close direction. Paper
+                    trading only. No real money.
+                    Shell discipline: PowerShell
+                    only.
+
+============================================================
+END - TB00119 NEXT SESSION INSTRUCTIONS v1_0
+============================================================

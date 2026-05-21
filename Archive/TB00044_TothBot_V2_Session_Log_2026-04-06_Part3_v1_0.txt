@@ -1,0 +1,275 @@
+DocDCN:     TB00044
+DocTitle:   TothBot_V2_Session_Log_2026-04-06_Part3
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\OneDrive\TothBot\TB00044_TothBot_V2_Session_Log_2026-04-06_Part3_v1_0.txt
+DocDate:    04-06-2026
+DocTime:    23:59:59 UTC
+
+============================================================
+TOTHBOT V2 SESSION LOG -- 2026-04-06 PART 3
+============================================================
+
+============================================================
+1. SESSION START STATE
+============================================================
+
+Phase 9 in progress. Module 7 started this session.
+Prior session log: TB00043.
+
+Documents read at session start:
+  TB00000  v2_7    Project Instructions          checked
+  TB00043  v1_0    Prior session log             checked
+  1011004  dv1_0   Execution_Engine_Coding_Spec  read in full
+  1011001  dv1_6   Engineering_Best_Practices    confirmed
+
+============================================================
+2. WORK COMPLETED THIS SESSION
+============================================================
+
+------------------------------------------------------------
+2.1 PL-NEW-005 RESOLVED -- risk_engine.py updated
+------------------------------------------------------------
+
+PL-NEW-005: gate_8() in risk_engine.py was not applying
+sizing_modifier from Gate 6 passed via
+extended_spec["sizing_modifier"] by signal_pipeline.
+
+Fix applied in gate_8() immediately after
+_compute_per_trade_usd():
+
+  sizing_modifier = Decimal(str(pair_spec.get("sizing_modifier", "1")))
+  if sizing_modifier != Decimal("1"):
+      per_trade_usd = per_trade_usd * sizing_modifier
+
+Logic: sizing_modifier = 1.0 (FULL) for TRENDING regimes,
+       0.5 (HALF) for NON_DIR + NORMAL_VOL.
+       Gate 6 never blocks — modifier scales only.
+
+risk_engine.py: 710 lines. Syntax validated clean.
+
+------------------------------------------------------------
+2.2 Module 7 -- execution_engine.py -- COMPLETE
+------------------------------------------------------------
+
+execution_engine.py written from 1011004 dv1_0.
+626 lines. Syntax validated clean.
+
+Spec compliance verified:
+
+  HR-EE-001  post_only=True on ALL entry add_order         OK
+  HR-EE-002  stp_type="cancel_newest" (underscore)         OK
+  HR-EE-003  deadline = UTC now + 5s on ALL orders         OK
+  HR-EE-004  triggers.reference="last" on emergSL          OK
+  HR-EE-005  TP+emergSL via batch_add atomic on fill.
+             Never OTO.                                     OK
+  HR-EE-006  cl_ord_id assigned at dispatch BEFORE send    OK
+  HR-EE-007  Pending Order Registry populated on dispatch   OK
+  HR-EE-008  All Decimal: Decimal(str()) on WS numerics    OK
+  HR-EE-009  Net 1:1.5 R:R HARDCODED (via gate_8)         OK
+  HR-EE-010  qty_min and cost_min checked before dispatch   OK
+  HR-EE-011  amend_order primary. edit_order PROHIBITED
+             (stated in docstring — not used in code)       OK
+  HR-EE-012  cancel_all_orders_after NEVER sent
+             (stated in docstring — not used in code)       OK
+
+Key design decisions:
+
+  atr_14 recovery:
+    Signal pipeline gate_8 output includes mae_pct but
+    not atr_14 directly. atr_14 recovered at dispatch:
+      atr_14 = mae_pct * entry_limit_price / mae_mult
+    This is mathematically exact (inverts the gate_8
+    mae_pct formula). Stored in _entry_orders context.
+    Used for post-fill gate_8 recomputation (EE-BA-002).
+
+  Post-fill gate_8 call:
+    On entry fill, EE calls risk_engine.gate_8() with
+    actual avg_price and stored atr_14. Uses tp_price
+    and emergsl_price from result. entry_qty from fill
+    event (cum_qty) — not recomputed. sizing_modifier
+    passed in extended_spec so PL-NEW-005 fix applies.
+
+  cl_ord_id format:
+    Entry:  symbol[:6] (no slash) + timestamp_ms (EE-ID-001)
+    TP:     "T" + 10-digit counter + symbol[:5]
+    emergSL: "S" + 10-digit counter + symbol[:5]
+    All guaranteed unique via monotonic counter.
+
+  Partial fill on GTD expiry (EE-REJ-002):
+    cum_qty > 0 → synthesises filled-style event and
+    delegates to _on_entry_filled(). TP+emergSL placed
+    for the partial qty.
+
+  batch_add response:
+    Handled by on_batch_add_response(msg). Extracts
+    Kraken-assigned tp_order_id and emgsl_order_id.
+    Calls pm.on_batch_add_ack(symbol, tp_id, emgsl_id).
+    Cleans up req_id_registry.
+
+  Rate limit rejection:
+    on_rate_limit_reject() logs ENTRY_REJECTED_RATE_LIMIT.
+    Caller (WS Manager) handles PM/semaphore cleanup.
+
+============================================================
+3. COMMITS REQUIRED THIS SESSION
+============================================================
+
+Two files to commit:
+
+  (1) tothbot/risk_engine.py    -- PL-NEW-005 fix
+  (2) tothbot/execution_engine.py  -- new Module 7
+
+============================================================
+4. BILL ACTIONS REQUIRED -- COMMIT SEQUENCE
+============================================================
+
+--- COMMIT 1: risk_engine.py (PL-NEW-005 fix) ---
+
+Copy risk_engine.py to:
+  C:\Users\wstot\GitHub\TothBot\TothBot_V2-Code\tothbot\
+
+```
+cd C:\Users\wstot\GitHub\TothBot\TothBot_V2-Code
+```
+
+```
+git add tothbot/risk_engine.py
+```
+
+```
+git commit -m "Fix PL-NEW-005: apply sizing_modifier in risk_engine.gate_8()"
+```
+
+```
+git push origin master
+```
+
+--- COMMIT 2: execution_engine.py (new Module 7) ---
+
+Copy execution_engine.py to:
+  C:\Users\wstot\GitHub\TothBot\TothBot_V2-Code\tothbot\
+
+```
+git add tothbot/execution_engine.py
+```
+
+```
+git commit -m "Phase 9 Module 7: execution_engine.py from 1011004 dv1_0"
+```
+
+```
+git push origin master
+```
+
+Confirm both commit hashes and record below:
+  risk_engine.py commit:      8d4867d
+  execution_engine.py commit: 0574a81
+
+============================================================
+5. OPEN ITEMS
+============================================================
+
+  No open items.
+
+============================================================
+6. PARKING LOT
+============================================================
+
+  PL-003     TRACKING: Pathway 1 GitHub automation specs.
+             After Pathway 2 reaches paper trading readiness.
+
+  PL-NEW-002 git add . prohibited. STANDING RULE 6.
+  PL-NEW-003 Multi-line commit -m breaks Windows batch.
+  PL-NEW-004 cd to repo root first. Always.
+
+  PL-NEW-005 RESOLVED this session. sizing_modifier from
+             Gate 6 now applied in risk_engine.gate_8().
+
+============================================================
+7. DECISIONS RECORDED
+============================================================
+
+  D-EE-001  atr_14 recovered at EE dispatch from mae_pct
+            (not passed through pipeline output). Formula:
+            atr_14 = mae_pct * entry_limit_price / mae_mult.
+            Mathematically exact. Avoids modifying
+            signal_pipeline.py (already committed).
+
+  D-EE-002  Post-fill TP/emergSL recomputation delegates
+            to risk_engine.gate_8() with actual avg_price.
+            Uses tp_price and emergsl_price from result.
+            entry_qty from fill event cum_qty — not
+            recomputed (qty locked at dispatch).
+
+============================================================
+8. NOTES
+============================================================
+
+  - execution_engine.py: 626 lines. Syntax clean.
+  - risk_engine.py: 710 lines. Syntax clean.
+  - All 12 hard rules (HR-EE-001 through -012) verified.
+  - PL-NEW-005 closed. Gate 6 sizing_modifier now flows
+    correctly from Signal Pipeline → Risk Engine.
+
+============================================================
+9. PHASE 9 STATUS
+============================================================
+
+  COMPLETE: Modules 1-7
+    logger.py           (1011007) committed
+    ws_manager.py       (1011002) committed
+    position_mirror.py  (1011006) committed
+    risk_engine.py      (1011011) committed + PL-NEW-005 fix
+    regime_engine.py    (1011012) committed
+    signal_pipeline.py  (1011003) committed
+    execution_engine.py (1011004) committed (this session)
+
+  NEXT: Module 8 -- Exit Controller (1011005 dv1_2)
+
+============================================================
+10. NEXT SESSION -- WHERE WE PICK UP
+============================================================
+
+Phase 9 continues. Next module: Exit Controller (1011005).
+
+------------------------------------------------------------
+SESSION OPENING INSTRUCTION (copy/paste exactly):
+------------------------------------------------------------
+
+  ============================================================
+  Read the Project Instructions (TB00000 v2_7) and session
+  log TB00044. Phase 9 is in progress.
+
+  Phase 9 status:
+    COMPLETE: Modules 1-7 (Logger, WS Manager, Position
+              Mirror, Risk Engine, Regime Engine,
+              Signal Pipeline, Execution Engine) -- all
+              committed.
+    NEXT: Module 8 -- Exit Controller (1011005 dv1_2).
+
+  Repository: TothBot_V2-Code (github.com/TothBot/TothBot_V2-Code)
+  Platform: Hetzner VPS 87.99.141.44, Python 3.12.3
+
+  Before coding Module 8: read 1011005 Exit_Controller_Coding_Spec
+  dv1_2 in full. Also confirm 1011001 Engineering_Best_Practices
+  dv1_6 is loaded.
+
+  RULE 14: git push origin master. Always.
+  RULE 15: One command per copy box. Always.
+  RULE 6:  git add . is prohibited. Explicit git add per file.
+  RULE 4:  cd to repo root first. Always.
+  ============================================================
+
+============================================================
+11. REVISION HISTORY
+============================================================
+
+  v1_0  04-06-2026  Initial session log. Phase 9 Part 3.
+                    PL-NEW-005 resolved in risk_engine.py.
+                    Module 7 execution_engine.py coded
+                    and ready for commit.
+
+============================================================
+END OF SESSION LOG
+============================================================

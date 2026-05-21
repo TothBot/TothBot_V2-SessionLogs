@@ -1,0 +1,751 @@
+DocDCN:     TB00123_NSI
+DocTitle:   Next_Session_Instructions_for_TB00124
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TBXXXXX_Session_Logs\TB00123_Next_Session_Instructions_v1_0.txt
+DocDate:    04-23-2026
+DocTime:    23:55:00 UTC
+
+============================================================
+NEXT SESSION INSTRUCTIONS - TB00124
+OBSERVATION-WINDOW-CLOSE + DEFECT-WM-REST-SIGN-001 FIX
+COLD-LOAD NEW CHAT REQUIRED
+============================================================
+
+PAPER TRADING ONLY. NO REAL MONEY.
+
+============================================================
+SECTION 1 - WHAT THIS SESSION DOES
+============================================================
+
+TB00124 is a TWO-PART session. Scope carries forward from
+TB00122 NSI v1_0 (which originally assigned this scope to
+TB00123). TB00123 executed as a SCOPE REEVALUATION session
+only because Bill's opening cold-load occurred at T+~42h,
+before the Part 1 T+48h precondition could be satisfied.
+TB00123 verified the mid-session project folder uploads and
+deferred both parts to TB00124.
+
+  PART 1  OBSERVATION-WINDOW-CLOSE. Evaluate window
+          evidence at T+48h (2026-04-25 06:11:04 UTC
+          minimum) and close OI-018 / OI-019 / OI-020
+          / OI-028 / OI-029 on evidence.
+
+  PART 2  DEFECT-WM-REST-SIGN-001 FIX. Deliver full
+          DC package for the three unsigned-private-
+          REST call sites in ws_manager.py documented
+          in TB00120 Session Log v1_1 §2.6. NO PATCHES.
+          Full files only. Complete DC package.
+
+TB00124 MUST be opened as a COLD-LOAD NEW CHAT. Claude
+reads all mandatory documents directly from the Claude.ai
+project folder. No reliance on mid-session memory
+permitted. Per TB00000 v2_13 §4.3 RR-RULE-001 / RR-RULE-
+003, Claude re-reads every rule before emit.
+
+TB00124 MUST be opened at or after 2026-04-25 06:11:04 UTC
+to satisfy the window T+48h minimum.
+
+Bill may choose at TB00124 open to DEFER Part 2 to TB00125
+if he prefers a clean observation-window-close session.
+Defer decision is Bill's; default is to bundle.
+
+------------------------------------------------------------
+1.1 Scope summary
+------------------------------------------------------------
+
+PART 1 STEPS:
+
+  STEP A  Pre-flight. Cold-load verification of project
+          folder state per §7.3 below.
+
+  STEP B  Run /root/tothbot_sweep.sh on VPS. Record
+          T+N counters (N = hours since 2026-04-23
+          06:11:04 UTC; at TB00124 open N >= 48).
+
+  STEP C  Compare T+N counters against T+0 baseline
+          from §4 below. DELTAS NEW TO WINDOW are
+          the closure evidence:
+            WS_MGR_FATAL                 (OI-018)
+            ALERT_SMTP_FAILED            (OI-019,
+                                          OI-029)
+            ALERT_SENT                   (OI-019)
+            FATAL_RECONNECT_FAILURE      (OI-020,
+                                          OI-028)
+            RECONNECT_COMPLETE           (OI-028)
+
+  STEP D  Close OIs on evidence. Closure criteria:
+            OI-018 closes if delta WS_MGR_FATAL = 0
+            OI-019 closes if delta ALERT_SENT >= 1
+                   AND delta ALERT_SMTP_FAILED = 0
+                   (TB00119 §2.9 ALERT_SENT satisfies
+                    pre-window partial)
+            OI-020 closes if delta
+                   FATAL_RECONNECT_FAILURE = 0
+            OI-028 closes if delta
+                   FATAL_RECONNECT_FAILURE = 0
+                   AND delta RECONNECT_COMPLETE >= 1
+                   (fallback: close on absence-of-
+                    FATAL and schedule follow-up
+                    check on first natural reconnect)
+            OI-029 closes if delta ALERT_SMTP_FAILED
+                   from service = 0 (TB00119 STEP G
+                   email-arrival satisfies retry-path
+                   partial)
+
+PART 2 STEPS (if not deferred):
+
+  STEP E  Read ws_manager.py dv1_22 / 1011002 dv1_21 /
+          0411002 dv1_1 / 1010000 dv1_13 / 1011001
+          dv1_7 directly from project folder. Do NOT
+          work from mid-session memory of prior
+          versions.
+
+  STEP F  FP/DP analysis of signing implementation.
+          Identify whether to add a helper
+          _sign_private_request() method or inline
+          signing at each site. Default recommendation:
+          helper method. Three call sites times three
+          nearly-identical signing blocks = helper is
+          cleaner and DRY-compliant per 1011001
+          Engineering Best Practices.
+
+  STEP G  Deliver full DC package per §6 below. All
+          files .txt per DR-001. One batch per DR-003.
+          Full 7-field headers per 0311001 v1_3 §5.1.
+          All version increments per 0311003 v1_1.
+
+  STEP H  Bill review. On approval: commit to
+          TothBot_V2-Code master (code file). Commit
+          separate DC package to TothBot_V2-Docs
+          master for the spec + anchor updates.
+
+  STEP I  Deploy to VPS via git pull. Restart tothbot
+          service. Verify via sweep: zero EAPI:Invalid
+          key events in new log. Optionally trigger a
+          test by toggling PAPER_TRADING_MODE=false
+          for 30 seconds with no open positions and
+          confirming the token fetch now succeeds
+          (DO NOT leave live mode on).
+
+  STEP J  TB00124 Session Log + TB00124 NSI.
+
+OPTIONAL SCOPE (Bill decides at open):
+
+  - Defer Part 2 to TB00125 (clean observation-window-
+    close only).
+  - Evaluate OI-043 (project-folder-drift-accumulation)
+    and decide whether 0311002 DC-SYNC-002 needs a
+    pre-flight reconciliation step. TB00122 and TB00123
+    addressed the symptomatic accumulation through
+    explicit Bill cleanup and uploads; governance-level
+    remediation remains open.
+
+============================================================
+SECTION 2 - MANDATORY READING (MUST BE FIRST, COLD-LOAD)
+============================================================
+
+TB00124 reads every document below directly from the
+Claude.ai project folder. Claude states the version read
+before doing any work. Do NOT paraphrase content - quote
+or cite by section where applicable.
+
+Governance and standing rules:
+
+  TB00000                       v2_13
+    Project Instructions. ALWAYS FIRST. §4.2 ABSOLUTE
+    STANDING RULE governs prohibited-string handling.
+    §4.3 ABSOLUTE STANDING RULES govern Claude behavior
+    (RR-SCOPE / RR-RULE / RR-SHELL / RR-VIOL / RR-RAT).
+    Cold-load verify presence. Confirm v2_12 ABSENT.
+
+  0311001                       v1_3
+    Namespace. §3.1 HR-PATH rules. §5.1 file-type
+    header formats.
+
+  0311002                       v1_3
+    Workflow. STEP 8.2.3 DC-SYNC rules. Pre-flight
+    version sweep.
+
+  0311003                       v1_1
+    Versioning Procedure. VP-003 code-file revhist.
+    VP-010 superseded documents.
+
+  0311004                       v1_2
+    Document Creation and Approval.
+
+Session history (last 7 plus TB00112):
+
+  TB00123 Session Log           v1_0
+    PRIOR session. Scope-reevaluation session. Post-
+    upload project-folder re-verification confirmed 12
+    of 13 mandatory files present; TB00118 Session Log
+    v1_1 not found in live index. Zero RR-* violations
+    detected.
+
+  TB00123 NSI                   v1_0
+    THIS document.
+
+  TB00122 Session Log           v1_0
+    Scope-reevaluation session documenting TB00121
+    project-folder drift. Five stale files removed.
+
+  TB00122 NSI                   v1_0
+    Original TB00123 scope source.
+
+  TB00121 Session Log           v1_1
+    Part 1 / Part 2 deferral session. §2.6 upload re-
+    verification via project_knowledge_search. §3.1
+    first RR-SCOPE-005 recurrence under v2_13. OI-043
+    originated.
+
+  TB00121 NSI                   v1_1
+    Prior NSI (TB00122 scope source).
+
+  TB00120 Session Log           v1_1
+    §2.6 DEFECT-WM-REST-SIGN-001 ROOT CAUSE LOCKED.
+    §3.3 misdiagnosis lesson (read-code-before-
+    concluding-code-works).
+
+  TB00120 NSI                   v1_1
+    Original observation-window-close + fix scope
+    source (TB00121 deferred to TB00122; TB00122
+    deferred to TB00123; TB00123 deferred to TB00124).
+
+  TB00119 Session Log           v1_0
+    DC package commit / deploy / observation-window
+    open. §2.7 T+0 baseline is the reference for
+    TB00124 Part 1 delta computation.
+
+  TB00119 NSI                   v1_0
+    Window closure criteria.
+
+  TB00118 NSI                   v1_1
+    DC package assembly record. Revhist captures the
+    1011002 dv1_20 -> dv1_21 cascade amendment
+    narrative.
+
+  TB00118 Session Log           v1_1   (NOTE: possibly
+    missing from project folder per TB00123 §2.5. If
+    absent, proceed on TB00118 NSI v1_1 revhist as
+    authoritative amendment record.)
+
+  TB00117 Session Log           v1_0
+    OI-028 / OI-029 diagnosis work.
+
+  TB00117 NSI                   v1_0
+    Prior NSI.
+
+  TB00112 Session Log           v1_0
+    Retained per long-standing retention reason.
+
+Architecture and code (Part 2):
+
+  0500000   System_Architecture_Overview   dv1_19
+    Full-system reference.
+
+  0411002   Kraken_REST_API_Specification  dv1_1
+    REST-AUTH-001 / REST-AUTH-003 signing contract.
+    AUTHORITATIVE reference for the Part 2 fix.
+
+  1011002   WS_Manager_Coding_Spec         dv1_21
+    WM-TOKEN-001 / WM-TOKEN-002 token rules. Updated
+    to dv1_22 in Part 2 with explicit WM-REST-SIGN-00X
+    rules.
+
+  1010000   Trading_System_Coding_Anchor   dv1_13
+    Registry. Updated to dv1_14 in Part 2 with
+    ws_manager.py SpecVer bump.
+
+  ws_manager.py                 dv1_22
+    Defect located at lines 602-629 (site 1), 656-666
+    (site 2), 668-678 (site 3). Updated to dv1_23 in
+    Part 2.
+
+  logger.py                     dv1_5
+    Reference only. Not modified in Part 2.
+
+  0311005   System_Definitions_and_Terminology  v1_0
+    Reference only.
+
+  1011001   Engineering_Best_Practices   dv1_7
+    BP-HDR-001 through BP-HDR-006 for Part 2 file
+    headers. Any helper-method conventions.
+
+============================================================
+SECTION 3 - PART 1 COMMAND SEQUENCE
+============================================================
+
+PART 1 STEP B sweep command (PowerShell, single copy box):
+
+  ssh root@87.99.141.44 "/root/tothbot_sweep.sh"
+
+Record full output in TB00124 Session Log §2.x. Compare to
+§4 T+0 baseline to compute deltas.
+
+Also record service PID and uptime from the SERVICE block
+of the sweep. If PID differs from 239919 or uptime is less
+than 48 hours, investigate auto-restart root cause before
+closing any OI.
+
+============================================================
+SECTION 4 - T+0 BASELINE (FROM TB00119 SESSION LOG §2.7)
+============================================================
+
+  Window start:   2026-04-23 06:11:04 UTC
+  T+48h close:    2026-04-25 06:11:04 UTC
+  Service PID:    239919 (may differ at TB00124 open
+                  if systemd auto-restarted)
+  Deploy:         ea18b83
+
+  Counters at T+0:
+    CRITICAL-level events:              1
+    FATAL_RECONNECT_FAILURE:            0
+    WS_MGR_FATAL:                       0
+    WSMGR_FATAL_PROPAGATED:             0
+    ALERT_SMTP_FAILED:                  0
+    TRADE_RECORD_WRITE_FAILED:          0
+    WARMUP_REST_FAILED:                 0
+    RECONNECT_INITIATED:                0
+    RECONNECT_TRIGGERED:                0
+    RECONNECT_ATTEMPT_FAILED:           0
+    RECONNECT_COMPLETE:                 0
+    ALERT_SENT:                         1
+    TRADE_CLOSE:                        0
+    PAPER_BALANCE_SET:                  1
+    SYSTEM_OPERATIONAL:                 1
+
+============================================================
+SECTION 5 - PART 2 DEFECT DETAIL
+============================================================
+
+Full defect record in TB00120 Session Log v1_1 §2.6.
+Summary for TB00124 Part 2 fix:
+
+DEFECT:       DEFECT-WM-REST-SIGN-001
+SEVERITY:     HIGH (live-trading blocker)
+IMPACT TODAY: ZERO in paper mode (skip branches)
+FILE:         tothbot/ws_manager.py
+GOVERNED BY:  1011002 WS_Manager_Coding_Spec
+
+Three call sites are unsigned:
+
+  (a) _rest_get_ws_token    (approx lines 602-629)
+      Endpoint: /0/private/GetWebSocketsToken
+      Retrieves trade_secret but does not use it.
+
+  (b) _rest_get_open_orders (approx lines 656-666)
+      Endpoint: /0/private/OpenOrders
+      Does not retrieve secret at all.
+
+  (c) _rest_get_account_balance (approx lines 668-678)
+      Endpoint: /0/private/Balance
+      Does not retrieve secret at all.
+
+All three ship only API-Key + nonce. Kraken correctly
+rejects with EAPI:Invalid key. The error text is misleading
+- keys are valid; requests are unsigned.
+
+SIGNING CONTRACT (0411002 dv1_1 REST-AUTH-001):
+
+  message   = URI_path + SHA256(nonce + POST_data_string)
+  signature = HMAC-SHA512(message, base64_decode(api_secret))
+  API-Sign  = base64_encode(signature)
+
+REQUIRED HEADERS (0411002 dv1_1 REST-AUTH-003):
+
+  API-Key:      TRADE API key value (or DATA key for
+                DATA-scoped endpoints)
+  API-Sign:     HMAC-SHA512 signature (above)
+  Content-Type: application/x-www-form-urlencoded
+
+RECOMMENDED PART 2 IMPLEMENTATION:
+
+Add a private helper on WSManager:
+
+  def _sign_private_request(
+      self,
+      uri_path: str,
+      postdata: dict,
+      api_secret: str,
+  ) -> tuple[dict, str]:
+      """
+      Returns (encoded_postdata, api_sign_header).
+      Per 0411002 REST-AUTH-001.
+      """
+      import hashlib, hmac, base64
+      from urllib.parse import urlencode
+
+      post_str = urlencode(postdata)
+      sha256_digest = hashlib.sha256(
+          (postdata["nonce"] + post_str).encode()
+      ).digest()
+      message = uri_path.encode() + sha256_digest
+      mac = hmac.new(
+          base64.b64decode(api_secret),
+          message,
+          hashlib.sha512,
+      )
+      api_sign = base64.b64encode(mac.digest()).decode()
+      return post_str, api_sign
+
+Apply at all three call sites. Pass Content-Type:
+application/x-www-form-urlencoded and the urlencoded
+post_str in the request body.
+
+FP/DP NOTE: The helper encapsulates the signing contract
+in one place. If Kraken changes the algorithm (REST-AUTH-
+002 notes the Oct 2025 change applied to Futures only;
+Spot unchanged), only the helper changes.
+
+============================================================
+SECTION 6 - PART 2 DC PACKAGE FILE LIST
+============================================================
+
+If Bill approves the Part 2 fix at TB00124 STEP E:
+
+Code files (TothBot_V2-Code):
+  tothbot/ws_manager.py             dv1_22 -> dv1_23
+    Three call sites updated to sign via helper.
+    New _sign_private_request() helper method.
+    Content-Type header added at all three sites.
+    Revision History entry dv1_23 04-25-2026.
+
+Coding specs (TothBot_V2-Docs):
+  1011002 WS_Manager_Coding_Spec    dv1_21 -> dv1_22
+    New rules WM-REST-SIGN-001 through -00N:
+      - MUST compute API-Sign per 0411002 REST-AUTH-001
+      - MUST include Content-Type header
+      - MUST use TRADE key/secret for trade endpoints
+      - MUST use DATA key/secret for data-scoped
+        endpoints (verify current scope)
+    Revision History entry dv1_22 04-25-2026.
+
+System specs (TothBot_V2-Docs):
+  0511001 WS_Manager_Specification  dv1_1 -> dv1_2
+    Only if arch-level change. Likely no change -
+    0511001 already references 0411002 for the REST
+    contract. Spec-review decision at STEP E.
+
+Parent anchor (TothBot_V2-Docs):
+  1010000 Trading_System_Coding_Anchor dv1_13 -> dv1_14
+    §5.2 registry entry for ws_manager.py SpecVer
+    bumped dv1_21 -> dv1_22. Revision History entry
+    dv1_14 04-25-2026.
+
+Optional (TothBot_V2-Docs):
+  0411002 Kraken_REST_API_Specification dv1_1 -> dv1_2
+    Only if any spec clarification needed. Likely no
+    change - spec already mandates signing; the defect
+    was code non-compliance, not spec under-
+    specification. Spec-review decision at STEP E.
+
+All files .txt per DR-001. One batch per DR-003. Full
+7-field headers per 0311001 v1_3 §5.1. All version
+increments per 0311003 v1_1. Post-commit upload to
+Claude.ai project folder per 0311002 v1_3 DC-SYNC-002.
+
+============================================================
+SECTION 7 - CURRENT STATE AT TB00124 OPEN
+============================================================
+
+------------------------------------------------------------
+7.1 VPS state
+------------------------------------------------------------
+
+  Service:         active (running) - likely same PID
+                   239919 if no auto-restart occurred
+                   during TB00123-to-TB00124 interval
+  Deploy:          ea18b83 (unchanged until Part 2
+                   deploy in STEP I)
+  Mode:            paper trading (NO REAL MONEY)
+  Paper balance:   10000 USD
+  Positions:       none open
+  Kraken rejection: SYMPTOM MASKED by dv1_22 skip
+                   branches. Zero EAPI:Invalid key
+                   events in current log.
+
+------------------------------------------------------------
+7.2 Repo state
+------------------------------------------------------------
+
+  Docs repo:  master @ cdc1a47 (unchanged since TB00119)
+  Code repo:  master @ ea18b83 (unchanged since TB00119)
+
+------------------------------------------------------------
+7.3 Project folder state expected at TB00124 open
+------------------------------------------------------------
+
+Verification results at TB00123 close (per TB00123 §2.5,
+using live project_knowledge_search index):
+
+  TB00000 v2_13                         PRESENT  ✓
+  TB00000 v2_12                         ABSENT   ✓
+  1011002 dv1_21                        PRESENT  ✓
+  1010000 dv1_13                        PRESENT  ✓
+  1011007 dv1_5                         PRESENT  ✓
+  1010000 dv1_12                        ABSENT   ✓
+  1011007 dv1_4                         ABSENT   ✓
+  ws_manager.py dv1_22                  PRESENT  ✓
+
+Session history files at TB00123 close:
+
+  TB00123 Session Log v1_0              PRESENT (after
+                                        Bill upload)
+  TB00123 NSI v1_0                      PRESENT (after
+                                        Bill upload)
+  TB00122 Session Log v1_0              PRESENT  ✓
+  TB00122 NSI v1_0                      PRESENT  ✓
+  TB00121 Session Log v1_1              PRESENT  ✓
+  TB00121 NSI v1_1                      PRESENT  ✓
+  TB00120 Session Log v1_1              PRESENT  ✓
+  TB00120 NSI v1_1                      PRESENT  ✓
+  TB00119 Session Log v1_0              PRESENT  ✓
+  TB00119 NSI v1_0                      PRESENT  ✓
+  TB00118 Session Log v1_1              UNVERIFIED
+                                        (not found in
+                                        live index at
+                                        TB00123; Bill
+                                        to locate/
+                                        upload if
+                                        available)
+  TB00118 NSI v1_1                      PRESENT  ✓
+  TB00117 Session Log v1_0              PRESENT  ✓
+  TB00117 NSI v1_0                      PRESENT  ✓
+  TB00112 Session Log v1_0              PRESENT  ✓
+
+Mandatory TB files retained per 7-session rolling
+window + TB00112:
+  TB00117 - TB00123 logs + NSIs = 14 files
+  + TB00112 Session Log         =  1 file
+  + TB00000 v2_13               =  1 file
+                                = 16 TB files total
+
+Optional cleanup at Bill discretion:
+
+  TB00116 Session Log v1_0 + TB00116 NSI v1_0
+    (drops from 7-session rolling window as TB00123
+     enters)
+
+STEP A pre-flight uses project_knowledge_search (not only
+/mnt/project/ filesystem listing) to verify upload state,
+per TB00121 §2.6 lesson. Filesystem mount alone is frozen
+at session start and cannot confirm uploads made after
+prior session close.
+
+If ws_manager.py is somehow not at dv1_22, HALT Part 2
+per STEP A.
+
+If TB00118 Session Log v1_1 is still not found in live
+index at TB00124 STEP A: proceed using TB00118 NSI v1_1
+revhist as authoritative amendment record. Note the gap
+in TB00124 Session Log §2.x. Not a halt condition.
+
+------------------------------------------------------------
+7.4 Parking Lot carried forward
+------------------------------------------------------------
+
+PART 1 CLOSING IN TB00124 (pending evidence):
+
+  OI-018 (HIGH)   closes at STEP D on evidence
+  OI-019 (MED)    closes at STEP D on evidence
+  OI-020 (MED)    closes at STEP D on evidence
+  OI-028 (HIGH)   closes at STEP D on evidence
+                  (fallback available)
+  OI-029 (MED)    closes at STEP D on evidence
+
+PART 2 CLOSING IN TB00124 (if not deferred):
+
+  OI-041 (HIGH)   DEFECT-WM-REST-SIGN-001. Root cause
+                  LOCKED in TB00120 v1_1 §2.6. Closes
+                  at STEP I on VPS evidence: zero
+                  EAPI:Invalid key events post-deploy
+                  under at least one token-fetch
+                  attempt.
+
+CARRIED FORWARD:
+
+  OI-017 (prior)                       OPEN
+  OI-021 (prior)                       OPEN
+  OI-022 (MED)                         PARTIAL
+  OI-023 (prior)                       PENDING
+  OI-024 (prior)                       OPEN
+  OI-025 (prior)                       OPEN
+  OI-026 (prior)                       OPEN
+  OI-027 (prior)                       OPEN
+  OI-031 (LOW)   observation-window semantic
+                 clarification - optional close
+  OI-034         Claude.ai platform instability
+  OI-042 (CAND)  shell-context-mismatch - dormant
+  OI-043 (LOW)   project-folder-drift-accumulation
+                 (originated TB00121; TB00122 and
+                 TB00123 partially addressed symptom
+                 via Bill cleanup and uploads;
+                 governance-level remediation still
+                 open; optional evaluation in TB00124)
+
+CLOSED IN TB00120:
+
+  OI-036 / OI-037 / OI-038 closed by TB00000 v2_13 §4.3.
+
+CLOSED IN TB00119:
+
+  OI-030 / OI-039.
+
+============================================================
+SECTION 8 - CRITICAL LESSONS CARRIED FORWARD
+============================================================
+
+TOOL-EXHAUSTION-BEFORE-DECLARING-UNVERIFIABLE (from
+TB00121 §3.2):
+  Before Claude declares a fact cannot be verified within
+  a session, Claude MUST exhaust all available verification
+  tools. The relevant tool set:
+    (1) /mnt/project/ filesystem mount (frozen at session
+        start; reliable for session-start state only)
+    (2) project_knowledge_search (LIVE project knowledge
+        index; reflects Bill's uploads; primary tool for
+        mid-session verification)
+    (3) conversation_search / recent_chats (for historical
+        session context)
+    (4) file view on specific expected paths (definitive
+        header confirmation)
+  TB00123 applied this lesson correctly at §2.2 / §2.5 -
+  combined filesystem listing + project_knowledge_search
+  for all version verification. TB00124 STEP A continues
+  this pattern.
+
+PROHIBITED-STRING HISTORICAL-FILE EXPOSURE (from
+TB00115 §2.4 / TB00122 §2.4):
+  Historical session-log files in the project folder that
+  contain the §4.2-prohibited string are the documented
+  recurrence vector for OI-033 / OI-036 / OI-039. TB00112
+  Session Log v1_0 is a retained mandatory file that
+  contains approximately 11 occurrences. This is not a
+  violation - the file is retained per long-standing
+  retention reason. Claude's pre-emit scan per OP-003 /
+  OP-004 catches any drafting attempt regardless.
+
+NO PATCHES RULE:
+  All code changes delivered as complete files. No
+  unified diffs. No partial files.
+
+FRESH DATA:
+  Every version claim in TB00124 session log from direct
+  file read this session. Memory and NSI text are stale
+  by definition.
+
+FP/DP DISCIPLINE - NEXT-LOGICAL-STEP EXECUTION (RR-SCOPE-
+005, TB00000 v2_13 §4.3.1):
+  When the next logical step follows deterministically
+  from first principles, Claude executes. Claude does
+  NOT ask Bill A/B/C/D/E decision questions when the
+  choice can be derived from data.
+
+SHELL DISCIPLINE (TB00118 / TB00000 v2_13 §4.3.3):
+  PowerShell is the sole local shell for TothBot V2
+  sessions. No silent switches to cmd.exe.
+
+NEW-RULE SELF-APPLICATION (TB00000 v2_13 §4.3.2):
+  After authoring a governance update, Claude re-reads
+  the new rule before issuing any subsequent operational
+  command that could be governed by it.
+
+============================================================
+SECTION 9 - BLOCKERS AND PROHIBITIONS
+============================================================
+
+The following actions MUST NOT occur in TB00124 without
+explicit Bill authorization in-session:
+
+  - Any code change without Bill approval of the FP/DP
+    analysis in STEP F.
+  - Any partial-file / unified-diff delivery (per NO
+    PATCHES RULE and Bill's session-open directive: "NO
+    PATCHES. ALL CHANGES TO BE FULLY DOCUMENTED TO
+    INCLUDE ALL DOCUMENT CONTROL REQUIREMENTS.")
+  - Any real-money trading beyond the Part 2 STEP I brief
+    verification toggle if executed.
+  - Using ANY Windows file path not in TB00000 §11
+    authoritative tree.
+  - Emitting the §4.2-prohibited string per TB00000 v2_13
+    §4.2 OP-001 through OP-009.
+  - Violating any §4.3 RR-* rule (per v2_13 §4.3 RR-VIOL-001
+    any violation is a session-halting defect).
+  - Silent shell switches from PowerShell to cmd.exe.
+
+============================================================
+SECTION 10 - DELIVERABLES EXPECTED FROM TB00124
+============================================================
+
+Minimum (Part 1 only):
+
+  TB00124_TothBot_V2_Session_Log_<DATE>_v1_0.txt
+  TB00124_Next_Session_Instructions_v1_0.txt
+
+Part 2 DC package (if not deferred) per §6:
+
+  tothbot/ws_manager.py                    dv1_23
+  1011002_WS_Manager_Coding_Spec_dv1_22.txt
+  1010000_Trading_System_Coding_Anchor_dv1_14.txt
+  (optional) 0511001_WS_Manager_Specification_dv1_2.txt
+  (optional) 0411002_Kraken_REST_API_Specification_dv1_2.txt
+
+Session-record artifacts (paste-ins to session log):
+
+  - Pre-flight sweep output
+  - Part 1 T+N VPS sweep output (full)
+  - Part 1 per-OI delta computation
+  - Part 1 per-OI closure statement
+  - Part 1 observation-window close timestamp
+  - Part 2 commit SHAs (docs + code)
+  - Part 2 VPS deploy confirmation
+  - Part 2 post-deploy sweep output
+  - Part 2 optional live-mode token verification
+    (if executed)
+
+Post-session Bill actions:
+
+  - Upload TB00124 Session Log v1_0 and NSI v1_0 to
+    Claude.ai project folder.
+  - Upload Part 2 DC package files to project folder per
+    0311002 v1_3 DC-SYNC-002 after GitHub commits.
+  - Remove TB00117 Session Log + NSI from project folder
+    (7-session retention rolls forward; TB00118 - TB00124
+    retained).
+  - Remove superseded ws_manager.py dv1_22 / 1011002
+    dv1_21 / 1010000 dv1_13 from project folder after
+    verifying the new versions arrived.
+
+============================================================
+REVISION HISTORY
+============================================================
+
+  v1_0  2026-04-23  Initial. Next-session instructions for
+                    TB00124 OBSERVATION-WINDOW-CLOSE +
+                    DEFECT-WM-REST-SIGN-001 FIX session.
+                    Scope carries forward from TB00122 NSI
+                    v1_0 (which assigned it to TB00123;
+                    TB00123 executed as scope-reevaluation
+                    session only due to Part 1 T+48h
+                    precondition still ~6-7h away at
+                    session close). Mandatory reading list
+                    updated: TB00123 Session Log + NSI
+                    added; TB00116 Session Log + NSI drop
+                    from 7-session rolling window (Bill
+                    discretion). TB00118 Session Log v1_1
+                    gap flagged - not a halt condition;
+                    NSI v1_1 revhist is authoritative
+                    amendment record. Project-folder
+                    expected state §7.3 reflects Bill's
+                    mid-TB00123 uploads. Cold-load
+                    directive emphasized: pre-flight
+                    STEP A must confirm upload state via
+                    project_knowledge_search before any
+                    Part 2 authoring. Paper trading only.
+                    No real money. Shell discipline:
+                    PowerShell only.
+
+============================================================
+END - TB00123 NEXT SESSION INSTRUCTIONS v1_0
+============================================================

@@ -1,0 +1,239 @@
+DocDCN:     TB00071
+DocTitle:   TothBot_V2_Session_Log_2026-04-10_Part10
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\My_TothBot_Stuff\TBXXXXX_Session_Logs\TB00071_TothBot_V2_Session_Log_2026-04-10_Part10_v1_0.txt
+DocDate:    04-10-2026
+DocTime:    23:59:59 UTC
+
+============================================================
+TOTHBOT V2 SESSION LOG — 2026-04-10 PART 10
+============================================================
+
+============================================================
+1. SESSION IDENTITY
+============================================================
+
+Session date:     April 10, 2026 (Part 10)
+Session number:   TB00071
+Session type:     0511001 WS_Manager_Specification audit,
+                  update to dv1_1, and GitHub commit.
+Prior session:    TB00070 (2026-04-10 Part 9)
+
+Documents read:
+  TB00000  v2_8   Project Instructions              checked
+  TB00070  v1_0   Most recent session log           checked
+  TB00069  v1_0   Session log                       checked
+  TB00068  v1_0   Session log                       checked
+  0511001  dv1_0  WS_Manager_Specification          checked
+  ws_manager.py   (project folder — 2,686 lines)    checked
+
+============================================================
+2. WORK COMPLETED THIS SESSION
+============================================================
+
+------------------------------------------------------------
+2.1 0511001 WS_Manager_Specification — Audited and Updated
+------------------------------------------------------------
+
+Audit finding: 0511001 dv1_0 (dated 04-04-2026) predated
+all paper trading mode work. Paper trading changes were
+implemented in ws_manager.py across TB00063 (9 changes)
+and TB00069 (4 DEFECT-WM-PT-002 fixes). None of these
+changes were reflected in 0511001 dv1_0.
+
+0511001 dv1_1 produced. Changes from dv1_0:
+
+  Section 2:
+    paper_mode noted in component summary.
+    Config key paper_trading_mode noted as primary input.
+
+  Section 3.1:
+    Private WS: note that it is NEVER connected in paper mode.
+
+  Section 4.2:
+    Paper mode startup path fully documented:
+      Set spot_usd_balance from config paper_starting_balance
+        (default $10,000).
+      Set portfolio_baseline_USD = spot_usd_balance.
+      Log PAPER_BALANCE_SET.
+      Connect public WS only. Subscribe instrument, status,
+        ohlc(5), ohlc(60). return.
+      Skip all private WS steps.
+
+  Section 5.2:
+    PositionRecord additions documented (dv1_1):
+      tp_price:      Decimal  (TP limit price — paper mode)
+      emergsl_price: Decimal  (emergSL trigger — paper mode)
+    Populated by batch_add() in paper mode. Used by
+    _handle_ticker() for paper fill detection.
+
+  Section 5.4:
+    portfolio_baseline_USD note: set from config in paper mode.
+
+  Section 7.1:
+    Private ping guard documented:
+      if self._ws_private is not None: [private ping logic]
+
+  Section 7.2:
+    Private zombie guard documented:
+      if self._ws_private is not None: [private zombie logic]
+
+  Sections 12.2, 12.3, 12.4, 12.7:
+    Interface descriptions updated for paper mode behavior.
+
+  Section 13 (NEW — Paper Trading Mode):
+    13.1  Activation: paper_mode bool from config.
+          self.paper_mode: bool = bool(
+              config.get("paper_trading_mode", False))
+    13.2  Simulated order methods (all 6):
+            add_order():           PAPER_ORDER_SIMULATED +
+                                   _simulate_entry_fill task + return
+            _simulate_entry_fill(): sleep(0.1) + fill callback
+            batch_add():           populate tp_price, emergsl_price,
+                                   PAPER_TP_, PAPER_SL_ IDs +
+                                   PAPER_BATCH_ADD_SIMULATED + return
+            cancel_order():        PAPER_CANCEL_SIMULATED + return
+            amend_order():         PAPER_AMEND_SIMULATED + return
+            batch_cancel():        PAPER_CANCEL_SIMULATED + return
+            dispatch_market_sell(): PAPER_MARKET_SELL_SIMULATED +
+                                   remove from Mirror + CIATS + return
+    13.3  Paper fill detection (_handle_ticker()):
+            TP:      if ask >= pos.tp_price → PAPER_TP_FILL_DETECTED
+            emergSL: if bid <= pos.emergsl_price →
+                       PAPER_EMERG_SL_TRIGGERED
+            TP check runs before emergSL. Only one fires per event.
+    13.4  Main loop paper path (3-task group):
+            recv_loop_public + ping_loop + zombie_monitor.
+            No recv_loop_private. return after group.
+    13.5  Private guards: _ping_loop and _zombie_monitor.
+
+  Section 14 (Hard Rules — renumbered from 13):
+    HR-WM-021: paper_mode read once from config at __init__.
+    HR-WM-022: private WS NEVER connected in paper mode.
+               All _ws_private references MUST guard.
+    HR-WM-023: ALL order methods gated in paper mode.
+               MUST NOT call _send_private().
+    HR-WM-024: Paper fill detection behavior rules.
+    HR-WM-025: Paper mode does not affect OHLC/pipeline/CIATS.
+
+  Section 15 (Triggers — renumbered from 14):
+    Paper triggers added: ticker bbo paper fill detection,
+    simulated fill task.
+
+  Section 16 (Logging — renumbered from 15):
+    PAPER TRADING log events added:
+      PAPER_BALANCE_SET, PAPER_ORDER_SIMULATED,
+      PAPER_BATCH_ADD_SIMULATED, PAPER_CANCEL_SIMULATED,
+      PAPER_AMEND_SIMULATED, PAPER_MARKET_SELL_SIMULATED,
+      PAPER_TP_FILL_DETECTED, PAPER_EMERG_SL_TRIGGERED
+
+  Sections 17, 18 (renumbered from 16, 17):
+    Related Documents and Revision History updated.
+
+------------------------------------------------------------
+2.2 0511001 dv1_1 — GitHub Commit
+------------------------------------------------------------
+
+  File confirmed present in local repo before commit:
+    C:\Users\wstot\GitHub\TothBot\TothBot_V2-Docs\
+    05XXXXX_System_Architecture\
+    0511001_WS_Manager_Specification_dv1_1.txt
+    (41,388 bytes — dv1_0 already absent)
+
+  Commands executed:
+    git add 0511001_WS_Manager_Specification_dv1_1.txt
+    git commit -m "0511001 WS_Manager_Specification dv1_1
+                   - paper trading mode added"
+    git push origin master
+
+  Commit: 2136a1a
+  Result: 1 file changed, 995 insertions(+)
+  Push:   c653760..2136a1a  master -> master  CONFIRMED
+
+============================================================
+3. CURRENT STATE AT END OF SESSION
+============================================================
+
+  ws_manager.py:
+    Project folder:  2,686 lines. All 16 checks PASS.
+    GitHub:          commit b1ce378 — current correct version.
+    VPS:             NOT YET DEPLOYED.
+
+  0511001 WS_Manager_Specification:
+    dv1_1: GitHub commit 2136a1a — COMMITTED ✓
+    dv1_0: superseded and absent from repo.
+
+  PT-ENTRY STATUS:
+    PT-ENTRY-001  All unit tests pass             DONE
+    PT-ENTRY-002  All integration tests pass      DONE
+    PT-ENTRY-003  VPS deployed per 1011013        PENDING
+    PT-ENTRY-004  logrotate configured            DONE (PL)
+    PT-ENTRY-005  IP whitelist confirmed          DONE
+    PT-ENTRY-006  Alert email confirmed           DONE
+    PT-ENTRY-007  systemd auto-restart confirmed  PENDING
+    PT-ENTRY-008  Startup sequence confirmed      PENDING
+
+============================================================
+4. DEFECT LOG
+============================================================
+
+  DEFECT-WM-PT-001  FIXED — commit 6e0843c
+  DEFECT-WM-PT-002  FIXED — commit b1ce378 ✓
+
+============================================================
+5. NEXT SESSION
+============================================================
+
+  Read TB00000 v2_8 and TB00071 before any work.
+
+  BILL MUST DO BEFORE NEXT SESSION:
+    Upload TB00071 to Claude.ai project folder.
+
+  NEXT TASK: Deploy ws_manager.py to VPS (PT-ENTRY-003).
+
+  VPS deploy sequence:
+    ssh root@87.99.141.44
+    cd ~/TothBot_V2-Code
+    git pull origin master
+    Confirm ws_manager.py updated (commit b1ce378)
+    systemctl start tothbot
+    journalctl -u tothbot -f
+    Confirm PAPER_BALANCE_SET in log
+    Confirm no crash loop
+    Confirm public WS connects and subscribes
+    Confirm OHLC events received
+
+  PT-ENTRY-003 completion criteria:
+    Service starts without crash
+    PAPER_BALANCE_SET logged at startup
+    Public WS connected and subscribed
+    OHLC events flowing
+    No ZOMBIE or PING_TIMEOUT alerts within 5 minutes
+
+============================================================
+6. PARKING LOT
+============================================================
+
+  PL-001      WSManager dual PM creation paths. Monitor.
+  PL-003      Pathway 1 GitHub automation. After paper trading.
+  PL-NEW-003  VPS migration to Hillsboro OR. After stable.
+  PL-NEW-004  EE ENTRY_TIMEOUT_SEC vs WM ENTRY_GTD_SEC. Monitor.
+  PL-NEW-005  requirements.txt — websockets>=13.0.
+  PL-NEW-006  tothbot.service not updated. After PT-ENTRY.
+  PL-NEW-007  LOG_FILE path mismatch. After PT-ENTRY.
+  PL-NEW-008  Heartbeat UNKNOWN_MESSAGE_TYPE spam. After PT-ENTRY.
+  PL-NEW-009  Untracked files in TothBot_V2-Code repo. After PT-ENTRY.
+
+============================================================
+7. REVISION HISTORY
+============================================================
+
+  v1_0  04-10-2026  Initial. 0511001 dv1_1 produced and
+                    committed to GitHub (commit 2136a1a).
+                    Paper trading mode fully documented.
+                    VPS deploy pending next session.
+
+============================================================
+END OF SESSION LOG
+============================================================

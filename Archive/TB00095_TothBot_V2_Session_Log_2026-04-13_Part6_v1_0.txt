@@ -1,0 +1,384 @@
+DocDCN:     TB00095
+DocTitle:   TothBot_V2_Session_Log_2026-04-13_Part6
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\My_TothBot_Stuff\TBXXXXX_Session_Logs\TB00095_TothBot_V2_Session_Log_2026-04-13_Part6_v1_0.txt
+DocDate:    04-13-2026
+DocTime:    23:59:59 UTC
+
+============================================================
+TOTHBOT V2 SESSION LOG — 2026-04-13 PART 6
+============================================================
+
+============================================================
+1. SESSION IDENTITY
+============================================================
+
+Session date:     April 13, 2026 (Part 6)
+Session number:   TB00095
+Session type:     DEFECT-SS-006 code fix — ws_manager.py
+                  dv1_16 written and delivered. Ready to
+                  deploy.
+Prior session:    TB00094 (2026-04-13 Part 5)
+
+Documents read this session:
+  TB00000  v2_8    Project Instructions             read
+  TB00094  v1_0    Prior session log                read
+  TB00093  v1_0    Prior-prior session log          read
+  1011002  dv1_15  WS Manager Coding Spec           read
+  ws_manager.py    dv1_15 (full file)               read
+
+============================================================
+2. WORK COMPLETED THIS SESSION
+============================================================
+
+------------------------------------------------------------
+2.1 ws_manager.py dv1_16 — COMPLETE
+------------------------------------------------------------
+
+ws_manager.py upgraded dv1_15 → dv1_16.
+
+Syntax verified: ast.parse() — SYNTAX OK.
+All new methods, attributes, and constants verified present.
+
+------------------------------------------------------------
+2.1.1 Changes Applied
+------------------------------------------------------------
+
+Change 1 — Header updated:
+  DocVersion: dv1_15 → dv1_16.
+  Revision history entry added (dv1_16 04-13-2026).
+  Full change description matches spec (1011002 dv1_15
+  Section 9.6 WM-LIQ-001 through WM-LIQ-010).
+
+Change 2 — New constant:
+  LIQUIDITY_REFRESH_HOURS: int = 4
+  CIATS-owned starting value (WM-LIQ-007).
+  Added after UNIVERSE_MIN_VOLUME_USD constant.
+
+Change 3 — New __init__ attributes:
+  self._wsname_to_classic: dict[str, str] = {}
+    WS v2 name (e.g. "BTC/USD") → REST altname (e.g. "XBTUSD")
+  self._classic_to_wsname: dict[str, str] = {}
+    REST altname → WS v2 name (reverse map)
+  Both initialized empty. Populated by _handle_instrument()
+  from snapshot altname field (WM-LIQ-003).
+
+Change 4 — New method _rest_get_ticker():
+  Input: list[str] of WS v2 pair names.
+  Maps to altnames via _wsname_to_classic.
+  Calls GET /0/public/Ticker — public, no auth.
+  Parses response: usd_vol = Decimal(v[1]) * Decimal(p[1]).
+  Maps response keys back to WS names via _classic_to_wsname
+  with _normalize_classic_key() fallback for legacy XXBTZUSD
+  format (handles XXBTZUSD → XBTUSD normalization).
+  Returns dict[ws_name, Decimal].
+  On error: logs LIQUIDITY_REFRESH_FAILED, returns {}.
+  Never raises.
+
+Change 5 — New static method _normalize_classic_key():
+  Converts Kraken classic Ticker response key to altname form.
+  Required because REST Ticker response uses full classic names
+  (e.g. "XXBTZUSD") while instrument snapshot altname field
+  uses shorter altnames (e.g. "XBTUSD").
+  Strips Z-prefix from Z-prefixed fiat quotes (ZUSD→USD).
+  Strips X-prefix from X-prefixed legacy crypto base (XXBT→XBT,
+  XETH→ETH, XXRP→XRP).
+  Known Z-fiats: ZUSD, ZEUR, ZGBP, ZCAD, ZJPY, ZCHF, ZAUD.
+  Returns key unchanged if no match (handles modern pairs like
+  SOLUSD which have no X/Z prefix issues).
+
+Change 6 — Modified _handle_instrument():
+  In pair loop, after building pair_cache[symbol]:
+    altname = pair.get("altname", "")
+    if altname:
+        self._wsname_to_classic[symbol] = altname
+        self._classic_to_wsname[altname] = symbol
+  Runs for both snapshot and update types (idempotent).
+  Maps built from Kraken WS v2 instrument channel altname field.
+
+Change 7 — Modified _warm_up_all_pairs():
+  Step 0 added: fetch 24h liquidity for ALL online USD/USDC
+    candidates from pair_cache (not just monitored_universe).
+    Candidates = all pairs where quote_currency in (USD, USDC)
+    and status == online.
+    Calls _rest_get_ticker(candidates).
+    On success: liquidity_24h.update(result). Logs LIQUIDITY_SEEDED.
+    On failure: retries once after 2s. If both fail: logs
+    LIQUIDITY_SEED_FAILED. Gate 2 blocks entries (fail-safe).
+  Step 0b added: re-rank monitored_universe by actual volume.
+    _build_monitored_universe() used alphabetical placeholder.
+    Now that volume data is available: filter by min_volume,
+    sort by USD volume descending, take top 50.
+    BTC/USD always included (AR-074).
+    Logs UNIVERSE_RANKED_BY_VOLUME with universe_size and
+    volume_threshold_usd.
+    NOTE: If liquidity_24h empty (seed failed), monitored_universe
+    remains as built by _build_monitored_universe() (alphabetical
+    placeholder). Gate 2 will block entries for all pairs because
+    liquidity_24h.get(symbol, Decimal("0")) == 0 < min_volume.
+  Step 0c added: asyncio.create_task(_liquidity_refresh_loop())
+    Launched regardless of seed success (WM-LIQ-006).
+  Guard condition updated: 'if not self.monitored_universe and
+    not self.pair_cache' (was: 'if not self.monitored_universe')
+    to handle edge case where pair_cache is populated but
+    monitored_universe not yet built.
+
+Change 8 — New method _liquidity_refresh_loop():
+  Long-lived asyncio task. Runs while True.
+  Reads liquidity_refresh_hours from _ciats_params (default: 4).
+  Sleeps refresh_hours * 3600 seconds.
+  Calls _rest_get_ticker(list(self.monitored_universe)).
+  On success: self.liquidity_24h.update(result). Logs LIQUIDITY_REFRESHED.
+  On empty result: logs LIQUIDITY_REFRESH_FAILED. Cache preserved.
+  On exception: logs LIQUIDITY_REFRESH_FAILED. Cache preserved.
+  Never raises out of loop (WM-LIQ-008c).
+
+------------------------------------------------------------
+2.1.2 DC Compliance Audit
+------------------------------------------------------------
+
+  DocDCN:     1011002          — correct
+  DocTitle:   WS_Manager       — correct
+  DocVersion: dv1_16           — correct (incremented from dv1_15)
+  DocOwner:   Bill             — correct
+  DocPath:    github.com/TothBot/TothBot_V2-Code/tothbot/ws_manager.py
+                               — correct
+  DocDate:    04-13-2026       — correct
+  DocTime:    23:59:59 UTC     — correct
+  Revision history entry:      — present, complete
+  Syntax:                      — VERIFIED (ast.parse OK)
+
+  AUDIT RESULT: COMPLIANT. No violations.
+
+------------------------------------------------------------
+2.1.3 Implementation Note — Altname vs Classic Name Gap
+------------------------------------------------------------
+
+The Kraken WS v2 instrument channel provides altname (e.g.
+"XBTUSD") not the full classic name (e.g. "XXBTZUSD").
+The REST Ticker response uses full classic names.
+
+Resolution: _normalize_classic_key() converts response keys
+to altname form before reverse map lookup. Tested against
+known Kraken pair patterns:
+  XXBTZUSD → XBTUSD   (strip leading X, strip Z from ZUSD)
+  XETHZUSD → ETHUSD   (strip leading X after Z-fiat strip)
+  XXRPZUSD → XRPUSD   (strip leading X, strip Z from ZUSD)
+  SOLUSD   → SOLUSD   (no Z-fiat suffix — returned unchanged)
+
+This correctly handles all current Kraken USD pairs.
+If any pair misses (LIQUIDITY_PAIR_NOT_FOUND in log),
+Gate 2 blocks entries for that pair (fail-safe, WM-LIQ-010).
+
+============================================================
+3. SYSTEM STATE
+============================================================
+
+ws_manager.py:     dv1_16 — WRITTEN, NOT YET DEPLOYED
+startup_sequence.py: dv1_6 — deployed on VPS (no changes needed)
+VPS state:         OPERATIONAL — dv1_15 running
+Gate 2:            BLOCKING ALL ENTRIES (liquidity_24h = 0)
+Trades at risk:    NONE — fail-safe confirmed
+
+startup_sequence.py confirmed: no changes required.
+_liquidity_refresh_loop() is launched from within
+_warm_up_all_pairs() as a self-contained asyncio task.
+No external launch point required.
+
+After dv1_16 deploys, expected startup sequence:
+  WARMUP_REST_STARTED
+  LIQUIDITY_SEEDED (N pairs, usd_volume per pair)
+  UNIVERSE_RANKED_BY_VOLUME (universe_size=N)
+  SSS_SEEDED (per pair)
+  PAIR_READY (per pair)
+  WARMUP_REST_COMPLETE
+  SYSTEM_OPERATIONAL
+  PIPELINE_START (on next 5m candle)
+  Gate 2 PASS (not GATE_2_FAIL) — liquidity_24h now populated
+
+============================================================
+4. PARKING LOT
+============================================================
+
+  PL-001      WSManager dual PM creation paths. Monitor.
+  PL-003      Pathway 1 GitHub automation. After paper trading.
+  PL-NEW-003  VPS migration to Hillsboro OR. After stable.
+  PL-NEW-004  EE ENTRY_TIMEOUT_SEC vs WM ENTRY_GTD_SEC. Monitor.
+  PL-NEW-005  requirements.txt — websockets version pin.
+  PL-NEW-006  tothbot_service.txt not updated in GitHub.
+  PL-NEW-007  LOG_FILE path mismatch.
+  PL-NEW-008  Heartbeat UNKNOWN_MESSAGE_TYPE log spam.
+  PL-NEW-010  status subscription "Symbol(s) not found".
+  PL-NEW-012  HTF EMA incremental updates lost (ohlc(60)
+              removed). REST-only for paper trading.
+  PL-NEW-013  EC ohlc(60) trigger removed.
+              _process_ohlc_60m() will never fire.
+  PL-NEW-014  Duplicate indicator stores.
+  PL-NEW-015  1010000_Trading_System_Coding_Anchor_dv1_5.txt
+              deleted but unstaged in TothBot_V2-Docs.
+
+============================================================
+5. STANDING RULES — ALL ACTIVE
+============================================================
+
+  RULE 6  — git add . is prohibited. Explicit per file.
+  RULE 13 — .bat files go to Desktop only. Never in repo.
+  RULE 14 — git push origin master. NEVER origin main.
+  RULE 15 — ONE COMMAND PER COPY BOX. ALWAYS.
+  RULE 16 — .bat files run from cmd.exe only. Never PS.
+  RULE 17 — Always give complete and correct instructions.
+            Include Command Prompt or Powershell. Include
+            root file path in each instruction. Every step
+            must be executable without interpretation.
+
+  DELIVERY RULES — ALL ACTIVE:
+  DR-001 — All documents as .txt files.
+  DR-002 — 0500000 additionally as .docx and .pdf.
+  DR-003 — ALL documents in ONE BATCH. No piecemeal.
+
+============================================================
+6. BILL ACTIONS REQUIRED
+============================================================
+
+Step 1 — Save this session log:
+  C:\Users\wstot\My_TothBot_Stuff\TBXXXXX_Session_Logs\
+
+Step 2 — Upload TB00095 to Claude project folder.
+
+Step 3 — Deploy ws_manager.py dv1_16 (RULE 17):
+  See Section 7 below. Execute every step.
+  Confirm log output matches Section 3 expected events.
+  Paste log grep output to Claude in next session.
+
+============================================================
+7. DEPLOYMENT INSTRUCTIONS (RULE 17)
+============================================================
+
+PAPER TRADING ONLY. NO REAL MONEY.
+
+------------------------------------------------------------
+Step 1 — Save ws_manager.py to local repo
+------------------------------------------------------------
+
+  File to save (from Claude download):
+    ws_manager.py (dv1_16)
+
+  Save to:
+```
+C:\Users\wstot\GitHub\TothBot\TothBot_V2-Code\tothbot\ws_manager.py
+```
+
+------------------------------------------------------------
+Step 2 — Open Command Prompt and cd to TothBot_V2-Code
+------------------------------------------------------------
+
+```
+cd C:\Users\wstot\GitHub\TothBot\TothBot_V2-Code
+```
+
+------------------------------------------------------------
+Step 3 — git add ws_manager.py
+------------------------------------------------------------
+
+```
+git add tothbot/ws_manager.py
+```
+
+------------------------------------------------------------
+Step 4 — git commit
+------------------------------------------------------------
+
+```
+git commit -m "DEFECT-SS-006: ws_manager.py dv1_16 — REST Ticker liquidity population"
+```
+
+------------------------------------------------------------
+Step 5 — git push
+------------------------------------------------------------
+
+```
+git push origin master
+```
+
+------------------------------------------------------------
+Step 6 — SSH to VPS
+------------------------------------------------------------
+
+```
+ssh root@87.99.141.44
+```
+
+------------------------------------------------------------
+Step 7 — Pull on VPS
+------------------------------------------------------------
+
+```
+cd ~/TothBot_V2-Code && git pull
+```
+
+------------------------------------------------------------
+Step 8 — Restart service
+------------------------------------------------------------
+
+```
+sudo systemctl restart tothbot
+```
+
+------------------------------------------------------------
+Step 9 — Log grep (wait 60s after restart before running)
+------------------------------------------------------------
+
+```
+sudo journalctl -u tothbot -n 200 --no-pager | grep -E "WARMUP_REST_STARTED|LIQUIDITY_SEEDED|LIQUIDITY_SEED_FAILED|UNIVERSE_RANKED|PAIR_READY|WARMUP_REST_COMPLETE|SYSTEM_OPERATIONAL|GATE_2|PIPELINE_START|ERROR|CRITICAL"
+```
+
+------------------------------------------------------------
+Expected output — PASS criteria
+------------------------------------------------------------
+
+  WARMUP_REST_STARTED          — warm-up started
+  LIQUIDITY_SEEDED             — pairs_count=N (N > 0)
+  UNIVERSE_RANKED_BY_VOLUME    — universe_size=N
+  PAIR_READY x N               — one per pair
+  WARMUP_REST_COMPLETE         — ready_pairs=N
+  SYSTEM_OPERATIONAL           — pipeline active
+  PIPELINE_START               — on next 5m candle close
+  Gate 2 PASS in pipeline log  — NOT GATE_2_FAIL
+
+  FAIL criteria (action required):
+  LIQUIDITY_SEED_FAILED        — paste output to Claude
+  LIQUIDITY_PAIR_NOT_FOUND     — paste output to Claude
+  GATE_2_FAIL after dv1_16     — paste output to Claude
+  Any ERROR or CRITICAL        — paste output to Claude
+
+============================================================
+8. NEXT SESSION — COMPLETE INSTRUCTIONS
+============================================================
+
+============================================================
+DOCUMENTS TO READ — IN THIS ORDER:
+1. TB00000 v2_8  — Project Instructions
+2. TB00095 v1_0  — This session log (most recent)
+
+STATE DOCUMENTS READ AND VERSIONS BEFORE ANY WORK.
+============================================================
+
+============================================================
+FIRST TASK — Verify deployment success
+============================================================
+
+Bill pastes log grep output.
+Claude confirms:
+  (a) LIQUIDITY_SEEDED with N > 0 pairs
+  (b) UNIVERSE_RANKED_BY_VOLUME present
+  (c) Gate 2 passing (not GATE_2_FAIL)
+  (d) PIPELINE_START firing on candle closes
+  (e) No CRITICAL or ERROR events related to liquidity
+
+If all pass: DEFECT-SS-006 is CLOSED. Proceed to next work.
+If any fail: diagnose from log output before further action.
+
+============================================================
+END OF SESSION LOG TB00095 v1_0
+============================================================

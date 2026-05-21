@@ -1,0 +1,530 @@
+DocDCN:     TB00208
+DocTitle:   Gate_2_FP_DP_Analysis_Hard_Rule_Registration
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TBXXXXX_Session_Logs\TB00208_Gate_2_FP_DP_Analysis_Hard_Rule_Registration_v1_0.txt
+DocDate:    05-11-2026
+DocTime:    23:30:00 UTC
+
+============================================================
+GATE 2 — FIRST-PRINCIPLES / DATA-POINT ANALYSIS
+HARD-RULE REGISTRATION PROBLEM (6 OCCURRENCES)
+DEFINITIVE RECOMMENDATION
+============================================================
+
+============================================================
+1. WHAT GATE 2 IS ASKING
+============================================================
+
+The trading bot enforces hard rules — mandatory, no-
+exception behavioral rules. Examples of hard rules in
+TothBot V2:
+
+  "Never place a trade where the expected reward-to-
+   risk ratio is below 1 to 1.5."
+  "Never reset the portfolio baseline once it is set
+   at startup."
+  "Never place a stop-loss order with an unprotected
+   open position."
+
+These rules live inside specification documents (the
+written descriptions of what each module of the trading
+bot does). Each rule gets a short code name (an
+identifier like "HR-LM-001" or "HR-SS-007") so the rule
+can be cross-referenced from other documents, from the
+architecture diagram, and from code.
+
+The architecture diagram (0500000) is the canonical
+source — the single authoritative description of what
+each module of the bot governs. Inside the diagram,
+each module box contains a "governs" list — the set of
+rules that module is responsible for enforcing.
+
+PROBLEM: in six places across the system, hard rules
+exist in the specification documents but are not
+properly registered in the architecture diagram's
+"governs" lists. This breaks the diagrams-as-canonical
+principle Bill established before TB00149. It also
+means future code generation, future audits, and future
+amendment work can't verify the bot actually
+implements those rules.
+
+Gate 2 asks: pick the best way to fix this so the six
+occurrences get resolved on the first try, with the
+fewest mistakes and the least redo work.
+
+============================================================
+2. THE THREE OPTIONS BEING WEIGHED
+============================================================
+
+OPTION A — JUST ADD THEM TO THE DIAGRAM.
+
+  Take the rule names that are missing from the
+  diagram's governs lists and add them. No content
+  changes. No renaming. Simplest possible fix when
+  the only problem is that a rule exists in a spec
+  but isn't yet registered in the diagram.
+
+OPTION B — PICK ONE NAME FOR EACH RULE.
+
+  When two documents describe the same rule under
+  two different names (or under the same name but
+  with different actual content), pick one name as
+  canonical and align the other document to match.
+  This fixes the underlying mismatch — not just
+  symptoms.
+
+OPTION C — ACCEPT IT AND DOCUMENT THE PROBLEM.
+
+  Leave everything as-is. Add a note that says "we
+  know about this; we'll deal with it later." Defer
+  the fix.
+
+============================================================
+3. THE SIX OCCURRENCES — WHAT'S ACTUALLY WRONG
+============================================================
+
+Each of the six occurrences has its OWN specific
+defect. The defects fall into three different defect
+classes. Understanding which defect class each
+occurrence belongs to is what makes the right fix
+visible.
+
+------------------------------------------------------------
+3.1 OCCURRENCE #1 — LONG MODULE HARD RULES
+------------------------------------------------------------
+
+WHERE: Long Module specification (0811001) versus Long
+Module coding specification (1011008).
+
+WHAT IS WRONG: Both documents contain 8 hard rules,
+numbered slot-by-slot from rule 1 through rule 8.
+Three of those eight numbered slots describe DIFFERENT
+RULE CONTENT in the two documents. Reading the
+specification document to look up "rule number 2"
+returns a different rule than reading the coding spec
+to look up "rule number 2."
+
+DEFECT CLASS: Content-binding drift. Same identifier
+name, different actual content in two documents.
+
+WHY THIS IS DANGEROUS: A developer or auditor who
+reads one document and acts on it could be enforcing
+a different rule than the architecture intended.
+
+------------------------------------------------------------
+3.2 OCCURRENCE #2 — SELECTION CONTROLLER HARD RULES
+------------------------------------------------------------
+
+WHERE: Selection Controller specification (0811002)
+versus Selection Controller coding specification
+(1011009).
+
+WHAT IS WRONG: Same defect class as Occurrence #1 but
+worse. Both documents define 7 hard rules numbered 1
+through 7. Five of those seven numbered slots have
+content mismatch between the two documents.
+
+DEFECT CLASS: Content-binding drift (same as #1).
+
+WHY THIS IS DANGEROUS: Same as #1.
+
+------------------------------------------------------------
+3.3 OCCURRENCE #3 — RISK ENGINE HARD RULES
+------------------------------------------------------------
+
+WHERE: Risk Engine coding specification (1011011)
+versus the four Risk parent documents (0611001
+Position Sizing Rules, 0611002 Drawdown and Halt
+Rules, 0611003 Concentration and Exposure Rules,
+0611004 Safety Parameter Framework).
+
+WHAT IS WRONG: The risk parent documents define rules
+under prefix names like HR-PS-* (position sizing),
+HR-DD-* (drawdown), HR-CE-* (concentration/exposure),
+HR-SPF-* (safety parameters). The Risk Engine coding
+spec describes the same rules under DIFFERENT prefix
+names: RE-SEM-* (semaphore), RE-DD-* (drawdown — same
+prefix as parents but different numbering), RE-SZ-*
+(sizing), RE-SIZER-* (sizer subsystem), etc.
+
+The architecture diagram doesn't list EITHER prefix
+family in any module's governs list. The rules exist
+in two documents under two different naming systems
+and the diagram knows about neither.
+
+DEFECT CLASS: Pure absence. The diagram is missing
+ALL of them. (A secondary prefix divergence exists
+between the two documents but the primary defect is
+that the diagram has no record of these rules at all.)
+
+WHY THIS IS DANGEROUS: Risk rules are loss-prevention
+rules. Drawdown halts, concentration limits,
+emergency stop-loss behavior, position sizing rules —
+all of these are the system's defense against losing
+the operator's capital. The canonical architecture
+diagram should declare which module owns each of
+these rules.
+
+------------------------------------------------------------
+3.4 OCCURRENCE #4 — REGIME ENGINE HARD RULES
+------------------------------------------------------------
+
+WHERE: Regime Taxonomy specification (0711002)
+versus Regime Engine coding specification (1011012).
+
+WHAT IS WRONG: The Regime Taxonomy specification
+defines 10 hard rules with prefix HR-REGIME-*. The
+Regime Engine coding spec describes the same
+functional concepts but uses NO hard-rule prefix at
+all — it uses ordinary identifiers like RE-CALC-*,
+RE-EVAL-*, etc. with no hard-rule designation.
+
+DEFECT CLASS: Prefix divergence. The Regime Taxonomy
+declares rules as hard rules; the coding spec
+implements them without the hard-rule designation.
+The two are out of sync about WHICH identifiers carry
+hard-rule force.
+
+WHY THIS IS DANGEROUS: The regime engine classifies
+market state into 6 regimes (trending up, trending
+down, ranging, volatile, low-volume, normal) that the
+strategy uses to gate trade entries. Hard rules
+governing regime classification — for example, the
+rule that says regime is computed once per day at
+midnight and held constant for 24 hours — must be
+unambiguously identified as hard rules in the
+canonical diagram.
+
+------------------------------------------------------------
+3.5 OCCURRENCE #5 — VPS DEPLOYMENT HARD RULES
+------------------------------------------------------------
+
+WHERE: Operations Infrastructure specification
+(0211002) versus VPS Deployment coding specification
+(1011013).
+
+WHAT IS WRONG: Operations Infrastructure defines 9
+hard rules under prefix HR-IN-*. The VPS Deployment
+coding spec covers the same operational behavior but
+uses VD-* prefix (no hard-rule designation). The
+coding spec contains ZERO HR-prefix identifiers.
+
+DEFECT CLASS: Prefix divergence (same as
+Occurrence #4).
+
+WHY THIS IS DANGEROUS: Hard rules in this area
+include "the bot must run as a systemd service" (so
+the operating system auto-restarts it if it crashes)
+and "Kraken API keys must only be stored in env files
+(never in code or repository)." These are
+operational security rules — losing them in a prefix
+mismatch creates audit gaps.
+
+------------------------------------------------------------
+3.6 OCCURRENCE #6 — STARTUP/SHUTDOWN HARD RULES
+------------------------------------------------------------
+
+WHERE: Startup/Shutdown Procedure specification
+(0211003) versus the architecture diagram (0500000).
+
+WHAT IS WRONG: The Startup/Shutdown specification
+defines 10 hard rules under prefix HR-SS-*. The
+architecture diagram contains ZERO occurrences of
+HR-SS-* in any module's governs list.
+
+DEFECT CLASS: Pure absence. The diagram simply does
+not know about these rules.
+
+WHY THIS IS DANGEROUS: This is the same problem
+AMENDMENT-17 fixes. Hard rules covering "portfolio
+baseline set exactly once on startup, never reset on
+reconnection," "no trading-decision pipeline activity
+before first pair reaches READY state," and the
+prohibition on Kraken's Daemon-Managed-Shutdown
+feature are all loss-prevention rules invisible to
+the canonical architecture diagram.
+
+============================================================
+4. CATEGORIZING THE SIX BY DEFECT CLASS
+============================================================
+
+The six occurrences group into three defect classes:
+
+PURE ABSENCE (diagram is just missing them — 2 cases):
+  - Occurrence #3 — Risk Engine
+  - Occurrence #6 — Startup/Shutdown
+
+CONTENT-BINDING DRIFT (same identifier name, different
+content in two documents — 2 cases):
+  - Occurrence #1 — Long Module
+  - Occurrence #2 — Selection Controller
+
+PREFIX DIVERGENCE (two documents use different prefix
+names for the same content — 2 cases):
+  - Occurrence #4 — Regime Engine
+  - Occurrence #5 — VPS Deployment
+
+Each defect class has a different root cause. Each
+needs the fix that matches its root cause.
+
+============================================================
+5. FIRST-PRINCIPLES ANALYSIS — WHICH OPTION FITS WHICH
+   DEFECT CLASS
+============================================================
+
+5.1 PURE-ABSENCE CASES (Risk Engine, Startup/Shutdown).
+
+  Root cause: rules exist in specs, not yet registered
+  in the diagram's governs lists.
+
+  Option A — Just add them: WORKS. The rules are
+    already correctly named and correctly defined.
+    The only missing step is the registration in the
+    diagram. Adding them is the entire fix.
+
+  Option B — Pick one name: DOES NOT APPLY. There is
+    no naming conflict to resolve. Both documents
+    agree on the names; the diagram just doesn't list
+    them yet.
+
+  Option C — Accept and defer: LEAVES A REAL GAP.
+    Loss-prevention rules invisible to the canonical
+    diagram. Future audits keep re-raising. Future
+    code generation keeps re-missing.
+
+  Best fit: OPTION A.
+
+5.2 CONTENT-BINDING-DRIFT CASES (Long Module, Selection
+    Controller).
+
+  Root cause: two documents define DIFFERENT RULES
+  under the same identifier name. The defect isn't
+  absence — it's contradiction.
+
+  Option A — Just add them: DOES NOT WORK. Which
+    version of the rule gets added to the diagram?
+    The 0811001 version or the 1011008 version? The
+    options are contradictory. Picking one without
+    fixing the other leaves the underlying defect
+    in place.
+
+  Option B — Pick one name as canonical: WORKS. Per
+    the project's standing rule that AA=08 (Trading
+    System architectural specifications) take
+    precedence over AA=10 (coding specifications)
+    when they conflict, the parent specifications
+    (0811001 and 0811002) are canonical. The coding
+    specs (1011008 and 1011009) get renumbered to
+    match the parent specs' content slot-by-slot.
+
+  Option C — Accept and defer: DANGEROUS. A
+    developer reading the wrong document could
+    enforce the wrong rule. Loss-prevention rules
+    must not be ambiguous.
+
+  Best fit: OPTION B (with AA=08-over-AA=10
+  precedence rule applied).
+
+5.3 PREFIX-DIVERGENCE CASES (Regime Engine, VPS
+    Deployment).
+
+  Root cause: two documents use different prefix
+  systems for related rules. One uses HR-* (hard-rule
+  designation); the other doesn't.
+
+  Option A — Just add them: PARTIALLY WORKS but
+    leaves the prefix conflict in place. Which prefix
+    family goes into the diagram? Adding both
+    families creates two parallel naming systems for
+    the same content.
+
+  Option B — Pick one prefix as canonical: WORKS.
+    The parent specifications (0711002 Regime
+    Taxonomy at AA=07 Strategy; 0211002 Operations
+    Infrastructure at AA=02 Operations) declare the
+    hard-rule prefixes (HR-REGIME-*, HR-IN-*). These
+    are the canonical names. The coding specifications
+    (1011012, 1011013) retain their existing prefix
+    names but ONLY as implementation-ordering aids,
+    not as architectural authority. The diagram lists
+    the parent-spec prefix names.
+
+  Option C — Accept and defer: same audit-rework
+    cost as the other cases.
+
+  Best fit: OPTION B (with parent-spec precedence
+  rule applied).
+
+============================================================
+6. ERRORS AND REWORK COMPARISON
+============================================================
+
+The decision criterion Bill specified is: least
+errors and rework. Compare the four candidate paths.
+
+6.1 IF EVERY OCCURRENCE GETS OPTION A (just add them).
+
+  Pure-absence cases: fixed correctly. (2 of 6.)
+  Drift cases: NOT FIXED — adding conflicting
+    identifiers does not resolve the content
+    contradiction. Future audit re-raises. (2 of 6
+    need redo.)
+  Prefix-divergence cases: leaves two prefix families
+    in the diagram for the same content. Creates
+    future ambiguity. (2 of 6 need redo.)
+
+  Total rework: 4 of 6 cases need a second pass.
+
+6.2 IF EVERY OCCURRENCE GETS OPTION B (rename one
+    document to align with the other).
+
+  Pure-absence cases: NOT FIXED — there's no name
+    conflict to resolve. The rules are simply absent
+    from the diagram. Renaming doesn't add them.
+    Future audit re-raises. (2 of 6 need redo.)
+  Drift cases: fixed correctly. (2 of 6.)
+  Prefix-divergence cases: fixed correctly. (2 of 6.)
+
+  Total rework: 2 of 6 cases need a second pass.
+
+6.3 IF EVERY OCCURRENCE GETS OPTION C (defer).
+
+  Pure-absence: still absent.
+  Drift: still in contradiction.
+  Prefix divergence: still divergent.
+
+  All six findings persist. Every future audit pass
+  re-raises all six. Every future amendment cycle
+  hits these defects again. Every future code-
+  generation pass works from incomplete or
+  inconsistent canonical sources.
+
+  Total rework: ongoing, unbounded, every cycle.
+
+6.4 IF EACH OCCURRENCE GETS THE OPTION THAT MATCHES
+    ITS DEFECT CLASS.
+
+  Pure-absence (Risk Engine, Startup/Shutdown):
+    Option A. Rules added to diagram. Fixed on first
+    pass.
+  Drift (Long Module, Selection Controller):
+    Option B. Coding specs renumbered to match
+    parent specs. Fixed on first pass.
+  Prefix divergence (Regime Engine, VPS Deployment):
+    Option B with parent-spec precedence. Diagram
+    lists parent-spec prefix names. Coding-spec
+    prefixes retained as implementation aids only.
+    Fixed on first pass.
+
+  Total rework: 0 of 6 cases need a second pass.
+
+============================================================
+7. DEFINITIVE RECOMMENDATION
+============================================================
+
+USE THE MATCHED-FIX APPROACH. Each of the six
+occurrences gets the option that fits its specific
+defect class. The path produces ZERO redo work
+versus 2-to-4 redo cycles for any uniform single-
+option path and unbounded ongoing rework for the
+defer path.
+
+Specifically:
+
+  Occurrence #1 — Long Module hard rules:
+    Renumber the coding spec (1011008) to match the
+    parent spec (0811001) slot-by-slot. Add the
+    8 hard rules to the diagram's Long Module
+    governs list.
+
+  Occurrence #2 — Selection Controller hard rules:
+    Renumber the coding spec (1011009) to match the
+    parent spec (0811002) slot-by-slot. Add the
+    7 hard rules to the diagram's Selection
+    Controller governs list.
+
+  Occurrence #3 — Risk Engine hard rules:
+    Add the parent specs' rule names (HR-PS-*,
+    HR-DD-*, HR-CE-*, HR-SPF-*) to the diagram's
+    Risk Engine governs list. Coding-spec prefixes
+    (RE-SEM-*, RE-DD-*, RE-SZ-*, etc.) retained as
+    implementation-ordering aids only — not as
+    architectural authority. (This is part of
+    AMENDMENT-14 in the close-gate package.)
+
+  Occurrence #4 — Regime Engine hard rules:
+    Add the Regime Taxonomy spec's HR-REGIME-* rule
+    names to the diagram's Regime Engine governs
+    list. Coding-spec prefixes (RE-CALC-*, etc.)
+    retained as implementation aids only.
+
+  Occurrence #5 — VPS Deployment hard rules:
+    Add the Operations Infrastructure spec's HR-IN-*
+    rule names to the diagram's VPS Deployment
+    governs list. Coding-spec prefixes (VD-*)
+    retained as implementation contracts only.
+
+  Occurrence #6 — Startup/Shutdown hard rules:
+    Add the Startup/Shutdown spec's HR-SS-* rule
+    names to the diagram's Startup Sequence governs
+    list. (This is part of AMENDMENT-17 — see
+    TB00208 AMENDMENT-17 Plain-Language Explanation
+    document.)
+
+============================================================
+8. WHY THIS RECOMMENDATION SERVES THE PRIMARY MISSION
+============================================================
+
+The primary mission is maximize profit, minimize loss,
+with emphasis on minimizing loss. Hard rules are
+disproportionately loss-prevention rules. Risk Engine
+hard rules are entirely loss prevention. Startup/
+Shutdown hard rules protect drawdown-halt integrity
+and order-cancellation discipline. VPS Deployment
+hard rules cover service-restart and credential-
+storage discipline.
+
+The matched-fix recommendation:
+  - Closes all six occurrences in one pass.
+  - Makes the canonical architecture diagram tell
+    the truth about every hard rule the system
+    enforces.
+  - Eliminates ongoing rework cycles on these six
+    items.
+  - Preserves the diagrams-as-canonical principle
+    Bill established before TB00149.
+  - Frees future audit and code-generation cycles
+    to find new defects instead of re-finding these
+    six.
+
+============================================================
+9. REVISION HISTORY
+============================================================
+
+  v1_0  2026-05-11  Initial. First-Principles / Data-
+                    Point analysis of the 6-occurrence
+                    hard-rule registration problem
+                    surfaced as Gate 2 in TB00207
+                    Step 3 Close-Gate Preliminary
+                    Package. Categorizes the six
+                    occurrences into three defect
+                    classes (pure absence, content-
+                    binding drift, prefix divergence)
+                    and recommends the matched-fix
+                    approach: each occurrence gets the
+                    option that fits its specific
+                    defect class. Definitive
+                    recommendation: zero redo work,
+                    versus 2-4 redo cycles for any
+                    uniform single-option path and
+                    unbounded rework for defer.
+                    Authored per TB00207 SL v1_1 §3.3
+                    + §5.1 carry-forward directives.
+                    Single-document deliverable per
+                    the one-document-per-turn rule
+                    established at TB00207 chat-turn 4.
+
+============================================================
+END OF DOCUMENT
+============================================================

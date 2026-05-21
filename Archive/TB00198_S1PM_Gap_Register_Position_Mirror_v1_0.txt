@@ -1,0 +1,1718 @@
+DocDCN:     TB00198
+DocTitle:   S1PM_Gap_Register_Position_Mirror
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TBXXXXX_Session_Logs\TB00198_S1PM_Gap_Register_Position_Mirror_v1_0.txt
+DocDate:    05-11-2026
+DocTime:    23:59:30 UTC
+
+============================================================
+STEP 3 SUB-STEP S-1 GAP REGISTER — POSITION_MIRROR PAIR
+1011006 dv1_1  vs  0511005 dv1_1
+                vs  0500000 dv1_46
+TB00198 — E-S1PM-03 THROUGH E-S1PM-07
+============================================================
+
+============================================================
+1. SCOPE AND METHODOLOGY
+============================================================
+
+1.1 TARGET PAIR.
+  AA=10 side: 1011006 Position_Mirror_Coding_Spec dv1_1
+              (9 sections — §1 Purpose / §2 Parent Chain /
+              §3 Five Coding-Readiness Questions / §4 Data
+              Structure (PositionRecord 15 fields) / §5
+              Write Operations (PM-CREATE / PM-FILL /
+              PM-ORDERS / PM-PARTIAL / PM-CANDLE /
+              PM-CLOSE) / §6 Reconciliation (PM-RECON-001..
+              005) / §7 Read Access (PM-READ-001..004) /
+              §8 Hard Rules HR-PM-001..009 / §9 Revision
+              History; ~50 elements; dv1_1 = 04-07-2026
+              field-name correction cascade for WSManager
+              sole-writer pathway).
+  AA=05 side: 0511005 Position_Mirror_Specification dv1_1
+              (12 sections + §6A PM-PAPER 5 rules /
+              HR-PM-001..012 including HR-PM-010 / -011 /
+              -012 NEW dv1_1 paper-as-master cascade;
+              dv1_1 = 05-07-2026 TB00151i STREAM D
+              Session 2 amendment).
+  AA=08 side: NONE. Verified via project_knowledge_search
+              + bash grep — no 08NNXXX file references
+              Position_Mirror as parent spec. 0811004 is
+              Entry_Limit_Placement (Long_Module-side
+              entry order placement, not PM). Cross-
+              namespace scope simpler than TB00197.
+              Single-AA-side parent (0511005 dv1_1).
+  Architecture canonical: 0500000 dv1_46
+              (8 diagrams; D6 R4 Complete System line 3951
+              binds mod:Position_Mirror as system-wide
+              shared-state component with HR-PM-009 sole-
+              writer constraints + AR-066 binding + PA-004
+              div #4 sourcing divergence; D7 R3 Paper-Mode
+              Dispatch Boundary line 6372 binds the
+              position_mirror_rejoin row where paper and
+              live paths rejoin at schema-identical
+              container; D3 R3 Exit Architecture line 2804
+              binds the pm_helper_callout band depicting
+              HR-PM-009 read-only-via-helpers pattern; D1
+              R2 line 1644 Tier-1 Position_Mirror group +
+              line 1365 root governs binds AR-002 / AR-066
+              / AR-047 / AR-008; Tier 1 Context line 1644
+              binds tothbot_position_mirror Tier-2 group).
+
+1.2 METHODOLOGY (TB00198 NSI §4; unchanged from TB00194 +
+    TB00195 + TB00196 + TB00197).
+  Three-bucket classification per element of 1011006:
+    (a) ARCHITECTURAL RESTATEMENT — duplicates content in
+        0500000 / 0511005 prose or 0500000 diagrams;
+        drop at 10XXXXX retirement (S-4).
+    (b) CODING-UNIQUE — implementation-level content
+        (Python @dataclass decorator + Decimal import +
+        function signatures + log emit format strings +
+        dict-type annotation); migrate to 0511005 prose
+        at S-3.
+    (c) ARCHITECTURAL CONTENT NOT IN DIAGRAMS — must be
+        encoded in 0500000 diagram FIRST per DD-003
+        4-step workflow; then 0511005 prose update;
+        then 10XXXXX retirement.
+    (d) UNCLEAR ORIGIN — per NSI §7.4 + RR-SCOPE-009
+        Chesterton-fence gate.
+
+1.3 STALE-PARAMETER-REFERENCE GREP (per NSI §7.6).
+  bash grep for retired-param tokens (tradeable_pct,
+  per_trade_pct, max_concurrent) and stale per-trade
+  values against 1011006 dv1_1 + 0511005 dv1_1 content:
+  ZERO MATCHES IN BOTH SPECS. Position Mirror does not
+  own sizing or concurrent-count parameters — those
+  reside in Risk_Engine domain. No cluster C1 cascade
+  contribution from this audit. Position Mirror does
+  carry the hold_candle_count field per AR-071
+  starting-value (max_hold_candles = 24 verified in
+  TB00197 audit) — this is a (a) restatement, not a
+  cluster C1 item.
+
+1.4 CROSS-NAMESPACE SCOPE — SINGLE-AA-SIDE PARENT.
+  Per NSI §1 CROSS-NAMESPACE NOTE: no AA=08 Position_
+  Mirror parent exists. Cross-namespace scope determined
+  by bash grep of /mnt/project/ at cold-load: zero
+  08NNXXX files reference Position_Mirror as parent
+  spec. 0811004 is Entry_Limit_Placement which deals
+  with Long_Module-side entry placement, not Position
+  Mirror authoring. Decision: single-AA-side parent
+  (0511005 dv1_1) is the in-scope AA=05 counterpart.
+  Derived directly per RR-SCOPE-005 from filesystem
+  evidence + NSI directive — NOT surfaced as Bill
+  ratification question per DD-011 + NSI §3.5 anti-
+  surface-derivable reinforcement.
+
+============================================================
+2. DIAGRAM COVERAGE BASELINE
+============================================================
+
+Per NSI §3.4 form-factor precedent: per-diagram governs-
+list inventory of Position_Mirror-relevant elements in
+0500000 dv1_46.
+
+2.1 TIER 1 CONTEXT (R0) line 1644 — tothbot_position_
+    mirror Tier-2 labeled group.
+  canonical: mod:Position_Mirror
+  drill_targets: contract:Synthetic_Capital_Ledger
+  constraints: ar:AR-066, decision:D-06_Paper_Live_Parity,
+               pt_mode:PT_MODE_002
+  consumes: evt:ENTRY_FILLED, channel:kraken_ws_executions
+  produces: none
+  Visual content: green box "Position Mirror (symbol-keyed
+                  dict O(1))" with fields "symbol · entry ·
+                  qty · TP id · cl_ord_id · emergSL id".
+
+2.2 DIAGRAM 1 (R2) line 1365 — root governs primary
+    Position_Mirror-relevant tokens.
+  Contains: ar:AR-001, ar:AR-002 (Position Mirror O(1)
+            dict primary architectural reference), ar:
+            AR-008 (entry_fill_price actual not limit —
+            HR-PM-003 origin), ar:AR-047 (Decimal(str())
+            immediate — HR-PM-004 origin), ar:AR-066
+            (CIATS Trade Outcome Bus single fire —
+            HR-PM-005 origin), rule:HR-WM-022, rule:
+            HR-WM-024, rule:HR-WM-032, rule:HR-WM-033
+            (all WSManager sole-writer pathway support).
+  Missing: ar:AR-003 (snap_orders reconciliation
+           preferred), ar:AR-054 (entry partial fill +
+           expiry/cancel), ar:AR-056 (mid-session WS
+           reconnect distinct from startup).
+
+2.3 DIAGRAM 3 (R3) line 2559 — Exit Architecture root
+    governs includes Position_Mirror-relevant items.
+  Contains: rule:HR-PM-009 (sole-writer; verbatim quoted
+            in pm_helper_callout band line 2811 + 2812
+            with HR-PM-011 strengthening reference).
+  Line 2594 + 2702 mod:Exit_Controller +
+    layer:L2_MAE_Threshold position_mirror_access
+    field documents read-only-via-helpers pattern
+    (wm.pm_get / wm.pm_iter); line 2702 enumerates
+    entry_fill_price + qty + fees_entry_usd reads at
+    MAE-trigger time.
+  Visual pm_helper_callout band (lines 2804-2817 R2 +
+    R3 retained) explicit text: "POSITION MIRROR READ
+    PATTERN — rule:HR-PM-009 SOLE-WRITER ENFORCEMENT
+    (0511005 dv1_1)" with full HR-PM-009 + HR-PM-011
+    verbatim citation.
+  Missing: rule:HR-PM-010 / -011 / -012 NEW dv1_1 as
+           registered tokens in root governs; ar:AR-052
+           drawdown formula (referenced by HR-PM-006 +
+           PM-RECON-004 + PM-READ-002 Risk Engine MTM);
+           param:fees_entry_usd as registered token
+           (referenced in position_mirror_access sub-
+           group prose only).
+
+2.4 DIAGRAM 6 (R4) line 3742 — Complete System root
+    governs primary Position_Mirror binding.
+  Contains: rule:HR-PM-009 (sole-writer), ar:AR-008,
+            ar:AR-066, contract:CIATS_Trade_Outcome_Bus,
+            mod:Position_Mirror.
+  Line 3951 g id="tb_position_mirror" Tier-2 labeled
+    group: constraints rule:HR-PM-009 verbatim quoted
+    inline + HR-PM-011 single-writer enforcement
+    reference + ar:AR-066 + PA-004 div #4 paper-sourced
+    annotation. Visible text line 3966 "HR-PM-009: WS
+    Manager is SOLE WRITER · PA-004 div #4: paper
+    sourced from local sim".
+  Wire-up callout block line 4243-4279 enumerates
+    mod:Position_Mirror as second module in wire-up
+    chain (READ-ONLY by mod:Exit_Controller, mod:Signal_
+    Pipeline, mod:Risk_Engine, mod:Logger via WSManager
+    helper methods — HR-PM-009 + HR-PM-011 single-writer
+    enforcement BOTH paper and live).
+  Missing: rule:HR-PM-010 / -011 / -012 as registered
+           tokens in root governs; param:fees_entry_usd
+           as registered token; ar:AR-052 / AR-003 /
+           AR-054 / AR-056 as registered tokens in any
+           governs list.
+
+2.5 DIAGRAM 7 (R3) line 5999 — Paper-Mode Dispatch
+    Boundary root governs.
+  Contains: rule:HR-PM-009 (sole-writer authority binds
+            Position_Mirror as the post-seam rejoin
+            point in paper-mode dispatch), ar:PA-001..
+            PA-007 (paper-as-master rule set —
+            architectural origin of HR-PM-010 / -011 /
+            -012 cascade), pt_mode:PT_MODE_001..003,
+            mod:Position_Mirror, contract:WSManager_
+            Dispatch_Seam, contract:Synthetic_Capital_
+            Ledger, contract:CIATS_Trade_Outcome_Bus.
+  Line 6372 g id="position_mirror_rejoin" Tier-2
+    labeled group: constraints rule:HR-PM-009 single-
+    owner invariant + ar:PA-004 (#4 — sourcing differs;
+    schema identical) + ar:PA-005 (schema byte-identical
+    paper ↔ live). Visible text line 6386 "mod:Position_
+    Mirror · schema-identical container · sourcing
+    differs ONLY at PA-004(4)".
+  Missing: rule:HR-PM-010 (mode-blind invariant) +
+           rule:HR-PM-011 (single-writer enforcement
+           BOTH modes — referenced in D3 + D6 visual
+           text but NOT a registered token in D7 root
+           governs) + rule:HR-PM-012 (fees_entry_usd
+           MANDATORY both modes — the most direct
+           paper-as-master cascade binding to D7).
+
+2.6 DIAGRAM 2 (R2) line 2007-2017 — Trading Pipeline
+    root governs.
+  Contains: ar:AR-072 (Selection_Controller binding;
+            SC-GATE-3 PM check encoded in §4 AR-072
+            prose at line 5098-5102 with per-module
+            position_mirror reference — see §7.2 below),
+            gate:G5_Selection_Controller, gate:G7_Risk_
+            Guard (Risk Engine drawdown MTM consumer).
+  Missing: explicit position_mirror state-contract
+           visualization at G5 + G7 (implicit via SC +
+           Risk_Engine bindings; not flagged as
+           diagram-encoding gap because SC-GATE-3 +
+           drawdown-MTM are owned by Selection_
+           Controller + Risk_Engine respectively, not
+           PM-owned content).
+
+2.7 DIAGRAM 4 (R3) Regime Taxonomy root governs.
+  Contains: regime:* tokens, indicator:* tokens, ar:
+            AR-009 / AR-017 / AR-072 / AR-073.
+  Position_Mirror relevance: asset_regime + market_
+    regime fields in PositionRecord (CIATS regime
+    tagging at entry). Regime tokens themselves bind
+    to D4; PM stores them as snapshot values at entry
+    — no PM-side diagram amendment required from D4.
+
+2.8 DIAGRAM 5 (R3) CIATS Architecture root governs.
+  Contains: param:half_kelly_applied_pct, contract:
+            CIATS_Trade_Outcome_Bus, evt:TRADE_CLOSE.
+  Position_Mirror relevance: HR-PM-005 (CIATS Trade
+    Outcome Bus fires ONCE on full position close)
+    binds Position_Mirror to evt:TRADE_CLOSE producer
+    chain at PM-CLOSE-001 record deletion. Already
+    encoded via AR-066 in D1 + D6 governs.
+
+============================================================
+3. ELEMENT-BY-ELEMENT CLASSIFICATION
+============================================================
+
+3.1 §1 Purpose statement.
+    "complete, unambiguous coding contract for the TothBot
+    V2 Position Mirror ... single source of truth for all
+    open position state at runtime."
+    Classification: (a) ARCHITECTURAL RESTATEMENT.
+    Duplicates 0511005 dv1_1 §1 Purpose paragraphs +
+    §2 Component Summary "TothBot's in-memory
+    authoritative record of all open positions."
+
+3.2 §2 Parent Chain.
+    Chain cited: 1000000 → 1010000 → 1011006 + Parent
+    spec: 0511005 Position_Mirror_Specification dv1_0.
+    Classification: (a) ARCHITECTURAL RESTATEMENT with
+    cluster C6 minor citation drift sub-finding.
+    Citation drift: cites "0511005 dv1_0" but current
+    parent is 0511005 dv1_1 (TB00151i amendment 05-07-
+    2026). Auto-resolves at S-4 retirement of 1011006.
+
+3.3 §3 (1) What does PM DO?
+    "Maintains an in-memory O(1) symbol-keyed dict of
+    all open positions. Written by WS Manager
+    exclusively. Read by Signal Pipeline (Gates 5, 7),
+    Exit Controller, Execution Engine, Risk Engine, and
+    CIATS. Reconciled against Kraken snap_orders at
+    startup and reconnect. Tracks all per-position
+    state needed for exit, sizing, and CIATS tagging."
+    Classification: (a) ARCHITECTURAL RESTATEMENT.
+    Duplicates 0511005 §2 Component Summary +
+    0500000 dv1_46 Tier 1 + D6 + D7 + D3 Position_
+    Mirror group desc fields.
+
+3.4 §3 (2) Interfaces.
+    Lists writer (WSManager sole) + readers
+    (Signal_Pipeline G5/G7, Risk_Engine G7, Exit_
+    Controller, Execution_Engine pre-batch_add, CIATS
+    EWMA Monitor) + reconciliation source (Kraken
+    executions snap_orders).
+    Classification: (a) ARCHITECTURAL RESTATEMENT.
+    Duplicates 0511005 §7 Interfaces (7.1-7.6) +
+    0500000 D3 / D6 / D7 wire-up callout blocks.
+
+3.5 §3 (3) Hard rules.
+    Restates 8 of 9 HR-PM-* rules in summary form:
+    O(1) dict (HR-PM-001), record at dispatch (HR-PM-
+    002), entry_fill_price actual not limit (HR-PM-
+    003), Decimal(str()) (HR-PM-004), WSManager sole
+    writer (HR-PM-009), one per symbol (HR-PM-008),
+    CIATS Bus fires once (HR-PM-005), baseline never
+    reset on reconnect (HR-PM-006), entry_fill_price
+    from filled.
+    Classification: (a) ARCHITECTURAL RESTATEMENT.
+    Duplicates §8 HR-PM-001..009 + 0511005 §8 HR-PM-
+    001..012.
+
+3.6 §3 (4) What triggers updates.
+    Lists: entry dispatch → record create; exec_type=
+    filled → entry_fill_price; batch_add ACK → tp +
+    emergsl order_ids; exec_type=trade → qty update;
+    exit confirmed → record delete; snap_orders →
+    reconcile.
+    Classification: (a) ARCHITECTURAL RESTATEMENT.
+    Duplicates 0511005 §9 What Triggers It + §4 Write
+    Rules trigger sub-sections.
+
+3.7 §3 (5) What it logs.
+    Lists 8 log events: POSITION_RECORD_CREATED /
+    POSITION_FILL_CONFIRMED / POSITION_ORDERS_SET /
+    POSITION_QTY_UPDATED / POSITION_CLOSED / GAP_
+    CLOSED_POSITION / UNEXPECTED_OPEN_ORDER /
+    RECONCILIATION_COMPLETE.
+    Classification: (a) ARCHITECTURAL RESTATEMENT.
+    Duplicates 0511005 §10 What It Logs.
+
+3.8 §4 dataclass decorator + Decimal import.
+    "from dataclasses import dataclass, field" +
+    "from decimal import Decimal" + "@dataclass".
+    Classification: (b) CODING-UNIQUE.
+    Python-implementation-layer detail; migrates to
+    0511005 prose at S-3 as PROSE-UPDATE-AB.
+
+3.9 §4 PositionRecord field — symbol: str.
+    Classification: (a) ARCHITECTURAL RESTATEMENT.
+    Duplicates 0511005 §3.1 symbol field.
+
+3.10 §4 PositionRecord field — cl_ord_id: str.
+    Classification: (a) ARCHITECTURAL RESTATEMENT.
+    Duplicates 0511005 §3 / §4.1 cl_ord_id-at-dispatch
+    field reference + HR-PM-002 origin.
+
+3.11 §4 PositionRecord field — entry_limit_price: Decimal.
+    "placeholder until fill confirmed (HR-PM-002)".
+    Classification: (a) ARCHITECTURAL RESTATEMENT.
+    NEW field added in 1011006 dv1_1 per dv1_1 revision
+    note ("entry_limit_price field added (was missing
+    from dataclass — needed by pm_create)"). 0511005
+    §4.1 references entry_limit_price as placeholder
+    in record creation prose ("record created with:
+    symbol, entry_limit_price (used as placeholder
+    until fill), entry_qty"). Field-level update to
+    0511005 §3.1 schema is OUT OF SCOPE per RR-SCOPE-
+    002 (parent §3.3 explicit). Restatement holds.
+
+3.12 §4 PositionRecord field — entry_fill_price: Decimal.
+    "set on exec_type=filled (HR-PM-003)".
+    Classification: (a) ARCHITECTURAL RESTATEMENT.
+    Restates AR-008 (in D1 + D3 + D6 governs) + HR-PM-
+    003 (in §8 of both parent and child).
+
+3.13 §4 PositionRecord field — qty: Decimal.
+    "current qty (decrements on partial TP)".
+    Classification: (a) ARCHITECTURAL RESTATEMENT.
+    Duplicates 0511005 §3.1 qty + §4.3 TP partial fill
+    qty-update mechanics.
+
+3.14 §4 PositionRecord field — tp_order_id: str
+     "Kraken-assigned TP order_id (set on batch_add
+     ACK)".
+    Classification: (a) ARCHITECTURAL RESTATEMENT.
+    Restates 0511005 §3.1 + §4.2 batch_add ACK
+    population path + PM-PAPER-003 paper/live ID
+    parity (PAPER_TP_/Kraken-assigned).
+
+3.15 §4 PositionRecord field — tp_cl_ord_id: str
+     "TothBot-assigned TP cl_ord_id".
+    Classification: (a) ARCHITECTURAL RESTATEMENT.
+    Restates 0511005 §3.1 + PM-PAPER-003 ID schema.
+
+3.16 §4 PositionRecord field — emergsl_order_id: str
+     "Kraken-assigned emergSL order_id".
+    Classification: (a) ARCHITECTURAL RESTATEMENT with
+    cluster C6 minor spelling-drift sub-finding.
+    Spelling drift: 1011006 dv1_1 uses "emergsl_" prefix
+    while 0511005 dv1_1 §3.1 schema still uses legacy
+    "emgsl_" prefix (per parent §12 dv1_1 revision
+    history "field-table preserves existing field names
+    including the legacy 'emgsl_' spelling"). Parent
+    explicitly defers the spelling reconciliation per
+    RR-SCOPE-002. Auto-resolves at S-4 1011006
+    retirement (post-S-3 PROSE-UPDATE will normalize
+    in 0511005).
+
+3.17 §4 PositionRecord field — emergsl_cl_ord_id: str.
+    Classification: (a) ARCHITECTURAL RESTATEMENT
+    (same spelling-drift sub-finding as §3.16).
+
+3.18 §4 PositionRecord field — entry_timestamp_utc: str.
+    "ISO 8601 from fill event".
+    Classification: (a) ARCHITECTURAL RESTATEMENT.
+    Restates 0511005 §3.1 + §4.2 entry-fill timestamp
+    capture from exec_type=filled event (live) or
+    _simulate_entry_fill (paper).
+
+3.19 §4 PositionRecord field — entry_atr_14: Decimal.
+    "ATR(14) at entry for exit calcs".
+    Classification: (a) ARCHITECTURAL RESTATEMENT.
+    Restates 0511005 §3.1 entry_atr_14 + 0511004
+    dv1_3 + 1011005 dv1_3 §7 EC-L2-001 MAE-trigger
+    formula consumer reference. Bound to indicator:
+    ATR_14 (in D3 + D4 + D1 governs).
+
+3.20 §4 PositionRecord field — asset_regime: str.
+    "regime_cache[symbol] at entry".
+    Classification: (a) ARCHITECTURAL RESTATEMENT.
+    Restates 0511005 §3.1 + 0500000 D4 R3 regime
+    taxonomy CIATS-tagging architecture (entry-time
+    asset regime snapshot).
+
+3.21 §4 PositionRecord field — market_regime: str.
+    "regime_cache['BTC/USD'] at entry".
+    Classification: (a) ARCHITECTURAL RESTATEMENT.
+    Restates 0511005 §3.1 + 0500000 D4 R3 BTC/USD
+    anchor market regime architecture.
+
+3.22 §4 PositionRecord field — signal_params: dict.
+    "SSS signal values at entry".
+    Classification: (a) ARCHITECTURAL RESTATEMENT.
+    Restates 0511005 §3.1 + 0500000 D5 R3 CIATS
+    signal_params tagging architecture per AR-067
+    SSS Signal Engine (cluster overlap with TB00195
+    AMENDMENT-6 D2 governs ADD ar:AR-067; closure
+    inherits).
+
+3.23 §4 PositionRecord field — hold_candle_count: int.
+    "incremented on each 5m close" (default 0).
+    Classification: (a) ARCHITECTURAL RESTATEMENT.
+    Restates 0511005 §3.1 + 0500000 §4 AR-071 (max_
+    hold_candles starting = 24 FP/DP — closes via
+    TB00197 cluster C5 AMENDMENT-9 D3 governs ADD).
+    Already in TB00197 cluster C5 closure path; no
+    new PM-side amendment required.
+
+3.24 §4 MISSING FIELD — fees_entry_usd: Decimal.
+    PositionRecord schema in 1011006 dv1_1 §4 dataclass
+    OMITS fees_entry_usd despite 0511005 dv1_1 §3.3
+    explicit reference: "the PositionRecord schema
+    includes a fees_entry_usd: Decimal field populated
+    at entry-fill time in BOTH paper and live modes"
+    + HR-PM-012 (NEW dv1_1) MANDATORY field rule.
+    Parent §3.3 explicit deferral: "Field-level
+    schema-table updates to §3.1 above and to 1011006
+    Position_Mirror_Coding_Spec are OUT OF SCOPE for
+    this parent-spec amendment per RR-SCOPE-002."
+    Classification: (c) ARCHITECTURAL CONTENT NOT IN
+    DIAGRAMS — cluster C5 #1 below.
+    Authoritative source-of-truth: 1011002 dv1_26
+    §16A.1 WM-PAPER-LEDGER-002. Cited in TB00194
+    cluster C5 closure path + TB00196 cluster C5 +
+    TB00197 cluster C5 prose-update Y (WIN/LOSS exit
+    reasons reference HR-EC-014 paths consuming
+    fees_entry_usd at exit).
+
+3.25 §4 position_mirror dict[str, PositionRecord]
+     declaration.
+    "position_mirror: dict[str, PositionRecord] = {}".
+    Classification: (b) CODING-UNIQUE.
+    Python-implementation-layer type annotation;
+    migrates to 0511005 prose at S-3 as PROSE-UPDATE-
+    AB (with the dataclass decorator + import block
+    from §3.8).
+
+3.26 §5.1 PM-CREATE-001 record creation rule.
+    "Called by WS Manager immediately when Execution
+    Engine dispatches add_order. Created BEFORE Kraken
+    response (no async gap). WSManager method:
+    pm_create()".
+    Classification: (a) ARCHITECTURAL RESTATEMENT.
+    Duplicates 0511005 §4.1 Record Creation + 0500000
+    D7 R3 above-seam dispatch flow (EE → WSManager
+    seam → PM record create). HR-PM-002 (in D7 +
+    HR-PM-009 sole-writer architecture).
+
+3.27 §5.1 pm_create() function signature + body.
+    Python def pm_create(symbol, cl_ord_id,
+    entry_limit_price, qty): position_mirror[symbol] =
+    PositionRecord(...).
+    Classification: (b) CODING-UNIQUE.
+    Function signature + kwargs assignment + log call
+    template. Migrates to 0511005 prose at S-3 as
+    PROSE-UPDATE-AC (canonical write-method signature
+    enumeration).
+
+3.28 §5.2 PM-FILL-001 entry-fill update rule.
+    "Called when exec_type=filled received for entry
+    cl_ord_id. WSManager method: pm_on_fill()".
+    Classification: (a) ARCHITECTURAL RESTATEMENT.
+    Duplicates 0511005 §4.2 Update on Entry Fill +
+    PM-PAPER-002 entry-fill source (paper: _simulate_
+    entry_fill; live: executions exec_type=filled).
+
+3.29 §5.2 pm_on_fill() function body.
+    if symbol not in position_mirror: log FILL_WITHOUT_
+    RECORD CRITICAL ; rec.entry_fill_price =
+    Decimal(str(fill_price)); rec.qty =
+    Decimal(str(qty)); rec.entry_timestamp_utc =
+    timestamp_utc.
+    Classification: (b) CODING-UNIQUE.
+    Python-implementation. Migrates to 0511005 prose
+    at S-3 as PROSE-UPDATE-AC.
+    Note: missing fees_entry_usd assignment in pm_on_
+    fill() body — would be required at HR-PM-012 (NEW
+    dv1_1) MANDATORY field rule. Falls under §3.24
+    cluster C5 #1 (fees_entry_usd PositionRecord
+    schema gap).
+
+3.30 §5.3 PM-ORDERS-001 batch_add ACK update rule.
+    Sets tp_order_id + emergsl_order_id on batch_add
+    ACK. WSManager method: pm_on_orders().
+    Classification: (a) ARCHITECTURAL RESTATEMENT.
+    Duplicates 0511005 §4.2 batch_add ACK paragraph
+    + PM-PAPER-003 ID parity (PAPER_TP_/PAPER_SL_
+    synthetic vs Kraken-assigned).
+
+3.31 §5.3 pm_on_orders() function body.
+    Classification: (b) CODING-UNIQUE.
+    Migrates to 0511005 prose at S-3 as PROSE-UPDATE-
+    AC.
+
+3.32 §5.4 PM-PARTIAL-001 TP partial fill rule.
+    "exec_type=trade for TP order_id with cum_qty <
+    tp_qty: rec.qty = Decimal(str(remaining_qty))".
+    Classification: (a) ARCHITECTURAL RESTATEMENT.
+    Duplicates 0511005 §4.3 TP Partial Fill (AR-066)
+    + PM-PAPER-002 paper TP fill detection via
+    _handle_ticker.
+
+3.33 §5.4 on_tp_partial_fill() function body.
+    Classification: (b) CODING-UNIQUE.
+    Migrates to 0511005 prose at S-3 as PROSE-UPDATE-
+    AC.
+
+3.34 §5.5 PM-CANDLE-001 hold_candle_count increment.
+    "WS Manager increments candle count on every 5m
+    OHLC close for pairs with open positions."
+    Classification: (a) ARCHITECTURAL RESTATEMENT.
+    Restates 0511005 §3.1 hold_candle_count field
+    semantics + AR-071 starting-value (max_hold_
+    candles = 24). Bound to channel:kraken_ws_ohlc_
+    5m (in D6 governs).
+
+3.35 §5.5 on_candle_close() function body.
+    Classification: (b) CODING-UNIQUE.
+    Trivial implementation; migrates to 0511005 prose
+    at S-3 as PROSE-UPDATE-AC.
+
+3.36 §5.6 PM-CLOSE-001 record deletion rule.
+    "Called after confirmed position close. NEVER
+    delete before close is confirmed. WSManager
+    method: close_position() for full exits (Exit
+    Controller path). WSManager method: pm_clear() for
+    entry cancel/expire no-fill (EE path)."
+    Classification: (a) ARCHITECTURAL RESTATEMENT.
+    Duplicates 0511005 §4.4 Record Deletion + 0511004
+    dv1_3 HR-EC-013/014 (EC is SOLE driver of Mirror
+    deletion in BOTH modes per parent §4.4 mode-parity
+    + §6A PM-PAPER-005). Pm_clear() entry-cancel-no-
+    fill path binds AR-054 (entry partial fill +
+    expiry/cancel — see §3.41 cluster C5 #3 below).
+
+3.37 §5.6 close_position() function body.
+    Classification: (b) CODING-UNIQUE.
+    Migrates to 0511005 prose at S-3 as PROSE-UPDATE-
+    AC.
+
+3.38 §5.6 pm_clear() function body.
+    Classification: (b) CODING-UNIQUE.
+    Implementation of entry-cancel-no-fill path.
+    Migrates to 0511005 prose at S-3 as PROSE-UPDATE-
+    AC.
+
+3.39 §6 PM-RECON-001 startup reconciliation rule.
+    "At startup (Step 6 of 1011014) and on every mid-
+    session reconnect: compare Position Mirror against
+    Kraken snap_orders."
+    Classification: (a) ARCHITECTURAL RESTATEMENT with
+    embedded cluster C5 #2 reference.
+    Restates 0511005 §5.1 + §5.2 reconciliation tagged
+    LIVE MODE ONLY per §6A PM-PAPER-002. Cites AR-003
+    (PREFERRED: snap_orders:true on executions
+    subscription; FALLBACK: REST GetOpenOrders) which
+    is NOT in any 0500000 root governs list — see
+    cluster C5 #2 below.
+
+3.40 §6 PM-RECON-002 GAP_CLOSED_POSITION handling.
+    For symbol in position_mirror but NOT in snap_
+    orders: log GAP_CLOSED_POSITION (HIGH) + fire
+    CIATS Trade Outcome Bus + close_position(symbol,
+    "GAP_CLOSED").
+    Classification: (a) ARCHITECTURAL RESTATEMENT.
+    Restates 0511005 §5.1 GAP_CLOSED_POSITION + AR-066
+    (CIATS single fire — in D1 + D6 governs).
+    Embedded cluster C5 #3 reference to AR-056 (Mid-
+    session WS reconnect distinct from startup) which
+    is NOT in any 0500000 governs list — see cluster
+    C5 #3 below.
+
+3.41 §6 PM-RECON-003 UNEXPECTED_OPEN_ORDER handling.
+    For open order in snap_orders but NOT in
+    position_mirror: log UNEXPECTED_OPEN_ORDER (WARN
+    + operator alert) + do NOT auto-manage.
+    Classification: (a) ARCHITECTURAL RESTATEMENT.
+    Restates 0511005 §5.1 unexpected-open-order path
+    + HR-PM-007.
+
+3.42 §6 PM-RECON-004 baseline preservation.
+    "portfolio_baseline_USD NOT reset. drawdown_pct
+    preserved. system_state preserved. Per HR-PM-006
+    (AR-056, AR-052)."
+    Classification: (a) ARCHITECTURAL RESTATEMENT with
+    embedded cluster C5 #4 + #5 references.
+    Restates 0511005 §5.2 + HR-PM-006. Cites AR-056
+    (cluster C5 #3) + AR-052 (Portfolio drawdown
+    formula + per-wallet thresholds; cluster C5 #4)
+    — both NOT in any 0500000 governs list.
+
+3.43 §6 PM-RECON-005 RECONCILIATION_COMPLETE log.
+    Log positions_confirmed + gap_closed counts.
+    Classification: (a) ARCHITECTURAL RESTATEMENT.
+    Restates 0511005 §10 RECONCILIATION_COMPLETE
+    (LIVE MODE ONLY).
+
+3.44 §7 PM-READ-001 Gate 5 SC-GATE-3 access pattern.
+    "is_open = symbol in position_mirror".
+    Classification: (a) ARCHITECTURAL RESTATEMENT.
+    Restates HR-PM-008 (one per symbol; in D2 G5
+    Selection_Controller via AR-072 SC-GATE-3 binding
+    + 0500000 §4 AR-072 prose at line 5098-5102 per-
+    module long_position_mirror / short_position_
+    mirror check). See §7.2 cluster C7 NEW PATTERN
+    finding (per-module Mirror currency lag) for the
+    direction-symmetric variant.
+
+3.45 §7 PM-READ-002 Risk Engine drawdown MTM.
+    "open_value = sum(bid_price[sym] * position_mirror
+    [sym].qty for sym in position_mirror)".
+    Classification: (a) ARCHITECTURAL RESTATEMENT with
+    embedded cluster C5 #4 reference.
+    Restates 0511005 §6 + AR-052 portfolio drawdown
+    formula. AR-052 amended dv1_43 to per-wallet:
+    "current_long_wallet_USD = long_spot_usd_balance +
+    sum(bid_price[sym] * long_position_qty[sym] for
+    sym in long_position_mirror)" — 0500000 §4 prose
+    line 4524-4530. PM-READ-002 in 1011006 dv1_1
+    (04-07-2026) reflects pre-amendment single-Mirror
+    form. See §7.2 cluster C7 NEW PATTERN finding.
+
+3.46 §7 PM-READ-003 Exit Controller order ID lookup.
+    "rec = position_mirror.get(symbol)" + tp_id +
+    sl_id + qty.
+    Classification: (a) ARCHITECTURAL RESTATEMENT.
+    Restates 0511005 §6 + 0511004 dv1_3 §7 EC read
+    pattern + HR-PM-009 read-only-via-helpers (in D3
+    + D6 governs via verbatim quote + pm_helper_
+    callout band line 2804).
+
+3.47 §7 PM-READ-004 Execution Engine pre-batch_add
+     assertion.
+    "assert symbol in position_mirror".
+    Classification: (a) ARCHITECTURAL RESTATEMENT.
+    Restates 0511005 §7.4 EE record existence check
+    + HR-PM-002 record-at-dispatch rule.
+
+3.48 §8 HR-PM-001 O(1) dict.
+    "Never list or ordered structure."
+    Classification: (a) ARCHITECTURAL RESTATEMENT.
+    Restates AR-002 (in D1 root governs line 1365 +
+    D1 Public_WS_v2 constraints line 1416 +
+    Configuration_Layer constraints line 546). 0511005
+    §8 HR-PM-001 identical text.
+
+3.49 §8 HR-PM-002 record at dispatch.
+    "Record created at entry dispatch (before fill
+    ACK)."
+    Classification: (a) ARCHITECTURAL RESTATEMENT.
+    Restates A-2 record-at-dispatch architectural rule
+    + 0511005 §4.1 + 0500000 D7 R3 above-seam dispatch
+    flow.
+
+3.50 §8 HR-PM-003 entry_fill_price actual.
+    "entry_fill_price = actual avg_price from fill
+    event."
+    Classification: (a) ARCHITECTURAL RESTATEMENT.
+    Restates AR-008 (OTO rejected — uses limit price
+    not fill price; in D1 + D3 + D6 governs).
+
+3.51 §8 HR-PM-004 Decimal(str()) immediate.
+    Classification: (a) ARCHITECTURAL RESTATEMENT.
+    Restates AR-047 (Price and quantity rounding +
+    Decimal arithmetic immediate; in D1 governs line
+    1365).
+
+3.52 §8 HR-PM-005 CIATS Trade Outcome Bus fires ONCE
+     on full close.
+    Classification: (a) ARCHITECTURAL RESTATEMENT.
+    Restates AR-066 (in D1 + D6 governs + Tier 1
+    Position_Mirror constraints line 1651) + 0511005
+    §8 HR-PM-005.
+
+3.53 §8 HR-PM-006 reconnect: baseline preserved.
+    "On reconnect: baseline and drawdown_pct
+    preserved. Per HR-PM-006 (AR-056, AR-052)."
+    Classification: (a) ARCHITECTURAL RESTATEMENT with
+    embedded cluster C5 #3 + #4 references.
+    Restates 0511005 §8 HR-PM-006 + AR-056 (cluster
+    C5 #3) + AR-052 (cluster C5 #4) — both NOT in any
+    0500000 governs list.
+
+3.54 §8 HR-PM-007 unexpected snap_orders: alert + log.
+    Classification: (a) ARCHITECTURAL RESTATEMENT with
+    embedded cluster C5 #2 reference.
+    Restates 0511005 §8 HR-PM-007 + 0500000 §4 AR-003
+    (Restart reconciliation — PREFERRED: snap_orders:
+    true; FALLBACK: REST). AR-003 NOT in any governs
+    list — cluster C5 #2.
+
+3.55 §8 HR-PM-008 one per symbol.
+    Restates 0511005 §8 HR-PM-008 + AR-072 SC-GATE-3
+    binding (in D2 root governs + 0500000 §4 AR-072
+    prose).
+    Classification: (a) ARCHITECTURAL RESTATEMENT.
+
+3.56 §8 HR-PM-009 WS Manager sole writer.
+    "No other component writes."
+    Classification: (a) ARCHITECTURAL RESTATEMENT.
+    Restates 0511005 §8 HR-PM-009 verbatim. Encoded
+    canonically in D3 root governs line 2559 + D6
+    root governs line 3754 + D7 root governs line
+    5999 + D6 Position_Mirror group constraints line
+    3958 (with HR-PM-011 reference) + D3 pm_helper_
+    callout band line 2811 (verbatim quote).
+    DIAGRAM-CANONICAL VERIFIED.
+
+3.57 §8 MISSING HARD RULE — HR-PM-010 PAPER-LIVE
+     BEHAVIORAL PARITY.
+    NEW dv1_1 in 0511005 §8: "Position Mirror has NO
+    mode-conditional branching. Paper and live execute
+    byte-identical Mirror code paths in every helper
+    method, every read access, every write operation,
+    every reconciliation read, every log emission, and
+    every triggered update."
+    Classification: (c) ARCHITECTURAL CONTENT NOT IN
+    DIAGRAMS — cluster C5 #5 below.
+    NOT in any 0500000 root governs list as registered
+    rule:HR-PM-010 token. Visible content reference:
+    NONE (no decoration band cites HR-PM-010 by
+    number). Cascade-origin parent: TB00000 v2_20 §4.4
+    PA-005 byte-identical paper-live + 0500000 dv1_24
+    §12.3 dispatch-seam absorption.
+
+3.58 §8 MISSING HARD RULE — HR-PM-011 SINGLE-WRITER
+     ENFORCEMENT IN BOTH MODES.
+    NEW dv1_1 in 0511005 §8: "Strengthening of HR-PM-
+    009 to PA-005 byte-identical status. WSManager is
+    the SOLE writer of position_mirror in BOTH paper
+    and live modes ... Execution Engine, Exit
+    Controller, Long Module, Selection Controller,
+    Risk Engine, Regime Engine, Signal Pipeline, and
+    CIATS EWMA Monitor MUST NOT: (a) hold a write
+    reference (b) construct or mutate a PositionRecord
+    (c) delete entries directly."
+    Classification: (c) ARCHITECTURAL CONTENT NOT IN
+    DIAGRAMS — cluster C5 #6 below.
+    Diagram-visual references to HR-PM-011 EXIST: D3
+    pm_helper_callout band line 2811 "strengthened by
+    rule:HR-PM-011 (NEW dv1_1) to PA-005 byte-identical
+    paper-live status"; D3 D6 mod:Position_Mirror
+    constraints lines 2591 + 3958 (inside HR-PM-009
+    annotation parenthetical); D6 wire-up callout line
+    4250 "(HR-PM-009 + HR-PM-011 single-writer
+    enforcement BOTH paper and live)". But HR-PM-011
+    is NOT a registered token in any root governs list
+    — same pattern as AR-073 in TB00197 audit (cited
+    inline pending §15.12 registration). Per DD-001
+    diagrams-as-canonical, registered-token presence
+    in governs lists is the V-038 binding criterion.
+
+3.59 §8 MISSING HARD RULE — HR-PM-012 fees_entry_usd
+     FIELD MANDATORY IN BOTH MODES.
+    NEW dv1_1 in 0511005 §8: "The PositionRecord
+    fees_entry_usd: Decimal field ... MUST be populated
+    at entry-fill time in BOTH paper and live modes."
+    Classification: (c) ARCHITECTURAL CONTENT NOT IN
+    DIAGRAMS — cluster C5 #7 below.
+    NOT in any 0500000 root governs list as registered
+    rule:HR-PM-012 token. Field-name reference EXISTS:
+    D3 position_mirror_access line 2702 ("entry_fill_
+    price + qty + fees_entry_usd read from Position
+    Record at MAE-trigger time") and §4 prose line
+    5838-5889 (HR-WM-032 paper-ledger entry-fill path
+    populates fees_entry_usd). But param:fees_entry_
+    usd is NOT a registered token in any governs list.
+    Cascade-origin: 1011002 dv1_26 §16A.1 WM-PAPER-
+    LEDGER-002 schema extension + 0511003 dv1_1 §5A
+    EE-PAPER-005 live-mode population + 1011005 dv1_3
+    §10A EC-PAPER-CODE-003(a) exit-time consumption.
+
+3.60 §9 Revision History.
+    dv1_0 04-05-2026 + dv1_1 04-07-2026 field-name
+    correction cascade.
+    Classification: (a) ARCHITECTURAL RESTATEMENT.
+
+============================================================
+4. ROLL-UP TOTALS
+============================================================
+
+Total elements classified: ~50 (15 dataclass fields + 6
+write-operation rules + 5 reconciliation rules + 4 read-
+access patterns + 9 hard rules + 6 §3 five-question
+answers + §1 + §2 + §4 dict-declaration + §9 + supporting
+prose).
+
+  (a) ARCHITECTURAL RESTATEMENT     ≈ 36 elements
+        (§1, §2 with C6 sub-finding, §3.1-3.5, §4 fields
+        symbol/cl_ord_id/entry_limit_price/entry_fill_
+        price/qty/tp_order_id/tp_cl_ord_id/emergsl_
+        order_id/emergsl_cl_ord_id/entry_timestamp_utc/
+        entry_atr_14/asset_regime/market_regime/signal_
+        params/hold_candle_count, §5 PM-CREATE/FILL/
+        ORDERS/PARTIAL/CANDLE/CLOSE rule statements, §6
+        PM-RECON-001..005, §7 PM-READ-001..004 rule
+        statements, §8 HR-PM-001..009, §9).
+
+  (b) CODING-UNIQUE                  ≈ 10 elements
+        (§4 @dataclass decorator + Decimal import + dict
+        type-annotation declaration, §5 pm_create / pm_
+        on_fill / pm_on_orders / on_tp_partial_fill /
+        on_candle_close / close_position / pm_clear
+        function bodies).
+
+  (c) ARCHITECTURAL CONTENT NOT IN DIAGRAMS
+        Cluster C5: 7 items (NEW THIS AUDIT — see §7.1).
+        Cluster C7 NEW PATTERN — per-module Mirror
+          currency lag: separate §7.2 finding (NOT IN
+          SCOPE per S-1 audit boundary, but flagged
+          for forward-session pickup).
+        Cluster C6 minor citation drift: 3 items —
+          §3.2 parent-chain dv1_0/dv1_1 drift + §3.16/
+          §3.17 emgsl_/emergsl_ spelling drift +
+          implicit pm_create wrt fees_entry_usd
+          population (handled by C5 #1).
+
+  (d) UNCLEAR-ORIGIN                 = 0 elements
+        No (d) bucket items. All field/rule references
+        have clear origin in 0511005 dv1_1 / 0500000
+        dv1_46 §4 AR registry / TB00000 v2_20 §4.4
+        PA-001..010 cascade. Zero RR-SCOPE-009
+        Chesterton-fence investigations required.
+
+CLUSTER OVERLAP WITH TB00194/195/196/197:
+  Cluster C1 (max_concurrent retirement + parameter
+    foundation §9 prose): no Position_Mirror-side
+    contribution (PM does not own sizing/concurrent
+    params).
+  Cluster C2 (parallel-module direction-symmetric):
+    Indirect contribution via per-module Mirror
+    currency lag — see §7.2 NEW PATTERN cluster C7
+    finding.
+  Cluster C3 (R:R-driven sizing curve form): no PM-
+    side contribution.
+  Cluster C4 (HR-WM-* rule set incl HR-WM-033 paper
+    Mirror sourcing): cluster overlap CONFIRMED.
+    HR-WM-033 (paper exits route through Exit
+    Controller) in D1 governs binds PM sourcing via
+    PA-004 #4. PM-PAPER-002 in 0511005 §6A cascade-
+    cites HR-WM-033. No new PM-side amendment
+    required; closure inherited.
+  Cluster C5 (parent-AR diagram-encoding gaps): NEW
+    THIS AUDIT — distinct from TB00194/195/196/197
+    cluster C5s. PM cluster C5 introduces new pattern
+    of MIXED registered + sub-rule + schema-field
+    items (HR-PM-010/011/012 + fees_entry_usd field).
+
+============================================================
+5. DOWNSTREAM QUEUE
+============================================================
+
+5.1 S-2 DIAGRAM AMENDMENTS — NEW AMENDMENT-10.
+
+    AMENDMENT-10 NEW THIS SESSION (Position_Mirror
+    diagram-encoding closure path):
+      D3 R3 root governs ADD:
+        ar:AR-003 (Restart reconciliation — preferred
+          snap_orders:true)
+        ar:AR-052 (Portfolio drawdown formula + per-
+          wallet thresholds)
+        ar:AR-054 (Entry partial fill + expiry/cancel
+          direction-symmetric)
+        ar:AR-056 (Mid-session WS reconnect distinct
+          from startup)
+        rule:HR-PM-010 (PAPER-LIVE BEHAVIORAL PARITY)
+        rule:HR-PM-011 (SINGLE-WRITER ENFORCEMENT
+          BOTH MODES — promote inline visible-text
+          citations to registered governs token)
+        rule:HR-PM-012 (fees_entry_usd FIELD MANDATORY
+          BOTH MODES)
+        param:fees_entry_usd (PositionRecord schema
+          extension token)
+      D6 R4 root governs ADD: same set of 8 tokens.
+      D7 R3 root governs ADD (paper-mode parity-
+        critical subset):
+        rule:HR-PM-010 (mode-blind invariant — direct
+          PA-005 byte-identical cascade)
+        rule:HR-PM-011 (single-writer enforcement BOTH
+          modes)
+        rule:HR-PM-012 (fees_entry_usd MANDATORY in
+          BOTH modes — most direct paper-as-master
+          cascade to D7 dispatch-seam)
+        param:fees_entry_usd
+      No SVG visual byte change required. Same closure
+      mechanism as TB00196 AMENDMENT-7 + TB00197
+      AMENDMENT-9 (root <desc> governs-list additions
+      only).
+      Notes for S-2 author:
+        (a) HR-PM-011 promotion: D3 line 2811 + D6
+          line 4250 already cite HR-PM-011 inline; the
+          AMENDMENT-10 action is to add the registered
+          rule:HR-PM-011 token to the root governs
+          lists per DD-001 diagrams-as-canonical
+          + 0311001 §15.12 registry binding. Per
+          TB00197 AR-073 precedent at §3.789 — the
+          identifier-registered-as-governs-token is
+          the V-038 criterion.
+        (b) param:fees_entry_usd registration in
+          §15.12.4 param token registry is a pre-
+          requisite for the governs ADD. Stage L+
+          housekeeping target. Per TB00197 §7.3
+          precedent (pair_cache pending §15.12.3
+          registration cited inline pending
+          registration).
+
+    CUMULATIVE QUEUE AT TB00198 CLOSE (9 confirmed +
+    1 candidate, carry-forwards from TB00194/195/196/
+    197):
+      AMENDMENT-1   0500000 §9 prose reconciliation
+                    (TB00194 cluster C1 + TB00195/196/
+                    197 AMENDMENT-INHERIT-1/2/3 §9
+                    parameter starting-value
+                    extensions).
+      AMENDMENT-2   D7 (or D6) per-wallet drawdown-
+                    machine encoding. Closes TB00194
+                    cluster C2.
+      AMENDMENT-3   D5 (or D6) R:R-driven sizing
+                    curve form factor. Closes TB00194
+                    cluster C3.
+      AMENDMENT-4   D1 ar:AR-068 (SSS indicator
+                    seeding at startup). TB00195 C3.
+      AMENDMENT-5   D1 ar:AR-056 (mid-session WS
+                    reconnect with pipeline-no-fire
+                    clause). TB00195 C4.
+                    NOTE: AMENDMENT-5 already
+                    enqueues ar:AR-056 → D1; this
+                    overlaps with AMENDMENT-10 D3/
+                    D6/D7 AR-056 additions. Per
+                    DD-001 + V-038 a single AR can be
+                    governed in multiple diagrams; S-2
+                    author bundles AMENDMENT-5 D1
+                    addition with AMENDMENT-10 D3/D6/
+                    D7 additions for AR-056 single-
+                    pass execution (no semantic
+                    conflict — AR-056 cross-cuts WS
+                    reconnect [D1] + reconciliation
+                    [D3+D6] + paper-mode parity [D7]).
+      AMENDMENT-6   D2 ar:AR-067 (SSS Signal Engine
+                    direction-symmetric scoring).
+                    TB00195 §7.1.
+      AMENDMENT-7   D1/D2/D5/D7 governs additions for
+                    EE parent-AR set + new HR-EE-014/
+                    015. TB00196 C5.
+      AMENDMENT-8 CANDIDATE
+                    D2 R-increment mod:Short_Module
+                    addition. TB00196 §7.3.
+      AMENDMENT-9   D3/D7/D5(D6) governs additions
+                    for EC parent-AR set + new HR-EC-
+                    015 + 3 param tokens. TB00197 C5.
+      AMENDMENT-10  NEW THIS SESSION. D3/D6/D7
+                    governs additions for PM parent-
+                    AR set + new HR-PM-010/011/012
+                    rules + param:fees_entry_usd
+                    schema-extension token. Closes
+                    TB00198 cluster C5.
+
+5.2 S-3 AA=05 PROSE UPDATES — NEW THIS SESSION.
+
+    PROSE-UPDATE-AB (NEW). 0511005 dv1_1 §3.1
+      PositionRecord schema table: enumerate the
+      Python @dataclass decorator + Decimal /
+      dataclass imports + position_mirror: dict[str,
+      PositionRecord] = {} type annotation
+      declaration (currently in 1011006 §4 ; coding-
+      relevant). Migration note per parent §3.3
+      RR-SCOPE-002 deferral: this PROSE-UPDATE
+      enacts the deferred field-level cascade for
+      fees_entry_usd schema-extension AFTER S-2
+      AMENDMENT-10 param:fees_entry_usd registration
+      lands. Gated on AMENDMENT-10 closure (DD-003
+      4-step prereq).
+
+    PROSE-UPDATE-AC (NEW). 0511005 dv1_1 §4 Write
+      Rules: add full pm_create / pm_on_fill / pm_on_
+      orders / on_tp_partial_fill / on_candle_close /
+      close_position / pm_clear method signature
+      canonical detail (currently in 1011006 §5
+      Python def bodies). Add the entry-cancel-no-
+      fill path semantics for pm_clear() vs close_
+      position() distinction (currently 0511005 §4.4
+      only narrates close path; pm_clear no-fill path
+      cited in 1011006 §5.6 with reason="ENTRY_
+      CANCELED_OR_EXPIRED_NO_FILL"). Coding-relevant.
+      Independent of AMENDMENT-10 (b) bucket
+      migration only.
+
+    PROSE-UPDATE-AD (NEW). 0511005 dv1_1 §3.3
+      PositionRecord schema-extension reference +
+      §8 HR-PM-012: add the fees_entry_usd
+      population code template that pm_on_fill()
+      MUST execute in BOTH paper and live (parent
+      §3.3 currently cites 1011002 dv1_26 §16A.1 +
+      0511003 dv1_1 §5A EE-PAPER-005 as authoritative
+      sources but does not enumerate the pm_on_fill()
+      assignment line). Gated on AMENDMENT-10 closure
+      for diagram-side param:fees_entry_usd
+      registration. Cluster overlap with TB00194
+      PROSE-UPDATE (WS_Manager fees_entry_usd capture
+      paths).
+
+    PROSE-UPDATE-AE (NEW). 0511005 dv1_1 §6A PM-
+      PAPER-002 ENTRY RECORD POPULATION SOURCE: add
+      the pm_create() / pm_on_fill() / pm_on_orders()
+      method-name canonical mapping to PAPER-MODE
+      source paths (WSManager._simulate_entry_fill
+      → pm_on_fill; WSManager batch_add paper-mode
+      gate → pm_on_orders) currently in 1011006 §5
+      WSManager method references. Coding-relevant
+      for paper-mode dispatch traceability. Cluster
+      overlap with TB00194 (HR-WM-033 paper exits
+      route through Exit Controller closure path).
+
+    PROSE-UPDATE-AF (NEW). 0511005 dv1_1 §10 What It
+      Logs: add log event field-schema enumeration
+      for the 8 PM events (POSITION_RECORD_CREATED
+      symbol/cl_ord_id/qty + POSITION_FILL_CONFIRMED
+      symbol/avg_price/cum_qty + POSITION_ORDERS_SET
+      symbol/tp_order_id/emgsl_id + POSITION_QTY_
+      UPDATED symbol/new_qty + POSITION_CLOSED
+      symbol/exit_reason + GAP_CLOSED_POSITION symbol
+      + UNEXPECTED_OPEN_ORDER order_id + RECONCILIATION_
+      COMPLETE positions_confirmed/gap_closed)
+      currently in 1011006 §3.5 + §5 + §6 emit
+      templates. Cross-reference 0511006 dv1_1
+      Logger Specification for log schema canonical.
+      Analogous to TB00196 PROSE-UPDATE-U + TB00197
+      PROSE-UPDATE-X log-schema enumerations.
+
+    PROSE-UPDATE-AG (NEW). 0511005 dv1_1 §3.1 schema
+      table spelling normalization: emgsl_order_id +
+      emgsl_cl_ord_id → emergsl_order_id +
+      emergsl_cl_ord_id to match 1011006 dv1_1
+      §4 dataclass canonical spelling. Auto-resolves
+      cluster C6 §3.16/§3.17 spelling drift sub-
+      finding. Per parent §12 dv1_1 revision history
+      RR-SCOPE-002 explicit deferral of this
+      spelling normalization, S-3 cycle now enacts.
+
+    Total NEW from TB00198: 6 prose updates (AB, AC,
+    AD, AE, AF, AG) to 0511005. PROSE-UPDATE-AB +
+    AD + AE are gated on S-2 AMENDMENT-10 closure
+    (DD-003 4-step prereq for fees_entry_usd
+    schema-extension registration). PROSE-UPDATE-AC
+    + AF + AG are independent.
+
+    Cumulative S-3 queue at TB00198 close: 33 prose
+    updates across 0511001 / 0511002 / 0511003 /
+    0511004 / 0511005 (27 prior + 6 NEW AB/AC/AD/
+    AE/AF/AG).
+
+5.3 S-4 1011006 RETIREMENT.
+    Gated on S-2 AMENDMENT-10 (cluster C5 diagram-
+    encoding closures) + AMENDMENT-5 D1 AR-056
+    addition (overlap with C4) + S-3 PROSE-UPDATE-AB
+    through PROSE-UPDATE-AG closure. Retire 1011006
+    dv1_1 in full once 0511005 dv1_2 (post-S-3)
+    contains all (b) migrated content + cluster C5
+    diagram-side and prose-side closures complete +
+    cluster C6 citation/spelling drift auto-
+    resolved.
+    Note: cluster C7 NEW PATTERN (per-module Mirror
+    currency lag — §7.2) is OUT OF SCOPE for S-4
+    1011006 retirement gate. Cluster C7 is an AA=05
+    + AA=10 namespace lifecycle item that may
+    trigger 0511005 dv1_2 + 1011006 dv1_2 cycles
+    at a future Stage K+/M+ direction; flagged for
+    forward-session pickup.
+
+5.4 CROSS-PAIR DEPENDENCIES.
+    Cluster C5 (4 parent-AR + 3 new HR-PM rules +
+    1 schema-extension field token — diagram-
+    encoding gaps) cross-cuts:
+      AR-003 (Restart reconciliation snap_orders
+        preferred / REST fallback) — referenced by
+        0511001 WS_Manager §5.1 startup
+        reconciliation + 1011014 Startup_Sequence
+        Step 6 + 0511003 Execution_Engine
+        reconciliation paths. Cross-cuts WS_Manager
+        (already complete TB00194) + Startup_
+        Sequence + Execution_Engine (already
+        complete TB00196) audits. Verify
+        retrospectively whether TB00194 / TB00196
+        S-1 audits surfaced AR-003 in their cluster
+        C5 sets — if NOT, AR-003 is uniquely
+        surfaced this audit and only enters cluster
+        via Startup_Sequence audit (TB00204 per
+        §6.1 queue).
+      AR-052 (Portfolio drawdown formula + per-
+        wallet thresholds; amended dv1_43 to
+        long_position_mirror / short_position_
+        mirror per-module) — referenced by 0611002
+        Drawdown_and_Halt_Rules + 1011011 Risk_
+        Engine_Coding_Spec + 1011002 dv1_26 paper-
+        mode drawdown computation (HR-WM-032 +
+        spot_usd_balance evolution per-wallet) +
+        TB00197 cluster C5 AR-052 reference (Exit
+        Controller drawdown-MTM consumer path).
+        Cross-cuts Risk_Engine (S-1 audit pending
+        TB00200 per §6.1 queue) + WS_Manager
+        (already complete TB00194) + Exit_Controller
+        (already complete TB00197 — closure
+        inheritance possible if Risk_Engine S-1
+        confirms scope) audits.
+      AR-054 (Entry partial fill + expiry/cancel
+        direction-symmetric protection; amended
+        dv1_43) — referenced by 0511003
+        Execution_Engine_Specification §4 entry
+        order placement + 1011004 Execution_Engine
+        spec (already complete TB00196 — AR-054
+        not surfaced in TB00196 cluster C5 set
+        per cross-check; potential cluster overlap
+        re-evaluation gated on TB00198 close
+        review). Cross-cuts Execution_Engine
+        audit (already complete) + Risk_Engine
+        audit (pending) + AR-054 cluster overlap
+        with 0811001 Long_Module +
+        0811005 Short_Module (entry-order
+        placement specs).
+      AR-056 (Mid-session WS reconnect distinct
+        from startup) — referenced by 0511001
+        WS_Manager §7 reconnect path + 0211003
+        Startup_Sequence (does NOT handle reconnect
+        — pure-startup scope) + 0511002 Signal_
+        Pipeline pipeline-no-fire-during-reconnect
+        per TB00195 AMENDMENT-5 closure path.
+        Cross-cuts WS_Manager + Signal_Pipeline
+        (both already complete) + future Startup_
+        Sequence S-1 audit (TB00204). TB00195
+        AMENDMENT-5 already enqueues AR-056 → D1;
+        AMENDMENT-10 AR-056 → D3/D6/D7 additions
+        bundle into AMENDMENT-5 + AMENDMENT-10
+        single-pass execution per §5.1 note (a).
+      HR-PM-010 (PAPER-LIVE BEHAVIORAL PARITY)
+        + HR-PM-011 (SINGLE-WRITER ENFORCEMENT BOTH
+        MODES) + HR-PM-012 (fees_entry_usd
+        MANDATORY BOTH MODES) — NEW dv1_1 rules
+        cross-cut EVERY module that reads or writes
+        Position Mirror state. Specifically:
+          Signal_Pipeline (S-1 complete TB00195) —
+            G5 SC-GATE-3 + G7 Risk_Guard read
+            position_mirror via WSManager helpers
+            per HR-PM-011 read-only-via-helpers.
+          Execution_Engine (S-1 complete TB00196) —
+            pre-batch_add record-existence check
+            via wm.pm_get(); EE-PAPER-005 populates
+            fees_entry_usd at entry-fill in live
+            per HR-PM-012.
+          Exit_Controller (S-1 complete TB00197) —
+            reads position_mirror via WSManager
+            helpers per HR-PM-011; consumes fees_
+            entry_usd at exit per HR-PM-012 +
+            EC-PAPER-CODE-003(a).
+          Risk_Engine (S-1 PENDING TB00200) —
+            drawdown MTM consumer via wm.pm_iter();
+            per-wallet drawdown reads long_
+            position_mirror / short_position_mirror
+            per cluster C7 currency-lag finding.
+          Logger (S-1 PENDING TB00199) — log all
+            PM state events; mode-agnostic per
+            HR-PM-010 §6A.2 PAPER_* events emitted
+            by WSManager not PM.
+          Selection_Controller (S-1 PENDING beyond
+            TB00200 — not in §6.1 queue; may
+            require addition) — consumes PM-CLOSE
+            event for exit_cooldown_log update via
+            HR-EC-014/AR-073 path through WSManager.
+        Verify retrospectively whether TB00195/
+        196/197 audits surfaced equivalent
+        single-writer enforcement rules at module
+        level. If so, the pattern may already be
+        elevated. If not, HR-PM-011 alone may
+        elevate to system-wide contract (e.g.,
+        contract:Single_Writer_Position_Mirror)
+        rather than module-local. Forward finding
+        for AMENDMENT-10 S-2 author.
+      param:fees_entry_usd (PositionRecord schema-
+        extension token) — cross-cuts ALL PM
+        consumers per HR-PM-012 cross-cut above.
+        Authoritative source: 1011002 dv1_26
+        §16A.1 WM-PAPER-LEDGER-002. Schema-field
+        registration in §15.12.4 param registry
+        is the AMENDMENT-10 prerequisite per
+        cluster C5 #1 closure.
+
+    CROSS-PAIR DEPENDENCY VERIFICATION (TB00197 §5.4
+    forward-declared cross-pair items):
+
+    (i) HR-PM-009 sole-writer architectural callout —
+        TB00197 §5.4 forward-declared. VERIFIED THIS
+        AUDIT: HR-PM-009 PRESENT in D3 + D6 + D7 root
+        governs lists as registered rule token + D3
+        pm_helper_callout band verbatim quote line
+        2811 + D6 Position_Mirror group constraints
+        line 3958 inline quote + D6 wire-up callout
+        block line 4250 + Tier 1 mod:Position_Mirror
+        class. DIAGRAM-CANONICAL ENCODING COMPLETE
+        for HR-PM-009. No PM-side AMENDMENT-10
+        action required for HR-PM-009. (HR-PM-011
+        promotion to registered governs token is
+        the action — see cluster C5 #6 above.)
+
+    (ii) AR-048 MAE bid-only (long; amended dv1_42
+        short-direction) — TB00197 §5.4 forward-
+        declared Position_Mirror bid-price-source
+        relevance. VERIFIED THIS AUDIT: PM is bid-
+        price-AGNOSTIC. PM-READ-002 §7 in 1011006
+        dv1_1 + 0511005 dv1_1 §6 enumerate "bid_
+        price[sym] * position_mirror[sym].qty" as
+        Risk Engine drawdown MTM consumer pattern —
+        bid_price[sym] originates from WSManager
+        ticker handler, NOT from PositionRecord. PM
+        does NOT store or expose bid prices. AR-048
+        cluster overlap is Risk_Engine-side + Exit_
+        Controller-side (already closed TB00197
+        AMENDMENT-9), not PM-side. NO PM-side
+        AMENDMENT-10 action required for AR-048.
+
+    (iii) AR-018 amend_order primary (TP partial
+        fill emergsl qty amend path) — TB00196 §5.4
+        forward-declared Position_Mirror state-
+        update timing relevance. VERIFIED THIS
+        AUDIT: 0511005 dv1_1 §4.5 Update on amend_
+        order documents emergsl qty amendment +
+        emgsl_order_id update on amend completion.
+        AR-018 is parent-AR for amend_order primary
+        (TB00196 cluster C5 AMENDMENT-7 D1/D2 governs
+        additions). Closure via TB00196 AMENDMENT-7
+        ALSO closes the PM-side §4.5 architectural
+        reference. NO additional PM-side AMENDMENT-
+        10 action required for AR-018.
+
+============================================================
+6. AMBIGUITY-SURFACE FINDINGS (per NSI §7)
+============================================================
+
+6.1 §7.3 VOLUME-OF-(c)-GAPS HIGH FINDING — AT THRESHOLD.
+    Cluster C5 surfaced 7 items (4 parent-AR + 3 new
+    HR-PM rules + implicit cluster C7 currency-lag
+    finding tracked separately at §7.2). Within
+    AMENDMENT-10 single-closure scope, 8 governs-list
+    additions (4 AR + 3 HR + 1 param token). Below
+    §7.3 "10+" high-volume threshold. Cluster C5
+    closure is a single AMENDMENT-10 with multiple
+    governs-list additions — same closure pattern as
+    TB00196 AMENDMENT-7 + TB00197 AMENDMENT-9. NO
+    SURFACE TO BILL REQUIRED — derivable per RR-SCOPE-
+    005 + NSI §3.5 anti-cadence-misread.
+
+6.2 §7.4 RR-SCOPE-009 CHESTERTON'S-FENCE — ZERO
+    INVESTIGATIONS + ZERO TRIPS.
+    No (d) UNCLEAR-ORIGIN bucket elements identified
+    this audit. All 1011006 dv1_1 elements have clear
+    origin in 0511005 dv1_1 (parent spec, dv1_1
+    explicit cascade citations to TB00000 v2_20 §4.4
+    + 0500000 dv1_24 §12) / 0500000 dv1_46 §4 AR
+    registry / 1011006 dv1_1 self (dv1_0 → dv1_1
+    field-name correction cascade explicitly
+    documented in §9 revision history). No constraint-
+    removal proposals — AMENDMENT-10 is constraint
+    ENCODING (adding governs-list items for already-
+    asserted parent-AR + HR rule + schema-field
+    content), not removal. RR-SCOPE-009 four-question
+    investigation NOT triggered.
+
+6.3 §7.1 GAP CLASSIFICATION AMBIGUITY — ZERO ITEMS
+    AT SESSION CLOSE.
+    All ~50 elements classified to clean (a)/(b)/(c)
+    buckets after parent-spec + diagram-side governs-
+    list verification. Boundary cases handled at
+    element level:
+      §3.11 entry_limit_price field — (a) restatement;
+        parent §4.1 explicit reference + parent §3.3
+        RR-SCOPE-002 deferral preserves (a) bucket
+        classification.
+      §3.16 / §3.17 emgsl_/emergsl_ spelling drift —
+        (a) restatement with C6 sub-finding; auto-
+        resolves at S-3 PROSE-UPDATE-AG.
+      §3.24 fees_entry_usd missing field — primary
+        (c) cluster C5 #1; parent §3.3 RR-SCOPE-002
+        deferral does NOT convert this to (a) — the
+        missing diagram-side registration is the
+        diagram-encoding gap regardless of parent's
+        RR-SCOPE-002 deferral on schema-table cascade.
+      §3.58 HR-PM-011 — (c) cluster C5 #6; visible
+        text references in D3 callout + D6 wire-up
+        block do NOT satisfy DD-001 diagrams-as-
+        canonical registered-token criterion per
+        TB00197 AR-073 precedent (cited inline
+        pending §15.12.13 registration). Promotion
+        to registered rule token in root governs is
+        the action.
+    NO SURFACE TO BILL REQUIRED.
+
+6.4 §7.5 FILESYSTEM-STATE ASSERTION WITHOUT BASH SWEEP
+    — NO RECURRENCE. TB00198 chat-turn 1 ran
+    bash_tool sweep FIRST per NSI §3.3.
+    ls -1 /mnt/project/ | sort output confirmed
+    0500000 dv1_46.html presence at 850,653 bytes +
+    1011006 dv1_1 + 0511005 dv1_1 + all session-
+    specific reading files present + TB00194/195/
+    196/197 gap registers + TB00197 SL present.
+    Bash sweep ran BEFORE any classification or
+    state-asserting emit.
+
+6.5 §7.2 TARGET-DIAGRAM IDENTIFICATION GAP — ZERO
+    AMBIGUITY POST-FP/DP.
+    Cluster C5 target diagrams identified:
+    C5 → D3 R3 (PM read-pattern + reconciliation
+              architecture binding — primary EC
+              consumer of PM state):
+              AR-003 / AR-052 / AR-056 / param:fees_
+              entry_usd.
+    C5 → D6 R4 (PM module-group binding — system-
+              level shared-state):
+              ALL 8 tokens (full PM module-group
+              constraints + wire-up callout block
+              alignment).
+    C5 → D7 R3 (Paper-mode dispatch boundary —
+              paper-as-master cascade critical):
+              HR-PM-010 (mode-blind invariant) +
+              HR-PM-011 (single-writer BOTH modes)
+              + HR-PM-012 (fees_entry_usd MANDATORY
+              BOTH modes) + param:fees_entry_usd.
+    No genuinely-new-diagram surfaces. No new Tier 2
+    diagram required. AR-054 cross-cuts D1 + D3 + D6
+    but primary binding remains the entry-cancel
+    path D3 / D6 / D7 ecosystem.
+
+6.6 §7.6 STALE PARAMETER REFERENCE HANDLING — ZERO
+    REFERENCES CONFIRMED.
+    bash grep result (§1.3) confirmed: 1011006 dv1_1
+    + 0511005 dv1_1 carry ZERO retired-parameter
+    references (tradeable_pct / per_trade_pct / max_
+    concurrent / $1,000 D-05 single-pool / rsi_entry_
+    low/high). Position_Mirror is the pure consumed-
+    state module; sizing + concurrent + drawdown
+    parameter ownership lives in Risk_Engine domain
+    (S-1 audit pending TB00200). Cluster C1 cascade
+    contribution from this audit: NONE.
+
+6.7 §7.7 DD-011 DERIVABLE-DECISION DISCIPLINE — ZERO
+    RATIFICATION-QUESTION RECURRENCE.
+    Per NSI §3.5 + §7.7 reinforcement: every
+    classification decision, cluster surface, queue
+    addition, and separate-finding surface this audit
+    derived from cold-load context per RR-SCOPE-005.
+    The single-AA-side parent determination (§1.4) +
+    AMENDMENT-10 closure scope + cluster C7 NEW
+    PATTERN currency-lag finding + cluster C5 8-
+    token governs-list closure scope + AR-073-
+    precedent HR-PM-011 promotion approach + AR-056
+    AMENDMENT-5 / AMENDMENT-10 bundling — ALL
+    derived from cold-load context + TB00194/195/
+    196/197 precedent and enacted directly without
+    surfacing as Bill ratification questions.
+    Cumulative DD-011 count at TB00198 close = 6
+    (UNCHANGED). Post-v2_27 enactment count = 2
+    (UNCHANGED). Pattern continues for FIVE
+    consecutive sessions (TB00194 + TB00195 +
+    TB00196 + TB00197 + TB00198) SUCCESSFUL.
+
+6.8 §7.8 CROSS-PAIR DEPENDENCY VERIFICATION.
+    Per TB00197 §5.4 forward-declared cross-pair
+    items (HR-PM-009 + AR-048 + AR-018):
+    HR-PM-009 sole-writer — VERIFIED at §5.4(i) —
+      already DIAGRAM-CANONICAL (D3/D6/D7 root
+      governs). No PM-side AMENDMENT-10 action for
+      HR-PM-009 itself (HR-PM-011 is the action).
+    AR-048 MAE bid-only — VERIFIED at §5.4(ii) — PM
+      is bid-price-AGNOSTIC; AR-048 cluster overlap
+      is Risk_Engine + Exit_Controller side (already
+      closed TB00197 AMENDMENT-9). No PM-side
+      action.
+    AR-018 amend_order primary — VERIFIED at §5.4
+      (iii) — PM §4.5 binding closure inherits from
+      TB00196 AMENDMENT-7. No additional PM-side
+      action.
+    NEW cross-pair items surfaced this audit
+    (enumerated in §5.4 main): AR-003 / AR-052 /
+    AR-054 / AR-056 / HR-PM-010/011/012 + param:
+    fees_entry_usd.
+
+============================================================
+7. SEPARATE 0500000 INTERNAL FINDINGS
+============================================================
+
+7.1 CLUSTER C5 — DIAGRAM-ENCODING GAPS FOR POSITION_
+    MIRROR PARENT-AR + NEW HR-PM RULES + SCHEMA-
+    EXTENSION PARAM TOKEN.
+    Per §1.3 + §3 element classifications + §6.5
+    target-diagram identification. Eight items
+    referenced by 1011006 dv1_1 / 0511005 dv1_1 but
+    absent from 0500000 dv1_46 diagram root governs
+    lists:
+      AR-003 — Restart reconciliation: PREFERRED
+               snap_orders:true / FALLBACK REST
+      AR-052 — Portfolio drawdown formula + per-wallet
+               session_pause / full_halt thresholds
+      AR-054 — Entry order partial fill + expiry/
+               cancel direction-symmetric protection
+      AR-056 — Mid-session WS reconnect distinct
+               from startup (state-preserving)
+      HR-PM-010 — PAPER-LIVE BEHAVIORAL PARITY (NEW
+                  dv1_1 — mode-blind invariant)
+      HR-PM-011 — SINGLE-WRITER ENFORCEMENT IN BOTH
+                  MODES (NEW dv1_1 — strengthening
+                  of HR-PM-009 to PA-005 byte-
+                  identical status)
+      HR-PM-012 — fees_entry_usd FIELD MANDATORY IN
+                  BOTH MODES (NEW dv1_1 — schema-
+                  extension rule)
+      param:fees_entry_usd — PositionRecord schema
+                             extension token (per
+                             1011002 dv1_26 §16A.1
+                             WM-PAPER-LEDGER-002
+                             authoritative source-
+                             of-truth)
+    Closure path: AMENDMENT-10 — D3 + D6 governs
+    add all 8 tokens; D7 governs add the paper-
+    mode-parity-critical subset (HR-PM-010/011/012
+    + param:fees_entry_usd). NO SVG VISUAL BYTE
+    CHANGE. Same closure mechanism as TB00196
+    AMENDMENT-7 + TB00197 AMENDMENT-9.
+    Prerequisite: param:fees_entry_usd registration
+    in 0311001 §15.12.4 param registry (Stage L+
+    housekeeping target per TB00197 §5.1 note (b)
+    precedent for AR-073 / pair_cache registration
+    pattern). HR-PM-011 promotion to registered
+    rule token in root governs (visible-text
+    references in D3 + D6 already cite HR-PM-011
+    inline pending §15.12.9 rule registration —
+    confirm whether HR-PM-011 is registered in
+    0311001 v1_12 §15.12.9; if not, registration
+    is the additional prerequisite per AR-073
+    precedent).
+
+7.2 CLUSTER C7 NEW PATTERN — PER-MODULE POSITION
+    MIRROR CURRENCY LAG (AA=05 + AA=10 NAMESPACE
+    LIFECYCLE).
+    DISTINCT FROM TB00197 §7.3 0811003 currency
+    lag pattern in that this is a CROSS-NAMESPACE
+    cascade lag (0500000 dv1_46 §4 AR registry
+    amendments vs 0511005 + 1011006 spec body)
+    rather than single-AA-side lag (0811003 vs
+    AA=05 sibling cascade).
+    SCOPE OF LAG:
+      0500000 dv1_46 §4 AR-052 amended prose (line
+        4521-4530) references per-module long_
+        position_mirror / short_position_mirror
+        per TB00000 v2_29 §9.7 per-wallet drawdown
+        halts:
+          current_long_wallet_USD = long_spot_usd_
+            balance + sum(bid_price[sym] * long_
+            position_qty[sym] for sym in long_
+            position_mirror)
+          current_short_wallet_USD = short_spot_usd_
+            balance + sum(ask_price[sym] * short_
+            position_qty[sym] for sym in short_
+            position_mirror)
+      0500000 dv1_46 §4 AR-054 amended prose (line
+        4885) references "remaining_qty (long_
+        position_mirror OR short_position_mirror"
+        for entry partial fill direction-symmetric
+        protection.
+      0500000 dv1_46 §4 AR-072 amended prose (line
+        5098-5102) references "SC-GATE-3 (direction-
+        symmetric, per-module): symbol NOT in
+        originating module's position_mirror.
+        Long_Module checks long_position_mirror;
+        Short_Module checks short_position_mirror."
+      0511005 dv1_1 §3 + §4 + §6 + §7 describe a
+        SINGLE position_mirror: dict[str,
+        PositionRecord] = {} (dv1_1 dated 05-07-
+        2026 pre-dates TB00000 v2_29 enactment
+        05-10-2026).
+      1011006 dv1_1 §4 dataclass + §5 write
+        operations + §7 read access all reference
+        SINGLE position_mirror dict (dv1_1 dated
+        04-07-2026 — even further pre-dates v2_29).
+    NATURE OF LAG: AA=05 + AA=10 spec body have
+    NOT been amended to reflect the v2_29
+    PARALLEL-MODULE FRAMEWORK per-module Mirror
+    split. The AR registry prose in 0500000 §4 has
+    been updated (cluster C7-A) but the architectural
+    diagrams D3 + D6 + D7 + Tier 1 still depict a
+    single mod:Position_Mirror module (cluster C7-B
+    — V-038 diagram-prose parity finding for
+    0500000 itself). 0511005 + 1011006 spec bodies
+    remain at single-Mirror form (cluster C7-C).
+    Disposition: AA=05 + AA=10 namespace lifecycle
+    is OUT OF SCOPE for the S-1 audit (which targets
+    the AA=10 retirement gate via diagram-encoding
+    closure of dv1_1 content). The per-module split
+    is a SEPARATE Stage K+ / M+ direction that may
+    trigger:
+      0500000 dv1_47 R-increment (diagram-side
+        encoding of mod:Long_Position_Mirror +
+        mod:Short_Position_Mirror as parallel
+        modules, OR retention of mod:Position_
+        Mirror with explicit per-module sub-record
+        structure).
+      0511005 dv1_2 amendment (AA=05 spec body
+        update to per-module schema OR per-module
+        sub-record structure).
+      1011006 dv1_2 amendment (AA=10 coding spec
+        update to match 0511005 dv1_2).
+    Flag this finding for forward-session pickup.
+    NO ACTION REQUIRED THIS AUDIT.
+    NOTE: This is the SECOND consecutive S-1 audit
+    to surface a currency-lag separate finding
+    (TB00197 §7.3 0811003 dv1_0 was the first;
+    TB00198 §7.2 cluster C7 is the second). Pattern
+    suggests S-1 audits are surfacing accumulated
+    spec-currency-lag across the project pre-v2_27
+    + pre-v2_29 + post-cascade timeline. Bill may
+    elect to bundle multiple currency-lag findings
+    into a single Stage K+/M+ catch-up cycle
+    rather than per-finding individual amendments.
+
+7.3 CLUSTER C6 — MINOR CITATION DRIFT (AUTO-RESOLVES
+    AT S-4).
+    Three minor citation-drift items:
+      (i)   1011006 §2 Parent Chain cites "0511005
+            Position_Mirror_Specification dv1_0";
+            current parent is 0511005 dv1_1.
+      (ii)  1011006 §4 PositionRecord field-name
+            spelling "emergsl_order_id" + "emergsl_
+            cl_ord_id" vs 0511005 §3.1 + §3.3 +
+            §6A + §7 + §8 + §9 + §10 legacy
+            "emgsl_order_id" + "emgsl_cl_ord_id"
+            spelling. Parent §12 dv1_1 revision
+            history explicitly defers this
+            normalization per RR-SCOPE-002 — S-3
+            PROSE-UPDATE-AG enacts the deferred
+            normalization.
+      (iii) Internal coding-spec numbering
+            consistency only (no PM-RECON or
+            PM-READ or HR-PM number gaps; no
+            internal drift).
+    Closure: auto-resolves at S-4 1011006 retirement
+    + S-3 PROSE-UPDATE-AG spelling normalization.
+
+7.4 SEPARATE FINDING — HR-PM-009 ENCODING COVERAGE
+    EXEMPLARY.
+    HR-PM-009 is one of the most thoroughly diagram-
+    canonical rules in the system: present in D3 +
+    D6 + D7 root governs lists AS A REGISTERED rule:
+    token + Tier 1 mod:Position_Mirror class label +
+    D3 pm_helper_callout band visible verbatim quote
+    + D6 visible Position_Mirror group constraints
+    inline quote + D6 wire-up callout block + D6
+    visible green-text annotation. The HR-PM-009
+    encoding pattern is a positive reference
+    exemplar for what FULL DD-001 diagrams-as-
+    canonical encoding looks like. AMENDMENT-10
+    HR-PM-011 promotion to the same encoding tier
+    is the closure target (visible-text references
+    already exist; registered-token governs
+    additions remain).
+    NO ACTION REQUIRED — observational finding.
+
+============================================================
+8. EXIT CRITERIA STATUS
+============================================================
+
+  E-S1PM-01   COMPLETE — Cold-load + bash sweep +
+              0500000 dv1_46 presence verified at
+              850,653 bytes. All NSI §3.1 standing
+              + §3.2 session-specific files present
+              + TB00194/195/196/197 gap registers
+              present + TB00197 SL present.
+  E-S1PM-02   COMPLETE — End-to-end read of 1011006
+              dv1_1 + 0511005 dv1_1 + relevant
+              D1/D3/D6/D7 + Tier 1 + §4 AR registry
+              regions of 0500000 dv1_46. Single-AA-
+              side parent determination (§1.4)
+              derived per RR-SCOPE-005 from
+              filesystem evidence.
+  E-S1PM-03   COMPLETE — Gap register §3.1-3.60
+              element-by-element classification
+              authored.
+  E-S1PM-04   COMPLETE — Three-bucket (a)/(b)/(c)
+              classification applied; (d) Chesterton-
+              fence bucket = 0 elements; roll-up in
+              §4.
+  E-S1PM-05   COMPLETE — Cluster C5 target diagrams
+              identified per §6.5 (D3 primary; D6
+              system-level; D7 paper-mode parity).
+  E-S1PM-06   COMPLETE — S-2 + S-3 + S-4 downstream
+              queue derived (cumulative TB00194 +
+              TB00195 + TB00196 + TB00197 + TB00198
+              queues per §5; AMENDMENT-10 NEW +
+              PROSE-UPDATE-AB..AG NEW).
+  E-S1PM-07   PENDING BILL APPROVAL GATE per NSI §2.3.
+  E-S1PM-08   COMPLETE THIS TURN — TB00198 SL +
+              TB00199 NSI + OCS trio per DR-008.6/.7/
+              .8/.9.
+  E-S1PM-09   COMPLETE THIS TURN — S-1 next-module-
+              pair sequencing recorded in TB00199
+              NSI §1 + §6.1 remaining 6 module pairs.
+
+============================================================
+9. REVISION HISTORY
+============================================================
+
+  v1_0  2026-05-11  Initial TB00198 Position_Mirror
+                    S-1 Gap Register. Step 3 sub-step
+                    S-1 fifth module pair. Methodology
+                    inherited from TB00194 + TB00195 +
+                    TB00196 + TB00197 form-factor
+                    precedent per RR-SCOPE-005
+                    derivable execution (no per-
+                    session re-ratification needed;
+                    methodology stabilized across four
+                    consecutive precedent audits;
+                    fifth consecutive validation this
+                    session). Form factor: discrete
+                    controlled-doc, 9 sections matching
+                    TB00194 / TB00195 / TB00196 /
+                    TB00197 structure. Single-AA-side
+                    parent (0511005 dv1_1) determined
+                    per RR-SCOPE-005 from filesystem
+                    evidence (no AA=08 PM parent
+                    exists); enacted directly (not
+                    surfaced as Bill ratification
+                    question per DD-011 + NSI §3.5
+                    anti-surface-derivable
+                    reinforcement). Three-bucket
+                    classification across ~50 elements:
+                    (a) ~36 ARCHITECTURAL RESTATEMENT /
+                    (b) ~10 CODING-UNIQUE / (c)
+                    cluster C5 (7 diagram-encoding
+                    gaps + 1 schema-extension param
+                    token in single cluster) +
+                    cluster C7 NEW PATTERN (per-module
+                    Mirror currency lag — NOT in S-1
+                    scope; flagged for forward-session
+                    pickup) + cluster C6 minor
+                    citation/spelling drift / (d) 0
+                    elements. AMENDMENT-10 NEW (D3 +
+                    D6 + D7 governs additions; 8
+                    tokens; no SVG byte change).
+                    PROSE-UPDATE-AB through PROSE-
+                    UPDATE-AG NEW (6 prose updates
+                    to 0511005 at S-3). Cluster C6
+                    minor citation-drift items auto-
+                    resolve at S-4 + PROSE-UPDATE-AG.
+                    Cluster C7 NEW PATTERN flagged
+                    as separate §7.2 finding NOT IN
+                    SCOPE for S-1 audit (analogous to
+                    TB00197 §7.3 0811003 currency
+                    lag — second consecutive currency-
+                    lag finding suggests systemic
+                    accumulated spec-currency-lag
+                    pattern). DD-011 pre-emit scan
+                    SUCCESSFUL: zero ratification-
+                    question pattern surfaced;
+                    cumulative count unchanged at 6
+                    (post-v2_27 = 2). Five consecutive
+                    sessions (TB00194 + TB00195 +
+                    TB00196 + TB00197 + TB00198) with
+                    zero post-v2_27 DD-011 recurrence.
+                    Single-turn DR-006 delivery
+                    enforced (gap register + SL + NSI
+                    + OCS in one chat-turn per OCS
+                    directive). Methodology continues
+                    to validate for application to
+                    next module pair (Logger at
+                    TB00199 per TB00198 NSI §6.1
+                    minus Position_Mirror). HR-PM-009
+                    cross-pair verification CONFIRMED
+                    DIAGRAM-CANONICAL across D3 + D6
+                    + D7 root governs as exemplary
+                    pattern for HR-PM-011 promotion
+                    closure (AMENDMENT-10).
+
+============================================================
+END OF TB00198 S1PM GAP REGISTER v1_0
+============================================================

@@ -1,0 +1,316 @@
+DocDCN:     TB00098
+DocTitle:   TothBot_V2_Session_Log_2026-04-14_Part2
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\My_TothBot_Stuff\TBXXXXX_Session_Logs\TB00098_TothBot_V2_Session_Log_2026-04-14_Part2_v1_0.txt
+DocDate:    04-14-2026
+DocTime:    23:59:59 UTC
+
+============================================================
+TOTHBOT V2 SESSION LOG — 2026-04-14 PART 2
+============================================================
+
+============================================================
+1. SESSION IDENTITY
+============================================================
+
+Session date:     April 14, 2026 (Part 2)
+Session number:   TB00098
+Session type:     DEFECT-SS-007 fix delivered and committed
+                  to GitHub. VPS deployment pending.
+Prior session:    TB00097 (2026-04-14)
+
+Documents read this session:
+  TB00000  v2_8    Project Instructions             read
+  TB00097  v1_0    Prior session log                read
+  ws_manager.py    dv1_16                           read
+  1011002          WS_Manager_Coding_Spec dv1_15    read
+
+============================================================
+2. WORK COMPLETED THIS SESSION
+============================================================
+
+------------------------------------------------------------
+2.1 Version Confirmation
+------------------------------------------------------------
+
+Both files confirmed in project folder at correct versions
+before any work began:
+  ws_manager.py                     dv1_16  CONFIRMED
+  1011002_WS_Manager_Coding_Spec    dv1_15  CONFIRMED
+
+------------------------------------------------------------
+2.2 DEFECT-SS-007 Fix Delivered
+------------------------------------------------------------
+
+Two documents produced as full files with full document
+control. Both delivered in one batch per DR-003.
+
+DOCUMENT 1: 1011002_WS_Manager_Coding_Spec_dv1_16.txt
+
+  Changes from dv1_15:
+
+  WM-LIQ-003 — CORRECTED:
+    OLD (wrong): "Build TWO maps at startup from instrument
+    snapshot (which provides both formats)"
+    NEW (correct): Instrument snapshot does NOT contain
+    altname field. Correct data source is REST AssetPairs
+    (GET /0/public/AssetPairs). Response fields: altname
+    (e.g. "XBTUSD") and wsname (e.g. "XBT/USD"). WS v2
+    uses BTC prefix ("BTC/USD"). Normalization: replace
+    "XBT/" with "BTC/" and "/XBT" with "/BTC". Maps:
+      wsname_to_classic: "BTC/USD" → "XBTUSD"
+      classic_to_wsname: "XBTUSD" → "BTC/USD"
+                         normalized key → "BTC/USD"
+
+  WM-LIQ-004 — UPDATED:
+    _rest_build_pair_maps() called BEFORE _rest_get_ticker()
+    in _warm_up_all_pairs().
+
+  WM-LIQ-009 — UPDATED:
+    PAIR_MAPS_BUILT (INFO, pairs_mapped=N) added.
+    PAIR_MAP_BUILD_FAILED (WARN, reason=str) added.
+
+  WM-LIQ-011 — NEW:
+    Complete specification for _rest_build_pair_maps().
+    Signature, call site, REST endpoint, normalization
+    logic, success/error behavior, log events, never-raises
+    contract — all fully specified.
+
+  Section 3 Q5 — UPDATED:
+    PAIR_MAPS_BUILT and PAIR_MAP_BUILD_FAILED added to
+    LIQUIDITY log event list.
+
+DOCUMENT 2: ws_manager.py dv1_17
+
+  CHANGE 1 — New method _rest_build_pair_maps():
+    Inserted immediately before _warm_up_all_pairs().
+    Calls GET /0/public/AssetPairs (public, no auth).
+    Uses self._make_http_session() per established pattern.
+    For each pair in result:
+      Normalizes wsname: XBT/ → BTC/, /XBT → /BTC.
+      Populates _wsname_to_classic and _classic_to_wsname.
+      Also stores _normalize_classic_key(classic_key) in
+      _classic_to_wsname for reverse lookup.
+      Fallback: if wsname_raw (unnormalized) is in
+      pair_cache, uses that.
+    Logs PAIR_MAPS_BUILT(pairs_mapped=N) on success.
+    Logs PAIR_MAP_BUILD_FAILED(reason=str) on error.
+    Never raises.
+
+  CHANGE 2 — Modified _warm_up_all_pairs():
+    await self._rest_build_pair_maps() inserted immediately
+    before first liquidity_result =
+    await self._rest_get_ticker(candidates) call.
+    Comment added: "Build WS name → REST altname maps from
+    AssetPairs (WM-LIQ-011, dv1_17 fix)"
+    No other methods changed.
+
+  AST syntax check: PASS.
+
+------------------------------------------------------------
+2.3 GitHub Commits
+------------------------------------------------------------
+
+TothBot_V2-Docs — commit 4d797a4:
+  git add: 1011002_WS_Manager_Coding_Spec_dv1_16.txt
+  git add: 1011002_WS_Manager_Coding_Spec_dv1_13.txt (del)
+  Note: dv1_13 was the version on GitHub prior to this
+  session. dv1_14 and dv1_15 were never committed to
+  GitHub (only in project folder / local). Git renamed
+  dv1_13 → dv1_16 (78% similarity). Correct result.
+  Push: origin master — CLEAN.
+
+TothBot_V2-Code — commit 5794cbd:
+  git add: tothbot\ws_manager.py (dv1_17)
+  1 file changed, 96 insertions(+), 2 deletions(-)
+  Push: origin master — CLEAN.
+
+------------------------------------------------------------
+2.4 Stale File Noted
+------------------------------------------------------------
+
+In TothBot_V2-Docs 10XXXXX_Coding_Specification dir:
+  1011014_Startup_Sequence_Coding_Spec_dv1_3.txt — PRESENT
+  1011014_Startup_Sequence_Coding_Spec_dv1_4.txt — PRESENT
+Both present. dv1_3 is superseded. Not addressed this
+session — captured on Parking Lot (PL-NEW-016).
+
+------------------------------------------------------------
+2.5 Claude Error — Copy Command
+------------------------------------------------------------
+
+Claude initially gave wrong file copy commands (specifying
+Downloads folder as source). Files were already in place
+in the GitHub repo folders — Bill had placed them there
+directly after downloading. Claude should have verified
+file locations before giving copy instructions. Error
+noted. Standing rule already exists (RULE 17).
+
+============================================================
+3. OPEN ITEMS
+============================================================
+
+OI-006  OPEN — Paper trading not active. VPS deployment
+        of dv1_17 is the next action (see Section 8).
+
+OI-014  OPEN — startup_sequence.py stale cross-references
+        and ohlc sequence review. Post paper trading.
+
+============================================================
+4. GITHUB COMMIT LOG — THIS SESSION
+============================================================
+
+  TothBot_V2-Docs  4d797a4
+    "DEFECT-SS-007: 1011002 dv1_16 — WM-LIQ-003 corrected,
+     WM-LIQ-011 added"
+
+  TothBot_V2-Code  5794cbd
+    "DEFECT-SS-007: ws_manager.py dv1_17 — REST AssetPairs
+     pair map build"
+
+============================================================
+5. PARKING LOT
+============================================================
+
+  PL-001      WSManager dual PM creation paths. Monitor.
+  PL-003      Pathway 1 GitHub automation. After paper trading.
+  PL-NEW-003  VPS migration to Hillsboro OR. After stable.
+  PL-NEW-004  EE ENTRY_TIMEOUT_SEC vs WM ENTRY_GTD_SEC. Monitor.
+  PL-NEW-005  requirements.txt — websockets version pin.
+  PL-NEW-006  tothbot_service.txt not updated in GitHub.
+  PL-NEW-007  LOG_FILE path mismatch.
+  PL-NEW-008  Heartbeat UNKNOWN_MESSAGE_TYPE log spam.
+  PL-NEW-010  status subscription "Symbol(s) not found".
+  PL-NEW-012  HTF EMA incremental updates lost (ohlc(60)
+              removed). REST-only for paper trading.
+  PL-NEW-013  EC ohlc(60) trigger removed.
+              _process_ohlc_60m() will never fire.
+  PL-NEW-014  Duplicate indicator stores.
+  PL-NEW-015  1010000_Trading_System_Coding_Anchor_dv1_5.txt
+              deleted but unstaged in TothBot_V2-Docs.
+  PL-NEW-016  1011014_Startup_Sequence_Coding_Spec_dv1_3.txt
+              still present in TothBot_V2-Docs alongside
+              dv1_4. Stale file — delete and commit.
+
+============================================================
+6. STANDING RULES — ALL ACTIVE
+============================================================
+
+  RULE 6  — git add . is prohibited. Explicit per file.
+  RULE 13 — .bat files go to Desktop only. Never in repo.
+  RULE 14 — git push origin master. NEVER origin main.
+  RULE 15 — ONE COMMAND PER COPY BOX. ALWAYS.
+  RULE 16 — .bat files run from cmd.exe only. Never PS.
+  RULE 17 — Always give complete and correct instructions.
+            Include Command Prompt or Powershell. Include
+            root file path in each instruction. Every step
+            must be executable without interpretation.
+
+  CODING RULES — ALL ACTIVE:
+  NO PATCHES EVER. Full file delivery only. Full document
+  control. Every code change = new version = full file
+  delivered as .txt per DR-001.
+
+  DELIVERY RULES — ALL ACTIVE:
+  DR-001 — All documents as .txt files.
+  DR-002 — 0500000 additionally as .docx and .pdf.
+  DR-003 — ALL documents in ONE BATCH. No piecemeal.
+
+============================================================
+7. BILL ACTIONS REQUIRED — THIS SESSION
+============================================================
+
+Step 1 — Save this session log:
+```
+C:\Users\wstot\My_TothBot_Stuff\TBXXXXX_Session_Logs\
+```
+
+Step 2 — Upload TB00098 to Claude project folder.
+
+Step 3 — Delete stale spec from local repo:
+```
+del C:\Users\wstot\GitHub\TothBot\TothBot_V2-Docs\10XXXXX_Coding_Specification\1011014_Startup_Sequence_Coding_Spec_dv1_3.txt
+```
+
+Step 4 — Stage and commit deletion:
+```
+cd C:\Users\wstot\GitHub\TothBot\TothBot_V2-Docs
+```
+```
+git add 10XXXXX_Coding_Specification\1011014_Startup_Sequence_Coding_Spec_dv1_3.txt
+```
+```
+git commit -m "Housekeeping: remove stale 1011014 dv1_3 (superseded by dv1_4)"
+```
+```
+git push origin master
+```
+
+============================================================
+8. NEXT SESSION — COMPLETE INSTRUCTIONS
+============================================================
+
+============================================================
+DOCUMENTS TO READ — IN THIS ORDER:
+1. TB00000  v2_8   — Project Instructions
+2. TB00098  v1_0   — This session log (most recent)
+3. TB00097  v1_0   — Prior session log (DEFECT-SS-007
+                     context and expected log output)
+STATE ALL DOCUMENTS READ AND VERSIONS BEFORE ANY WORK.
+============================================================
+
+============================================================
+TASK — VPS Deployment of ws_manager.py dv1_17
+============================================================
+
+Step 1 — SSH to VPS:
+```
+ssh root@87.99.141.44
+```
+
+Step 2 — Pull on VPS:
+```
+cd ~/TothBot_V2-Code && git pull
+```
+
+Expected output:
+  From https://github.com/TothBot/TothBot_V2-Code
+  fe2ac7b..5794cbd  master -> origin/master
+  Fast-forward
+  tothbot/ws_manager.py | 96 +++... (changes confirmed)
+
+Step 3 — Restart service:
+```
+sudo systemctl restart tothbot
+```
+
+Step 4 — Wait 60 seconds. Run log grep:
+```
+grep -E "PAIR_MAPS_BUILT|PAIR_MAP_BUILD_FAILED|LIQUIDITY_SEEDED|LIQUIDITY_SEED_FAILED|WARMUP_REST_COMPLETE|SYSTEM_OPERATIONAL|GATE_2|PIPELINE_START|ERROR|CRITICAL" /home/tothbot/logs/tothbot.log | tail -30
+```
+
+Step 5 — Paste full output to Claude.
+
+------------------------------------------------------------
+EXPECTED PASS:
+  PAIR_MAPS_BUILT       (pairs_mapped > 0)
+  LIQUIDITY_SEEDED      (pairs_count > 0)
+  UNIVERSE_RANKED_BY_VOLUME
+  PAIR_READY            (one or more)
+  WARMUP_REST_COMPLETE  (ready_pairs > 0)
+  SYSTEM_OPERATIONAL
+  PIPELINE_START        (on next 5m candle)
+  No GATE_2_FAIL        (or gone after first cycle)
+
+FAIL CONDITIONS — paste to Claude and stop:
+  PAIR_MAP_BUILD_FAILED
+  LIQUIDITY_SEED_FAILED
+  LIQUIDITY_PAIR_NOT_FOUND (for most/all pairs)
+  GATE_2_FAIL persisting after LIQUIDITY_SEEDED
+  Any ERROR or CRITICAL
+------------------------------------------------------------
+
+============================================================
+END OF SESSION LOG TB00098 v1_0
+============================================================

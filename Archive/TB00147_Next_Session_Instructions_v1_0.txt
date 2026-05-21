@@ -1,0 +1,669 @@
+DocDCN:     TB00147
+DocTitle:   Next_Session_Instructions
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TBXXXXX_Session_Logs\TB00147_Next_Session_Instructions_v1_0.txt
+DocDate:    05-03-2026
+DocTime:    23:59:59 UTC
+
+============================================================
+TB00148 NEXT SESSION INSTRUCTIONS
+============================================================
+
+============================================================
+1. PRIMARY WORK FOR TB00148
+============================================================
+
+CODE IMPLEMENTATION SESSION — execute the CODE IMPACT
+enumerations from TB00147 cascade.
+
+Specs governing TB00148 work (committed at TB00147 close):
+  0511001 dv1_5    (b98954b) — parent system spec
+  1011002 dv1_26   (fc03cdb) — WS Manager coding spec
+  0511004 dv1_3    (57a6aed) — Exit Controller spec
+  1011005 dv1_3    (57a6aed) — Exit Controller coding spec
+  0211005 dv1_3    (e8713d5) — Paper trading ops procedure
+
+Spec cascade closes governance/spec layer of three
+defects:
+  FINDING-TB00147-06 (CRITICAL) — paper synthetic ledger
+  FINDING-TB00147-07 (HIGH)     — exit_controller CIATS params
+  FINDING-TB00147-08 (CRITICAL) — paper exits bypass EC
+
+TB00148 closes the code-deploy layer of all three.
+
+PAPER TRADING ONLY. NO REAL MONEY. paper_trading_mode
+config flag MUST be True before any tothbot service
+start. NO LIVE TRADING under any circumstance until
+PT-AC-001..006 acceptance criteria are satisfied AND
+Bill formal written approval.
+
+------------------------------------------------------------
+1.1 USE CLAUDE CODE FOR ALL CODE EDITS
+------------------------------------------------------------
+
+Per Bill's standing instruction and TB00146 NSI: do NOT
+do coding in chat. Use Claude Code for all code edits.
+
+PowerShell launch:
+  cd C:\Users\wstot\GitHub\TothBot
+  claude code
+
+Working directory (Claude Code scope):
+  C:\Users\wstot\GitHub\TothBot\
+
+Claude Code has access to:
+  - TothBot_V2-Docs\        (governance, specs)
+  - TothBot_V2-Code\        (Python package + operations)
+  - TBXXXXX_Session_Logs\   (TB00000, session logs, NSIs)
+
+Claude Code does NOT have access to project knowledge
+folder. Specs read from TothBot_V2-Docs filesystem.
+
+------------------------------------------------------------
+1.2 CODE EDIT ENUMERATION — ws_manager.py
+------------------------------------------------------------
+
+Per 1011002 dv1_26 §19 Revision History "CODE IMPACT"
+section. Eight changes:
+
+(1) PositionRecord schema extension.
+    Add field:
+      fees_entry_usd: Decimal = Decimal("0")
+
+    Capture this on entry fill in BOTH paper and live
+    paths so Exit Controller can read it on close per
+    EC-PAPER-CODE-003.
+
+(2) _simulate_entry_fill — apply HR-WM-032 entry-fill
+    debit.
+    After position_mirror is populated and BEFORE
+    invoking Execution Engine entry callback:
+      entry_cost = qty * price
+      entry_fee  = entry_cost * FEE_MAKER_PCT
+      self.spot_usd_balance -= (entry_cost + entry_fee)
+      pos.fees_entry_usd = entry_fee
+    Emit PAPER_LEDGER_UPDATED log per WM-PAPER-LEDGER-004.
+
+(3) _maybe_paper_fill — route TP detection through Exit
+    Controller per WM-PAPER-EXIT-001.
+    Replace current direct position_mirror.pop pattern
+    with:
+      a. Compute exit_price = pos.tp_price
+      b. exit_proceeds = qty * exit_price
+      c. fees_exit = exit_proceeds * FEE_MAKER_PCT
+      d. self.spot_usd_balance += (exit_proceeds - fees_exit)
+      e. Emit PAPER_LEDGER_UPDATED.
+      f. Emit PAPER_TP_FILL_DETECTED.
+      g. await self._exit_controller_fn(
+             event="paper_close",
+             symbol=symbol,
+             exit_price=exit_price,
+             exit_reason="TP_FILL",
+             fees_exit=fees_exit,
+         )
+      h. await self._update_ticker_event_trigger(
+             symbol, "trades")
+
+(4) _maybe_paper_fill — route emergSL detection through
+    Exit Controller per WM-PAPER-EXIT-002.
+    Same pattern as (3) with substitutions:
+      exit_price = bid (market sell)
+      fees_exit = exit_proceeds * FEE_TAKER_PCT
+      log: PAPER_EMERG_SL_TRIGGERED
+      exit_reason: "EMERGENCY_SL"
+
+(5) dispatch_market_sell — paper branch return contract
+    per WM-PAPER-EXIT-004.
+    Paper branch:
+      bid = self.latest_bid.get(symbol, Decimal("0"))
+      if bid <= Decimal("0"):
+          self._log("PAPER_MARKET_SELL_NO_BID", level="WARN",
+                    symbol=symbol)
+          return (Decimal("0"), Decimal("0"))
+      exit_price = bid
+      exit_proceeds = qty * exit_price
+      fees_exit = exit_proceeds * FEE_TAKER_PCT
+      self.spot_usd_balance += (exit_proceeds - fees_exit)
+      Emit PAPER_LEDGER_UPDATED.
+      Emit PAPER_MARKET_SELL_SIMULATED.
+      return (exit_price, fees_exit)
+    Method MUST NOT directly pop position_mirror.
+
+    Live branch: also returns (exit_price, fees_exit)
+    derived from actual exec_type=trade events. Update
+    method signature documentation accordingly.
+
+(6) Constructor — REMOVE ciats_outcome_bus_fn parameter.
+    The argument is no longer needed (per HR-WM-033 +
+    WM-PAPER-EXIT-005).
+
+(7) DELETE _fire_ciats_outcome method and ALL call sites.
+    Method retired per WM-PAPER-EXIT-005.
+
+(8) Add helper _emit_paper_ledger_updated for the
+    standardized log event per WM-PAPER-LEDGER-004:
+      def _emit_paper_ledger_updated(
+          self, event_type: str, symbol: str,
+          delta_usd: Decimal, fee_usd: Decimal,
+          exit_reason: str = "",
+      ) -> None:
+          self._log(
+              "PAPER_LEDGER_UPDATED",
+              level="INFO",
+              event_type=event_type,
+              symbol=symbol,
+              delta_usd=delta_usd,
+              fee_usd=fee_usd,
+              new_balance=self.spot_usd_balance,
+              exit_reason=exit_reason,
+          )
+
+Selection Controller state updates (exit_cooldown_log,
+consecutive_loss_count) MUST be REMOVED from
+ws_manager.py and MOVED to exit_controller.py per
+HR-EC-014.
+
+Header update:
+  DocVersion: dv1_25 -> dv1_26
+  DocDate:    update to TB00148 session date
+  DocTime:    update to TB00148 session time
+  Add dv1_26 entry to in-file Revision History matching
+  the spec.
+
+------------------------------------------------------------
+1.3 CODE EDIT ENUMERATION — exit_controller.py
+------------------------------------------------------------
+
+Per 1011005 dv1_3 §11 Revision History "CODE IMPACT"
+section. Five changes:
+
+(1) Add public method on_paper_close per
+    EC-PAPER-CODE-001.
+    Signature:
+      async def on_paper_close(
+          self,
+          symbol: str,
+          exit_price: Decimal,
+          exit_reason: str,
+          fees_exit: Decimal,
+          wm: "WSManager",
+      ) -> None:
+
+    Body: validate symbol still in wm.position_mirror
+    (race condition handling), then call
+    self._close_position(symbol=symbol,
+    exit_price=exit_price, exit_reason=exit_reason,
+    fees_exit=fees_exit, wm=wm).
+
+(2) _close_position — extension per EC-PAPER-CODE-003.
+    a. Read fees_entry_usd from PositionRecord:
+         fees_entry = pos.fees_entry_usd
+       (Replace any previous fees_entry computation if
+       present.)
+    b. Verify fees_total_usd computation:
+         fees_total = fees_entry + fees_exit
+    c. Add Selection Controller state update block per
+       HR-EC-014. Move from retired
+       ws_manager._fire_ciats_outcome:
+         from tothbot.selection_ctrl import (
+             WIN_EXIT_REASONS,
+         )
+         if exit_reason in WIN_EXIT_REASONS:
+             wm.consecutive_loss_count[symbol] = 0
+             wm.exit_cooldown_log.pop(symbol, None)
+         else:
+             wm.consecutive_loss_count[symbol] = (
+                 wm.consecutive_loss_count.get(symbol, 0)
+                 + 1
+             )
+             wm.exit_cooldown_log[symbol] = (
+                 time.monotonic()
+             )
+
+(3) Replace direct module-constant usage with
+    self._params.get() reads at four sites per HR-EC-015:
+
+    Line 251 (or current location of MAX_HOLD_CANDLES use):
+      OLD: if wm.position_mirror[symbol].hold_candle_count
+           >= MAX_HOLD_CANDLES:
+      NEW: max_hold = int(self._params.get(
+               "max_hold_candles", MAX_HOLD_CANDLES))
+           if wm.position_mirror[symbol].hold_candle_count
+           >= max_hold:
+
+    Line 372 (or current location of MAE_MULT use):
+      OLD: threshold = atr_14 * MAE_MULT
+      NEW: mae_mult = Decimal(str(self._params.get(
+               "mae_mult", MAE_MULT)))
+           threshold = atr_14 * mae_mult
+
+    Lines 679, 700 (or current locations of
+    CANCEL_TIMEOUT_WINDOW use):
+      OLD: await asyncio.sleep(CANCEL_TIMEOUT_WINDOW)
+      NEW: cancel_timeout = float(self._params.get(
+               "cancel_timeout_window",
+               CANCEL_TIMEOUT_WINDOW))
+           await asyncio.sleep(cancel_timeout)
+
+    MPP_RETRY_COUNT call sites (search for usage):
+      OLD: for attempt in range(MPP_RETRY_COUNT):
+      NEW: mpp_retries = int(self._params.get(
+               "mpp_retry_count", MPP_RETRY_COUNT))
+           for attempt in range(mpp_retries):
+
+(4) _market_sell_with_retry — update to consume tuple
+    return (exit_price, fees_exit) from
+    ws_manager.dispatch_market_sell per
+    EC-PAPER-CODE-002.
+    Existing helper presumably already returns these or
+    captures them — verify and update if needed.
+
+(5) Import WIN_EXIT_REASONS from tothbot.selection_ctrl.
+    Update top of file imports.
+
+Header update:
+  DocVersion: dv1_2 -> dv1_3
+  DocDate / DocTime: update.
+  Add dv1_3 in-file revision history entry.
+
+------------------------------------------------------------
+1.4 MODULE WIRE-UP — tothbot/__main__.py
+------------------------------------------------------------
+
+(a) REMOVE ciats_outcome_bus_fn argument from WSManager
+    constructor call (no longer accepted by constructor
+    per ws_manager.py change #6).
+
+(b) Verify exit_controller_fn argument is wired into
+    WSManager constructor. This is REQUIRED — paper
+    exit routing depends on it. If not currently wired,
+    add it:
+      ws_manager = WSManager(
+          ...,
+          exit_controller_fn=exit_controller.on_paper_close,
+          ...,
+      )
+    or whatever the current naming convention is.
+
+(c) Verify Exit Controller is constructed BEFORE
+    WSManager so the on_paper_close method can be
+    referenced.
+
+------------------------------------------------------------
+1.5 UNIT TEST COVERAGE — REQUIRED
+------------------------------------------------------------
+
+Per 1011005 dv1_3 §10A.3 EC-PAPER-CODE-006. Add the
+following tests to tests/ in TothBot_V2-Code:
+
+(a) test_paper_tp_fill_routes_through_ec
+    Setup: paper-mode WSManager with mocked exit_controller_fn.
+    Action: trigger _maybe_paper_fill with ask >= tp_price.
+    Assert: _exit_controller_fn called once with
+            exit_reason="TP_FILL".
+    Assert: spot_usd_balance increased by
+            (proceeds - maker_fee).
+    Assert: PAPER_LEDGER_UPDATED log emitted.
+    Assert: position_mirror still contains symbol (EC
+            clears it, not ws_manager).
+
+(b) test_paper_emergsl_routes_through_ec
+    Same pattern; bid <= emergsl_price; FEE_TAKER_PCT;
+    exit_reason="EMERGENCY_SL".
+
+(c) test_paper_layer2_mae_breach_uses_taker_fee
+    Trigger Layer 2 MAE breach in paper mode.
+    Assert: dispatch_market_sell returns
+            (bid, fees_taker).
+    Assert: _close_position called with these values.
+    Assert: TRADE_CLOSE log emitted with
+            exit_reason="MAE_THRESHOLD_BREACH".
+
+(d) test_paper_multi_trade_ledger_evolution
+    5 paper trades (3 wins + 2 losses).
+    Assert: spot_usd_balance evolves correctly across
+            sequence (correct sign + magnitude per
+            trade).
+    Assert: drawdown computation produces correct
+            values across sequence.
+    Assert: consecutive_loss_count tracks correctly
+            (resets on wins, increments on losses).
+
+(e) test_exit_controller_reads_ciats_params
+    For each of mae_mult, max_hold_candles,
+    cancel_timeout_window, mpp_retry_count:
+      Setup _params dict with non-default value.
+      Action: trigger relevant code path.
+      Assert: non-default value used (NOT the module
+              constant).
+
+(f) Regression check: ALL 19/19 existing unit tests
+    pass without modification.
+
+------------------------------------------------------------
+1.6 COMMIT SEQUENCE
+------------------------------------------------------------
+
+Per RR-SHELL discipline. PowerShell launches:
+
+  cmd /c "cd /D C:\Users\wstot\GitHub\TothBot\TothBot_V2-Code && git status && git log -1 --oneline"
+
+Verify HEAD = fb5de32.
+
+Code edits in Claude Code session.
+
+After all tests pass locally:
+  cmd /c 'cd /D C:\Users\wstot\GitHub\TothBot\TothBot_V2-Code && git add tothbot\ws_manager.py tothbot\exit_controller.py tothbot\__main__.py tests\... && git commit -m "TB00148 dv1_26 ws_manager + dv1_3 exit_controller - paper ledger update WM-PAPER-LEDGER + paper exit routing through EC WM-PAPER-EXIT - retire _fire_ciats_outcome - CIATS-owned params via _params.get() - closes FINDING-TB00147-06/07/08" && git push origin master && git log -1 --oneline'
+
+------------------------------------------------------------
+1.7 DEPLOY DEFERRED TO TB00149
+------------------------------------------------------------
+
+VPS deploy + 24-72h paper observation deferred to TB00149
+or whatever session number is current at time of deploy.
+TB00148 is code edit + commit ONLY. NO deploy.
+
+Reason: keep code edit and deploy as separate sessions
+so any issue surfacing in code edit can be resolved
+before VPS exposure.
+
+============================================================
+2. LOCKED DECISIONS
+============================================================
+
+D-01 through D-08 LOCKED per TB00144 NSI §2.
+
+CRITICAL: D-03 LOCKED. Universe = ALL Kraken spot pairs
+quoted in USD, USDC, OR USDT satisfying 0711003 dv1_3
+AS-001 (online status + $500k/day USD volume floor).
+NO top-N cap. NO USDT exclusion.
+
+CRITICAL (NEW reinforcement TB00147):
+  Paper synthetic ledger MUST evolve via simulated-fill
+  P/L per HR-WM-032. NEVER static.
+  Paper exit paths MUST route through Exit Controller's
+  _close_position per HR-WM-033 + EC-PAPER. NEVER
+  direct position_mirror.pop.
+  Exit Controller MUST read all CIATS-owned parameters
+  via self._params.get() per HR-EC-015. Module constants
+  serve only as params.get fallbacks.
+
+============================================================
+3. MANDATORY READING — START OF TB00148
+============================================================
+
+Per TB00000 v2_18 §2 Reading Rule. All documents read
+from project knowledge folder.
+
+  TB00000   Project_Instructions             v2_18
+  TB00147   Session_Log_2026-05-03           v1_0
+            (this session — predecessor)
+  TB00147   Next_Session_Instructions        v1_0
+            (THIS DOCUMENT)
+  0311001   Namespace_Specification          v1_3
+  0311002   Document_Creation_Workflow       v1_8
+  0311003   Versioning_Procedure             v1_1
+  0311004   Document_Creation_and_Approval   v1_2
+  0311005   System_Definitions_Terminology   v1_0
+  0311006   Known_Platform_Limitations       dv1_0
+  0500000   System_Architecture_Overview     dv1_21
+            (.txt + .docx + .pdf triplet)
+
+  CASCADE DOCUMENTS (NEW THIS CYCLE — REQUIRED READING):
+  0511001   WS_Manager_Specification         dv1_5
+            (HR-WM-032 paper ledger + HR-WM-033 paper
+            exits route through EC + §13.7 + §13.8)
+  1011002   WS_Manager_Coding_Spec           dv1_26
+            (§16A.1 WM-PAPER-LEDGER-001..004 +
+            §16A.2 WM-PAPER-EXIT-001..005 +
+            §19 CODE IMPACT enumeration)
+  0511004   Exit_Controller_Specification    dv1_3
+            (§6A EC-PAPER + HR-EC-013/014/015)
+  1011005   Exit_Controller_Coding_Spec      dv1_3
+            (§10A EC-PAPER-CODE-001..006 +
+            §11 CODE IMPACT enumeration)
+  0211005   Paper_Trading_Operations_Proc    dv1_3
+            (PT-MODE-006 paper exit routing +
+            PT-MODE-007 CIATS data flow parity)
+
+  ALSO READ:
+  1011014   Startup_Sequence_Coding_Spec     dv1_7
+  1011013   VPS_Deployment_Coding_Spec       dv1_6
+  0211003   Startup_Shutdown_Procedure       dv1_0
+  0211004   Incident_Response_Procedure      dv1_0
+  0411003   Kraken_Fee_Rate_Limit_Spec       dv1_0
+            (FEE_MAKER_PCT, FEE_TAKER_PCT cited
+            in WM-PAPER-LEDGER + WM-PAPER-EXIT)
+  1011001   Engineering_Best_Practices       dv1_7
+  1011007   Logger_Coding_Spec               dv1_5
+            (PAPER_LEDGER_UPDATED + TRADE_CLOSE
+            log schemas)
+  1011009   Selection_Controller_Coding_Spec dv1_1
+            (WIN_EXIT_REASONS / LOSS_EXIT_REASONS
+            classification used by EC SC state
+            update per HR-EC-014)
+
+============================================================
+4. PROJECT FOLDER KEPT/ABSENT LISTS
+============================================================
+
+------------------------------------------------------------
+KEPT IN PROJECT FOLDER (for TB00148 cold-load):
+------------------------------------------------------------
+
+GOVERNANCE:
+  TB00000  v2_18
+  TB00147  Session_Log v1_0
+  TB00147  NSI v1_0
+  0311001  v1_3
+  0311002  v1_8
+  0311003  v1_1
+  0311004  v1_2
+  0311005  v1_0
+  0311006  dv1_0
+
+DESIGN / SPEC:
+  0500000  dv1_21 (.txt _Claude_Source + .docx + .pdf)
+  0511001  dv1_5  (NEW, replaces dv1_4)
+  0511004  dv1_3  (NEW, replaces dv1_2)
+  0211005  dv1_3  (NEW, replaces dv1_2)
+  1011013  dv1_6
+  1011014  dv1_7
+
+CODING SPEC:
+  1011002  dv1_26 (NEW, replaces dv1_25)
+  1011005  dv1_3  (NEW, replaces dv1_2)
+
+OPERATIONS:
+  0211003  dv1_0
+  0211004  dv1_0
+
+------------------------------------------------------------
+ABSENT FROM PROJECT FOLDER (retired or never present):
+------------------------------------------------------------
+
+  TB00000  v2_17 (retired by v2_18)
+  TB00146  Session_Log v1_0 (retired by TB00147 v1_0)
+  TB00146  NSI v1_0 (retired by TB00147 v1_0)
+  TB00145  Session_Log v1_1 (retired earlier; if still
+                              present, may be removed)
+  TB00145  NSI v1_1 (retired earlier; if still present,
+                     may be removed)
+  0511001  dv1_4 (retired by dv1_5 in TB00147 b98954b)
+  1011002  dv1_25 (retired by dv1_26 in TB00147 fc03cdb)
+  0511004  dv1_2 (retired by dv1_3 in TB00147 57a6aed)
+  1011005  dv1_2 (retired by dv1_3 in TB00147 57a6aed)
+  0211005  dv1_2 (retired by dv1_3 in TB00147 e8713d5)
+
+============================================================
+5. PARKING LOT — CARRIED FORWARD
+============================================================
+
+PL-001  TB00148 is the code-edit session. NO deploy. NO
+        spec amendments. Code work strictly per CODE
+        IMPACT enumerations in 1011002 dv1_26 §19 and
+        1011005 dv1_3 §11.
+
+PL-002  Per TB00000 v2_18 §4.4 PA-008, every authoring
+        action (spec, code, parameter, configuration)
+        MUST pre-emit-scan against PA-001..010 for
+        wrong-direction language. Self-catch signal:
+
+          PA-MASTER self-caught — redrafting.
+
+        TB00148 is a code-edit session — verify code
+        does not silently introduce paper-only or
+        live-only divergence outside PA-004 four points.
+
+PL-003  RR-SCOPE-007 (no silent narrowing of user-
+        specified scope) in active enforcement. The TB00147
+        cascade made this concrete: spec adds (HR-WM-032,
+        HR-WM-033, HR-EC-013/014/015, etc.) are all
+        constraint-ADDITIVE. If TB00148 code work surfaces
+        a need for constraint REMOVAL, halt and apply
+        RR-SCOPE-009 four-question investigation.
+
+PL-004  RR-SCOPE-009 four-question origin investigation
+        applies before ANY constraint removal. TB00148
+        is implementing newly-added constraints; no
+        constraint removal expected.
+
+PL-005  RR-SCOPE-005 cumulative count: 6 entering TB00148
+        (unchanged). Strict pre-emit scan before every
+        confirm-prompt. After FP/DP determines a path,
+        Claude proceeds.
+
+PL-006  TB00141 / TB00142 / TB00143 / TB00144 STREAM 4
+        empirical work preserved in ws_manager.py
+        dv1_25 (fb5de32). TB00148 builds dv1_26 on top
+        of dv1_25 — preserving PATH 2 sharding +
+        WM-PACE pacing + WM-SHARD silent-pair handling
+        + AR-070 anti-silent-narrowing guard.
+
+PL-007  CONCURRENT PAPER + LIVE OPERATION (Bill rabbit
+        TB00145 chat-close). Future architecture
+        decision — when live trading begins, paper +
+        live should run as INDEPENDENT processes.
+        NOT a TB00148 scope item. Captured for future
+        planning sessions.
+
+PL-008  STREAM 5 deploy (originally TB00147 NSI primary)
+        is now SUPERSEDED by post-TB00148 deploy. The
+        deploy candidate is no longer fb5de32 alone
+        but fb5de32 + dv1_26/dv1_3 code edits. New deploy
+        session number assigned at TB00148 close.
+
+============================================================
+6. FIRST ACTIONS FOR TB00148
+============================================================
+
+1. Cold-load mandatory reading per §3.
+
+2. State all documents read and their versions before
+   beginning any work (per TB00000 §2 Reading Rule).
+
+3. Execute STEP A pre-flight per 0311002 v1_8 §8.2.5
+   (DC-PREFLIGHT-001..006). Document output in TB00148
+   session log §2.
+
+4. Confirm GitHub state for both repos:
+     cmd /c "cd /D C:\Users\wstot\GitHub\TothBot\TothBot_V2-Docs && git fetch origin && git log -1 --oneline"
+     cmd /c "cd /D C:\Users\wstot\GitHub\TothBot\TothBot_V2-Code && git fetch origin && git log -1 --oneline"
+   Expected:
+     TothBot_V2-Docs HEAD = e8713d5
+     TothBot_V2-Code HEAD = fb5de32
+
+5. Confirm D-01 through D-08 LOCKED per §2.
+
+6. Read TB00000 v2_18 §4.4 PAPER-AS-MASTER PRINCIPLE
+   end-to-end. PA-001..010 govern all work this session.
+
+7. Launch Claude Code from
+   C:\Users\wstot\GitHub\TothBot per TB00148 §1.1.
+
+8. Execute code edits per §1.2 (ws_manager.py) and
+   §1.3 (exit_controller.py).
+
+9. Update tothbot/__main__.py per §1.4 module wire-up.
+
+10. Add unit tests per §1.5.
+
+11. Run full test suite. Verify 19/19 prior tests pass
+    AND all new tests pass. ZERO regressions tolerated.
+
+12. Commit per §1.6.
+
+13. Author TB00148 Session Log v1_0 + TB00148 NSI v1_0.
+
+14. Apply RR-SCOPE-005 STRICTLY. Cumulative count = 6.
+
+15. Apply RR-SCOPE-001 STRICTLY across BOTH chat and
+    Claude Code.
+
+16. Apply RR-SHELL-001..004 STRICTLY. PowerShell is
+    Bill's default shell.
+
+17. Apply OP-001..009 (ONEDRIVE PROHIBITION) STRICTLY.
+
+18. Apply PA-001..010 (PAPER-AS-MASTER PRINCIPLE)
+    STRICTLY. Pre-emit scan before every authoring
+    action — code or text.
+
+============================================================
+7. SCOPE BOUNDARIES
+============================================================
+
+IN SCOPE FOR TB00148:
+  - Code edit ws_manager.py per 1011002 dv1_26 CODE IMPACT.
+  - Code edit exit_controller.py per 1011005 dv1_3 CODE
+    IMPACT.
+  - Module wire-up update in tothbot/__main__.py.
+  - Unit test additions per EC-PAPER-CODE-006.
+  - Regression verification (19/19 prior tests pass).
+  - Commit + push to TothBot_V2-Code master.
+  - TB00148 Session Log + NSI authoring.
+
+OUT OF SCOPE FOR TB00148:
+  - VPS deploy (deferred to next session post-TB00148).
+  - 24-72h paper observation (post-deploy).
+  - New spec authoring or amendment beyond what is
+    needed to align in-file revision histories.
+  - New parameter changes (CIATS-owned values).
+  - Constraint removal (RR-SCOPE-009 territory).
+  - Concurrent paper+live architecture work (PL-007).
+  - Live trading.
+
+If TB00148 surfaces a defect requiring spec amendment,
+halt code work, document in session log, and defer the
+spec amendment to a separate session. Do NOT mix spec
+and code work in the same session beyond in-file
+revision history.
+
+============================================================
+8. SESSION COMPLETION CRITERIA FOR TB00148
+============================================================
+
+  [ ] Cold-load mandatory reading complete
+  [ ] STEP A pre-flight PASS
+  [ ] GitHub state verified (Docs=e8713d5, Code=fb5de32)
+  [ ] ws_manager.py edits complete per 1011002 dv1_26
+      CODE IMPACT (8 changes)
+  [ ] exit_controller.py edits complete per 1011005
+      dv1_3 CODE IMPACT (5 changes)
+  [ ] __main__.py wire-up updated per §1.4
+  [ ] In-file revision histories updated to dv1_26 /
+      dv1_3
+  [ ] All new unit tests added per EC-PAPER-CODE-006
+  [ ] Full test suite runs clean (zero regressions)
+  [ ] Code committed + pushed to TothBot_V2-Code master
+  [ ] TB00148 Session Log v1_0 authored
+  [ ] TB00148 NSI v1_0 authored
+
+ALL boxes MUST be checked before TB00148 closes. If any
+fails, document in session log, defer remaining work to
+TB00149+ as a new stream.
+
+============================================================
+END OF DOCUMENT
+============================================================

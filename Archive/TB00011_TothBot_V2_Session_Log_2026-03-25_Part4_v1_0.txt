@@ -1,0 +1,769 @@
+DocDCN:     TB00011
+DocTitle:   TothBot_V2_Session_Log_2026-03-25_Part4
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\OneDrive\TothBot\TB00011_TothBot_V2_Session_Log_2026-03-25_Part4_v1_0.txt
+DocDate:    03-25-2026
+DocTime:    23:59:59 UTC
+
+============================================================
+TOTHBOT V2 — SESSION LOG 2026-03-25 PART 4
+============================================================
+
+Read TB00001 through TB00010 first.
+
+This log is the definitive reference session for the work
+done on March 25, 2026. It documents:
+
+  (1) The 0500000 three-file save protocol — mandatory
+      standing rule for all future sessions.
+  (2) Complete error audit — every error found in the
+      TB00010 FP/DP validation, classified as omission or
+      commission, with full reasoning documented.
+  (3) Prior-occurrence audit results — which errors were
+      previously known and when they were introduced.
+  (4) Search strategy improvements for all future sessions.
+  (5) Phase 1 completion and next session state.
+
+============================================================
+1. SESSION IDENTITY
+============================================================
+
+Session date:     March 25, 2026 (Part 4 — same day)
+Session type:     Error audit + Phase 1 document production +
+                  Comprehensive session log
+Prior session:    TB00010 (2026-03-25 Part 3)
+
+Work performed this session:
+  - Prior-occurrence audit of all 6 TB00010 findings.
+  - Phase 1 documents produced: 0000000, 0100000, 0200000,
+    0300000, 0310000, 0311003, 0311005 (all new dv1_0).
+  - This session log (TB00011).
+
+============================================================
+2. 0500000 THREE-FILE SAVE PROTOCOL — MANDATORY STANDING RULE
+============================================================
+
+★★★ THIS RULE APPLIES TO EVERY FUTURE SESSION ★★★
+★★★ NO EXCEPTIONS. NO PARTIAL COMPLIANCE.      ★★★
+
+Every time 0500000 System_Architecture_Overview is produced
+or updated, exactly THREE output files MUST be delivered:
+
+------------------------------------------------------------
+FILE 1 — Claude Source (.txt)
+------------------------------------------------------------
+
+Filename:  0500000_System_Architecture_Overview_dv[X]_Claude_Source.txt
+Purpose:   Claude's working source. Contains the complete
+           document text AND all 6 SVG diagrams embedded as
+           plain text blocks.
+Why:       Claude cannot read binary .docx files. Without
+           the Claude Source, the next session cannot update
+           0500000 and must rebuild it from scratch, risking
+           loss of all accumulated changes.
+Upload to: Claude.ai project (mandatory for next session).
+Store on:  C:\Users\wstot\OneDrive\TothBot\
+
+------------------------------------------------------------
+FILE 2 — Word Document (.docx)
+------------------------------------------------------------
+
+Filename:  0500000_System_Architecture_Overview_dv[X].docx
+Purpose:   Bill's working document and official controlled
+           document for GitHub commit.
+DIAGRAM PLACEMENT RULE (NON-NEGOTIABLE):
+           Diagrams are embedded IMMEDIATELY AFTER the section
+           heading they illustrate — NOT at the end.
+           Diagram 1 → after "2. Kraken API Connection Architecture"
+           Diagram 2 → after "3. TothBot Trading Pipeline"
+           Diagram 3 → after "4. Exit Architecture"
+           Diagram 4 → after "5. Regime Taxonomy"
+           Diagram 5 → after "6. CIATS Architecture"
+           Diagram 6 → after "7. Complete System"
+Store on:  GitHub.com/TothBot/TothBot-V2-Docs/05XXXXX_.../
+
+------------------------------------------------------------
+FILE 3 — PDF (.pdf)
+------------------------------------------------------------
+
+Filename:  0500000_System_Architecture_Overview_dv[X].pdf
+Purpose:   Bill's readable PDF reference.
+SAME RULE:  Diagrams in sections — not at end. Same layout
+           as the .docx.
+Store on:  C:\Users\wstot\OneDrive\TothBot\ (or with .docx)
+
+------------------------------------------------------------
+PRODUCTION SEQUENCE (follow exactly every time)
+------------------------------------------------------------
+
+  (1) Read current Claude Source from project into
+      /home/claude/0500000_work.txt
+  (2) Apply all changes via str_replace
+  (3) Update DocVersion and revision history
+  (4) Extract SVGs: python3 extract_svgs.py
+  (5) Convert SVGs to PNGs: cairosvg.svg2png(scale=2.0)
+  (6) Build .docx with node build_docx.js
+      (diagrams in sections — verify before proceeding)
+  (7) Validate: python3 validate.py
+  (8) Convert to PDF: soffice --headless --convert-to pdf
+  (9) Copy all three files to /mnt/user-data/outputs/
+  (10) present_files all three together
+
+WHY THIS RULE EXISTS — HISTORY:
+  Prior sessions produced only a .txt or only a .docx,
+  causing repeated rebuilds, lost diagram placements,
+  and lost content. The three-file protocol eliminates
+  all of these problems in one standing rule.
+
+============================================================
+3. COMPLETE ERROR AUDIT — TB00010 VALIDATION SESSION
+============================================================
+
+This section documents every error found during the third
+10-search FP/DP organism validation (TB00010). Each error
+is classified, its origin traced, and the reasoning that
+produced it fully documented. This section is MANDATORY
+READING before any future FP/DP validation session.
+
+------------------------------------------------------------
+ERROR 1: stp_type FORMAT
+Classification: ERROR OF COMMISSION
+Severity: CRITICAL — would break every order dispatch
+Origin: TB00001, March 23 (Session 1)
+Duration uncorrected: All sessions through dv1_9
+------------------------------------------------------------
+
+WHAT WAS WRONG:
+Every TothBot V2 document from TB00001 through 0500000 dv1_9
+specified stp_type values using hyphens: "cancel-newest".
+This is the REST API format. WS v2 uses underscores:
+"cancel_newest". Official Kraken WS v2 batch_add documentation
+example: "stp_type": "cancel_both" — underscore, confirmed.
+
+IMPACT IF CODED WITHOUT CORRECTION:
+Every single add_order and batch_add call would use the
+wrong STP format. Kraken would either reject the order or
+silently ignore the STP parameter. Self-trade prevention
+would not function. In a scenario where TothBot dispatches
+a new entry order while a previous post_only entry for the
+same pair is still resting in the book, the two orders
+could fill against each other.
+
+HOW THE ERROR WAS INTRODUCED:
+TB00001 wrote the pipeline description: "add_order (limit,
+post_only, GTD expiretm=now+30-60s)" and later in the same
+session added stp_type using the REST API format that was
+already familiar. No verification was done against WS v2
+documentation specifically. The REST and WS v2 formats look
+similar but differ in separator character only — easy to
+miss without a targeted verification.
+
+WHY IT PERSISTED FOR SIX SESSIONS:
+Every prior FP/DP search focused on functional questions
+(ping, zombie, sequence gaps, exec_types, rate limits,
+deprecations) but none included a search specifically asking
+"what are the exact accepted values and format for stp_type
+in WS v2 add_order?" The error was authoritative-looking
+because A-4 was a named architectural requirement that had
+been reviewed multiple times. Named requirements look correct
+even when they are wrong.
+
+TB00010 Search 5 ("Kraken WS v2 add_order batch_add parameters
+stp_type GTD deadline 2025") returned the official Kraken WS
+v2 add_order and batch_add pages directly. The batch_add
+example showed "stp_type": "cancel_both" — underscore — and
+the contradiction with all prior specs was immediately visible.
+
+CORRECTION APPLIED:
+0500000 dv1_10: all text occurrences corrected + SVG diagrams.
+0411001 dv1_3: WS-STP-001 through -003.
+1011002 dv1_3: WM-STP-001 through -003.
+1011001 dv1_1: BP-ORD-001 + BP-TEST-004 (unit test assertion).
+AR-032 added.
+
+CARRY-FORWARD RULE FOR FUTURE SESSIONS:
+Every FP/DP validation session MUST include at least one
+search explicitly targeting WS v2 order parameter format
+and accepted values — not just functionality. The format
+difference between REST and WS v2 is a single character
+(hyphen vs underscore) and is easy to propagate unchecked
+across many documents. Targeted verification is required.
+
+------------------------------------------------------------
+ERROR 2: deadline PARAMETER — WRONG DECISION
+Classification: ERROR OF COMMISSION
+Severity: HIGH — order placement vulnerable to network delay
+Origin: TB00009 (WS-GTD-002 in 0411001 dv1_2)
+Duration uncorrected: TB00009 only (one session)
+------------------------------------------------------------
+
+WHAT WAS WRONG:
+In 0411001 dv1_2 (written during TB00009), WS-GTD-002
+explicitly stated:
+  "TothBot does not use the deadline parameter for entry
+  orders (uses GTD expiretm instead). deadline is for
+  amend_order time-sensitivity."
+
+This decision is logically wrong. deadline and GTD expiretm
+operate at different layers and serve different purposes.
+They are complementary, not alternatives.
+
+THE CORRECT UNDERSTANDING:
+
+GTD expiretm (Business Rule Layer):
+  Controls how long an unfilled order rests in the book.
+  If TothBot sends an entry order at candle close, and the
+  price moves away before the order fills, the order expires
+  after 30-60 seconds and is removed from the book.
+  This is a business rule about order resting duration.
+
+deadline (Transport/Message Layer):
+  Controls whether the engine accepts the ORDER MESSAGE at all.
+  If TothBot's event loop pauses for 6 seconds after computing
+  the entry (due to GC, network, asyncio saturation), and
+  deadline = now+5s has already passed, the engine rejects
+  the order. This prevents placing an entry at a price that
+  was computed 6 seconds ago and is now stale.
+  This is a transport-layer latency protection.
+
+Both should be used. A GTD entry order should also carry
+deadline = now+5s. The GTD controls "how long it lives if
+unfilled." The deadline controls "whether the engine even
+accepts the order message given its age."
+
+HOW THE WRONG DECISION WAS MADE:
+During TB00009, the deadline parameter was encountered in
+research and correctly noted as having a range of 500ms-60s
+with a default of 5s. The reasoning that followed was:
+"TothBot uses GTD expiretm = now+30-60s. That already
+limits the order lifetime. deadline adds another limit.
+Having both is redundant."
+This reasoning failed at the layer confusion: expiretm
+limits in-book resting time; deadline limits message
+transport time. They are not in the same dimension.
+
+This is the most dangerous error type: an explicit written
+decision that appears reasoned and documented. WS-GTD-002
+looks authoritative. It has a section number, a spec ID,
+and a clear rationale. It would not prompt review because
+it appears resolved.
+
+TB00010 Search 5 returned the full add_order documentation
+showing both parameters used together, making their distinct
+purposes clear.
+
+CORRECTION APPLIED:
+0411001 dv1_3: WS-DL-001 through -004. WS-GTD-002 corrected.
+1011002 dv1_3: WM-DL-001 through -004.
+0500000 dv1_10: A-21, AR-033.
+Standard: deadline = now+5s on ALL add_order and batch_add.
+
+CARRY-FORWARD RULE FOR FUTURE SESSIONS:
+When a parameter appears to overlap with an existing mechanism,
+explicitly identify the LAYER each one operates at before
+concluding they are redundant. Business-rule controls and
+transport-layer controls are never substitutes.
+Also: any spec that includes a "TothBot does NOT use X"
+statement should be flagged for reverification in the next
+FP/DP session. Explicit non-use decisions are more
+dangerous than omissions because they prevent correction.
+
+------------------------------------------------------------
+ERROR 3: aiohttp ClientTimeout/TCPConnector — INCOMPLETE SPEC
+Classification: ERROR OF OMISSION (partial capture)
+Severity: MODERATE — REST calls vulnerable to hangs
+Origin: TB00009 (one-line research note, incomplete spec)
+Duration uncorrected: TB00009 only (one session)
+------------------------------------------------------------
+
+WHAT WAS WRONG:
+TB00009 Section 10 Research Findings noted:
+  "aiohttp.ClientSession with TCPConnector pooling"
+WM-REST-003 in dv1_2 specified:
+  ClientTimeout(total=10)          — correct but incomplete
+  TCPConnector(limit=10, ssl=True) — partial
+
+Missing from the spec:
+  connect=5 (max time to establish TCP connection)
+  sock_read=8 (max time waiting for server response bytes)
+  force_close=False (HTTP keepalive — connection reuse)
+  limit_per_host=5
+
+WHY THE SUB-TIMEOUTS MATTER:
+total=10 without sub-timeouts means: a call that takes 9.9
+seconds to connect (e.g., Kraken REST temporarily slow) can
+still pass, leaving only 0.1 seconds for the actual data
+transfer. The server then takes 0.2 seconds to respond and
+the call fails with TimeoutError — but only after spending
+9.9 + 0.2 = 10.1 seconds. With connect=5 and sock_read=8,
+both phases are independently bounded and the failure is
+detected faster.
+
+WHY force_close=False MATTERS:
+force_close=True (or omitted, defaulting to True in some
+aiohttp versions) closes the TCP connection after each
+REST call. GetWebSocketsToken is called on every reconnect.
+GetOpenOrders is called on every executions sequence gap.
+These are hot-path calls. Connection reuse via keepalive
+materially reduces per-call overhead.
+
+HOW THE INCOMPLETE CAPTURE OCCURRED:
+TB00009 was a high-volume session (six new documents in one
+session). The aiohttp finding was noted as a one-line summary
+in Section 10 but was not converted to a complete, code-ready
+specification before moving to the next finding. When writing
+WM-REST-003, only the broadest requirement was captured.
+
+CORRECTION APPLIED:
+0411001 dv1_3: WS-REST-005 through -008.
+1011002 dv1_3: WM-REST-006 through -011.
+1011001 dv1_1: BP-HTTP-001 through -004 (complete config block).
+0500000 dv1_10: A-22, AR-035, IMP-16, IMP-17.
+
+CARRY-FORWARD RULE FOR FUTURE SESSIONS:
+Research findings must be converted to COMPLETE, CODE-READY
+specifications — not one-line summaries. Before closing a
+finding, verify it answers all five coding-readiness
+questions (what does it do, interfaces, hard rules, triggers,
+logs). A one-line note in Section 10 of a session log is not
+a specification. The complete aiohttp configuration block is
+now established in BP-HTTP-002 and must not be simplified.
+
+------------------------------------------------------------
+ERROR 4: event_trigger:bbo — WRONG DEFERRAL CONTEXT
+Classification: ERROR OF OMISSION (known, deferred incorrectly)
+Severity: MODERATE — exit detection slower than necessary
+Origin: TB00006 (March 24)
+Duration uncorrected: 5 sessions (TB00006 through TB00009)
+------------------------------------------------------------
+
+WHAT WAS WRONG:
+From TB00006, Open Item OI-004 (Entry limit placement) was
+extended to include: "evaluate ticker event_trigger:bbo."
+This bundled the bbo evaluation for EXIT (MAE monitoring on
+open positions) with the bbo evaluation for ENTRY (post_only
+limit price placement). They are independent concerns.
+
+The EXIT application (use bbo for faster adverse price
+detection on pairs with open positions) does not require
+the same research or evaluation as the ENTRY application.
+For exit/MAE monitoring, bbo is clearly superior: for long
+positions, the bid is the realizable exit price, and bbo
+fires immediately when the bid drops — even if no trade
+has occurred. This is better than waiting for the next
+trades event to fire.
+
+By deferring both to OI-004 (Phase 5-6), the system was
+specified to use trades trigger for all ticker subscriptions,
+including pairs with open positions. Five sessions passed
+with this specification in place.
+
+HOW THE DEFERRAL OCCURRED:
+In TB00006, the discussion of bbo arose in the context of
+entry limit placement: "should we evaluate the L2 book and
+bbo trigger to better position post_only limit entries?"
+That is a legitimate Phase 5-6 question requiring data.
+The exit application was not separately identified at that
+point — both uses of bbo were lumped together.
+
+THE ANALYSIS THAT WAS MISSING:
+bbo for ENTRY requires: evaluating whether faster bid/ask
+data improves fill rates on post_only entries. Data needed.
+bbo for EXIT requires: recognizing that bid = realizable
+exit price for longs. Faster detection = faster MAE trigger
+= less adverse excursion. No data needed — this is
+straightforward.
+
+CORRECTION APPLIED:
+0411001 dv1_3: WS-TKR-001 through -004.
+1011002 dv1_3: WM-TKR-001 through -004 (per-pair trigger mgmt).
+0500000 dv1_10: A-23, AR-034, IMP-18.
+OI-004 retains only the entry placement evaluation.
+
+CARRY-FORWARD RULE FOR FUTURE SESSIONS:
+For any market data capability, explicitly evaluate its
+application to EXIT and ENTRY independently. These are
+different decisions with different evidence requirements.
+An exit application that is clearly beneficial should
+never be deferred because the entry application requires
+analysis. Check all contexts before assigning to a single OI.
+
+------------------------------------------------------------
+ERROR 5: Regime Engine REST Rate Limit Stagger — NEVER CONSIDERED
+Classification: ERROR OF OMISSION (fundamental gap)
+Severity: HIGH — regime classification corrupted at 00:00 UTC
+Origin: Never in any session
+Duration uncorrected: All sessions through dv1_0 of 1011012
+------------------------------------------------------------
+
+WHAT WAS WRONG:
+The Regime Engine specification (1011012) described calling
+GetOHLCData for each monitored pair at 00:00 UTC. No document
+addressed rate limiting. The Kraken public REST OHLC endpoint
+is rate-limited at approximately 1 call/second per IP+pair.
+
+With 50 monitored pairs, the obvious developer implementation
+would be:
+  await asyncio.gather(*[get_ohlc(pair) for pair in pairs])
+This fires all 50 calls simultaneously. The rate limit fires
+at pair #2. Pairs 2-50 receive HTTP 429 and fall back to
+stale regime (previous day). At 00:00 UTC, this means most
+pairs enter the new day with yesterday's regime classification.
+
+IMPACT:
+A pair that moved from TRENDING_NEG to TRENDING_POS overnight
+would still be classified as TRENDING_NEG in Gate 3, blocking
+valid entries all day. A pair that moved from TRENDING_POS
+to TRENDING_NEG would be allowed through Gate 3, generating
+entries in a no-entry regime.
+
+HOW THE OMISSION OCCURRED:
+The Regime Engine specification focused on two correctness
+concerns: (1) computing indicators correctly (exclude
+response[-1]) and (2) scheduling correctly (00:00 UTC).
+The operational constraint of the rate limit was never
+identified because no search specifically targeted the
+public OHLC endpoint rate limits.
+
+TB00010 Search 8 ("Kraken rate limits public REST endpoints
+OHLC calls GetOHLCData frequency limits") returned the
+Kraken rate limit documentation directly, making the
+constraint immediately visible.
+
+CORRECTION APPLIED:
+1011012 dv1_1: RE-RL-001 through -004.
+0411001 dv1_3: WS-OHLC-006 through -009.
+1011002 dv1_3: WM-RL-004 note.
+0500000 dv1_10: A-24, AR-036, IMP-19.
+Standard: asyncio.sleep(1.1) between each pair call.
+
+CARRY-FORWARD RULE FOR FUTURE SESSIONS:
+For EVERY batch REST operation (any loop calling an endpoint
+for N pairs or assets), include a search specifically for
+the rate limit of that endpoint before finalizing the spec.
+Never assume batch concurrent REST calls are safe. Public
+REST endpoints at Kraken are rate-limited per IP+pair.
+Future searches must include: "[endpoint] rate limit
+calls per second Kraken 2025" for every batch operation.
+
+------------------------------------------------------------
+ERROR 6: API Key IP Whitelisting — NEVER CONSIDERED
+Classification: ERROR OF OMISSION (security gap)
+Severity: MODERATE — API keys more vulnerable than necessary
+Origin: Never in any session
+Duration uncorrected: All sessions through 1011013 dv1_0
+------------------------------------------------------------
+
+WHAT WAS WRONG:
+No document specified that the Kraken DATA and TRADE API keys
+should be IP-whitelisted to the VPS IP address (87.99.141.44).
+Kraken supports per-key IP whitelisting. With a fixed VPS IP,
+this is straightforward: add the VPS IP to both key whitelists.
+If keys are accidentally exposed (git leak, shoulder surfing,
+etc.), an attacker cannot use them from any IP other than
+the VPS.
+
+ADDITIONAL FINDING IN THIS SEARCH:
+TB00010 Search 4 also confirmed that Kraken's direct AWS PoP
+routing (referenced as a latency improvement option in Kraken
+docs) is NOT available for standard Spot WS/REST. It is
+institutional FIX API only. The Hillsboro VPS migration
+(PL-007, AR recommendation) remains the correct mechanism
+for improving WS latency — not IP routing changes. This
+distinction is important: "IP whitelist" is a security
+control, not a routing/latency control.
+
+HOW THE OMISSION OCCURRED:
+1011013 dv1_0 focused on process management (systemd),
+monitoring (watchdog), log management (logrotate), and key
+storage security (EnvironmentFile, chmod 600). IP whitelisting
+is a natural complement to key storage security but was not
+in the mental model when writing that document. No prior
+search retrieved the Kraken IP whitelisting documentation.
+
+CORRECTION APPLIED:
+1011013 dv1_1: VD-KEY-006 through -009.
+0411001 dv1_3: WS-KEY-006 through -009.
+0500000 dv1_10: AR-037.
+
+VPS MIGRATION SEQUENCE (mandatory, from VD-KEY-009):
+  (1) Note new VPS IP BEFORE decommissioning old VPS.
+  (2) Add new IP to both key whitelists in Kraken UI.
+  (3) Verify authentication from new VPS successfully.
+  (4) THEN decommission old VPS.
+  (5) Remove old IP from both key whitelists.
+  Violating this sequence = complete trading halt at migration.
+
+CARRY-FORWARD RULE FOR FUTURE SESSIONS:
+Every deployment or infrastructure spec update must include
+an explicit IP whitelisting step. It is now documented in
+1011013. When the VPS migrates to Hillsboro, the migration
+checklist must include the above five-step sequence.
+
+============================================================
+4. PRIOR-OCCURRENCE AUDIT RESULTS
+============================================================
+
+The search specifically asked: were any TB00010 findings
+present in earlier sessions but not corrected?
+
+  ERROR 1 (stp_type):    First in TB00001. Carried through
+                          ALL 9 prior sessions. Never questioned.
+                          Genuinely new find in TB00010.
+
+  ERROR 2 (deadline):     Researched in TB00009. Deadline range
+                          confirmed (500ms-60s, default 5s).
+                          BUT WS-GTD-002 explicitly decided NOT
+                          to use it on entry orders — wrong.
+                          Error introduced in TB00009.
+                          Error corrected in TB00010.
+
+  ERROR 3 (aiohttp):      Found in TB00009 Search 9 (one-line
+                          note: "TCPConnector pooling"). Written
+                          into WM-REST-003 with partial config.
+                          Partial capture in TB00009.
+                          Completed in TB00010.
+
+  ERROR 4 (bbo/exit):     Known since TB00006. Placed in OI-004
+                          (wrong bucket) for 5 sessions.
+                          Correct context identified in TB00010.
+
+  ERROR 5 (OHLC stagger): Never in any prior session.
+                          Genuinely new find in TB00010.
+
+  ERROR 6 (IP whitelist): Never in any prior session.
+                          Genuinely new find in TB00010.
+
+ERROR TYPE SUMMARY:
+  2 genuinely new finds (never previously encountered).
+  2 partial captures (found but incompletely converted).
+  1 deferred to wrong context (known but misclassified).
+  1 active wrong decision (researched, decided incorrectly).
+
+The active wrong decision (Error 2) is the most dangerous
+error type. It creates a documented, reasoned, seemingly
+resolved item that prevents correction. Future reviews
+skip it because it looks complete. All future FP/DP sessions
+must specifically search for "TothBot does NOT use X"
+statements and reverify each one.
+
+============================================================
+5. SEARCH STRATEGY REQUIREMENTS FOR FUTURE FP/DP SESSIONS
+============================================================
+
+MANDATORY SEARCH INCLUSION IN ALL FUTURE FP/DP VALIDATIONS:
+
+  CATEGORY A — Order parameter format (WS v2):
+  Search: "Kraken WS v2 add_order parameters stp_type format"
+  Search: "Kraken batch_add WS v2 example official 2025"
+  Verify ALL order parameter values against WS v2 docs
+  independently of REST docs. Different protocol = different
+  format.
+
+  CATEGORY B — Rate limits for all batch REST operations:
+  For every endpoint called in a loop:
+  Search: "Kraken [endpoint name] rate limit per second"
+  Specify required stagger before finalizing any batch spec.
+  Current established staggers:
+    GetOHLCData: asyncio.sleep(1.1) between pairs.
+
+  CATEGORY C — Transport vs business-rule layer distinction:
+  Before deciding two parameters serve the "same purpose":
+  explicitly identify the layer each operates at.
+  Transport-layer controls ≠ business-rule-layer controls.
+  deadline (transport) ≠ expiretm (business rule).
+
+  CATEGORY D — Exit vs entry separation:
+  For any market data capability, evaluate exit and entry
+  applications independently. Never defer an exit application
+  because the entry application needs more analysis.
+
+  CATEGORY E — "TothBot does NOT use X" audit:
+  In every FP/DP session, grep all current specs for
+  "does not", "NOT use", "REJECTED" statements and
+  reverify each one. These are the highest-risk items
+  because they block their own correction.
+
+  CATEGORY F — Infrastructure security:
+  Each new deployment or VPS spec update:
+  IP whitelist status, key rotation procedure,
+  permission validation checks.
+
+  CATEGORY G — 0500000 three-file verification:
+  At session close, confirm all three 0500000 files
+  (Claude Source .txt, .docx, .pdf) are present in outputs
+  before marking the session complete.
+
+============================================================
+6. PHASE 1 STATUS
+============================================================
+
+All 10 Phase 1 documents exist as of this session.
+
+  0000000  Ethics_and_Safety                   dv1_0  ★ NEW
+  0100000  Management                          dv1_0  ★ NEW
+  0200000  Operations                          dv1_0  ★ NEW
+  0300000  Governance                          dv1_0  ★ NEW
+  0310000  Governance_Procedures_Anchor        dv1_0  ★ NEW
+  0311001  Namespace_Specification             dv1_2
+  0311002  Document_Creation_Workflow          dv1_7
+  0311003  Versioning_Procedure                dv1_0  ★ NEW
+  0311004  Document_Creation_and_Approval      dv1_0
+  0311005  System_Definitions_and_Terminology  dv1_0  ★ NEW
+
+GATE 1 REQUIREMENT: All 10 must reach v (approved) state
+and be committed to GitHub before Phase 2 begins.
+
+BILL ACTIONS TO PASS GATE 1:
+  (1) Review all 10 Phase 1 documents.
+  (2) Approve each (change dv → v, increment version).
+  (3) Commit all 10 to GitHub per 0311001 folder structure.
+  (4) GATE 1 passed. Phase 2 begins at Step 2.1: 0400000.
+
+============================================================
+7. ALL OUTSTANDING BILL ACTIONS
+============================================================
+
+From prior sessions (TB00010 forward):
+  (b) Create GitHub repositories — if not yet done.
+  (c) Create folder structure in TothBot-V2-Docs.
+  (d) Approve 0311002 dv1_7.
+  (k) Download 0500000 dv1_10 (all 3 files).
+  (l) Approve 0411001 dv1_3.
+  (m) Approve 1011001 dv1_1.
+  (n) Approve 1011002 dv1_3.
+  (o) Approve 1011012 dv1_1.
+  (p) Approve 1011013 dv1_1.
+  (q) ★ CRITICAL: Whitelist VPS IP (87.99.141.44) on
+      both DATA and TRADE API keys in Kraken settings.
+
+New this session (TB00011):
+  (r) Download all 7 new Phase 1 documents from outputs.
+  (s) Review and approve all 7 new Phase 1 documents.
+  (t) Approve existing 0311001 dv1_2 and 0311004 dv1_0.
+  (u) Commit all 10 Phase 1 documents to GitHub.
+  (v) GATE 1 passed. Begin Phase 2, Step 2.1: 0400000.
+
+============================================================
+8. NEXT SESSION — WHERE WE PICK UP
+============================================================
+
+ASSUMING GATE 1 IS PASSED BY BILL:
+  Next step: Phase 2, Step 2.1 → 0400000_Exchange_Interface
+  This is the AA=04 Domain Document. It defines the scope
+  of the Exchange Interface domain and depends on all
+  Phase 1 documents being committed and approved.
+
+MANDATORY UPLOAD FOR NEXT SESSION:
+  TB00001 through TB00011 (all session logs including this one)
+  0000000 dv1_0 (or v1_0 if approved)
+  0100000 dv1_0 (or v1_0)
+  0200000 dv1_0 (or v1_0)
+  0300000 dv1_0 (or v1_0)
+  0310000 dv1_0 (or v1_0)
+  0311001 dv1_2 (or v1_0)
+  0311002 dv1_7 (or v1_0)
+  0311003 dv1_0 (or v1_0)
+  0311004 dv1_0 (or v1_0)
+  0311005 dv1_0 (or v1_0)
+  0411001 dv1_3
+  1011001 dv1_1
+  1011002 dv1_3
+  1011010 dv1_1
+  1011012 dv1_1
+  1011013 dv1_1
+  0500000_System_Architecture_Overview_dv1_10_Claude_Source.txt
+
+DO NOT UPLOAD:
+  Any version of 0411001 prior to dv1_3.
+  Any version of 1011002 prior to dv1_3.
+  Any version of 1011012 prior to dv1_1.
+  Any version of 1011013 prior to dv1_1.
+  0500000 Claude Source prior to dv1_10.
+
+============================================================
+9. OPEN ITEMS — CURRENT STATE
+============================================================
+
+  OI-001  SSS signal generation — Phase 5-6.
+  OI-002  Asset selection universe — Phase 5-6.
+  OI-003  Exit Controller full spec — Phase 5-6.
+          Requires: MPP IOC retry, cancel timeout,
+          ticker bbo for MAE, batch_cancel Full Halt.
+  OI-004  Entry limit placement — Phase 5-6.
+          SCOPE (corrected TB00010): entry post_only
+          limit price placement evaluation only.
+          bbo for MAE/exit is separately resolved (A-23).
+  OI-005  Selection Controller — Phase 5-6.
+
+Nothing in Phase 1-4 is blocked.
+
+============================================================
+10. PARKING LOT — CURRENT STATE
+============================================================
+
+  PL-003  TRACKING: Pathway 1 GitHub automation.
+          After Pathway 2 reaches paper trading readiness.
+
+  All other PL items resolved or closed. No new items.
+
+============================================================
+11. COMPLETE DOCUMENT INVENTORY — CURRENT STATE
+============================================================
+
+SESSION LOGS (upload all to project):
+  TB00001  through  TB00011  (all v1_0)
+
+PHASE 1 DOCUMENTS:
+  0000000  Ethics_and_Safety                   dv1_0  ★
+  0100000  Management                          dv1_0  ★
+  0200000  Operations                          dv1_0  ★
+  0300000  Governance                          dv1_0  ★
+  0310000  Governance_Procedures_Anchor        dv1_0  ★
+  0311001  Namespace_Specification             dv1_2
+  0311002  Document_Creation_Workflow          dv1_7
+  0311003  Versioning_Procedure                dv1_0  ★
+  0311004  Document_Creation_and_Approval      dv1_0
+  0311005  System_Definitions_and_Terminology  dv1_0  ★
+
+WORKING DRAFT CODING SPECS (authoritative versions):
+  0411001  Kraken_WS_v2_Specification          dv1_3  ★
+  1011001  Engineering_Best_Practices          dv1_1  ★
+  1011002  WS_Manager_Coding_Spec              dv1_3  ★
+  1011010  CIATS_Coding_Spec                   dv1_1
+  1011012  Regime_Engine_Coding_Spec           dv1_1  ★
+  1011013  VPS_Deployment_Coding_Spec          dv1_1  ★
+
+0500000 SYSTEM ARCHITECTURE OVERVIEW:
+  dv1_10_Claude_Source.txt  ✅ (upload to project)
+  dv1_10.docx               ✅ (diagrams in sections)
+  dv1_10.pdf                ✅ (diagrams in sections)
+
+★ = Updated or new this session (TB00010/TB00011)
+
+SUPERSEDED — DO NOT USE:
+  0411001 dv1_0, dv1_1, dv1_2
+  1011001 dv1_0
+  1011002 dv1_0, dv1_1
+  1011012 dv1_0
+  1011013 dv1_0
+  0500000 dv1_9 Claude Source and all prior
+
+============================================================
+12. REVISION HISTORY
+============================================================
+
+  v1_0  03-25-2026  Initial session log. Records:
+                    0500000 three-file save protocol.
+                    Complete error audit: 6 errors, all
+                    classified (commission/omission), all
+                    root-caused, all carry-forward rules
+                    documented. Prior-occurrence audit.
+                    Search strategy requirements.
+                    Phase 1 completion (all 10 documents).
+                    All Bill actions. Complete inventory.
+
+============================================================
+END OF SESSION LOG
+============================================================

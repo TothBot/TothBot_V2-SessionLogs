@@ -1,0 +1,436 @@
+DocDCN:     TB00094
+DocTitle:   TothBot_V2_Session_Log_2026-04-13_Part5
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\My_TothBot_Stuff\TBXXXXX_Session_Logs\TB00094_TothBot_V2_Session_Log_2026-04-13_Part5_v1_0.txt
+DocDate:    04-13-2026
+DocTime:    23:59:59 UTC
+
+============================================================
+TOTHBOT V2 SESSION LOG — 2026-04-13 PART 5
+============================================================
+
+============================================================
+1. SESSION IDENTITY
+============================================================
+
+Session date:     April 13, 2026 (Part 5)
+Session number:   TB00094
+Session type:     DEFECT-SS-006 spec corrections complete.
+                  Three spec documents written, delivered,
+                  committed, and pushed to GitHub.
+Prior session:    TB00093 (2026-04-13 Part 4)
+
+Documents read this session:
+  TB00000  v2_8    Project Instructions             read
+  TB00093  v1_0    Prior session log                read
+  0411002  dv1_0   Kraken REST API Specification    read
+  0711003  dv1_0   Asset Selection Specification    read
+  1011002  dv1_14  WS Manager Coding Spec           read
+  1011003  dv1_0   Signal Pipeline Coding Spec      read
+  ws_manager.py    dv1_15 (liquidity_24h confirmed  read
+                   empty — never populated)
+
+============================================================
+2. WORK COMPLETED THIS SESSION
+============================================================
+
+------------------------------------------------------------
+2.1 DEFECT-SS-006 Spec Corrections — COMPLETE
+------------------------------------------------------------
+
+All three spec documents produced from scratch, delivered
+in one batch per DR-003, committed to TothBot_V2-Docs,
+and pushed to GitHub.
+
+GitHub commit: af3a5ad
+  "DEFECT-SS-006: 0411002 dv1_1, 0711003 dv1_1,
+   1011002 dv1_15 — REST Ticker liquidity source correction"
+  3 files changed, 3560 insertions(+)
+
+------------------------------------------------------------
+2.2 Document 1: 0411002 dv1_1 — COMPLETE
+------------------------------------------------------------
+
+Kraken_REST_API_Specification upgraded dv1_0 → dv1_1.
+
+Changes:
+  Section 4.8 Ticker added — REST-TKR-001 through
+  REST-TKR-010.
+    REST-TKR-001: Purpose. REST Ticker is SOLE correct
+      source for 24h USD volume. Instrument channel has
+      NO volume data. (DEFECT-SS-006)
+    REST-TKR-002: Endpoint. GET /0/public/Ticker.
+      Public — no auth required.
+    REST-TKR-003: Request pair name format. WS v2 "BTC/USD"
+      must be mapped to classic "XXBTZUSD" before request.
+    REST-TKR-004: Response format. v[1] = 24h base volume,
+      p[1] = 24h VWAP (USD). All strings → Decimal.
+    REST-TKR-005: USD volume formula.
+      usd_volume_24h = Decimal(v[1]) * Decimal(p[1]).
+    REST-TKR-006: Response key mapping. Classic names back
+      to WS names. LIQUIDITY_PAIR_NOT_FOUND on miss.
+    REST-TKR-007: Call triggers. Startup during
+      _warm_up_all_pairs(). Periodic every
+      liquidity_refresh_hours. NOT on hot path.
+    REST-TKR-008: Rate limit. Single call for all pairs.
+      No stagger required.
+    REST-TKR-009: Error handling. Retry once on startup
+      failure. Preserve cache on refresh failure.
+      Fail-safe: Gate 2 blocks entries if cache empty.
+    REST-TKR-010: HARD RULE. Instrument channel has NO
+      volume data. REST Ticker is the ONLY correct source.
+
+  Section 1: endpoint count updated 7 → 8.
+  Section 6 Q1: 8 endpoints.
+  Section 6 Q2: liquidity_24h cache added to interfaces.
+  Section 6 Q4: Ticker trigger chain added.
+  Section 6 Q5: Ticker log events added.
+  Related documents: 0711003 dv1_1 and 1011003 dv1_0 added.
+
+------------------------------------------------------------
+2.3 Document 2: 0711003 dv1_1 — COMPLETE
+------------------------------------------------------------
+
+Asset_Selection_Specification upgraded dv1_0 → dv1_1.
+
+Changes:
+  AS-004 completely rewritten: 9-step startup procedure
+  (was 7 steps).
+    Step 1: Subscribe to instrument channel.
+    Step 2: Receive snapshot. EXPLICITLY states: snapshot
+      has NO volume data. Do NOT read volume from here.
+    Step 3: Build raw candidate list (USD/USDC + ONLINE).
+    Step 4: Call REST Ticker for all candidates.
+    Step 5: Filter by min_volume_usd_daily.
+    Step 6: Anchor BTC/USD.
+    Step 7: Rank remaining by volume, take top N-1.
+    Step 8: Final universe = BTC/USD union top N.
+    Step 9: Per-pair: cache metadata, subscribe ohlc(5)
+      only (NOT ohlc(60) per OI-NEW-001 / HR-WM-021),
+      subscribe ticker, begin WARM_UP.
+
+  AS-005 completely rewritten: REST Ticker is the data
+    source. USD volume formula documented. Periodic
+    refresh documented. liquidity_refresh_hours CIATS
+    parameter added (starting value: 4h). Fail-safe on
+    refresh failure documented. Prior dv1_0 incorrect
+    claim explicitly marked DEPRECATED with root cause.
+
+  HR-AS-006 corrected: volume source is REST Ticker ONLY.
+    Instrument channel prohibition made explicit.
+
+  Section 9 Q1: REST Ticker and liquidity_24h added
+    to inputs.
+  Section 9 Q2: REST Ticker and liquidity_24h cache added
+    to interfaces.
+  Section 9 Q4: REST Ticker call and periodic refresh
+    trigger added.
+  Section 9 Q5: Liquidity log events added.
+
+  Section 8 CIATS registry: liquidity_refresh_hours
+    added (starting value: 4 hours).
+
+  Related documents: 0411002 dv1_1 and 1011002 dv1_15
+    added with explicit context.
+
+------------------------------------------------------------
+2.4 Document 3: 1011002 dv1_15 — COMPLETE
+------------------------------------------------------------
+
+WS_Manager_Coding_Spec upgraded dv1_14 → dv1_15.
+
+Changes:
+  Section 9.6 added: 24h Liquidity Cache (DEFECT-SS-006).
+    WM-LIQ-001 through WM-LIQ-010.
+    WM-LIQ-001: liquidity_24h dict. Initialized empty.
+      Populated from REST Ticker. Read by Gate 2.
+    WM-LIQ-002: _rest_get_ticker() method specification.
+      Maps WS names → classic names. Calls GET /Ticker.
+      Computes Decimal(v[1]) * Decimal(p[1]) per pair.
+      Maps classic names back to WS names. Returns dict.
+    WM-LIQ-003: Pair name mapping. wsname_to_classic and
+      classic_to_wsname maps built from instrument
+      snapshot at startup.
+    WM-LIQ-004: Startup call sequence. Called from
+      _warm_up_all_pairs() for ALL online USD/USDC
+      candidates (not just monitored_universe — must
+      fetch all to rank by volume).
+    WM-LIQ-005: _liquidity_refresh_loop() asyncio task.
+      Sleeps liquidity_refresh_hours * 3600. Wakes,
+      refreshes monitored_universe pairs, logs result.
+    WM-LIQ-006: Task launch. create_task() from
+      _warm_up_all_pairs() after initial population.
+    WM-LIQ-007: CIATS parameter liquidity_refresh_hours
+      = 4 (starting value).
+    WM-LIQ-008: Error handling. Preserve cache on failure.
+      Never zero out. Fail-safe on startup failure.
+    WM-LIQ-009: Log events: LIQUIDITY_SEEDED,
+      LIQUIDITY_REFRESHED, LIQUIDITY_REFRESH_FAILED,
+      LIQUIDITY_SEED_FAILED, LIQUIDITY_PAIR_NOT_FOUND.
+    WM-LIQ-010: Fail-safe guarantee. Empty cache →
+      Gate 2 blocks all entries. Safe by default.
+
+  Section 3 Q1: liquidity_24h cache added to description.
+  Section 3 Q5: Liquidity log events added to STARTUP
+    and new LIQUIDITY category.
+  WM-PS-002: corrected — instrument channel has NO volume.
+    Volume from REST Ticker only. Reference HR-WM-022.
+  Section 9.3: stale ohlc(60) WS sentence corrected with
+    NOTE — HTF EMAs are REST-only per HR-WM-021.
+  HR-WM-022 added: liquidity_24h from REST Ticker only.
+    Instrument channel prohibition explicit.
+  Related documents: 0411002 → dv1_1, 0711003 dv1_1 added.
+
+------------------------------------------------------------
+2.5 Document 4: 1011003 dv1_0 — NO CHANGES NEEDED
+------------------------------------------------------------
+
+Gate 2 reads liquidity_24h[symbol] from pre-computation
+cache (SP-PRE-002). It does not care where the cache was
+populated — that is WM's responsibility. Gate 2 spec is
+source-agnostic and correct as-is. No version increment
+required.
+
+------------------------------------------------------------
+2.6 DC Compliance Audit — CLEAN
+------------------------------------------------------------
+
+All three documents passed:
+  7-field headers correct.
+  DocVersion incremented correctly.
+  DocPath matches filename.
+  DocDate 04-13-2026 / DocTime 23:59:59 UTC.
+  Parent chain intact.
+  Cross-document version references current.
+
+============================================================
+3. OPEN ITEMS
+============================================================
+
+DEFECT-SS-004  CLOSED.
+DEFECT-SS-005  CLOSED.
+DEFECT-SS-006  SPEC COMPLETE. Code not yet written.
+               Specs committed to GitHub: af3a5ad.
+               Next step: write ws_manager.py dv1_16.
+
+PT-ENTRY-008   DONE — SYSTEM_OPERATIONAL confirmed.
+OI-006         CLOSED.
+
+============================================================
+4. GITHUB COMMIT LOG — THIS SESSION
+============================================================
+
+TothBot_V2-Docs commits:
+  [af3a5ad] DEFECT-SS-006: 0411002 dv1_1, 0711003 dv1_1,
+    1011002 dv1_15 — REST Ticker liquidity source correction
+    3 files changed, 3560 insertions(+)
+
+TothBot_V2-Code commits:
+  None this session.
+
+VPS:
+  No changes this session.
+  System OPERATIONAL. Gate 2 blocking all entries.
+  PAPER TRADING ONLY. No trades at risk.
+
+============================================================
+5. SYSTEM STATE
+============================================================
+
+ws_manager.py:     dv1_15 — deployed on VPS
+startup_sequence.py: dv1_6 — deployed on VPS
+VPS state:         OPERATIONAL
+Gate 2:            BLOCKING ALL ENTRIES (liquidity_24h = 0)
+Trades at risk:    NONE — fail-safe confirmed
+
+The system is safe. Gate 2 will continue to block all
+entries until ws_manager.py dv1_16 is written, committed,
+deployed, and liquidity_24h is populated from REST Ticker.
+
+============================================================
+6. PARKING LOT
+============================================================
+
+  PL-001      WSManager dual PM creation paths. Monitor.
+  PL-003      Pathway 1 GitHub automation. After paper trading.
+  PL-NEW-003  VPS migration to Hillsboro OR. After stable.
+  PL-NEW-004  EE ENTRY_TIMEOUT_SEC vs WM ENTRY_GTD_SEC. Monitor.
+  PL-NEW-005  requirements.txt — websockets version pin.
+  PL-NEW-006  tothbot_service.txt not updated in GitHub.
+  PL-NEW-007  LOG_FILE path mismatch.
+  PL-NEW-008  Heartbeat UNKNOWN_MESSAGE_TYPE log spam.
+  PL-NEW-010  status subscription "Symbol(s) not found".
+  PL-NEW-012  HTF EMA incremental updates lost (ohlc(60)
+              removed). REST-only for paper trading.
+  PL-NEW-013  EC ohlc(60) trigger removed.
+              _process_ohlc_60m() will never fire.
+  PL-NEW-014  Duplicate indicator stores.
+  PL-NEW-015  1010000_Trading_System_Coding_Anchor_dv1_5.txt
+              deleted but unstaged in TothBot_V2-Docs.
+
+============================================================
+7. STANDING RULES — ALL ACTIVE
+============================================================
+
+  RULE 6  — git add . is prohibited. Explicit per file.
+  RULE 13 — .bat files go to Desktop only. Never in repo.
+  RULE 14 — git push origin master. NEVER origin main.
+  RULE 15 — ONE COMMAND PER COPY BOX. ALWAYS.
+  RULE 16 — .bat files run from cmd.exe only. Never PS.
+  RULE 17 — Always give complete and correct instructions.
+            Include Command Prompt or Powershell. Include
+            root file path in each instruction. Every step
+            must be executable without interpretation.
+
+  DELIVERY RULES — ALL ACTIVE:
+  DR-001 — All documents as .txt files.
+  DR-002 — 0500000 additionally as .docx and .pdf.
+  DR-003 — ALL documents in ONE BATCH. No piecemeal.
+
+============================================================
+8. BILL ACTIONS REQUIRED
+============================================================
+
+Step 1 — Save this session log:
+```
+C:\Users\wstot\My_TothBot_Stuff\TBXXXXX_Session_Logs\
+```
+
+Step 2 — Upload TB00094 to Claude project folder.
+
+Step 3 — NO deployment actions. System is fail-safe.
+         Gate 2 blocks all entries. No trades at risk.
+         Wait for next session to write and deploy code.
+
+============================================================
+9. NEXT SESSION — COMPLETE INSTRUCTIONS
+============================================================
+
+============================================================
+DOCUMENTS TO READ — IN THIS ORDER:
+1. TB00000 v2_8  — Project Instructions
+2. TB00094 v1_0  — This session log (most recent)
+
+STATE DOCUMENTS READ AND VERSIONS BEFORE ANY WORK.
+============================================================
+
+============================================================
+FIRST TASK — Write ws_manager.py dv1_16 (DEFECT-SS-006)
+============================================================
+
+STEP 1: Re-read these documents from project:
+  1011002  dv1_15  WS Manager Coding Spec (just written)
+  ws_manager.py    dv1_15 (current GitHub version)
+
+  Do NOT assume any prior session context.
+  Start fresh from the project files.
+
+STEP 2: Write ws_manager.py dv1_16.
+  Starting point: ws_manager.py dv1_15 from project.
+  The prior dv1_16 (OHLC hack) is WITHDRAWN and MUST
+  NOT be used. It was never committed. It does not exist.
+
+  Code changes required (governed by 1011002 dv1_15
+  Section 9.6, WM-LIQ-001 through WM-LIQ-010):
+
+  Change 1: Build pair name maps from instrument snapshot.
+    In _handle_instrument(), after processing snapshot,
+    build two dicts:
+      self._wsname_to_classic: dict[str, str]
+        WS name (e.g. "BTC/USD") → classic (e.g. "XXBTZUSD")
+      self._classic_to_wsname: dict[str, str]
+        classic → WS name
+    The instrument channel snapshot provides both the
+    symbol (WS format) and the altname/classic name.
+    Use these fields to build the maps.
+
+  Change 2: New method _rest_get_ticker(candidates).
+    Input: list of WS pair names.
+    Map to classic names via _wsname_to_classic.
+    Build comma-separated pair string.
+    Call: GET https://api.kraken.com/0/public/Ticker
+          ?pair=[comma-separated classic names]
+    Via self._rest_session (shared aiohttp ClientSession).
+    Parse result: for each classic key in result:
+      usd_vol = Decimal(str(data["v"][1])) *
+                Decimal(str(data["p"][1]))
+      ws_name = self._classic_to_wsname.get(classic_key)
+      if ws_name: self.liquidity_24h[ws_name] = usd_vol
+      else: log LIQUIDITY_PAIR_NOT_FOUND
+    Return dict[str, Decimal].
+    On exception: log LIQUIDITY_REFRESH_FAILED, return {}.
+
+  Change 3: Modify _warm_up_all_pairs().
+    After instrument snapshot processed and before
+    seed_indicators_from_rest() loop:
+      candidates = list of all online USD/USDC pairs
+        from self.pair_cache (NOT just monitored_universe)
+      await self._rest_get_ticker(candidates)
+        → populates self.liquidity_24h
+      log LIQUIDITY_SEEDED(pairs=N)
+    After initial population:
+      asyncio.create_task(self._liquidity_refresh_loop())
+
+  Change 4: New method _liquidity_refresh_loop().
+    async def _liquidity_refresh_loop(self):
+      while True:
+        await asyncio.sleep(
+            self._params.liquidity_refresh_hours * 3600)
+        result = await self._rest_get_ticker(
+            list(self.monitored_universe))
+        if result:
+          self.liquidity_24h.update(result)
+          log LIQUIDITY_REFRESHED(pairs=len(result))
+        else:
+          log LIQUIDITY_REFRESH_FAILED
+
+  Change 5: Update header — dv1_14 → dv1_16.
+    Add dv1_16 revision history entry.
+
+  NOTE: startup_sequence.py does NOT need changes.
+    _liquidity_refresh_loop() is launched from within
+    _warm_up_all_pairs() as a self-contained asyncio task.
+    No external launch point required.
+
+STEP 3: DC compliance audit on ws_manager.py dv1_16.
+  7-field header correct. DocVersion dv1_16.
+  DocPath correct. Revision history entry present.
+
+STEP 4: Deliver ws_manager.py dv1_16 per DR-003.
+
+STEP 5: Provide COMPLETE deployment instructions per
+  RULE 17. Command Prompt. Full root paths. Every step
+  explicit. ONE COMMAND PER COPY BOX (RULE 15).
+
+  Deployment order:
+    1. Bill saves ws_manager.py to correct local path:
+       C:\Users\wstot\GitHub\TothBot\TothBot_V2-Code\
+         tothbot\ws_manager.py
+    2. Command Prompt — cd to TothBot_V2-Code.
+    3. git add tothbot/ws_manager.py
+    4. git commit -m "DEFECT-SS-006: ws_manager.py dv1_16
+       — REST Ticker liquidity population"
+    5. git push origin master
+    6. SSH to VPS.
+    7. cd ~/TothBot_V2-Code && git pull
+    8. sudo systemctl restart tothbot
+    9. Log grep to confirm expected events.
+
+  Expected in log after successful deployment:
+    WARMUP_REST_STARTED
+    LIQUIDITY_SEEDED (N pairs, usd_volume per pair)
+    SSS_SEEDED (per pair)
+    PAIR_READY (per pair)
+    WARMUP_REST_COMPLETE
+    SYSTEM_OPERATIONAL
+    PIPELINE_START (on next candle)
+    Gate 2 PASS (not GATE_2_FAIL)
+    SSS_RESULT or deeper gate result
+
+STEP 6: Write session log TB00095 and provide next
+  session instructions.
+
+============================================================
+END OF SESSION LOG TB00094 v1_0
+============================================================

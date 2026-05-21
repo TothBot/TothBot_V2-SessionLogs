@@ -1,0 +1,273 @@
+DocDCN:     TB00065
+DocTitle:   TothBot_V2_Session_Log_2026-04-10_Part4
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\My_TothBot_Stuff\TBXXXXX_Session_Logs\TB00065_TothBot_V2_Session_Log_2026-04-10_Part4_v1_0.txt
+DocDate:    04-10-2026
+DocTime:    23:59:59 UTC
+
+============================================================
+TOTHBOT V2 SESSION LOG — 2026-04-10 PART 4
+============================================================
+
+============================================================
+1. SESSION IDENTITY
+============================================================
+
+Session date:     April 10, 2026
+Session number:   TB00065
+Session type:     Phase 11 — GitHub commit of paper trading
+                  files + DEFECT-SS-001 discovery and fix.
+Prior session:    TB00064 (2026-04-10 Part 3)
+
+Documents read:
+  TB00000  v2_8   Project Instructions              checked
+  TB00064  v1_0   Prior session log                 checked
+  TB00063  v1_0   FP/DP analysis session log        checked
+  TB00062  v1_0   Prior session log                 checked
+
+============================================================
+2. WORK COMPLETED THIS SESSION
+============================================================
+
+------------------------------------------------------------
+2.1 GitHub Commit — Paper Trading Files
+------------------------------------------------------------
+
+Bill copied ws_manager.py and startup_sequence.py
+(downloaded from TB00064 session) to local GitHub working
+copy and committed:
+
+  Local copy:
+    C:\Users\wstot\GitHub\TothBot\TothBot_V2-Code\tothbot\ws_manager.py
+    C:\Users\wstot\GitHub\TothBot\TothBot_V2-Code\tothbot\startup_sequence.py
+
+  Commit: 8f2df04
+  Message: "Feat: implement paper trading mode"
+  Push: confirmed to origin master
+
+  VPS git pull: confirmed — Fast-forward
+    tothbot/startup_sequence.py: 42 insertions, 12 deletions
+    tothbot/ws_manager.py: 218 insertions, 72 deletions
+
+------------------------------------------------------------
+2.2 Env Vars Set on VPS
+------------------------------------------------------------
+
+  echo "PAPER_TRADING_MODE=true" >> /root/.tothbot.env
+  echo "PAPER_TRADING_MODE=true" >> /root/TothBot_V2-Code/.tothbot.env
+
+  Both verified with grep — PAPER_TRADING_MODE=true confirmed
+  in both files.
+
+------------------------------------------------------------
+2.3 Service Started — Crash Loop Discovered
+------------------------------------------------------------
+
+systemctl start tothbot — service entered crash loop.
+PAPER_TRADING_MODE_ON confirmed in log before crash.
+Crash every ~5 seconds. Restart counter reached 31+.
+
+journalctl revealed crash cause:
+  [STARTUP FATAL] ExecutionEngine.__init__() missing 1
+  required positional argument: 'position_mirror'
+
+------------------------------------------------------------
+2.4 DEFECT-SS-001 — Missing position_mirror Arg — FIXED
+------------------------------------------------------------
+
+Root cause:
+  startup_sequence.py _build_components() instantiated
+  ExecutionEngine without the required position_mirror
+  argument. ExecutionEngine.__init__ signature requires:
+    ws_manager, risk_engine, position_mirror, logger
+  The call only passed: ws_manager, risk_engine, logger.
+
+  This was a pre-existing bug — present before paper trading
+  changes. It was undetected because the service had not
+  been run since execution_engine.py was updated to require
+  position_mirror as a non-default parameter.
+
+Fix applied on VPS using Python inline replacement:
+  Added position_mirror=pm after risk_engine=re in the
+  ExecutionEngine(...) call in _build_components().
+
+Fix verified:
+  grep -n "position_mirror" startup_sequence.py
+  Line 279: position_mirror=pm  ← ExecutionEngine call
+  Line 288: position_mirror=pm  ← ExitController (pre-existing)
+  Line 312: position_mirror=pm  ← LongModule (pre-existing)
+
+Committed from VPS:
+  Commit: 7ae8cf5
+  Message: "Fix: add position_mirror arg to ExecutionEngine instantiation"
+  Push: confirmed to origin master
+
+------------------------------------------------------------
+2.5 Project Folder Updated
+------------------------------------------------------------
+
+Complete current startup_sequence.py delivered to Bill
+containing all changes:
+  - Paper trading mode env var read in _load_config()
+  - PAPER_TRADING_MODE_ON/OFF logging in _async_main()
+  - position_mirror=pm in ExecutionEngine instantiation
+
+Bill downloaded and uploaded to project folder.
+Project folder now matches GitHub commit 7ae8cf5.
+
+ws_manager.py is NOT in the project folder yet.
+ws_manager.py is in GitHub (commit 8f2df04).
+ws_manager.py must be downloaded from GitHub and uploaded
+to project folder at start of next session.
+
+============================================================
+3. CURRENT STATE AT END OF SESSION
+============================================================
+
+  GitHub:       commit 7ae8cf5 — current and correct
+  VPS code:     commit 7ae8cf5 — pulled and current
+  Project folder startup_sequence.py: matches 7ae8cf5 ✓
+  Project folder ws_manager.py: STALE — pre-paper-trading
+                                 version still in project.
+                                 Must be updated next session.
+
+  Service:      NOT STARTED — Bill ended session before
+                starting service after DEFECT-SS-001 fix.
+
+  VPS env files:
+    /root/.tothbot.env               — PAPER_TRADING_MODE=true ✓
+    /root/TothBot_V2-Code/.tothbot.env — PAPER_TRADING_MODE=true ✓
+
+  PT-ENTRY STATUS:
+    PT-ENTRY-001  All unit tests pass             DONE
+    PT-ENTRY-002  All integration tests pass      DONE
+    PT-ENTRY-003  VPS deployed per 1011013        PENDING
+                  (DEFECT-SS-001 fixed — service not yet
+                   started and confirmed running this session)
+    PT-ENTRY-004  logrotate configured            DONE (wrong path — PL)
+    PT-ENTRY-005  IP whitelist confirmed          DONE
+    PT-ENTRY-006  Alert email confirmed           DONE
+    PT-ENTRY-007  systemd auto-restart confirmed  PENDING
+    PT-ENTRY-008  Startup sequence confirmed      PENDING
+
+============================================================
+4. NEXT SESSION OPENING INSTRUCTIONS
+============================================================
+
+  ============================================================
+  Read TB00000 v2_8 and TB00065.
+
+  FIRST THING — Fix project folder ws_manager.py:
+    The project folder has the pre-paper-trading version of
+    ws_manager.py. Bill must download the current version
+    from GitHub and upload it to the project folder before
+    any other work.
+
+    GitHub location:
+      https://github.com/TothBot/TothBot_V2-Code/blob/master/tothbot/ws_manager.py
+
+    Upload to project folder as: ws_manager.py
+
+  SECOND — Start service and confirm PAPER_TRADING_MODE_ON:
+    SSH to VPS:
+      ssh -i C:\Users\wstot\.ssh\id_ed25519 root@87.99.141.44
+
+    Activate venv:
+      source /root/tothbot_env/bin/activate
+
+    Navigate:
+      cd /root/TothBot_V2-Code
+
+    Start service:
+      systemctl start tothbot
+
+    Confirm paper mode and no crash:
+      sleep 5 && tail -50 /home/tothbot/logs/tothbot.log
+      MUST see PAPER_TRADING_MODE_ON.
+      MUST NOT see crash loop (TOTHBOT_STARTING repeating).
+
+    Confirm service running:
+      systemctl status tothbot
+
+  THIRD — Complete PT-ENTRY checklist:
+    PT-ENTRY-003: Confirm VPS deployed and paper mode active
+    PT-ENTRY-007: Confirm systemd auto-restart works
+    PT-ENTRY-008: Confirm startup sequence, all pairs READY
+
+  PARKING LOT (address after PT-ENTRY complete):
+    PL-001      WSManager dual PM creation paths. Monitor.
+    PL-003      Pathway 1 GitHub automation. After paper trading.
+    PL-NEW-003  VPS migration to Hillsboro OR. After stable.
+    PL-NEW-004  EE ENTRY_TIMEOUT_SEC vs WM ENTRY_GTD_SEC. Monitor.
+    PL-NEW-005  requirements.txt — websockets>=13.0.
+    PL-NEW-006  tothbot.service in GitHub not updated.
+                Type=simple, no WatchdogSec. Update after PT-ENTRY.
+    PL-NEW-007  LOG_FILE path mismatch: logger.py uses
+                /home/tothbot/logs/tothbot.log. logrotate points to
+                /root/TothBot_V2-Code/logs/*.log. Fix after PT-ENTRY.
+    PL-NEW-008  Heartbeat UNKNOWN_MESSAGE_TYPE log spam.
+                Add heartbeat no-op handler to dispatch table.
+                Fix after PT-ENTRY.
+  ============================================================
+
+============================================================
+5. PARKING LOT
+============================================================
+
+  PL-001  WSManager dual PM creation paths. Monitor during
+          paper trading.
+
+  PL-003  Pathway 1 GitHub automation. After paper trading.
+
+  PL-NEW-003  VPS migration to Hillsboro OR. After paper
+              trading stable.
+
+  PL-NEW-004  EE ENTRY_TIMEOUT_SEC vs WM ENTRY_GTD_SEC
+              alignment. Monitor during paper trading.
+
+  PL-NEW-005  requirements.txt — websockets>=13.0.
+
+  PL-NEW-006  tothbot.service in GitHub not updated.
+              Type=simple, no WatchdogSec. Update after
+              PT-ENTRY complete.
+
+  PL-NEW-007  LOG_FILE path: logger.py uses
+              /home/tothbot/logs/tothbot.log. logrotate
+              points to /root/TothBot_V2-Code/logs/*.log.
+              Correct after PT-ENTRY complete.
+
+  PL-NEW-008  Heartbeat UNKNOWN_MESSAGE_TYPE log spam.
+              Add heartbeat no-op handler to dispatch table.
+              Fix after PT-ENTRY complete.
+
+============================================================
+6. DEFECT LOG
+============================================================
+
+  DEFECT-SS-001
+    File:       startup_sequence.py
+    Location:   _build_components(), ExecutionEngine(...)
+    Defect:     position_mirror=pm missing from call.
+    Error:      ExecutionEngine.__init__() missing 1 required
+                positional argument: 'position_mirror'
+    Impact:     Service crash loop on every start attempt.
+    Fix:        Added position_mirror=pm after risk_engine=re.
+    Commit:     7ae8cf5
+    Status:     FIXED AND COMMITTED
+
+============================================================
+7. REVISION HISTORY
+============================================================
+
+  v1_0  04-10-2026  Initial. GitHub commit of paper trading
+                    files confirmed (8f2df04). DEFECT-SS-001
+                    discovered and fixed (7ae8cf5). Project
+                    folder startup_sequence.py updated.
+                    ws_manager.py project folder still stale
+                    — must be updated next session.
+                    Service not started this session.
+
+============================================================
+END OF SESSION LOG
+============================================================

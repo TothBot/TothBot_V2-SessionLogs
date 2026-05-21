@@ -1,0 +1,1275 @@
+DocDCN:     TB00194
+DocTitle:   S1WSM_Gap_Register_WS_Manager
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TBXXXXX_Session_Logs\TB00194_S1WSM_Gap_Register_WS_Manager_v1_0.txt
+DocDate:    05-11-2026
+DocTime:    19:45:00 UTC
+
+============================================================
+STEP 3 SUB-STEP S-1 GAP REGISTER — WS_MANAGER PAIR
+1011002 dv1_26  vs  0511001 dv1_6  vs  0500000 dv1_46
+TB00194 — E-S1WSM-03 THROUGH E-S1WSM-07
+============================================================
+
+============================================================
+1. SCOPE AND METHODOLOGY
+============================================================
+
+1.1 TARGET PAIR.
+  AA=10 side: 1011002 WS_Manager_Coding_Spec dv1_26
+              (19 sections / 34 HR-WM-* / 116 WM-* contracts)
+  AA=05 side: 0511001 WS_Manager_Specification dv1_6
+              (19 sections / 33 HR-WM-*)
+  Architecture canonical: 0500000 dv1_46
+              (8 diagrams: Tier 1, D1-D7; D1 governs
+              WS_Manager PATH 2 architecture; D7 governs
+              paper-mode dispatch boundary)
+
+1.2 METHODOLOGY (TB00194 NSI §4).
+  Three-bucket classification per element of 1011002:
+    (a) ARCHITECTURAL RESTATEMENT — duplicates content
+        in 0500000 / 0511001 prose or 0500000 diagrams;
+        drop at 10XXXXX retirement (S-4).
+    (b) CODING-UNIQUE — implementation-level content
+        (signatures, types, retry budgets, log strings,
+        decimal rounding mechanics); migrate to 0511001
+        prose at S-3.
+    (c) ARCHITECTURAL CONTENT NOT IN DIAGRAMS — must be
+        encoded in 0500000 diagram FIRST per DD-003
+        4-step workflow; then 0511001 prose update;
+        then 10XXXXX retirement.
+    (d) UNCLEAR ORIGIN — per NSI §7.4 + RR-SCOPE-009;
+        Chesterton's-fence investigation required before
+        disposition.
+
+1.3 DIAGRAM SOURCE OF TRUTH.
+  Per TB00000 v2_29 §4.5 DD-001/002 diagrams-as-canonical:
+  0500000 dv1_46 inline SVG content + root-<desc> governs
+  list is the authoritative source for "what IS encoded
+  in the diagrams." Prose in 0500000 §1-§13 is V-038.3
+  prose-follows-diagram narration. Section-9 prose
+  inconsistency (still lists retired tradeable_pct /
+  per_trade_pct / max_concurrent) is a separate 0500000
+  prose-side V-038.3 reconciliation defect — flagged in
+  §6.4 below, NOT a WS_Manager-pair gap.
+
+============================================================
+2. DIAGRAM COVERAGE BASELINE
+   (What 0500000 dv1_46 diagrams ENCODE for WS_Manager)
+============================================================
+
+2.1 D1 KRAKEN API CONNECTION ARCHITECTURE (R2; viewBox
+    1500x1600).
+  Root-<desc> governs list (line 1365):
+    HR-WM-021, HR-WM-022, HR-WM-023, HR-WM-024,
+    HR-WM-025, HR-WM-026, HR-WM-027, HR-WM-028
+    (PATH 2 sharding), HR-WM-029 (shard independence),
+    HR-WM-030 (silent-pair handling), HR-WM-031
+    (subscribe-count vs max-concurrent decoupling),
+    HR-WM-032 (paper ledger update), HR-WM-033 (paper
+    exits route through Exit Controller), HR-WM-034,
+    contract:WM-PACE-001 (process-singleton token bucket),
+    contract:WM-PACE-002 (SUBSCRIBE_RATE_PER_SEC=10,
+    SUBSCRIBE_BURST_CAPACITY=20),
+    contract:WM-SHARD-001 (N_conns=ceil(universe/
+    SYMBOLS_PER_CONN_SAFE), SYMBOLS_PER_CONN_SAFE=500),
+    contract:WM-SHARD-010 (silent-pair state machine),
+    contract:WM-RECONNECT-016 (transient WS catch +
+    per-shard reconnect),
+    decision:D-03 (universe USD+USDC+USDT),
+    decision:D-06 (paper-live parity),
+    decision:D-08 (Top-N retired),
+    ar:AR-001/002/006/007/008/010/011/014/022/023/024/
+    026/029/030/031/032/033/035/038/039/046/047/058/
+    059/060/064/066/070/072,
+    pt_mode:PT_MODE_001/002/004
+  Visual elements:
+    - "Public WS v2 (PATH 2 Multi-Shard)" header
+    - "SHARD ASSIGNMENT (WM-SHARD-001/002):" label
+    - "Subscribe Token Bucket — process-singleton
+      (WM-PACE-001..010)" labeled band
+    - "Silent-Pair State Machine — per-pair
+      (WM-SHARD-010 + WM-PS-007 + HR-WM-030)" band
+    - "PATH 2 params (NEW dv1_5):"
+    - "PATH 1 single-connection — superseded by PATH 2
+      (HR-WM-028)"
+    - "PATH 2 ADR — Empirical Validation"
+
+2.2 D7 PAPER-MODE DISPATCH BOUNDARY (R3; viewBox
+    1500x1700).
+  Root-<desc> governs list:
+    HR-WM-021/022/023/024/025/026 (paper mode rules),
+    HR-WM-032 (paper ledger update),
+    HR-WM-033 (paper exits route through EC),
+    HR-EE-013, HR-PM-009, HR-REGIME-007,
+    ar:PA-001/002/003/004/005/006/007 (paper-as-master),
+    ar:AR-009/072/073,
+    decision:D-05_Paper_Starting_Balance,
+    decision:D-06_Paper_Live_Parity,
+    pt_mode:PT_MODE_001/002/003,
+    contract:WSManager_Dispatch_Seam,
+    contract:Synthetic_Capital_Ledger,
+    contract:CIATS_Trade_Outcome_Bus,
+    container:Private_WS_v2,
+    mod:WS_Manager, mod:Execution_Engine,
+    mod:Exit_Controller, mod:Long_Module, mod:Short_Module,
+    mod:Signal_Pipeline, mod:Position_Mirror,
+    mod:Startup_Sequence,
+    layer:Configuration_Layer,
+    param:paper_trading_mode,
+    param:paper_starting_balance
+  Visual elements:
+    - Long_Module + Short_Module as sibling labeled groups
+      above the dispatch seam (R2→R3 amendment per
+      TB00000 v2_29 §9.3 parallel-module framework)
+    - WSManager dispatch seam with paper_mode gate
+    - Synthetic_Capital_Ledger band
+    - PA-005 dispatch parity arrows
+
+2.3 D2 TOTHBOT TRADING PIPELINE (viewBox 1500x1700).
+  Encodes: OHLC 5m candle-close pipeline trigger
+  (AR-045), 8 gates, pair_cache consumption via
+  startup injection (AR-073), WS Manager as pipeline
+  trigger source. Sections of 1011002 (§8 OHLC, §9
+  per-symbol state) anchor here for trigger-flow
+  encoding.
+
+2.4 D3 EXIT ARCHITECTURE (viewBox 1500x1320).
+  Encodes: Three-layer exit (signal/MAE/emergSL),
+  HR-WM-033 paper exits route through Exit Controller,
+  MAE detection via bid_price (WM-EC-001..003).
+
+2.5 D4-D6 (REGIME / CIATS / SYSTEM).
+  Encode regime engine + CIATS + system organism;
+  intersect with WS_Manager only at WM-WARMUP-004
+  (regime startup seed) and CIATS_Trade_Outcome_Bus
+  contract.
+
+2.6 TIER 1 SYSTEM CONTEXT.
+  Per TB00153 Tier_1_Context_Diagram_Content_Scope —
+  Authoritative blueprint. Encodes WS Manager as
+  module in TothBot_Zone with connection to
+  Kraken_Zone.
+
+============================================================
+3. ELEMENT-BY-ELEMENT GAP REGISTER
+   (Organized by 1011002 dv1_26 section structure)
+============================================================
+
+------------------------------------------------------------
+§1 PURPOSE / §2 PARENT CHAIN / §3 FIVE CODING-READINESS
+------------------------------------------------------------
+
+3.1 §1 Purpose statement.
+    1011002 §1 restates module purpose (events from
+    Kraken WS, dispatch to handlers, single connection
+    arch v1_6 → multi-shard PATH 2). Counterpart:
+    0511001 §1.
+    Classification: (a) ARCHITECTURAL RESTATEMENT.
+    Retirement: S-4 drop entirely; 0500000 §2 prose +
+    D1 figcaption encode module purpose.
+
+3.2 §2 Parent chain citations.
+    1011002 §2 cites parent chain to 0500000 (Domain
+    Doc), 0510000 (Sub-Domain Anchor), 0511001
+    (Instance — current parent). Boilerplate doc-
+    control content.
+    Classification: (a) ARCHITECTURAL RESTATEMENT.
+    Retirement: S-4 drop; parent chain is namespace-
+    spec mandate per 0311001, not module-spec content.
+
+3.3 §3 Five coding-readiness questions.
+    1011002 §3 answers the §3.2 five questions for
+    coding readiness (what does it do, interfaces,
+    hard rules, triggers, logs). Restates content
+    already in 0511001 §1-§16 + 0500000 §2/§11.
+    Classification: (a) ARCHITECTURAL RESTATEMENT.
+    Retirement: S-4 drop; the questions are
+    governance-spec mandate per TB00000 §3.2, not
+    requiring coding-spec answer duplication.
+
+------------------------------------------------------------
+§4 WS CONNECTION ARCHITECTURE (1011002 lines 226-1049)
+------------------------------------------------------------
+
+3.4 WM-CONN-001 max_queue=None REQUIRED (AR-058).
+    Diagram: D1 governs ar:AR-058.
+    0511001 counterpart: §3 + HR-WM-002.
+    Classification: (a) ARCHITECTURAL RESTATEMENT.
+
+3.5 WM-CONN-002 Connection template (ALL FOUR
+    CONNECTIONS).
+    Connection-construction template detail (URL,
+    ping_interval=None, ping_timeout=None,
+    max_queue=None, etc.). Implementation-level
+    websockets-library invocation pattern.
+    Classification: (b) CODING-UNIQUE.
+    Migrate to 0511001 §3 prose at S-3 (currently
+    §3 has high-level connection summary but not
+    the construction-template detail).
+
+3.6 WM-CONN-003 Runtime per-connection state
+    (last_real_data_time tracking, etc.).
+    Classification: (b) CODING-UNIQUE.
+    Migrate to 0511001 §3 + §7 prose at S-3.
+
+3.7 WM-CONN-004 ping_interval=None — disable library
+    ping (AR-059).
+    Diagram: D1 governs ar:AR-059.
+    Classification: (a) ARCHITECTURAL RESTATEMENT.
+
+3.8 WM-CONN-005 Application-level JSON ping (A-7).
+    Diagram: D1 governs ar:A-7 via HR-WM-003 (already
+    in 0511001 HR-WM-003).
+    Classification: (b) CODING-UNIQUE for the JSON
+    message format detail; (a) for the 30s-cadence
+    rule.
+    Split: migrate JSON format to 0511001 §3 prose
+    at S-3; drop the cadence rule at retirement (a).
+
+3.9 WM-CONN-006 Zombie vs Ping independent health
+    checks.
+    Classification: (a) ARCHITECTURAL RESTATEMENT.
+    0511001 §7 + HR-WM-003/004 covers; D1 + D7
+    encode WS Manager health monitoring.
+
+3.10 WM-CONN-007 Use websockets.asyncio.client.connect
+     (AR-060).
+     Diagram: D1 governs ar:AR-060.
+     Classification: (a) ARCHITECTURAL RESTATEMENT.
+
+3.11 WM-TOKEN-001..003 Token caching (900s validity,
+     TRADE key, instance variable).
+     0511001 §3 references token acquisition via REST
+     /0/private/GetWebSocketsToken. Token-lifecycle
+     mechanics (instance variable, never logged, never
+     persisted) are implementation-level.
+     Classification: (b) CODING-UNIQUE.
+     Migrate token-cache mechanics to 0511001 §3.
+
+3.12 WM-REST-SIGN-001..003 Kraken REST signature
+     computation (HMAC-SHA512 sequence, body format,
+     ordering).
+     This is pure REST-signing protocol implementation
+     detail per Kraken API spec. Architectural fact
+     (HR-WM-023 — "Every private Kraken REST call MUST
+     be signed") IS in D1 governs list.
+     Classification: (b) CODING-UNIQUE.
+     Migrate signature-computation sequence to 0511001
+     §3 prose at S-3.
+
+3.13 WM-STARTUP-001 Complete startup sequence.
+     Restates 0211003 Startup_Shutdown_Procedure +
+     1011014 Startup_Sequence_Coding_Spec scope.
+     Diagram: Tier 1 + D6 implicit; D1 encodes WS
+     Manager startup ordering.
+     Classification: (a) ARCHITECTURAL RESTATEMENT
+     for cross-module ordering; (b) for any internal
+     WS Manager startup substep not already in 0511001
+     §4.
+
+3.14 WM-RUN-001 run() exception handling (extract
+     sub-exceptions from TaskGroup ExceptionGroup).
+     Implementation-level error-handling pattern.
+     Classification: (b) CODING-UNIQUE.
+     Migrate to 0511001 §3 or §15 prose at S-3.
+
+3.15 WM-SHARD-001 N_CONNS COMPUTATION.
+     Diagram: D1 governs contract:WM-SHARD-001
+     (N_conns=ceil(universe/SYMBOLS_PER_CONN_SAFE),
+     SYMBOLS_PER_CONN_SAFE=500).
+     0511001 §3 + HR-WM-028 cover.
+     Classification: (a) ARCHITECTURAL RESTATEMENT.
+
+3.16 WM-SHARD-002 SHARD ASSIGNMENT (deterministic
+     hash mapping).
+     Diagram: D1 visual element labels
+     "SHARD ASSIGNMENT (WM-SHARD-001/002)".
+     Classification: (a) ARCHITECTURAL RESTATEMENT.
+
+3.17 WM-SHARD-003 SHARD DATA STRUCTURE.
+     ShardState dataclass field-by-field
+     specification.
+     Classification: (b) CODING-UNIQUE.
+     Migrate to 0511001 §3 prose at S-3 (currently
+     §3 mentions per-shard state but not the
+     dataclass layout).
+
+3.18 WM-SHARD-004 PARALLEL CONNECT.
+     Async-gather pattern across N_conns shards.
+     Mix: architectural fact (parallel connect)
+     is in D1 governs (HR-WM-028/029); the
+     asyncio.gather() implementation is coding-
+     unique.
+     Classification: SPLIT (a)/(b). The "parallel
+     across shards" fact = (a); the asyncio pattern
+     = (b) migrate to 0511001 §3.
+
+3.19 WM-SHARD-005 PER-SHARD SUBSCRIBE ROUTING.
+     Each shard receives its assigned symbols only.
+     Classification: (a) ARCHITECTURAL RESTATEMENT
+     (D1 + HR-WM-028/029).
+
+3.20 WM-SHARD-006 PER-SHARD INBOUND DISPATCH.
+     Each shard's recv loop dispatches to common
+     handlers.
+     Classification: (a) ARCHITECTURAL RESTATEMENT.
+
+3.21 WM-SHARD-007 PER-SHARD HEALTH MONITORING.
+     Classification: (a) ARCHITECTURAL RESTATEMENT.
+
+3.22 WM-SHARD-008 PER-SHARD RECONNECT.
+     Diagram: D1 governs WM-RECONNECT-016.
+     Classification: (a) ARCHITECTURAL RESTATEMENT.
+
+3.23 WM-SHARD-009 PIPELINE-DURING-RECONNECT GUARD.
+     Diagram: D1 governs HR-WM-029 (shard
+     independence — implies per-shard pipeline gate
+     during that shard's reconnect).
+     Classification: (a) ARCHITECTURAL RESTATEMENT.
+
+3.24 WM-SHARD-010 SILENT-PAIR STATE MACHINE.
+     Diagram: D1 visual element labels
+     "Silent-Pair State Machine — per-pair
+     (WM-SHARD-010 + WM-PS-007 + HR-WM-030)".
+     Governs list: contract:WM-SHARD-010.
+     Classification: (a) ARCHITECTURAL RESTATEMENT.
+
+3.25 WM-SHARD-011 ANTI-AR-070 GUARD.
+     Diagram: D1 governs ar:AR-070 (amended dv1_20:
+     USD+USDC+USDT, no Top-N cap) + HR-WM-028.
+     Classification: (a) ARCHITECTURAL RESTATEMENT.
+
+3.26 WM-PACE-001..010 TOKEN BUCKET.
+     Diagram: D1 visual element labels "Subscribe
+     Token Bucket — process-singleton
+     (WM-PACE-001..010)".
+     Governs list: contract:WM-PACE-001 +
+     contract:WM-PACE-002 (rate=10, burst=20).
+     Classification: (a) ARCHITECTURAL RESTATEMENT
+     for the bucket existence + capacity/rate
+     numerics + acquisition semantics.
+     EXCEPTION: WM-PACE-005 BUCKET STATE LOGGING
+     (specific log-event field list) — (b) CODING-
+     UNIQUE; migrate to 0511001 §16 logs at S-3.
+     EXCEPTION: WM-PACE-008 PRE-DEPLOY DC-PREFLIGHT-006
+     LINKAGE — references 0311002 DC-PREFLIGHT-006
+     gate; document-control linkage, not WS Manager
+     contract. Classification: (a) (the linkage IS
+     in 0500000 D1 governs via HR-WM-030 / pre-deploy
+     rate-limit gate HR-WM-030).
+
+------------------------------------------------------------
+§5 INBOUND MESSAGE DISPATCH (1011002 lines 1051-1480)
+------------------------------------------------------------
+
+3.27 WM-EC-001..003 MAE detection mechanics (uses
+     bid_price; fired by WS Manager on every ticker
+     event; bid_price updated from event_trigger:bbo).
+     Diagram: D3 Exit Architecture governs Layer 2
+     MAE-threshold exit; D1 governs ticker channel
+     consumption.
+     Classification: (a) ARCHITECTURAL RESTATEMENT
+     for the trigger semantics (in D3); (b) CODING-
+     UNIQUE for the "every ticker event" event-loop
+     mechanic (Python event-handling implementation).
+     Split: (a) + (b)-portion to 0511001 §10 +
+     0511004 Exit_Controller_Specification at S-3.
+
+3.28 WM-EC-004..008 TP partial-fill detection,
+     amend_order sequence, full-TP-fill handling.
+     Per-exec_type handling table + amend vs
+     cancel+resubmit decision rationale.
+     Classification: SPLIT.
+       Architectural fact "TP partial-fill triggers
+       amend_order" = (a) — D3 + 0511003 + AR-* in
+       D1 cover.
+       The amend-vs-cancel rationale text and
+       specific amend payload format = (b) — migrate
+       to 0511001 §8/9 at S-3.
+
+3.29 WM-DISP-020..026 amended exec_type dispatch
+     branches.
+     Diagram: D1 governs ar:AR-019 amended-handler
+     dispatch (via §11 trade lifecycle prose).
+     Classification: (a) for the requirement that
+     amended is handled in the exec_type dispatch
+     table (D1 governs); (b) for the per-case handler
+     pseudocode (CASE A/B/C/D, etc.) — migrate to
+     0511001 §8 at S-3.
+
+3.30 WM-EXE-014..016 Fill-event field capture
+     (fill-level vs cumulative values, data usage,
+     FILL_EVENT log format).
+     Classification: (b) CODING-UNIQUE.
+     Migrate FILL_EVENT log format to 0511001 §16
+     at S-3; migrate field-capture mechanics to
+     0511001 §8.
+
+3.31 WM-STATUS-001 Connection_id logging from status
+     channel.
+     Classification: (b) CODING-UNIQUE — log-format
+     detail. Migrate to 0511001 §16.
+
+------------------------------------------------------------
+§6 OUTBOUND MESSAGE DISPATCH (1011002 lines 1482-1669)
+------------------------------------------------------------
+
+3.32 WM-CAN-001 Individual cancel_order with per-
+     order tracking.
+     Classification: (b) CODING-UNIQUE.
+     Migrate to 0511001 §9 at S-3.
+
+3.33 Subscribe / unsubscribe outbound mechanics
+     (WM-PACE acquisition before subscribe).
+     Diagram: D1 governs WM-PACE-004 ("ALL OUTBOUND
+     SUBSCRIBES PASS THROUGH the token bucket").
+     Classification: (a) for the must-pass-through
+     fact; (b) for the message-construction details.
+
+------------------------------------------------------------
+§7 CONNECTION HEALTH MONITORING (1011002 lines 1671-1850)
+------------------------------------------------------------
+
+3.34 WM-ZOM-001..007 Zombie connection detection
+     (90s threshold, last_real_data tracking, real-
+     data event list, action sequence).
+     Diagram: D1 governs HR-WM-004 (last_real_data
+     reset rule). D1 governs HR-WM-003 (application
+     ping 30s).
+     Classification:
+       Architectural fact "zombie detection exists at
+       90s threshold with last_real_data tracking" =
+       (a) — encoded via HR-WM-004 in D1.
+       Specific real-data-event-resets-timer event
+       list + action-sequence pseudocode = (b) —
+       migrate to 0511001 §7 at S-3 (currently §7 has
+       high-level zombie detection description but
+       not the full event list).
+
+------------------------------------------------------------
+§8 OHLC CANDLE-CLOSE DETECTION (1011002 lines 1852-1898)
+------------------------------------------------------------
+
+3.35 WM-OHLC-001..006 OHLC detection algorithm
+     (interval_begin field per AR-027, separate dicts
+     for 5m vs 60m, stall handling, GetOHLCData
+     response[-1] excluded per AR-028).
+     Diagram: D2 governs AR-027/028 + HR-WM-013.
+     Classification:
+       WM-OHLC-001/002 detection trigger algorithm
+       (architectural) = (a).
+       WM-OHLC-003 (use interval_begin only — already
+       AR-027) = (a).
+       WM-OHLC-004 (separate dicts per timeframe —
+       implementation pattern) = (b).
+       WM-OHLC-005 (stall handling) = (a) — D2 covers.
+       WM-OHLC-006 (GetOHLCData response[-1] exclusion
+       — already HR-WM-013) = (a).
+
+------------------------------------------------------------
+§9 PER-SYMBOL STATE MANAGEMENT (1011002 lines 1900-2401)
+------------------------------------------------------------
+
+3.36 WM-PS-001..006 pair_cache / monitored_universe
+     population, per-pair instrument-snapshot capture,
+     quote-currency derivation.
+     Diagram: D1 §2.0 governs pair_cache (NEW dv1_37
+     V-038.3 reconciliation per DR-042). D1 governs
+     AR-028 + AR-073 (pair_cache startup injection).
+     Classification: (a) for pair_cache existence +
+     ownership facts; (b) for population mechanics
+     and instrument-snapshot-field capture format —
+     migrate to 0511001 §3 + §5 at S-3.
+
+3.37 WM-PS-007 PER-PAIR DATA-AVAILABILITY STATE
+     MACHINE.
+     Diagram: D1 visual element labels "Silent-Pair
+     State Machine — per-pair (WM-SHARD-010 +
+     WM-PS-007 + HR-WM-030)".
+     Classification: (a) ARCHITECTURAL RESTATEMENT.
+
+3.38 WM-PS-008 AR-070 SILENT-NARROWING PROHIBITION.
+     Diagram: D1 governs ar:AR-070 + HR-WM-028.
+     Classification: (a) ARCHITECTURAL RESTATEMENT.
+
+3.39 WM-SC-001..004 Selection Controller state
+     maintained by WS Manager (open_positions_set,
+     consecutive_loss_count, preservation across
+     reconnect, Gate-5 exposure).
+     Diagram: D2 + D5 govern. AR-072 covers SC
+     parameters.
+     Classification: (a) for the architectural fact
+     "WS Manager owns SC-feed state across reconnect";
+     (b) for the specific dict-update sequence — to
+     0511001 §5/§8 at S-3.
+
+3.40 WM-LIQ-001..011 Liquidity refresh loop (24h
+     volume from REST Ticker, refresh cadence, pair
+     name mapping, fail-safe).
+     Diagram: D1 governs ar:HR-WM-022 (liquidity_24h
+     populated ONLY from REST Ticker).
+     Classification: (a) for the source-of-truth fact
+     (REST Ticker only); (b) for the refresh-loop
+     async-task implementation, error handling, log
+     events, _rest_build_pair_maps — to 0511001 §3
+     + §16 at S-3.
+
+3.41 WM-BAL-001..006 Balances handling (capture from
+     balances channel, spot-wallet only,
+     portfolio_baseline_USD set once at startup,
+     sequence tracking, gap alerts).
+     Diagram: D7 governs HR-WM-011 (portfolio_baseline
+     once at startup).
+     Classification: WM-BAL-001/002/003/005/006 = (a)
+     — D1 + D7 + HR-WM-011 cover.
+     EXCEPTION: WM-BAL-004 "portfolio_baseline_USD: set
+     ONCE at startup..." — RISKED STALE PER §6
+     RR-SCOPE-009. Currently references the
+     single-pool drawdown model. Per TB00000 v2_29
+     §9.7 PER-WALLET DRAWDOWN HALTS, drawdown is
+     per-module-wallet. Need to verify D7 encodes
+     per-wallet baseline vs single-pool baseline.
+     Provisional classification: (c) — see §6.1.
+
+3.42 WM-SZ-001..005 Position sizing (portfolio_USD,
+     tradeable_USD = portfolio_USD * tradeable_pct,
+     per_trade_USD = tradeable_USD * per_trade_pct,
+     max_concurrent = 20, entry sizing).
+     ** STALE PER TB00000 v2_29 §9.16/§9.17 **
+     tradeable_pct, per_trade_pct, max_concurrent
+     ALL retired at v2_29 (TB00179 STAGE M-2
+     PARAMETER FOUNDATION). Replacement parameters:
+     per_trade_size_usd (Kraken minimum starting),
+     per_trade_ceiling_pct (25% wallet starting),
+     CIATS-owned sizing curve function of expected
+     R:R. Per-module wallets:
+     paper_starting_balance_long_usd = $5,000 /
+     paper_starting_balance_short_usd = $5,000.
+     Diagram: D7 governs per-module wallet structure
+     (mod:Long_Module + mod:Short_Module +
+     decision:D-05 + contract:Synthetic_Capital_Ledger
+     + param:paper_starting_balance). But the SPECIFIC
+     R:R-driven sizing curve form factor + 25% per-
+     trade ceiling + Kraken-minimum per_trade_size_usd
+     starting value are NOT visibly encoded in 0500000
+     dv1_46 diagrams (§9 prose still shows the retired
+     params).
+     Classification: (c) ARCHITECTURAL CONTENT NOT IN
+     DIAGRAMS for the per-module-wallet + R:R-driven
+     sizing-curve content. The retired-param textual
+     forms (tradeable_pct etc.) in 1011002 WM-SZ-001..005
+     are direct legacy carry-forward.
+     Target diagram: D6 Complete System Organism
+     (where parameter registry overview is encoded) +
+     D5 CIATS Architecture (where sizing curve =
+     CIATS-owned function is encoded) + D7 paper-mode
+     dispatch boundary (where per-module wallets are
+     already encoded at labeled-group level but the
+     R:R-driven curve form factor is not visible).
+     See §5.2 + §6.1 below.
+
+3.43 WM-POR-001..007 Pending Order Registry (dispatch-
+     time registration, exec_type removal triggers,
+     Gate 7 use, reconcile-on-reconnect).
+     Diagram: D1 governs ar:AR-053 (Gate 7
+     available_USD check).
+     Classification: (a) for the architectural fact
+     "Pending Order Registry exists, Gate 7 reads it";
+     (b) for the dispatch-time registration mechanics
+     and reconcile-on-reconnect handshake — to
+     0511001 §5/§11 at S-3.
+
+3.44 WM-DD-001..008 Drawdown monitoring (mark-to-
+     market formula, drawdown_pct formula, system_state
+     machine, SESSION_PAUSE 5%, FULL_HALT 10%,
+     portfolio_baseline_USD source, CIATS-owned
+     starting values, forced-sells prohibition).
+     ** STALE PER TB00000 v2_29 §9.7 PER-WALLET HALTS **
+     Per-wallet evaluation (Long_Module wallet halt
+     does NOT halt Short_Module). Both thresholds
+     CIATS-owned starting values per §9.17:
+     session_pause_drawdown_pct = 5% per-wallet,
+     full_halt_drawdown_pct = 10% per-wallet.
+     Diagram: D7 encodes mod:Long_Module + mod:Short_
+     Module siblings — implies per-wallet halts at
+     module-isolation level. But the EXPLICIT
+     per-wallet drawdown formula + per-module halt
+     state machine is not visibly encoded in 0500000
+     dv1_46 §11 prose (§9 prose still lists single-
+     pool full_halt_drawdown = 10% of portfolio).
+     Classification: (c) ARCHITECTURAL CONTENT NOT IN
+     DIAGRAMS for the per-wallet halt machine; (a) for
+     the formula structure (mark-to-market + bid-price
+     for open positions).
+     Target diagram: D6 Complete System Organism +
+     D7 Paper-Mode Dispatch Boundary (halt-state per-
+     module visual element addition).
+
+3.45 WM-EC-001..003 (also see §3.27).
+     Classification noted above.
+
+3.46 WM-DMS-001..004 Dead Man's Switch prohibition
+     (cancel_all_orders_after EXPLICITLY PROHIBITED,
+     reason, defect-on-detection, batch_cancel ≠ DMS).
+     Diagram: D1 governs HR-WM-010 (DMS prohibition).
+     Classification: (a) for the prohibition + reason;
+     (b) for the "if detected in code, treat as defect"
+     operational rule (could go in 0211004 Incident
+     Response).
+     Likely all (a) — to retire at S-4.
+
+------------------------------------------------------------
+§10 BALANCES AND PORTFOLIO (1011002 lines 2403-2474)
+------------------------------------------------------------
+
+3.47 Restated WM-BAL-001..006 + WM-SZ-001..005 +
+     WM-POR-006. See §3.41 + §3.42 + §3.43.
+
+------------------------------------------------------------
+§11 DRAWDOWN MONITORING (1011002 lines 2476-2551)
+------------------------------------------------------------
+
+3.48 WM-DD-001..008 — see §3.44.
+
+------------------------------------------------------------
+§12 PENDING ORDER REGISTRY (1011002 lines 2553-2584)
+------------------------------------------------------------
+
+3.49 WM-POR-001..007 — see §3.43.
+
+------------------------------------------------------------
+§13 DMS PROHIBITION (1011002 lines 2586-2610)
+------------------------------------------------------------
+
+3.50 WM-DMS-001..004 — see §3.46.
+
+------------------------------------------------------------
+§14 DECIMAL ROUNDING (1011002 lines 2612-2663)
+------------------------------------------------------------
+
+3.51 WM-ROUND-001..007 Decimal rounding mechanics
+     (string-to-Decimal conversion via HR-WM-008,
+     entry/TP/SL/order_qty rounding per pair_cache,
+     ROUND_DOWN vs ROUND_UP semantics, cost
+     validation before dispatch).
+     Diagram: D2 governs AR-047 (Decimal arithmetic);
+     D1 governs HR-WM-008 (string-to-Decimal).
+     Classification: (a) for HR-WM-008 + AR-047
+     existence; (b) for the per-field rounding-mode
+     selection + cost-validation pre-dispatch
+     sequence — migrate to 0811004 Entry_Limit_
+     Placement_Specification + 0511001 §9 at S-3.
+
+------------------------------------------------------------
+§15 MID-SESSION RECONNECT (1011002 lines 2665-2880)
+------------------------------------------------------------
+
+3.52 WM-RECONNECT-001..019 Reconnect sequence (token
+     re-acquisition, public+private re-connect, channel
+     resubscribe, snap_orders processing, position
+     reconciliation, Pending Order Registry reconcile,
+     sequence-counter reset, ticker resubscribe,
+     pipeline-event-queue discard, normal-operation
+     resume; baseline never reset on reconnect;
+     ATR/EMA cache preservation rule; exit_cooldown_log
+     preservation; transient WS disconnect retry
+     schedule; TaskGroup exception handling; paper-mode
+     reconnect gating).
+     Diagram: D1 governs HR-WM-016 (reconnect separate
+     code path) + WM-RECONNECT-016 (transient WS
+     catch + per-shard reconnect) + HR-WM-029 (shard
+     independence implies per-shard reconnect).
+     Classification:
+       WM-RECONNECT-001 (separate code path fact) = (a)
+       — HR-WM-016 in D1.
+       WM-RECONNECT-002..010 (10-step sequence
+       structure) = (a) for the architectural
+       sequence; (b) for the per-step pseudocode.
+       Split: keep architectural sequence in 0511001
+       §11 prose; migrate per-step code to 0511001
+       §11 + §15 detail.
+       WM-RECONNECT-011 (DISCARD all pipeline events
+       queued during gap) = (a) — HR-WM-012 (pipeline
+       evaluation prohibited during reconnect) in D1.
+       WM-RECONNECT-013 (baseline never reset) = (a)
+       — HR-WM-011 in D1.
+       WM-RECONNECT-014 (ATR/EMA preservation rule
+       with gap-threshold logic) = (b) coding-unique
+       cache-preservation mechanic — to 0511001 §11.
+       WM-RECONNECT-015 (exit_cooldown_log and
+       consecutive_loss_count preservation) = (a)
+       — selection-controller-state preservation IS
+       in D2/D5/D7 implicit; cross-ref AR-072.
+       WM-RECONNECT-016 (transient WS catch) = (a)
+       — directly in D1 governs list.
+       WM-RECONNECT-017 (retry schedule mechanics
+       — 10 attempts over 120s) = (b) coding-unique
+       retry budget — to 0511001 §11.
+       WM-RECONNECT-018 (TaskGroup exception
+       handling) = (b) coding-unique.
+       WM-RECONNECT-019 PAPER-MODE RECONNECT GATING
+       (OI-028 / OI-029) = (c) potentially. Verify
+       whether paper-mode reconnect-disable is encoded
+       in D7. If D7 governs HR-WM-022 (private WS
+       never connected in paper mode), then mid-session
+       reconnect gating in paper is derivable from
+       D7 (no private WS to reconnect to) — (a). If
+       there's any paper-specific reconnect contract
+       beyond "no private WS reconnect attempt," (c).
+       Provisional: (a).
+
+------------------------------------------------------------
+§16 TICKER EVENT_TRIGGER (1011002 lines 2882-2902)
+------------------------------------------------------------
+
+3.53 Restated AR-034 ticker event_trigger management
+     (bbo for open positions; trades for monitoring).
+     Diagram: D1 governs ar:AR-034 (line 1365
+     governs list).
+     Classification: (a) ARCHITECTURAL RESTATEMENT.
+
+------------------------------------------------------------
+§16A PAPER MODE OPERATIONS (1011002 lines 2904-3237)
+NEW dv1_26 — direction-symmetric per-module
+------------------------------------------------------------
+
+3.54 WM-PAPER-LEDGER-001 INITIALIZATION.
+     ** STALE PER TB00000 v2_29 §9.4 / §9.17 **
+     References PAPER_STARTING_BALANCE_DEFAULT =
+     Decimal("1000") per D-05 LOCKED. Retired at
+     TB00179 STAGE M-2.
+     0511001 §13.6 dv1_6 was amended for per-module
+     direction-symmetric ($5,000 per-module pair).
+     Diagram: D7 governs decision:D-05 +
+     param:paper_starting_balance + mod:Long_Module +
+     mod:Short_Module siblings.
+     Classification: (a) ARCHITECTURAL RESTATEMENT
+     for the per-module pair structure (now in
+     0511001 §13.6 + D7); the $1,000 reference is
+     stale-prose-needing-deletion at S-4 (or migration
+     correction at S-3 if the structure is preserved
+     with corrected values).
+
+3.55 WM-PAPER-LEDGER-002..004 ENTRY-FILL DEBIT,
+     EXIT-FILL CREDIT, PAPER_LEDGER_UPDATED log
+     emission.
+     Diagram: D7 governs HR-WM-032 (paper ledger
+     update) + contract:Synthetic_Capital_Ledger.
+     Classification: (a) for the ledger-update rule
+     existence (HR-WM-032 in D7); (b) for the
+     specific debit/credit arithmetic + log-event
+     field list — migrate to 0511001 §13.7 (already
+     largely there post-dv1_6 amendment) + §16 at S-3.
+
+3.56 WM-PAPER-EXIT-001..005 TP fill detection
+     routing, emergSL trigger routing, Layer 2 MAE
+     breach (EC-driven), dispatch_market_sell paper
+     mode, _fire_ciats_outcome RETIRED.
+     Diagram: D7 governs HR-WM-033 (paper exits
+     route through Exit Controller) +
+     contract:CIATS_Trade_Outcome_Bus.
+     Classification:
+       WM-PAPER-EXIT-001..004 (routing topology) = (a)
+       — HR-WM-033 in D7.
+       WM-PAPER-EXIT-004 dispatch_market_sell paper-
+       mode specific (Position Mirror removal + CIATS
+       fire + return) = (b) coding-unique — to
+       0511001 §13.2 (already there largely).
+       WM-PAPER-EXIT-005 _fire_ciats_outcome RETIRED
+       — historical-record entry; (a) drop at S-4.
+
+------------------------------------------------------------
+§17 HARD RULES CONSOLIDATED (1011002 lines 3240-3486)
+------------------------------------------------------------
+
+3.57 1011002 §17 reconsolidates HR-WM-001 through
+     HR-WM-034 as a flat list. All 34 rules are in
+     0511001 §14 (HR-WM-001..033 in 0511001 dv1_6;
+     HR-WM-034 added in 1011002 dv1_26 — see §6.2
+     below).
+     Classification: (a) ARCHITECTURAL RESTATEMENT
+     en masse. Retirement: S-4 drop entire §17 with
+     1011002 retirement.
+
+3.58 ** HR-WM-034 IDENTIFIER ASYMMETRY **
+     1011002 dv1_26 §17 contains HR-WM-034
+     "OUTBOUND SUBSCRIBE PACING — TOKEN BUCKET".
+     0511001 dv1_6 §14 contains HR-WM-001..HR-WM-033
+     only (no HR-WM-034).
+     D1 governs list at 0500000 dv1_46 line 1365
+     INCLUDES rule:HR-WM-034.
+     Finding: HR-WM-034 is encoded in the 1011002
+     coding spec + 0500000 D1 diagram, but absent
+     from the parent 0511001 AA=05 spec.
+     Classification: (c) ARCHITECTURAL CONTENT NOT
+     IN PARENT AA=05 PROSE (the architectural rule
+     IS in the canonical D1 diagram per DD-001 but
+     the prose narration in 0511001 §14 is missing).
+     Target action: 0511001 prose update at S-3 to
+     add HR-WM-034 to §14 hard rules list (cascading
+     in from D1 governs list).
+
+3.59 ** HR-WM-011 INTERNAL DRIFT IN 0511001 dv1_6 **
+     0511001 §14 HR-WM-011 currently reads:
+       "portfolio_baseline_USD: set once at startup.
+       In paper mode: set from config
+       paper_starting_balance (default $1,000 per
+       D-05)."
+     ** STALE per TB00000 v2_29 §9.4 + D-05
+     supersession in §13.6 of same document. **
+     This is an internal 0511001 dv1_6 prose-prose
+     V-038.3 inconsistency surfaced in TB00192 SL
+     §4.2 (mid-amendment state).
+     Classification: (c) — internal V-038.3
+     reconciliation in 0511001 dv1_6 (independent of
+     1011002 retirement; needs 0511001 dv1_6 →
+     dv1_7 update).
+
+3.60 ** HR-WM-031 INTERNAL DRIFT IN 0511001 dv1_6 **
+     0511001 §14 HR-WM-031 references
+     max_concurrent (retired parameter per TB00000
+     v2_29 §9.17).
+     Classification: (c) — internal V-038.3
+     reconciliation in 0511001 dv1_6 (independent of
+     1011002 retirement).
+
+------------------------------------------------------------
+§18 RELATED DOCUMENTS (1011002 lines 3488-3536)
+------------------------------------------------------------
+
+3.61 ** STALE CROSS-REFERENCES per TB00192 SL §4.3 **
+     1011002 §18 cross-references parent 0511001 dv1_5
+     (current: dv1_6) and 0500000 dv1_21 (current:
+     dv1_46). All cross-doc references in §18 may be
+     stale.
+     Classification: (a) ARCHITECTURAL RESTATEMENT
+     en masse. Retirement: §18 drops with 1011002
+     retirement. NO migration; cross-references are
+     embedded in each spec's own §2 parent chain or
+     §15-18 related-docs section per 0311001 spec-
+     authoring conventions.
+
+------------------------------------------------------------
+§19 REVISION HISTORY (1011002 lines 3539-end)
+------------------------------------------------------------
+
+3.62 1011002 §19 revision history covers dv1_0
+     through dv1_26 (PATH 2 sharding + token bucket
+     + paper-mode dv1_26 amendments).
+     Classification: (a) ARCHITECTURAL RESTATEMENT.
+     Retirement: §19 retains as historical record
+     in the retired 1011002 document; not migrated
+     (each retired document keeps its own revision
+     history per 0311001 §11 retirement-archive
+     convention).
+
+============================================================
+4. ROLL-UP TOTALS
+============================================================
+
+Bucket counts across 116 WM-* contracts + 34 HR-WM-*
+rules + §1-§3 + §17/§18/§19 metadata sections:
+
+  (a) ARCHITECTURAL RESTATEMENT (drop with retirement):
+      ~95 elements
+      - All HR-WM-* rules en masse (encoded in D1+D7+
+        D2+D3 governs lists)
+      - All WM-PACE-* (D1 governs list + visual band)
+      - All WM-SHARD-* (D1 governs list + visual
+        band)
+      - WM-CONN-001/004/006/007 (AR-058/059/060 + D1)
+      - WM-RECONNECT-001/011/013/015/016 (D1 governs)
+      - WM-OHLC-001/002/003/005/006 (D2 + HR-WM-013)
+      - WM-PS-001..008 high-level architectural facts
+      - WM-DMS-001..004 (HR-WM-010 in D1)
+      - WM-SC-001..004 high-level architectural facts
+      - WM-EC-001..003 architectural fact
+      - WM-BAL-001/002/003/005/006 (D7 + HR-WM-011)
+      - §1/§2/§3/§17/§18/§19 metadata sections
+
+  (b) CODING-UNIQUE (migrate to 0511001 at S-3):
+      ~35 elements
+      - WM-CONN-002/003/005 (template + state +
+        message format)
+      - WM-TOKEN-001..003 (token-cache mechanics)
+      - WM-REST-SIGN-001..003 (HMAC-SHA512 sequence)
+      - WM-RUN-001 (TaskGroup exception extraction)
+      - WM-SHARD-003 (dataclass field layout)
+      - WM-SHARD-004 (asyncio.gather pattern)
+      - WM-PACE-005 (log format) + WM-ZOM event list
+      - WM-EC-004..008 amend payload format
+      - WM-DISP-021..026 handler pseudocode
+      - WM-EXE-014..016 fill capture + FILL_EVENT
+        log format
+      - WM-STATUS-001 log format
+      - WM-CAN-001 individual cancel implementation
+      - WM-OHLC-004 separate-dict pattern
+      - WM-PS-* population mechanics + per-pair
+        capture format
+      - WM-SC-* dict-update sequence
+      - WM-LIQ-002..011 refresh-loop implementation
+      - WM-POR-* dispatch-time mechanics +
+        reconcile-on-reconnect handshake
+      - WM-ROUND-001..007 per-field rounding
+        selection + cost validation pre-dispatch
+      - WM-RECONNECT-014/017/018 cache-preservation
+        + retry-schedule + TaskGroup
+      - WM-PAPER-LEDGER-002/003/004 specific
+        arithmetic + log format
+      - WM-PAPER-EXIT-004 paper-mode dispatch_market_
+        sell
+
+  (c) ARCHITECTURAL CONTENT NOT IN DIAGRAMS:
+      4 distinct gap-clusters (impact-counted, not
+      element-counted):
+      C1. PER-MODULE WALLET PARAMETER REGISTRY in
+          0500000 §9 prose. 0500000 §9 still lists
+          retired tradeable_pct / per_trade_pct /
+          max_concurrent + single-pool drawdown.
+          Per-module wallets ARE encoded at D7
+          labeled-group level (mod:Long_Module +
+          mod:Short_Module + decision:D-05 +
+          contract:Synthetic_Capital_Ledger). Gap is
+          in 0500000 §9 prose narration ONLY (this
+          is a 0500000 internal V-038.3 prose-side
+          gap; affects WM-SZ-001..005 +
+          WM-PAPER-LEDGER-001 + HR-WM-011 prose
+          classifications).
+          Cascaded affected elements: WM-SZ-001..005,
+          WM-PAPER-LEDGER-001, HR-WM-011 in 0511001
+          §14, §4.2 Step 9b + §5.4 in 0511001.
+      C2. PER-WALLET DRAWDOWN HALT MACHINE encoded at
+          D7 labeled-group level (Long_Module +
+          Short_Module siblings imply per-wallet halt
+          isolation per TB00000 v2_29 §9.7) but the
+          specific per-wallet state machine (drawdown_
+          pct_long / drawdown_pct_short computation +
+          per-module halt-state transitions) is NOT
+          visibly encoded in D7 visual elements or
+          §11 prose. Affected: WM-DD-001..008.
+      C3. R:R-DRIVEN SIZING CURVE FORM FACTOR. Per
+          TB00000 v2_29 §9.10 sacred-floor R:R +
+          CIATS-owned sizing curve above the floor,
+          A1 acceptance rule, B2 25% per-trade
+          ceiling. This is encoded as a CIATS-owned
+          parameter family but the specific sizing-
+          curve-form-factor architectural element
+          (the function shape mapping expected R:R
+          to allocation %) is not visibly encoded in
+          D5 CIATS Architecture diagram or D6
+          Complete System Organism. Affected: WM-SZ-005
+          entry sizing (cascades to all sizing-curve-
+          dependent contracts).
+      C4. HR-WM-034 PROSE-NARRATION GAP IN 0511001.
+          HR-WM-034 IS in D1 governs list at 0500000
+          dv1_46 line 1365. HR-WM-034 IS in 1011002
+          §17. HR-WM-034 is NOT in 0511001 §14 hard
+          rules list (0511001 dv1_6 has HR-WM-001..033
+          only). This is a 0511001 dv1_6 internal
+          V-038.3 prose-follows-diagram gap.
+
+  (d) UNCLEAR ORIGIN (RR-SCOPE-009 Chesterton's-fence
+      gate): 0 elements. All inspected elements have
+      clear origin rationale in their respective
+      diagram/rule citations.
+
+============================================================
+5. DOWNSTREAM QUEUE
+============================================================
+
+5.1 S-2 DIAGRAM AMENDMENTS NEEDED.
+    Per DEC-003 Path A one-diagram-per-session cadence.
+
+    AMENDMENT-1. 0500000 §9 prose-side V-038.3
+      reconciliation (NOT a diagram amendment — a
+      0500000 §9 prose update). §9 narration must
+      be updated to mirror TB00000 v2_29 §9.17
+      CIATS Parameter Registry (per-module instan-
+      tiation; retired tradeable_pct/per_trade_pct/
+      max_concurrent; per_trade_size_usd + per_trade_
+      ceiling_pct + per-module wallets +
+      session_pause_drawdown_pct/full_halt_drawdown_
+      pct as per-wallet). Single-session amendment;
+      no diagram SVG byte change required IF the
+      labeled-group governs lists in D5/D6/D7 already
+      cover the parameter identifiers (per inspection
+      they do at D7 — mod:Long_Module + mod:Short_
+      Module + decision:D-05 + param:paper_starting_
+      balance). VERIFY parameter governs list at D5
+      + D6 (parent registry); add per_trade_size_usd /
+      per_trade_ceiling_pct / per-wallet drawdown
+      params if not currently in any diagram's governs
+      list. Closes gap C1.
+
+    AMENDMENT-2. D7 (or D6) per-wallet drawdown
+      machine encoding. Add explicit per-wallet
+      drawdown-state visual element + per-wallet
+      halt-state arrow into mod:Long_Module / mod:
+      Short_Module labeled groups. Or alternatively
+      add per_wallet_drawdown_state to relevant
+      labeled-group <desc> governs list. Closes gap
+      C2.
+
+    AMENDMENT-3. D5 CIATS Architecture (or D6
+      organism) — encode R:R-driven sizing curve
+      form factor (expected_rr → allocation_pct
+      mapping). Either:
+        - Add explicit "Sizing Curve" labeled group
+          with contract:Sizing_Curve_Per_Module +
+          ar:AR-* (new AR for the function-of-R:R
+          sizing) in D5 governs list, OR
+        - Add the architectural element to D6
+          Complete System Organism CIATS panel.
+      Closes gap C3.
+
+    Total: 3 diagram-side amendments. Within
+    DEC-003 Path A one-per-session cadence, 3
+    sessions minimum. AMENDMENT-1 is the most
+    urgent (closes the 0500000 §9 stale prose that
+    invalidates classifications C1-cascaded items in
+    1011002).
+
+5.2 S-3 AA-PROSE GAP-FILL (0511001 dv1_6 → dv1_7).
+    Affected: bucket (b) + cluster C4 + cluster C1-
+    cascaded prose corrections.
+
+    PROSE-UPDATE-A. 0511001 §3 WS connections: add
+      WM-CONN-002 connection template (URL, kwargs)
+      + WM-CONN-005 JSON ping message format +
+      WM-TOKEN-001..003 token-cache mechanics +
+      WM-REST-SIGN-001..003 HMAC-SHA512 signature
+      sequence + WM-SHARD-003 ShardState dataclass
+      layout + WM-RUN-001 TaskGroup exception
+      extraction.
+
+    PROSE-UPDATE-B. 0511001 §5 per-symbol state: add
+      WM-PS-001..006 population mechanics + WM-PS-008
+      AR-070 silent-narrowing guard.
+
+    PROSE-UPDATE-C. 0511001 §8 inbound dispatch: add
+      WM-EC-004..008 amend-payload format +
+      WM-DISP-021..026 per-case handler pseudocode +
+      WM-EXE-014..016 fill capture + FILL_EVENT log
+      format.
+
+    PROSE-UPDATE-D. 0511001 §9 outbound: add WM-CAN-001
+      individual cancel mechanics.
+
+    PROSE-UPDATE-E. 0511001 §11 reconnect: add
+      WM-RECONNECT-002..010 per-step pseudocode +
+      WM-RECONNECT-014 ATR/EMA cache preservation +
+      WM-RECONNECT-017 retry schedule + WM-RECONNECT-
+      018 TaskGroup exception handling.
+
+    PROSE-UPDATE-F. 0511001 §13 paper mode: add
+      WM-PAPER-LEDGER-002/003/004 specific arithmetic
+      + WM-PAPER-EXIT-004 dispatch_market_sell paper-
+      mode return path (most of §13 already amended
+      at dv1_6 — verify gaps individually).
+
+    PROSE-UPDATE-G. 0511001 §16 logs: add WM-PACE-005
+      bucket-state log format + WM-ZOM event list +
+      WM-STATUS-001 connection_id log + WM-LIQ-002..011
+      log events + FILL_EVENT format.
+
+    PROSE-UPDATE-H. 0511001 §14 hard rules: add
+      HR-WM-034 OUTBOUND SUBSCRIBE PACING (cluster
+      C4 closure).
+
+    PROSE-UPDATE-I. 0511001 §14 hard rules: correct
+      HR-WM-011 + HR-WM-031 stale references (per-
+      module wallet + retired max_concurrent) per
+      §3.59 + §3.60 (cluster C1-cascaded; depends
+      on S-2 AMENDMENT-1 closure first per DD-003).
+
+    PROSE-UPDATE-J. 0511001 §4.2 Step 9b + §5.4
+      Drawdown State: correct stale single-pool
+      paper_starting_balance / drawdown references
+      to per-module pair (cluster C1-cascaded;
+      depends on S-2 AMENDMENT-1 + AMENDMENT-2
+      closure first).
+
+    Total: 10 prose updates, ~1-2 sessions to author.
+    PROSE-UPDATE-I and PROSE-UPDATE-J are gated on
+    S-2 diagram amendments closing first per DD-003
+    4-step workflow.
+
+5.3 S-4 1011002 RETIREMENT.
+    Gated on S-2 + S-3 closure. Retire 1011002 dv1_26
+    in full once 0511001 dv1_7 (post-S-3) contains
+    all (b) migrated content + cluster C4 closure
+    + 0500000 §9 (post-S-2 AMENDMENT-1) + D5/D6/D7
+    (post-S-2 AMENDMENT-2/-3) close the (c)
+    cluster gaps.
+
+5.4 PARALLEL AVENUE — 0511001 dv1_6 → dv1_7 INTERNAL
+    V-038.3.
+    Independent of 1011002 retirement: 0511001 dv1_6
+    contains internal HR-WM-011 + HR-WM-031 staleness
+    (§3.59 + §3.60). PROSE-UPDATE-I + PROSE-UPDATE-J
+    could be authored as a 0511001 dv1_6 → dv1_7
+    internal V-038.3 reconciliation in a single
+    session immediately after S-2 AMENDMENT-1 +
+    AMENDMENT-2 close. This unblocks dependent
+    documents that read 0511001 §14 as canonical.
+
+============================================================
+6. AMBIGUITY-SURFACE FINDINGS (per NSI §7)
+============================================================
+
+6.1 §7.3 VOLUME-OF-(c)-GAPS HIGH FINDING — SURFACE
+    TO BILL.
+    Four (c) gap clusters (C1, C2, C3, C4) surfaced
+    in WS_Manager pair. Below the §7.3 "10+" high-
+    volume threshold but two of the four (C1 + C2)
+    cascade through multiple downstream elements
+    (WM-SZ-001..005 + WM-PAPER-LEDGER-001 +
+    WM-DD-001..008 + HR-WM-011 + HR-WM-031 + §4.2 +
+    §5.4 + §13.6 already-amended elements). The
+    cascade pattern indicates the per-module wallet
+    + per-wallet drawdown architecture transition
+    initiated at TB00179 STAGE M-2 is not yet fully
+    propagated through the diagram-canonical layer
+    at 0500000 dv1_46.
+    Surface: Is the per-module-wallet diagram-side
+    propagation a single-session AMENDMENT-1 (0500000
+    §9 prose fix only) or does it require explicit
+    diagram-SVG amendments for D6/D7 visual elements?
+
+6.2 §7.4 RR-SCOPE-009 CHESTERTON'S-FENCE — NO TRIPS.
+    No (d) bucket elements identified. All retired-
+    parameter references (tradeable_pct,
+    per_trade_pct, max_concurrent, $1,000 single-pool
+    D-05) have clear origin: TB00179 STAGE M-2
+    PARAMETER FOUNDATION supersession (TB00000 v2_29
+    §12). All architectural facts (PATH 2 sharding,
+    token bucket, silent-pair, paper exits) have
+    clear origin in their D1/D7 diagram encoding
+    and predecessor TB00141/TB00142/TB00143 + TB00179
+    derivations.
+
+6.3 §7.1 GAP CLASSIFICATION AMBIGUITY — TWO ITEMS.
+    (a) WM-RECONNECT-019 PAPER-MODE RECONNECT GATING
+        (OI-028 / OI-029) classification provisional
+        as (a). Verification: is the "no private WS
+        reconnect attempt in paper mode" rule encoded
+        in D7 (via HR-WM-022 — private WS never
+        connected in paper mode → no reconnect to
+        attempt)? If YES, (a). If there's a paper-
+        specific reconnect contract beyond the
+        derivable-from-HR-WM-022 fact, (c).
+        Surface to Bill: provisional (a) sufficient
+        for S-3 author? Or explicit verification
+        needed?
+    (b) WM-DD-004 SESSION_PAUSE threshold formulation
+        ("max(0, drawdown_pct)") — the formula
+        structure is architectural (D6 + D7 govern
+        the halt-state machine) but the specific
+        max() bounding is implementation-level.
+        Classified split (a)/(b). Surface to Bill:
+        split acceptable, or full (b) migration?
+
+6.4 §7.5 FILESYSTEM-STATE ASSERTION WITHOUT BASH
+    SWEEP — NO RECURRENCE. TB00194 chat-turn 1 ran
+    bash_tool sweep FIRST per NSI §3.3.
+
+6.5 §7.2 TARGET-DIAGRAM IDENTIFICATION GAP — NO
+    GENUINELY NEW-DIAGRAM SURFACES. All (c) gaps
+    target existing diagrams D1/D5/D6/D7 + 0500000
+    §9 prose. No new Tier 2 diagram or new diagram
+    region required.
+
+============================================================
+7. SEPARATE 0500000 INTERNAL FINDING
+   (Surfaced during audit; NOT a WS_Manager-pair gap)
+============================================================
+
+7.1 0500000 §9 CIATS PARAMETER REGISTRY PROSE-SIDE
+    V-038.3 STALENESS.
+    0500000 dv1_46 §9 prose lists:
+      tradeable_pct:           50% of portfolio
+      per_trade_pct:           5% → Half-Kelly at 200
+      max_concurrent:          20 positions
+      full_halt_drawdown:      10% of portfolio
+      session_pause_drawdown:  5% of portfolio
+    All five values are SUPERSEDED at TB00000 v2_29
+    §9.17 (TB00179 STAGE M-2 PARAMETER FOUNDATION):
+    first three retired; last two redefined as per-
+    wallet (not per-portfolio).
+    Per DD-001/DD-002 diagrams-as-canonical: the
+    diagram <desc> governs lists (D5/D6/D7) ARE the
+    canonical source. 0500000 §9 prose must follow
+    diagrams + TB00000 v2_29 per DD-002 prose-
+    follows-diagram. The §9 dv1_46 staleness IS a
+    DD-002 violation needing 0500000 internal V-038.3
+    reconciliation.
+    This is the C1 cluster root cause. AMENDMENT-1 at
+    §5.1 above addresses it. Surface to Bill: log as
+    new MDR DR-* entry in TB00153 Master_Defect_
+    Register at session close? Or hold as carry-
+    forward in TB00194 SL §7?
+
+============================================================
+8. EXIT CRITERIA STATUS
+============================================================
+
+  E-S1WSM-01   COMPLETE (TB00192).
+  E-S1WSM-02   COMPLETE (TB00192).
+  E-S1WSM-03   COMPLETE — element-by-element gap
+               register authored above (§3.1-3.62
+               coverage of 1011002 dv1_26 §1-§19).
+  E-S1WSM-04   COMPLETE — three-bucket classification
+               (a/b/c) applied to every element;
+               roll-up in §4 above.
+  E-S1WSM-05   COMPLETE — (c) gap target-diagram
+               identified per §4 cluster C1-C4 +
+               §5.1 S-2 AMENDMENT mapping.
+  E-S1WSM-06   COMPLETE — S-2 + S-3 + S-4 downstream
+               queue derived in §5.
+  E-S1WSM-07   PENDING — Bill approval gate at
+               TB00194 close.
+  E-S1WSM-08   PENDING — TB00194 SL + TB00195 NSI +
+               OCS trio at session close.
+  E-S1WSM-09   PENDING — S-1 next-module-pair
+               sequencing in TB00195 NSI §1.
+
+============================================================
+9. REVISION HISTORY
+============================================================
+
+  v1_0  2026-05-11  Initial S-1 gap register for
+                    WS_Manager pair (1011002 dv1_26 +
+                    0511001 dv1_6 vs 0500000 dv1_46).
+                    Authored at TB00194 chat-turn 1
+                    per OCS directive + NSI §2.1 +
+                    DD-011 derivable-decision discipline
+                    + RR-SCOPE-005 next-logical-step
+                    execution. Form factor escalated
+                    to dedicated controlled-doc per
+                    NSI §2.1 ~5,000-word threshold
+                    + Bill discretion deferred to
+                    TB00194 close per same §2.1.
+                    Three-bucket classification across
+                    19 sections / 34 HR-WM-* / 116
+                    WM-* / metadata sections. Four
+                    (c) gap clusters identified
+                    (C1 per-module wallet prose; C2
+                    per-wallet drawdown machine; C3
+                    R:R-driven sizing curve form
+                    factor; C4 HR-WM-034 prose-
+                    narration gap in 0511001).
+                    Zero (d) Chesterton-fence trips.
+                    Surfaced 0500000 §9 internal
+                    V-038.3 staleness as separate
+                    finding (§7.1). Two §7.1 gap-
+                    classification ambiguities
+                    surfaced for Bill direction
+                    (WM-RECONNECT-019 + WM-DD-004).
+                    One §7.3 cascade-pattern volume
+                    finding surfaced.
+
+============================================================
+END OF TB00194 S-1 WS_MANAGER GAP REGISTER v1_0
+============================================================

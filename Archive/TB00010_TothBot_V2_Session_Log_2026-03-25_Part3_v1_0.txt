@@ -1,0 +1,403 @@
+DocDCN:     TB00010
+DocTitle:   TothBot_V2_Session_Log_2026-03-25_Part3
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\OneDrive\TothBot\TB00010_TothBot_V2_Session_Log_2026-03-25_Part3_v1_0.txt
+DocDate:    03-25-2026
+DocTime:    23:59:59 UTC
+
+============================================================
+TOTHBOT V2 — SESSION LOG 2026-03-25 PART 3
+============================================================
+
+Read TB00001 through TB00009 first.
+
+============================================================
+1. SESSION IDENTITY
+============================================================
+
+Session date:     March 25, 2026 (Part 3 — same day as TB00008/09)
+Session type:     Third 10-search FP/DP organism validation +
+                  Document updates across all affected specs +
+                  0500000 dv1_10 production (.txt, .docx, .pdf)
+Prior session:    TB00009 (2026-03-25 Part 2)
+Documents in:     All documents listed in TB00009 Section 9,
+                  plus 0500000 dv1_9 Claude Source
+
+============================================================
+2. SESSION OPENING — MANDATORY READING
+============================================================
+
+All mandatory documents read per TB00000 Section 2:
+
+  TB00000  v2_5       — governing
+  TB00009  v1_0       — most recent prior session log
+  0311001  dv1_2      — confirmed
+  0311002  dv1_7      — confirmed
+  0500000  dv1_9      — Claude Source confirmed
+
+State from TB00009: All parking lot items resolved. All
+prior findings (A-11 through A-19, IMP-06 through IMP-15)
+captured and resolved. Next step: Begin Phase 1.
+
+============================================================
+3. WORK PERFORMED THIS SESSION
+============================================================
+
+------------------------------------------------------------
+3.1 Third 10-Search FP/DP Organism Validation
+------------------------------------------------------------
+
+Conducted 10 sequential web searches per Bill instruction.
+No references repeated from prior sessions. Each search
+built on the knowledge from previous searches.
+
+SEARCH 1  — Kraken WS v2 API 2025-2026 changelog review
+SEARCH 2  — Kraken REST API new endpoints 2025
+SEARCH 3  — Python asyncio websocket aiohttp performance
+SEARCH 4  — Kraken AWS PoP direct connection latency
+SEARCH 5  — Kraken add_order batch_add parameters stp_type GTD
+SEARCH 6  — Kraken executions channel last_qty trade events
+SEARCH 7  — Kraken add_order deadline stp_type underscore
+SEARCH 8  — Kraken rate limits public OHLC IP frequency
+SEARCH 9  — CIATS continuous improvement PDCA statistical methods
+SEARCH 10 — Kraken ticker bid ask MAE monitoring async
+
+110 unique references total across all three validation
+sessions (10 searches each, no repeats).
+
+------------------------------------------------------------
+3.2 Findings — Confirmed Correct
+------------------------------------------------------------
+
+CONFIRMED-07:  All A-11 through A-19 findings from prior
+               sessions remain valid. No reversals.
+
+CONFIRMED-08:  WS v2 only correct for all future Kraken
+               enhancements. v1 maintained but no new features.
+
+CONFIRMED-09:  Kraken Spot IP whitelisting is key-level
+               security control only. Direct AWS PoP access
+               (which would require routing changes) is not
+               available for standard Spot trading — FIX
+               institutional only. VPS location optimization
+               (Hillsboro) remains the correct mechanism.
+
+CONFIRMED-10:  GTD deadline parameter range confirmed:
+               500ms minimum to 60s maximum. Default 5s.
+               Applies to add_order AND batch_add.
+
+CONFIRMED-11:  aiohttp is confirmed best practice for asyncio
+               REST calls. Single ClientSession, explicit
+               timeout, TCPConnector with keepalive required.
+
+------------------------------------------------------------
+3.3 New Gaps and Improvements Found (ALL RESOLVED)
+------------------------------------------------------------
+
+GAP-B (dv1_10) ★ CRITICAL — stp_type Format Correction:
+  FINDING: Official Kraken WS v2 documentation and batch_add
+  example uses underscore format for stp_type values:
+    "stp_type": "cancel_both"   (underscore — WS v2 correct)
+    "stp_type": "cancel_newest" (underscore — WS v2 correct)
+  REST API uses hyphen format: cancel-newest, cancel-both.
+  ALL prior TothBot V2 specifications used "cancel-newest"
+  (hyphen) — this is the REST format, WRONG for WS v2.
+  Using hyphen format in WS v2 will cause order rejection
+  or silent STP failure. This is a critical error in all
+  prior specifications dv1_0 through dv1_9.
+  Resolved in: 0500000 dv1_10 (all text + SVG diagrams),
+               0411001 dv1_3 WS-STP-001 through -003,
+               1011002 dv1_3 WM-STP-001 through -003,
+               1011001 dv1_1 BP-ORD-001, BP-TEST-004.
+  AR-032 added.
+
+A-21 (dv1_10) ★ — deadline Parameter on add_order / batch_add:
+  FINDING: Both WS v2 add_order and batch_add support a
+  deadline parameter (ISO 8601 UTC timestamp). Engine
+  rejects orders arriving after this time. Provides
+  protection against stale order placement on network delay.
+  Range: 500ms–60s. Default if omitted: 5s.
+  Standard: deadline = now + 5s.
+  Resolved in: 0500000 dv1_10 A-21, AR-033,
+               0411001 dv1_3 WS-DL-001 through -004,
+               1011002 dv1_3 WM-DL-001 through -004.
+
+A-22 (dv1_10) ★ — aiohttp ClientTimeout + TCPConnector:
+  FINDING: aiohttp.ClientSession without explicit timeout
+  can hang indefinitely on degraded REST servers. This
+  blocks reconnect/gap recovery sequences.
+  ClientTimeout(total=10, connect=5, sock_read=8) +
+  TCPConnector(limit=10, limit_per_host=5, force_close=False).
+  force_close=False enables HTTP keepalive.
+  Resolved in: 0500000 dv1_10 A-22, AR-035,
+               0411001 dv1_3 WS-REST-005 through -008,
+               1011002 dv1_3 WM-REST-006 through -011,
+               1011001 dv1_1 BP-HTTP-001 through -004.
+
+A-23 (dv1_10) ★ — Ticker event_trigger:bbo for Open Positions:
+  FINDING: Ticker event_trigger:bbo fires on every bid/ask
+  change. For long positions, bid is the realizable exit
+  price. bbo provides faster MAE detection than trades-only.
+  For pairs without open positions, trades trigger is
+  sufficient and generates less volume.
+  WS Manager must manage per-pair trigger based on Position
+  Mirror state, resubscribing when positions open/close.
+  Resolved in: 0500000 dv1_10 A-23, AR-034,
+               0411001 dv1_3 WS-TKR-001 through -004,
+               1011002 dv1_3 WM-TKR-001 through -004.
+
+A-24 (dv1_10) ★ — Regime Engine REST Rate Limit Stagger:
+  FINDING: Kraken public REST OHLC endpoint is rate-limited
+  by IP + currency pair at ~1 call/second. Calling for
+  50+ pairs simultaneously at 00:00 UTC triggers HTTP 429
+  responses and corrupts regime classification.
+  asyncio.sleep(1.1) between pair calls required.
+  50 pairs × 1.1s = 55s total. Completes before first candle.
+  Resolved in: 0500000 dv1_10 A-24, AR-036,
+               0411001 dv1_3 WS-OHLC-006 through -009,
+               1011002 dv1_3 WM-RL-004,
+               1011012 dv1_1 RE-RL-001 through -004.
+
+AR-037 — API Key IP Whitelisting:
+  FINDING: Kraken supports per-key IP whitelisting for both
+  DATA and TRADE keys. VPS has fixed IP — ideal for this.
+  Both keys must be whitelisted to VPS IP. Must be updated
+  on any VPS migration (before migration, not after).
+  Direct Kraken AWS PoP access is NOT available for standard
+  Spot trading — Hillsboro migration remains the correct
+  latency optimization.
+  Resolved in: 0500000 dv1_10 AR-037,
+               0411001 dv1_3 WS-KEY-006 through -009,
+               1011013 dv1_1 VD-KEY-006 through -009.
+
+IMP-16 through IMP-19 added to 0500000 dv1_10.
+All six new findings resolved. Zero items on parking lot.
+
+============================================================
+4. DOCUMENTS PRODUCED THIS SESSION
+============================================================
+
+  UPDATED DOCUMENTS (new versions):
+
+    0500000  dv1_10  System_Architecture_Overview
+             Three output files:
+             (a) 0500000_System_Architecture_Overview_dv1_10_Claude_Source.txt
+                 Complete text + all 6 SVG diagrams. 1664 lines.
+                 Claude working source for future updates.
+             (b) 0500000_System_Architecture_Overview_dv1_10.docx
+                 Word document with all 6 diagrams embedded in
+                 their sections (NOT at the end). ~1.6MB.
+             (c) 0500000_System_Architecture_Overview_dv1_10.pdf
+                 PDF with diagrams in sections. ~1.8MB.
+             Changes: GAP-B stp_type correction throughout,
+             A-20 through A-24 in Section 2.4, IMP-16 through
+             IMP-19 in Section 2.5, AR-032 through AR-037 in
+             Section 8, dv1_10 revision history, all stp_type
+             in text and SVG diagrams corrected from hyphen to
+             underscore.
+
+    0411001  dv1_3  Kraken_WS_v2_Specification
+             Six additions: WS-STP-001/-003 (stp_type),
+             WS-DL-001/-004 (deadline), WS-TKR-001/-004 (bbo),
+             WS-REST-005/-008 (aiohttp config), WS-OHLC-006/-009
+             (stagger), WS-KEY-006/-009 (IP whitelist).
+
+    1011001  dv1_1  Engineering_Best_Practices
+             Three additions: BP-HTTP-001/-004 (aiohttp config),
+             BP-ORD-001/-003 (stp_type underscore + deadline),
+             BP-TEST-004 (unit test stp_type verification).
+
+    1011002  dv1_3  WS_Manager_Coding_Spec
+             Ten additions: WM-STP, WM-DL, WM-TKR, WM-REST-006/-011,
+             WM-RL-004, WM-KEY-006/-008, WM-PM, WM-INST-006/-007,
+             WM-ORD, WM-BA.
+
+    1011012  dv1_1  Regime_Engine_Coding_Spec
+             Three additions: RE-RL-001/-004 (stagger),
+             RE-TAG-001/-003 (two-level tagging contract),
+             RE-STL-001/-003 (stale cache handling).
+
+    1011013  dv1_1  VPS_Deployment_Coding_Spec
+             One addition: VD-KEY-006/-009 (IP whitelisting).
+
+============================================================
+5. BILL ACTIONS REQUIRED
+============================================================
+
+FROM PRIOR SESSIONS (status updated):
+  (b) Create GitHub repositories — if not yet done.
+  (c) Create folder structure in TothBot-V2-Docs.
+  (d) Approve 0311002 dv1_7 — if not yet done.
+
+FROM TB00009 (still pending):
+  (h) Approve 0411001 dv1_1 — superseded by dv1_3 below.
+  (i) Approve 1011002 dv1_1 — superseded by dv1_3 below.
+  (j) Approve 1011013 dv1_0 — superseded by dv1_1 below.
+
+NEW THIS SESSION — CRITICAL:
+  (k) Download and save:
+        0500000_System_Architecture_Overview_dv1_10_Claude_Source.txt
+        0500000_System_Architecture_Overview_dv1_10.docx
+        0500000_System_Architecture_Overview_dv1_10.pdf
+  (l) Approve 0411001 dv1_3 (supersedes dv1_0, dv1_1, dv1_2).
+  (m) Approve 1011001 dv1_1 (supersedes dv1_0).
+  (n) Approve 1011002 dv1_3 (supersedes dv1_0, dv1_1, dv1_2).
+  (o) Approve 1011012 dv1_1 (supersedes dv1_0).
+  (p) Approve 1011013 dv1_1 (supersedes dv1_0).
+  (q) CRITICAL: Whitelist VPS IP (87.99.141.44) on both
+      DATA and TRADE API keys in Kraken account settings
+      per VD-KEY-006 through -009 in 1011013 dv1_1.
+
+NEXT STEP: Begin Phase 1 per 0311002 dv1_7:
+    Step 1.1 → 0000000_Ethics_and_Safety
+    Step 1.2 → 0100000_Management
+    Step 1.3 → 0200000_Operations
+    Step 1.4 → 0300000_Governance
+    Step 1.5 → 0310000_Governance_Procedures_Anchor
+
+============================================================
+6. NEXT SESSION — WHERE WE PICK UP
+============================================================
+
+  1. Upload to project for next session:
+       TB00001 through TB00010 (all session logs)
+       0311001 dv1_2
+       0311002 dv1_7
+       0311004 dv1_0
+       0411001 dv1_3 (NEW — replaces all prior versions)
+       1011001 dv1_1 (NEW — replaces dv1_0)
+       1011002 dv1_3 (NEW — replaces all prior versions)
+       1011010 dv1_1
+       1011012 dv1_1 (NEW — replaces dv1_0)
+       1011013 dv1_1 (NEW — replaces dv1_0)
+       0500000_System_Architecture_Overview_dv1_10_Claude_Source.txt
+
+  2. Confirm Bill actions (b), (c), (d), (k) through (q) above.
+
+  3. Begin Phase 1 — Step 1.1: 0000000_Ethics_and_Safety.
+
+============================================================
+7. OPEN ITEMS — CURRENT STATE
+============================================================
+
+  OI-001  SSS signal generation — Phase 5-6 work.
+  OI-002  Asset selection universe — Phase 5-6 work.
+  OI-003  Exit Controller full spec — Phase 5-6 work.
+          Requires: MPP IOC retry, cancel timeout, bbo trigger.
+  OI-004  Entry limit placement — Phase 5-6 work.
+  OI-005  Selection Controller — Phase 5-6 work.
+
+All five are Phase 5-6 work. Nothing in Phase 1-4 blocked.
+
+============================================================
+8. PARKING LOT — CURRENT STATE
+============================================================
+
+ALL ITEMS RESOLVED OR TRACKING. NO NEW ITEMS.
+
+  PL-001  RESOLVED → 0311004 dv1_0
+  PL-002  RESOLVED → 0311002 dv1_7 Section 17
+  PL-003  TRACKING (Pathway 1 after paper trading)
+  PL-004  RESOLVED → _Archive + 0611004 note
+  PL-005  RESOLVED → 0411001
+  PL-006  CLOSED — not needed for V1
+  PL-007  RESOLVED → 1011013 dv1_1 VD-VPS-002
+  PL-008  CLOSED (FIX API)
+  PL-009  RESOLVED — L3 URL in 0411001
+  PL-010  RESOLVED → 0411001 WS-L2-001/002
+  PL-011  CLOSED (OTO)
+  PL-012  RESOLVED → 0411001 WS-L3-001
+  PL-013  RESOLVED → 0411001, 1011002
+  PL-014  RESOLVED → 0411001 WS-AUTH
+  PL-015  RESOLVED → 0500000, 1011012
+  PL-016  RESOLVED → 0411001, 1011002
+  PL-017  RESOLVED → 0411001, 1011002
+  PL-018  RESOLVED → 0411001, 1011002
+
+The third 10-search session found zero new parking lot items.
+All new findings resolved immediately in documents.
+
+============================================================
+9. COMPLETE DOCUMENT INVENTORY — CURRENT STATE
+============================================================
+
+  AUTHORITATIVE SESSION LOGS:
+    TB00001  Session Log 2026-03-23              v1_0
+    TB00002  Session Log 2026-03-23 Part 2       v1_0
+    TB00003  Session Log 2026-03-24              v1_0
+    TB00004  Session Log 2026-03-24 Part 2       v1_0
+    TB00005  Session Log 2026-03-24 Part 3       v1_0
+    TB00006  Session Log 2026-03-24 Part 4       v1_0
+    TB00007  Session Log 2026-03-24 Part 5       v1_0
+    TB00008  Session Log 2026-03-25              v1_0
+    TB00009  Session Log 2026-03-25 Part 2       v1_0
+    TB00010  Session Log 2026-03-25 Part 3       v1_0  (THIS)
+
+  AUTHORITATIVE CONTROLLED DOCUMENTS:
+    0311001  Namespace_Specification             dv1_2
+    0311002  Document_Creation_Workflow          dv1_7
+
+  WORKING DRAFT DOCUMENTS (current authoritative versions):
+    0311004  Document_Creation_and_Approval      dv1_0
+    0411001  Kraken_WS_v2_Specification          dv1_3  (UPDATED)
+    1011001  Engineering_Best_Practices          dv1_1  (UPDATED)
+    1011002  WS_Manager_Coding_Spec              dv1_3  (UPDATED)
+    1011010  CIATS_Coding_Spec                   dv1_1
+    1011012  Regime_Engine_Coding_Spec           dv1_1  (UPDATED)
+    1011013  VPS_Deployment_Coding_Spec          dv1_1  (UPDATED)
+
+  0500000 SYSTEM ARCHITECTURE OVERVIEW (CURRENT):
+    dv1_10_Claude_Source.txt ✅ (NEW — Claude working source)
+    dv1_10.docx              ✅ (NEW — Bill's Word copy)
+    dv1_10.pdf               ✅ (NEW — Bill's PDF copy)
+
+  SUPERSEDED (do not use):
+    0500000  dv1_9 and all prior versions
+    0411001  dv1_2 and all prior versions
+    1011001  dv1_0
+    1011002  dv1_2 and all prior versions
+    1011012  dv1_0
+    1011013  dv1_0
+
+============================================================
+10. KEY FINDINGS SUMMARY — THIS SESSION
+============================================================
+
+The single most important finding:
+
+  ★★★ stp_type FORMAT CORRECTION ★★★
+  WS v2 uses UNDERSCORES: cancel_newest
+  REST uses HYPHENS: cancel-newest
+  ALL prior TothBot V2 specifications had this WRONG.
+  0500000 dv1_9 and all prior versions specified the
+  REST hyphen format in WS v2 context — this would have
+  caused every single entry order and batch_add to use
+  the wrong STP format, potentially causing order
+  rejections or undetected STP failures.
+  Corrected throughout in dv1_10.
+
+All other findings (deadline, aiohttp config, bbo trigger,
+regime stagger, IP whitelist) are improvements that reduce
+risk and improve reliability — none are blocking defects.
+The stp_type correction is the only finding in this session
+that would have caused incorrect runtime behavior if coded
+without correction.
+
+============================================================
+11. REVISION HISTORY
+============================================================
+
+  v1_0  03-25-2026  Initial session log. Records third
+                    10-search FP/DP organism validation.
+                    110 unique references total (no repeats).
+                    GAP-B stp_type critical correction.
+                    A-21 deadline, A-22 aiohttp, A-23 bbo,
+                    A-24 regime stagger, AR-037 IP whitelist.
+                    0500000 updated to dv1_10 with .txt, .docx,
+                    .pdf outputs. All documents updated.
+                    Zero parking lot items. Zero unresolved.
+
+============================================================
+END OF SESSION LOG
+============================================================

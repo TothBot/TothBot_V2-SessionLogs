@@ -1,0 +1,433 @@
+DocDCN:     TB00056
+DocTitle:   TothBot_V2_Session_Log_2026-04-08_Part4
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\My_TothBot_Stuff\TBXXXXX_Session_Logs\TB00056_TothBot_V2_Session_Log_2026-04-08_Part4_v1_0.txt
+DocDate:    04-08-2026
+DocTime:    23:59:59 UTC
+
+============================================================
+TOTHBOT V2 — SESSION LOG 2026-04-08 PART 4
+============================================================
+
+============================================================
+1. SESSION IDENTITY
+============================================================
+
+Session date:     April 8, 2026 (Part 4)
+Session type:     Phase 11 — Defect fixes (partial write,
+                  hit tool-call budget before delivery)
+Prior session:    TB00055 (2026-04-08 Part 3)
+
+Documents read:
+  TB00000  v2_8   Project Instructions              checked
+  TB00055  v1_0   Prior session log                 checked
+  All affected source files read from project:
+    execution_engine.py  (full — 627 lines)
+    ws_manager.py        (full — 2486 lines, all sections)
+    risk_engine.py       (constructor + MTM section)
+    startup_sequence.py  (full — 516 lines)
+    exit_controller.py   (_close_position section)
+    test_integration.py  (full — 862 lines)
+  TB00052 integration test session read for context
+
+============================================================
+2. WORK COMPLETED THIS SESSION
+============================================================
+
+------------------------------------------------------------
+2.1 Source Files Read — Full Coverage
+------------------------------------------------------------
+
+All source files required for defect fixes were read
+in full before any code was written. Key findings:
+
+  execution_engine.py
+    DEFECT-001: Lines 232-265 — manual entry_msg
+      construction + ws_private.send + pm.create_record.
+      Root cause confirmed: pm has no create_record().
+      Fix: replace entire block with wm.add_order().
+    DEFECT-002: Lines 505, 538 — pm.clear_record().
+      Root cause confirmed: pm has no clear_record().
+      Fix: wm.position_mirror.pop(symbol, None).
+    DEFECT-003: Line 198 — pair_specs (does not exist).
+      Fix: pair_cache (confirmed present on WM).
+    ADDITIONAL BUGS FOUND (not in defect list):
+      Line 351: pm.on_entry_filled() — method does not
+        exist on PositionMirror. WM already updates
+        position_mirror in _handle_filled before calling
+        exec_engine_fn. Fix: remove the call entirely.
+      Line 596: pm.on_batch_add_ack() — method does not
+        exist. Fix: direct wm.position_mirror update.
+      startup_sequence.py passes no position_mirror to
+        EE constructor. Fix: make position_mirror param
+        optional (default=None) in EE.__init__.
+
+  ws_manager.py
+    DEFECT-004: Already fixed in project file.
+      cl_ord_id present in exec_engine_fn event dict
+      at line 1206. Complete file replacement covers this.
+    DEFECT-005: _channel_dispatch has no "batch_add" key.
+      "batch_add" method ACK from Kraken goes to
+      UNKNOWN_MESSAGE_TYPE and is discarded. Fix:
+      add "batch_add" to dispatch table. Add
+      _handle_batch_add_ack() method. Wire via
+      self._batch_add_ack_fn callback (new field).
+    Paper mode: tp_price/emergsl_price fields confirmed
+      absent from PositionRecord. Add both.
+
+  risk_engine.py
+    DEFECT-006: Lines 205, 254.
+      self._pm.all_records.items() — PositionMirror
+        has no all_records attribute.
+      self._pm.open_count — does not exist.
+      WM.position_mirror is the authoritative mirror.
+      Fix: wm.position_mirror.items() and
+        len(wm.position_mirror).
+
+  startup_sequence.py
+    EE constructor call confirmed: passes ws_manager,
+      risk_engine, logger ONLY — no position_mirror.
+      This is consistent with EE fix (make optional).
+    wm._batch_add_ack_fn not wired anywhere. Fix:
+      add wm._batch_add_ack_fn = ee.on_batch_add_response
+      after both wm and ee are constructed.
+
+  exit_controller.py
+    _close_position() TRADE_CLOSE log record confirmed.
+    Paper mode field needs adding:
+      "paper_trade": wm.paper_mode
+
+  test_integration.py
+    8 tests confirmed. All use _make_config() which
+    returns a dict without "paper_trading_mode" key.
+    WM now reads paper_mode from config — need to
+    add "paper_trading_mode": False to _make_config()
+    to prevent KeyError / unexpected True default.
+    PositionRecord changes (tp_price, emergsl_price)
+    are additive with defaults — no test changes
+    needed for those.
+
+------------------------------------------------------------
+2.2 Files Written (Partial Batch — NOT Delivered)
+------------------------------------------------------------
+
+TWO files were fully written to /home/claude/fixes/
+before the session hit the tool-call budget limit.
+They were NOT delivered. They must be included in the
+next session's ONE BATCH delivery per DR-003.
+
+  execution_engine.py — COMPLETE
+    Location: /home/claude/fixes/execution_engine.py
+    Changes applied:
+      DEFECT-001: lines 232-265 replaced with
+        await self._wm.add_order(symbol, entry_limit_price,
+        entry_qty, cl_ord_id). Manual entry_msg, ws_private
+        send, pm.create_record, pending_orders manual
+        populate, req_id_registry manual populate — all
+        removed. WM.add_order handles everything atomically.
+      DEFECT-002: pm.clear_record(symbol) → wm.position_mirror
+        .pop(symbol, None) at both locations (lines 505, 538).
+      DEFECT-003: pair_specs → pair_cache (line 198).
+      ADDITIONAL: pm.on_entry_filled() call removed from
+        _on_entry_filled (WM already updated mirror).
+      ADDITIONAL: pm.on_batch_add_ack() in
+        on_batch_add_response replaced with direct
+        wm.position_mirror[symbol].tp_order_id and
+        wm.position_mirror[symbol].emergsl_order_id update.
+      ADDITIONAL: position_mirror param made optional
+        (default=None) in __init__. Not used. WM governs.
+      ENTRY_DISPATCHED log: removed entry_msg["params"]
+        ["deadline"] reference (entry_msg no longer built).
+
+  ws_manager.py — COMPLETE
+    Location: /home/claude/fixes/ws_manager.py
+    Changes applied:
+      PositionRecord: added tp_price: Decimal = Decimal("0")
+        and emergsl_price: Decimal = Decimal("0") fields.
+      WSManager.__init__: added self.paper_mode = bool(
+        config.get("paper_trading_mode", False)) and
+        self._batch_add_ack_fn: Callable | None = None.
+      _setup_dispatch_tables: added
+        "batch_add": self._handle_batch_add_ack.
+      DEFECT-005: added _handle_batch_add_ack(msg, is_public)
+        method after _handle_exec_status. Routes to
+        self._batch_add_ack_fn(msg) if wired.
+      _handle_ticker: added paper mode TP/emergSL detection.
+        If paper_mode and bid >= pos.tp_price → fire
+        exit_ctrl_fn with tp_filled trigger. If bid <=
+        pos.emergsl_price → fire exit_ctrl_fn with
+        emerg_sl_fired trigger.
+      add_order: send gated behind if not self.paper_mode.
+        In paper mode: PM record and pending_orders still
+        created (bookkeeping intact). PAPER_ORDER_SIMULATED
+        logged. WS message suppressed.
+      batch_add: send gated behind if not self.paper_mode.
+        tp_price and sl_trigger stored on position_mirror
+        in both modes (needed for paper ticker detection).
+        PAPER_BATCH_ADD_SIMULATED logged in paper mode.
+      cancel_order: send gated behind if not self.paper_mode.
+        PAPER_CANCEL_SIMULATED logged in paper mode.
+      dispatch_market_sell: send gated behind if not
+        self.paper_mode. PAPER_MARKET_SELL_SIMULATED logged.
+
+------------------------------------------------------------
+2.3 Files NOT Yet Written
+------------------------------------------------------------
+
+Four files still need to be written in the next session:
+
+  risk_engine.py — DEFECT-006 only (2 line changes)
+  startup_sequence.py — paper_mode env var + logging +
+    wm._batch_add_ack_fn = ee.on_batch_add_response wiring
+  exit_controller.py — "paper_trade": wm.paper_mode added
+    to TRADE_CLOSE log record in _close_position()
+  tests/test_integration.py — "paper_trading_mode": False
+    added to _make_config() return dict
+
+============================================================
+3. WHAT DID NOT HAPPEN — EXACT FAILURE
+============================================================
+
+Session hit the tool-call budget limit while writing
+ws_manager.py str_replace edits. The last successful
+edit was gating dispatch_market_sell. Files written to
+/home/claude/fixes/ were NOT converted to .txt and were
+NOT delivered per DR-001/DR-003. DR-003 requires ONE
+BATCH — partial delivery is prohibited.
+
+Outcome: Zero files delivered this session. All work
+is captured in /home/claude/fixes/ on the Claude
+container but that directory does not persist across
+sessions. Next session must re-write all 6 files from
+scratch using project source files.
+
+============================================================
+4. VPS CURRENT STATE
+============================================================
+
+  Repo:         /root/TothBot_V2-Code
+  HEAD:         2f95c3b — "Phase 10: Fix 3 test files"
+  Service:      NOT installed
+  Venv:         NOT created
+  .tothbot.env: NOT created
+  logrotate:    NOT configured
+  Tests:        95 unit tests pass, 0 integration tests
+
+  REMINDER: VPS has pending OS restart.
+  Run before deployment: reboot (then reconnect SSH).
+
+  No changes made to repo this session.
+
+============================================================
+5. PARKING LOT
+============================================================
+
+  PL-001  WSManager dual PM creation paths. Monitor during
+          paper trading. Do not chase until confirmed.
+
+  PL-003  Pathway 1 GitHub automation. After paper trading.
+
+  PL-NEW-002  VPS pending OS restart. Run reboot before
+              deployment. Then reconnect SSH.
+
+  PL-NEW-003  VPS migration to Hillsboro OR (VD-VPS-002).
+              Evaluate after paper trading stable.
+
+  PL-NEW-004  EE ENTRY_TIMEOUT_SEC (45s) vs WM ENTRY_GTD_SEC
+              (30s) alignment. WM governs after DEFECT-001
+              fix. Monitor during paper trading. CIATS owns.
+
+============================================================
+6. OPEN ITEMS
+============================================================
+
+  All PT-ENTRY criteria (003 through 008) remain PENDING.
+
+  DEFECT-001 through DEFECT-007: all open, all blocking.
+    (DEFECT-004 resolved by complete file replacement.)
+
+  Paper trading mode: not implemented. Blocking PT-ENTRY-008.
+
+============================================================
+7. BILL ACTIONS REQUIRED
+============================================================
+
+Step 1 — Save this session log:
+
+  Save TB00056 to:
+  C:\Users\wstot\My_TothBot_Stuff\TBXXXXX_Session_Logs\
+
+Step 2 — Upload to Claude project:
+
+  Upload TB00056 to Claude project.
+
+Step 3 — Start next session with the instruction in
+          Section 8 below.
+
+============================================================
+8. NEXT SESSION OPENING INSTRUCTION
+============================================================
+
+  ============================================================
+  Read TB00000 v2_8 and TB00056. This is Phase 11 defect fix
+  session — second attempt. All analysis is complete in
+  TB00055 and TB00056. Write all 6 corrected files and
+  deliver in ONE BATCH per DR-001 and DR-003.
+
+  IMPORTANT: Do NOT use /home/claude/fixes/ — that directory
+  does not persist across sessions. Read source files from
+  the Claude project and write fresh corrected versions.
+
+  Source files to read before writing (from project):
+    execution_engine.py, ws_manager.py, risk_engine.py,
+    exit_controller.py, startup_sequence.py,
+    test_integration.py
+
+  ALL 6 files to write and deliver as .txt in ONE BATCH:
+
+  (1) tothbot/execution_engine.py — DEFECT-001, 002, 003
+      DEFECT-001: lines 232-265 replaced with single call:
+        await self._wm.add_order(
+            symbol, entry_limit_price, entry_qty, cl_ord_id
+        )
+        Remove: manual entry_msg, ws_private.send,
+        pm.create_record, pending_orders manual set,
+        req_id_registry manual set, req_id assignment.
+        Keep: cl_ord_id assignment, atr_14 computation,
+        _entry_orders storage, ENTRY_DISPATCHED log
+        (remove entry_msg["params"]["deadline"] ref).
+      DEFECT-002: pm.clear_record(symbol) at lines 505
+        and 538 → self._wm.position_mirror.pop(symbol, None)
+      DEFECT-003: self._wm.pair_specs → self._wm.pair_cache
+        at line 198.
+      ADDITIONAL (not listed but also crash on run):
+        Line 351: remove pm.on_entry_filled() call —
+          WM already updated position_mirror before
+          calling exec_engine_fn.
+        Line 596: replace pm.on_batch_add_ack() with
+          direct wm.position_mirror[symbol] field update
+          (tp_order_id, emergsl_order_id).
+        __init__: make position_mirror param optional
+          (default=None) — startup_sequence does not pass it.
+
+  (2) tothbot/ws_manager.py — DEFECT-005 + paper mode
+      PositionRecord: add 2 fields:
+        tp_price: Decimal = Decimal("0")
+        emergsl_price: Decimal = Decimal("0")
+      WSManager.__init__: add after dispatch tables:
+        self.paper_mode: bool = bool(
+            config.get("paper_trading_mode", False))
+        self._batch_add_ack_fn: Callable | None = None
+      _setup_dispatch_tables: add to _channel_dispatch:
+        "batch_add": self._handle_batch_add_ack
+      Add _handle_batch_add_ack(self, msg, is_public=False):
+        if self._batch_add_ack_fn:
+            await self._batch_add_ack_fn(msg)
+        else: log BATCH_ADD_ACK_NO_HANDLER warning
+      _handle_ticker: add paper TP/emergSL detection block
+        after bid update and before MAE check.
+        If paper_mode and bid >= pos.tp_price:
+          fire exit_ctrl_fn with tp_filled trigger.
+        If paper_mode and bid <= pos.emergsl_price:
+          fire exit_ctrl_fn with emerg_sl_fired trigger.
+      add_order: gate await self._send_private(payload)
+        behind if not self.paper_mode. In paper mode:
+        still do PM record creation + pending_orders.
+        Log PAPER_ORDER_SIMULATED.
+      batch_add: gate send behind if not self.paper_mode.
+        Store tp_price/sl_trigger on position_mirror
+        in BOTH modes. Log PAPER_BATCH_ADD_SIMULATED.
+      cancel_order: gate send behind if not self.paper_mode.
+        Log PAPER_CANCEL_SIMULATED in paper mode.
+      dispatch_market_sell: gate send. Log
+        PAPER_MARKET_SELL_SIMULATED in paper mode.
+
+  (3) tothbot/risk_engine.py — DEFECT-006
+      Line 205: self._pm.all_records.items()
+        → self._wm.position_mirror.items()
+      Line 254: self._pm.open_count
+        → len(self._wm.position_mirror)
+
+  (4) tothbot/startup_sequence.py — paper mode + wiring
+      _load_config(): add to return dict:
+        "paper_trading_mode": os.environ.get(
+            "PAPER_TRADING_MODE", "false"
+        ).lower() == "true"
+      _async_main(): after logger initialized, add:
+        paper_mode = config.get("paper_trading_mode", False)
+        if paper_mode:
+            logger.info(log_record({
+                "event": "PAPER_TRADING_MODE_ON", ...}))
+        else:
+            logger.info(log_record({
+                "event": "PAPER_TRADING_MODE_OFF", ...}))
+      _build_components(): after ee and wm are created:
+        wm._batch_add_ack_fn = ee.on_batch_add_response
+      EE constructor call: already has no position_mirror
+        arg — leave as-is (matches EE optional param fix).
+
+  (5) tothbot/exit_controller.py — paper_trade field
+      In _close_position(), add to TRADE_CLOSE log record:
+        "paper_trade": wm.paper_mode,
+
+  (6) tests/test_integration.py — paper_mode config
+      In _make_config(), add to return dict:
+        "paper_trading_mode": False
+      All 8 tests otherwise unchanged.
+
+  RULE: Complete files. ONE BATCH. .txt format. No patches.
+  RULE: No options. No questions. No SCP.
+  RULE: git add . is PROHIBITED. Named files only.
+  RULE: git push origin master. Always.
+  RULE: One command per copy box. Always.
+
+  After delivery, Bill performs:
+    Save all 6 .txt files as .py to local repo paths:
+      tothbot/execution_engine.py
+      tothbot/ws_manager.py
+      tothbot/risk_engine.py
+      tothbot/startup_sequence.py
+      tothbot/exit_controller.py
+      tests/test_integration.py
+
+  Then in LOCAL command prompt at
+  C:\Users\wstot\GitHub\TothBot\TothBot_V2-Code\:
+
+    git add tothbot/execution_engine.py
+    git add tothbot/ws_manager.py
+    git add tothbot/risk_engine.py
+    git add tothbot/startup_sequence.py
+    git add tothbot/exit_controller.py
+    git add tests/test_integration.py
+    git commit -m "Phase 11: Fix 6 critical defects + paper trading mode"
+    git push origin master
+
+  Then on VPS (SSH terminal):
+    cd /root/TothBot_V2-Code && git pull
+
+  Then run tests on VPS:
+    cd /root/TothBot_V2-Code
+    python3.12 -m pytest tests/ -q
+
+  After tests pass: proceed to PT-ENTRY-003 (Kraken API
+  keys). Reboot VPS first per PL-NEW-002:
+    reboot
+  Then reconnect and proceed.
+  ============================================================
+
+============================================================
+9. REVISION HISTORY
+============================================================
+
+  v1_0  04-08-2026  Session log Part 4. Phase 11 second
+                    attempt. Two files written to container
+                    (execution_engine.py complete,
+                    ws_manager.py complete) before tool
+                    budget exhausted. Zero files delivered.
+                    All analysis complete in TB00055/TB00056.
+                    Next session: write all 6 from scratch.
+
+============================================================
+END OF SESSION LOG
+============================================================

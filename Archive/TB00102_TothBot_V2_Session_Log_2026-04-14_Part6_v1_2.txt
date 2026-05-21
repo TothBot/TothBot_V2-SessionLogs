@@ -1,0 +1,628 @@
+DocDCN:     TB00102
+DocTitle:   TothBot_V2_Session_Log_2026-04-14_Part6
+DocVersion: v1_2
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\My_TothBot_Stuff\TBXXXXX_Session_Logs\TB00102_TothBot_V2_Session_Log_2026-04-14_Part6_v1_2.txt
+DocDate:    04-16-2026
+DocTime:    21:50:00 UTC
+
+============================================================
+TOTHBOT V2 SESSION LOG — 2026-04-14 PART 6
+============================================================
+
+============================================================
+1. SESSION IDENTITY
+============================================================
+
+Session date:     April 14, 2026 (Part 6, continued 04-16)
+Session number:   TB00102
+Session type:     DEFECT-SS-009 diagnosis, fix, and VPS
+                  deployment verification. DEFECT-WM-CRASH-001
+                  root cause confirmed via Fix 1 ExceptionGroup
+                  logging and reclassified to
+                  DEFECT-WM-RECONNECT-001.
+Prior session:    TB00101 v1_0 (2026-04-14 Part 5)
+
+Documents read this session:
+  TB00000  v2_8    Project Instructions             read
+  TB00101  v1_0    Prior session log                read
+  TB00102  v1_1    This session log (prior version) read
+  0311001  v1_1    Namespace_Specification          read
+  0311002  v1_2    Document_Creation_Workflow       read
+  0311003  v1_0    Versioning_Procedure             read
+  0311004  v1_1    Document_Creation_Approval_Proc  read
+
+============================================================
+2. WORK COMPLETED THIS SESSION
+============================================================
+
+PAPER TRADING ONLY. NO REAL MONEY.
+
+------------------------------------------------------------
+2.1 Fix 2 Deployment Verification — Partial Failure Found
+------------------------------------------------------------
+
+After VPS deployment of ws_manager.py dv1_19 (TB00101),
+regime startup seed sequence confirmed in log:
+
+  WARMUP_REST_COMPLETE (18:07:53)
+  REGIME_STARTUP_SEED_STARTED (18:07:53)
+  REGIME_STARTUP_SEED_COMPLETE (18:07:54) ← 1.25 seconds
+  SYSTEM_OPERATIONAL (18:07:54)
+
+DEFECT confirmed: seed completed in 1.25 seconds for 50 pairs.
+Expected: ~55 seconds (50 pairs × 1.1s stagger per RE-RL-002).
+Conclusion: an exception being silently caught OR regime
+computed for far fewer than 50 pairs.
+
+Gate 3 check confirmed: all pairs still failing NO_REGIME_DATA
+at 18:35–18:37 UTC, 27 minutes after startup. Fix 2 had
+no effect on trading readiness.
+
+------------------------------------------------------------
+2.2 Root Cause Analysis — DEFECT-SS-009
+------------------------------------------------------------
+
+DEFECT-SS-009 (CRITICAL — CONFIRMED AND FIXED)
+
+Root cause: _regime_wrapper in startup_sequence.py called
+  rge.run_daily_computation() with no universe argument.
+  run_daily_computation() uses self._universe when no
+  universe is passed. rge._universe is set at RegimeEngine
+  construction time from _load_universe(config).
+  _load_universe() returns ["BTC/USD"] only (TOTHBOT_UNIVERSE
+  env var not set; default is "BTC/USD").
+
+  The full 50-pair monitored universe is built by WSManager
+  at runtime from the Kraken instrument snapshot — it is NOT
+  available at construction time. rge._universe = ["BTC/USD"]
+  for the lifetime of the process.
+
+  Result: regime computed for 1 pair (BTC/USD) only.
+  All 49 other monitored pairs had NO_REGIME_DATA.
+  Gate 3 blocked all non-BTC entries for the entire session.
+  This also affects the daily 00:00 UTC regime refresh —
+  same wrapper, same defect.
+
+  Evidence:
+    REGIME_STARTUP_SEED_COMPLETE in ~1.25s (BTC/USD: 1.1s
+    stagger + ~0.15s REST fetch = ~1.25s correct for 1 pair).
+    All non-BTC pairs showing GATE_3_FAIL NO_REGIME_DATA
+    27 minutes after SYSTEM_OPERATIONAL.
+
+Fix: _regime_wrapper now passes list(wm.monitored_universe)
+  to rge.run_daily_computation(universe=universe). Python
+  closures capture wm by reference — at call time,
+  wm.monitored_universe contains the full ranked 50-pair
+  universe. Guard: if wm.monitored_universe else None.
+
+------------------------------------------------------------
+2.3 DEFECT-SS-009 Fix — Documents Updated
+------------------------------------------------------------
+
+Governing spec: 1011014 dv1_5 SS-WIRE-001 (new rule).
+Code file: startup_sequence.py dv1_6 → dv1_7.
+
+startup_sequence.py change (one line + comments):
+
+  BEFORE (dv1_6):
+    async def _regime_wrapper(candles, symbol: str) -> None:
+        await rge.run_daily_computation()
+
+  AFTER (dv1_7):
+    async def _regime_wrapper(candles, symbol: str) -> None:
+        universe = (
+            list(wm.monitored_universe)
+            if wm.monitored_universe else None
+        )
+        await rge.run_daily_computation(universe=universe)
+
+------------------------------------------------------------
+2.4 Document Control — All Requirements Met
+------------------------------------------------------------
+
+Per 0311001, 0311002, 0311003, 0311004:
+
+  startup_sequence.py
+    dv1_6 → dv1_7
+    7-field header updated. Revision history updated.
+    DEFECT-SS-009 fix documented.
+
+  1011014_Startup_Sequence_Coding_Spec
+    dv1_4 → dv1_5
+    Section 12 (Component Wiring Rules) added.
+    SS-WIRE-001 (new rule): _regime_wrapper must pass
+    wm.monitored_universe. Related documents updated.
+    Revision history entry added.
+
+  1010000_Trading_System_Coding_Anchor
+    dv1_7 → dv1_8 (note: dv1_7 committed earlier this
+    session for ws_manager.py registry update)
+    Code File Registry: startup_sequence.py SpecVer
+    updated dv1_3 → dv1_5. Revision history updated.
+
+------------------------------------------------------------
+2.5 Step 8 VPS Deployment — PASSED (v1_2 addition)
+------------------------------------------------------------
+
+Deployment executed 2026-04-16 21:19:49 UTC.
+
+Git pull confirmed:
+  c723410..6d75479  master -> origin/master
+  tothbot/startup_sequence.py | 34 +++++++++++++++++++++++++++++-----
+  1 file changed, 29 insertions(+), 5 deletions(-)
+
+Service restart confirmed. Process PID 144026 up since
+21:19:49 UTC. No new crashes in the current run.
+
+VPS file version verified:
+  grep -E "^DocVersion" /root/TothBot_V2-Code/tothbot/startup_sequence.py
+  → DocVersion: dv1_7
+
+Startup sequence observed in log:
+
+  WS_CONNECTED                     21:19:51.180
+  INSTRUMENT_SNAPSHOT_COMPLETE     21:19:51.312 (1510 pairs)
+  OHLC_SUBSCRIBED                  21:19:51.313 (50 pairs)
+  WARMUP_REST_STARTED              21:19:51.313
+  WARMUP_REST_COMPLETE             21:19:53.213 (50/50)
+  REGIME_STARTUP_SEED_STARTED      21:19:53.213
+  REGIME_COMPUTED × 50             21:19:53 → 21:20:53
+  REGIME_STARTUP_SEED_COMPLETE     21:20:54.927
+  SYSTEM_OPERATIONAL               21:20:54.928
+
+Seed elapsed time: 61.7 seconds. Expected ~55 seconds
+(50 pairs × 1.1s stagger). Matches spec. Confirms all
+50 pairs computed — not just BTC/USD.
+
+Gate 3 events after SYSTEM_OPERATIONAL:
+  USDC/USD  rejection=REGIME_BLOCKED  directional=TRENDING_NEGATIVE
+  DOT/USD   rejection=REGIME_BLOCKED  directional=TRENDING_NEGATIVE
+  (repeated on 5-minute candle closes, multiple pairs)
+
+All Gate 3 rejections post-SYSTEM_OPERATIONAL show valid
+regime reasons (REGIME_BLOCKED with classified regime) —
+NOT NO_REGIME_DATA. This is the expected and correct
+behavior.
+
+Success criteria — all MET:
+  (a) REGIME_STARTUP_SEED_STARTED present         YES
+  (b) REGIME_STARTUP_SEED_COMPLETE present        YES
+      Elapsed ~55s (observed 61.7s)               YES
+  (c) SYSTEM_OPERATIONAL after SEED_COMPLETE      YES
+  (d) GATE_3_FAIL shows REGIME_BLOCKED            YES
+      (not NO_REGIME_DATA)
+  (e) WS_MGR_FATAL absent in current run          YES
+
+DEFECT-SS-009: VERIFIED FIXED ON VPS.
+Paper trading IS operational with full 50-pair regime
+coverage as of 2026-04-16 21:20:54 UTC.
+
+------------------------------------------------------------
+2.6 DEFECT-WM-CRASH-001 — Root Cause Confirmed via Fix 1
+------------------------------------------------------------
+
+Fix 1 (ws_manager.py dv1_19 ExceptionGroup logging) was
+deployed prior to this session and has successfully
+captured full tracebacks and sub-exceptions for 7+ crashes
+across 2026-04-16.
+
+ws_manager.py VPS version verified: dv1_19.
+
+Crash timeline with captured sub-exceptions:
+
+  04-16 01:22  _recv_loop_public:975
+               ConnectionClosedError: no close frame
+               received or sent
+  04-16 06:02  _recv_loop_public:975
+               ConnectionClosedError: no close frame
+               received or sent
+  04-16 07:02  _ping_loop:2353 → _initiate_reconnect:3241
+               RuntimeError: Fatal reconnect failure —
+               systemd restart required
+  04-16 08:29  _ping_loop:2353 → _initiate_reconnect:3241
+               RuntimeError: Fatal reconnect failure
+  04-16 11:25  _ping_loop:2353 → _initiate_reconnect:3241
+               RuntimeError: Fatal reconnect failure
+  04-16 12:05  _ping_loop:2360 → _send_public:735
+               ConnectionClosedOK: received 1001 (going
+               away) CloudFlare WebSocket proxy restarting
+  04-16 13:12  _ping_loop:2360 → _send_public:735
+               ConnectionClosedOK: CloudFlare WebSocket
+               proxy restarting
+  04-16 13:43  _recv_loop_public:975
+               ConnectionClosedError: no close frame
+  04-16 14:21  _recv_loop_public:975
+               ConnectionResetError [Errno 104]
+               Connection reset by peer → ConnectionClosedError
+
+Crash intervals observed over ~13 hours:
+  Mean: 1h 37m
+  Max:  4h 40m
+  Min:  0h 31m
+
+Pattern: Kraken's CloudFlare WebSocket proxy is performing
+routine connection cycling (normal CF infrastructure
+behavior). Transient connection events — ConnectionClosedError,
+ConnectionClosedOK, ConnectionResetError — are being
+propagated out of the asyncio TaskGroup to WS_MGR_FATAL,
+terminating the process. systemd restarts. Loop repeats.
+
+Fix 1 is working as designed. DEFECT-WM-CRASH-001 is
+fully diagnosed.
+
+------------------------------------------------------------
+2.7 DEFECT-WM-RECONNECT-001 — NEW DEFECT (CRITICAL)
+------------------------------------------------------------
+
+Reclassification: OI-016 DEFECT-WM-CRASH-001 is now
+closed as "diagnosed." The actual production defect is
+reconnect resilience, not crash detection.
+
+DEFECT-WM-RECONNECT-001 (CRITICAL — diagnosed, NOT fixed)
+
+Component:   ws_manager.py dv1_19
+Governing:   1011002_WS_Manager_Coding_Spec dv1_18
+
+Problem:
+  _ping_loop (lines 2353, 2360), _recv_loop_public (line
+  975), _send_public (line 735), and _initiate_reconnect
+  (line 3241) propagate routine WebSocket disconnects out
+  of the asyncio TaskGroup. Any disconnect triggered by
+  CloudFlare proxy cycling or transient network conditions
+  terminates the entire TothBot process.
+
+Required behavior:
+  ConnectionClosedError, ConnectionClosedOK, and
+  ConnectionResetError within the public WebSocket loops
+  must be caught locally and trigger orderly reconnect
+  without process termination. Only truly unrecoverable
+  conditions (e.g., repeated reconnect failure across N
+  attempts) should propagate to WS_MGR_FATAL.
+
+_initiate_reconnect at line 3241 currently raises
+RuntimeError("Fatal reconnect failure — systemd restart
+required") — this logic needs review. The reconnect path
+should retry with backoff, not immediately fatal-exit
+after one failure.
+
+Impact:
+  System experiences ~1-2 crashes per hour (mean interval
+  1h 37m over 13h window). Each crash loses in-flight
+  WebSocket state, forces 60s+ regime re-seed, blocks
+  Gate 3 during re-seed, and creates observational noise
+  across all downstream components. CIATS data quality
+  degraded by constant restarts.
+
+Severity: CRITICAL. Blocks stable paper trading.
+
+Fix scope (NEXT SESSION — NO PATCHES):
+  ws_manager.py dv1_19 → dv1_20 (full file, full DC)
+  1011002 WS_Manager_Coding_Spec — review reconnect rules;
+    increment version if new rules added
+  1010000 Trading_System_Coding_Anchor — registry update
+  Full DC compliance per 0311001, 0311002, 0311003, 0311004
+
+------------------------------------------------------------
+2.8 24-Hour Observation Period Started
+------------------------------------------------------------
+
+PAPER TRADING ONLY. NO REAL MONEY.
+
+System running. Process PID 144026. Gate 3 operational.
+
+Observation period:
+  Start:  2026-04-16 21:19:49 UTC
+  End:    2026-04-17 21:20:00 UTC (approx)
+  Duration: 24 hours minimum
+
+Purpose:
+  (1) Confirm DEFECT-WM-RECONNECT-001 crash pattern is
+      exclusively CloudFlare/transient-network signatures.
+  (2) Collect crash interval data for fix design input.
+  (3) Verify Gate 3 operates correctly across full day of
+      market conditions between crashes.
+  (4) Verify DEFECT-SS-009 fix remains stable across
+      crash-restart cycles.
+
+Stop condition (early termination):
+  If WS_MGR_FATAL appears with error signature NOT matching
+  ConnectionClosedError / ConnectionClosedOK /
+  ConnectionResetError / "Fatal reconnect failure" →
+  open new session immediately.
+
+Progress check commands (run on VPS):
+  grep -c "WS_MGR_FATAL" /home/tothbot/logs/tothbot.log
+  systemctl status tothbot
+
+============================================================
+3. OPEN ITEMS / PARKING LOT
+============================================================
+
+OI-018  OPEN — DEFECT-WM-RECONNECT-001 (CRITICAL).
+        Reclassified from OI-016. Full root cause
+        identified. Fix NOT deployed. Scope: next session.
+        ws_manager.py → dv1_20 + full DC per 0311001 et al.
+
+OI-016  CLOSED — DEFECT-WM-CRASH-001. Diagnosed. Fix 1
+        (ws_manager.py dv1_19 ExceptionGroup logging)
+        working as designed. Actual production issue is
+        reconnect resilience — see OI-018.
+
+OI-017  OPEN — DEFECT-WM-LIQ-001. Liquidity refresh
+        returning empty_result every 4 hours. Non-blocking.
+        Investigate after OI-018.
+
+OI-014  OPEN — startup_sequence.py stale cross-references
+        and ohlc sequence review. Post paper-trading stable.
+
+============================================================
+4. STANDING RULES — ALL ACTIVE
+============================================================
+
+  RULE 6  — git add . is prohibited. Explicit per file.
+  RULE 13 — .bat files go to Desktop only. Never in repo.
+  RULE 14 — git push origin master. NEVER origin main.
+  RULE 15 — ONE COMMAND PER COPY BOX. ALWAYS.
+  RULE 16 — .bat files run from cmd.exe only. Never PS.
+  RULE 17 — Always give complete and correct instructions.
+            Include Command Prompt or Powershell. Include
+            root file path in each instruction. Every step
+            must be executable without interpretation.
+
+  CODING RULES — ALL ACTIVE:
+  NO PATCHES EVER. Full file delivery only. Full document
+  control. Every code change = new version = full file
+  delivered as .txt per DR-001.
+
+  DELIVERY RULES — ALL ACTIVE:
+  DR-001 — All documents as .txt files.
+  DR-002 — 0500000 additionally as .docx and .pdf.
+  DR-003 — ALL documents in ONE BATCH. No piecemeal.
+
+============================================================
+5. BILL ACTIONS REQUIRED — THIS SESSION
+============================================================
+
+------------------------------------------------------------
+STEP 1 — Save session log                        COMPLETE
+------------------------------------------------------------
+TB00102 v1_1 saved to:
+  C:\Users\wstot\My_TothBot_Stuff\TBXXXXX_Session_Logs\
+
+------------------------------------------------------------
+STEP 2 — Upload to Claude project folder         COMPLETE
+------------------------------------------------------------
+TB00102 v1_1 uploaded to Claude project folder.
+TB00101 v1_0 deleted from Claude project folder.
+
+------------------------------------------------------------
+STEP 3 — Download documents                      COMPLETE
+------------------------------------------------------------
+All four documents downloaded.
+
+------------------------------------------------------------
+STEP 4 — Place in Docs repo                      COMPLETE
+------------------------------------------------------------
+Files placed in:
+  C:\Users\wstot\GitHub\TothBot\TothBot_V2-Docs\
+    10XXXXX_Coding_Specification\
+
+------------------------------------------------------------
+STEP 5 — Commit TothBot_V2-Docs                  COMPLETE
+------------------------------------------------------------
+Commit hash: f882a81
+Message: TB00102: 1011014 dv1_5 SS-WIRE-001; 1010000 dv1_8
+         registry update; remove superseded dv1_17
+
+------------------------------------------------------------
+STEP 6 — Place startup_sequence.py in Code repo  COMPLETE
+------------------------------------------------------------
+startup_sequence.py (dv1_7) placed in:
+  C:\Users\wstot\GitHub\TothBot\TothBot_V2-Code\tothbot\
+
+------------------------------------------------------------
+STEP 7 — Commit TothBot_V2-Code                  COMPLETE
+------------------------------------------------------------
+Commit hash: 6d75479
+Message: TB00102: startup_sequence.py dv1_7
+         DEFECT-SS-009 _regime_wrapper pass monitored_universe
+
+------------------------------------------------------------
+STEP 8 — Deploy to VPS                           COMPLETE
+------------------------------------------------------------
+Deployed 2026-04-16 21:19:49 UTC.
+Git pull: c723410..6d75479 fast-forward (29 insertions,
+5 deletions).
+Service restart successful. Process PID 144026 running.
+VPS file version: startup_sequence.py dv1_7 verified.
+REGIME_STARTUP_SEED_COMPLETE at 21:20:54.927 UTC.
+Seed elapsed: 61.7 seconds (matches expected ~55s).
+SYSTEM_OPERATIONAL at 21:20:54.928 UTC.
+Gate 3 rejections show REGIME_BLOCKED (valid) —
+NOT NO_REGIME_DATA.
+
+DEFECT-SS-009: VERIFIED FIXED ON VPS.
+
+------------------------------------------------------------
+STEP 9 — 24-hour observation period              IN PROGRESS
+------------------------------------------------------------
+Start:    2026-04-16 21:19:49 UTC
+End:      2026-04-17 21:20:00 UTC (approx)
+
+No action required during observation unless stop
+condition met (see Section 2.8).
+
+Progress check commands (optional — on VPS):
+```
+grep -c "WS_MGR_FATAL" /home/tothbot/logs/tothbot.log
+```
+```
+systemctl status tothbot
+```
+
+------------------------------------------------------------
+STEP 10 — Save TB00102 v1_2                      PENDING
+------------------------------------------------------------
+Save TB00102 v1_2 to:
+  C:\Users\wstot\My_TothBot_Stuff\TBXXXXX_Session_Logs\
+
+File: TB00102_TothBot_V2_Session_Log_2026-04-14_Part6_v1_2.txt
+
+------------------------------------------------------------
+STEP 11 — Upload TB00102 v1_2 to Claude project  PENDING
+------------------------------------------------------------
+Upload TB00102 v1_2 to Claude project folder.
+Delete TB00102 v1_1 from Claude project folder.
+
+============================================================
+6. NEXT SESSION — COMPLETE INSTRUCTIONS
+============================================================
+
+============================================================
+DOCUMENTS TO READ — IN THIS ORDER:
+1. TB00000  v2_8    — Project Instructions
+2. TB00102  v1_2    — This session log (most recent)
+STATE ALL DOCUMENTS READ AND VERSIONS BEFORE ANY WORK.
+============================================================
+
+============================================================
+FIRST TASK — Report 24-hour observation result
+============================================================
+
+PAPER TRADING ONLY. NO REAL MONEY.
+
+Paste to Claude:
+
+  (a) Count of WS_MGR_FATAL events during observation:
+```
+grep -c "WS_MGR_FATAL" /home/tothbot/logs/tothbot.log
+```
+
+  (b) All WS_MGR_FATAL sub-exception signatures since
+      observation start (21:19:49 UTC 04-16):
+```
+grep -E "WS_MGR_FATAL" /home/tothbot/logs/tothbot.log | awk '$0 ~ /"ts":"2026-04-1[67]T/' | tail -30
+```
+
+  (c) Current service state:
+```
+systemctl status tothbot
+```
+
+  (d) Confirm Gate 3 is healthy (REGIME_BLOCKED not
+      NO_REGIME_DATA) in most recent run:
+```
+grep -E "GATE_3_FAIL" /home/tothbot/logs/tothbot.log | tail -20
+```
+
+============================================================
+SECOND TASK — Scope DEFECT-WM-RECONNECT-001 fix
+============================================================
+
+After observation data reviewed, proceed to scope the
+DEFECT-WM-RECONNECT-001 fix per Section 2.7.
+
+Expected actions:
+  (1) Read ws_manager.py dv1_19 lines 735, 958, 975,
+      2353, 2360, 3241 (reconnect paths)
+  (2) Read 1011002 WS_Manager_Coding_Spec dv1_18
+      reconnect requirements
+  (3) Design fix:
+      - Catch ConnectionClosedError, ConnectionClosedOK,
+        ConnectionResetError locally inside _recv_loop_public,
+        _ping_loop, _send_public
+      - Trigger orderly reconnect with backoff (not fatal)
+      - _initiate_reconnect: retry N attempts with backoff;
+        only fatal after all retries exhausted
+      - Never propagate transient disconnects to TaskGroup
+  (4) Update ws_manager.py dv1_19 → dv1_20 (full file,
+      full DC per 0311001/02/03/04)
+  (5) Update 1011002 dv1_18 → dv1_19 if reconnect rules
+      changed (add RECONNECT-* rules as needed)
+  (6) Update 1010000 Trading_System_Coding_Anchor
+      registry (SpecVer update)
+  (7) Deliver all documents .txt per DR-001, one batch
+      per DR-003
+
+NO PATCHES. Full file delivery only.
+Full DC compliance required.
+
+============================================================
+CURRENT STATE SUMMARY — END OF SESSION
+============================================================
+
+GitHub — TothBot_V2-Docs:
+  Latest commit: f882a81 (531b447 prior)
+  1011014 dv1_5: SS-WIRE-001 added
+  1010000 dv1_8: startup_sequence.py registry updated
+  All superseded specs removed
+
+GitHub — TothBot_V2-Code:
+  Latest commit: 6d75479 (c723410 prior)
+  startup_sequence.py dv1_7: DEFECT-SS-009 fix
+  ws_manager.py dv1_19: Fix 1 ExceptionGroup logging
+
+VPS:
+  Status: RUNNING — PID 144026 since 2026-04-16 21:19:49 UTC
+  startup_sequence.py: dv1_7 deployed and verified
+  ws_manager.py: dv1_19 deployed and verified
+  SYSTEM_OPERATIONAL since 2026-04-16 21:20:54 UTC
+  50/50 pairs regime-seeded
+  Gate 3: operational, rejecting with valid regime reasons
+
+24-hour observation period:
+  Start: 2026-04-16 21:19:49 UTC
+  End:   2026-04-17 21:20:00 UTC (approx)
+  Purpose: confirm DEFECT-WM-RECONNECT-001 signature set
+
+Open defects:
+  OI-018  DEFECT-WM-RECONNECT-001 (CRITICAL) — diagnosed,
+          NOT fixed. ws_manager.py transient WS disconnects
+          propagating to WS_MGR_FATAL. Fix scope next
+          session. NO PATCHES. Full DC required.
+  OI-017  DEFECT-WM-LIQ-001 — liquidity refresh empty_result
+          every 4 hours. Non-blocking. Deferred.
+  OI-014  startup_sequence.py stale cross-references.
+          Post paper-trading stable.
+
+Closed this session:
+  OI-016  DEFECT-WM-CRASH-001 — diagnosed; Fix 1 logging
+          working as designed. Actual issue reclassified
+          to OI-018.
+
+============================================================
+REVISION HISTORY
+============================================================
+
+  v1_2  04-16-2026  Step 8 VPS deployment PASSED.
+                    DEFECT-SS-009 verified fixed on VPS.
+                    Full deployment evidence added
+                    (Section 2.5). DEFECT-WM-CRASH-001
+                    root cause confirmed via Fix 1 logging
+                    (Section 2.6). OI-016 closed; new
+                    DEFECT-WM-RECONNECT-001 opened as OI-018
+                    (Section 2.7). 24-hour observation period
+                    started 2026-04-16 21:19:49 UTC
+                    (Section 2.8). Steps 8–11 added.
+                    Next session instructions updated for
+                    observation review and reconnect fix
+                    scoping.
+
+  v1_1  04-14-2026  Updated after GitHub commits completed.
+                    Steps 1-7 marked COMPLETE with commit
+                    hashes. Step 8 VPS deployment detailed
+                    with success/failure criteria. Current
+                    state summary added. Next session
+                    instructions updated.
+
+  v1_0  04-14-2026  Initial. DEFECT-SS-009 diagnosed and
+                    fixed. Root cause: _regime_wrapper not
+                    passing monitored_universe to
+                    run_daily_computation(). Three documents
+                    updated with full DC compliance per
+                    0311001, 0311002, 0311003, 0311004.
+
+============================================================
+END OF SESSION LOG TB00102 v1_2
+============================================================

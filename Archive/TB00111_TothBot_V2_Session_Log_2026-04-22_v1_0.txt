@@ -1,0 +1,657 @@
+DocDCN:     TB00111
+DocTitle:   TothBot_V2_Session_Log_2026-04-22
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TBXXXXX_Session_Logs\TB00111_TothBot_V2_Session_Log_2026-04-22_v1_0.txt
+DocDate:    04-22-2026
+DocTime:    18:45:00 UTC
+
+============================================================
+TOTHBOT V2 SESSION LOG — TB00111
+dv1_22 OBSERVATION WINDOW ABORTED — TRIPWIRES FIRED
+============================================================
+
+PAPER TRADING ONLY. NO REAL MONEY.
+
+============================================================
+1. SESSION IDENTITY
+============================================================
+
+Session date:     April 22, 2026
+Session number:   TB00111
+Session type:     Claude Chat — dv1_22 observation window
+                  close attempt. Built and verified the
+                  tripwire sweep protocol that failed in
+                  TB00110. Executed sweep at T+1h 15min
+                  and T+1h 27min (clean). Third sweep at
+                  T+16h 04min detected three tripwire
+                  fires. Observation window ABORTED.
+                  OI-018 / OI-019 / OI-020 remain
+                  PENDING — NOT closed. Three new OIs
+                  opened covering the observed regressions
+                  and a sweep-script defect.
+Prior session:    TB00110 (2026-04-22, Claude Chat — dv1_22
+                  deploy complete, observation window
+                  opened).
+Platform:         Claude Chat.
+Next session:     TB00112 (Claude Chat OR Claude Code —
+                  CHANGE session. Diagnose WS reconnect
+                  regression, diagnose SMTP read-timeout
+                  failure, fix sweep script FATAL pattern,
+                  full DC package for any code/spec changes).
+
+Documents read this session:
+  TB00000  v2_10   Project Instructions for Claude      read
+  TB00110  v1_0    Session Log (prior session)          read
+  TB00110  v1_0    NSI (prior session instructions)     read
+  03XXXXX          Document Control Procedures          read
+                   (per Bill's session-open directive)
+
+Fresh-data discipline upheld: project_knowledge_search
+re-queried after TB00110 read and before building the
+sweep protocol.
+
+============================================================
+2. WORK COMPLETED THIS SESSION
+============================================================
+
+------------------------------------------------------------
+2.1 Ambiguity resolution at session start
+------------------------------------------------------------
+
+Bill's opening phrase "test the testing protocol" was
+initially misinterpreted as the pytest unit/integration
+suite. Bill clarified: "testing protocol" meant the
+TB00110 NSI observation-window tripwire sweep commands
+that failed last session with "grep: Trailing backslash"
+due to PowerShell -> ssh -> bash quote-escape collision.
+Scope corrected before any work started.
+
+------------------------------------------------------------
+2.2 Sweep-protocol script built and tested
+------------------------------------------------------------
+
+Root cause of TB00110 failure (restated):
+  PowerShell's backslash-escaping of embedded double
+  quotes for a single-line ssh command does not survive
+  the PS -> ssh -> bash three-layer transit. The remote
+  bash sees unbalanced quotes and aborts grep with
+  "Trailing backslash".
+
+Solution adopted:
+  Move all grep patterns into a bash script that lives
+  ON THE VPS at /root/tothbot_sweep.sh. PowerShell ssh
+  passes only ONE unquoted argument (the script path).
+  No quote-escape transit required.
+
+Script content:
+  - systemctl status tothbot --no-pager | head -5
+  - Three tripwire counts (FATAL / ALERT_SMTP_FAILED /
+    TRADE_RECORD_WRITE_FAILED) with JSON-field-precise
+    patterns
+  - Four OI-close-decision counts (WS_MGR_FATAL /
+    MAX_RECONNECT_EXCEEDED / ALERT_SENT / TRADE_CLOSE)
+  - Expected-values echo for quick visual compare
+
+Pre-delivery self-test performed inside this Claude
+container using a synthetic log file to confirm:
+  (a) Clean log produces three zeros
+  (b) Injected FATAL / SMTP_FAILED / WRITE_FAILED events
+      each increment the correct counter
+  (c) Event names containing "FATAL" but level=WARN
+      are NOT counted by the '"level":"FATAL"' pattern
+All three tests passed in the container.
+
+Deployment to VPS (Bill executed, one command at a time):
+  STEP 1  scp script from Desktop to /root/             PASS
+  STEP 2  chmod +x on VPS                               PASS
+  STEP 3  sed -i 's/\r$//' for CRLF -> LF conversion    PASS
+  STEP 4  initial test run                              PASS
+
+Initial sweep result (T+1h 15min, 03:30:52 UTC):
+  PID 223133 unchanged. Since 02:15:21 UTC unchanged.
+  All three tripwires: 0, 0, 0.
+  WS_MGR_FATAL: 6 (all 6 timestamps from 2026-04-21 —
+                 historical, pre-window).
+  MAX_RECONNECT_EXCEEDED: 0.
+  ALERT_SENT: 0. TRADE_CLOSE: 0.
+  Sweep protocol VERIFIED working.
+
+Second sweep (T+1h 27min, 03:42:31 UTC, after Windows
+reboot test):
+  Identical to first reading. Protocol survives Windows
+  client reboot — service is independent.
+
+------------------------------------------------------------
+2.3 Third sweep — TRIPWIRES FIRED
+------------------------------------------------------------
+
+Sweep at 2026-04-22 18:19:41 UTC (+16h 04min into
+window). Results compared to window-open baseline:
+
+  Metric                       Baseline  Observed   Status
+  ---------------------------- --------  --------   ------
+  PID                          223133    231707     FIRED #4
+  Since                        02:15:21  16:46:14   FIRED #4
+  FATAL events                 0         0          see 2.5
+  ALERT_SMTP_FAILED            0         2          FIRED #2
+  TRADE_RECORD_WRITE_FAILED    0         0          OK
+  WS_MGR_FATAL                 6 (hist)  10 (+4)    REGRESSION
+  MAX_RECONNECT_EXCEEDED       0         0          OK
+  ALERT_SENT                   0         42         (info)
+  TRADE_CLOSE                  0         0          (info)
+
+Three tripwires fired (#2 and #4-x2). Per TB00110 NSI
+§6.6 Case 3, observation window ABORTED.
+
+------------------------------------------------------------
+2.4 Forensic timeline reconstructed from log tails
+------------------------------------------------------------
+
+Window opened:    2026-04-22 02:15:21 UTC   PID 223133
+
++12h 20min
+14:35:21 UTC      ALERT_SMTP_FAILED #1
+                    to:      alerts@tothbot.com
+                    subject: [HIGH] RECONNECT_INITIATED | WS_MGR
+                    error:   "Connection unexpectedly
+                             closed: The read operation
+                             timed out"
+
++12h 42min
+14:57:29 UTC      ALERT_SMTP_FAILED #2
+                    to:      alerts@tothbot.com
+                    subject: [HIGH] RECONNECT_TRIGGERED | WS_MGR
+                    error:   same SMTP read timeout
+
++12h 50min
+15:05:30 UTC      WS_MGR_FATAL #1 (level=CRITICAL)
+15:05:32 UTC      WS_MGR_FATAL #2 (level=CRITICAL)
+                    "Fatal reconnect failure — systemd
+                     restart required"
+                    systemd did NOT restart here; service
+                    tolerated the raise and continued.
+
++14h 30min
+16:46:04 UTC      WS_MGR_FATAL #3 (level=CRITICAL)
+16:46:07 UTC      WS_MGR_FATAL #4 (level=CRITICAL)
+
+16:46:14 UTC      systemd auto-restart to new PID 231707.
+                    Service running continuously since.
+
+Current at end of session:
+18:19:41 UTC      +1h 33min uptime on PID 231707.
+                  No further FATAL / RECONNECT / SMTP
+                  events since restart. Currently stable.
+
+------------------------------------------------------------
+2.5 Sweep script defect — top-line FATAL count
+------------------------------------------------------------
+
+The top-line "FATAL events: 0" reading was false
+reassurance. The 4 new WS_MGR_FATAL events are logged
+at level=CRITICAL, not level=FATAL. The sweep script's
+tripwire-#1 grep pattern '"level":"FATAL"' does not
+match level=CRITICAL events and therefore missed the
+regression. The bottom-section WS_MGR_FATAL counter
+caught it (6 -> 10 delta).
+
+TB00110 NSI §H-2 tripwire #1 reads "Any FATAL event".
+The NSI author (prior Claude Chat) likely meant the
+word generically. The code actually emits reconnect
+failures at level=CRITICAL. This is a semantic
+disconnect between the NSI wording and the code
+behavior — to be resolved in TB00112.
+
+Sweep script remediation options (for TB00112):
+  Option A: Broaden pattern to match FATAL or CRITICAL.
+            Risk — CRITICAL level is used for other
+            events too, increasing false-positive rate.
+  Option B: Match event names directly (WS_MGR_FATAL,
+            other enumerated FATAL-class events).
+            More precise but requires enumerating all
+            FATAL-class event names.
+  Option C: Both — CRITICAL|FATAL level match AND
+            cross-check against WS_MGR_FATAL count.
+
+Recommendation: Option B is preferred per first-
+principles precision. Decision deferred to TB00112.
+
+------------------------------------------------------------
+2.6 Interpretation of the SMTP failures
+------------------------------------------------------------
+
+The 2 ALERT_SMTP_FAILED events are a DIFFERENT failure
+mode from the one OI-019 was meant to fix.
+
+OI-019 fixed the singular-vs-plural mailbox routing
+(550 Recipient rejected because "alert@" did not exist,
+only "alerts@"). All 42 ALERT_SENT events in the window
+routed to alerts@tothbot.com, confirming OI-019 is
+correct.
+
+The 2 failures show error "Connection unexpectedly
+closed: The read operation timed out". That is a
+transport-level SMTP timeout between the VPS and
+Proton's SMTP gateway — not a recipient-rejection.
+Candidate causes:
+  - Network flake between VPS (Hetzner Ashburn VA) and
+    Proton SMTP endpoint
+  - Proton SMTP rate limiting under burst (the alerts
+    came during active WS reconnect storms)
+  - Missing SMTP retry / backoff logic in the logger
+    send path
+
+Conclusion: OI-019's fix is NOT invalidated. But a NEW
+concern exists — the logger's SMTP send path has no
+retry on transport timeout. 2 CRITICAL/HIGH alerts
+were lost. This is a new OI.
+
+============================================================
+3. OBSERVATION WINDOW STATUS — FINAL
+============================================================
+
+Window opened:    2026-04-22 02:15:21 UTC
+Window ABORTED:   2026-04-22 18:19:41 UTC (detection)
+Actual abort:     Began at 14:35 UTC (first SMTP fail)
+Window duration:  ~16h before abort vs 48h required
+Reason:           Three tripwires fired.
+
+Per TB00110 NSI §6.6 Case 3:
+  OI-018 (WM reconnect):         NOT CLOSED — REGRESSION
+                                 (+4 WS_MGR_FATAL events
+                                  during window)
+  OI-019 (alert routing):        NOT CLOSED
+                                 (original fix appears
+                                  correct — 42/42 ALERT_SENT
+                                  routed to plural mailbox —
+                                  but a NEW failure mode
+                                  was observed: SMTP read
+                                  timeout. No close decision
+                                  possible until the new
+                                  failure mode is addressed.)
+  OI-020 (Kraken retry window):  NOT CLOSED
+                                 (MAX_RECONNECT_EXCEEDED = 0
+                                  during window — no direct
+                                  regression evidence — but
+                                  the WS reconnect regression
+                                  casts doubt on the retry
+                                  window's real-world
+                                  adequacy. Defer.)
+  OI-022 (ALERT_SENT structured  PARTIAL OPERATIONAL
+         event):                 VERIFICATION
+                                 42 ALERT_SENT events fired
+                                 in the window. Payload
+                                 structure was not inspected
+                                 this session. Tie to
+                                 TB00112 for payload audit
+                                 on a representative sample.
+  OI-023 (trades_<YYYY>.jsonl):  NO VERIFICATION
+                                 Zero TRADE_CLOSE events
+                                 fired. Verification remains
+                                 PENDING until first trade.
+
+============================================================
+4. NEW OPEN ITEMS THIS SESSION
+============================================================
+
+------------------------------------------------------------
+OI-028  DEFECT-WM-RECONNECT-REGRESSION-001  (HIGH)
+------------------------------------------------------------
+
+Status:        OPEN — requires code-level diagnosis
+Severity:      HIGH (defeats dv1_22's primary purpose)
+Discovered:    2026-04-22 15:05:30 UTC (first occurrence)
+               2026-04-22 18:19:41 UTC (sweep detection)
+Evidence:      4 WS_MGR_FATAL events during observation
+               window at 15:05:30, 15:05:32, 16:46:04,
+               16:46:07 UTC. Two pair-fires spaced
+               ~1h40min apart. Second pair triggered
+               systemd auto-restart (16:46:14 UTC).
+Traceback:     ExceptionGroup from asyncio.TaskGroup
+               in ws_manager.py:1064 _main_loop; source
+               exception ConnectionClosedError in
+               _recv_loop_public (line 1104) "no close
+               frame received or sent"; escalated to
+               RuntimeError "Fatal reconnect failure"
+               via _initiate_reconnect (line 3448).
+Implication:   OI-018 close EVIDENCE INVALIDATED.
+               dv1_22's WM-RECONNECT-016/017/018 logic
+               does not survive real-world WS
+               disconnects where no close frame is
+               received.
+Mitigation:    systemd auto-restart caught the second
+               pair. Service currently running on
+               PID 231707 since 16:46:14 UTC, stable
+               for 1h 33min. No trading impact (paper
+               mode, no open positions at abort).
+Action:        Diagnose in TB00112 with fresh read of
+               ws_manager.py reconnect path, WM-RECONNECT
+               spec sections, and the 4 full tracebacks
+               (already captured — see §2.4). No code
+               changes permitted until FP/DP analysis
+               identifies root cause.
+
+------------------------------------------------------------
+OI-029  DEFECT-SMTP-READ-TIMEOUT-001  (MEDIUM)
+------------------------------------------------------------
+
+Status:        OPEN — new failure mode, separate from
+               OI-019
+Severity:      MEDIUM (2 HIGH-priority alerts LOST)
+Discovered:    2026-04-22 14:35:21 UTC (first occurrence)
+Evidence:      ALERT_SMTP_FAILED events at 14:35:21 and
+               14:57:29 UTC. Both error="Connection
+               unexpectedly closed: The read operation
+               timed out". Routing was correct
+               (to=alerts@tothbot.com). Failure was
+               transport-level during SMTP handshake /
+               DATA phase.
+Implication:   Logger's SMTP send path has no retry /
+               backoff on transport failure. An alert
+               that fails once is LOST. For CRITICAL
+               and HIGH alerts this creates an
+               observability gap precisely when
+               problems are occurring.
+Paper-trade
+ impact:       None observed. No trades active.
+Action:        In TB00112, review logger.py SMTP send
+               path. Candidate fix: wrap send in a
+               bounded retry (e.g., 3 attempts with
+               exponential backoff) for transport-level
+               errors; preserve immediate failure for
+               permanent errors (e.g., 550 rejection).
+               Full DC package required: logger.py +
+               1011007 Logger Coding Spec + possibly
+               0511006 Logger Specification update.
+
+------------------------------------------------------------
+OI-030  DEFECT-SWEEP-SCRIPT-FATAL-PATTERN-001  (LOW)
+------------------------------------------------------------
+
+Status:        OPEN — script correctness
+Severity:      LOW (false-negative on top-line counter
+               did not cause harm; bottom-section
+               WS_MGR_FATAL counter caught the event.
+               But the false green light is dangerous
+               if relied upon alone.)
+Discovered:    2026-04-22 18:19:41 UTC (during analysis
+               of third sweep result)
+Evidence:      Sweep script top-line "FATAL events" used
+               grep pattern '"level":"FATAL"'. Actual
+               WS_MGR_FATAL events are logged at
+               level=CRITICAL. Pattern missed all 4.
+Action:        Fix in TB00112. Options A/B/C enumerated
+               in §2.5. Recommendation: Option B (match
+               event names directly). Deliver updated
+               /root/tothbot_sweep.sh as part of TB00112
+               fix package. No DCN required — script is
+               a transient operational aid, not a
+               controlled document.
+
+------------------------------------------------------------
+OI-031  (Candidate) OBSERVATION-WINDOW-SEMANTICS  (LOW)
+------------------------------------------------------------
+
+Status:        CANDIDATE — governance clarification
+Severity:      LOW
+Observation:   TB00110 NSI §H-2 tripwire #1 says "Any
+               FATAL event". Code emits comparable
+               failures at level=CRITICAL. NSI author
+               used "FATAL" generically; code uses the
+               level field strictly. Resolve the
+               semantic disconnect in TB00112 NSI
+               language AND in any future observation
+               NSI templates.
+Action:        Clarify tripwire definitions in TB00112
+               NSI. No DCN required.
+
+============================================================
+5. PARKING LOT — STATE AT END OF TB00111
+============================================================
+
+  OI-017  OPEN                   — liquidity refresh
+                                   (deferred)
+  OI-018  PENDING — REGRESSION   — WM reconnect
+                                   (OI-028 is the defect;
+                                    OI-018 stays PENDING
+                                    until OI-028 resolved
+                                    and a new observation
+                                    window runs clean)
+  OI-019  PENDING                — alert routing
+                                   (original fix intact;
+                                    new failure mode OI-029)
+  OI-020  PENDING                — Kraken retry window
+                                   (no direct regression;
+                                    deferred with OI-018)
+  OI-021  OPEN                   — 8 bounces per fatal
+                                   (may be moot after
+                                    OI-018/019 resolution —
+                                    re-evaluate in TB00113)
+  OI-022  CLOSED (design) /      — ALERT_SENT event
+          PARTIAL OP VERIFY        (42 events fired; payload
+                                    not inspected)
+  OI-023  CLOSED (design) /      — trades_<YYYY>.jsonl
+          NO OP VERIFY             (zero TRADE_CLOSE —
+                                    no verification possible
+                                    this window)
+  OI-024  OPEN                   — CIATS corpus migration
+  OI-025  OPEN                   — logrotate path mismatch
+  OI-026  OPEN                   — UNKNOWN_MESSAGE_TYPE
+                                   heartbeat spam
+  OI-027  OPEN                   — service runs as root
+  OI-028  OPEN (NEW)             — WM reconnect regression
+                                   DEFECT-WM-RECONNECT-
+                                   REGRESSION-001
+  OI-029  OPEN (NEW)             — SMTP read timeout
+                                   DEFECT-SMTP-READ-
+                                   TIMEOUT-001
+  OI-030  OPEN (NEW)             — sweep script FATAL
+                                   pattern defect
+  OI-031  CANDIDATE (NEW)        — observation-window
+                                   semantic clarification
+
+============================================================
+6. SESSION LESSONS
+============================================================
+
+------------------------------------------------------------
+6.1 The PS -> ssh -> bash quoting problem is SOLVED
+------------------------------------------------------------
+
+Solution: put bash grep patterns in a script on the VPS.
+PowerShell passes only the script path. No escape transit.
+Record of proven approach:
+
+  scp <local> root@<ip>:/root/<script>
+  ssh root@<ip> "chmod +x /root/<script>"
+  ssh root@<ip> "sed -i 's/\r$//' /root/<script>"  (CRLF fix)
+  ssh root@<ip> /root/<script>                     (execute)
+
+Adopted as standard pattern for all future monitoring
+that would otherwise need nested quoting.
+
+------------------------------------------------------------
+6.2 Sweep-script counters must be derived from code truth
+------------------------------------------------------------
+
+Observation: monitoring patterns written from memory of
+NSI wording can disagree with what the code actually
+emits. The top-line FATAL counter matched the NSI
+wording but missed the real CRITICAL-level events.
+
+Lesson: pattern definitions for monitoring scripts must
+be derived by reading the logger.py / ws_manager.py
+event-emission code, NOT by paraphrasing the NSI.
+Record in TB00112 as an operational engineering rule.
+
+------------------------------------------------------------
+6.3 OneDrive Desktop redirection
+------------------------------------------------------------
+
+Bill's Desktop is redirected to
+C:\Users\wstot\OneDrive\Desktop\, NOT
+C:\Users\wstot\Desktop\. Path caused initial scp
+failure "No such file or directory". Use OneDrive-
+aware path form for all future file operations:
+
+  C:\Users\wstot\OneDrive\Desktop\<filename>
+
+This is a Windows/OneDrive client configuration, not
+a project artifact. Document here for next session's
+instruction-writing Claude.
+
+------------------------------------------------------------
+6.4 Clarifying questions must be anchored in session logs
+------------------------------------------------------------
+
+Opened the session by mis-parsing "testing protocol" as
+pytest suite because I did not adequately anchor my
+reading to TB00110 §3.1 (the PowerShell quoting lesson)
+before asking clarifying questions. Bill corrected me
+and we proceeded. Lesson: when TB<prior> session logs
+document specific operational failures, the next-
+session Claude must specifically check whether the
+user's opening request refers to those documented
+failures before offering alternative interpretations.
+
+============================================================
+7. CURRENT STATE AT END OF TB00111
+============================================================
+
+------------------------------------------------------------
+7.1 VPS state
+------------------------------------------------------------
+
+Service:      active (running)
+Main PID:     231707  (was 223133 at window open;
+              auto-restarted by systemd at
+              2026-04-22 16:46:14 UTC after 4th
+              WS_MGR_FATAL)
+Since:        Wed 2026-04-22 16:46:14 UTC (uptime ~1h 33min
+              at last sweep)
+Binary:       /root/tothbot_env/bin/python3 -m tothbot
+Deploy ver:   dv1_22 (unchanged — same code running on
+              auto-restarted process)
+Mode:         paper trading (confirmed — no real money
+              at risk)
+Open positions: none (no trades active during window)
+Active alerts: none new since 16:46:14 UTC
+
+------------------------------------------------------------
+7.2 Repo state (unchanged this session)
+------------------------------------------------------------
+
+Docs repo   (TothBot_V2-Docs):  master @ 802f920
+                                Clean, synced with origin
+Code repo   (TothBot_V2-Code):  master @ 7e744a3
+                                Clean, synced with origin
+
+No commits this session — TB00111 is a diagnostic
+session, not a change session.
+
+------------------------------------------------------------
+7.3 VPS operational tooling
+------------------------------------------------------------
+
+/root/tothbot_sweep.sh  installed, executable, LF-ended.
+Working correctly for 3 of 4 counter lines; top-line
+FATAL counter has pattern defect per OI-030.
+
+============================================================
+8. STANDING RULES — ALL ACTIVE
+============================================================
+
+  RULE 6  — git add . is PROHIBITED. Explicit per file.
+  RULE 13 — .bat files go to Desktop only. Never in repo.
+  RULE 14 — git push origin master. NEVER origin main.
+  RULE 15 — ONE COMMAND PER COPY BOX. ALWAYS.
+  RULE 16 — .bat files run from cmd.exe only. Never PS.
+  RULE 17 — Complete and correct instructions.
+
+  CODING RULES:
+  NO PATCHES EVER. Full file delivery only. Full DC.
+
+  DELIVERY RULES:
+  DR-001 — All documents as .txt files.
+  DR-002 — 0500000 additionally as .docx and .pdf.
+  DR-003 — ALL documents in ONE BATCH.
+
+  FRESH-DATA RULE:
+  Every authoritative question is preceded by
+  project_knowledge_search. No exceptions.
+
+============================================================
+9. DELIVERABLES PRODUCED THIS SESSION
+============================================================
+
+Two files, delivered in one batch per DR-003:
+
+  TB00111_TothBot_V2_Session_Log_2026-04-22_v1_0.txt
+    (this file)
+
+  TB00111_Next_Session_Instructions_v1_0.txt
+    (detailed instructions for TB00112 — change
+    session to diagnose and fix OI-028 / OI-029 /
+    OI-030; no new observation window until fixes
+    deployed)
+
+Also produced and deployed on VPS during this session
+(not a controlled document, logged here for record):
+
+  /root/tothbot_sweep.sh  (on Hetzner VPS 87.99.141.44)
+    Tripwire sweep script. Contains a pattern defect
+    (OI-030) to be fixed in TB00112. Retained in place
+    in the interim — the WS_MGR_FATAL counter remains
+    reliable.
+
+Both controlled files land locally in:
+  C:\Users\wstot\GitHub\TothBot\TBXXXXX_Session_Logs\
+
+============================================================
+REVISION HISTORY
+============================================================
+
+  v1_0  04-22-2026  Initial. Claude Chat observation-
+                    window close-attempt session for
+                    dv1_22 window opened in TB00110.
+                    Built, tested, and deployed
+                    /root/tothbot_sweep.sh on the VPS —
+                    resolves the TB00110 PowerShell
+                    quote-escape failure by moving grep
+                    patterns into a bash script on the
+                    VPS. Two clean sweeps at T+1h 15min
+                    and T+1h 27min. Third sweep at
+                    T+16h 04min detected three tripwire
+                    fires: #2 (ALERT_SMTP_FAILED = 2),
+                    #4 (unplanned systemd restart —
+                    PID 223133 -> 231707, Since
+                    02:15:21 UTC -> 16:46:14 UTC), and
+                    WS_MGR_FATAL regression (6 -> 10,
+                    4 new events during window).
+                    Observation window ABORTED per
+                    TB00110 NSI §6.6 Case 3. OI-018 /
+                    OI-019 / OI-020 remain PENDING —
+                    NOT closed. Three new OIs opened:
+                    OI-028 (WS reconnect regression —
+                    dv1_22 did not fix the defect),
+                    OI-029 (SMTP read-timeout — new
+                    failure mode distinct from OI-019
+                    routing fix), OI-030 (sweep script
+                    FATAL pattern defect — missed
+                    level=CRITICAL events). One
+                    governance candidate OI-031
+                    (observation-window FATAL vs
+                    CRITICAL semantic clarification).
+                    Forensic timeline reconstructed
+                    from log tails. Service currently
+                    running on PID 231707 since
+                    16:46:14 UTC, stable, paper mode,
+                    no open positions, no trading
+                    impact. Session artifacts: this
+                    log plus TB00111 NSI v1_0 for
+                    TB00112 change session.
+
+============================================================
+END OF SESSION LOG TB00111 v1_0
+============================================================

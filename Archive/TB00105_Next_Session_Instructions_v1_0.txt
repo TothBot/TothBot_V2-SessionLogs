@@ -1,0 +1,427 @@
+DocDCN:     TB00105_NSI
+DocTitle:   Next_Session_Instructions_for_Claude_Code
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TBXXXXX_Session_Logs\TB00105_Next_Session_Instructions_v1_0.txt
+DocDate:    04-20-2026
+DocTime:    19:45:00 UTC
+
+============================================================
+NEXT SESSION INSTRUCTIONS — CLAUDE CODE
+AI-1 (close OI-018) + AI-2 (alert routing) +
+AI-3 (retry window extension) — BUNDLED DEPLOY
+============================================================
+
+This file is a local reference for Bill only. NOT
+uploaded to the Claude project folder.
+
+PAPER TRADING ONLY. NO REAL MONEY.
+
+============================================================
+SECTION 1 — PRE-FLIGHT CHECKLIST
+============================================================
+
+Before opening Claude Code, confirm:
+
+  [ ] TB00105 v1_0 saved to:
+      C:\Users\wstot\GitHub\TothBot\TBXXXXX_Session_Logs\
+
+  [ ] TB00105 v1_0 uploaded to Claude project folder.
+      TB00104 v1_0 deleted from Claude project folder.
+
+  [ ] TothBot_V2-Docs local repo clean and up-to-date:
+      cd C:\Users\wstot\GitHub\TothBot\TothBot_V2-Docs
+      git pull origin master
+
+  [ ] TothBot_V2-Code local repo clean and up-to-date:
+      cd C:\Users\wstot\GitHub\TothBot\TothBot_V2-Code
+      git pull origin master
+
+  [ ] VPS running stable (no urgency — verify only):
+      ssh root@87.99.141.44
+      systemctl status tothbot
+
+============================================================
+SECTION 2 — LAUNCH CLAUDE CODE
+============================================================
+
+Claude Code v2.1.114 is installed and authenticated. You
+only need to navigate and launch.
+
+Step A — Open PowerShell at the parent folder:
+
+  cd C:\Users\wstot\GitHub\TothBot
+
+Step B — Launch Claude Code:
+
+  claude
+
+Step C — When Claude Code opens, verify access to all
+three subfolders:
+  TBXXXXX_Session_Logs\
+  TothBot_V2-Code\
+  TothBot_V2-Docs\
+
+============================================================
+SECTION 3 — KICKOFF PROMPT TO PASTE INTO CLAUDE CODE
+============================================================
+
+Copy everything between the BEGIN and END markers and
+paste as the first message to Claude Code.
+
+---------------- BEGIN KICKOFF PROMPT ----------------
+
+PAPER TRADING ONLY. NO REAL MONEY. PAPER TRADING ONLY.
+
+NO PATCHES. Full file delivery only. Full document control
+per 0311001, 0311002, 0311003, 0311004. Every code change
+= new version = full file delivered as .txt per DR-001.
+All deliverables in ONE BATCH per DR-003.
+
+SESSION CONTEXT
+===============
+
+You are Claude Code working on TothBot V2. Bill is the
+sole operator. This is a continuation from TB00105.
+
+Prior session (TB00105, Claude Chat) closed the 42.5-hour
+observation period for DEFECT-WM-RECONNECT-001 fix
+(ws_manager.py dv1_20). Fix is verified working —
+crash rate dropped ~25-50x. Stop condition never tripped.
+
+This session executes a BUNDLED DEPLOY of three items:
+  AI-1  Close OI-018 (DEFECT-WM-RECONNECT-001) —
+        governance only.
+  AI-2  Fix alert routing (OI-019) — change singular
+        "alert@tothbot.com" to plural "alerts@tothbot.com"
+        in 3 code files, TB00000, and affected specs.
+  AI-3  Extend Kraken retry window (OI-020) —
+        MAX_RECONNECT_ATTEMPTS 10 → 20 in ws_manager.py
+        and 1011002 spec.
+
+LOCAL FILESYSTEM LAYOUT
+=======================
+
+You are launched from:
+  C:\Users\wstot\GitHub\TothBot\
+
+Subfolders:
+  TBXXXXX_Session_Logs\   session logs + TB00000
+  TothBot_V2-Code\        code repo
+  TothBot_V2-Docs\        docs repo
+
+DOCUMENTS TO READ — IN THIS ORDER
+=================================
+
+State each file name and version before proceeding.
+
+Session logs (TBXXXXX_Session_Logs\):
+  1.  TB00000  v2_9    Project Instructions
+  2.  TB00105  v1_0    Prior session log (most recent)
+
+Governance (TothBot_V2-Docs\03XXXXX_Governance\):
+  3.  0311001  v1_1    Namespace_Specification
+  4.  0311002  v1_2    Document_Creation_Workflow
+  5.  0311003  v1_0    Versioning_Procedure
+  6.  0311004  v1_1    Document_Creation_and_Approval_Procedure
+
+Specs (TothBot_V2-Docs\10XXXXX_Coding_Specification\):
+  7.  1011002  dv1_19  WS_Manager_Coding_Spec
+  8.  1011007  (current) Logger_Coding_Spec
+  9.  1011013  (current) VPS_Deployment_Coding_Spec
+  10. 1011014  (current) Startup_Sequence_Coding_Spec
+  11. 1010000  dv1_9   Trading_System_Coding_Anchor
+
+Code (TothBot_V2-Code\tothbot\):
+  12. ws_manager.py      dv1_20 (deployed & verified)
+  13. logger.py          (current)
+  14. startup_sequence.py dv1_7 (deployed & verified)
+  15. vps_deployment.py  (current)
+
+Confirm all 15 file versions before starting work.
+
+FIX SPECIFICATIONS
+==================
+
+---------------- AI-1: Close DEFECT-WM-RECONNECT-001 ----------------
+
+Governance only. No code change.
+
+Evidence for closure (from TB00105):
+  - 42.5-hour observation window elapsed.
+  - 2 post-deploy fatals; 0 novel signatures.
+  - ~25-50x crash reduction from pre-deploy baseline.
+  - Market data pipeline uninterrupted.
+  - Gate 3 / DEFECT-SS-009 fix stable across all restarts.
+  - All post-deploy fatals root-caused to external Kraken
+    API transient outage (addressed by AI-3), NOT to
+    ws_manager.py dv1_20 code.
+
+Action:
+  - Mark OI-018 CLOSED in this session's log.
+  - In 1010000 Trading_System_Coding_Anchor Section 4.2
+    (WS_Manager spec block), add note that
+    DEFECT-WM-RECONNECT-001 is CLOSED as of 2026-04-20
+    per TB00105 42.5h observation.
+
+---------------- AI-2: Fix alert routing (OI-019) ----------------
+
+Root cause:
+  - Code default ALERT_EMAIL_TO = "alert@tothbot.com"
+    (singular).
+  - Proton Mail mailbox is "alerts@tothbot.com" (plural).
+  - Singular mailbox does not exist; cannot be created
+    via Proton UI (returns "Address is already taken"
+    due to domain catch-all reserving the namespace).
+  - 100% of post-deploy critical alerts bounced. Bill
+    only detected issues via bounce notifications.
+
+Code changes (confirmed via grep on VPS):
+
+  File 1: tothbot/logger.py line 75
+    BEFORE:  ALERT_EMAIL: str = "alert@tothbot.com"
+    AFTER:   ALERT_EMAIL: str = "alerts@tothbot.com"
+    Also update 7-field header + revision history.
+
+  File 2: tothbot/startup_sequence.py line 245
+    BEFORE:  "alert_to": os.environ.get(
+               "ALERT_EMAIL_TO", "alert@tothbot.com"),
+    AFTER:   "alert_to": os.environ.get(
+               "ALERT_EMAIL_TO", "alerts@tothbot.com"),
+    Also update 7-field header + revision history.
+
+  File 3: tothbot/vps_deployment.py line 129
+    BEFORE:  to_addr = os.environ.get(
+               "ALERT_EMAIL_TO", "alert@tothbot.com")
+    AFTER:   to_addr = os.environ.get(
+               "ALERT_EMAIL_TO", "alerts@tothbot.com")
+    Also update 7-field header + revision history.
+
+Governance changes:
+
+  TB00000 v2_9 → v2_10 Section 9.7:
+    BEFORE: "All notifications to alert@tothbot.com."
+    AFTER:  "All notifications to alerts@tothbot.com."
+    Add revision history entry with FP/DP explanation.
+
+  1011007 Logger_Coding_Spec — version bump if
+    references alert email by address. If not, no
+    change needed. Check and decide.
+
+  1011013 VPS_Deployment_Coding_Spec — version bump
+    if references alert email default. Check and
+    decide.
+
+  1011014 Startup_Sequence_Coding_Spec — version
+    bump if references alert email default. Check
+    and decide.
+
+  1010000 Trading_System_Coding_Anchor:
+    Update SpecVer + RegDate for every code file
+    whose version changes. Revision history entry.
+
+VPS cleanup (include in Bill actions list):
+  rm /root/.tothbot.env.save
+  (stale backup containing old singular reference)
+
+---------------- AI-3: Extend retry window (OI-020) ----------------
+
+Observed data (TB00105):
+  - 2026-04-19 02:49:21 → 02:51:54 UTC (~2m 33s)
+  - 2026-04-20 06:25:46 → 06:28:18 UTC (~2m 32s)
+  Both Kraken REST `EAPI:Invalid key` outages.
+  Both exceeded current retry window (~181s).
+  Both led to WS_MGR_FATAL + systemd restart.
+
+Current schedule (WM-RECONNECT-017):
+  MAX_RECONNECT_ATTEMPTS = 10
+  base=1s, cap=30s, factor=2x
+  Worst-case: 1+2+4+8+16+30+30+30+30+30 = 181s
+
+Proposed schedule:
+  MAX_RECONNECT_ATTEMPTS = 20
+  base=1s, cap=30s, factor=2x (unchanged)
+  Worst-case: 181s + 10×30s = 481s (~8 minutes)
+  Bridges observed 2.5-3 minute Kraken outages with
+  generous safety margin.
+
+Rationale (approved in TB00105):
+  - Simplest change (one constant).
+  - Same exponential curve, no behavior regression.
+  - Matches CIATS parameter philosophy.
+  - Easy to revert if proves wrong.
+  - Conservative — no novel failure modes introduced.
+
+Code change:
+
+  tothbot/ws_manager.py dv1_20 → dv1_21:
+    BEFORE:  MAX_RECONNECT_ATTEMPTS: int = 10
+    AFTER:   MAX_RECONNECT_ATTEMPTS: int = 20
+    Also update 7-field header + revision history.
+
+Governance change:
+
+  1011002 WS_Manager_Coding_Spec dv1_19 → dv1_20:
+    WM-RECONNECT-017 update: "N=10" → "N=20"
+    Update worst-case wall-time calculation text.
+    Revision history entry.
+
+Cross-reference update:
+  1010000 Trading_System_Coding_Anchor: SpecVer +
+    RegDate for both ws_manager.py and 1011002.
+
+DESIGN CONSTRAINTS (ALL THREE AIs)
+===================================
+
+  DC-1  NO PATCHES. Full files delivered as .txt.
+  DC-2  All modified files: 7-field header updated,
+        revision history entry added.
+  DC-3  Preserve all behavior unrelated to these three
+        specific fixes.
+  DC-4  No magic numbers.
+  DC-5  Every code path emits structured log events.
+  DC-6  No bare Exception catches added.
+  DC-7  Follow 1011001 Engineering_Best_Practices.
+  DC-8  No new external dependencies.
+  DC-9  Python syntax check via py_compile passes
+        on every modified .py file before delivery.
+  DC-10 1010000 registry reflects every version bump.
+
+ACCEPTANCE CRITERIA
+===================
+
+  AC-1  OI-018 formally closed in session log.
+  AC-2  All three code files have
+        "alerts@tothbot.com" (plural) defaults.
+  AC-3  No occurrence of "alert@tothbot.com"
+        (singular) remains in source code. Verify
+        with grep before delivery.
+  AC-4  ws_manager.py MAX_RECONNECT_ATTEMPTS = 20.
+  AC-5  1011002 WM-RECONNECT-017 text updated to N=20
+        with matching worst-case calculation.
+  AC-6  TB00000 Section 9.7 updated to plural.
+  AC-7  1010000 registry reflects all version bumps.
+  AC-8  All .py files pass py_compile.
+  AC-9  All .txt files pass 7-field header check.
+  AC-10 All revision histories reference governing
+        defect IDs (OI-018, OI-019, OI-020) and
+        governing rules as appropriate.
+
+DELIVERABLES
+============
+
+Produce as .txt and present in ONE BATCH:
+
+  Code files (TothBot_V2-Code\tothbot\):
+    1. ws_manager.py              dv1_21
+    2. logger.py                  (new version)
+    3. startup_sequence.py        (new version)
+    4. vps_deployment.py          (new version)
+
+  Doc files (TBXXXXX_Session_Logs\):
+    5. TB00000  v2_10
+
+  Spec files (TothBot_V2-Docs\10XXXXX_Coding_Specification\):
+    6. 1011002  dv1_20
+    7. Any other specs that required version bumps
+       (decided during read).
+    8. 1010000  (new version, e.g., dv1_10)
+
+  Session log:
+    9. TB00106_TothBot_V2_Session_Log_<date>_v1_0.txt
+       (Bill will confirm TB number; use TB00106 as
+       placeholder.)
+
+  Bill actions list:
+    - Save/upload/delete sequence.
+    - TothBot_V2-Docs commit sequence.
+    - TothBot_V2-Code commit sequence.
+    - VPS deploy sequence.
+    - VPS cleanup: rm /root/.tothbot.env.save
+    - Post-deploy test alert verification.
+    - 24-hour observation window definition.
+
+WORK PLAN
+=========
+
+Step 1.  Read all 15 files. State versions.
+Step 2.  Grep TothBot_V2-Code for any remaining
+         occurrence of "alert@tothbot.com" singular.
+         Confirm only the 3 known files + git log
+         identity entries. Report findings to Bill.
+Step 3.  Design preview (unified diff style, NOT
+         delivery) for Bill to approve:
+           - 3 code file changes (alert routing).
+           - ws_manager.py MAX_RECONNECT_ATTEMPTS change.
+           - TB00000 Section 9.7 change.
+           - 1011002 WM-RECONNECT-017 change.
+           - Any other spec changes identified in Step 2.
+Step 4.  After Bill approves, apply code edits.
+Step 5.  py_compile verification on all .py files.
+Step 6.  Produce all spec/governance files as .txt.
+Step 7.  Produce session log.
+Step 8.  Produce Bill actions list.
+Step 9.  Deliver all files in ONE BATCH.
+
+Do NOT skip Step 3 (design preview). Do NOT deliver
+until after Bill approves Step 3.
+
+HARD STOPS
+==========
+
+Stop and ask Bill if:
+  - Any read file is missing or version mismatch.
+  - grep in Step 2 finds unexpected occurrences of
+    "alert@tothbot.com" that suggest more code files
+    need changes.
+  - Any spec beyond those listed requires version bump.
+  - py_compile fails.
+  - Any fix scope creeps beyond AI-1/AI-2/AI-3.
+
+PROCEED NOW WITH STEP 1.
+
+---------------- END KICKOFF PROMPT ----------------
+
+============================================================
+SECTION 4 — AFTER CLAUDE CODE DELIVERS
+============================================================
+
+Review Step 3 design preview before approving.
+Review final batch before committing.
+Follow Bill actions list exactly — one command per
+copy box per RULE 15.
+
+Key post-deploy test:
+  - After `systemctl restart tothbot`, wait for the
+    next natural WS_MGR_FATAL (or request Claude Code
+    to include a safe test trigger).
+  - Verify the alert email arrives in Bill's Proton
+    inbox at alerts@tothbot.com (NOT as a bounce).
+  - If verification fails, open a new session — do NOT
+    assume the fix worked without evidence.
+
+============================================================
+SECTION 5 — IF CLAUDE CODE SESSION FAILS
+============================================================
+
+If Claude Code session crashes or loses context:
+  (a) Return to Claude Chat.
+  (b) Upload most recent TB0010X session log produced.
+  (c) Paste:
+      Resume AI-1 + AI-2 + AI-3 bundle from prior
+      Claude Code session. Read TB00105 v1_0 and the
+      most recent TB0010X. State all versions. Identify
+      which work plan steps are complete and which
+      remain.
+
+============================================================
+REVISION HISTORY
+============================================================
+
+  v1_0  04-20-2026  Initial. Kickoff prompt for bundled
+                    AI-1 + AI-2 + AI-3 deploy. Produced
+                    alongside TB00105 v1_0.
+
+============================================================
+END OF NEXT SESSION INSTRUCTIONS
+============================================================

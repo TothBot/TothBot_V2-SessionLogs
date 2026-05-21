@@ -1,0 +1,362 @@
+DocDCN:     TB00047
+DocTitle:   TothBot_V2_Session_Log_2026-04-06_Part6
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\OneDrive\TothBot\TB00047_TothBot_V2_Session_Log_2026-04-06_Part6_v1_0.txt
+DocDate:    04-06-2026
+DocTime:    23:59:59 UTC
+
+============================================================
+TOTHBOT V2 SESSION LOG -- 2026-04-06 PART 6
+============================================================
+
+============================================================
+1. SESSION START STATE
+============================================================
+
+Phase 9 complete. Phase 10 (Testing) begins this session.
+
+Documents read at session start:
+  TB00000  v2_7    Project Instructions              checked
+  TB00046  v1_1    Prior session log                 checked
+  1021001  dv1_0   Unit_Test_Specification           read in full
+  1021002  dv1_0   Integration_Test_Specification    read in full
+  1021003  dv1_0   Paper_Trading_Test_Specification  read in full
+  1011001  dv1_6   Engineering_Best_Practices        confirmed
+
+============================================================
+2. FP/DP ANALYSIS -- TESTING SEQUENCE REVISION
+============================================================
+
+Bill requested FP/DP analysis of the original testing
+sequence before proceeding. Analysis performed. Key finding:
+
+  Original plan: 13 unit test files + 8 integration scenarios
+  Problem: WSManager (2,442 lines, hub), LongModule (state
+  machine), and StartupSequence (orchestrator) are structurally
+  unsuited to meaningful unit isolation. Mock complexity would
+  exceed module complexity, producing tests that test the mock,
+  not the module.
+
+  Revised plan (Bill confirmed):
+    TIER 1: 6 targeted unit test files (pure math/logic modules)
+    TIER 2: 8 integration scenarios (unchanged)
+    DEFER:  7 low-value unit test files (covered by IT)
+
+  Risk assessment: Tier 1 modules (RiskEngine, RegimeEngine,
+  CIATS, Logger) are where silent math bugs have financial
+  consequences. These are correctly tested in isolation.
+  WSManager/pipeline bugs are caught by integration tests
+  and paper trading, which are better suited to event-driven
+  async systems.
+
+Bill confirmed revised sequence: Proceed.
+
+============================================================
+3. WORK COMPLETED THIS SESSION
+============================================================
+
+------------------------------------------------------------
+3.1 Bug Found -- startup_sequence.py v1_0
+------------------------------------------------------------
+
+During test infrastructure setup, a bug was discovered
+in startup_sequence.py (committed as Module 13 v1_0):
+
+  BUG: imports setup_logger from tothbot.logger.
+       setup_logger() does not exist in logger.py.
+       Correct function: initialize_logger().
+       initialize_logger() returns:
+         (log_queue, log_listener, logger) -- 3 values.
+
+  IMPACT: startup_sequence.py v1_0 would fail on import
+          with ImportError before any TothBot code runs.
+
+  FIX: startup_sequence.py v1_1:
+    - setup_logger replaced with initialize_logger()
+    - Returns correctly unpacked to (log_queue, log_listener, logger)
+    - log_listener.stop() now called in finally block (HR-LG-004)
+    - monitor_log_queue task now started (1011007 S10)
+    - monitor_task cancelled in finally block alongside ciats_task
+
+  DELIVERY: startup_sequence.py v1_1 delivered this session.
+  ACTION REQUIRED: Bill must replace v1_0 with v1_1 in repo
+  (see Section 5 actions).
+
+------------------------------------------------------------
+3.2 Test Infrastructure Created
+------------------------------------------------------------
+
+  pytest.ini          Test runner config. asyncio_mode=auto.
+                      No uvloop (UT-FW-004). Markers defined.
+
+  tests/__init__.py   Package marker.
+
+  tests/conftest.py   Shared fixtures: tothbot_logger,
+                      param_store, mock_ws_manager,
+                      mock_position_mirror, btc_usd_pair_spec.
+
+------------------------------------------------------------
+3.3 Tier 1 Unit Tests Written -- 6 Files
+------------------------------------------------------------
+
+All 6 files syntax-clean (ast.parse verified).
+
+  test_logger.py        387L   UT-LG-001 through -006
+                               UT-BP-005 (no math.floor/ceil)
+                               UT-BP-006 (orjson used)
+
+  test_risk_engine.py   513L   UT-RK-001 through -011
+                               Semaphore, drawdown formula,
+                               floor, circuit breakers,
+                               Gate 7 available_USD,
+                               Gate 8 R:R, min size,
+                               Half-Kelly negative guard,
+                               baseline set-once.
+
+  test_regime_engine.py 458L   UT-RE-001 through -007
+                               response[-1] excluded,
+                               ADX batch (not incremental),
+                               classification logic,
+                               vol regime boundary,
+                               stale fallback,
+                               1.1s stagger enforced,
+                               no asyncio.gather().
+
+  test_position_mirror.py 331L UT-PM-001 through -006
+                               Record create/close (dict ops),
+                               fill price from avg not limit,
+                               partial TP qty decrement,
+                               hold_candle_count increment,
+                               reconciliation gap detection.
+
+  test_ciats.py         464L   UT-CI-001 through -008
+                               EWMA formula lambda=0.2,
+                               CUSUM drift detection,
+                               200-trade hard floor,
+                               negative Kelly no-update,
+                               isolation contract,
+                               PDCA 50-trade interval,
+                               EWMA floor=50 candle evals,
+                               WIN_EXIT_REASONS classification.
+
+  test_vps_deployment.py 334L  UT-VD-001 through -005
+                               Status API non-blocking,
+                               alert rate limiting (1/60s),
+                               env var validation,
+                               service unit mandatory params,
+                               watchdog interval 30s.
+
+------------------------------------------------------------
+3.4 Rule Coverage Summary
+------------------------------------------------------------
+
+  Module              Rules covered
+  ─────────────────────────────────────────────────────────
+  Logger              HR-LG-001 through -006, BP-JSON-005
+  Risk Engine         RE-SEM-001/002, RE-DD-002/005/006/007,
+                      RE-G7-001, RE-SZ-005, AR-011,
+                      RE-SIZER-005, RE-CIATS-002, HR-WM-011
+  Regime Engine       RE-OHLC-002, RE-FPD-005, RE-IND-006,
+                      RE-TAX-001/002, RE-SCH-003, RE-RL-002/003
+  Position Mirror     HR-PM-001/002/003/008, PM-WR-001 through
+                      -005, PM-REC-001, AR-003
+  CIATS               CIATS-EW-001, CIATS-CU-001, CIATS-TOB-001,
+                      CIATS-KE-006, CIATS-ISO-001/002,
+                      CIATS-TOB-003, CIATS-MON-001, CIATS-KE-002
+  VPS Deployment      VD-STAT-001/002/003, VD-ALT-003,
+                      VD-KEY-003, VD-SYS-001/002/005/006,
+                      VD-WD-002
+
+  BP checks           BP-DEC-001 (no math.floor/ceil),
+                      BP-JSON-001 (orjson only)
+
+============================================================
+4. OPEN ITEMS
+============================================================
+
+  OI-NEW-001  startup_sequence.py v1_0 in repo has ImportError
+              bug (setup_logger). Must be replaced with v1_1
+              before running tests or deploying to VPS.
+              See Section 5.2 actions.
+
+  CARRY-FWD   Module 8 gaps in exit_controller.py (documented).
+              Cancel ACK not routed. Regime downgrade not
+              forwarded. Both mitigated. Not blocking.
+
+============================================================
+5. BILL ACTIONS REQUIRED
+============================================================
+
+------------------------------------------------------------
+5.1 Download all files from Claude
+------------------------------------------------------------
+
+Download these files from Claude:
+  startup_sequence.py         (v1_1 bug fix)
+  pytest.ini
+  tests/__init__.py
+  tests/conftest.py
+  tests/test_logger.py
+  tests/test_risk_engine.py
+  tests/test_regime_engine.py
+  tests/test_position_mirror.py
+  tests/test_ciats.py
+  tests/test_vps_deployment.py
+  TB00047 (this log)
+
+------------------------------------------------------------
+5.2 Fix startup_sequence.py in repo (OI-NEW-001)
+------------------------------------------------------------
+
+cd C:\Users\wstot\GitHub\TothBot\TothBot_V2-Code
+
+copy C:\Users\wstot\Downloads\startup_sequence.py tothbot\startup_sequence.py
+
+git add tothbot/startup_sequence.py
+
+git commit -m "Fix startup_sequence.py: setup_logger -> initialize_logger (HR-LG-004)"
+
+git push origin master
+
+------------------------------------------------------------
+5.3 Create tests/ directory and deploy test files
+------------------------------------------------------------
+
+mkdir tests
+
+copy C:\Users\wstot\Downloads\pytest.ini pytest.ini
+
+copy C:\Users\wstot\Downloads\tests\__init__.py tests\__init__.py
+
+copy C:\Users\wstot\Downloads\tests\conftest.py tests\conftest.py
+
+copy C:\Users\wstot\Downloads\tests\test_logger.py tests\test_logger.py
+
+copy C:\Users\wstot\Downloads\tests\test_risk_engine.py tests\test_risk_engine.py
+
+copy C:\Users\wstot\Downloads\tests\test_regime_engine.py tests\test_regime_engine.py
+
+copy C:\Users\wstot\Downloads\tests\test_position_mirror.py tests\test_position_mirror.py
+
+copy C:\Users\wstot\Downloads\tests\test_ciats.py tests\test_ciats.py
+
+copy C:\Users\wstot\Downloads\tests\test_vps_deployment.py tests\test_vps_deployment.py
+
+------------------------------------------------------------
+5.4 Commit test files
+------------------------------------------------------------
+
+git add pytest.ini
+
+git add tests/__init__.py
+
+git add tests/conftest.py
+
+git add tests/test_logger.py
+
+git add tests/test_risk_engine.py
+
+git add tests/test_regime_engine.py
+
+git add tests/test_position_mirror.py
+
+git add tests/test_ciats.py
+
+git add tests/test_vps_deployment.py
+
+git commit -m "Phase 10: Tier 1 unit tests (test_logger, risk_engine, regime_engine, position_mirror, ciats, vps_deployment)"
+
+git push origin master
+
+------------------------------------------------------------
+5.5 Install test dependencies on VPS and run tests
+------------------------------------------------------------
+
+SSH to VPS, then:
+
+ssh root@87.99.141.44
+
+cd ~/TothBot_V2-Code
+
+git pull origin master
+
+pip install pytest pytest-asyncio --break-system-packages
+
+pytest tests/ -v
+
+------------------------------------------------------------
+5.6 Report results
+------------------------------------------------------------
+
+Paste the full pytest output into the next session.
+Tests that fail require investigation before integration
+tests begin. Every failure maps to a rule reference in the
+test method name (e.g. UT-RK-009, HR-LG-004).
+
+------------------------------------------------------------
+5.7 Save and upload session log
+------------------------------------------------------------
+
+Save TB00047 to: C:\Users\wstot\OneDrive\TothBot\
+
+Upload TB00047 to Claude project before next session.
+
+============================================================
+6. NEXT SESSION
+============================================================
+
+Next session opens with pytest results from Bill.
+Claude will triage failures, fix code or tests as
+appropriate, and proceed to integration tests once
+all Tier 1 unit tests pass.
+
+------------------------------------------------------------
+SESSION OPENING INSTRUCTION (copy/paste exactly):
+------------------------------------------------------------
+
+  ============================================================
+  Read the Project Instructions (TB00000 v2_7) and session
+  log TB00047. Phase 10 Tier 1 unit tests are committed.
+  pytest results are [PASTE RESULTS HERE].
+
+  Repository: TothBot_V2-Code (github.com/TothBot/TothBot_V2-Code)
+  Platform: Hetzner VPS 87.99.141.44, Python 3.12.3
+
+  If all Tier 1 unit tests pass: proceed to Tier 2
+  integration tests (1021002 dv1_0, 8 scenarios).
+
+  If any tests fail: triage failures and fix before
+  proceeding to integration tests.
+
+  Module 8 gaps (documented in exit_controller.py):
+  - Cancel ACK not routed from ws_manager to exit_ctrl_fn.
+    Mitigated: asyncio.sleep(5.0) + second retry.
+  - Daily regime downgrade not forwarded to EC after regime_refresh.
+    Mitigated: EC polls regime_cache on every ticker_bbo event.
+
+  RULE 14: git push origin master. Always.
+  RULE 15: One command per copy box. Always.
+  RULE 6:  git add . is prohibited. Explicit git add per file.
+  RULE 4:  cd to repo root first. Always.
+  ============================================================
+
+============================================================
+7. PARKING LOT
+============================================================
+
+No new items. Prior items carry forward.
+
+============================================================
+8. REVISION HISTORY
+============================================================
+
+  v1_0  04-06-2026  Session log Part 6. FP/DP analysis of
+                    testing sequence. Revised to Tier 1 + IT.
+                    startup_sequence.py v1_1 bug fix.
+                    6 Tier 1 unit test files written.
+                    pytest.ini and conftest.py created.
+
+============================================================
+END OF SESSION LOG
+============================================================

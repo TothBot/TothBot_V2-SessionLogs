@@ -1,0 +1,636 @@
+DocDCN:     TB00014
+DocTitle:   TothBot_V2_Session_Log_2026-03-25_Part7
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\OneDrive\TothBot\TB00014_TothBot_V2_Session_Log_2026-03-25_Part7_v1_0.txt
+DocDate:    03-25-2026
+DocTime:    23:59:59 UTC
+
+============================================================
+TOTHBOT V2 — SESSION LOG 2026-03-25 PART 7
+============================================================
+
+Read TB00001 through TB00013 first.
+
+This session is the sixth 10-search FP/DP organism
+validation. Focus: 0500000 connections and communication
+channels. Five new findings. All resolved immediately.
+Zero items placed in parking lot.
+
+============================================================
+1. SESSION IDENTITY
+============================================================
+
+Session date:     March 25, 2026 (Part 7)
+Session type:     10-Search FP/DP Organism Validation
+                  All findings resolved — zero parking lot
+Prior session:    TB00013 (2026-03-25 Part 6)
+
+Documents read at session open:
+  TB00000  v2_5       — governing
+  TB00013  v1_0       — most recent prior session log
+  0311001  dv1_2      — confirmed
+  0311002  dv1_7      — confirmed
+  0500000  dv1_10     — Claude Source confirmed
+
+============================================================
+2. TEN SEARCHES — COMPLETE RECORD
+============================================================
+
+------------------------------------------------------------
+SEARCH 1 — cancel_order and batch_cancel response formats
+------------------------------------------------------------
+
+Sources: cancel_order docs (full fetch), batch_cancel docs
+(full fetch), amend_order docs, cancel_all docs, cancel_after
+docs, edit_order docs, WS v1 placing/cancelling guide,
+WS v2 API overview, Kraken.Net GitHub issue #55.
+References: 10 unique.
+
+FINDINGS:
+S1-F1: ★ NEW-08 CRITICAL — cancel_order returns INDIVIDUAL
+       RESPONSES per order when multiple order_ids provided.
+       "When cancelling multiple orders, there will be a
+       stream of individual order responses." Each response
+       has order_id and cl_ord_id of cancelled order plus
+       req_id echo.
+
+S1-F2: ★ NEW-08 — batch_cancel returns SINGLE response with
+       result.count only. No individual order responses.
+       cancel_order and batch_cancel have completely different
+       ACK patterns. Cannot be swapped.
+
+S1-F3: CONFIRMED — cancel_order accepts arrays of order_id,
+       cl_ord_id, or order_userref. Multiple IDs in one call
+       = multiple individual responses back.
+
+S1-F4: CONFIRMED — req_id uniqueness is NOT enforced by the
+       exchange. WS Manager must enforce its own uniqueness.
+
+S1-F5: ★ NEW-12 — GetWebSocketsToken: "The token should be
+       used within 15 minutes of creation. The token does
+       not expire once a connection to a WebSockets API
+       private message (feed) is maintained." Our spec is
+       correct: fresh token on every reconnect.
+
+SEARCH 1 CONCLUSION: Critical batch_cancel vs cancel_order
+distinction confirmed. Token behavior confirmed.
+
+------------------------------------------------------------
+SEARCH 2 — batch_cancel rate counter bypass
+------------------------------------------------------------
+
+Sources: spot trading limits docs (full fetch), spot REST
+rate limits docs, Kraken support rate limits article,
+Kraken crypto API overview, atomic amends guide (full fetch),
+futures rate limits docs, custody rate limits docs, Kraken
+WS v2 overview.
+References: 9 additional unique.
+
+FINDINGS:
+S2-F1: ★ NEW-09 CRITICAL SAFETY FEATURE — Official Kraken
+       spot trading limits docs state explicitly:
+       "If the rate counter in the batch exceeds maximum
+       for a batch cancel, the requests in batch are
+       STILL ACCEPTED."
+       batch_cancel bypasses rate counter threshold.
+       Always executes regardless of rate counter state.
+
+S2-F2: CONFIRMED — Regular cancel_order is subject to
+       normal rate counter limits. Only batch_cancel
+       has the bypass property.
+
+S2-F3: CONFIRMED — amend_order atomic amend: preserves
+       queue position, lower rate cost (+4 vs +7 for
+       <5s orders). Our AR-018 is confirmed correct.
+
+S2-F4: CONFIRMED — amend_order only modifies limit_price,
+       trigger_price, order_qty, display_qty. Cannot change
+       order_type, margin, or lifetime attributes (start,
+       end, time-in-force). If those need changing: cancel
+       and resubmit. This confirms we cannot use amend_order
+       to change GTD to GTC or vice versa.
+
+SEARCH 2 CONCLUSION: batch_cancel rate bypass confirmed.
+Critical safety feature for Full Halt. Full Halt is immune
+to rate counter exhaustion.
+
+------------------------------------------------------------
+SEARCH 3 — GetWebSocketsToken expiry and heartbeat behavior
+------------------------------------------------------------
+
+Sources: GetWebSocketsToken REST docs (fetched), WS v2 spot
+auth guide, Kraken WS v1 reference, Kraken WS v2 reference,
+python-kraken-sdk GitHub, WS FAQ (new portions), AsyncAPI
+Kraken blog parts 1 and 2, asyncapi spec GitHub.
+References: 9 additional unique.
+
+FINDINGS:
+S3-F1: CONFIRMED — Token: 15 minutes from creation, no
+       expiry while connection maintained. Fresh on reconnect.
+       Three independent sources confirm.
+
+S3-F2: ★ NEW-11 CONFIRMED — Kraken heartbeat behavior:
+       "When subscribed to a feed, a heartbeat message will
+       be received at a frequency of 1 heartbeat per second.
+       Heartbeats will not be received if other messages
+       (market data, account data, etc.) are received
+       instead."
+       Heartbeats fire ONLY when no real data is flowing.
+       Heartbeats are NOT real market data.
+
+S3-F3: ★ NEW-11 — python-kraken-sdk example code:
+       ```python
+       if message.get("method") == "pong" \
+           or message.get("channel") == "heartbeat":
+           return
+       ```
+       The official SDK explicitly filters out pong and
+       heartbeat before processing. This is the correct
+       pattern. Our zombie detection must do the same:
+       heartbeats MUST NOT reset last_real_data_time.
+
+S3-F4: CONFIRMED — "Any request, for example a ping,
+       can be used to keep the connection alive." Our
+       JSON ping every 30s satisfies this. No separate
+       heartbeat management needed.
+
+S3-F5: CONFIRMED — Heartbeat format: {"channel":"heartbeat"}
+       Distinct from JSON pong: {"method":"pong","req_id":N}
+
+SEARCH 3 CONCLUSION: NEW-11 confirmed from Kraken docs
+and official SDK. Heartbeats must be excluded from zombie
+detection. All token behavior confirmed.
+
+------------------------------------------------------------
+SEARCH 4 — Drawdown circuit breaker trading patterns
+------------------------------------------------------------
+
+Sources: wundertrading Python trading bot article, aiobreaker
+GitHub, purgatory PyPI, pybreaker GitHub, ProjectX Python SDK
+docs, asyncio trading bot Hashnode, concurrent scalping Alpaca,
+Python concurrency with asyncio book (table of contents).
+References: 9 additional unique.
+
+FINDINGS:
+S4-F1: CONFIRMED — 10% drawdown full halt, 3-5% session pause
+       are standard industry circuit breaker values. Our
+       10%/5% thresholds are confirmed appropriate.
+
+S4-F2: CONFIRMED — Circuit breaker implementation at the
+       application layer (not using aiobreaker library) is
+       correct for TothBot. aiobreaker is for protecting
+       external API calls (retry/halt on repeated failure).
+       TothBot's drawdown circuit breaker is a business rule,
+       not an API failure pattern. Simple drawdown check
+       per pipeline evaluation is the right approach.
+
+S4-F3: CONFIRMED — Ticker-driven continuous monitoring (not
+       just candle-close check) is the correct approach for
+       real-time drawdown detection between candle closes.
+
+SEARCH 4 CONCLUSION: Drawdown circuit breaker design
+confirmed. No new findings.
+
+------------------------------------------------------------
+SEARCH 5 — Momentum trading EMA ADX validation
+------------------------------------------------------------
+
+Sources: Kraken Pro indicators support article, TradingView
+EMA scripts, preprints.org MACD+ADX paper, momentum trading
+PDF, forex momentum trading article, medium EMA ADX strategy,
+Kraken day trading strategies article, medium dual EMA article,
+forextester ADX EMA strategy article.
+References: 9 additional unique.
+
+FINDINGS:
+S5-F1: CONFIRMED — ADX>25 + EMA(20)>EMA(50) as entry filter
+       is extensively validated across multiple independent
+       sources. Standard practice for momentum systems.
+
+S5-F2: CONFIRMED — 5-minute chart momentum is appropriate.
+       Multiple sources use 15-min to 1-hour charts but
+       5-minute is validated for higher-frequency systems.
+
+S5-F3: NOTE — One source uses ADX>30 (vs our ADX>25) for
+       stronger trend confirmation. ADX=25 is the Wilder
+       original. Our CIATS will validate threshold after
+       600 trades. No spec change needed.
+
+S5-F4: CONFIRMED — The multi-filter approach (regime +
+       HTF confirmation + SSS signals) is validated practice.
+       Multiple sources confirm: "adding ADX and other
+       trend strength indicators can be introduced as
+       auxiliary judgment." Our design is sound.
+
+SEARCH 5 CONCLUSION: All strategy specs confirmed. No new
+findings requiring action.
+
+------------------------------------------------------------
+SEARCH 6 — asyncio semaphore max concurrent positions
+------------------------------------------------------------
+
+Sources: rednafi.com asyncio semaphore article, Soumendrak
+semaphore blog, superfastpython asyncio gather concurrency,
+Python 3.14 asyncio docs (full fetch), copyprogramming
+concurrency guide, dev.to semaphore guide, death.andgravity
+limit concurrency, GitHub benfasoli gist, snok/self-limiters.
+References: 9 additional unique.
+
+FINDINGS:
+S6-F1: ★ NEW-10 — asyncio.BoundedSemaphore is confirmed
+       as the correct Python primitive for limiting concurrent
+       position count. BoundedSemaphore raises ValueError on
+       over-release (release() called more than acquire()),
+       which is safer than regular Semaphore for position
+       tracking (over-release = bug indicator).
+
+S6-F2: CONFIRMED — Python 3.11+ introduced TaskGroup for
+       structured concurrency. asyncio.Semaphore remains
+       the correct primitive for concurrency limiting.
+       TaskGroup is for managing groups of related tasks
+       with automatic cancellation on error.
+
+S6-F3: CONFIRMED — Check/acquire separation is the correct
+       asyncio pattern for TOCTOU safety:
+         if not semaphore.locked():  # non-blocking check
+             await semaphore.acquire()  # actual acquire
+       This matches our Gate 7 / Execution Engine separation.
+
+S6-F4: CONFIRMED — Python official asyncio.Semaphore docs:
+       "The preferred way to use a Semaphore is an async
+       with statement." However, for position tracking
+       where acquire and release occur at different code
+       points, explicit acquire/release is required.
+
+SEARCH 6 CONCLUSION: asyncio.BoundedSemaphore confirmed
+as correct implementation. Full pattern documented.
+
+------------------------------------------------------------
+SEARCH 7 — Kraken WS heartbeat vs ping behavior
+------------------------------------------------------------
+
+Sources: Kraken WS ping docs (full fetch), Kraken WS v1
+reference, Kraken WS FAQ, Kraken WS v2 reference (new
+sections), python-kraken-sdk GitHub (new sections), AsyncAPI
+Kraken example (new), asyncapi spec GitHub, Kraken.Net
+ping/pong issue.
+References: 9 additional unique (different sources from S3).
+
+FINDINGS:
+S7-F1: CONFIRMED — JSON ping format WS v2:
+       Send: {"method":"ping","req_id":<n>}
+       Response: {"method":"pong","req_id":<n>,
+                  "time_in":"...","time_out":"..."}
+       Our WS-PING-002 spec is confirmed correct.
+
+S7-F2: CONFIRMED — Heartbeat format WS v2:
+       {"channel":"heartbeat","type":"update"}
+       (Different from pong which has "method":"pong")
+       Dispatch table can distinguish via presence of
+       "channel" vs "method" key.
+
+S7-F3: CONFIRMED — "This is an application level ping as
+       opposed to default ping in the websockets standard
+       which is server initiated." Our distinction between
+       library TCP ping and application JSON ping (WM-WSLB-
+       001 through WM-WSLB-004) is confirmed correct.
+
+S7-F4: CONFIRMED — Any request keeps the connection alive.
+       JSON pings serve double duty: keepalive + full
+       stack verification.
+
+SEARCH 7 CONCLUSION: Ping/heartbeat distinction confirmed.
+Zombie detection heartbeat exclusion validated.
+
+------------------------------------------------------------
+SEARCH 8 — Kraken trading pair universe USDT/USDC
+------------------------------------------------------------
+
+Sources: CoinGecko Kraken stats, CoinMarketCap Kraken,
+CoinRanking Kraken markets, Kraken cryptocurrency support
+article, Kraken exchange review, TradeSanta Kraken pairs,
+Kraken prices page, tradesanta USDC-USDT pair.
+References: 8 additional unique.
+
+FINDINGS:
+S8-F1: CONFIRMED — Kraken has 700+ coins and 1,500+ trading
+       pairs as of 2026. Multiple quote currencies including
+       USD, USDT, USDC, EUR, BTC, ETH.
+
+S8-F2: CONFIRMED — BTC/USD is the highest volume pair with
+       ~$196M daily. Multiple pairs will meet our $500k/day
+       liquidity gate.
+
+S8-F3: CONFIRMED — Quote currencies on Kraken include USD,
+       USDT, USDC, EUR, BTC, ETH, GBP, JPY, CAD, CHF, AUD,
+       and new stablecoins (RLUSD, EURC, PYUSD, USDR, etc.)
+
+S8-F4: NOTE — Our asset selection universe (OI-002) is
+       deferred to Phase 5-6. The $500k/day volume filter
+       will be the primary selection criterion. USD and
+       USDC quote pairs will dominate our tradeable universe.
+       USD pairs have highest liquidity.
+
+SEARCH 8 CONCLUSION: Kraken pair universe confirmed adequate
+for our $500k/day filter. OI-002 remains Phase 5-6 work.
+
+------------------------------------------------------------
+SEARCH 9 — Python asyncio concurrent position monitoring
+------------------------------------------------------------
+
+Sources: superfastpython asyncio semaphore, copyprogramming
+concurrency 2026, Python docs asyncio-sync (full fetch),
+death.andgravity limit concurrency, prefect community asyncio,
+dev.to semaphore guide (new sections), rednafi semaphore
+(new URL), snok/self-limiters (new sections), asyncio gather
+concurrency (new sections).
+References: 9 additional unique (different from S6).
+
+FINDINGS:
+S9-F1: CONFIRMED — Python docs asyncio.BoundedSemaphore:
+       "A bounded semaphore object. Not thread-safe.
+       Bounded Semaphore is a version of Semaphore that
+       raises a ValueError in release() if it increases
+       the internal counter above the initial value."
+       This is exactly the safety property needed for
+       position count tracking.
+
+S9-F2: CONFIRMED — semaphore.locked() returns True when
+       all permits are taken (counter == 0). This is the
+       correct Gate 7 check: if locked, max_concurrent
+       reached, block new entries.
+
+S9-F3: NOTE — Python 3.14 (Oct 2025): "Removed implicit
+       event loop creation — use asyncio.run() or
+       asyncio.Runner()". Our BP-UVL-006 spec already
+       uses asyncio.Runner(loop_factory=uvloop.new_event_loop)
+       which is compliant with Python 3.14+. Future-proof.
+
+SEARCH 9 CONCLUSION: BoundedSemaphore implementation
+confirmed from Python official docs. Gate 7 check via
+semaphore.locked() confirmed correct.
+
+------------------------------------------------------------
+SEARCH 10 — cancel_order cl_ord_id array support
+------------------------------------------------------------
+
+Sources: cancel_order (different search), WS v1 cancel guide
+(new sections), FIX Order Cancel Request, cancel all docs
+(new sections), cancel_all_orders_after docs (full fetch),
+REST cancel order batch docs, amend order docs (new sections),
+FIX OCRR docs, FIX mass cancel docs.
+References: 9 additional unique.
+
+FINDINGS:
+S10-F1: CONFIRMED — cancel_order WS v2 accepts arrays of:
+        - order_id (Kraken identifiers)
+        - cl_ord_id (our client identifiers)
+        - order_userref (optional integer group identifier)
+        All three types accepted simultaneously in one call.
+
+S10-F2: CONFIRMED — cancel_order can cancel using cl_ord_id
+        directly. Since we assign cl_ord_id at dispatch, we
+        can cancel by cl_ord_id without needing to know the
+        Kraken order_id first. This is useful for the Layer
+        2 MAE exit where we have cl_ord_id from dispatch.
+
+S10-F3: CONFIRMED — cancel_all_orders_after (Dead Man's
+        Switch) is REJECTED per AR-001. "If the timer
+        expires, all orders are cancelled and then the timer
+        remains disabled until the client provides a new
+        non-zero timeout." This destroys crash protection
+        emergSL. Our rejection of DMS is confirmed correct.
+
+S10-F4: CONFIRMED — cancel_after docs confirm: "If the timer
+        expires, all orders in the account are cancelled."
+        This would cancel our resting TP AND emergSL —
+        destroying both the profit target and the crash
+        protection in one shot. AR-001 rejection is correct.
+
+SEARCH 10 CONCLUSION: cancel_order cl_ord_id support
+confirmed. DMS rejection re-confirmed from new angle.
+
+============================================================
+3. NEW FINDINGS SUMMARY
+============================================================
+
+NEW-08 (CRITICAL): cancel_order returns stream of individual
+       responses vs batch_cancel returns single count.
+       Layer 2 MAE exit must use cancel_order (individual
+       ACK tracking). Full Halt must use batch_cancel
+       (count + rate bypass).
+       Resolved: WS-CAN-001 through -004 in 0411001 dv1_6.
+       WM-CAN-001 through -004 in 1011002 dv1_6.
+
+NEW-09 (CRITICAL SAFETY): batch_cancel bypasses rate
+       counter maximum — always executes even when rate
+       limited. Full Halt is immune to rate exhaustion.
+       Resolved: WS-CAN-004 through -007 in 0411001 dv1_6.
+
+NEW-10: asyncio.BoundedSemaphore is correct primitive for
+       max_concurrent position enforcement. BoundedSemaphore
+       raises ValueError on over-release (bug detection).
+       Resolved: RE-SEM-001 through -006 in 1011011 dv1_0.
+
+NEW-11: Heartbeat messages MUST NOT reset last_real_data_time
+       in zombie detection. Heartbeats fire only when no
+       real data flows — they indicate zombie state, not
+       health. Official SDK explicitly filters them out.
+       Resolved: WM-ZOM-004 through -007 in 1011002 dv1_6.
+
+NEW-12: GetWebSocketsToken: 15-min from creation, no-expiry
+       while connection maintained. CONFIRMED. Existing spec
+       is correct. Documentation only.
+       Resolved: WM-TOKEN-001 through -003 in 1011002 dv1_6.
+
+CONFIRMED — No action needed (19 items):
+  cancel_all_orders_after (DMS) rejection confirmed (AR-001),
+  amend_order field limitations confirmed, ADX>25 confirmed,
+  5-minute chart validated, $500k/day filter adequate for
+  Kraken universe, drawdown 10%/5% thresholds confirmed,
+  ticker-driven continuous drawdown monitoring confirmed,
+  BoundedSemaphore locked() for Gate 7 check confirmed,
+  cl_ord_id cancellation supported in cancel_order,
+  Python 3.14 asyncio.Runner pattern confirmed future-proof,
+  JSON ping keepalive confirmed, heartbeat format confirmed,
+  Kraken pair count 700+/1500+ confirmed adequate,
+  batch_cancel 2-50 orders confirmed, req_id not enforced
+  unique by exchange confirmed, amend_order queue position
+  preserved confirmed, Python official BoundedSemaphore docs
+  confirmed, uvloop Python 3.12.3 compatible confirmed,
+  Kraken 15-minute token window confirmed.
+
+============================================================
+4. DOCUMENTS PRODUCED THIS SESSION
+============================================================
+
+  0411001  Kraken_WS_v2_Specification     dv1_6  ★
+  1011002  WS_Manager_Coding_Spec         dv1_6  ★
+  1011011  Risk_Engine_Coding_Spec        dv1_0  ★ NEW
+  TB00014  This session log               v1_0   ★
+
+★ = Produced this session
+
+0500000 changes required (apply in next dedicated session):
+  All prior pending changes carry forward (AR-038 through
+  AR-040 from TB00012/TB00013). New additions:
+
+  AR-041 (dv1_12): cancel_order returns individual responses
+  per order (req_id trackable). batch_cancel returns single
+  count + bypasses rate counter limit. Layer 2 MAE exit
+  uses cancel_order. Full Halt uses batch_cancel. These
+  are NOT interchangeable. Document the behavioral
+  distinction and implementation intent.
+  Assign: 0411001 WS-CAN-001 through -007.
+          1011002 WM-CAN-001 through -004.
+
+  AR-042 (dv1_12): Zombie detection excludes heartbeat
+  messages. Heartbeats fire ONLY when no real data flows —
+  they indicate zombie state, not connection health.
+  last_real_data_time resets ONLY on real channel events:
+  ohlc, ticker, instrument, executions, balances, status.
+  Assign: 1011002 WM-ZOM-004 through -007.
+
+  AR-043 (dv1_12): max_concurrent position limit enforced
+  by asyncio.BoundedSemaphore in Risk Engine/Gate 7.
+  BoundedSemaphore raises ValueError on over-release
+  (bug indicator). Gate 7 checks semaphore.locked().
+  Execution Engine acquires semaphore before dispatch.
+  Position close triggers release.
+  Assign: 1011011 RE-SEM-001 through -006.
+
+NOTE: 0500000 dv1_11 is now dv1_12 due to 3 new ARs.
+Apply all pending changes (AR-038 through AR-043) in
+one update. Text-only. No diagram changes.
+
+============================================================
+5. PARKING LOT — CURRENT STATE
+============================================================
+
+  PL-003  TRACKING: Pathway 1 GitHub automation.
+
+  ALL OTHER ITEMS: Resolved. Zero new items.
+
+============================================================
+6. OPEN ITEMS — CURRENT STATE
+============================================================
+
+  OI-001  SSS signal generation — Phase 5-6 work
+  OI-002  Asset selection universe — Phase 5-6 work
+  OI-003  Exit Controller full spec — Phase 5-6 work
+  OI-004  Entry limit placement — Phase 5-6 work
+  OI-005  Selection Controller — Phase 5-6 work
+
+  Nothing in Phase 1-4 blocked.
+
+============================================================
+7. BILL ACTIONS REQUIRED
+============================================================
+
+All prior pending actions from TB00013 still apply. New:
+  (cc) Download 4 new documents:
+       0411001 dv1_6, 1011002 dv1_6, 1011011 dv1_0, TB00014.
+  (dd) Approve all 4 documents.
+  (ee) At next 0500000 session: apply ALL pending changes
+       (AR-038 through AR-043). Now dv1_12, not dv1_11.
+       Text-only. No diagram changes.
+
+============================================================
+8. NEXT SESSION — WHERE WE PICK UP
+============================================================
+
+ASSUMING GATE 1 IS PASSED BY BILL:
+  Next step: Phase 2, Step 2.1 -> 0400000_Exchange_Interface
+
+MANDATORY UPLOAD FOR NEXT SESSION:
+  TB00001 through TB00014 (all session logs)
+  0000000 through 0311005 (Phase 1 documents)
+  0411001 dv1_6 (this session — replaces dv1_5)
+  1011001 dv1_3
+  1011002 dv1_6 (this session — replaces dv1_5)
+  1011010 dv1_2
+  1011011 dv1_0 (this session — NEW)
+  1011012 dv1_2
+  1011013 dv1_2
+  0500000_System_Architecture_Overview_dv1_10_Claude_Source.txt
+
+============================================================
+9. 0500000 CHANGE SPECIFICATION FOR NEXT UPDATE
+============================================================
+
+All TB00012 and TB00013 pending changes carry forward.
+New additions from TB00014:
+
+CHANGE 8 — New AR-041:
+  cancel_order/batch_cancel behavioral distinction.
+  Layer 2 MAE exit: cancel_order (individual ACK tracking).
+  Full Halt: batch_cancel (count + rate bypass).
+
+CHANGE 9 — New AR-042:
+  Zombie detection heartbeat exclusion. last_real_data_time
+  resets only on real channel events (not heartbeats).
+
+CHANGE 10 — New AR-043:
+  max_concurrent via asyncio.BoundedSemaphore. Gate 7 check,
+  Execution Engine acquire, position close release.
+
+0500000 will become dv1_12 (not dv1_11) incorporating all
+10 changes from TB00012, TB00013, and TB00014.
+
+============================================================
+10. COMPLETE DOCUMENT INVENTORY — CURRENT STATE
+============================================================
+
+SESSION LOGS:
+  TB00001 through TB00014 (all v1_0)
+
+PHASE 1 DOCUMENTS:
+  0000000  Ethics_and_Safety                  dv1_0
+  0100000  Management                         dv1_0
+  0200000  Operations                         dv1_0
+  0300000  Governance                         dv1_0
+  0310000  Governance_Procedures_Anchor       dv1_0
+  0311001  Namespace_Specification            dv1_2
+  0311002  Document_Creation_Workflow         dv1_7
+  0311003  Versioning_Procedure               dv1_0
+  0311004  Document_Creation_and_Approval     dv1_0
+  0311005  System_Definitions_and_Terminology dv1_0
+
+WORKING DRAFT CODING SPECS:
+  0411001  Kraken_WS_v2_Specification         dv1_6  ★ NEW
+  1011001  Engineering_Best_Practices         dv1_3
+  1011002  WS_Manager_Coding_Spec             dv1_6  ★ NEW
+  1011010  CIATS_Coding_Spec                  dv1_2
+  1011011  Risk_Engine_Coding_Spec            dv1_0  ★ NEW
+  1011012  Regime_Engine_Coding_Spec          dv1_2
+  1011013  VPS_Deployment_Coding_Spec         dv1_2
+
+SYSTEM ARCHITECTURE:
+  0500000  dv1_10  (dv1_12 pending — text only, 10 changes)
+
+SUPERSEDED — DO NOT USE:
+  0411001 dv1_0 through dv1_5
+  1011002 dv1_0 through dv1_5
+  1011011 does not exist in prior versions
+
+============================================================
+11. REVISION HISTORY
+============================================================
+
+  v1_0  03-25-2026  Initial session log. Sixth 10-search
+                    FP/DP validation. 19 confirmations.
+                    5 new findings all immediately resolved.
+                    0 parking lot additions.
+                    Documents produced: 0411001 dv1_6,
+                    1011002 dv1_6, 1011011 dv1_0.
+                    Critical findings: cancel_order/batch_cancel
+                    behavioral distinction (NEW-08), batch_cancel
+                    rate bypass for Full Halt (NEW-09),
+                    BoundedSemaphore for max_concurrent (NEW-10),
+                    heartbeat zombie exclusion (NEW-11).
+                    0500000 dv1_12 change spec (10 changes).
+
+============================================================
+END OF SESSION LOG
+============================================================

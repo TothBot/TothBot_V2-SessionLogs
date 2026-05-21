@@ -1,0 +1,381 @@
+DocDCN:     TB00101
+DocTitle:   TothBot_V2_Session_Log_2026-04-14_Part5
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\My_TothBot_Stuff\TBXXXXX_Session_Logs\TB00101_TothBot_V2_Session_Log_2026-04-14_Part5_v1_0.txt
+DocDate:    04-14-2026
+DocTime:    23:59:59 UTC
+
+============================================================
+TOTHBOT V2 SESSION LOG — 2026-04-14 PART 5
+============================================================
+
+============================================================
+1. SESSION IDENTITY
+============================================================
+
+Session date:     April 14, 2026 (Part 5)
+Session number:   TB00101
+Session type:     Paper trading defect diagnosis and fix.
+                  Two critical defects diagnosed and fixed:
+                  DEFECT-WM-CRASH-001 (Fix 1) and
+                  DEFECT-RE-002 (Fix 2).
+Prior session:    TB00100 v1_0 (2026-04-14 Part 4)
+
+Documents read this session:
+  TB00000  v2_8    Project Instructions             read
+  TB00100  v1_0    Prior session log                read
+
+============================================================
+2. WORK COMPLETED THIS SESSION
+============================================================
+
+------------------------------------------------------------
+2.1 Paper Trading Health Check
+------------------------------------------------------------
+
+PAPER TRADING ONLY. NO REAL MONEY.
+
+System was confirmed operational from TB00100 (OI-006 closed).
+Health check commands run immediately. Results:
+
+  systemctl status tothbot:
+    Active — running since 17:06:35 UTC (after restart).
+    restart counter = 1.
+    Memory: 60.4 MB. CPU: 3.538s.
+
+  TRADE_OPEN / GATE_PASS grep:
+    Zero results. No trades opened. No gates passed.
+
+  GATE activity grep:
+    All GATE_3_FAIL with rejection=NO_REGIME_DATA.
+    System processing candle closes but Gate 3 blocking
+    every pair on every candle. Zero pipeline progress.
+
+------------------------------------------------------------
+2.2 Defect Diagnosis — Two Critical Defects Confirmed
+------------------------------------------------------------
+
+DEFECT-WM-CRASH-001 (CRITICAL — CONFIRMED)
+  Description: Recurring TaskGroup fatal crash. Service
+    crashes and systemd restarts every few hours.
+  Evidence: WS_MGR_FATAL + WSMGR_FATAL_PROPAGATED logged
+    at 17:06:22 UTC today. Pattern across full log:
+    at least 4 crashes on April 13-14 (10:27, 11:12,
+    17:06 UTC and prior runs).
+  Root cause (partial): The except block in run() logs
+    only str(exc) — for a Python 3.11+ ExceptionGroup
+    (raised by asyncio.TaskGroup on task failure) this
+    produces only "unhandled errors in a TaskGroup
+    (1 sub-exception)". The actual sub-exception is
+    permanently lost. Cannot diagnose the real crash
+    cause without this fix.
+  Status: Fix 1 applied this session. Next crash will
+    log the actual sub-exception and traceback.
+
+DEFECT-RE-002 (CRITICAL — CONFIRMED)
+  Description: Regime engine never seeded at startup.
+    regime_cache empty for all 50 pairs. Gate 3 returns
+    NO_REGIME_DATA and blocks all entries.
+  Evidence: Zero regime computation events in the entire
+    log. All pairs failing Gate 3 since first candle
+    close after startup. System has processed multiple
+    candle cycles but zero trades possible.
+  Root cause: _trigger_daily_regime_refresh() is only
+    called at 00:00 UTC (ohlc(60) handler). It is never
+    called at startup. regime_cache is empty from startup
+    until 00:00 UTC — potentially 23+ hours with no trades.
+  Status: Fix 2 applied this session.
+
+DEFECT-WM-LIQ-001 (WARN — LOGGED, NOT FIXED THIS SESSION)
+  Description: Liquidity refresh returning empty_result
+    every 4 hours. Prior cache values preserved — Gate 2
+    functional. Non-blocking.
+  Evidence: LIQUIDITY_REFRESH_FAILED at 05:26, 09:26,
+    15:12 UTC today.
+  Status: Deferred. Will investigate after crash root
+    cause confirmed from Fix 1 log output.
+
+------------------------------------------------------------
+2.3 Fix 1 — DEFECT-WM-CRASH-001
+------------------------------------------------------------
+
+Governing spec: 1011002 dv1_18 WM-RUN-001 (new rule).
+Code file: ws_manager.py dv1_18 → dv1_19.
+
+Changes:
+  (1) Added import traceback to imports section.
+  (2) Updated run() except block:
+      - isinstance(exc, ExceptionGroup) check added.
+      - Iterates exc.exceptions[], formats each sub-exc
+        type, message, and traceback.
+      - Logs WS_MGR_FATAL with fields:
+          error:          str(exc)           (unchanged)
+          traceback:      tb_str[-2000:]     (NEW)
+          sub_exceptions: list[str] or None  (NEW)
+      - Alert message updated to include type(exc).__name__.
+
+------------------------------------------------------------
+2.4 Fix 2 — DEFECT-RE-002
+------------------------------------------------------------
+
+Governing spec: 1011002 dv1_18 WM-WARMUP-004 (new rule).
+Code file: ws_manager.py dv1_18 → dv1_19.
+
+Changes in _warm_up_all_pairs():
+  After WARMUP_REST_COMPLETE is logged:
+    if self._regime_engine_fn:
+        log REGIME_STARTUP_SEED_STARTED
+        await self._trigger_daily_regime_refresh()
+        log REGIME_STARTUP_SEED_COMPLETE
+  Then SYSTEM_OPERATIONAL logged as before.
+
+  Awaited (not create_task): SYSTEM_OPERATIONAL must not
+  fire until regime data is populated. During the ~55s
+  computation window (50 pairs × 1.1s stagger), Gate 3
+  correctly blocks all entries with NO_REGIME_DATA.
+  This is correct fail-safe behavior.
+
+------------------------------------------------------------
+2.5 Document Control — All Requirements Met
+------------------------------------------------------------
+
+Documents updated this session:
+
+  1011002_WS_Manager_Coding_Spec
+    dv1_17 → dv1_18
+    Added: WM-RUN-001 (ExceptionGroup extraction rule)
+    Updated: WM-WARMUP-002 (step 4→6 sequence corrected)
+    Added: WM-WARMUP-004 (regime startup seed rule)
+
+  ws_manager.py
+    dv1_18 → dv1_19
+    Fix 1: run() ExceptionGroup handling
+    Fix 2: _warm_up_all_pairs() regime startup seed
+
+  1010000_Trading_System_Coding_Anchor
+    dv1_6 → dv1_7
+    Code File Registry: ws_manager.py SpecVer
+    updated dv1_13 → dv1_18
+
+============================================================
+3. OPEN ITEMS / PARKING LOT
+============================================================
+
+OI-016  OPEN — DEFECT-WM-CRASH-001 root cause unknown.
+        Fix 1 deployed this session — next crash will
+        log actual sub-exception. Must review log after
+        next crash to identify root cause and fix it.
+
+OI-017  OPEN — DEFECT-WM-LIQ-001. Liquidity refresh
+        returning empty_result every 4 hours.
+        Non-blocking (prior cache preserved). Investigate
+        after OI-016 root cause is confirmed.
+
+OI-014  OPEN — startup_sequence.py stale cross-references
+        and ohlc sequence review. Post paper-trading stable.
+
+============================================================
+4. STANDING RULES — ALL ACTIVE
+============================================================
+
+  RULE 6  — git add . is prohibited. Explicit per file.
+  RULE 13 — .bat files go to Desktop only. Never in repo.
+  RULE 14 — git push origin master. NEVER origin main.
+  RULE 15 — ONE COMMAND PER COPY BOX. ALWAYS.
+  RULE 16 — .bat files run from cmd.exe only. Never PS.
+  RULE 17 — Always give complete and correct instructions.
+            Include Command Prompt or Powershell. Include
+            root file path in each instruction. Every step
+            must be executable without interpretation.
+
+  CODING RULES — ALL ACTIVE:
+  NO PATCHES EVER. Full file delivery only. Full document
+  control. Every code change = new version = full file
+  delivered as .txt per DR-001.
+
+  DELIVERY RULES — ALL ACTIVE:
+  DR-001 — All documents as .txt files.
+  DR-002 — 0500000 additionally as .docx and .pdf.
+  DR-003 — ALL documents in ONE BATCH. No piecemeal.
+
+============================================================
+5. BILL ACTIONS REQUIRED — THIS SESSION
+============================================================
+
+------------------------------------------------------------
+STEP 1 — Save session log
+------------------------------------------------------------
+```
+C:\Users\wstot\My_TothBot_Stuff\TBXXXXX_Session_Logs\
+```
+Save: TB00101_TothBot_V2_Session_Log_2026-04-14_Part5_v1_0.txt
+
+------------------------------------------------------------
+STEP 2 — Upload session log to Claude project folder
+------------------------------------------------------------
+Upload TB00101 v1_0 to Claude project folder.
+Delete TB00100 v1_0 from Claude project folder.
+
+------------------------------------------------------------
+STEP 3 — Download documents from this session
+------------------------------------------------------------
+Download all four documents from the file delivery:
+  ws_manager.py (dv1_19)
+  1011002_WS_Manager_Coding_Spec_dv1_18.txt
+  1010000_Trading_System_Coding_Anchor_dv1_7.txt
+  TB00101_TothBot_V2_Session_Log_2026-04-14_Part5_v1_0.txt
+
+------------------------------------------------------------
+STEP 4 — Place coding spec and anchor in Docs repo
+------------------------------------------------------------
+Place in:
+  C:\Users\wstot\GitHub\TothBot\TothBot_V2-Docs\10XXXXX_Coding_Specification\
+
+  1011002_WS_Manager_Coding_Spec_dv1_18.txt
+    (replace dv1_17 — delete old version)
+
+  1010000_Trading_System_Coding_Anchor_dv1_7.txt
+    (replace dv1_6 — delete old version)
+
+------------------------------------------------------------
+STEP 5 — Commit TothBot_V2-Docs
+------------------------------------------------------------
+Open Command Prompt (NOT PowerShell):
+```
+cd C:\Users\wstot\GitHub\TothBot\TothBot_V2-Docs
+```
+```
+git status
+```
+Verify only the two updated spec files show as changes.
+```
+git add 10XXXXX_Coding_Specification/1011002_WS_Manager_Coding_Spec_dv1_18.txt
+```
+```
+git add 10XXXXX_Coding_Specification/1010000_Trading_System_Coding_Anchor_dv1_7.txt
+```
+```
+git commit -m "TB00101: 1011002 dv1_18 WM-RUN-001 WM-WARMUP-004; 1010000 dv1_7 registry update"
+```
+```
+git push origin master
+```
+Report the commit hash.
+
+------------------------------------------------------------
+STEP 6 — Place ws_manager.py in Code repo
+------------------------------------------------------------
+The delivered ws_manager.py is a .txt file for project
+folder compatibility. Before placing in the repo, rename
+to ws_manager.py (remove the .txt extension if present).
+
+Place in:
+  C:\Users\wstot\GitHub\TothBot\TothBot_V2-Code\tothbot\
+
+------------------------------------------------------------
+STEP 7 — Commit TothBot_V2-Code
+------------------------------------------------------------
+Open Command Prompt:
+```
+cd C:\Users\wstot\GitHub\TothBot\TothBot_V2-Code
+```
+```
+git status
+```
+Verify only tothbot/ws_manager.py shows as changed.
+```
+git add tothbot/ws_manager.py
+```
+```
+git commit -m "TB00101: ws_manager.py dv1_19 Fix1 ExceptionGroup logging Fix2 regime startup seed"
+```
+```
+git push origin master
+```
+Report the commit hash.
+
+------------------------------------------------------------
+STEP 8 — Deploy to VPS
+------------------------------------------------------------
+```
+ssh root@87.99.141.44
+```
+```
+cd /root/TothBot_V2-Code
+```
+```
+git pull
+```
+Confirm ws_manager.py updated in pull output.
+```
+sudo systemctl restart tothbot
+```
+```
+sleep 10 && tail -30 /home/tothbot/logs/tothbot.log
+```
+Confirm:
+  (a) PAPER_TRADING_MODE_ON present
+  (b) REGIME_STARTUP_SEED_STARTED present
+  (c) REGIME_STARTUP_SEED_COMPLETE present
+  (d) SYSTEM_OPERATIONAL present
+  (e) No CRITICAL or ERROR events
+
+------------------------------------------------------------
+STEP 9 — Confirm first gate pass after regime seeding
+------------------------------------------------------------
+Wait ~5 minutes for first candle close after restart.
+```
+grep -E "GATE_3_FAIL|GATE_4|PIPELINE_START|NO_REGIME" /home/tothbot/logs/tothbot.log | tail -20
+```
+After Fix 2, Gate 3 should no longer fail with NO_REGIME_DATA.
+Pairs may still fail Gate 3 for legitimate regime reasons
+(TRENDING_NEGATIVE or NON_DIR+ELEVATED) — that is correct.
+
+============================================================
+6. NEXT SESSION — COMPLETE INSTRUCTIONS
+============================================================
+
+============================================================
+DOCUMENTS TO READ — IN THIS ORDER:
+1. TB00000  v2_8    — Project Instructions
+2. TB00101  v1_0    — This session log (most recent)
+STATE ALL DOCUMENTS READ AND VERSIONS BEFORE ANY WORK.
+============================================================
+
+============================================================
+TASK — Confirm Fix 1 and Fix 2 deployed and working
+============================================================
+
+PAPER TRADING ONLY. NO REAL MONEY.
+
+Tell Claude:
+  (a) Commit hashes from Steps 5 and 7 above.
+  (b) VPS deployment confirmation (Step 8 output).
+  (c) Gate activity after restart (Step 9 output).
+
+If Fix 2 confirmed working (no NO_REGIME_DATA after
+REGIME_STARTUP_SEED_COMPLETE):
+  OI-006 remains CLOSED. Paper trading active.
+  Monitor for DEFECT-WM-CRASH-001 root cause from
+  next crash log (OI-016).
+
+If next crash occurs, paste:
+  grep -E "WS_MGR_FATAL|sub_exception|traceback" \
+    /home/tothbot/logs/tothbot.log | tail -20
+
+============================================================
+REVISION HISTORY
+============================================================
+
+  v1_0  04-14-2026  Initial. Two critical defects diagnosed
+                    and fixed. DEFECT-WM-CRASH-001 Fix 1:
+                    ExceptionGroup sub-exception logging.
+                    DEFECT-RE-002 Fix 2: regime startup seed.
+                    Three documents updated with full DC
+                    compliance. Commit and deploy instructions
+                    provided.
+
+============================================================
+END OF SESSION LOG TB00101 v1_0
+============================================================

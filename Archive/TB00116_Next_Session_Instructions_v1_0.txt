@@ -1,0 +1,721 @@
+DocDCN:     TB00116_NSI
+DocTitle:   Next_Session_Instructions_for_TB00117
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TBXXXXX_Session_Logs\TB00116_Next_Session_Instructions_v1_0.txt
+DocDate:    04-23-2026
+DocTime:    02:50:00 UTC
+
+============================================================
+NEXT SESSION INSTRUCTIONS - TB00117
+PART 2: TESTING AND CODING CHANGES
+DIAGNOSE OI-028 / OI-029; FIX OI-030
+POST-TB00116 CONTEXT — OI-039 REMEDIATION DEPLOYED
+============================================================
+
+PAPER TRADING ONLY. NO REAL MONEY.
+
+============================================================
+SECTION 1 - WHAT THIS SESSION DOES
+============================================================
+
+TB00117 is the Part 2 change session, originally planned
+in TB00114 NSI and deferred through TB00115 and TB00116.
+TB00116 closed OI-039 contamination (commit b5ca306:
+0311001 v1_3, 0311003 v1_1, 1010000 dv1_12; TB00000 v2_12
+delivered). Remaining work is the original diagnosis-
+and-fix sequence for the dv1_22 observation-window
+aborted state.
+
+TB00117 scope, in this order:
+
+  STEP A  Pre-flight. Cold-load verification of TB00000
+          v2_12 presence, v2_11 absence; 0311001 v1_3
+          and 0311003 v1_1 present, v1_2 and v1_0 absent;
+          1010000 dv1_12 present, dv1_11 absent; TB00116
+          Session Log and TB00116 NSI present. Project-
+          folder prohibited-string count in active
+          governance = zero. Sweep VPS state.
+
+  STEP B  FP/DP diagnose OI-028 (WS_MGR_FATAL reconnect
+          regression) against fresh ws_manager.py dv1_21
+          and the 4 captured WS_MGR_FATAL tracebacks on
+          the VPS. NO code change without Bill-approved
+          diagnosis direction.
+
+  STEP C  FP/DP diagnose OI-029 (SMTP read-timeout failure
+          mode) against fresh logger.py dv1_4. Re-verify
+          all line-number references.
+
+  STEP D  Fix OI-030 (sweep script FATAL pattern). Derive
+          the FATAL-class event name list by reading code
+          emission points. Deliver updated tothbot_sweep.sh
+          as a FIRST-CLASS CONTROLLED DOCUMENT per TB00000
+          v2_12 §3.4.2 / §3.4.3 HR-TP004 and 0311001 v1_3
+          HR-DC-001:
+            Commit to: TothBot_V2-Code/operations/
+                       tothbot_sweep.sh
+            Add to:    1010000 dv1_12 §5.7 registry
+            Deploy:    git pull on VPS, then copy or
+                       symlink from /root/TothBot_V2-Code/
+                       operations/tothbot_sweep.sh to
+                       /root/tothbot_sweep.sh (if existing
+                       execution path must be preserved)
+                       OR update cron / execution command
+                       to run from the repo path directly.
+
+  STEP E  Full DC package for any Bill-approved code fix.
+          NO PATCHES. Full files only. Complete parent-
+          chain version increments.
+
+  STEP F  Commit, push, deploy, verify. Standard TB00108
+          / TB00110 pattern.
+
+  STEP G  Open new 48-hour observation window.
+
+  STEP H  TB00117 Session Log and TB00117 NSI.
+
+OPTIONAL SCOPE (Bill decides at open):
+
+  - OI-036 / OI-037 / OI-038 remediation via TB00000
+    v2_12 -> v2_13. OI-037 has now recurred in three
+    consecutive sessions (TB00114 / TB00115 / TB00116).
+    Escalation may be warranted.
+  - OI-039 formal close.
+
+============================================================
+SECTION 2 - MANDATORY READING (MUST BE FIRST)
+============================================================
+
+TB00117 reads every document below and states the
+version read before doing any work.
+
+  TB00000                       v2_12
+    Project Instructions. Always first. §4.2 ABSOLUTE
+    STANDING RULE governs all prohibited-string handling.
+    §3.4.2 / §3.4.3 / §11 define operational scripts
+    scope. Cold-load verify presence.
+
+  TB00116 Session Log           v1_0
+    This session's OI-039 remediation. Commit b5ca306.
+    Four documents delivered.
+
+  TB00116 NSI                   v1_0
+    THIS document.
+
+  TB00115 Session Log           v1_0
+    Prior session. Prohibited-string contamination
+    elimination via 85-file project-folder deletion.
+    TB00000 v2_11 §4.2 rule enactment.
+
+  TB00115 NSI                   v1_0
+    Prior NSI (superseded by this NSI).
+
+  TB00114 Session Log           v1_0
+    Part 1 cleanup outcome (commit 7191bf8). Claude-
+    error OIs OI-036 / OI-037 / OI-038 originated.
+
+  TB00113 Session Log           v1_0
+    15-step plan full discrepancy audit.
+
+  TB00112 Session Log           v1_0
+    OI-032 discovery, Claude operational errors.
+
+  TB00111 Session Log           v1_0
+    dv1_22 observation-window abort forensic timeline,
+    the 4 WS_MGR_FATAL tracebacks.
+
+  TB00111 NSI                   v1_0
+    §6 diagnosis sequence detail. NOTE: §6.4 line
+    references were against logger.py dv1_3 — MUST be
+    re-verified against dv1_4.
+
+  0311001                       v1_3
+    Namespace. §3.1 HR-PATH rules. HR-PATH-004
+    exception eliminated. operations/ subfolder
+    authoritative.
+
+  0311002                       v1_3
+    Workflow. STEP 8.2.3 DC-SYNC rules.
+
+  0311003                       v1_1
+    Versioning Procedure. VP-010 SUPERSEDED DOCUMENTS
+    clarified.
+
+  0311004                       v1_2
+    Document Creation and Approval.
+
+  ws_manager.py                 dv1_21
+    Primary diagnostic source for OI-028.
+
+  logger.py                     dv1_4
+    Primary diagnostic source for OI-029.
+
+  startup_sequence.py           dv1_9
+
+  1011002 WS_Manager_Coding_Spec          dv1_19
+  1011007 Logger_Coding_Spec              dv1_4
+  1011014 Startup_Sequence_Coding_Spec    dv1_7
+  1011013 VPS_Deployment_Coding_Spec      dv1_4
+  1010000 Trading_System_Coding_Anchor    dv1_12
+  0511001 WS_Manager_Specification        dv1_1
+  0511006 Logger_Specification            dv1_1
+
+============================================================
+SECTION 3 - FRESH-DATA DISCIPLINE - HARD RULE
+============================================================
+
+Per 0311002 v1_3 STEP 8.2.3 DC-SYNC-003:
+
+  3.1  TB00117 MUST execute the pre-flight version sweep
+       at session open. Commands in Section 5.
+
+  3.2  Any drift between project folder and GitHub master
+       halts the session until resolved per DC-SYNC-004.
+
+  3.3  Any drift between project folder and VPS deployed
+       state halts the session until resolved.
+
+  3.4  Mid-session project-folder mutations are verified
+       at the next cold-load session per DC-SYNC-005.
+
+  3.5  File versions are verified by opening the file.
+       Not by NSI text. Not by memory.
+
+  3.6  TB00000 v2_12 §4.2 OP-003 pre-emit scan applies
+       to every Windows file path emitted. Claude self-
+       catches per OP-004 before emission.
+
+============================================================
+SECTION 4 - SESSION STATE AT START OF TB00117
+============================================================
+
+------------------------------------------------------------
+4.1 VPS state
+------------------------------------------------------------
+
+  Service:     active (running) since 2026-04-22
+               16:46:14 UTC (systemd auto-restart)
+  Deploy:      dv1_22 (unchanged — commit 7e744a3)
+  PID:         231707 (last recorded)
+  Mode:        paper trading (NO REAL MONEY)
+  Positions:   none open
+
+State between TB00116 close and TB00117 open may have
+changed. TB00117 runs /root/tothbot_sweep.sh at session
+open.
+
+------------------------------------------------------------
+4.2 Repo state
+------------------------------------------------------------
+
+  Docs repo (TothBot_V2-Docs):  master @ b5ca306
+                                (OI-039 remediation
+                                pushed in TB00116)
+  Code repo (TothBot_V2-Code):  master @ 7e744a3
+                                (unchanged since TB00113)
+                                Local operations/
+                                subfolder created by
+                                Bill at session close,
+                                empty, NOT yet committed.
+
+------------------------------------------------------------
+4.3 Project folder state
+------------------------------------------------------------
+
+TB00000 v2_12 present (v2_11 removed by Bill post-session).
+0311001 v1_3 present (v1_2 to be removed by Bill).
+0311003 v1_1 present (v1_0 to be removed by Bill).
+1010000 dv1_12 present (dv1_11 to be removed by Bill).
+TB00116 Session Log v1_0 and TB00116 NSI v1_0 present
+(uploaded by Bill post-close per 0311002 v1_3 DC-SYNC-002).
+
+Mandatory session-log / NSI retention:
+  TB00111 Session Log v1_0
+  TB00111 NSI v1_0
+  TB00112 Session Log v1_0
+  TB00113 Session Log v1_0
+  TB00113 NSI v1_0
+  TB00114 Session Log v1_0
+  TB00114 NSI v1_0
+  TB00115 Session Log v1_0
+  TB00115 NSI v1_0
+  TB00116 Session Log v1_0
+  TB00116 NSI v1_0
+
+------------------------------------------------------------
+4.4 Parking Lot carried forward
+------------------------------------------------------------
+
+Full Parking Lot in TB00116 §5. Relevant to TB00117:
+
+  OI-028 (HIGH)   - PRIMARY DIAGNOSIS FOCUS (STEP B)
+  OI-029 (MED)    - SECONDARY DIAGNOSIS FOCUS (STEP C)
+  OI-030 (LOW)    - FIX IN PASSING (STEP D)
+  OI-031 (CAND)   - optional close
+  OI-036 (LOW)    - TB00117 evaluates full closure
+  OI-037 (MED)    - ELEVATED from LOW. Three-session
+                    recurrence (TB00114/TB00115/TB00116).
+                    TB00117 evaluates TB00000 v2_13 rule
+                    addition.
+  OI-038 (LOW)    - TB00117 evaluates TB00000 rule
+                    addition.
+  OI-039 (READY TO CLOSE) - Project-folder verification
+                    at STEP A confirms closure.
+
+============================================================
+SECTION 5 - PRE-FLIGHT CHECKLIST (HARD GATE)
+============================================================
+
+TB00117 confirms BEFORE making any change:
+
+  [ ] Session is cold-load.
+
+  [ ] TB00000 v2_12 present; v2_11 absent.
+      Command (bash_tool):
+        ls /mnt/project/TB00000*.txt
+      Expected: single file, v2_12.
+
+  [ ] Mandatory session log / NSI files present
+      (11 files per §4.3).
+      Command (bash_tool):
+        ls /mnt/project/TB00*.txt | wc -l
+      Expected: 12 (TB00000 + 11 mandatory).
+
+  [ ] Project-folder .py version sweep executed.
+      Command (bash_tool):
+        cd /mnt/project && for f in *.py; do
+          v=$(grep -m1 "DocVersion" "$f" | awk '{print $NF}')
+          echo "$f: $v"
+        done
+      Expected: all 16 .py files at versions confirmed
+      in TB00116 §2.1 (no drift).
+
+  [ ] Project-folder governance / spec sweep.
+      Command (bash_tool):
+        cd /mnt/project && grep -H DocVersion \
+          03*.txt 05*.txt 10*.txt | grep -v README
+      Expected: 0311001 v1_3, 0311002 v1_3, 0311003 v1_1,
+      0311004 v1_2, 0311005 v1_0, 1010000 dv1_12.
+      No v1_2 / v1_0 / dv1_11 residuals.
+
+  [ ] Project-folder prohibited-string sweep in active
+      governance.
+      Command (bash_tool):
+        cd /mnt/project && grep -c -i "onedrive" \
+          03*.txt 05*.txt 10*.txt
+      Expected: all governance / spec / coding spec
+      files return 0. (Historical session logs may
+      still contain references — that is by design.)
+      OI-039 CLOSE CONDITION: active-governance
+      sweep returns zero.
+
+  [ ] VPS .py version sweep executed by Bill.
+      Command (PowerShell or cmd):
+        ssh root@87.99.141.44 "cd /root/TothBot_V2-Code/tothbot && grep -H DocVersion *.py"
+      Expected: matches project-folder sweep.
+
+  [ ] /root/tothbot_sweep.sh executed once to capture
+      current VPS state.
+      Command (PowerShell or cmd):
+        ssh root@87.99.141.44 /root/tothbot_sweep.sh
+
+If ANY check fails, TB00117 halts and resolves the drift
+per 0311002 v1_3 DC-SYNC-004 before any other work.
+
+============================================================
+SECTION 6 - DETAILED SEQUENCE
+============================================================
+
+------------------------------------------------------------
+6.1 STEP A - Pre-flight
+------------------------------------------------------------
+
+Execute SECTION 5 pre-flight checklist in full. Log the
+sweep results in the TB00117 session log §2. Close
+OI-039 if prohibited-string active-governance sweep
+returns zero. No diagnosis work until all checks pass.
+
+------------------------------------------------------------
+6.2 STEP B - OI-028 diagnosis (WS reconnect regression)
+------------------------------------------------------------
+
+ws_manager.py is dv1_21 on both VPS and project folder
+(confirmed TB00112 through TB00116). Line-number
+references in TB00111 NSI §6.2 are valid for dv1_21.
+
+Pull the 4 captured WS_MGR_FATAL tracebacks. Single copy
+box:
+
+  ssh root@87.99.141.44 "grep WS_MGR_FATAL /home/tothbot/logs/tothbot.log | tail -4"
+
+Read relevant ws_manager.py sections. Two separate copy
+boxes:
+
+  ssh root@87.99.141.44 "sed -n '980,1150p' /root/TothBot_V2-Code/tothbot/ws_manager.py"
+
+  ssh root@87.99.141.44 "sed -n '3350,3470p' /root/TothBot_V2-Code/tothbot/ws_manager.py"
+
+FP/DP analysis per TB00111 NSI §6.3 candidates (a)-(d).
+Hypothesis (d) (exception masking the reconnect signal)
+is first-principles most likely per TB00111 NSI. Confirm
+or refute by reading the actual except-clauses.
+
+Deliver the root-cause finding as part of the TB00117
+session log §2. NO CODE WRITTEN until Bill approves the
+diagnosis direction.
+
+------------------------------------------------------------
+6.3 STEP C - OI-029 diagnosis (SMTP read timeout)
+------------------------------------------------------------
+
+Execute TB00111 NSI §6.4 analysis, BUT:
+  (a) logger.py is dv1_4 (not dv1_3 as TB00111 NSI
+      stated). Re-verify all line-number references.
+  (b) Re-verify the retry-logic analysis — dv1_4 may
+      already include retry. If so, pivot the diagnosis
+      to the actual observed failure mode.
+
+Questions to answer (from TB00111 NSI §6.4):
+  (d1) Which exception types are caught from
+       aiosmtplib? Are read-timeout exceptions covered?
+  (d2) Does the logger retry on transient SMTP
+       failure? With what backoff and what maximum
+       attempts?
+
+Deliver the root-cause finding. NO CODE WRITTEN until
+Bill approves the diagnosis direction.
+
+------------------------------------------------------------
+6.4 STEP D - Fix OI-030 (sweep script FATAL pattern)
+------------------------------------------------------------
+
+Root cause documented in TB00111 §2.5 and TB00111 NSI
+§6.5. The sweep script's top-line `"level":"FATAL"`
+pattern missed all 4 WS_MGR_FATAL events because those
+events are logged at level=CRITICAL, not level=FATAL.
+
+Approach: match event names directly, not level strings.
+The FATAL-class event list is derived by reading the
+code, not by paraphrasing NSI text.
+
+Read code emission points:
+  ws_manager.py          (dv1_21)
+  logger.py              (dv1_4)
+  execution_engine.py    (dv1_0)
+  signal_pipeline.py     (dv1_0)
+  startup_sequence.py    (dv1_9)
+
+Enumerate every event name explicitly classified as
+FATAL-class.
+
+Deliver updated tothbot_sweep.sh AS A FIRST-CLASS
+CONTROLLED DOCUMENT per TB00000 v2_12 §3.4.2 / §3.4.3
+HR-TP004 and 0311001 v1_3 HR-DC-001:
+
+  Source path: TothBot_V2-Code/operations/tothbot_sweep.sh
+  Header:      Shebang line 1 (#!/usr/bin/env bash)
+               7-field DC header in # comment block
+               (per 0311001 v1_3 §5.1)
+  Registry:    1010000 dv1_12 §5.7 entry added
+               (dv1_12 -> dv1_13; new registry entry
+               replacing the operations/.gitkeep
+               placeholder)
+  Deploy:      git commit to TothBot_V2-Code, git push,
+               git pull on VPS, then either:
+               (a) cp /root/TothBot_V2-Code/operations/
+                    tothbot_sweep.sh /root/tothbot_sweep.sh
+                    (preserves existing execution path), OR
+               (b) Update any cron / systemd timer /
+                    manual execution command to reference
+                    /root/TothBot_V2-Code/operations/
+                    tothbot_sweep.sh directly
+
+  operations/.gitkeep removed from 1010000 §5.6 when
+  tothbot_sweep.sh added to §5.7 (first actual file
+  in operations/ replaces the placeholder).
+
+------------------------------------------------------------
+6.5 STEP E - Full DC package for any approved code fix
+------------------------------------------------------------
+
+Per TB00000 v2_12 NO PATCHES and 0311002 v1_3 / 0311003
+v1_1 / 0311004 v1_2, any code change MUST ship with a
+complete DC package.
+
+For OI-028 fix (if Bill approves from STEP B):
+  ws_manager.py         dv1_21 -> dv1_22
+  1011002 Coding Spec   dv1_19 -> dv1_20
+  0511001 System Spec   dv1_1  -> dv1_2  (if arch changes)
+  1010000 Coding Anchor dv1_12 -> dv1_13 (if parent
+                         chain version bumps)
+
+For OI-029 fix (if Bill approves from STEP C):
+  logger.py             dv1_4  -> dv1_5
+  1011007 Coding Spec   dv1_4  -> dv1_5
+  0511006 System Spec   dv1_1  -> dv1_2 (if arch changes)
+  1010000 Coding Anchor bump (if not already bumped)
+
+For OI-030 fix (STEP D):
+  tothbot_sweep.sh      NEW dv1_0 (first controlled
+                         version in operations/)
+  1010000 Coding Anchor dv1_12 -> dv1_13 (registry
+                         entry added)
+
+Optional (if Bill approves):
+  OI-036 / OI-037 / OI-038 remediation — TB00000
+  v2_12 -> v2_13 with rule additions.
+
+All files per DR-001 (.txt) and DR-003 (one batch).
+All version history blocks updated. All DocDate /
+DocTime stamps in UTC.
+
+Per 0311002 v1_3 DC-SYNC-002, every committed file MUST
+be uploaded to the Claude.ai project folder before
+session close.
+
+------------------------------------------------------------
+6.6 STEP F - Commit, push, deploy, verify
+------------------------------------------------------------
+
+Docs repo: one commit per DC package.
+
+Code repo: one commit bundling the code file updates
+AND the new operations/tothbot_sweep.sh.
+
+All commits in single copy boxes with shell context
+included (cd, git add per file, git commit, git push)
+per TB00116 lesson §3.2.
+
+Deploy pattern (TB00108 / TB00110 standard). Individual
+copy boxes per command:
+
+  ssh root@87.99.141.44 "cd /root/TothBot_V2-Code && git fetch"
+
+  ssh root@87.99.141.44 "cd /root/TothBot_V2-Code && git log HEAD..origin/master --oneline"
+
+  ssh root@87.99.141.44 "cd /root/TothBot_V2-Code && git pull"
+
+  ssh root@87.99.141.44 "head -20 /root/TothBot_V2-Code/tothbot/<changed_file>.py"
+
+  ssh root@87.99.141.44 "ls -la /root/TothBot_V2-Code/operations/"
+
+  ssh root@87.99.141.44 "systemctl restart tothbot"
+
+  ssh root@87.99.141.44 "systemctl status tothbot --no-pager | head -5"
+
+  ssh root@87.99.141.44 /root/tothbot_sweep.sh
+  (or new path if deploy pattern changes)
+
+Capture new baseline and record in TB00117 session log.
+
+------------------------------------------------------------
+6.7 STEP G - Open new 48-hour observation window
+------------------------------------------------------------
+
+Window start = first sweep after restart showing
+expected baseline.
+
+  Minimum duration:  48 hours
+  Tripwires:         four tripwires, UPDATED sweep
+                     script with event-name pattern
+                     matching.
+
+If clean at T+48h:
+  OI-018 / OI-028 closeable.
+  OI-019 / OI-029 closeable only after a real
+    CRITICAL/HIGH alert routes successfully (no SMTP
+    read-timeout, no retry-path failure).
+  OI-020 closeable.
+
+------------------------------------------------------------
+6.8 STEP H - TB00117 Session Log + NSI
+------------------------------------------------------------
+
+Deliverables per DR-001 (.txt) and DR-003 (one batch)
+at session close. Upload to Claude.ai project folder
+per 0311002 v1_3 DC-SYNC-002.
+
+============================================================
+SECTION 7 - SCOPE GUARD
+============================================================
+
+TB00117 is a CHANGE session. Permitted:
+  - Reading code and specs on VPS and in project folder
+  - FP/DP analysis of OI-028 / OI-029 tracebacks
+  - Delivery of full DC packages for any Bill-approved
+    code fix
+  - Delivery of tothbot_sweep.sh as first-class
+    controlled document with DC header and registry
+    entry
+  - Git commits to TothBot_V2-Code (code fixes and
+    new operational script) and TothBot_V2-Docs
+    (spec updates)
+  - Deploy to VPS using TB00108 / TB00110 standard
+    pattern
+  - Opening a new 48-hour observation window
+  - OI-039 formal close at STEP A verification
+  - OI-036 / OI-037 / OI-038 remediation via
+    TB00000 v2_13 if Bill approves
+
+NOT permitted without Bill's explicit approval:
+  - Any new Domain Document or Sub-Domain Anchor
+  - Retiring any existing document
+  - Touching the archive repos
+  - Any code change before STEP B / STEP C diagnosis
+    is Bill-approved
+
+Forbidden:
+  - Patches (must be full files)
+  - Skipping DC package components
+  - Changing code without coding-spec update
+  - Emitting the prohibited string per TB00000 v2_12
+    §4.2 OP-001 through OP-009
+  - Using ANY Windows file path not in the authoritative
+    tree from TB00000 §11
+  - Any real-money trading
+
+============================================================
+SECTION 8 - DELIVERABLES EXPECTED FROM TB00117
+============================================================
+
+Minimum (pre-flight + diagnosis + session log):
+
+  TB00117_TothBot_V2_Session_Log_<DATE>_v1_0.txt
+  TB00117_Next_Session_Instructions_v1_0.txt
+
+If diagnosis produces approved code fixes:
+
+  Updated ws_manager.py                     (file)
+  Updated 1011002 WS_Manager_Coding_Spec    (file)
+  Updated logger.py                         (file)
+  Updated 1011007 Logger_Coding_Spec        (file)
+  NEW tothbot_sweep.sh in operations/       (file)
+  Any updated system specs (0511001 / 0511006)
+  Updated 1010000 dv1_12 -> dv1_13          (file)
+
+If Bill approves OI-036/037/038 remediation:
+
+  Updated TB00000 v2_13                     (file)
+
+All .txt per DR-001. One batch per DR-003. Full 7-field
+headers. All version increments per 0311003. Post-commit
+upload to Claude.ai project folder per 0311002 v1_3
+DC-SYNC-002.
+
+============================================================
+SECTION 9 - STANDING RULES REMINDER
+============================================================
+
+  RULE 6  - git add . is PROHIBITED. Explicit per file.
+  RULE 13 - .bat files go to local git repo only.
+            Prohibited-string paths forbidden per
+            TB00000 v2_12 §4.2.
+  RULE 14 - git push origin master. NEVER origin main.
+  RULE 15 - ONE COPY BOX = ONE COPY/PASTE OPERATION.
+            Multiple commands in one copy box are fine
+            as long as they execute together from one
+            paste. Shell context MUST be part of the
+            copy box (e.g., `cd /D <path> && ...` at
+            the front of any command that depends on
+            working directory — per TB00116 §3.2
+            lesson).
+  RULE 16 - .bat files run from cmd.exe only. Never PS.
+  RULE 17 - Complete and correct instructions in full.
+
+  TB00000 v2_12 §4.2 ABSOLUTE STANDING RULE:
+  The prohibited string is banned in all Claude output
+  per OP-001 through OP-009. Pre-emit scan per OP-003.
+  Self-catch per OP-004. No exceptions per OP-005.
+
+  CODING RULES:
+  NO PATCHES EVER. Full file delivery only. Full DC
+  package per 0311002 v1_3 / 0311003 v1_1 / 0311004 v1_2.
+
+  DELIVERY RULES:
+  DR-001 - All documents as .txt files.
+  DR-002 - 0500000 additionally as .docx and .pdf.
+  DR-003 - ALL documents in ONE BATCH.
+
+  FRESH-DATA RULE (0311002 v1_3 DC-SYNC-003):
+  Every authoritative question preceded by direct file
+  read. File versions verified by opening the file.
+
+  MID-SESSION INDEX RULE (0311002 v1_3 DC-SYNC-005):
+  Mid-session project-folder mutations verified at
+  next cold-load.
+
+  AUTHORITATIVE SOURCE FOR CODE (TB00000 §11):
+  GitHub, mirrored at the governed local repo per
+  0311001 v1_3 §3. NEVER scp from VPS to any path
+  outside the governed repo for controlled code or
+  operational scripts.
+
+  PATH GOVERNANCE (TB00000 v2_12 §4.2 + §11, 0311001
+  v1_3 §3.1):
+  Only the governed paths from TB00000 §11 are
+  authoritative. Any path outside that tree requires
+  explicit Bill authorization before Claude emits it.
+
+  INSTRUCTION-FOLLOWING (OI-037 — ELEVATED):
+  Three consecutive recurrences (TB00114 / TB00115 /
+  TB00116). When Bill states scope, Claude produces
+  exactly that scope. No invented pre-flight checks.
+  No invented error handling. No invented
+  completeness-beyond-request. "Simple" means simple.
+
+  SHELL-CONTEXT COMPLETENESS (OI-038):
+  Every copy box contains every shell-state element
+  required to execute it — including working directory.
+  No "cd first, then paste" separations. Lead commands
+  with `cd /D <abs_path> && ...` when directory matters.
+
+  NO DECISION BLOCKS:
+  User preference: plain-text lettered questions only.
+  ask_user_input_v0 prohibited in this project.
+
+  NEW-RULE SELF-APPLICATION (OI-036):
+  After authoring a governance update, Claude re-reads
+  the new rule before issuing any subsequent operational
+  command that could be governed by it.
+
+  SINGLE-LINE REINFORCEMENT (TB00000 v2_12 §4.2 OP-007):
+  Bill may paste this line at the top of any session
+  message:
+
+    ONEDRIVE BAN ACTIVE per TB00000 §4.2: do not emit
+    the string in any path, command, or response.
+    Self-catch before emit.
+
+============================================================
+REVISION HISTORY
+============================================================
+
+  v1_0  2026-04-23  Initial. Next-session instructions
+                    for TB00117 CHANGE session executing
+                    the Part 2 plan twice-deferred
+                    through TB00115 and TB00116. TB00116
+                    closed OI-039 contamination at commit
+                    b5ca306 (0311001 v1_3, 0311003 v1_1,
+                    1010000 dv1_12 pushed; TB00000 v2_12
+                    delivered). operations/ subfolder
+                    created locally in TothBot_V2-Code,
+                    empty, awaiting first commit. TB00117
+                    executes VPS pre-flight sweep, OI-028
+                    diagnosis, OI-029 diagnosis, OI-030
+                    sweep-script fix with tothbot_sweep.sh
+                    delivered as first-class controlled
+                    document in operations/ subfolder,
+                    full DC package for approved code
+                    fixes, commit/push/deploy, new
+                    48-hour observation window. OI-039
+                    ready to formally close at STEP A
+                    project-folder verification. OI-037
+                    elevated to MED after three-session
+                    recurrence; TB00000 v2_13 rule
+                    addition evaluated. Paper trading
+                    only. No real money.
+
+============================================================
+END - TB00116 NEXT SESSION INSTRUCTIONS v1_0
+============================================================

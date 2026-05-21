@@ -1,0 +1,512 @@
+DocDCN:     TB00137_NSI
+DocTitle:   Next_Session_Instructions_for_TB00138
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TBXXXXX_Session_Logs\TB00137_Next_Session_Instructions_v1_0.txt
+DocDate:    04-25-2026
+DocTime:    05:55:00 UTC
+
+============================================================
+NEXT SESSION INSTRUCTIONS — TB00138
+POST-CLOSURE CONSOLIDATION + OPTIONAL CODE CASCADE
+============================================================
+
+PAPER TRADING ONLY. NO REAL MONEY.
+PAPER TRADING MUST MIMIC LIVE TRADING EXACTLY.
+NO PATCHES.
+
+============================================================
+1. WHAT TB00138 DOES
+============================================================
+
+TB00137 closed four open items in a single batch:
+  - 1011004 MISSING (recovery authoring)
+  - OI-053-CAND (governance authoring via 0311002 v1_5)
+  - OI-054-CAND (governance authoring via TB00000 v2_14)
+  - OI-055-CAND-D3 (FP/DP R-D3-iii defer)
+
+The TB00137 deliverable set leaves the spec corpus
+fully consistent at all tiers and all domains. The
+only remaining work to fully close FINDING-TB00135-001
+is ws_manager.py dv1_23 -> dv1_24 in Claude Code scope.
+
+TB00138 has THREE possible work streams. Bill directs
+which (or all) at session open.
+
+STREAM 1 — ws_manager.py CODE CASCADE (Claude Code scope):
+
+  Increment ws_manager.py dv1_23 -> dv1_24 to conform
+  to 1011002 dv1_23. Three edits (UNCHANGED from
+  TB00136 NSI §4):
+
+    Edit 1 — Line ~1702 quote filter:
+      Was:  if quote not in ("USD", "USDC"):
+      Now:  if quote not in ("USD", "USDC", "USDT"):
+
+    Edit 2 — Remove Top-N constant and slice:
+      Line ~446: delete UNIVERSE_TOP_N: int = 50
+      Lines ~1711-1715: remove top_n =
+        candidates[:UNIVERSE_TOP_N] slice; pass full
+        candidates list as monitored_universe.
+        Preserve BTC/USD always-include carve-out.
+
+    Edit 3 — Line ~1695 header comment:
+      Was: "Filter: USD/USDC, online, volume >= $500k.
+            Top N=50. BTC/USD always in."
+      Now: "Filter: USD/USDC/USDT, online, volume >=
+            $500k. NO Top-N cap (D-08 retired).
+            BTC/USD always in."
+
+  Per TB00130 directive: code authoring proceeds in
+  Claude Code, not in chat. TB00138 chat session can
+  optionally check Claude Code progress, review
+  diffs, or stay focused on STREAM 2 / STREAM 3.
+
+  Closes (at code-deploy):
+    OI-045  USDT exclusion
+    OI-046  Top-N cap retired
+    FINDING-TB00135-001  D-03 + D-08 AA=10 cascade
+                         (full closure including code)
+
+STREAM 2 — execution_engine.py CONFORMANCE REVIEW
+            (Claude Code scope):
+
+  Now that 1011004 Execution_Engine_Coding_Spec
+  dv1_0 exists in the corpus, the existing
+  execution_engine.py code (TB00125-deploy state)
+  should be reviewed against the spec for conformance.
+  Likely findings:
+    - HR-EE-013 paper-live parity: verify code has
+      no mode-conditional branching.
+    - DR-005 .docx integrity validation gates:
+      verify the code's binary-artifact-handling
+      paths (if any) align with TB00000 v2_14 DR-004.
+    - Section 5.3 cl_ord_id format: verify the code
+      uses up-to-18-character format with symbol
+      prefix + timestamp_ms.
+    - Section 7.2 batch_add construction: verify
+      triggers.reference="last" present on emergSL
+      leg + stp_type="cancel_newest" with underscore.
+    - Section 5.6 Pending Order Registry population:
+      verify estimated_cost includes maker_fee_rate.
+
+  Per TB00130 directive: code review and any
+  resulting code changes proceed in Claude Code,
+  not in chat.
+
+  Findings produce one of:
+    (a) Code changes (Claude Code authoring) +
+        execution_engine.py revhist increment.
+    (b) Spec amendment (1011004 dv1_0 -> dv1_1)
+        if the spec is wrong against actual
+        operational requirements observed in code.
+    (c) Both, if the code and spec drift in
+        different directions.
+
+STREAM 3 — OI-053-CAND IMPLEMENTATION VERIFICATION:
+
+  STEP 8.2.4 (TB00137-authored) governs cleanup
+  going forward. TB00138 cold-load is the first
+  session under STEP 8.2.4 governance. Pre-flight
+  STEP A MUST verify:
+    - Project folder still complies with TB00136
+      NSI §9 KEPT list AS AMENDED by TB00137 §9
+      (KEPT list includes TB00137 deliverables;
+      ABSENT list adds 0311002 v1_4 + TB00000 v2_13
+      as superseded).
+    - DC-CLEANUP-002 MUST-PRESERVE set intact
+      (TB00001, TB00012, TB00013, TB00014, TB00020).
+    - No session log eligible for cleanup has lost
+      a recurring-defect-fix per DC-CLEANUP-003.
+
+  Findings produce a status entry in TB00138
+  Session Log § (cleanup verification). No deliverable
+  if clean.
+
+STREAM 4 — 0311006 KNOWN PLATFORM LIMITATIONS DOC
+            AUTHORING (OPTIONAL):
+
+  STEP 8.2.4 DC-CLEANUP-004 reserves DCN 0311006 for
+  the Known Platform Limitations controlled document.
+  KPL-001 through KPL-003 currently live in the
+  STEP 8.2.4 interim register. Authoring 0311006
+  dv1_0 migrates the register to a dedicated
+  controlled document at appropriate AA=03 sub-domain
+  level.
+
+  Authorize only if Bill explicitly opens at session
+  open. Lower priority than Streams 1-3.
+
+TB00138 MUST be opened as a COLD-LOAD NEW CLAUDE
+CHAT.
+
+============================================================
+2. LOCKED DECISIONS — DO NOT RE-ASK
+============================================================
+
+  D-01  Option B (burn window)                   LOCKED
+  D-02  REPAIR (not rewrite)                     LOCKED
+  D-03  Universe USD + USDC + USDT, no cap       LOCKED
+  D-04  Liquidity filter $500k/day               LOCKED
+  D-05  Starting capital $1,000                  LOCKED
+  D-06  Paper-to-live parity EXACT               LOCKED
+  D-07  NO PATCHES                               LOCKED
+  D-08  Top-N cap retired                        LOCKED
+        AA=10 SPEC COVERAGE COMPLETE per TB00135.
+        AA=07 SPEC COVERAGE COMPLETE per TB00136
+        Phase C. AA=10 CORPUS COMPLETE per TB00137
+        (1011004 dv1_0 NEW). SPEC CORPUS COVERAGE
+        NOW COMPLETE ACROSS ALL TIERS, ALL DOMAINS,
+        AND ALL AA=10 INSTANCE SLOTS.
+
+If any TB00138 instruction or response would
+contradict D-01 through D-08, Claude STOPS and
+flags the contradiction to Bill before proceeding.
+
+============================================================
+3. MANDATORY READING AT COLD-LOAD
+============================================================
+
+From project folder:
+
+Project instructions + current session context:
+  TB00000 v2_14       Project Instructions (NEW BASELINE
+                      replacing v2_13 — DR-004 + DR-005
+                      added per OI-054-CAND closure)
+  TB00137 Session Log v1_0 (full session — four
+                            closures + R-D3-iii defer)
+  TB00137 NSI v1_0    (this document)
+  TB00136 Session Log v1_1
+  TB00136 NSI v1_1
+  TB00135 Session Log v1_0
+  TB00135 NSI v1_0
+  TB00134 Session Log v1_0
+  TB00134 NSI v1_0
+  TB00133 Session Log v1_0
+  TB00133 NSI v1_0
+  TB00132 Session Log v1_0
+  TB00132 NSI v1_0
+
+Governance:
+  0311001 v1_3        Namespace_Specification
+  0311002 v1_5        Document_Creation_Workflow
+                      (NEW BASELINE replacing v1_4 —
+                      STEP 8.2.4 added per OI-053-CAND
+                      closure)
+  0311003 v1_1        Versioning_Procedure
+  0311004 v1_2        Document_Creation_and_Approval_Procedure
+  0311005 v1_0        System_Definitions_and_Terminology
+
+Architecture + active spec baseline (post-TB00137):
+  0500000 dv1_21      System Architecture Overview
+                      (.txt / .docx / .pdf three-format
+                      set — unchanged this session)
+  0700000 dv1_1       Strategy
+  0710000 dv1_1       Strategy_Signals_Anchor
+  0711003 dv1_3       Asset Selection Specification
+  0511001 dv1_3       WS Manager Specification
+  0511003 dv1_0       Execution Engine Specification
+                      (parent of NEW 1011004)
+  1010000 dv1_17      Trading System Coding Anchor
+  1011001 dv1_7       Engineering Best Practices
+  1011002 dv1_23      WS Manager Coding Spec
+  1011004 dv1_0       Execution Engine Coding Spec
+                      (NEW BASELINE — recovery
+                      authored TB00137)
+  1011005 dv1_2       Exit Controller Coding Spec
+  1011009 dv1_1       Selection Controller Coding Spec
+  1011012 dv1_5       Regime Engine Coding Spec
+  0211005 dv1_1       Paper Trading Operations Procedure
+  0611004 dv1_1       Safety Parameter Framework
+  0921001 dv1_1       TothBot V2 Business Plan
+
+If STREAM 1 (ws_manager.py code cascade) opens:
+  ws_manager.py (TB00125 deploy state — read line
+                 ~446, ~1695, ~1702, ~1711-1715 to
+                 plan dv1_24 edits)
+
+If STREAM 2 (execution_engine.py conformance review):
+  execution_engine.py (TB00125 deploy state — full
+                       read against 1011004 dv1_0)
+
+If STREAM 4 (0311006 authoring):
+  0311002 v1_5 STEP 8.2.4 DC-CLEANUP-004 KPL-001
+    through KPL-003 (interim register source content).
+  0311004 v1_2 (template for AA=03 instance documents).
+
+MUST-PRESERVE set per DC-CLEANUP-002:
+  TB00001, TB00012, TB00013, TB00014, TB00020.
+
+Claude states all documents read and their versions
+before beginning any work. If any version differs
+from the list above, Claude reads the project
+version and notes the discrepancy.
+
+============================================================
+4. PROJECT FOLDER EXPECTED STATE AT TB00138 OPEN
+============================================================
+
+KEPT (after Bill post-TB00137 cleanup actions):
+
+  TB00000 v2_14 (NEW — replaces v2_13).
+  All 0* series at current versions.
+  All 1* series at current versions, with NEW
+    BASELINES this session:
+      0311002 v1_5 (replaces v1_4)
+      1011004 dv1_0 (NEW — was MISSING)
+  All other AA=10 instance specs at current versions.
+  All .py modules at TB00125 deploy state (5d44292).
+    ws_manager.py STILL STALE under 1011002 dv1_23
+      spec — pending dv1_24 cascade.
+    execution_engine.py STALE only if STREAM 2
+      conformance review identifies drift.
+  TB00131 -> TB00136 session logs + NSIs.
+  TB00137 Session Log v1_0 + NSI v1_0 (NEW).
+  TB00001, TB00012, TB00013, TB00014, TB00020
+    (MUST-PRESERVE per DC-CLEANUP-002).
+
+ABSENT (Bill post-TB00137 cleanup actions required):
+
+  TB00000 v2_13 (superseded by v2_14).
+  0311002 v1_4 (superseded by v1_5).
+  TB00130 session log + NSI (Bill discretion if
+    drops out of 7-session rolling window).
+  TB00118 session log v1_0 (if still present —
+    superseded by v1_1).
+  Other items per DC-CLEANUP-001 7-session
+    rolling window evaluation by Bill.
+
+DC-CLEANUP-006 COMPLIANCE: This NSI provides KEPT
+and ABSENT lists, MUST-PRESERVE compliance statement,
+and pre-cleanup recurring-defect-fix extraction
+confirmation:
+
+  MUST-PRESERVE compliance: TB00001, TB00012, TB00013,
+  TB00014, TB00020 ALL present in KEPT list. PASS.
+
+  Pre-cleanup extraction confirmation: TB00138 cold-
+  load is the first session under STEP 8.2.4
+  governance. No session logs are eligible for
+  cleanup yet under DC-CLEANUP-001 rolling window
+  (TB00131-TB00137 are all within the 7-session
+  window). PASS by vacuous condition.
+
+TB00138 STEP A pre-flight should confirm this state
+via bash sweep of /mnt/project/ and flag any drift.
+
+============================================================
+5. PARKING LOT — CARRIED FROM TB00137
+============================================================
+
+CLOSED in TB00137:
+
+  1011004 MISSING       Recovered via fresh authoring
+                        from 0511003 dv1_0 first
+                        principles. dv1_0 baseline.
+
+  OI-053-CAND           Session-log cleanup rule.
+                        CLOSED via 0311002 v1_5
+                        STEP 8.2.4 (DC-CLEANUP-001
+                        through DC-CLEANUP-007 +
+                        KPL-001 through KPL-003
+                        interim register).
+
+  OI-054-CAND           DR-002 governance refinement.
+                        CLOSED via TB00000 v2_14
+                        §4.1 DR-004 + DR-005.
+
+  ERROR-PRE-001         Now governed by DR-004.
+                        Forensic record retained.
+
+DEFERRED in TB00137:
+
+  OI-055-CAND-D3        VD-WD-006 disposition.
+                        R-D3-iii (zero-cost defer)
+                        executed. Carries forward to
+                        next 0211003 update cycle as
+                        parking-lot acknowledgment.
+
+REMAINING OPEN:
+
+  OI-018, OI-019, OI-020, OI-028, OI-029  PENDING
+    CLOSE at R-01+ deploy.
+  OI-043  Project-folder drift. STEP 8.2.4 provides
+    governance basis to close at next-cleanup-
+    boundary verification.
+  OI-044  Paper-mode bypass. Spec coverage COMPLETE.
+    Closes at code deploy.
+  OI-045  USDT exclusion. AA=10 spec coverage
+    COMPLETE. Closes at code deploy (STREAM 1).
+  OI-046  Top-N cap retired. AA=10 spec coverage
+    COMPLETE. Closes at code deploy (STREAM 1).
+  OI-049-CAND, OI-050-CAND, OI-051-CAND  Preserved
+    in Phase 1 deliverables; close at deploy.
+  FINDING-TB00135-001  AA=10 SPEC coverage CLOSED.
+    Code closure pending ws_manager.py dv1_24
+    (STREAM 1).
+
+  ERROR-PRE-001  Forensic record only. Governed by
+    DR-004 going forward.
+
+  OI-037 RECURRENCE  Pattern BROKEN at TB00137 close
+    (third consecutive session test passed: TB00135
+    PASS, TB00136 TWO PASSES, TB00137 THREE PASSES).
+    Continued multi-session verification.
+
+============================================================
+6. FIRST ACTIONS IN TB00138
+============================================================
+
+1. Cold-load mandatory reading per §3.
+2. State all documents read and their versions
+   before any work.
+3. Execute STEP A pre-flight: bash sweep of
+   project folder; confirm §4 expected state;
+   flag any drift.
+4. Confirm D-01 through D-08 LOCKED per §2.
+5. Confirm TB00137 deliverables (1011004 dv1_0,
+   0311002 v1_5, TB00000 v2_14, TB00137 Session
+   Log v1_0, TB00137 NSI v1_0) successfully
+   ingested in the Claude.ai project folder. If
+   still showing prior versions, halt and request
+   Bill confirmation.
+6. Confirm DC-CLEANUP-002 MUST-PRESERVE compliance
+   per §4 PASS statement.
+7. Confirm TB00000 v2_14 ingested. If still showing
+   v2_13, halt — DR-004 / DR-005 governance is not
+   active until v2_14 is the read baseline.
+8. Determine STREAM scope per Bill direction at
+   session open:
+   - STREAM 1 alone: confirm code cascade is in
+     Claude Code scope. Chat-side action limited
+     to review/diff-checking.
+   - STREAM 2 alone: execution_engine.py
+     conformance review against 1011004 dv1_0
+     in Claude Code scope.
+   - STREAM 3 alone: cleanup verification (status
+     entry in session log).
+   - STREAM 4 alone: author 0311006 dv1_0 from
+     KPL-001 through KPL-003 source.
+   - Multiple streams: execute in priority order
+     (STREAM 1 closure most urgent because two
+     LOCKED-decision violations remain in deployed
+     code).
+9. Apply pre-emit OP-003 grep scan before every
+   file delivery.
+10. Apply DR-004 binary integrity validation before
+    every binary artifact delivery (newly active
+    under v2_14).
+11. Apply RR-SCOPE-005 strictly per TB00135 NSI §8
+    carry-forward directive — do NOT ask Bill gate
+    questions when FP/DP analysis has already
+    determined the answer.
+12. Apply AUDIT-QUESTION RESPONSE PATTERN per
+    TB00136 NSI §8 if Bill asks any "are there any
+    more X" question — execute audit + report
+    findings + execute corrective in the same turn.
+
+============================================================
+7. STANDING RULES — REINFORCEMENT
+============================================================
+
+ALL TB00000 v2_14 standing rules apply unchanged:
+  §4.1 DR-001 / DR-002 / DR-003 / DR-004 / DR-005
+       (DR-004 + DR-005 NEW this session).
+  §4.2 ABSOLUTE STANDING RULE (OP-001..009).
+  §4.3.1 RR-SCOPE-001..006.
+  §4.3.2 RR-RULE-001..004.
+  §4.3.3 RR-SHELL-001..004.
+  §4.3.4 RR-VIOL-001..002.
+
+Apply pre-emit OP-003 grep scan before EVERY file
+delivery. Self-catch behavior per OP-004 / RR-RULE-
+004 / RR-SCOPE-006.
+
+DR-001: All deliverables as .txt (plus .docx +
+.pdf for 0500000 only).
+DR-002: 0500000 three-format every time it is
+updated.
+DR-003: All deliverables in ONE BATCH at session
+end.
+DR-004: Binary artifact integrity validation —
+file probe + container probe + .docx settings.xml
+validate.py gate. NEW v2_14.
+DR-005: Canonical naming of three-format components
+(.txt _Claude_Source / .docx / .pdf / version
+triplet consistency / DocPath consistency). NEW
+v2_14.
+
+============================================================
+8. OUT OF SCOPE FOR TB00138
+============================================================
+
+  - Spec authoring beyond Streams listed above.
+  - OI-041 (closed TB00125).
+  - OI-048-CAND (Operator Observer Dashboard —
+    future).
+  - Any CIATS PDCA activity (still pre-200-trade
+    floor).
+  - Emergency live-mode testing.
+  - Re-opening D-01 through D-08 without explicit
+    Bill override.
+  - AA=07 / AA=10 cascade work (CLOSED at SPEC level
+    in TB00135 / TB00136 / TB00137).
+  - 1011004 SPEC content changes (dv1_0 baseline
+    just authored; amendments only via STREAM 2
+    findings).
+
+============================================================
+9. NOTES FOR BILL POST-TB00137
+============================================================
+
+Post-session Bill actions:
+
+  (1) Upload TB00137 deliverables to Claude.ai
+      project folder:
+        1011004_Execution_Engine_Coding_Spec_dv1_0.txt
+        0311002_Document_Creation_Workflow_v1_5.txt
+        TB00000_..._for_Claude_v2_14.txt
+        TB00137_TothBot_V2_Session_Log_..._v1_0.txt
+        TB00137_Next_Session_Instructions_v1_0.txt
+
+  (2) Remove from Claude.ai project folder
+      (superseded):
+        TB00000_..._for_Claude_v2_13.txt
+        0311002_Document_Creation_Workflow_v1_4.txt
+
+  (3) GitHub commit per 0311002 STEP 8.2.3 post-
+      commit sync rule. Commit messages should
+      reference TB00137 OI closures.
+
+  (4) Optional Bill-discretion 7-session-window
+      cleanup of older session logs / NSIs per
+      0311002 v1_5 STEP 8.2.4 DC-CLEANUP-001.
+      DC-CLEANUP-003 extraction sweep MUST be
+      executed before any cleanup.
+
+============================================================
+REVISION HISTORY
+============================================================
+
+  v1_0  2026-04-25  Initial. NSI for TB00138. TB00137
+                    closed four items in single batch
+                    (1011004 MISSING recovery + OI-053
+                    + OI-054 + OI-055-D3 R-D3-iii
+                    defer). TB00138 has four optional
+                    work streams: ws_manager.py code
+                    cascade (STREAM 1), execution_engine
+                    .py conformance review (STREAM 2),
+                    cleanup verification (STREAM 3),
+                    0311006 KPL doc authoring (STREAM 4).
+                    Code work is Claude Code scope per
+                    standing TB00130 directive. D-01
+                    through D-08 all LOCKED. Standing
+                    rules all active under v2_14
+                    (DR-004 + DR-005 NEW). Paper trading
+                    only. No real money. Paper trading
+                    must mimic all aspects of live
+                    trading exactly. No patches.
+
+============================================================
+END — TB00137 NEXT SESSION INSTRUCTIONS v1_0
+============================================================

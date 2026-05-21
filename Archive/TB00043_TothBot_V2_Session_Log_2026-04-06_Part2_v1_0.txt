@@ -1,0 +1,225 @@
+DocDCN:     TB00043
+DocTitle:   TothBot_V2_Session_Log_2026-04-06_Part2
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\OneDrive\TothBot\TB00043_TothBot_V2_Session_Log_2026-04-06_Part2_v1_0.txt
+DocDate:    04-06-2026
+DocTime:    23:59:59 UTC
+
+============================================================
+TOTHBOT V2 SESSION LOG -- 2026-04-06 PART 2
+============================================================
+
+============================================================
+1. SESSION START STATE
+============================================================
+
+Phase 9 in progress. Module 6 completed this session.
+Prior session log: TB00042.
+
+Documents read at session start:
+  TB00000  v2_7    Project Instructions          checked
+  TB00042  v1_0    Prior session log             checked
+  1011003  dv1_0   Signal_Pipeline_Coding_Spec   read in full
+  1011001  dv1_6   Engineering_Best_Practices    confirmed
+
+============================================================
+2. WORK COMPLETED THIS SESSION
+============================================================
+
+------------------------------------------------------------
+2.1 Module 6 -- signal_pipeline.py -- COMPLETE
+------------------------------------------------------------
+
+signal_pipeline.py written from 1011003 dv1_0.
+1002 lines. Syntax validated clean.
+
+Spec compliance verified:
+  HR-SP-001  Parameter Store snapshot frozen per eval     OK
+  HR-SP-002  Pre-computation cache read-only              OK
+  HR-SP-003  Gates sequential 1->8, Gate 4 skipped for
+             NON_DIR                                      OK
+  HR-SP-004  RSI Wilder's SMMA (alpha=1/14). Standard
+             EMA prohibited. Explicitly documented.       OK
+  HR-SP-005  SSS runs only after Gate 3 pass              OK
+  HR-SP-006  Gate 8 never blocks                          OK
+  HR-SP-007  net_RR=1.5 hardcoded via RiskEngine
+             delegation                                   OK
+  HR-SP-008  All financial arithmetic Decimal.
+             float() at line 771 is time comparison
+             only (non-financial).                        OK
+  HR-SP-009/010  Enforced by caller (WS Manager).
+                 Documented.                              OK
+
+Bug found and fixed during session:
+  _gate_1() was returning None in both PASS and FAIL
+  paths. Fixed to return bool. on_candle() caller
+  updated to use: if not self._gate_1(symbol): return None
+
+Committed: commit 0ddb91a
+  File: tothbot/signal_pipeline.py
+  Repo: github.com/TothBot/TothBot_V2-Code
+  Branch: master
+
+============================================================
+3. PHASE 9 MODULE STATUS
+============================================================
+
+  COMPLETE:
+    Module 1:  logger.py            Logger          1011007  5d7ed65
+    Module 2:  ws_manager.py        WS Manager      1011002  3ce4603
+    Module 3:  position_mirror.py   Position Mirror 1011006  033e8e6
+    Module 4:  risk_engine.py       Risk Engine     1011011  e7caba9
+    Module 5:  regime_engine.py     Regime Engine   1011012  2357fc6
+    Module 6:  signal_pipeline.py   Signal Pipeline 1011003  0ddb91a
+
+  REMAINING (dependency order):
+    Module 7:  execution_engine.py  Execution Engine 1011004
+    Module 8:  exit_controller.py   Exit Controller  1011005
+    Module 9:  selection_ctrl.py    Selection Ctrl   1011009
+    Module 10: long_module.py       Long Module      1011008
+    Module 11: ciats.py             CIATS            1011010
+    Module 12: vps_deployment.py    VPS Deployment   1011013
+    Module 13: startup_sequence.py  Startup Sequence 1011014
+
+============================================================
+4. REPOSITORY STATE
+============================================================
+
+Repository: github.com/TothBot/TothBot_V2-Code
+Branch: master
+
+Current tothbot/ directory contents (confirmed):
+  __init__.py
+  logger.py          (Module 1 -- COMMITTED)
+  ws_manager.py      (Module 2 -- COMMITTED)
+  position_mirror.py (Module 3 -- COMMITTED)
+  risk_engine.py     (Module 4 -- COMMITTED)
+  regime_engine.py   (Module 5 -- COMMITTED)
+  signal_pipeline.py (Module 6 -- COMMITTED)
+
+  Subdirectories (empty -- scaffold):
+    ciats/
+    execution_engine/
+    exit_controller/
+    long_module/
+    regime_engine/
+    risk_engine/
+    selection_controller/
+    signal_pipeline/
+    ws_manager/
+
+Standing rules confirmed active:
+  RULE 6:  git add . is prohibited. Explicit git add per file.
+  RULE 14: git push origin master. Always.
+  RULE 15: One command per copy box. Always.
+
+============================================================
+5. OPEN ITEMS
+============================================================
+
+  No open items.
+
+============================================================
+6. PARKING LOT
+============================================================
+
+  PL-003     TRACKING: Pathway 1 GitHub automation specs.
+             After Pathway 2 reaches paper trading readiness.
+
+  PL-NEW-002 git add . prohibited. STANDING RULE 6.
+  PL-NEW-003 Multi-line commit -m breaks Windows batch.
+  PL-NEW-004 cd to repo root first. Always run git
+             commands from TothBot_V2-Code root, not
+             from inside the tothbot\ subdirectory.
+
+  PL-NEW-005 gate_8() in risk_engine.py does not apply
+             sizing_modifier from Gate 6. signal_pipeline
+             passes it via extended_spec["sizing_modifier"]
+             but risk_engine.gate_8() does not read it.
+             Must be resolved at Module 7 (Execution
+             Engine) or Module 4 (Risk Engine update).
+
+============================================================
+7. DECISIONS RECORDED
+============================================================
+
+  No new architectural decisions this session.
+  All code written directly from 1011003 dv1_0.
+
+============================================================
+8. NOTES
+============================================================
+
+  - LF/CRLF warning on git add is harmless on Windows.
+    No action required.
+
+  - Bill's directory listing showed signal_pipeline.py
+    already present before git add was issued. File was
+    confirmed copied from Downloads correctly.
+
+  - git add failed once because it was run from inside
+    tothbot\ subdirectory instead of repo root. Fixed
+    by cd to TothBot_V2-Code first.
+
+============================================================
+9. NEXT SESSION -- WHERE WE PICK UP
+============================================================
+
+Phase 9 continues. Next module: Execution Engine (1011004).
+
+------------------------------------------------------------
+SESSION OPENING INSTRUCTION (copy/paste exactly):
+------------------------------------------------------------
+
+  ============================================================
+  Read the Project Instructions (TB00000 v2_7) and session
+  log TB00043. Phase 9 is in progress.
+
+  Phase 9 status:
+    COMPLETE: Modules 1-6 (Logger, WS Manager, Position
+              Mirror, Risk Engine, Regime Engine,
+              Signal Pipeline) -- all committed.
+    NEXT: Module 7 -- Execution Engine (1011004 dv1_0).
+
+  Repository: TothBot_V2-Code (github.com/TothBot/TothBot_V2-Code)
+  Platform: Hetzner VPS 87.99.141.44, Python 3.12.3
+
+  Before coding Module 7: read 1011004
+  Execution_Engine_Coding_Spec dv1_0 in full. Also
+  confirm 1011001 Engineering_Best_Practices dv1_6 is
+  loaded. Note PL-NEW-005: sizing_modifier from Gate 6
+  is not yet applied in risk_engine.gate_8(). Resolve
+  this at Module 7.
+
+  RULE 14: git push origin master. Always.
+  RULE 15: One command per copy box. Always.
+  RULE 6:  git add . is prohibited. Explicit git add per file.
+  RULE 4:  cd to repo root first. Always.
+  ============================================================
+
+============================================================
+10. BILL ACTIONS REQUIRED
+============================================================
+
+  (a) Download TB00043 (this log).
+
+  (b) Save to: C:\Users\wstot\OneDrive\TothBot\
+
+  (c) Upload TB00043 to Claude project before next session.
+
+  (d) Start new Claude session.
+
+  (e) Paste the opening instruction from Section 9.
+
+============================================================
+11. REVISION HISTORY
+============================================================
+
+  v1_0  04-06-2026  Initial session log. Phase 9 Part 2.
+                    Module 6 signal_pipeline.py coded
+                    and committed. commit 0ddb91a.
+
+============================================================
+END OF SESSION LOG
+============================================================

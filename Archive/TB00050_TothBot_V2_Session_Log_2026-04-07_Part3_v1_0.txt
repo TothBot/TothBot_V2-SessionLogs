@@ -1,0 +1,303 @@
+DocDCN:     TB00050
+DocTitle:   TothBot_V2_Session_Log_2026-04-07_Part3
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\OneDrive\TothBot\TB00050_TothBot_V2_Session_Log_2026-04-07_Part3_v1_0.txt
+DocDate:    04-07-2026
+DocTime:    23:59:59 UTC
+
+============================================================
+TOTHBOT V2 SESSION LOG -- 2026-04-07 PART 3
+============================================================
+
+============================================================
+1. SESSION START STATE
+============================================================
+
+Phase 10 Tier 2 integration tests. Pre-coding blocker
+identified in TB00049: OI-001 and OI-002.
+
+Documents read at session start:
+  TB00000  v2_7    Project Instructions              checked
+  TB00049  v1_0    Prior session log                 checked
+
+============================================================
+2. WORK COMPLETED THIS SESSION
+============================================================
+
+------------------------------------------------------------
+2.1 FP/DP Analysis — Position Mirror Write Ownership
+------------------------------------------------------------
+
+Full audit performed across all relevant documents and
+source files. Zero memory used. Documents read:
+
+  0511005  Position_Mirror_Specification dv1_0       (full)
+  0511003  Execution_Engine_Specification dv1_0      (full)
+  1011006  Position_Mirror_Coding_Spec dv1_0         (full)
+  ws_manager.py                                      (full)
+  execution_engine.py                                (full)
+  startup_sequence.py                                (partial)
+  exit_controller.py                                 (partial)
+  signal_pipeline.py                                 (partial)
+  risk_engine.py                                     (partial)
+  long_module.py                                     (partial)
+
+Key findings:
+
+  (a) OI-001: PositionRecord field name mismatch.
+      1011006 spec used: cl_ord_id_entry, emgsl_order_id,
+      emgsl_cl_ord_id, and was missing entry_limit_price.
+      ws_manager.py actual: cl_ord_id, emergsl_order_id,
+      emergsl_cl_ord_id. exit_controller.py consistent
+      with ws_manager.py actual names.
+      Spec was wrong. Code was internally consistent.
+
+  (b) OI-002: ExecutionEngine._pm methods non-existent.
+      EE called self._pm.create_record(), on_entry_filled(),
+      on_batch_add_ack(), clear_record() — none existed
+      anywhere. Dead code. Crash at runtime.
+
+  (c) Architectural finding: HR-PM-009 and 0511003 §7.4
+      both state WSManager is SOLE WRITER to position_mirror.
+      EE providing a separate PositionMirror object violates
+      this rule. Correct fix: PM write methods on WSManager;
+      EE calls self._wm.pm_*().
+
+  (d) Additional finding: position_mirror.py does not exist
+      in the project files. long_module.py calls
+      self._pm.on_entry_filled() and self._pm.clear_record()
+      — method names inconsistent with actual position_mirror.py
+      committed to GitHub (which has create(), close_position()).
+      signal_pipeline.py uses self._pm.all_records.
+      risk_engine.py uses self._pm.all_records and open_count.
+      Blocked from writing test_integration.py until
+      position_mirror.py is uploaded to project.
+
+Decision: Add pm_create/pm_on_fill/pm_on_orders/pm_clear
+as WSManager instance methods. Remove position_mirror
+injection from EE constructor. EE calls self._wm.pm_*().
+WSManager remains SOLE WRITER. HR-PM-009 satisfied.
+
+------------------------------------------------------------
+2.2 OI-001 Fix — ws_manager.py
+------------------------------------------------------------
+
+Changes made:
+  (1) Added entry_limit_price: Decimal = Decimal("0") to
+      PositionRecord dataclass after cl_ord_id field.
+      Field needed by pm_create and by 1011006 spec.
+
+  (2) Added 4 PM write methods to WSManager class:
+
+        pm_create(symbol, cl_ord_id, entry_limit_price, qty)
+          Creates PositionRecord at entry dispatch.
+          HR-PM-002: record-at-dispatch, no async gap.
+
+        pm_on_fill(symbol, fill_price, qty, timestamp_utc)
+          Updates entry_fill_price, qty, timestamp on fill.
+          HR-PM-003: uses actual avg_price, never limit price.
+
+        pm_on_orders(symbol, tp_order_id, emgsl_order_id)
+          Updates tp_order_id and emergsl_order_id on
+          batch_add ACK.
+
+        pm_clear(symbol)
+          Deletes PositionRecord on entry cancel or expire
+          with no fill (EE path only — not full position close).
+
+  All 4 methods write to self.position_mirror directly.
+  All 4 log their state change event.
+  WSManager is SOLE WRITER to self.position_mirror.
+
+------------------------------------------------------------
+2.3 OI-002 Fix — execution_engine.py
+------------------------------------------------------------
+
+Changes made:
+  (1) Removed position_mirror: Any from __init__ parameters.
+  (2) Removed self._pm = position_mirror.
+  (3) Added comment: "Position Mirror writes go through
+      self._wm.pm_*() methods. HR-PM-009: WS Manager is
+      SOLE WRITER. No _pm object injected."
+  (4) Replaced 5 call sites:
+        self._pm.create_record(...) → self._wm.pm_create(...)
+        self._pm.on_entry_filled(...) → self._wm.pm_on_fill(...)
+        self._pm.on_batch_add_ack(...) → self._wm.pm_on_orders(...)
+        self._pm.clear_record(symbol) → self._wm.pm_clear(symbol)
+          [appears in both _on_entry_canceled and _on_entry_expired]
+
+  Verified: grep for self._pm returns only the comment line.
+  Verified: grep for self._wm.pm_ returns all 5 call sites.
+
+------------------------------------------------------------
+2.4 Fix — startup_sequence.py
+------------------------------------------------------------
+
+Change made:
+  Removed position_mirror=pm from ExecutionEngine(...)
+  constructor call only.
+  All other pm injections (RiskEngine, ExitController,
+  LongModule, SignalPipeline) unchanged — those modules
+  still use pm as a read source.
+
+------------------------------------------------------------
+2.5 1011006 Position_Mirror_Coding_Spec — dv1_0 → dv1_1
+------------------------------------------------------------
+
+Changes made:
+  (1) PositionRecord dataclass field names corrected:
+        cl_ord_id_entry  → cl_ord_id
+        emgsl_order_id   → emergsl_order_id
+        emgsl_cl_ord_id  → emergsl_cl_ord_id
+        entry_limit_price added (was missing)
+
+  (2) Write method signatures updated to match WSManager
+      implementation:
+        create_position_record → pm_create
+        on_entry_filled        → pm_on_fill
+        on_batch_add_ack       → pm_on_orders
+        close_position         → unchanged (Exit Controller path)
+        pm_clear               → new (EE no-fill cancel/expire)
+
+  (3) All functions documented as WSManager instance methods
+      called by EE via self._wm.pm_*().
+
+  (4) Version bumped: dv1_0 → dv1_1.
+      DocDate: 04-07-2026. DocTime: 23:59:59 UTC.
+      Revision history updated.
+
+------------------------------------------------------------
+2.6 Blocking Finding — test_integration.py NOT written
+------------------------------------------------------------
+
+position_mirror.py is not in the Claude project files.
+The file was committed to GitHub but never uploaded to
+the project. Without it:
+  - Cannot determine actual method names and signatures
+  - Cannot determine all_records / open_count interface
+  - Cannot write correct integration test assertions
+  - long_module.py call site audit incomplete
+
+Bill action required: upload position_mirror.py from
+GitHub to Claude project before next session.
+
+============================================================
+3. PHASE 10 STATUS
+============================================================
+
+  Tier 1 Unit Tests:   COMPLETE -- 95/95 passing
+  Tier 2 Integration:  BLOCKED pending position_mirror.py upload
+  Paper Trading:       Phase 11
+
+============================================================
+4. FILES DELIVERED THIS SESSION
+============================================================
+
+  ws_manager.py                                   UPDATED
+  execution_engine.py                             UPDATED
+  startup_sequence.py                             UPDATED
+  1011006_Position_Mirror_Coding_Spec_dv1_1.txt   UPDATED
+
+============================================================
+5. BILL ACTIONS REQUIRED
+============================================================
+
+Step 1 — Download all 4 source files + this session log:
+
+  ws_manager.py
+  execution_engine.py
+  startup_sequence.py
+  1011006_Position_Mirror_Coding_Spec_dv1_1.txt
+  TB00050_TothBot_V2_Session_Log_2026-04-07_Part3_v1_0.txt
+
+Step 2 — Save session log to OneDrive:
+
+  C:\Users\wstot\OneDrive\TothBot\
+
+Step 3 — Save source files to local repo:
+
+  C:\Users\wstot\GitHub\TothBot\TothBot_V2-Code\tothbot\
+
+Step 4 — Save spec to local docs repo:
+
+  C:\Users\wstot\GitHub\TothBot\TothBot_V2-Docs\10XXXXX_Coding_Specification\
+
+Step 5 — Commit and push source files:
+
+  cd C:\Users\wstot\GitHub\TothBot\TothBot_V2-Code
+
+  git add tothbot/ws_manager.py
+
+  git add tothbot/execution_engine.py
+
+  git add tothbot/startup_sequence.py
+
+  git commit -m "Phase 10: Fix OI-001 OI-002 - PM write ownership to WSManager"
+
+  git push origin master
+
+Step 6 — Commit and push spec:
+
+  cd C:\Users\wstot\GitHub\TothBot\TothBot_V2-Docs
+
+  git add 10XXXXX_Coding_Specification/1011006_Position_Mirror_Coding_Spec_dv1_1.txt
+
+  git commit -m "1011006 dv1_1: correct field names, pm_* method names"
+
+  git push origin master
+
+Step 7 — Upload position_mirror.py to Claude project:
+
+  From: github.com/TothBot/TothBot_V2-Code/tothbot/position_mirror.py
+  To:   Claude.ai project file upload
+
+Step 8 — Upload TB00050 to Claude project.
+
+Step 9 — Start new session with:
+
+  ============================================================
+  Read TB00000 v2_7 and TB00050.
+  OI-001 and OI-002 fixes are committed.
+  position_mirror.py is now uploaded to project.
+  Write tests/test_integration.py — 8 scenarios per
+  1021002 dv1_0. Before coding: read position_mirror.py
+  in full, then audit long_module.py pm call sites for
+  method name consistency.
+  RULE 14: git push origin master. Always.
+  RULE 15: One command per copy box. Always.
+  RULE 6:  git add . is prohibited. Always.
+  RULE 4:  cd to repo root first. Always.
+  ============================================================
+
+============================================================
+6. PARKING LOT
+============================================================
+
+  PL-001  long_module.py calls self._pm.on_entry_filled()
+          and self._pm.clear_record(). These may not match
+          actual position_mirror.py method names. Audit and
+          fix in next session alongside test_integration.py.
+
+  PL-002  WSManager.add_order() independently creates a
+          PositionRecord at line 1550. EE now also calls
+          self._wm.pm_create() after its own direct WS send.
+          These are two separate code paths. The add_order()
+          path is never called by EE. Consider whether
+          add_order() PM creation should be removed to
+          avoid future confusion. Parking lot — do not
+          chase until test_integration.py complete.
+
+============================================================
+7. REVISION HISTORY
+============================================================
+
+  v1_0  04-07-2026  Session log Part 3. FP/DP analysis of
+                    position mirror write ownership. OI-001
+                    and OI-002 resolved. 4 files updated.
+                    test_integration.py blocked pending
+                    position_mirror.py upload.
+
+============================================================
+END OF SESSION LOG
+============================================================

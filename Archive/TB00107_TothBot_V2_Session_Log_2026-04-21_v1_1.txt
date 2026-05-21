@@ -1,0 +1,600 @@
+DocDCN:     TB00107
+DocTitle:   TothBot_V2_Session_Log_2026-04-21
+DocVersion: v1_1
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TBXXXXX_Session_Logs\TB00107_TothBot_V2_Session_Log_2026-04-21_v1_1.txt
+DocDate:    04-21-2026
+DocTime:    23:45:00 UTC
+
+============================================================
+TOTHBOT V2 SESSION LOG — 2026-04-21
+============================================================
+
+============================================================
+1. SESSION IDENTITY
+============================================================
+
+Session date:     April 21, 2026
+Session number:   TB00107
+Session type:     (1) Overnight-alert investigation.
+                  (2) Execution of TB00106 Bill Actions
+                      STEPS B through G (bundled deploy of
+                      AI-1 + AI-2 + AI-3, dv1_20 -> dv1_21).
+                  (3) Opened 24-hour observation window for
+                      dv1_21. (4) Mid-session discovery of
+                      CRITICAL data loss defect in trade
+                      record storage (OI-023). (5) Pivot
+                      decision: bundle OI-023 + OI-022 +
+                      OI-014 into a new Claude Code deploy
+                      session (TB00108), burning the dv1_21
+                      observation window. (6) Session log
+                      and next-session instructions
+                      production.
+Prior session:    TB00106 v1_0 (2026-04-20, Claude Code —
+                  bundled-deploy files produced but not
+                  committed / not deployed).
+Platform:         Claude Chat.
+Next platform:    Claude Code (TB00108 — bundled deploy
+                  of OI-023 + OI-022 + OI-014).
+
+Documents read this session:
+  TB00000  v2_10   Project Instructions              read
+  TB00105  v1_0    Observation close-out session     read
+  TB00105  NSI v1_0 Next-session instructions        read
+  TB00106  v1_0    Claude Code deploy session log    read
+  TB00106  Bill Actions v1_0                         read
+  0311001  v1_1    Namespace_Specification           read
+  0311002  v1_2    Document_Creation_Workflow        read
+  0311003  v1_0    Versioning_Procedure              read
+  0311004  v1_1    Doc Creation and Approval         read
+  1011007  dv1_2   Logger_Coding_Spec                read
+  0511006  dv1_0   Logger_Specification              read
+
+PAPER TRADING ONLY. NO REAL MONEY.
+
+============================================================
+2. WORK COMPLETED THIS SESSION
+============================================================
+
+------------------------------------------------------------
+2.1 Overnight-alert investigation
+------------------------------------------------------------
+
+Bill reported receiving multiple alert bounce notifications
+overnight. Investigation scope: explain the alerts, decide
+whether to proceed with the TB00106 bundled deploy (which
+had been produced by Claude Code but not committed /
+deployed).
+
+Findings from VPS logs and journalctl:
+
+  6 SERVICE CRASHES since TB00105 handoff:
+  -----------------------------------------
+  #1  2026-04-21 03:40:53 UTC  (restart counter 2 -> 3)
+  #2  2026-04-21 05:32:36 UTC  (restart counter 3 -> 4)
+  #3  2026-04-21 06:11:12 UTC  (restart counter 4 -> 5)
+  #4  2026-04-21 06:35:30 UTC  (restart counter 5 -> 6)
+  #5  2026-04-21 07:34:06 UTC  (restart counter 6 -> 7)
+  #6  2026-04-21 12:01:46 UTC  (restart counter 7 -> 8)
+
+  Identical signature every time:
+    PING_TIMEOUT (no data ~95s)
+      -> ZOMBIE_CONNECTION_DETECTED
+        -> RECONNECT_INITIATED (mid-session path HR-WM-016)
+          -> 10 reconnect attempts all fail (~84-87s total)
+            -> FATAL_RECONNECT_FAILURE at attempt_count:10
+              -> RuntimeError (ws_manager.py:3241)
+                -> TaskGroup unwinds (ws_manager.py:1064)
+                  -> WS_MGR_FATAL
+                    -> WSMGR_FATAL_PROPAGATED
+                      -> systemd restart
+
+  Conclusion: every one of these crashes is the SAME
+  signature as DEFECT-WM-RECONNECT-001. The dv1_20 fix
+  that TB00105 closed after 42.5h clean observation is
+  NOT actually resolved. The 42.5h clean window was luck,
+  not correctness. Kraken transient outages longer than
+  ~90s repeatedly exhaust the 10-retry window.
+
+  Corollary: OI-018 was closed in TB00106 based on the
+  42.5h clean observation. The 6 overnight crashes
+  invalidate that close. OI-018 must be REOPENED.
+
+  Alert visibility: zero `ALERT_SMTP_FAILED` events in the
+  structured log because logger emits the failure message
+  only to stderr (journalctl), not to tothbot.log. Every
+  CRITICAL alert bounced at singular `alert@tothbot.com`
+  (which does not exist — catch-all reserved namespace in
+  Proton) with `550 5.1.1 Recipient address rejected`. Bill
+  only saw the bounce notifications, never the underlying
+  CRITICAL alerts.
+
+Result: the 6 overnight crashes are real-world evidence
+that AI-3 (retry window 10 -> 20) is URGENT and CORRECT.
+AI-2 (plural alert email) is the reason Bill could not see
+the CRITICAL alerts in real time. Deploy to proceed
+immediately.
+
+------------------------------------------------------------
+2.2 TB00106 bundled deploy — STEPS B through G executed
+------------------------------------------------------------
+
+Executed TB00106_Bill_Actions_v1_0.txt STEPS B, C, D, E, F,
+G in order. One command per copy box (RULE 15). Each step
+verified by output before proceeding to the next.
+
+STEP B — Claude project folder updated.
+  Uploaded: TB00106 session log, TB00000 v2_10, and 5 spec
+  files (1011002 dv1_20, 1011007 dv1_3, 1011013 dv1_5,
+  1011014 dv1_6, 1010000 dv1_10).
+  Deleted: superseded prior versions.
+
+STEP C — TothBot_V2-Docs committed and pushed.
+  Staged 5 new files explicitly (RULE 6). Stray .txt
+  transport files NOT present in Docs repo.
+  Commit: 9528097 (5 files, 5583 insertions).
+  Push: 8d41dfa..9528097 master -> master
+
+STEP D — TothBot_V2-Code committed and pushed.
+  Stray .txt transport files found in working tree BEFORE
+  staging (tests/vps_deployment_dv1_5.txt,
+  tests/ws_manager_dv1_21.txt,
+  tothbot/logger_dv1_3.txt,
+  tothbot/startup_sequence_dv1_8.txt).
+  All 4 deleted from disk before git add to prevent
+  contamination of Code repo with transport artifacts.
+  Staged 4 modified .py files explicitly.
+  Commit: ebc93cf (4 files, 77 insertions, 21 deletions).
+  Push: 8242d1c..ebc93cf master -> master
+
+STEP E — VPS deploy.
+  git fetch + git pull: 8242d1c..ebc93cf (4 files updated).
+  Verified on disk before restart:
+    ws_manager.py DocVersion  = dv1_21   (expected)
+    MAX_RECONNECT_ATTEMPTS    = 20       (expected)
+    logger.py ALERT_EMAIL     = alerts@tothbot.com
+                                (plural, expected)
+  systemctl restart tothbot.
+  Active (running) since 2026-04-21 18:07:58 UTC.
+  Main PID: 217309 (new process — old 212492 replaced).
+  Live log verified healthy: CANDLE_CLOSE, REGIME_COMPUTED,
+  PIPELINE_START, heartbeats flowing. No WS_MGR_FATAL.
+
+STEP F — VPS cleanup (stale env backup removal).
+  /root/.tothbot.env.save was already absent at check time
+  (cleaned in an earlier session per TB00106 deploy
+  narrative or manual tidy). Live /root/.tothbot.env
+  verified to contain TOTHBOT_SMTP_USER=alerts@tothbot.com
+  (plural). Only canonical env file now present on VPS.
+
+STEP G — Post-deploy alert path baseline.
+  ALERT_SENT count in tothbot.log        = 0
+  ALERT_SMTP_FAILED count in tothbot.log = 0
+  journalctl SMTP/550/bounce greps       = empty
+  Proton inbox alerts@tothbot.com        = no new items
+  No bounces since 18:07 UTC restart.
+  Baseline is clean. Passive 5-min tail skipped as
+  unnecessary (real validation is STEP H window).
+
+------------------------------------------------------------
+2.3 STEP H — Observation window opened (then pivoted)
+------------------------------------------------------------
+
+Window start:     2026-04-21 18:07:58 UTC (Main PID 217309)
+Intended end:     2026-04-22 18:07:58 UTC (+24h) minimum
+
+Window was originally planned to run to TB00108 close-out.
+Replaced later in session by the pivot decision (2.4).
+
+------------------------------------------------------------
+2.4 Mid-session discovery — OI-023 data loss defect
+------------------------------------------------------------
+
+During observation-window idle time, Bill explored what
+productive work could run during the wait. Conversation
+led to scoping an Operator Observer Dashboard to give Bill
+"is it running?" and "is it making money?" at-a-glance
+views. Design inquiry for the P&L view (time periods,
+tax-year tracking, CSV export) surfaced a concern: how is
+trade data preserved if logs rotate?
+
+Investigation of the Logger specification and deployed
+code confirmed a CRITICAL defect:
+
+  TRADE_CLOSE records (the authoritative record of every
+  closed position — entry/exit prices, fees, P&L, regime
+  tags, signal params, timestamps) are written ONLY to
+  tothbot.log. No separate permanent store exists.
+
+  tothbot.log is managed by RotatingFileHandler. Deployed
+  config retains only a small number of rotated files (4
+  files observed on VPS: tothbot.log + tothbot.log.1/2/3).
+  At ~50 MB/file and current write rate, this yields
+  approximately 6 days of on-disk history.
+
+  Consequence: trade records more than ~6 days old are
+  PERMANENTLY LOST. This breaks:
+    - CIATS 200-trade statistical floor (rolling corpus
+      truncated to ~6 days of trades)
+    - IRS Form 8949 / Schedule D recordkeeping (3-year
+      minimum retention required by 26 CFR 1.6001-1)
+    - Audit trail for any post-incident forensic work
+    - Annual / YTD / 365d P&L for operator dashboard
+
+  Filed as OI-023 DEFECT-TRADE-RECORD-001 (full write-up
+  Section 3.6 below).
+
+------------------------------------------------------------
+2.5 Pivot decision — bundled deploy replaces observation
+------------------------------------------------------------
+
+FP/DP analysis on Bill's direction to consolidate all
+pending code changes into one deploy:
+
+  Constraint 1: dv1_21 observation window was in progress
+  (started 18:07:58 UTC, ~4h elapsed at decision time).
+  Any additional code deploy terminates that observation.
+
+  Constraint 2: Every hour on current code loses additional
+  trade records to rotation.
+
+  Constraint 3: Three open items have defined fixes ready
+  for spec-and-code work:
+    OI-023 (CRITICAL) - permanent trade record
+    OI-022 (LOW)      - ALERT_SENT event instrumentation
+    OI-014 (LOW)      - stale xrefs in startup_sequence
+                        spec / code
+
+  Constraint 4: dv1_21 fixes (MAX_RECONNECT_ATTEMPTS=20,
+  plural alert email, OI-018 close flag) are LOW-risk
+  deterministic changes. 4h observation provides nearly
+  as much confidence as 24h for determining whether they
+  broke anything. The observations we actually need
+  (ride-through evidence for OI-018/OI-020 closes) require
+  an actual Kraken transient outage during the window —
+  which is probabilistic, not guaranteed in any window
+  length.
+
+  Decision basis: bundling OI-023 with OI-022 and OI-014
+  costs no additional deploy overhead (one session, one
+  commit per repo, one VPS restart, one observation
+  window). Separating them into future deploys costs 2-3
+  additional deploy cycles for trivial incremental work.
+  Loss minimization dictates fixing the CRITICAL data-loss
+  defect (OI-023) as soon as specification and code are
+  ready, and carrying the two cheap items along rather
+  than banking them as technical debt.
+
+  Decision: pivot to Claude Code bundled-deploy session
+  (TB00108). Burn the dv1_21 observation window. Produce
+  TB00107 v1_1 (this revision) and TB00107_NSI v1_1
+  (Claude Code kickoff) as the sole deliverables of this
+  session. Defer all close/reopen decisions on
+  OI-018/019/020 to TB00109, where they will be evaluated
+  against the post-TB00108 observation window along with
+  OI-023 validation.
+
+============================================================
+3. KEY FINDINGS AND DECISIONS
+============================================================
+
+3.1 DEFECT-WM-RECONNECT-001 is NOT resolved by dv1_20.
+    The 42.5h clean window in TB00105 was luck. 6 crashes
+    in 8.5 hours after TB00105 handoff prove the 10-retry
+    budget is insufficient for real-world Kraken outages.
+    OI-018 close was premature.
+
+3.2 TB00106 AI-3 (MAX_RECONNECT_ATTEMPTS 10 -> 20) is the
+    direct mitigation for the observed failure mode.
+    Deployed in dv1_21 at 2026-04-21 18:07:58 UTC. Proof
+    of correctness deferred to TB00109 observation.
+
+3.3 TB00106 AI-2 (plural alert email) is proven correct
+    on disk. Every CRITICAL alert between 2026-04-19 and
+    2026-04-21 12:01 bounced silently on the singular
+    address. Live VPS env and code both now use plural
+    address.
+
+3.4 TB00106 AI-1 (OI-018 close) is INVALIDATED by the 6
+    new crashes. OI-018 is REOPENED with tighter close
+    criteria (see Section 4).
+
+3.5 OBSERVABILITY GAP: Logger emits ALERT_SMTP_FAILED
+    messages only to stderr (journalctl), not to
+    tothbot.log. Successful alert sends emit no
+    structured event at all. Filed as OI-022 — address
+    in TB00108 bundle.
+
+3.6 OI-023 DEFECT-TRADE-RECORD-001 — CRITICAL — NEW
+
+    Title: Trade records lost to log rotation within ~6
+    days of closure.
+
+    Severity: CRITICAL.
+
+    Affected scope:
+      - logger.py (current deployed: dv1_3)
+      - 1011007 Logger_Coding_Spec (current: dv1_3)
+      - 0511006 Logger_Specification (current: dv1_0)
+      - Live tothbot.log trade records already older
+        than ~6 days are UNRECOVERABLE.
+
+    Root cause: TRADE_CLOSE events are emitted via the
+    same Logger path as every other event, landing in
+    tothbot.log. tothbot.log is managed by
+    RotatingFileHandler with limited retention. No
+    independent permanent trade store exists.
+
+    Observable symptom: VPS ls of /home/tothbot/logs/
+    shows tothbot.log.1/2/3 dated Apr 20, Apr 18, Apr 15
+    — oldest retained history is ~6 days. Any trade
+    closed before that is gone.
+
+    Blast radius:
+      - CIATS cannot build a 200-trade statistical corpus
+        if paper-trade throughput is below ~33 trades/day
+        (200 trades / 6 days). Below that threshold,
+        CIATS activation is structurally blocked by data
+        loss, not by trade volume.
+      - US tax filing: 26 CFR 1.6001-1 requires retention
+        of records supporting tax return items for 3
+        years minimum (longer in audit-extension cases).
+        Dashboard-derived P&L without source records is
+        not audit-defensible.
+      - Post-incident forensics: any investigation of a
+        historical trade anomaly is impossible once
+        records age out.
+
+    Proposed fix (high level — full design in TB00108):
+      - Add append-only permanent trade record file:
+        /home/tothbot/records/trades_<YYYY>.jsonl
+        (annual-segmented, no rotation, one JSON per
+        line, one line per TRADE_CLOSE event).
+      - Logger writes TRADE_CLOSE events to BOTH the
+        main rotating log (diagnostics) AND the annual
+        trade record file (permanence). Single source
+        of truth remains the Logger's TRADE_CLOSE record
+        contract — no duplicate computation.
+      - On-demand CSV export transformation (for tax
+        tools and accountants) derived from the annual
+        JSONL. No dual write paths.
+
+    Fix governance:
+      - logger.py dv1_3 -> dv1_4
+      - 1011007 Logger_Coding_Spec dv1_3 -> dv1_4
+        (new section specifying annual trade record
+        file, path, contents, write contract, retention)
+      - 0511006 Logger_Specification — evaluate whether
+        architectural update is needed; likely yes
+        (two-stream record architecture)
+      - 1010000 Trading_System_Coding_Anchor registry
+        bump
+
+    FP/DP decisions locked for TB00108:
+      Location: /home/tothbot/records/trades_<YYYY>.jsonl
+      Contents: TRADE_CLOSE records only
+      Format:   JSONL primary; CSV generated on demand
+      Retention:Annual file; no rotation; permanent
+      Timing:   Deploy immediately in TB00108 bundle
+
+3.7 PIVOT DECISION: bundle OI-023 + OI-022 + OI-014 into
+    TB00108 Claude Code session. Burn dv1_21 observation
+    window. Carry OI-018/019/020 close evaluation forward
+    to TB00109 (which will observe the dv1_22 bundle).
+
+============================================================
+4. OPEN ITEMS / PARKING LOT — CURRENT
+============================================================
+
+OI-018  REOPENED — DEFECT-WM-RECONNECT-001.
+        Closed prematurely in TB00106 based on TB00105
+        42.5h clean window. 6 overnight crashes
+        invalidate that close. Now mitigated by
+        dv1_21 AI-3 (retry budget 10 -> 20).
+        Close criteria: 48h clean AFTER dv1_22 deploy
+        AND at least one observed RECONNECT_COMPLETE at
+        attempt_count > 10 without a following
+        FATAL_RECONNECT_FAILURE — OR 48h clean with
+        zero qualifying Kraken transient outages (weaker
+        close). Pending TB00109 observation evidence.
+
+OI-019  PENDING CLOSE — DEFECT-ALERT-ROUTING-001 (HIGH).
+        dv1_21 AI-2 deployed. Code confirms plural
+        address on disk. Close criteria: zero bounces
+        across the post-TB00108 observation window AND
+        at least one ALERT_SENT delivered to Proton
+        inbox. Pending TB00109 evidence (enabled by
+        OI-022 fix in TB00108).
+
+OI-020  PENDING CLOSE — DEFECT-KRAKEN-TRANSIENT-API-001
+        (HIGH). dv1_21 AI-3 deployed. Close criteria:
+        at least one RECONNECT_COMPLETE fires at
+        attempt_count > 10 without a following
+        FATAL_RECONNECT_FAILURE across observation —
+        OR 48h clean with zero qualifying outages
+        (weaker close). Pending TB00109 evidence.
+
+OI-021  OPEN — DEFECT-ALERT-DUPLICATION-001 (COSMETIC).
+        ~8 bounces per fatal. Re-evaluate in TB00109
+        now that AI-2 is live. Expected to be moot
+        (no bounces => no duplication).
+
+OI-022  SCHEDULED FOR TB00108 —
+        DEFECT-OBSERVABILITY-ALERT-SENT-001 (LOW).
+        Successful alert sends do not emit an
+        ALERT_SENT structured event to tothbot.log.
+        Fix: one logger.info call in the alert success
+        path. Bundled with OI-023 fix in TB00108.
+
+OI-023  SCHEDULED FOR TB00108 —
+        DEFECT-TRADE-RECORD-001 (CRITICAL). Full
+        write-up Section 3.6. Append-only annual
+        trade record file. Bundled with OI-022 and
+        OI-014 in TB00108 Claude Code session.
+
+OI-014  SCHEDULED FOR TB00108 —
+        startup_sequence.py stale xrefs (LOW).
+        Docstring / comment references point at
+        module names or specs that have since moved
+        or been renamed. Cleanup work only — no
+        behavior change. Scope to be determined by
+        Claude Code inspection during TB00108.
+
+OI-017  OPEN — DEFECT-WM-LIQ-001 (LOW).
+        Liquidity refresh empty_result every 4h.
+        Needs investigation before spec. Deferred.
+
+============================================================
+5. STANDING RULES — ALL ACTIVE
+============================================================
+
+  RULE 6  — git add . is PROHIBITED. Explicit per file.
+  RULE 13 — .bat files go to Desktop only. Never in repo.
+  RULE 14 — git push origin master. NEVER origin main.
+  RULE 15 — ONE COMMAND PER COPY BOX. ALWAYS.
+  RULE 16 — .bat files run from cmd.exe only. Never PS.
+  RULE 17 — Complete and correct instructions.
+
+  CODING RULES — ALL ACTIVE:
+  NO PATCHES EVER. Full file delivery only. Full DC.
+
+  DELIVERY RULES — ALL ACTIVE:
+  DR-001 — All documents as .txt files.
+  DR-002 — 0500000 additionally as .docx and .pdf.
+  DR-003 — ALL documents in ONE BATCH.
+
+============================================================
+6. BILL ACTIONS REQUIRED — THIS SESSION
+============================================================
+
+------------------------------------------------------------
+STEP 1 — Save both files locally                 PENDING
+------------------------------------------------------------
+
+Save both files to:
+  C:\Users\wstot\GitHub\TothBot\TBXXXXX_Session_Logs\
+
+  (a) TB00107_TothBot_V2_Session_Log_2026-04-21_v1_1.txt
+  (b) TB00107_Next_Session_Instructions_v1_1.txt
+
+Delete local v1_0 of both files (superseded).
+
+------------------------------------------------------------
+STEP 2 — Upload session log to Claude project    PENDING
+------------------------------------------------------------
+
+Upload to Claude.ai project folder:
+  TB00107_TothBot_V2_Session_Log_2026-04-21_v1_1.txt
+
+Delete from Claude.ai project folder:
+  TB00107_TothBot_V2_Session_Log_2026-04-21_v1_0.txt
+    (if present — superseded by v1_1 this session)
+  TB00106_TothBot_V2_Session_Log_2026-04-20_v1_0.txt
+    (if present — superseded by TB00107)
+
+TB00107_Next_Session_Instructions_v1_1.txt is NOT uploaded
+to the Claude project folder. Local reference only.
+
+------------------------------------------------------------
+STEP 3 — Launch TB00108 Claude Code session      PENDING
+------------------------------------------------------------
+
+Follow TB00107_Next_Session_Instructions_v1_1.txt Section 2
+(pre-flight) and Section 3 (Claude Code kickoff). The
+VPS continues running dv1_21. No action on the VPS until
+TB00108 deploy.
+
+============================================================
+7. CURRENT STATE SUMMARY — END OF SESSION
+============================================================
+
+GitHub — TothBot_V2-Docs:
+  Latest commit: 9528097 (TB00106 bundled — 5 spec files)
+  Pushed to origin/master.
+
+GitHub — TothBot_V2-Code:
+  Latest commit: ebc93cf (TB00106 bundled — 4 .py files)
+  Pushed to origin/master.
+
+VPS:
+  Status: RUNNING — PID 217309 since 2026-04-21 18:07:58 UTC
+  ws_manager.py:        dv1_21 deployed
+  logger.py:            dv1_3 deployed
+  startup_sequence.py:  dv1_8 deployed
+  vps_deployment.py:    dv1_5 deployed
+  MAX_RECONNECT_ATTEMPTS: 20 (was 10)
+  ALERT_EMAIL:           alerts@tothbot.com (plural)
+  /root/.tothbot.env:    plural address confirmed
+  /root/.tothbot.env.save: absent (cleanup complete)
+  systemd NRestarts:     8 at time of dv1_21 deploy.
+
+Observation window:
+  TERMINATED by pivot. Started 2026-04-21 18:07:58 UTC.
+  dv1_21 remains running until TB00108 deploy supersedes it.
+  Ran ~5h before the pivot decision.
+
+Open defects:
+  OI-018  REOPENED — WM reconnect (dv1_21 mitigation
+                    pending observation)
+  OI-019  PENDING CLOSE — alert routing
+                    (pending observation evidence)
+  OI-020  PENDING CLOSE — Kraken retry window
+                    (pending observation evidence)
+  OI-021  OPEN — 8 bounces per fatal (re-evaluate TB00109)
+  OI-022  SCHEDULED TB00108 — ALERT_SENT instrumentation
+  OI-023  SCHEDULED TB00108 — CRITICAL data loss
+  OI-014  SCHEDULED TB00108 — stale xrefs cleanup
+  OI-017  OPEN — liquidity refresh (deferred)
+
+Closed this session:
+  (none — closes pending TB00109 evidence.)
+
+============================================================
+REVISION HISTORY
+============================================================
+
+  v1_0  04-21-2026  Initial. Overnight-alert investigation
+                    revealed 6 service crashes since
+                    TB00105 handoff, all with the
+                    DEFECT-WM-RECONNECT-001 signature —
+                    invalidating the TB00106 OI-018 close.
+                    Executed TB00106 Bill Actions STEPS B
+                    through G: Docs commit 9528097, Code
+                    commit ebc93cf, VPS pulled and
+                    restarted on dv1_21 at 18:07:58 UTC.
+                    Stray .txt transport files found in
+                    Code working tree and deleted before
+                    staging. VPS baseline clean: zero
+                    ALERT_SENT, zero ALERT_SMTP_FAILED,
+                    zero bounces since restart. Observation
+                    window opened. OI-018 reopened with
+                    tighter close criteria. New OI-022
+                    filed for missing ALERT_SENT event
+                    instrumentation. TB00108 was scoped
+                    as Claude Chat observation close-out.
+
+  v1_1  04-21-2026  Mid-session pivot. During observation
+                    idle time, scoping of an Operator
+                    Observer Dashboard surfaced CRITICAL
+                    defect OI-023 DEFECT-TRADE-RECORD-001:
+                    TRADE_CLOSE records lost to log
+                    rotation within ~6 days. Tax records,
+                    CIATS 200-trade floor, and audit trail
+                    all affected.
+                    Pivot decision (FP/DP analysis in
+                    Section 2.5): bundle OI-023 + OI-022 +
+                    OI-014 into TB00108 Claude Code
+                    session. Burn the dv1_21 observation
+                    window. TB00107_NSI replaced v1_0
+                    (Claude Chat close-out) with v1_1
+                    (Claude Code bundled deploy).
+                    OI-018/019/020 close evaluation
+                    deferred to TB00109 observation of
+                    dv1_22. Added full OI-023 write-up
+                    (Section 3.6). Updated all forward
+                    references (Open Items, Bill Actions,
+                    Current State) to reflect pivot.
+
+============================================================
+END OF SESSION LOG TB00107 v1_1
+============================================================

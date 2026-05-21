@@ -1,0 +1,550 @@
+DocDCN:     TB00151i
+DocTitle:   TothBot_V2_Session_Log_2026-05-07
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TBXXXXX_Session_Logs\TB00151i_TothBot_V2_Session_Log_2026-05-07_v1_0.txt
+DocDate:    05-07-2026
+DocTime:    23:59:59 UTC
+
+============================================================
+TOTHBOT V2 SESSION LOG — TB00151i
+PAPER-AS-MASTER STREAM D SESSION 2 OF 3
+0511005 Position_Mirror_Specification dv1_0 -> dv1_1
+============================================================
+
+============================================================
+1. SESSION IDENTITY
+============================================================
+
+Session:       TB00151i
+Date:          2026-05-07
+Mission:       STREAM D Session 2 of 3 — author 0511005
+               Position_Mirror_Specification dv1_0 -> dv1_1
+               PAPER-AS-MASTER amendment.
+Prior session: TB00151h (closed 0511003 dv1_0 -> dv1_1 —
+               STREAM D Session 1 of 3).
+Next session:  TB00151j (final Phase 1 close-gate spec —
+               1011014 Startup_Sequence_Coding_Spec
+               dv1_7 -> dv1_8).
+
+============================================================
+2. COLD-LOAD VERIFICATION
+============================================================
+
+TB00151i NSI v1_0 §3 FIVE-ITEM cold-load verification
+executed at session start. All five checks PASSED.
+
+  §3.1 TB00000 v2_20 in /mnt/project/.
+       PASS. Header confirmed.
+
+  §3.2 0311001 v1_6, 0311002 v1_10, 0311006 dv1_2
+       present at expected versions.
+       PASS. All three confirmed.
+
+  §3.3 0500000 dv1_24 .html present. DR-007.9 well-
+       formedness verified via Python html.parser feed.
+       PASS. 0 orphan close tags, 0 unclosed elements
+       at EOF, 0 parser exceptions.
+
+  §3.4 Cascade reference specs at expected versions:
+         0511001 dv1_5
+         1011002 dv1_26
+         0511003 dv1_1 (NOT dv1_0)
+         0511004 dv1_3
+         1011005 dv1_3
+         0211005 dv1_3
+         1011006 dv1_1
+       PASS. All seven confirmed. Only ONE 0511003 and
+       ONE 0511005 in /mnt/project/ (DR-005 version
+       consistency).
+
+  §3.5 BASELINE-DRIFT DEFENSE per ERROR-TB00151g-01
+       corrective.
+       (a) project_knowledge_search content grep on
+           0511005 dv1_0 for paper-as-master markers
+           (HR-WM-032, HR-PM-PAPER, WM-PAPER-LEDGER,
+           PT-MODE, PA-001, PAPER-AS-MASTER,
+           paper_trading_mode, paper_mode,
+           paper-as-master). Result: ZERO matches.
+       (b) conversation_search "0511005 position
+           mirror paper as master amendment dv1_1".
+           Result: confirmed TB00147 closed 5 specs
+           (NOT 0511005), TB00151h closed 0511003
+           (NOT 0511005), TB00151i is the authoring
+           session for 0511005.
+       PASS.
+
+Retired 0500000 sidecar / .txt / .docx / .pdf check:
+  NONE present in /mnt/project/. Confirmed no _svg.txt,
+  no .png, no .docx, no .pdf, no legacy .txt around
+  0500000. Only the canonical
+  0500000_System_Architecture_Overview_dv1_24_Claude_
+  Source.html.
+
+STEP A Pre-Flight per 0311002 v1_10 §8.2.5 executed:
+  CHECK 1 (parent chain compliance)         PASS
+  CHECK 2 (governance documents reachable)  PASS
+  CHECK 3 (binary deliverable integrity)    N/A
+                                            (.txt scope)
+  CHECK 4 (DR-005 version consistency)      PASS
+  CHECK 5 (DR-006 single-turn announcement) DEFERRED
+                                            (executed
+                                            at delivery)
+  CHECK 6 (DR-007 content completeness)     DEFERRED
+                                            (executed
+                                            post-author)
+  CHECK 7 (asset presence)                  N/A
+                                            (no embedded
+                                            assets)
+  CHECK 8 (HTML well-formedness)            N/A
+                                            (.txt scope)
+  CHECK 9 (RR-SCOPE-002 scope bound)        PASS
+
+============================================================
+3. WORK PERFORMED
+============================================================
+
+3.1 Architectural source-of-truth read.
+
+  0500000 dv1_24 §12 Paper-Mode Dispatch Boundary
+  Architecture extracted via Python html.parser feed
+  (skipping <style>, <script>, <svg> subtrees) and
+  read in full:
+    §12.0 Architectural Status — First-Class System
+          Element.
+    §12.1 PA-004 Permitted Divergence Points (paper vs
+          live). PA-004 #4 Position Mirror Sourcing
+          identified as PRIMARY divergence point for
+          this spec.
+    §12.2 paper_trading_mode Flag — Definition and
+          Lifecycle. Position Mirror identified in
+          §12.2 WHO READS IT as "Do NOT read directly.
+          Mode is not their concern."
+    §12.3 The Dispatch Seam — WSManager as Sole
+          Gatekeeper.
+    §12.4 Synthetic Capital Ledger — Single-Owner
+          Architecture. Cited as the parallel single-
+          writer pattern that HR-PM-011 (NEW dv1_1)
+          binds the Mirror to.
+    §12.5 Paper Exit Routing Through Exit Controller.
+          Cited as the architectural basis for
+          §4.4 mode-parity paragraph (EC sole driver
+          of Mirror deletion in BOTH modes).
+    §12.6 Paper Telemetry Event Taxonomy. Cited as
+          the basis for §10 mode-agnostic clarifier
+          (PAPER_* events emitted by WSManager NOT
+          Position Mirror).
+    §12.7 Diagram 7 — Paper-Mode Dispatch Boundary.
+    §12.8 Compliance Mapping to Downstream
+          Specifications. 0511005 listed as a Phase 1
+          close-gate spec.
+    §12.9 Architectural Reasons This Section Exists.
+
+3.2 Sibling pattern reads.
+
+  0511003 dv1_1 §5A EE-PAPER (lines 285-557) read in
+  full to confirm structural pattern. Key structural
+  elements adopted in this amendment:
+    - §5A.1 Architectural Principle (5 sub-rules with
+      explicit binding citations).
+    - §5A.2 What This Section Does NOT Change.
+    - §5A.3 Closes (cascade-alignment block citing
+      0500000 dv1_24 §12.0..12.8 + TB00000 v2_20 §4.4).
+    - HR-EE-013/014/015 placement immediately after
+      §8 baseline rules.
+    - §11 Related Documents cascade-citation pattern
+      with parenthetical version+section refs.
+    - §12 dv1_1 entry structure (SECTIONS AMENDED;
+      REASON FOR CHANGE; FP/DP ANALYSIS Option A
+      Reject / Option B Accept / Option C Reject;
+      RR-SCOPE-002/007/009 NOTES; PA-008 PRE-EMIT
+      SCAN; PARENT CHAIN COMPLIANCE; COMPANION
+      DELIVERABLES; OPEN ITEMS; CASCADE PROVENANCE;
+      CODING-READINESS VERIFICATION).
+
+  0511004 dv1_3 §6A EC-PAPER (lines 307-477) read for
+  HR-EC-013/014/015 structural pattern reference.
+
+3.3 Baseline read.
+
+  0511005 dv1_0 (320 lines) read in full. Hard rules
+  HR-PM-001 through HR-PM-009 confirmed. PositionRecord
+  field list confirmed (legacy "emgsl_" spelling
+  preserved per RR-SCOPE-002 — field-name corrections
+  out of scope). §4.1 through §4.5 write rules
+  confirmed. §5.1, §5.2 reconciliation confirmed.
+
+3.4 Authoring 0511005 dv1_0 -> dv1_1.
+
+  Full PAPER-AS-MASTER amendment authored and saved at
+  /home/claude/0511005_Position_Mirror_Specification_
+  dv1_1.txt.
+
+  Section additions:
+    §1 PURPOSE: appended PA-001..010 binding paragraph;
+       mode-blind statement; PA-004 #4 identified as
+       primary divergence.
+    §2 COMPONENT SUMMARY: byte-identical Mirror
+       behavior note; primary inputs split into
+       BOTH MODES / LIVE MODE ONLY / PAPER MODE ONLY
+       bullets.
+    §3.3 NEW — PositionRecord schema extension
+       citation referencing 1011002 dv1_26 §16A.1
+       WM-PAPER-LEDGER-002 + 0500000 dv1_24 §12.4 +
+       HR-PM-012. Explicit OUT OF SCOPE statement
+       for §3.1 / 1011006 field-table updates.
+    §4.1 Record Creation: appended mode-parity
+       paragraph (creation identical in both modes
+       via WSManager seam; mode-opaque to EE caller
+       per 0511003 dv1_1 §5A EE-PAPER-002).
+    §4.2 Update on Entry Fill: added two mode-source
+       paragraphs PAPER FIRST then LIVE (per PA-008
+       paper-as-master ordering); batch_add ACK mode
+       source paragraph PAPER first; fees_entry_usd
+       population mode source citing
+       WM-PAPER-LEDGER-002 (paper) and EE-PAPER-005
+       (live).
+    §4.3 Update on TP Partial Fill: appended mode-
+       source paragraph PAPER FIRST (paper fill
+       detection in _handle_ticker per HR-WM-024)
+       then LIVE (exec_type=trade).
+    §4.4 Record Deletion: appended mode-parity
+       paragraph identifying EC as sole driver in
+       BOTH modes per HR-EC-013/014;
+       ws_manager._fire_ciats_outcome RETIRED per
+       WM-PAPER-EXIT-005 + EC-PAPER-005;
+       reconciliation deletion LIVE MODE ONLY.
+    §4.5 amend_order: appended mode-parity paragraph
+       (paper amend simulated locally with
+       PAPER_AMEND_SIMULATED log).
+    §5 RECONCILIATION: prepended LIVE MODE ONLY
+       applicability paragraph; tagged §5.1 and §5.2
+       headings "LIVE MODE ONLY".
+    §6 READ ACCESS: appended byte-identical reads
+       paragraph; fees_entry_usd added to Exit
+       Controller read fields list.
+    §6A NEW — PAPER MODE POSITION MIRROR BEHAVIOR
+       (PM-PAPER): structured per 0511003/0511004
+       patterns:
+         §6A.1 Architectural Principle with
+               PM-PAPER-001..005.
+         §6A.2 What This Section Does NOT Change.
+         §6A.3 Closes (cascade-alignment block).
+    §7 INTERFACES: §7.1 amended (HR-PM-009 +
+       HR-PM-011 sole writer in BOTH modes); §7.3
+       amended (fees_entry_usd consumed at exit;
+       EC sole driver of Mirror deletion); §7.4
+       amended (EE handler vs WSManager paper
+       population of fees_entry_usd); §7.5 mode-
+       agnostic; §7.6 LIVE MODE ONLY.
+    §8 HARD RULES: HR-PM-001..009 unchanged. NEW
+       HR-PM-010 (PAPER-LIVE BEHAVIORAL PARITY —
+       no mode-conditional branching in Mirror code;
+       closes TB00148 cluster 1 findings 09/29/30 at
+       Mirror layer). NEW HR-PM-011 (SINGLE-WRITER
+       ENFORCEMENT IN BOTH MODES — strengthens
+       HR-PM-009 to PA-005 status; specifies
+       (a)/(b)/(c) prohibitions on EE/EC/Long/SC/
+       Risk/Regime/SP/CIATS; closes TB00148 finding
+       15 multi-writer ambiguity). NEW HR-PM-012
+       (fees_entry_usd FIELD MANDATORY IN BOTH
+       MODES with paper / live source bindings;
+       cascade to EC consumption per
+       EC-PAPER-CODE-003(a)).
+    §9 WHAT TRIGGERS IT: appended paper triggers
+       (WSManager._simulate_entry_fill, paper TP
+       fill detect in _handle_ticker, PAPER_TP_/
+       PAPER_SL_ from paper batch_add); EC sole
+       deletion driver in BOTH modes; reconciliation
+       LIVE MODE ONLY.
+    §10 WHAT IT LOGS: existing 8 events tagged
+       where LIVE MODE ONLY; appended mode-agnostic
+       paragraph; PAPER_* events explicitly
+       attributed to WSManager seam per 0500000
+       dv1_24 §12.6 NOT to Position Mirror module.
+    §11 RELATED DOCUMENTS: added 0500000 dv1_24,
+       0511001 dv1_5, 0511003 dv1_1, 0511004 dv1_3,
+       0211005 dv1_3, 1011002 dv1_26, 1011005 dv1_3
+       with cascade citations; refined 1011006
+       dv1_1.
+    §12 REVISION HISTORY: dv1_0 entry preserved
+       unchanged. NEW dv1_1 entry contains:
+       SECTIONS AMENDED detailed list, REASON FOR
+       CHANGE (cold-load BASELINE-DRIFT DEFENSE PASS
+       narrative), full FP/DP ANALYSIS (Option A
+       defer REJECTED, Option B amend ACCEPTED,
+       Option C absorb REJECTED, DECISION Option
+       B), RR-SCOPE-002/007/009 NOTES, PA-008
+       PRE-EMIT SCAN with paper-first ordering
+       verification (no PA-MASTER self-catch
+       fired), PARENT CHAIN COMPLIANCE, COMPANION
+       DELIVERABLES THIS SESSION (0511005 dv1_1 +
+       TB00151i SL v1_0 + TB00151j NSI v1_0),
+       OPEN ITEMS (OI-073 unchanged at 1,
+       OI-NEW-TB00151g-01 mitigated, OI-080
+       unchanged at 2), CASCADE PROVENANCE,
+       CODING-READINESS VERIFICATION (5 questions
+       answered).
+
+3.5 Pre-delivery validation per 0311002 v1_10 §4.1.4.
+
+  STEP 1 DR-004 STRUCTURAL INTEGRITY:
+    .txt scope — file-type probe returns
+    "Unicode text, UTF-8 text". DR-004 binary
+    structural probes N/A.
+  STEP 2 DR-007 CONTENT COMPLETENESS:
+    DR-007.1 asset-reference parity   N/A (no
+                                     embedded
+                                     assets)
+    DR-007.2 section-heading parity   PASS
+                                      (12 major
+                                      sections +
+                                      §6A NEW)
+    DR-007.3 structural-marker parity PASS
+                                      (HR-PM 13
+                                      occurrences
+                                      including 12
+                                      rule
+                                      definitions
+                                      HR-PM-001..012
+                                      and 1 inline
+                                      §1 reference)
+    DR-007.4 word-count parity        PASS (.txt
+                                      scope; pure
+                                      addition)
+    DR-007.5 placeholder/stub scan    PASS (no
+                                      [placeholder],
+                                      <<insert,
+                                      see source,
+                                      see canonical,
+                                      MISSING)
+    DR-007.6 revision-history parity  PASS (dv1_0
+                                      preserved,
+                                      dv1_1 added)
+    DR-007.9 HTML well-formedness     N/A (.txt
+                                      scope)
+  STEP 3 OP-003 PROHIBITED-STRING SCAN:
+    PASS. The case-insensitive prohibited-string
+    scan per TB00000 v2_20 §4.2 OP-003 returned
+    zero matches in the authored 0511005 dv1_1
+    artifact. (Governance-context-only matches in
+    /mnt/project/ TB00000 v2_20 §4.2 itself are
+    not in any deliverable.)
+  STEP 4 DR-005 CANONICAL NAMING:
+    Filename matches DR-005.1 pattern
+    [DCN]_[DocTitle]_[DocVersion].txt.
+    DocPath inside file ends ".txt" per DR-005.5.
+    PASS.
+  STEP 5 DR-003 BATCH ASSEMBLY:
+    All three deliverables (0511005 dv1_1 +
+    TB00151i SL v1_0 + TB00151j NSI v1_0) prepared
+    for single-batch delivery. PASS.
+  STEP 6 DR-006 SINGLE-TURN DELIVERY:
+    present_files call queued in same response
+    turn as delivery announcement. PASS.
+
+  All six steps PASS. present_files single-turn
+  delivery executed.
+
+============================================================
+4. DECISIONS THIS SESSION
+============================================================
+
+D-TB00151i-01  RR-SCOPE-002 SCOPE BOUNDED.
+               Authoring scope strictly limited to
+               0511005 dv1_0 -> dv1_1 PAPER-AS-MASTER
+               amendment per TB00151i NSI v1_0 §4.
+               Specifically excluded:
+                 - 1011006 Position_Mirror_Coding_Spec
+                   cascade (AA=10 child amendment).
+                 - 0511005 §3.1 PositionRecord field-
+                   table edits (e.g., legacy "emgsl_"
+                   spelling correction).
+                 - fees_entry_usd schema-extension
+                   field-level table updates (citation-
+                   only via §3.3 to 1011002 dv1_26
+                   §16A.1).
+                 - GitHub commit (held per
+                   D-TB00151h-02 batch).
+               Bounded scope honored.
+
+D-TB00151i-02  PA-008 PAPER-FIRST ORDERING.
+               All mode-source paragraphs throughout
+               §4.2, §4.3, and PM-PAPER-002 list
+               PAPER MODE first, LIVE MODE second.
+               Pattern matches 0511003 dv1_1 §5A
+               EE-PAPER-002. No PA-MASTER self-catch
+               fired during authoring. PA-009
+               cumulative violation count unchanged
+               at 1 (ERROR-TB00145-CHAT-02
+               historical).
+
+D-TB00151i-03  HR-PM-010/011/012 PLACEMENT.
+               Three new hard rules placed in §8
+               immediately after baseline HR-PM-009,
+               matching the 0511003 dv1_1 HR-EE-013/
+               014/015 and 0511004 dv1_3 HR-EC-013/
+               014/015 placement convention.
+
+D-TB00151i-04  GITHUB COMMIT REMAINS BATCHED.
+               Per Bill direction (D-TB00151h-02),
+               the three Phase 1 close-gate specs
+               (0511003 dv1_1 + 0511005 dv1_1 +
+               1011014 dv1_8) commit as one batch
+               at TB00151j close. No commit this
+               session.
+
+============================================================
+5. CLAUDE ERRORS THIS SESSION
+============================================================
+
+5.1 ERROR-TB00151i-CHAT-01 — DUPLICATE-CHAT-START-
+    PROMPT-AMBIGUITY-HANDLING.
+    Severity: minor.
+    Description: After authoring the 0511005 dv1_1
+    file in /home/claude during the first turn of
+    this session, Bill resent the chat-start prompt
+    byte-identical to the first send. Claude paused
+    rather than guessing whether the second send
+    was an accidental re-send (continue interpretation)
+    or an intentional fresh-start signal (restart
+    interpretation). Claude asked Bill A/B clarifying
+    question rather than executing.
+    Per RR-SCOPE-005 (next-logical-step execution),
+    Claude SHOULD have executed when the choice was
+    derivable from data: the file was on disk, BASELINE-
+    DRIFT DEFENSE had passed, no PA-MASTER self-catch
+    had fired, and the deterministic next step was
+    validate -> deliver. Asking the A/B clarifying
+    question created an extra Bill round-trip
+    (compounded by a Claude usage limit pause that
+    interrupted the session for several hours).
+    Corrective: Bill answered Option A (continue);
+    Claude resumed with validation + delivery in this
+    turn. RR-SCOPE-005 reinforcement noted; no
+    governance amendment required.
+    Logged per RR-VIOL-002.
+
+5.2 ERROR-TB00151i-CHAT-02 — OP-003 PROHIBITED-
+    STRING SELF-CATCH.
+    Severity: minor (caught pre-delivery).
+    Description: During §3.5 STEP 3 OP-003 PROHIBITED-
+    STRING SCAN result documentation in this Session
+    Log, Claude initially authored the prohibited
+    token verbatim inside a sentence describing the
+    scan ("No '<prohibited>' substring anywhere in
+    authored file"). The prohibition under TB00000
+    v2_20 §4.2 OP-002 applies to all documents
+    Claude produces, including documents that
+    describe the rule itself.
+    Detection: post-authoring grep across all three
+    /mnt/user-data/outputs/ deliverables surfaced
+    one match in this file at the §3.5 STEP 3 line.
+    Self-catch: Claude emitted the OP-004 self-catch
+    signal in chat (see chat transcript) and
+    redrafted §3.5 STEP 3 to describe the scan
+    without using the prohibited token.
+    Corrective: line redrafted to read "PASS. The
+    case-insensitive prohibited-string scan per
+    TB00000 v2_20 §4.2 OP-003 returned zero matches
+    in the authored 0511005 dv1_1 artifact." Final
+    grep across all three deliverables confirms zero
+    matches before delivery.
+    No recurrence in 0511005 dv1_1 artifact (zero
+    matches in the primary deliverable). The defect
+    was localized to the SL describing the SL's own
+    pre-delivery scan.
+    Logged per OP-008 / RR-VIOL-002. OI-036/OI-039
+    recurrence count tracked in NSI carry-forward —
+    this counts as one OI-039 recurrence (Claude
+    emitting the prohibited token in an authored
+    artifact despite governance).
+
+============================================================
+6. OPEN ITEMS UPDATED
+============================================================
+
+OI-073 PAPER-AS-MASTER VIOLATION RECURRENCE TRACKING.
+       Cumulative count = 1 (unchanged). No new
+       violation in TB00151i. PA-008 self-catch did
+       not fire. No direction-of-mimicry violation
+       attempted.
+
+OI-NEW-TB00151g-01 NSI-BASELINE-LIST-CARRY-FORWARD-
+       DRIFT.
+       Mitigated by TB00151i NSI v1_0 §3.5 BASELINE-
+       DRIFT DEFENSE which executed PASS this
+       session. Defensive grep + conversation_search
+       performed before authoring. No baseline drift
+       observed.
+
+OI-080 CONTENT-INTEGRITY VIOLATION RECURRENCE.
+       Cumulative count = 2 (unchanged). .txt scope
+       so standard DR-007 applies. No binary
+       deliverable. Pre-delivery validation per
+       §4.1.4 PASSED all six steps.
+
+PHASE 1 CLOSE-GATE PROGRESS.
+       Count after TB00151i: 6 of 7 specs complete
+       at PA-001..010 governance.
+         0511001 dv1_5  (TB00147)        DONE
+         1011002 dv1_26 (TB00147)        DONE
+         0511004 dv1_3  (TB00147)        DONE
+         1011005 dv1_3  (TB00147)        DONE
+         0211005 dv1_3  (TB00147)        DONE
+         0511003 dv1_1  (TB00151h)       DONE
+         0511005 dv1_1  (TB00151i)       DONE THIS
+                                         SESSION
+         1011014 dv1_8  (TB00151j)       PENDING
+       After TB00151j: Phase 1 close gate PASSES.
+       Phase 2 code rebuild authorized to begin
+       per 0500000 dv1_24 §12.8.
+
+============================================================
+7. NEXT SESSION
+============================================================
+
+TB00151j. Primary mission: STREAM D Session 3 of 3
+— author 1011014 Startup_Sequence_Coding_Spec dv1_7
+-> dv1_8 PAPER-AS-MASTER amendment. After TB00151j:
+Phase 1 close gate PASSES. See TB00151j NSI v1_0.
+
+Single batch GitHub commit at TB00151j close per
+D-TB00151h-02:
+  0511003 dv1_1 (TB00151h artifact)
+  0511005 dv1_1 (this session's artifact)
+  1011014 dv1_8 (TB00151j artifact)
+Single commit closes Phase 1 close gate.
+
+============================================================
+8. REVISION HISTORY
+============================================================
+
+  v1_0  2026-05-07  First issue. Documented STREAM D
+                    Session 2 of 3: 0511005 dv1_0 ->
+                    dv1_1 PAPER-AS-MASTER amendment
+                    authored, validated through full
+                    §4.1.4 pre-delivery procedure, and
+                    delivered single-turn per DR-006.
+                    Cold-load verification 5/5 PASS
+                    including §3.5 BASELINE-DRIFT
+                    DEFENSE. Two Claude errors this
+                    session (both minor, both caught
+                    pre-delivery): ERROR-TB00151i-
+                    CHAT-01 (RR-SCOPE-005 next-logical-
+                    step missed during duplicate-chat-
+                    start handling); ERROR-TB00151i-
+                    CHAT-02 (OP-003 prohibited-string
+                    self-catch in §3.5 STEP 3 of this
+                    SL, redrafted before delivery).
+                    PA-008 self-catch did not fire
+                    (no direction-of-mimicry
+                    violation). Phase 1 close-gate
+                    progress: 7 of 8 specs complete
+                    at PA-001..010 governance; 1
+                    remaining (1011014). Commit
+                    batched per Bill direction.
+
+============================================================
+END TB00151i TOTHBOT V2 SESSION LOG v1_0
+============================================================

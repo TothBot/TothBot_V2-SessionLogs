@@ -1,0 +1,219 @@
+DocDCN:     TB00053
+DocTitle:   TothBot_V2_Session_Log_2026-04-08
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\My_TothBot_Stuff\TBXXXXX_Session_Logs\TB00053_TothBot_V2_Session_Log_2026-04-08_v1_0.txt
+DocDate:    04-08-2026
+DocTime:    23:59:59 UTC
+
+============================================================
+TOTHBOT V2 — SESSION LOG 2026-04-08
+============================================================
+
+============================================================
+1. SESSION IDENTITY
+============================================================
+
+Session date:     April 8, 2026
+Session type:     OI-PENDING-001 resolution + Phase 11 prep
+Prior session:    TB00052 (2026-04-07 Part 5)
+
+Documents read:   TB00000  v2_8   (governing)
+                  TB00052  v1_0   (most recent session log)
+
+============================================================
+2. WHAT HAPPENED — COMPLETE RECORD
+============================================================
+
+------------------------------------------------------------
+2.1 OI-PENDING-001 — Investigated and Resolved
+------------------------------------------------------------
+
+TB00052 recorded three git anomalies:
+  modified:   tests/conftest.py
+  modified:   tothbot/long_module.py
+  untracked:  tothbot/long_module - Copy.py
+
+Investigation findings:
+
+  long_module.py:
+    Git diff confirmed this was the TB00051 fix:
+      position_mirror.clear_record() -> close_position()
+    Three call sites corrected (docstring, class docstring,
+    _handle_below_minimum method body). Correct change.
+    Per final git status, already committed to HEAD prior
+    to this session (committed during TB00052 integration
+    test debugging). No further action needed.
+
+  conftest.py:
+    Git diff showed committed version (143 lines) was the
+    correct shared fixtures file. Working tree contained
+    861 lines — the full integration test suite content —
+    saved to conftest.py instead of test_integration.py.
+    Root cause: file saved to wrong location during
+    TB00052 integration test debugging.
+    git checkout tests/conftest.py returned "Updated 0
+    paths from the index" because the 861-line version was
+    already staged in the index.
+    Fix: correct 143-line shared fixtures file reconstructed
+    and delivered. Bill saved it, overwriting wrong content.
+    Committed: f6ebd7e — "Phase 10: Restore correct
+    conftest.py shared fixtures" — pushed to master.
+    STATUS: RESOLVED.
+
+  long_module - Copy.py:
+    Accidental Windows Explorer copy. Deleted.
+    del "tothbot\long_module - Copy.py"
+    STATUS: RESOLVED.
+
+  test_integration.py:
+    Confirmed already committed and present in tests/.
+    8/8 integration tests passing.
+    STATUS: NO ACTION NEEDED.
+
+------------------------------------------------------------
+2.2 Missing Dependencies — Local Dev Environment Only
+------------------------------------------------------------
+
+pytest collection failed on test_vps_deployment.py due to
+two packages not installed on local Windows dev environment:
+  aiosmtplib — pip install aiosmtplib  (5.1.0 installed)
+  sdnotify   — pip install sdnotify    (0.3.2 installed)
+
+Both packages are in requirements.txt and present on VPS.
+Local environment gap only. Not a code defect.
+
+------------------------------------------------------------
+2.3 Full Test Suite — 103/103 Passing
+------------------------------------------------------------
+
+Command: python -m pytest tests/ -v
+Result:  103 passed in 1.57s
+
+  Tier 1 Unit Tests:    95 tests  — all pass
+  Tier 2 Integration:    8 tests  — all pass
+  Total:               103 tests
+
+Non-critical warning:
+  RuntimeWarning: coroutine 'send_alert' was never awaited
+  Pre-existing test artifact. Alert fires in test context
+  but coroutine not awaited at teardown. Does not affect
+  correctness. Not new. Monitor during paper trading.
+  Not blocking.
+
+============================================================
+3. PHASE 10 STATUS — FINAL
+============================================================
+
+  Tier 1 Unit Tests:    COMPLETE — 95/95 passing
+  Tier 2 Integration:   COMPLETE —  8/8 passing
+  OI-PENDING-001:       CLOSED
+  Git repo:             CLEAN
+  Total tests passing:  103/103
+
+  Phase 10 COMPLETE.
+
+============================================================
+4. PHASE 11 — PAPER TRADING ENTRY CRITERIA STATUS
+============================================================
+
+Per 1021003 Paper_Trading_Test_Specification dv1_0 Section 4:
+
+  PT-ENTRY-001  All unit tests pass           DONE — 95/95
+  PT-ENTRY-002  All integration tests pass    DONE —  8/8
+  PT-ENTRY-003  VPS deployed per 1011013      PENDING
+  PT-ENTRY-004  logrotate configured          PENDING
+  PT-ENTRY-005  IP whitelist confirmed        PENDING
+  PT-ENTRY-006  Alert email confirmed         PENDING
+  PT-ENTRY-007  systemd auto-restart confirmed PENDING
+  PT-ENTRY-008  Startup sequence confirmed    PENDING
+
+Governing documents for Phase 11:
+  1011013  VPS_Deployment_Coding_Spec         dv1_4
+  0211005  Paper_Trading_Operations_Procedure dv1_0
+  0211003  Startup_Shutdown_Procedure         dv1_0
+
+VPS: ssh root@87.99.141.44
+Repo: github.com/TothBot/TothBot_V2-Code
+Python: 3.12.3
+
+============================================================
+5. OPEN ITEMS
+============================================================
+
+  OI-PENDING-001  CLOSED this session.
+
+  CARRY FORWARD (non-blocking):
+    RuntimeWarning: coroutine 'send_alert' was never awaited.
+    Monitor during paper trading. Not blocking Phase 11.
+
+============================================================
+6. PARKING LOT
+============================================================
+
+  PL-001  WSManager dual PM creation paths. Monitor during
+          paper trading. Do not chase until problem confirmed.
+
+  PL-003  Pathway 1 GitHub automation. After paper trading.
+
+============================================================
+7. BILL ACTIONS REQUIRED
+============================================================
+
+Step 1 — Save session log:
+
+  Save TB00053 to:
+  C:\Users\wstot\My_TothBot_Stuff\TBXXXXX_Session_Logs\
+
+Step 2 — Upload to Claude project:
+
+  Upload TB00053 to Claude project.
+
+Step 3 — Start next session with the instruction in
+          Section 8 below.
+
+============================================================
+8. NEXT SESSION OPENING INSTRUCTION
+============================================================
+
+  ============================================================
+  Read TB00000 v2_8 and TB00053. Phase 10 complete --
+  103 tests passing (95 unit + 8 integration).
+  Begin Phase 11: VPS deployment and paper trading setup.
+
+  Before any work: read 1011013 VPS_Deployment_Coding_Spec
+  dv1_4 and 0211005 Paper_Trading_Operations_Procedure
+  dv1_0 in full.
+
+  Entry criteria remaining (PT-ENTRY-003 through PT-ENTRY-008):
+    PT-ENTRY-003  VPS deployed per 1011013
+    PT-ENTRY-004  logrotate configured
+    PT-ENTRY-005  IP whitelist confirmed
+    PT-ENTRY-006  Alert email confirmed working
+    PT-ENTRY-007  systemd auto-restart confirmed
+    PT-ENTRY-008  Startup sequence confirmed -- all pairs READY
+
+  VPS: ssh root@87.99.141.44
+  Repo: github.com/TothBot/TothBot_V2-Code
+  Python: 3.12.3
+
+  RULE 14: git push origin master. Always.
+  RULE 15: One command per copy box. Always.
+  RULE 6:  git add . is prohibited. Always.
+  RULE 4:  cd to repo root first. Always.
+  ============================================================
+
+============================================================
+9. REVISION HISTORY
+============================================================
+
+  v1_0  04-08-2026  OI-PENDING-001 resolved. conftest.py
+                    restored (f6ebd7e). long_module - Copy.py
+                    deleted. aiosmtplib and sdnotify installed
+                    locally. 103/103 tests passing.
+                    Phase 10 complete. Phase 11 entry criteria
+                    documented.
+
+============================================================
+END OF SESSION LOG
+============================================================

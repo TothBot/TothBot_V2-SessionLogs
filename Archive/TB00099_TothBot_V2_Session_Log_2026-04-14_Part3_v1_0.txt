@@ -1,0 +1,297 @@
+DocDCN:     TB00099
+DocTitle:   TothBot_V2_Session_Log_2026-04-14_Part3
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\My_TothBot_Stuff\TBXXXXX_Session_Logs\TB00099_TothBot_V2_Session_Log_2026-04-14_Part3_v1_0.txt
+DocDate:    04-14-2026
+DocTime:    23:59:59 UTC
+
+============================================================
+TOTHBOT V2 SESSION LOG — 2026-04-14 PART 3
+============================================================
+
+============================================================
+1. SESSION IDENTITY
+============================================================
+
+Session date:     April 14, 2026 (Part 3)
+Session number:   TB00099
+Session type:     DEFECT-SS-008 diagnosis, fix, and delivery.
+                  VPS deployment result analyzed.
+                  Two documents produced and delivered.
+Prior session:    TB00098 (2026-04-14 Part 2)
+
+Documents read this session:
+  TB00000  v2_8    Project Instructions             read
+  TB00098  v1_0    Prior session log                read
+  ws_manager.py    dv1_17                           read
+  1011002          WS_Manager_Coding_Spec dv1_16    read
+  03XXXXX          Governance documents             read
+
+============================================================
+2. WORK COMPLETED THIS SESSION
+============================================================
+
+------------------------------------------------------------
+2.1 VPS Deployment Result — dv1_17
+------------------------------------------------------------
+
+ws_manager.py dv1_17 deployed to VPS via git pull and
+systemctl restart. Log output analyzed.
+
+RESULT: PARTIAL PASS.
+
+  PAIR_MAPS_BUILT    pairs_mapped=1498    PASS — dv1_17 fix
+                                          confirmed working.
+  LIQUIDITY_SEED_FAILED                   FAIL — still firing.
+  WARMUP_REST_COMPLETE ready_pairs=1      PASS — system live.
+  SYSTEM_OPERATIONAL   ready_pairs=1      PASS — system live.
+  GATE_2_FAIL persisting liquidity_24h=0  FAIL — no trading.
+
+------------------------------------------------------------
+2.2 DEFECT-SS-008 — Root Cause Analysis
+------------------------------------------------------------
+
+Root cause identified via expanded grep and code inspection.
+
+DEFECT-SS-008: quote_currency derived from wrong source.
+
+_handle_instrument() populates pair_cache with:
+  "quote_currency": pair.get("quote_currency", "")
+
+Kraken WS v2 instrument snapshot does NOT provide a
+"quote_currency" field. pair.get("quote_currency", "")
+ALWAYS returns "".
+
+Downstream consequences:
+
+  (a) _build_monitored_universe():
+        quote = spec.get("quote_currency", "")
+        if quote not in ("USD", "USDC"): continue
+      ALL pairs fail this filter. candidates = [].
+      Only BTC/USD survives via hardcoded fallback.
+      → monitored_universe = ["BTC/USD"] (pairs=1).
+
+  (b) _warm_up_all_pairs():
+        candidates = [sym for sym, spec in pair_cache...
+          if spec.get("quote_currency") in ("USD","USDC")
+          and spec.get("status") == "online"]
+      Same filter. candidates = [] always.
+      → _rest_get_ticker([]) → {} immediately (silent).
+      → Both startup attempts return {}.
+      → LIQUIDITY_SEED_FAILED.
+      → Gate 2 blocks all entries. Zero trading.
+
+The PAIR_MAPS_BUILT=1498 in dv1_17 was correct — but the
+map build is irrelevant because candidates is always [].
+The symptom LIQUIDITY_SEED_FAILED persisting after dv1_17
+was therefore expected and correct — dv1_17 only fixed the
+map source, not the empty candidates root cause.
+
+Pre-existing spec defect also identified:
+WM-PS-005 through WM-PS-009 in Section 10 of 1011002
+spec were incorrectly prefixed WM-PS (same prefix as
+Pair Status rules in Section 9), creating a rule number
+collision. Fixed in 1011002 dv1_17 by renaming to
+WM-SZ-001 through WM-SZ-005.
+
+------------------------------------------------------------
+2.3 DEFECT-SS-008 Fix — Delivered
+------------------------------------------------------------
+
+Two documents produced with full document control.
+Both delivered in one batch per DR-003.
+
+DOCUMENT 1: ws_manager.py dv1_18
+
+  Single code change. _handle_instrument() line 1207.
+
+  OLD (wrong):
+    "quote_currency": pair.get("quote_currency", ""),
+
+  NEW (correct):
+    "quote_currency": symbol.split("/")[1] if "/" in symbol else "",
+
+  All Kraken WS v2 symbols are "BASE/QUOTE" format.
+  The quote asset is ALWAYS the right side of "/".
+  "BTC/USD".split("/")[1] → "USD"
+  "ETH/USDC".split("/")[1] → "USDC"
+  No dependency on instrument snapshot fields.
+
+  Additional changes:
+    pair_cache comment updated to include quote_currency
+    and note the derivation rule (WM-PS-006, DEFECT-SS-008).
+
+  Governed by 1011002 dv1_17 WM-PS-006.
+
+DOCUMENT 2: 1011002_WS_Manager_Coding_Spec dv1_17
+
+  Changes from dv1_16:
+    WM-PS-002: Corrected quote_currency criterion.
+      Was: "(1) quote_currency: USD or USDC" (no source
+      guidance — implied instrument snapshot).
+      Now: Explicitly states derivation from symbol name.
+      Kraken WS v2 instrument snapshot does NOT provide
+      "quote_currency" field. References WM-PS-006.
+    WM-PS-006 ADDED: New mandatory rule. quote_currency
+      in pair_cache MUST be derived from symbol by
+      splitting on "/" at index [1]. NEVER read from
+      instrument snapshot field. Full rationale, root
+      cause, and derivation formula documented.
+    WM-SZ-001 through WM-SZ-005: Pre-existing rule number
+      collision corrected. WM-PS-005 through WM-PS-009
+      (sizing rules in Section 10) renamed to WM-SZ-001
+      through WM-SZ-005. No code impact.
+
+------------------------------------------------------------
+2.4 Expected Post-dv1_18 Log Output
+------------------------------------------------------------
+
+After deploying ws_manager.py dv1_18:
+
+  PAIR_MAPS_BUILT        pairs_mapped=1498        PASS
+  LIQUIDITY_SEEDED       pairs_count=N (>0)       PASS — NEW
+  UNIVERSE_RANKED_BY_VOLUME universe_size=N        PASS — NEW
+  PAIR_READY             (one or more symbols)    PASS — NEW
+  WARMUP_REST_COMPLETE   ready_pairs=N (>1)       PASS
+  SYSTEM_OPERATIONAL     ready_pairs=N (>1)       PASS
+  PIPELINE_START         symbol != BTC/USD only   PASS — NEW
+  GATE_2_FAIL            ABSENT                   PASS — NEW
+
+FAIL CONDITIONS — paste to Claude and stop:
+  LIQUIDITY_SEED_FAILED  (still firing)
+  GATE_2_FAIL persisting after LIQUIDITY_SEEDED
+  Any ERROR or CRITICAL
+
+============================================================
+3. OPEN ITEMS
+============================================================
+
+OI-006  OPEN — Paper trading not yet confirmed active.
+        Confirm after LIQUIDITY_SEEDED fires on dv1_18.
+
+============================================================
+4. GITHUB COMMIT LOG — THIS SESSION
+============================================================
+
+  No commits this session. Bill commits after download.
+
+============================================================
+5. STANDING RULES — ALL ACTIVE
+============================================================
+
+  RULE 6  — git add . is prohibited. Explicit per file.
+  RULE 13 — .bat files go to Desktop only. Never in repo.
+  RULE 14 — git push origin master. NEVER origin main.
+  RULE 15 — ONE COMMAND PER COPY BOX. ALWAYS.
+  RULE 16 — .bat files run from cmd.exe only. Never PS.
+  RULE 17 — Always give complete and correct instructions.
+            Include Command Prompt or Powershell. Include
+            root file path in each instruction. Every step
+            must be executable without interpretation.
+
+  CODING RULES — ALL ACTIVE:
+  NO PATCHES EVER. Full file delivery only. Full document
+  control. Every code change = new version = full file
+  delivered as .txt per DR-001.
+
+  DELIVERY RULES — ALL ACTIVE:
+  DR-001 — All documents as .txt files.
+  DR-002 — 0500000 additionally as .docx and .pdf.
+  DR-003 — ALL documents in ONE BATCH. No piecemeal.
+
+============================================================
+6. BILL ACTIONS REQUIRED — THIS SESSION
+============================================================
+
+Step 1 — Save this session log:
+```
+C:\Users\wstot\My_TothBot_Stuff\TBXXXXX_Session_Logs\
+```
+
+Step 2 — Save ws_manager_dv1_18.py to local repo,
+         renaming to ws_manager.py:
+```
+C:\Users\wstot\GitHub\TothBot\TothBot_V2-Code\tothbot\ws_manager.py
+```
+
+Step 3 — Stage and commit ws_manager.py to TothBot_V2-Code:
+```
+cd C:\Users\wstot\GitHub\TothBot\TothBot_V2-Code
+```
+```
+git add tothbot\ws_manager.py
+```
+```
+git commit -m "DEFECT-SS-008: derive quote_currency from symbol name (dv1_18)"
+```
+```
+git push origin master
+```
+
+Step 4 — Save spec to local repo:
+```
+C:\Users\wstot\GitHub\TothBot\TothBot_V2-Docs\10XXXXX_Coding_Specification\1011002_WS_Manager_Coding_Spec_dv1_17.txt
+```
+
+Step 5 — Delete stale spec from local repo:
+```
+del C:\Users\wstot\GitHub\TothBot\TothBot_V2-Docs\10XXXXX_Coding_Specification\1011002_WS_Manager_Coding_Spec_dv1_16.txt
+```
+
+Step 6 — Stage and commit spec to TothBot_V2-Docs:
+```
+cd C:\Users\wstot\GitHub\TothBot\TothBot_V2-Docs
+```
+```
+git add 10XXXXX_Coding_Specification\1011002_WS_Manager_Coding_Spec_dv1_17.txt
+```
+```
+git add 10XXXXX_Coding_Specification\1011002_WS_Manager_Coding_Spec_dv1_16.txt
+```
+```
+git commit -m "DEFECT-SS-008: quote_currency derivation fix + WM-SZ renumber (1011002 dv1_17)"
+```
+```
+git push origin master
+```
+
+Step 7 — SSH to VPS and deploy dv1_18:
+```
+ssh root@87.99.141.44
+```
+```
+cd ~/TothBot_V2-Code && git pull
+```
+```
+sudo systemctl restart tothbot
+```
+
+Step 8 — Wait 60 seconds, then grep log:
+```
+grep -E "PAIR_MAPS_BUILT|LIQUIDITY_SEEDED|LIQUIDITY_SEED_FAILED|UNIVERSE_RANKED|WARMUP_REST_COMPLETE|SYSTEM_OPERATIONAL|GATE_2_FAIL|PIPELINE_START|ERROR|CRITICAL" /home/tothbot/logs/tothbot.log | tail -40
+```
+
+Step 9 — Paste full output to Claude.
+
+Step 10 — Upload TB00099 to Claude project folder.
+
+============================================================
+7. NEXT SESSION — COMPLETE INSTRUCTIONS
+============================================================
+
+============================================================
+DOCUMENTS TO READ — IN THIS ORDER:
+1. TB00000  v2_8   — Project Instructions
+2. TB00099  v1_0   — This session log (most recent)
+STATE ALL DOCUMENTS READ AND VERSIONS BEFORE ANY WORK.
+============================================================
+
+TASK — Confirm dv1_18 VPS deployment result.
+Paste grep output per Step 8 above.
+Expected: LIQUIDITY_SEEDED fires, GATE_2_FAIL absent,
+          PAIR_READY fires for multiple pairs.
+
+============================================================
+END OF SESSION LOG TB00099 v1_0
+============================================================

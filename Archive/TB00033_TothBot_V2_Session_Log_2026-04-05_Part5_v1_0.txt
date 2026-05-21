@@ -1,0 +1,461 @@
+DocDCN:     TB00033
+DocTitle:   TothBot_V2_Session_Log_2026-04-05_Part5
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\OneDrive\TothBot\TB00033_TothBot_V2_Session_Log_2026-04-05_Part5_v1_0.txt
+DocDate:    04-05-2026
+DocTime:    23:59:59 UTC
+
+============================================================
+TOTHBOT V2 -- SESSION LOG 2026-04-05 PART 5
+============================================================
+
+Read TB00001 through TB00032 first.
+
+This session: Phase 6 Steps 6.1-6.6 executed. Six new
+Phase 6 AA=08 Trading System documents written. Phase 6
+complete pending Bill commit. Two deferred values
+(cancel_timeout_window, mpp_retry_count) FP/DP derived
+and defined. OI-003 CLOSED.
+
+============================================================
+1. SESSION IDENTITY
+============================================================
+
+Session date:     April 5, 2026 (Part 5)
+Session type:     Phase 6 -- AA=08 Trading System document
+                  writing (Steps 6.1-6.6)
+Prior session:    TB00032 (2026-04-05 Part 4, Phase 5)
+
+Documents read:   TB00000 v2_7 (governing)
+                  TB00032 v1_0 (most recent session log)
+                  TB00031 v1_0 (Phase 4 log, for context)
+                  0311001 v1_0
+                  0311002 v1_0
+                  0500000 dv1_18 (Claude Source -- primary)
+                  0511003 dv1_0 (Execution Engine -- ref)
+                  0511004 dv1_2 (Exit Controller -- ref)
+                  0511005 dv1_0 (Position Mirror -- ref)
+                  0700000 dv1_0 (Phase 5 format reference)
+                  0811001-0811004 are new (no prior version)
+
+============================================================
+2. WHAT HAPPENED -- COMPLETE RECORD
+============================================================
+
+------------------------------------------------------------
+2.1 Six Phase 6 Documents Written -- Steps 6.1-6.6
+------------------------------------------------------------
+
+All six documents derived from 0500000 dv1_18 (AR-002,
+AR-006, AR-007, AR-008, AR-009, AR-011, AR-019, AR-040,
+AR-041, AR-046, AR-048, AR-054, AR-066, AR-069, AR-072,
+AR-073, I-2, I-4, I-6) and AA=05 component specifications
+as primary content sources.
+
+  0800000  Trading_System                          dv1_0
+  0810000  Trading_System_Modules_Anchor           dv1_0
+  0811001  Long_Module_Specification               dv1_0
+  0811002  Selection_Controller_Specification      dv1_0
+  0811003  Exit_Controller_Specification           dv1_0
+  0811004  Entry_Limit_Placement_Specification     dv1_0
+
+------------------------------------------------------------
+2.2 FP/DP Analysis -- Two Deferred Values Resolved
+------------------------------------------------------------
+
+Both values were deferred from 0511004 (dv1_1 revision
+history). Both FP/DP derived this session. Both defined
+in 0811003. OI-003 CLOSED.
+
+cancel_timeout_window = 5.0 seconds
+  Basis: VPS-to-Kraken latency (A-3 monitoring data),
+  TCP retry timing (10-50ms normal, up to 3-4s on
+  disruption), false timeout vs hold-on-ambiguity cost
+  analysis. 5.0s covers all realistic disruption scenarios.
+  CIATS adjusts from actual ws_roundtrip_latency_ms data.
+
+mpp_retry_count = 3
+  Basis: Kraken MPP behavior (0411001 WS-MPP-001 through
+  -004), IOC retry at best_bid - 0.2% per attempt,
+  spread analysis on $500k+ daily volume pairs, rate
+  counter cost per retry (1 unit). 3 retries covers
+  elevated and near-extreme spread scenarios. After 3:
+  HOLD + CRITICAL alert is the correct response.
+
+------------------------------------------------------------
+2.3 Document-by-Document Summary
+------------------------------------------------------------
+
+0800000 Trading_System (Domain Document)
+  Scope: all Trading System modules (Long Module, Selection
+  Controller, Exit Controller, Entry Limit Placement).
+  5 governing principles. Pipeline position mapping
+  (Gates 5, 8, dispatch, monitoring). 9-parameter CIATS
+  registry. 12 hard rules. 1 sub-domain.
+
+0810000 Trading_System_Modules_Anchor (Sub-Domain Anchor)
+  Anchors 0811001-0811004 to 0800000. Document inventory
+  with content summaries. Dependency order. External
+  dependencies on 0711001 noted (0811002 and 0811004).
+
+0811001 Long_Module_Specification (Instance)
+  Phase 1 (entry dispatch): cl_ord_id at dispatch (LM-001
+  through LM-004). add_order format (LM-005 through
+  LM-010). Pending Order Registry (LM-011 through LM-012).
+  6 entry order outcomes (LM-013 through LM-018). Partial
+  fill protection AR-054 (LM-019).
+  Phase 2 (position protection): R:R formula using actual
+  fill price (LM-021 through LM-023). batch_add format
+  (LM-024 through LM-027). Position Mirror write (LM-028
+  through LM-029). 8 hard rules. 5 coding-readiness Qs.
+
+0811002 Selection_Controller_Specification (Instance)
+  6 quality gates fully specified (SC-001 through SC-026):
+    SC-GATE-1: SSS PASS
+    SC-GATE-2: candle body > ATR * 0.3
+    SC-GATE-3: no existing position
+    SC-GATE-4: cooldown 300s
+    SC-GATE-5: position size viability
+    SC-GATE-6: consecutive losses < 3
+  State management: exit_cooldown_log dict (SC-019 through
+  SC-022), consecutive_loss_count dict (SC-023 through
+  SC-026). Both preserved across reconnect (AR-073).
+  7 hard rules. 3 CIATS parameters. 5 coding-readiness Qs.
+
+0811003 Exit_Controller_Specification (Instance)
+  New AA=08 document. Distinct from 0511004 (AA=05).
+  FP/DP derivations for deferred values (Section 4).
+  3-layer architecture: L1a (EC-001 through EC-007),
+  L1b (EC-008 through EC-011), L2 (EC-012 through
+  EC-015), L3 reference (EC-016 through EC-019).
+  Full Halt batch_cancel (EC-020 through EC-021).
+  Cancel timeout fallback (EC-022 through EC-026).
+  MPP IOC retry strategy (EC-027 through EC-031).
+  Pair status adaptation (EC-032 through EC-033).
+  CIATS Trade Outcome Bus (EC-034 through EC-036).
+  12 hard rules. 4 CIATS parameters. 5 coding-readiness Qs.
+
+0811004 Entry_Limit_Placement_Specification (Instance)
+  entry_limit_price = candle_close ROUND_DOWN to
+  price_increment (ELP-001 through ELP-009). AR-069
+  fully specified. Candle close rationale (vs best_ask,
+  mid, last). ROUND_DOWN rationale. price_increment from
+  instrument channel snapshot. Decimal arithmetic.
+  5 hard rules. No numeric CIATS parameters (entry basis
+  is an architectural decision, not a CIATS parameter).
+  5 coding-readiness questions.
+
+------------------------------------------------------------
+2.4 Two-Criteria Review
+------------------------------------------------------------
+
+Two-criteria review applied to all six documents:
+  (1) Every decision FP/DP analyzed? YES for all six.
+  (2) Everything automatable automated? YES for all six.
+
+No defects found. Key validations:
+
+  0800000: No new decisions introduced. All content traces
+           to validated ARs in 0500000. Sacred 1:1.5 R:R
+           correctly identified as hardcoded, not CIATS.
+
+  0810000: Structural anchor only. External dependency on
+           0711001 correctly noted (SC-GATE-1 and ELP basis).
+
+  0811001: Phase 1 and Phase 2 fully consistent with 0511003.
+           Partial fill protection (AR-054) correctly handled.
+           batch_add atomic dispatch confirmed. No async gap
+           (A-2) correctly implemented via dispatch-time
+           Position Mirror write.
+
+  0811002: All 6 gates consistent with AR-072. State dict
+           preservation across reconnect (AR-073) confirmed.
+           Monotonic clock (time.monotonic()) correctly
+           specified for cooldown measurement.
+           TIME_EXPIRY correctly identified as a loss
+           (increments consecutive_loss_count).
+
+  0811003: cancel_timeout_window and mpp_retry_count
+           FP/DP derived and documented. MAE using bid_price
+           (AR-048) confirmed. Layer 3 never in normal
+           operation (AR-001) confirmed. batch_cancel (not
+           cancel_order) for Full Halt (AR-041) confirmed.
+           Trade Outcome Bus fires once per close (AR-066)
+           confirmed. Drawdown circuit breakers read live
+           (not from snapshot) per D-003 in TB00031 confirmed.
+
+  0811004: Candle close basis (AR-069) confirmed as only
+           correct basis. ROUND_DOWN rationale documented.
+           price_increment from instrument channel (GAP-C)
+           confirmed. No hardcoded tick sizes.
+
+============================================================
+3. DECISIONS MADE THIS SESSION
+============================================================
+
+  D-001   cancel_timeout_window = 5.0 seconds (CIATS-owned).
+          FP/DP derived from VPS-to-Kraken latency profile
+          and TCP retry timing. CIATS adjusts from actual
+          ws_roundtrip_latency_ms (A-3 EWMA signal) data.
+
+  D-002   mpp_retry_count = 3 (CIATS-owned). FP/DP derived
+          from Kraken MPP behavior, IOC retry strategy, and
+          $500k+ volume pair spread analysis. 3 retries
+          covers elevated and near-extreme spread scenarios.
+
+  D-003   TIME_EXPIRY counts as a loss for consecutive_loss_
+          count purposes. Rationale: time expiry means the
+          position did not achieve TP — it is a failure of
+          the momentum thesis regardless of exact P/L.
+          Incrementing the count is the conservative/
+          loss-prevention choice.
+
+  D-004   entry_limit_basis = candle_close is an architectural
+          decision, NOT a CIATS parameter. CIATS does not own
+          the price basis. Changing it requires a document
+          revision and architectural review.
+
+============================================================
+4. DOCUMENTS PRODUCED THIS SESSION
+============================================================
+
+  0800000  Trading_System                          dv1_0  ★
+  0810000  Trading_System_Modules_Anchor           dv1_0  ★
+  0811001  Long_Module_Specification               dv1_0  ★
+  0811002  Selection_Controller_Specification      dv1_0  ★
+  0811003  Exit_Controller_Specification           dv1_0  ★
+  0811004  Entry_Limit_Placement_Specification     dv1_0  ★
+  Phase6_Trading_System_Commit.bat                        ★
+  TB00033  This session log                        v1_0   ★
+
+★ = Produced this session
+
+============================================================
+5. GITHUB COMMITS -- PHASE 6
+============================================================
+
+Bill commits 6 documents using Phase6_Trading_System_Commit.bat
+Folder: 08XXXXX_Trading_System\
+
+  0800000_Trading_System_dv1_0.txt
+  0810000_Trading_System_Modules_Anchor_dv1_0.txt
+  0811001_Long_Module_Specification_dv1_0.txt
+  0811002_Selection_Controller_Specification_dv1_0.txt
+  0811003_Exit_Controller_Specification_dv1_0.txt
+  0811004_Entry_Limit_Placement_Specification_dv1_0.txt
+
+PHASE 6: COMPLETE after Bill commits and confirms.
+
+============================================================
+6. COMPLETE DOCUMENT INVENTORY -- CURRENT STATE
+============================================================
+
+PHASE 1 DOCUMENTS -- APPROVED AND ON GITHUB (all v1_0):
+  0000000  Ethics_and_Safety                   v1_0  +
+  0100000  Management                          v1_0  +
+  0200000  Operations                          v1_0  +
+  0300000  Governance                          v1_0  +
+  0310000  Governance_Procedures_Anchor        v1_0  +
+  0311001  Namespace_Specification             v1_0  +
+  0311002  Document_Creation_Workflow          v1_0  +
+  0311003  Versioning_Procedure                v1_0  +
+  0311004  Document_Creation_and_Approval      v1_0  +
+  0311005  System_Definitions_and_Terminology  v1_0  +
+
+PHASE 2 AA=04 DOCUMENTS -- ON GITHUB (all dv):
+  0400000  Exchange_Interface                  dv1_0  +
+  0410000  Exchange_Interface_Kraken_Anchor    dv1_0  +
+  0411001  Kraken_WS_v2_Specification          dv1_11 +
+  0411002  Kraken_REST_API_Specification       dv1_0  +
+  0411003  Kraken_Fee_Rate_Limit_Specification dv1_0  +
+
+PHASE 2 AA=05 DOCUMENTS -- ON GITHUB (all dv):
+  0500000  System_Architecture_Overview        dv1_18 +
+           Three formats (docx, pdf, Claude_Source.txt)
+  0510000  System_Components_Anchor            dv1_0  +
+  0511001  WS_Manager_Specification            dv1_0  +
+  0511002  Signal_Pipeline_Specification       dv1_0  +
+  0511003  Execution_Engine_Specification      dv1_0  +
+  0511004  Exit_Controller_Specification       dv1_2  +
+  0511005  Position_Mirror_Specification       dv1_0  +
+  0511006  Logger_Specification                dv1_0  +
+
+PHASE 3 AA=02 DOCUMENTS -- ON GITHUB (all dv):
+  0210000  Operations_CIATS_Anchor             dv1_0  +
+  0211001  CIATS_Specification                 dv1_0  +
+  0211002  Operations_Infrastructure_Spec      dv1_0  +
+  0211003  Startup_Shutdown_Procedure          dv1_0  +
+  0211004  Incident_Response_Procedure         dv1_0  +
+  0211005  Paper_Trading_Operations_Procedure  dv1_0  +
+
+PHASE 4 AA=06 DOCUMENTS -- ON GITHUB (all dv):
+  0600000  Risk                                dv1_0  +
+  0610000  Risk_Rules_Anchor                   dv1_0  +
+  0611001  Position_Sizing_Rules               dv1_0  +
+  0611002  Drawdown_and_Halt_Rules             dv1_0  +
+  0611003  Concentration_and_Exposure_Rules    dv1_0  +
+  0611004  Safety_Parameter_Framework          dv1_0  +
+
+PHASE 5 AA=07 DOCUMENTS -- ON GITHUB (all dv):
+  0700000  Strategy                            dv1_0  +
+  0710000  Strategy_Signals_Anchor             dv1_0  +
+  0711001  SSS_Signal_Model_Specification      dv1_0  +
+  0711002  Regime_Taxonomy_Specification       dv1_0  +
+  0711003  Asset_Selection_Specification       dv1_0  +
+
+PHASE 6 AA=08 DOCUMENTS -- NEW THIS SESSION (all dv):
+  0800000  Trading_System                      dv1_0  NEW
+  0810000  Trading_System_Modules_Anchor       dv1_0  NEW
+  0811001  Long_Module_Specification           dv1_0  NEW
+  0811002  Selection_Controller_Specification  dv1_0  NEW
+  0811003  Exit_Controller_Specification       dv1_0  NEW
+  0811004  Entry_Limit_Placement_Specification dv1_0  NEW
+
+WORKING DRAFT CODING SPECS (on GitHub -- WD, premature):
+  1011001  Engineering_Best_Practices          dv1_5
+  1011002  WS_Manager_Coding_Spec              dv1_11
+  1011005  Exit_Controller_Coding_Spec         dv1_1
+  1011007  Logger_Coding_Spec                  dv1_1
+  1011010  CIATS_Coding_Spec                   dv1_5
+  1011011  Risk_Engine_Coding_Spec             dv1_2
+  1011012  Regime_Engine_Coding_Spec           dv1_3
+  1011013  VPS_Deployment_Coding_Spec          dv1_3
+  1011014  Startup_Sequence_Coding_Spec        dv1_2
+
++ = On GitHub
+NEW = Added this session (pending Bill commit)
+
+============================================================
+7. OPEN ITEMS -- CURRENT STATE
+============================================================
+
+  OI-003  CLOSED this session.
+          cancel_timeout_window = 5.0s (FP/DP derived).
+          mpp_retry_count = 3 (FP/DP derived).
+          Both defined in 0811003.
+
+  OI-008  All AA=10 coding specifications -- Phase 8.
+
+  All other OIs closed in prior sessions.
+
+============================================================
+8. PARKING LOT -- CURRENT STATE
+============================================================
+
+  PL-003     TRACKING: Pathway 1 GitHub automation.
+             After Pathway 2 reaches paper trading readiness.
+
+  PL-NEW-001 WD documents prematurely on GitHub.
+             Accepted as-is. Future updates commit correctly.
+
+  PL-NEW-002 git add . prohibited. Standing rule.
+
+  PL-NEW-003 Multi-line commit -m breaks Windows batch.
+
+  PL-NEW-004 cd to repo root must be first command in all
+             git sequences. Standing rule.
+
+============================================================
+9. BILL ACTIONS REQUIRED
+============================================================
+
+  (a) Create folder in TothBot_V2-Docs if not exists:
+        C:\Users\wstot\GitHub\TothBot\TothBot_V2-Docs\
+        08XXXXX_Trading_System\
+
+  (b) Download 6 Phase 6 documents from Claude outputs:
+        0800000_Trading_System_dv1_0.txt
+        0810000_Trading_System_Modules_Anchor_dv1_0.txt
+        0811001_Long_Module_Specification_dv1_0.txt
+        0811002_Selection_Controller_Specification_dv1_0.txt
+        0811003_Exit_Controller_Specification_dv1_0.txt
+        0811004_Entry_Limit_Placement_Specification_dv1_0.txt
+
+  (c) Place all 6 in:
+        C:\Users\wstot\GitHub\TothBot\TothBot_V2-Docs\
+        08XXXXX_Trading_System\
+
+  (d) Download Phase6_Trading_System_Commit.bat.
+      Save to OneDrive or Desktop (NOT inside repo).
+
+  (e) Run git status first. Verify only the 6 expected
+      files appear as untracked. If unexpected files
+      appear: stop and tell Claude.
+
+  (f) Run Phase6_Trading_System_Commit.bat.
+
+  (g) Confirm all 6 commits pushed successfully.
+      Report commit hashes to Claude.
+
+  (h) Upload TB00033 (this log) to Claude project.
+
+  (i) Upload all 6 Phase 6 documents to Claude project.
+
+  (j) Tell Claude: "Phase 6 committed. Begin Phase 7."
+
+============================================================
+10. NEXT SESSION -- WHERE WE PICK UP
+============================================================
+
+Phase 7 per 0311002 Document_Creation_Workflow v1_0:
+Phase 7 is not explicitly numbered in 0311002 as "Phase 7"
+but follows the domain sequence. The next domain after
+AA=08 is AA=09 Plans (if applicable) or AA=10 Coding
+Specifications. Verify with 0311002 at next session start.
+
+Per 0311002 section structure and domain order:
+
+  AA=09 Plans (if required per 0311002 workflow)
+
+  OR Phase 8 (0311002 sequence) -- AA=10 Coding Specs:
+    The AA=10 coding specification documents are the
+    last major document writing phase before coding.
+    Several WD coding specs already exist (see inventory).
+    These will be completed and elevated to full specs.
+
+Bill: at next session start, Claude reads 0311002 v1_0 to
+confirm the exact next phase designation and steps.
+
+============================================================
+11. STANDING RULES -- ALL ACTIVE
+============================================================
+
+RULE 1  -- 0500000 must be built with docx-js (Node.js).
+RULE 2  -- 0500000 three-file protocol (txt + docx + pdf).
+RULE 3  -- Diagrams placed immediately after section headings.
+RULE 4  -- DocPath correction = change = version increment.
+RULE 5  -- Never go from memory. Always read project files.
+RULE 6  -- git add . is prohibited. Explicit git add per file.
+RULE 7  -- Multi-line git commit -m breaks Windows batch.
+RULE 8  -- dv -> v is valid (direct promotion).
+RULE 9  -- After any accidental commit, immediately run
+           git rm --cached on each affected file and push.
+           Never defer.
+RULE 10 -- Before running any commit script, Bill runs
+           git status first. If unexpected files appear:
+           stop, do not run the script, tell Claude.
+RULE 11 -- All commit scripts include git status as the
+           first command before any git add.
+RULE 12 -- docx-js ImageRun transformation uses pixels at
+           96dpi. US Letter 1-inch margins: content width
+           = 624px. Never use EMU in ImageRun transformation.
+RULE 13 -- .bat commit scripts must never be saved inside
+           the repo folder tree. Save to OneDrive or
+           Desktop only.
+
+============================================================
+12. REVISION HISTORY
+============================================================
+
+  v1_0  04-05-2026  Initial session log. Phase 6 complete.
+                    Six AA=08 Trading System documents written
+                    (Steps 6.1-6.6). Two-criteria review
+                    passed for all six. FP/DP analysis for
+                    cancel_timeout_window (5.0s) and
+                    mpp_retry_count (3) completed. OI-003
+                    CLOSED. Four decisions recorded.
+
+============================================================
+END OF SESSION LOG
+============================================================

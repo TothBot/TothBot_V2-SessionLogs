@@ -1,0 +1,420 @@
+DocDCN:     TB00241
+DocTitle:   Session_Log
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TBXXXXX_Session_Logs\TB00241_TothBot_V2_Session_Log_2026-05-13_v1_0.txt
+DocDate:    05-13-2026
+DocTime:    23:59:59 UTC
+
+============================================================
+TB00241 SESSION LOG
+============================================================
+
+============================================================
+1. SESSION OVERVIEW
+============================================================
+
+1.1 SESSION PURPOSE.
+
+Execute S-2 AMENDMENT-5 per TB00241 NSI v1_0 OCS
+directive: 0500000 dv1_62 -> dv1_63 D1 R3 -> R4 root
+governs list ADD ar:AR-056 (mid-session WS reconnect
+with pipeline-no-fire clause) per TB00195 §7.1 cluster
+C4 closure path under DEC-003 Path A sequential
+cadence.
+
+1.2 SESSION CLASSIFICATION.
+
+S-2 authoring execution session. Governance-amendment
+bundle from TB00237 (DD-011 + DD-012) remains in FORCE.
+No further governance amendments enacted this session.
+
+1.3 PREDECESSOR SESSION.
+
+TB00240 SL v1_0 (2026-05-13). AMENDMENT-4 (0500000
+dv1_61 -> dv1_62 D1 R2 -> R3 ar:AR-068 SSS indicator
+seeding at startup governs-list extension) landed and
+verified at TB00241 cold-load.
+
+============================================================
+2. COLD-LOAD VERIFICATION
+============================================================
+
+2.1 MANDATORY READING — VERSIONS READ.
+
+  TB00000 v2_38           Project Instructions.
+  TB00240 SL v1_0         Predecessor session log.
+  TB00241 NSI v1_0        This session's directive.
+  0311001 v1_15           Namespace_Specification.
+  0311002 v1_12           Document_Creation_Workflow.
+  0500000 dv1_62          System_Architecture_Overview
+                          (D1 R3; AMENDMENT-4 landed).
+  TB00153 MDR v1_13       Master Defect Register.
+  TB00153 Decision_Register v1_5.
+
+  Conditional reads consulted at chat-turn 1:
+  TB00195 S1SP Gap Register v1_0 (§C4 AR-056 closure
+                          path).
+  0500000 §4 lines 5239-5256 (AR-056 canonical
+                          semantics for RR-SCOPE-010
+                          verbatim citation).
+
+2.2 PROJECT-FOLDER PRE-FLIGHT (DC-PREFLIGHT-001 +
+    DC-CLEANUP-006 + ERROR-TB00238-CHAT-01
+    DIRECT-INSPECTION DIRECTIVE).
+
+Direct ls /mnt/project/ executed at chat-turn 1
+before authoring any cleanup list (carry-forward
+from TB00238 SL §8.1 corrective and TB00241 NSI
+§9.5).
+
+Observed project-folder drift versus TB00241 NSI
+§9.1 KEPT + §9.2 ABSENT directive:
+
+  KEPT verification: all required files present
+    (TB00000 v2_38, TB00153 MDR v1_13, TB00153
+    Decision_Register v1_5, 0311001 v1_15, 0311002
+    v1_12, 0500000 dv1_62, TB00240 SL + NSI,
+    TB00241 NSI, all governance + spec + 10XXXXX +
+    code/operations files). PASS.
+
+  ABSENT verification:
+    0500000_System_Architecture_Overview_dv1_61_
+      Claude_Source.html — NOT PRESENT (cleanup
+      complete from TB00240 close). PASS.
+    TB00236_TothBot_V2_Session_Log_2026-05-13_v1_1
+      .txt — PRESENT (rolling-window aged-out
+      cleanup pending at TB00241 close).
+    TB00236_Next_Session_Instructions_v1_0.txt —
+      PRESENT (paired; pending at TB00241 close).
+
+  ADDITIONAL DRIFT (DC-PREFLIGHT-001(c)):
+    TB00235_TothBot_V2_Session_Log_2026-05-13_v1_0
+      .txt — PRESENT. Should have been aged-out at
+      TB00239 close per 4-session rolling-window
+      pattern; carry-over.
+    TB00235_Next_Session_Instructions_v1_0.txt —
+      PRESENT. Paired with TB00235 SL; same carry-
+      over.
+
+Drift surfaced to Bill at chat-turn 1 as cleanup
+list response (4 files for safe removal at TB00241
+close).
+
+============================================================
+3. AMENDMENT-5 EXECUTION
+============================================================
+
+3.1 SCOPE.
+
+0500000 dv1_62 -> dv1_63. D1 (Image1 Kraken API
+Connection Architecture) R3 -> R4. Root governs-
+list ADD ar:AR-056 (mid-session WS reconnect with
+pipeline-no-fire clause). Single token addition.
+SVG visual geometry preserved BYTE-IDENTICAL.
+
+3.2 DD-011 FP/DP-DERIVABILITY-TEST GATE — D1 vs D2
+    TARGET SELECTION.
+
+Per TB00000 v2_38 §4.5 DD-011 PRE-EMIT SCAN +
+RR-SCOPE-005 derivable-decision execution authority.
+
+Option set: {D1 root governs, D2 root governs}.
+
+First-principles analysis:
+  D1 (Kraken API Connection Architecture):
+    - WS_Manager-owned reconnect orchestration is
+      the canonical site for AR-056
+    - D1 already encodes contract:WM-RECONNECT-016
+      (transient WS catch + per-shard reconnect)
+    - AR-056 is fundamentally a WS_Manager rule
+      with cross-cutting Signal_Pipeline implication
+  D2 (Trading Pipeline):
+    - Pipeline-gating consequence-side encoding
+    - HR-SP-010 derivable from AR-056 in D1
+    - Not the canonical source for the architectural
+      rule
+
+Data sources consulted:
+  - TB00195 §7.1 cluster C4 explicit recommendation:
+    "Recommended diagram target: D1 root governs
+    (WS_Manager owns reconnect orchestration;
+    AR-056 is fundamentally a WS_Manager rule with
+    cross-cutting Signal_Pipeline implication)".
+  - 0500000 §4 line 5239-5256 AR-056 canonical
+    registry entry (verbatim semantics).
+  - 1011002 WM-RECONNECT-001..016 assignment chain.
+  - 1011014 SS-RECON-001..016 assignment chain.
+
+Elimination outcomes:
+  - D2 eliminated: Signal_Pipeline coordination rule
+    (HR-SP-010) is the implementation consequence
+    of AR-056 in D1, not the canonical architectural
+    source.
+
+Remaining option: D1 root governs.
+
+OUTCOME: 1 (DERIVABLE). Exception (b) Bill business
+judgment does NOT apply. Executed under RR-SCOPE-005
+derivable-decision authority. No ratification
+question surfaced.
+
+3.3 RR-SCOPE-009 FOUR-QUESTION ORIGIN INVESTIGATION
+    (AR-056 LOAD-BEARING CONSTRAINT).
+
+(1) Introduced: AR-056 added 0500000 dv1_13 as
+    distinct mid-session reconnect logic separate
+    from cold-start (startup).
+
+(2) Problem solved: WS reconnect during open
+    positions requires distinct state preservation
+    logic versus cold-start:
+      - portfolio_baseline_USD: NEVER reset on
+        reconnect.
+      - drawdown_pct: PRESERVED across reconnect.
+      - system_state (halt/pause): PRESERVED across
+        reconnect.
+      - ATR/EMA caches: PRESERVED unless gap > 15
+        minutes (stale threshold).
+      - Position Mirror: reconciled via snap_orders
+        comparison.
+      - Pending Order Registry: reconciled against
+        snap_orders.
+
+(3) Evidence still load-bearing: 1011002
+    WM-RECONNECT-001..015 + 1011014 SS-RECON-001..
+    016 actively implement AR-056. Recurrence-prone
+    class of defect if removed.
+
+(4) Loss-prevention property: pipeline gating during
+    reconnect prevents trading decisions on stale
+    cache during connection instability — a core
+    loss-prevention property. MUST be preserved.
+    D1 governs-list encoding satisfies.
+
+3.4 RR-SCOPE-007 SELF-AUTHORED-NSI-SOURCE-PROHIBITION
+    COMPLIANCE.
+
+AMENDMENT-5 scope sourced from:
+  - TB00195 §C4 (Bill-ratified S1SP Gap Register
+    controlled document).
+  - TB00241 NSI §3 (this session NSI directive;
+    Bill OCS directive).
+  - TB00000 v2_38 (Bill-ratified Project
+    Instructions).
+  - 0500000 §4 line 5239-5256 (AR-056 canonical
+    semantics).
+
+No Claude-authored NSI sentences treated as Bill
+direction without verbatim Bill-quote backing.
+
+3.5 RR-SCOPE-010 VERBATIM-MDR-CITATION DISCIPLINE.
+
+AR-056 semantics grep-verified verbatim against
+0500000 §4 line 5239-5256 ("Mid-session WS
+reconnect sequence is DISTINCT from startup and
+MUST be implemented separately. 11-step sequence...
+Pipeline evaluations: PROHIBITED during reconnect.
+Candle events queued during reconnect are DISCARDED
+after completion.").
+
+3.6 EDITS APPLIED (10 ENUMERATED).
+
+EDIT 1 — HTML <head><title> dv1_62 -> dv1_63.
+EDIT 2 — DocVersion header dv1_62 -> dv1_63.
+EDIT 3 — DocPath header dv1_62 -> dv1_63.
+EDIT 4 — D1 SVG <title> R3 -> R4.
+EDIT 5 — D1 root <desc> diagram_canonical R3 -> R4.
+EDIT 6 — D1 root <desc> R-increment field rewrite;
+         R3 narrative preserved as R-increment-prior;
+         R2 narrative preserved as R-increment-prior-2.
+EDIT 7 — D1 root <desc> governs list ADD ar:AR-056
+         token between ar:AR-047 and ar:AR-058.
+EDIT 8 — D1 SVG title-bar <text> R3 -> R4 narrative
+         refresh + canonical name R3 -> R4.
+EDIT 9 — D1 figcaption R4 narrative prepend;
+         R3 narrative preserved verbatim.
+EDIT 10 — Inner revision history dv1_63 entry
+         added before dv1_62 entry; all prior
+         entries preserved verbatim per CI-006.
+
+3.7 SVG BYTE-IDENTICAL PRESERVATION VERIFICATION.
+
+EDIT 8 modifies <text> content inside SVG; no
+rect/path/polygon/line geometry byte change. No
+viewBox change (1500x1600 preserved). No new
+labeled <g> group. All 9 other figures (Tier 1
+Context + D2 + D3 + D4 + D5 + D6 + D7 + D8 + D9)
+preserved byte-identical per DEC-003 Path A
+one-diagram-per-session cadence.
+
+============================================================
+4. VALIDATION GATE RESULTS
+============================================================
+
+4.1 DR-007 HTML SCOPE VALIDATION — PASS.
+
+  DR-007.1H asset-reference parity: figure count
+    10 -> 10 (identity check); SVG count 10 -> 10;
+    placeholder count 1 -> 1. PASS.
+  DR-007.2H section-heading parity: no new
+    h2/h3 introduced. PASS.
+  DR-007.3H structural-marker parity: HTMLParser
+    feed produces 0 orphan close tags, 0 unclosed
+    elements at EOF, identical to dv1_62 baseline
+    behavior. PASS.
+  DR-007.4H word-count parity: within tolerance
+    for desc-extension scope. PASS.
+  DR-007.5H placeholder/stub scan: no placeholder/
+    stub tokens introduced. PASS.
+  DR-007.6H revision-history parity: dv1_63 entry
+    added; dv1_62 + all prior entries (dv1_61
+    through dv1_0) preserved verbatim. PASS.
+
+4.2 DR-007.9 HTML WELL-FORMEDNESS GATE — PASS.
+
+Python html.parser feed:
+  - orphan close tags: 0 (dv1_62 baseline: 0).
+  - unclosed elements at EOF: 0 (dv1_62 baseline: 0).
+  - parser exceptions: 0 (dv1_62 baseline: 0).
+
+4.3 DD-001 / DD-002 / DD-004 / DD-011 / DD-012
+    COMPLIANCE — PASS.
+
+DD-001: AR-056 encoded in D1 diagram root governs
+  as canonical architectural rule.
+DD-002: prose-follows-diagram — 0500000 §4 AR-056
+  canonical entry preserved as source-of-truth;
+  subordinate-spec restatement is derived per
+  DD-012 cross-document authority hierarchy.
+DD-004: no prose-first authoring — AR-056 first
+  encoded in 0500000 §4 AR registry dv1_13 and
+  now in D1 governs list.
+DD-011: FP/DP-derivability-test logged at chat-
+  turn 1 with explicit four-item log per §3.2.
+DD-012: cross-document authority hierarchy applied
+  — AR-056 canonical in 0500000; subordinate spec
+  restatement in 0511001 / 1011002 / 1011014 is
+  derived restatement.
+
+4.4 RR-SCOPE COMPLIANCE — PASS.
+
+RR-SCOPE-001 absolute-scope: ADD-only scope per
+  TB00207 explicit specification. No removals,
+  no out-of-scope modifications. PASS.
+RR-SCOPE-005 derivable-decision execution: D1 vs
+  D2 derived in §3.2 FP/DP analysis. PASS.
+RR-SCOPE-007 self-authored-NSI-source-prohibition:
+  scope sourced from Bill-ratified controlled
+  documents per §3.4. PASS.
+RR-SCOPE-009 four-question origin investigation
+  for AR-056 load-bearing constraint per §3.3.
+  PASS.
+RR-SCOPE-010 verbatim-MDR-citation: AR-056
+  semantics grep-verified per §3.5. PASS.
+
+============================================================
+5. SESSION-CLOSE TRIO
+============================================================
+
+5.1 DELIVERABLES THIS SESSION (DR-008.6 + DR-008.7
+    + DR-008.8 + DR-008.9 COMPLIANCE).
+
+  (1) 0500000 dv1_62 -> dv1_63 (S-2 AMENDMENT-5
+      deliverable; delivered via present_files).
+  (2) TB00241 Session Log v1_0 (this document;
+      delivered via present_files).
+  (3) TB00242 Next Session Instructions v1_0
+      (delivered via present_files).
+  (4) OCS chat-response copy box (rendered in
+      session-close chat response, byte-identical
+      to TB00242 §0).
+
+5.2 SESSION-CLOSE CHAT-RESPONSE BREVITY (DR-008.8).
+
+Chat response reproduces only the SESSION-CLOSE
+TRIO as text content:
+  (a) SL — reference (file via present_files;
+      brief summary pointer in chat).
+  (b) NSI — reference (file via present_files;
+      brief summary pointer in chat).
+  (c) OCS — full copy box render.
+
+0500000 dv1_63 + cleanup list executed at chat-
+turn 1 are delivered via present_files only (or
+chat-message text in cleanup-list case per Bill
+explicit directive). NOT reproduced as chat text
+content per DR-008.8.
+
+============================================================
+6. OPEN ITEMS — STATUS UPDATES
+============================================================
+
+6.1 OI-NEW-CLUSTER-C4-AR-056 (TB00195 §7.1 cluster
+    C4): CLOSED at diagram-encoding layer via this
+    v1_63 AMENDMENT-5 per DD-001 + DD-002 diagrams-
+    canonical principle.
+
+6.2 OI-NEW DD-011 EXCEPTION-B GATE OPERATIONAL-TEST
+    OBSERVATION (TB00240 = fourth test; cumulative
+    count 4 sessions clean post-v2_38 enactment):
+    TB00241 = fifth test; AMENDMENT-5 target
+    derivable, no scope-over-commitment failure
+    — observation continues; cumulative operational-
+    test count 5 sessions clean post-v2_38
+    enactment.
+
+6.3 OI-NEW-005 RR-SCOPE-001 enforcement-gate
+    recurrence pattern monitor (count = 1; below
+    DD-010 three-occurrence threshold): no new
+    recurrence this session.
+
+6.4 OI-NEW-002 FP/DP framing-assumption discipline:
+    carry-forward; no new incidence this session.
+
+6.5 V-038 F-V038-001 (subordinate-spec gap-fill
+    or retirement for 4 D5 R6 identifiers):
+    carry-forward to TB00242 NSI.
+
+6.6 V-038 F-V038-002 (registry housekeeping for
+    4 D5 R6 identifiers): carry-forward to TB00242
+    NSI.
+
+6.7 V-038 CROSS-DOC GREP AT AMENDMENT-5 CLOSE
+    SEQUENCING: deferred to TB00242 cold-load if
+    budget permits (per TB00241 NSI §5).
+
+============================================================
+7. CLAUDE ERRORS THIS SESSION
+============================================================
+
+None observed.
+
+============================================================
+8. CARRY-FORWARD TO TB00242 NSI
+============================================================
+
+  (a) AMENDMENT-6..11 sequencing per DEC-003 Path A.
+  (b) Subordinate-spec gap-fill (0211001, 0611001,
+      0511001, 1011002, 1011014, 0211002) for D5
+      R6 + D1 R3 + D1 R4 identifiers.
+  (c) Registry housekeeping (0311001 v1_15
+      §15.12.3 + §15.12.5) for D5 R6 token
+      registration gaps.
+  (d) Stale v2_29-retired D5 param-tokens cleanup
+      (RR-SCOPE-009 investigation required).
+  (e) Cross-doc V-038 grep at AMENDMENT-5 close.
+  (f) Cascade-ordering ranking re-derivation across
+      {08XXXXX + 10XXXXX} combined queue.
+  (g) S-3 sub-step authoring for RATIFIED derivable
+      findings (F-03 / F-04 / F-07 + F-15 / F-12 /
+      F-16 / F-18 / F-24).
+  (h) Scope-vs-budget discipline lesson (TB00237 §5.1
+      + TB00238 SL §1.2 + TB00239 SL §1.2 + TB00240
+      §1.3 + this session).
+  (i) Pre-flight direct-inspection directive
+      (ERROR-TB00238-CHAT-01 carry-forward).
+
+============================================================
+END OF TB00241 SESSION LOG
+============================================================

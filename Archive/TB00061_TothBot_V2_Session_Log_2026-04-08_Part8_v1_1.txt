@@ -1,0 +1,267 @@
+DocDCN:     TB00061
+DocTitle:   TothBot_V2_Session_Log_2026-04-08_Part8
+DocVersion: v1_1
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\My_TothBot_Stuff\TBXXXXX_Session_Logs\TB00061_TothBot_V2_Session_Log_2026-04-08_Part8_v1_1.txt
+DocDate:    04-08-2026
+DocTime:    23:59:59 UTC
+
+============================================================
+TOTHBOT V2 SESSION LOG — 2026-04-08 PART 8
+============================================================
+
+============================================================
+1. SESSION IDENTITY
+============================================================
+
+Session date:     April 8, 2026 (Part 8)
+Session type:     Phase 11 — PT-ENTRY-003 through PT-ENTRY-007
+Prior session:    TB00059 (2026-04-08 Part 7) — blocked on SMTP
+                  TB00060 (old project) — SMTP search incomplete
+
+Documents read:
+  TB00000  v2_8   Project Instructions              checked
+  TB00059  v1_0   Prior session log                 checked
+  TB00060  v1_0   Old project session log           checked
+
+============================================================
+2. WORK COMPLETED THIS SESSION
+============================================================
+
+------------------------------------------------------------
+2.1 SMTP Credentials — RESOLVED
+------------------------------------------------------------
+
+Old TothBot-Code repo on VPS contained only Binance keys.
+No SMTP credentials found anywhere in old code or VPS.
+
+Resolution:
+  - Generated new ProtonMail SMTP app password (SMTP
+    submission token) at:
+    account.proton.me → IMAP/SMTP → Generate token
+  - Token name: TothBot_V2
+  - Email address: alerts@tothbot.com (NOTE: with 's' —
+    this is correct. 'alert@tothbot.com' without 's' is WRONG)
+
+SMTP credentials confirmed working:
+  TOTHBOT_SMTP_HOST=smtp.protonmail.ch
+  TOTHBOT_SMTP_PORT=587
+  TOTHBOT_SMTP_USER=alerts@tothbot.com
+  TOTHBOT_SMTP_PASS=<ProtonMail SMTP token — in .tothbot.env>
+
+------------------------------------------------------------
+2.2 Kraken API Keys — CREATED
+------------------------------------------------------------
+
+Two API key pairs created on Kraken Pro:
+  TothBot_V2_DATA   — read-only market data key
+  TothBot_V2_TRADE  — order execution key
+
+Both keys:
+  - IP restricted to 87.99.141.44
+  - WebSocket interface enabled
+
+DATA key permissions:
+  Query (Funds), Query open/closed orders & trades,
+  Query ledger entries, Export data, WebSocket
+
+TRADE key permissions:
+  Query (Funds), Query open/closed orders & trades,
+  Create & modify orders, Cancel & close orders,
+  Query ledger entries, WebSocket
+
+Keys stored in Bill's Notepad. NOT in GitHub. NOT in chat.
+
+------------------------------------------------------------
+2.3 .tothbot.env — CREATED
+------------------------------------------------------------
+
+Created at: /root/.tothbot.env  (for systemd EnvironmentFile)
+Copied to:  /root/TothBot_V2-Code/.tothbot.env  (working copy)
+Permissions: 600 (root read/write only) on both files
+
+Contents (values redacted):
+  TOTHBOT_SMTP_HOST=smtp.protonmail.ch
+  TOTHBOT_SMTP_PORT=587
+  TOTHBOT_SMTP_USER=alerts@tothbot.com
+  TOTHBOT_SMTP_PASS=<token>
+  KRAKEN_DATA_API_KEY=<key>
+  KRAKEN_DATA_API_SECRET=<secret>
+  KRAKEN_TRADE_API_KEY=<key>
+  KRAKEN_TRADE_API_SECRET=<secret>
+
+NOTE: .tothbot.env is NOT committed to GitHub (contains
+secrets). It exists on VPS only.
+
+------------------------------------------------------------
+2.4 PT-ENTRY-004 — logrotate — COMPLETE
+------------------------------------------------------------
+
+Created: /etc/logrotate.d/tothbot
+
+Contents:
+  /root/TothBot_V2-Code/logs/*.log {
+      daily
+      rotate 30
+      compress
+      missingok
+      notifempty
+      copytruncate
+  }
+
+------------------------------------------------------------
+2.5 PT-ENTRY-005 — IP Whitelist — COMPLETE
+------------------------------------------------------------
+
+Confirmed VPS can reach Kraken:
+  curl -s https://api.kraken.com/0/public/Time
+  Returns valid JSON with unixtime. PASS.
+
+------------------------------------------------------------
+2.6 PT-ENTRY-006 — Alert Email — COMPLETE
+------------------------------------------------------------
+
+Test email sent successfully from VPS to alerts@tothbot.com.
+Email received at nwoguy56@proton.me. CONFIRMED.
+
+------------------------------------------------------------
+2.7 Defects Found and Fixed During Service Start Attempts
+------------------------------------------------------------
+
+DEFECT-NEW-001: Missing __main__.py
+  Error: No module named tothbot.__main__
+  Fix: Created /root/TothBot_V2-Code/tothbot/__main__.py
+  Content: from tothbot.startup_sequence import run; run()
+  Status: FIXED — COMMITTED TO GITHUB
+
+DEFECT-NEW-002: websockets version too old
+  Error: No module named 'websockets.asyncio'
+  Installed version: 12.0
+  Required version: 13.0+
+  Fix: pip install "websockets>=13.0"
+  Installed: websockets-16.0
+  Status: FIXED on VPS — requirements.txt NOT YET UPDATED
+  ACTION REQUIRED: Update requirements.txt next session
+
+DEFECT-NEW-003: ExecutionEngine missing position_mirror arg
+  Error: ExecutionEngine.__init__() missing 1 required
+         positional argument: 'position_mirror'
+  Root cause: startup_sequence.py line 290 — EE instantiation
+              missing position_mirror=pm argument.
+              Comment on line 288 incorrectly stated it was
+              optional. The __init__ signature requires it.
+  Fix: Added position_mirror=pm to EE instantiation.
+  Status: FIXED — COMMITTED TO GITHUB
+
+------------------------------------------------------------
+2.8 GitHub Commit — COMPLETE
+------------------------------------------------------------
+
+Commit hash: a92a7bb
+Commit message: Fix: add __main__.py and position_mirror
+                arg to ExecutionEngine
+Branch: master
+Remote: https://github.com/TothBot/TothBot_V2-Code.git
+
+Files committed:
+  tothbot/__main__.py         — NEW FILE (DEFECT-NEW-001)
+  tothbot/startup_sequence.py — DEFECT-NEW-003 fix
+
+Push status: SUCCESS
+
+============================================================
+3. PT-ENTRY STATUS
+============================================================
+
+  PT-ENTRY-001  All unit tests pass             DONE
+  PT-ENTRY-002  All integration tests pass      DONE
+  PT-ENTRY-003  VPS deployed per 1011013        IN PROGRESS
+  PT-ENTRY-004  logrotate configured            DONE
+  PT-ENTRY-005  IP whitelist confirmed          DONE
+  PT-ENTRY-006  Alert email confirmed           DONE
+  PT-ENTRY-007  systemd auto-restart confirmed  PENDING
+  PT-ENTRY-008  Startup sequence confirmed      PENDING
+
+============================================================
+4. VPS STATE — CURRENT
+============================================================
+
+  Repo:         /root/TothBot_V2-Code  (clean — commit a92a7bb)
+  Venv:         /root/tothbot_env      (active)
+  websockets:   16.0 (upgraded — requirements.txt outdated)
+  .tothbot.env: /root/.tothbot.env     (created, 600)
+                /root/TothBot_V2-Code/.tothbot.env  (copy, 600)
+  __main__.py:  /root/TothBot_V2-Code/tothbot/__main__.py
+  logrotate:    /etc/logrotate.d/tothbot  (created)
+  Service:      INSTALLED — NOT RUNNING
+                (defects fixed — not yet restarted)
+
+============================================================
+5. NEXT SESSION OPENING INSTRUCTION
+============================================================
+
+  ============================================================
+  Read TB00000 v2_8 and TB00061.
+
+  Continuing PT-ENTRY-003. Three defects were fixed and
+  committed to GitHub this session. Service has not been
+  restarted yet after the last fix.
+
+  VPS SSH command:
+    ssh -i C:\Users\wstot\.ssh\id_ed25519 root@87.99.141.44
+
+  After connecting, run these three commands in order:
+    source /root/tothbot_env/bin/activate
+    cd /root/TothBot_V2-Code
+    export $(cat .tothbot.env | xargs)
+
+  Next steps in order:
+    1. systemctl start tothbot
+    2. Check journal for errors
+    3. If clean — confirm PT-ENTRY-007 (systemd auto-restart)
+    4. Confirm PT-ENTRY-008 (startup sequence)
+    5. Update requirements.txt — websockets 12.0 → websockets>=13.0
+    6. Commit requirements.txt update to GitHub
+    7. Write session log TB00062
+  ============================================================
+
+============================================================
+6. PARKING LOT
+============================================================
+
+  PL-001  WSManager dual PM creation paths. Monitor during
+          paper trading.
+
+  PL-003  Pathway 1 GitHub automation. After paper trading.
+
+  PL-NEW-003  VPS migration to Hillsboro OR. After paper
+              trading stable.
+
+  PL-NEW-004  EE ENTRY_TIMEOUT_SEC vs WM ENTRY_GTD_SEC
+              alignment. Monitor during paper trading.
+
+  PL-NEW-005  requirements.txt must be updated:
+              websockets==12.0 → websockets>=13.0
+              Do this first thing next session before
+              anything else.
+
+============================================================
+7. REVISION HISTORY
+============================================================
+
+  v1_0  04-08-2026  Initial. Phase 11 PT-ENTRY-003 continued.
+                    SMTP credentials resolved. Kraken API keys
+                    created. .tothbot.env created. logrotate
+                    configured. IP whitelist confirmed. Alert
+                    email confirmed. Three defects fixed.
+                    Service not yet confirmed running.
+                    PT-ENTRY-007 and PT-ENTRY-008 pending.
+
+  v1_1  04-08-2026  Added GitHub commit details (Section 2.8).
+                    Updated VPS state. Updated next session
+                    opening instruction with complete SSH and
+                    setup commands.
+
+============================================================
+END OF SESSION LOG
+============================================================
