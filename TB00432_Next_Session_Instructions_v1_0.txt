@@ -23,9 +23,10 @@ memory: TB00000 v2_60 (sec 4.1.2 DR-008.6 FOUR-OPERATION
 SEQUENTIAL + DR-009 SESSION-OPEN CLEANUP LIST; sec 4.3.1
 RR-SCOPE-011 ONE-MISSION; sec 4.3.3 RR-SHELL-010; sec 11
 STORAGE), 0911002 dv1_1 (Option A; sec 6 ONE-MISSION-PER-
-SESSION; sec 6.2 retirement/migration SEPARATE sessions; Phase 2
-AA=05), 0500000 dv1_128 Claude_Source.html (live consolidation
-TARGET; D2 Trading_Pipeline is the amendment anchor), 0511002
+SESSION; sec 6.2 retirement/migration SEPARATE sessions; sec 7
+DD-012 six-step retirement gate; Phase 2 AA=05), 0500000 dv1_128
+Claude_Source.html (live consolidation TARGET; D2
+Trading_Pipeline is the amendment anchor), 0511002
 Signal_Pipeline_Specification dv1_1 + TB00431_S1SP_DD012_Phase2_
 Gap_Register_0511002_v1_0 (the audit basis), 0311001 v1_32
 Namespace_Specification, TB00153 (highest present, v1_56; last
@@ -43,19 +44,21 @@ INSTRUMENT_STATUS_BLOCKED (Pre_Gate_1_Per_Pair_Status) and
 SYSTEM_STATE_BLOCKED (G1_State_Machine) - into the D2
 mod:Signal_Pipeline component produces/constraints fields
 (0500000 dv1_128 -> dv1_129), so 0511002 can later clear the
-DD-012 S-1 retirement gate. Ground-truth grep the live D2 before
-and after. ADD-only: no existing token removed, no SVG geometry
-change, no viewBox change, all other 9 figures byte-identical
-per DEC-003 Path A. Register the two tokens in 0311001 sec 15.12
-if absent (companion namespace amendment). NO migration of
-0511002 architectural content this session; NO 0511002
-retirement; NO sec 9.17 edit; NO TB00000 edit.
+DD-012 S-1 retirement gate. This is the determined next mission:
+the two tokens are the sole bucket (c) gap from TB00431, and per
+0911002 sec 7 DD-012 the S-1 retirement gate for 0511002 CANNOT
+pass until they are registered in D2. The D2-amendment is
+therefore a hard prerequisite to all later 0511002 migration and
+retirement work; it precedes the next component-spec audit. NOT
+a Bill-selectable A/B choice.
 
-ALTERNATIVELY, if Bill directs the next AA=05 component-spec
-AUDIT instead (CF-TB00431-A), the next spec in cadence is 0511003
-Execution_Engine_Specification dv1_1 - same read-only DD-012
-three-bucket method as TB00431. Bill selects which mission; ONE
-mission only (RR-SCOPE-011).
+Ground-truth grep the live D2 before and after. ADD-only: no
+existing token removed, no SVG geometry change, no viewBox
+change, all other 9 figures byte-identical per DEC-003 Path A.
+Register the two tokens in 0311001 sec 15.12 if grep-verified
+absent (companion namespace amendment). NO migration of 0511002
+architectural content this session; NO 0511002 retirement; NO
+sec 9.17 edit; NO TB00000 edit.
 
 next DEC = DEC-064 (verify live against TB00153 v1_56).
 Session-open + close per DR-008.6 FOUR-OPERATION SEQUENTIAL +
@@ -78,23 +81,28 @@ END OCS
 ------------------------------------------------------------
 
 1.1  0511002 SIGNAL_PIPELINE BUCKET (c) D2-AMENDMENT
-     (CF-TB00431-C; the recommended next mission). The TB00431
-     read-only audit found exactly ONE bucket (c) gap: two
-     architectural gate reject tokens absent from D2 -
-     INSTRUMENT_STATUS_BLOCKED (Pre-Gate-1 per-pair status) and
-     SYSTEM_STATE_BLOCKED (G1 state machine). Sibling gates
-     (G2-G5) already carry canonical reject tokens in D2, so
-     these two are a genuine architectural absence. Perform an
-     ADD-only D2 amendment (0500000 dv1_128 -> dv1_129) adding
-     the two reject tokens to the D2 Pre_Gate_1_Per_Pair_Status
-     and G1_State_Machine component produces/constraints fields,
-     with a companion 0311001 sec 15.12 namespace registration
-     if the tokens are grep-verified absent. This closes the
-     DD-012 S-1 prerequisite for eventual 0511002 retirement.
+     (CF-TB00431-C). The TB00431 read-only audit found exactly
+     ONE bucket (c) gap: two architectural gate reject tokens
+     absent from D2 - INSTRUMENT_STATUS_BLOCKED (Pre-Gate-1
+     per-pair status) and SYSTEM_STATE_BLOCKED (G1 state
+     machine). Sibling gates (G2-G5) already carry canonical
+     reject tokens in D2, so these two are a genuine
+     architectural absence.
 
-     OR (Bill's choice): 0511003 Execution_Engine_Specification
-     dv1_1 read-only architectural audit (CF-TB00431-A), same
-     DD-012 three-bucket method as TB00431.
+     Perform an ADD-only D2 amendment (0500000 dv1_128 ->
+     dv1_129) adding the two reject tokens to the D2
+     Pre_Gate_1_Per_Pair_Status and G1_State_Machine component
+     produces/constraints fields, with a companion 0311001
+     sec 15.12 namespace registration if the tokens are
+     grep-verified absent.
+
+     This is the determined next mission, not a selection.
+     Per 0911002 sec 7 DD-012, the S-1 retirement gate for
+     0511002 cannot pass while a bucket (c) gap remains open.
+     The two missing reject tokens ARE that open gap. Closing
+     them in D2 is therefore a hard prerequisite to every later
+     0511002 step (migration, then retirement) and to the
+     downstream AA=05 cadence. It runs first.
 
      ONE mission only (RR-SCOPE-011).
 
@@ -105,55 +113,70 @@ END OCS
   - NO 0511002 architectural-content migration this session
     (separate session per 0911002 sec 6.2).
   - NO 0511002 retirement (separate session, after migration).
+  - NO 0511003 (or any other component-spec) audit this session;
+    it is downstream of the bucket (c) closure (RR-SCOPE-011).
   - NO sec 9.17 edit; NO TB00000 amendment.
   - NO re-opening of DEC-056 / 057 / 059 / 060 / 061 / 062 / 063.
-  - NO bundling of the D2-amendment AND a new spec audit in one
-    session (RR-SCOPE-011).
+  - NO bundling of the D2-amendment with any other mission
+    (RR-SCOPE-011).
 
 ------------------------------------------------------------
 3. DELIVERABLES (SESSION-CLOSE FOUR-OPERATION SEQUENTIAL)
 ------------------------------------------------------------
 
-  PRIMARY (mission-dependent):
-    0500000 dv1_129 (if bucket (c) D2-amendment), OR
-    TBNNNNN_S1EE_DD012_Phase2_Gap_Register_0511003_v1_0.txt
-      (if 0511003 audit)
+  PRIMARY:
+    0500000 dv1_128 -> dv1_129 Claude_Source.html (ADD-only D2
+      amendment: the two reject tokens registered in
+      Pre_Gate_1_Per_Pair_Status + G1_State_Machine).
   PAIRED:
-    TB00153 v1_56 -> v1_57 (DEC-064 entry; paired MDR only if a
-      defect is closed)
-    0311001 namespace amendment (only if new tokens registered)
+    0311001 v1_32 -> v1_33 (sec 15.12 namespace registration of
+      the two reject tokens, only if grep-verified absent).
+    TB00153 v1_56 -> v1_57 (DEC-064 entry recording the
+      D2-amendment decision; paired MDR only if a defect is
+      closed).
   SESSION-CLOSE:
     Session Log v1_0
     Next Session Instructions v1_0
     OCS chat-response copy box
     GitHub upload copy box
 
+  ROUTING (sec 11): 0500000 dv1_129 -> 05XXXXX_System_
+  Architecture/; 0311001 v1_33 -> 03XXXXX_Governance/; all
+  TB-prefix files -> SessionLogs/.
+
 ------------------------------------------------------------
 4. FP/DP-DERIVABILITY-TEST (DD-011 CHAT-TURN-1 GATE)
 ------------------------------------------------------------
 
-  Mission is a single Bill-directed one-source action (the
-  TB00431-identified bucket (c) closure, or the next-cadence
-  0511003 audit). The compliant path is the single ADD-only
-  amendment / single read-only audit under RR-SCOPE-005.
-  OUTCOME 1: execute; do not surface as a ratification question.
-  Mission SELECTION between the two options is Bill's sequencing
-  decision per 0911002 sec 6 - confirm at chat-turn 1 if
-  ambiguous.
+  Mission is fully determined, not a selection. Option-set:
+  (A) close the bucket (c) D2 gap now; (B) audit 0511003 first;
+  (C) attempt 0511002 migration/retirement now. (B) is eliminated
+  - RR-SCOPE-011 one-mission and cadence both place the gap
+  closure ahead of the next audit. (C) is eliminated - DD-012
+  sec 7 S-1 blocks 0511002 retirement while a bucket (c) gap is
+  open, and migration precedes retirement, so neither can run
+  before (A). (A) is the single compliant path. OUTCOME 1:
+  execute the ADD-only D2 amendment under RR-SCOPE-005; do NOT
+  surface as a ratification question.
 
 ------------------------------------------------------------
 5. CARRY-FORWARDS
 ------------------------------------------------------------
 
   CF-TB00431-A  0911002 Phase 2 - remaining AA=05 component specs
-                (0511003 / 0511004 / 0511005 / 0511006)
-                architectural audit + migration, one per session.
+                (0511003 Execution_Engine / 0511004 Exit_
+                Controller / 0511005 Position_Mirror / 0511006
+                Logger) read-only DD-012 three-bucket audit, one
+                per session, AFTER the 0511002 bucket (c) closure.
+                Next in cadence: 0511003 Execution_Engine_
+                Specification dv1_1.
   CF-TB00431-B  Project folder at high utilization; render DR-009
                 cleanup list at session open.
-  CF-TB00431-C  0511002 bucket (c): D2-amendment to ADD
-                INSTRUMENT_STATUS_BLOCKED + SYSTEM_STATE_BLOCKED
-                reject tokens (prerequisite to 0511002 migration
-                + retirement). [PRIMARY candidate this session.]
+  CF-TB00432-A  0511002 migration of architectural content to
+                0500000 (separate session, after the bucket (c)
+                D2 gap is closed this session), then 0511002
+                retirement (separate session, after migration)
+                per 0911002 sec 6.2 + sec 7 DD-012.
 
   next DEC = DEC-064 (verify live against TB00153 v1_56).
 
