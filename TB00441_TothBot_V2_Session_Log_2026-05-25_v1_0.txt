@@ -1,0 +1,276 @@
+DocDCN:     TB00441
+DocTitle:   TothBot_V2_Session_Log_2026-05-25
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    GitHub.com/TothBot/TothBot_V2-SessionLogs/TB00441_TothBot_V2_Session_Log_2026-05-25_v1_0.txt
+DocDate:    05-25-2026
+DocTime:    23:59:59 UTC
+
+============================================================
+TB00441 SESSION LOG
+============================================================
+
+------------------------------------------------------------
+1. SESSION IDENTITY
+------------------------------------------------------------
+
+Session:      TB00441
+Cold-load:    TB00441 Next Session Instructions (authored at
+              TB00440 close).
+Primary mission (per TB00441 NSI section 1): resolve
+              CF-TB00435-A exit_reason enum - determine
+              whether per-module (Long vs Short) or one
+              shared contradictory set. Recommendation only.
+Reads:        FRESH reads performed this session. All
+              TB00440-carried (transcript-sourced)
+              identifiers re-verified against the current
+              authoritative documents per RR-SCOPE-010.
+
+------------------------------------------------------------
+2. WORK PERFORMED
+------------------------------------------------------------
+
+2.1 Re-verified every TB00440 SL section 4 transcript-
+    carried identifier against the live documents
+    (RR-SCOPE-010). One TB00440 error corrected: the List B
+    sites are in the D3 Exit Architecture figure, NOT D2
+    Trading Pipeline as the transcript stated.
+
+2.2 Fresh-read the exit_reason sites in 0500000 dv1_129,
+    0511004 dv1_7 (section 3.1 + formal enum + section 7.5),
+    0811005 dv1_3 (section 7.5 - decisive), 1011007 dv1_5
+    (LG-TOB-002 enum + event names), 0711001 dv1_2 (List B
+    producers), 0711002 dv1_2 (List A producers), and
+    TB00153 v1_57 (prior ratified decisions).
+
+2.3 Resolved the per-module-vs-shared question and authored
+    a written forensic recommendation (no pick, no amend).
+    Answer: SHARED (hypothesis a). Per-module hypothesis (b)
+    is NOT supported by the documents.
+
+2.4 No document amended this session. OPERATION 2 of the
+    session-close is empty.
+
+------------------------------------------------------------
+3. CF-TB00435-A FINDINGS (FRESH-READ VERIFIED)
+------------------------------------------------------------
+
+3.1 THE ENUM RENDERINGS. The exit_reason enum appears in
+    0500000 dv1_129 in THREE non-identical forms, plus the
+    Logger spec:
+
+    LIST A (regime-based, 6 values) - D5/D6 CIATS Trade
+    Outcome Bus 23-field schema, lines 4498 / 4589 / 4605 /
+    5240. Self-declares canonical per DD-001/DD-002:
+      { TP_FILL, MAE_THRESHOLD_BREACH, HTF_REGIME_REVERSAL,
+        DAILY_REGIME_DOWNGRADE, TIME_EXPIRY,
+        TP_PARTIAL_FILL_REMAINDER }
+
+    LIST B (signal-based) - D3 Exit Architecture figure
+    q-cells, lines 3511 / 3545 / 3546 / 3568 / 3758:
+      { TP_FILL, MAE_THRESHOLD_BREACH, SIGNAL_DECAY,
+        MOMENTUM_LOSS, TIME_EXPIRY, EMERGENCY_SL_FIRED }
+
+    MIXED list - AR-073 per-module loss-counter rule, lines
+    6434-6438:
+      { MAE_THRESHOLD_BREACH, TIME_EXPIRY,
+        HTF_REGIME_REVERSAL, DAILY_REGIME_DOWNGRADE,
+        SIGNAL_DECAY }   (List A regime values + one List B
+        value, applied to both modules)
+
+    LOGGER 8-value - 1011007 dv1_5 LG-TOB-002, lines
+    564-572:
+      List A's 6 values + SIGNAL_DECAY + PAIR_LIMIT_ONLY_EXIT
+      (does NOT carry MOMENTUM_LOSS or EMERGENCY_SL_FIRED)
+
+3.2 MODULE-ANNOTATION (THE CRUX). NO exit_reason site in
+    0500000 dv1_129 is annotated by module (Long / Short).
+    Both List A (D5/D6) and List B (D3) sit in the single
+    shared Exit Controller path. The per-module pattern that
+    DOES exist in this architecture (TB00000 section 9.6)
+    partitions STATE and reject-codes - not exit_reason:
+      - AR-072: SSS gate variants differ by direction with
+        per-direction reject codes (SSS_SIGNAL_FAIL_LONG vs
+        SSS_SIGNAL_FAIL_SHORT), per-module position mirrors,
+        cooldown logs, loss counters, CIATS instances.
+      - AR-073 (lines 6420-6438): per-module state dicts
+        ({long|short}_exit_cooldown_log,
+        {long|short}_consecutive_loss_count) but the
+        loss-exit reason SET is applied IDENTICALLY to both
+        {long|short}. The reason list is shared; only the
+        state container is per-module.
+
+3.3 SHORT MODULE - DECISIVE (0811005 dv1_3 section 7.5).
+    Short Module does NOT define its own exit reasons. It
+    writes to the shared Position Mirror; the shared Exit
+    Controller reads short positions via side="short" filter
+    and applies direction-symmetric exit FORMULAS (Layer 2
+    MAE short formula = ask - entry_fill_price, etc.).
+    Canonical exit source cited as 0511004 dv1_7 + 0500000
+    D5/D6. The side="short" tag is a FORMULA discriminator,
+    not a separate exit_reason set. Therefore Bill's
+    per-module hypothesis (b) is NOT supported: Short
+    inherits the shared enum.
+
+3.4 EXIT CONTROLLER (0511004 dv1_7). Layer 1a triggers are
+    a SINGLE SHARED set, not per-module:
+      EC-L1A-001 HTF Regime Reversal -> HTF_REGIME_REVERSAL
+      EC-L1A-002 Daily Regime Downgrade -> DAILY_REGIME_DOWNGRADE
+      EC-L1A-003 Max Hold Time -> TIME_EXPIRY
+    Formal exit_reason enum (lines 593-594, 1484-1489) =
+    LIST A six values verbatim. There is NO SIGNAL_DECAY and
+    NO MOMENTUM_LOSS trigger defined anywhere in the current
+    Exit Controller architecture.
+
+3.5 PRODUCING MECHANISMS (NSI section 4.4 architectural
+    grounds).
+      - List A producers EXIST: 0711002 dv1_2 defines daily
+        regime (computed from daily candles, line 209) and
+        the 1H HTF EMA(20)/EMA(50) confirmation (lines
+        462-475) - the mechanisms behind EC-L1A-001/002.
+      - List B producers DO NOT EXIST as exit triggers:
+        0711001 dv1_2 uses momentum only for ENTRY scoring
+        (three-factor momentum entry pattern). There is NO
+        SIGNAL_DECAY and NO MOMENTUM_LOSS exit-side
+        deterioration mechanism in the SSS spec.
+
+3.6 NAMESPACE SEPARATION. EMERGENCY_SL_FIRED is a Logger
+    CRITICAL event / alert name (1011007 line 437 event
+    table; line 612 alert-event list with FULL_HALT_TRIGGERED,
+    PAIR_MAINTENANCE_HOLD, etc.) - it is NOT in the
+    LG-TOB-002 exit_reason enum. It is a log-event, not an
+    exit_reason value. Same class as PAIR_LIMIT_ONLY_EXIT
+    (an exit-condition name).
+
+3.7 PRIOR DECISIONS. TB00153 v1_57 contains NO ratified
+    decision touching exit_reason or the Layer 1a exit enum.
+    The enum is genuinely unsettled; nothing constrains it.
+
+------------------------------------------------------------
+4. RECOMMENDATION (NO PICK - BILL RATIFIES)
+------------------------------------------------------------
+
+4.1 ANSWER TO THE CRUX. The enum is (a) ONE SHARED set, not
+    (b) two per-module sets. The rendering is internally
+    contradictory across the forms in section 3.1. Bill's
+    per-module hypothesis is the natural guess because so
+    much else in the system IS per-module (section 9.6), but
+    that pattern partitions state, not exit reasons. Short
+    inherits the shared enum (3.3); Layer 1a is shared (3.4);
+    no site is module-annotated (3.2).
+
+4.2 RECOMMENDED CANONICAL SET (architectural grounds). LIST
+    A (regime-based, 6 values) is the recommended spine
+    because:
+      (i)   it is the only set whose triggers are actually
+            defined (0511004 section 3.1 EC-L1A-001/002/003);
+      (ii)  its producing mechanisms exist (0711002 daily +
+            1H HTF regime);
+      (iii) it is the DD-001/DD-002 canonical D5/D6 schema;
+      (iv)  List B's SIGNAL_DECAY / MOMENTUM_LOSS have NO
+            producing exit trigger anywhere (0711001);
+      (v)   EMERGENCY_SL_FIRED is a log/alert event, not an
+            exit_reason (3.6).
+    List B (D3 q-cells) appears to be a STALE signal-based
+    rendering that predates and contradicts 0511004 dv1_7's
+    regime-based Layer 1a definition.
+
+4.3 G-4 (6-vs-8) RESOLVES AS A BY-PRODUCT. The Logger
+    8-value = List A's 6 + SIGNAL_DECAY + PAIR_LIMIT_ONLY_EXIT.
+    If Bill ratifies List A:
+      - drop SIGNAL_DECAY (no producing trigger) unless Bill
+        ratifies a signal-decay exit trigger as a NEW design
+        addition;
+      - PAIR_LIMIT_ONLY_EXIT is a SEPARATE namespace question
+        (exit-condition vs exit_reason) - flag for Bill, do
+        NOT pick.
+
+4.4 OPEN SUB-QUESTIONS FOR BILL (not decided here):
+      Q1. Ratify List A (regime 6-value) as the single
+          canonical shared exit_reason enum? (Claude
+          recommends yes on the evidence above.)
+      Q2. Is SIGNAL_DECAY a real intended exit trigger to be
+          ADDED (with a producing mechanism authored into
+          0711001 / 0511004), or is it stale and to be
+          dropped?
+      Q3. Is PAIR_LIMIT_ONLY_EXIT a legitimate 7th
+          exit_reason value, or a log-event to be moved out
+          of the LG-TOB-002 enum?
+
+------------------------------------------------------------
+5. DECISIONS MADE / NOT MADE
+------------------------------------------------------------
+
+  - No enum decision made (recommendation only; Bill
+    ratifies per TB00441 NSI section 1.2).
+  - No document amended (OPERATION 2 empty).
+  - exit_reason D3 consolidation line remains BLOCKED until
+    CF-TB00435-A is ratified.
+
+------------------------------------------------------------
+6. CLEANUP LIST (DR-009)
+------------------------------------------------------------
+
+Files in the project folder verifiably superseded and safe
+to remove (fresh folder read; duplicate-DCN scan):
+
+  0511004_Exit_Controller_Specification_dv1_6.txt
+    (superseded by dv1_7 present in the same folder;
+     dv1_7 header line 948 records DocVersion dv1_6 -> dv1_7)
+
+No other superseded-version duplicate pairs found. The
+TB00437/438/439/440 SL+NSI pairs are required reading per
+TB00441 NSI section 2 and are NOT removable.
+
+------------------------------------------------------------
+7. CLAUDE ERRORS THIS SESSION
+------------------------------------------------------------
+
+None. The TB00440 transcript's D2-vs-D3 site attribution
+error was corrected this session by fresh read (section 2.1).
+
+------------------------------------------------------------
+8. CARRY-FORWARDS / OPEN ITEMS
+------------------------------------------------------------
+
+CF-TB00435-A (CRITICAL) - RESOLVED to a written
+  recommendation (section 4). Awaits Bill ratification of
+  Q1/Q2/Q3. Until ratified, the D3 exit_reason consolidation
+  line stays BLOCKED.
+
+G-4 (6-vs-8 enum drift) - resolves as a by-product of the
+  CF-TB00435-A decision (section 4.3). Carry forward until
+  Bill ratifies.
+
+0511004 -> 0500000 consolidation placement map - separate
+  migration session per campaign section 6.2. Remaining D3
+  producer-side gaps: HR-EC-001, HR-EC-009, HR-EC-015,
+  EC-PAPER, exit_reason TP_PARTIAL_FILL_REMAINDER line
+  (blocked on CF-TB00435-A). RE-VERIFY before migrating.
+
+------------------------------------------------------------
+9. DELIVERABLES THIS SESSION
+------------------------------------------------------------
+
+  TB00441 Session Log v1_0 (this document).
+  TB00442 Next Session Instructions v1_0.
+  Both commit to TothBot_V2-SessionLogs per TB00000 section
+  11 STORAGE TB-prefix filing rule + section 4.1.2 DR-008.6
+  OPERATION 4 canonical repo routing + section 4.5 DD-013.
+
+------------------------------------------------------------
+10. REVISION HISTORY
+------------------------------------------------------------
+
+  v1_0  2026-05-25  Initial TB00441 Session Log. Fresh-read
+                    resolution of CF-TB00435-A: enum is one
+                    SHARED set (not per-module); List A
+                    (regime 6-value) recommended canonical;
+                    List B D3 rendering likely stale; G-4
+                    resolves as by-product. Recommendation
+                    only - no pick, no amend. No documents
+                    amended.
+
+============================================================
+END OF SESSION LOG
+============================================================
