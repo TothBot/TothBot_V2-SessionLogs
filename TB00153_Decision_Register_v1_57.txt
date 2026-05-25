@@ -1,8 +1,8 @@
 DocDCN:     TB00153
 DocTitle:   Decision_Register
-DocVersion: v1_56
+DocVersion: v1_57
 DocOwner:   Bill
-DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00153_Decision_Register_v1_56.txt
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00153_Decision_Register_v1_57.txt
 DocDate:    05-25-2026
 DocTime:    23:59:59 UTC
 
@@ -7211,6 +7211,106 @@ closure). No value migration; sec 9.17 unchanged; TB00000 not
 amended; no paired MDR entry. Migrates the Exit-controller
 group's three remaining tokens (D3 mod:Exit_Controller) and
 CLOSES the DEC-045 carry-forward — Exit-controller group COMPLETE.
+
+
+DEC-064: 0911002 CAMPAIGN PHASE 2 (AA=05) - 0511002 SIGNAL_PIPELINE
+         BUCKET (c) D2-AMENDMENT (CF-TB00431-C) - ADD-only
+         registration of the two missing gate-reject tokens found by
+         the TB00431 audit (DEC-063 bucket (c)) into the 0500000 D2
+         Trading_Pipeline: INSTRUMENT_STATUS_BLOCKED (Pre_Gate_1_Per_
+         Pair_Status) + SYSTEM_STATE_BLOCKED (G1_State_Machine);
+         0500000 dv1_128 -> dv1_129; ONE companion namespace amendment
+         (0311001 v1_32 -> v1_33, two evt tokens registered in
+         sec 15.12.7); NO MIGRATION; NO 0511002 RETIREMENT; NO sec 9
+         MIRROR EDIT; NO sec 9.17 EDIT; NO TB00000 EDIT; NO PAIRED MDR
+         ENTRY (closes no defect)                     (TB00432;
+                                                       RR-SCOPE-011
+                                                       one-mission;
+                                                       RR-SCOPE-005
+                                                       derivable
+                                                       execution;
+                                                       RR-SCOPE-001
+                                                       ADD-only;
+                                                       CF-TB00431-C)
+
+DEC-064 records the ADD-only D2-amendment that closes the sole
+bucket (c) gap found by the DEC-063 / TB00431 read-only audit of
+0511002 Signal_Pipeline_Specification dv1_1. This is the determined
+next mission in the 0911002 Phase 2 AA=05 0511002 thread: per
+0911002 sec 7 DD-012 the S-1 retirement gate for 0511002 CANNOT pass
+until the two gate-reject tokens are canonical in D2, so the
+D2-amendment is the hard prerequisite to all later 0511002 migration
+and retirement work (those are SEPARATE downstream sessions per
+0911002 sec 6.2). Not a Bill-selectable A/B choice; single compliant
+path, executed under RR-SCOPE-005 (no new ratification gate surfaced).
+
+GROUND-TRUTH (RV gate, chat-turn 1, against live dv1_128):
+  RV-1  Both tokens grep-verified ABSENT from dv1_128 (zero hits
+        file-wide). The four sibling gate-reject tokens
+        LIQUIDITY_REJECTED (G2) / REGIME_BLOCKED (G3) /
+        HTF_GATE_REJECTED (G4) / SELECTION_REJECTED (G5) present
+        (5 hits each), establishing the canonical encoding pattern.
+  RV-2  Tokens + semantics confirmed against 0511002 dv1_1:
+        INSTRUMENT_STATUS_BLOCKED (line 126) = Pre-Gate-1 per-pair
+        instrument-status SKIP code; SYSTEM_STATE_BLOCKED (line 140
+        / sec 4) = G1 code LOGGED ON FAIL (engine cancel_only|
+        maintenance), pipeline WAITS/defers (no pipeline rejection).
+  RV-3  Canonical encoding SITE confirmed per live sibling ground-
+        truth: reject tokens live in the gate component <desc>
+        q1_do/q4_triggers/q5_logs fields + SVG skip-decoration, with
+        produces:none UNIVERSAL across all 16 D2 components (no gate
+        uses a produces:evt reject encoding). The TB00431 sec 5.1 /
+        NSI phrase "produces/constraints fields" is shorthand for the
+        component <desc> field-body; a produces:evt token would break
+        the V-040 80-cell uniformity (TB00377). The two tokens are
+        therefore encoded in the q-fields, matching the four siblings.
+
+ENCODING (ADD-only, RR-SCOPE-001):
+  Pre_Gate_1  the pre-existing non-registered truncated inline label
+              "STATUS_BLOCKED" (zero 0311001 namespace hits - never a
+              canonical token) is canonicalized to the registered
+              token INSTRUMENT_STATUS_BLOCKED in q1_do + q4_triggers +
+              q5_logs. INSTRUMENT_STATUS_BLOCKED CONTAINS the prior
+              string as a substring, so the edit is additive at the
+              character level and removes no registered token; the
+              SVG skip-decoration is preserved byte-identical.
+  G1          SYSTEM_STATE_BLOCKED is ADDED to q4_triggers + q5_logs
+              as the rejection_code logged on engine-not-ready FAIL
+              per 0511002 sec 4 (rejection_code={none|SYSTEM_STATE_
+              BLOCKED}). G1 WAIT/defer semantics preserved verbatim
+              (logged-only; no SKIP; does not feed SKIP REJECT
+              REGISTRY); SVG decoration preserved byte-identical.
+
+COMPANION NAMESPACE. Both tokens were ABSENT from the live 0311001
+v1_32 sec 15.12.7 evt registry (grep-verified). 0311001 v1_32 ->
+v1_33 registers evt:INSTRUMENT_STATUS_BLOCKED + evt:SYSTEM_STATE_
+BLOCKED in sec 15.12.7 (two new tokens; annotated 0511002).
+
+SCOPE. ONE mission (RR-SCOPE-011): the ADD-only D2-amendment + its
+companion namespace registration. RR-SCOPE-001 ADD-only (no
+registered token removed; no SVG geometry/rect/path/polygon/line/
+text-position byte change; no SVG title / diagram_canonical /
+title-bar-text byte change; no viewBox change - D2 1500x1700
+preserved; no figure-count change; D2 R-number unchanged at R8; all
+9 other figures byte-identical per DEC-003 Path A). NO 0511002
+migration, NO 0511002 retirement, NO sec 9 mirror edit (reject codes
+are not parameters - DEC-056/057 precedent), NO sec 9.17 edit, NO
+TB00000 amendment. NO re-opening of DEC-056 / 057 / 059 / 060 / 061 /
+062 / 063. RR-SCOPE-007 self-authored-NSI-source-prohibition
+compliance: scope sourced from TB00431 sec 5.1 + 0911002 sec 7
+DD-012 + 0511002 dv1_1 canonical token text + TB00432 NSI + the
+per-session RV gate's independent live re-derivation (which corrected
+the "produces/constraints" shorthand to the ground-truth q-field
+encoding site). NO paired MDR entry (the bucket (c) finding is a
+forward architectural gap, not a latent defect in existing canonical
+content - consistent with the TB00431 / DEC-063 no-MDR precedent).
+sec 2 index unchanged (detail-only per post-DEC-027 pattern);
+next DEC = DEC-065.
+
+CARRY-FORWARD. 0511002 bucket-(b) migration then 0511002 retirement
+(0911002 sec 6.2; CF-TB00432-A). Next AA=05 component-spec audit =
+0511003 Execution_Engine_Specification dv1_1 read-only DD-012 three-
+bucket (CF-TB00431-A), to run AFTER this closure.
 
 
 DEC-063: 0911002 CAMPAIGN PHASE 2 (AA=05) - 0511002 SIGNAL_PIPELINE
