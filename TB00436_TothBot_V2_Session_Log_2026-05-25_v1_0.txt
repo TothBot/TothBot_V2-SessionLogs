@@ -1,0 +1,221 @@
+DocDCN:     TB00436
+DocTitle:   TothBot_V2_Session_Log_2026-05-25
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00436_TothBot_V2_Session_Log_2026-05-25_v1_0.txt
+DocDate:    05-25-2026
+DocTime:    23:59:59 UTC
+
+============================================================
+TOTHBOT V2 SESSION LOG - TB00436
+============================================================
+
+============================================================
+1. SESSION IDENTITY
+============================================================
+
+Session:    TB00436
+Cold-load:  TB00436_Next_Session_Instructions_v1_0.txt
+Mission:    exit_reason ENUM RECONSTRUCTION + REMEDIATION
+            (CF-TB00435-A, CRITICAL). ONE mission per
+            RR-SCOPE-011.
+Outcome:    INCOMPLETE. STEP 1 git-history forensic
+            reconstruction only partially executed. No
+            canonical edit made. No DEC consumed. Mission
+            carried forward to TB00437.
+
+============================================================
+2. DOCUMENTS READ THIS SESSION
+============================================================
+
+Read from project folder (not memory) per TB00000 sec 2:
+
+  TB00000 v2_60  (project folder governs; cold-load header
+                 preload showed v2_58 - project file is v2_60
+                 per sec 2 project-governs rule)
+  TB00436 NSI v1_0
+  TB00435 SL v1_0
+  0500000 dv1_129 Claude_Source.html (canonical TARGET;
+                 enum sites grep-verified live)
+  0511004 Exit_Controller_Specification dv1_6
+  0911002 dv1_1 (DD-012 six-step gate, sec 7)
+  0311001 v1_33
+  TB00153 Decision_Register v1_57 (tail = DEC-064;
+                 next = DEC-065)
+
+============================================================
+3. WHAT WAS CONFIRMED (grep-verified in dv1_129, not memory)
+============================================================
+
+The CF-TB00435-A in-document conflict is REAL and confirmed.
+The canonical document dv1_129 contains two contradictory
+exit_reason enum lists:
+
+  LIST A (TRADE_CLOSE schema enum; 4 sites - dv1_129 lines
+          4498, 4589, 4605, 5240):
+            TP_FILL
+            MAE_THRESHOLD_BREACH
+            HTF_REGIME_REVERSAL
+            DAILY_REGIME_DOWNGRADE
+            TIME_EXPIRY
+            TP_PARTIAL_FILL_REMAINDER
+
+  LIST B (Trade Outcome Bus / Layer-1a prose; lines 3511,
+          3545, 3546, 3568, 3758; bound to rule HR-EC-016):
+            SIGNAL_DECAY
+            TIME_EXPIRY
+            MOMENTUM_LOSS
+            TP_FILL
+            MAE_THRESHOLD_BREACH
+            EMERGENCY_SL_FIRED
+
+Key observations:
+  - Layer-1a q4_triggers (line 3545) maps three triggers to
+    three names: signal-decay -> SIGNAL_DECAY, max-hold ->
+    TIME_EXPIRY, momentum-loss -> MOMENTUM_LOSS. The prose
+    treats SIGNAL_DECAY / MOMENTUM_LOSS as the live Layer-1a
+    exit names, while the schema enum uses
+    HTF_REGIME_REVERSAL / DAILY_REGIME_DOWNGRADE for the same
+    Layer-1a exits.
+  - PAIR_LIMIT_ONLY_EXIT: 0 hits in dv1_129 (live in 0511004
+    sec 5 + 1011007 sec 7, absent from canonical).
+  - EMERGENCY_SL_FIRED: in List B; Layer 3 is off-book
+    Kraken-side per q1_do (line 3509) - genuinely ambiguous
+    whether it is a true exit_reason value or an event-code
+    only.
+
+CF-TB00435-A CRITICAL is confirmed, not overstated. The
+canonical document is internally self-contradictory.
+
+============================================================
+4. STEP 1 PROGRESS - PARTIAL ONLY
+============================================================
+
+STEP 1 (git-history forensic reconstruction) requires Bill to
+run pickaxe commands in PowerShell against the local repos.
+Claude has no git-history access - only the dv1_129 project-
+folder snapshot.
+
+Bill ran ONE of the eight required pickaxe queries:
+
+  git log --all --oneline -S "SIGNAL_DECAY" -- "**/0500000_*"
+
+Result (the one new evidence fact this session):
+  - The SIGNAL_DECAY (List B) token's returned commit window
+    runs back through the TB00398-TB00429 CIATS-ownership
+    migration series.
+  - Oldest commit in the returned window = ecbe6ec
+    (TB00395, dv1_113).
+  - The window did NOT reach the true originating commit
+    (SIGNAL_DECAY appears in cumulative revision-history prose
+    that is copied forward each version bump, so a bare -S
+    pickaxe on this token is noisy and hits every version
+    bump; the first-introduction commit is earlier than the
+    returned window).
+
+NOT RUN this session (carried forward to TB00437):
+  - git log -S "MOMENTUM_LOSS"          -- "**/0500000_*"
+  - git log -S "HTF_REGIME_REVERSAL"    -- "**/0500000_*"
+  - git log -S "DAILY_REGIME_DOWNGRADE" -- "**/0500000_*"
+  - git log -S "PAIR_LIMIT_ONLY_EXIT"   -- "**/0500000_*"
+  - git log -S "EMERGENCY_SL_FIRED"     -- "**/0500000_*"
+  - git log -S "SIGNAL_DECAY" -- "**/TB00153_*"
+  - git log -S "exit_reason"  -- "**/TB00153_*"
+  - retrieval of originating 0500000 version(s) via
+    git checkout <hash> -- "**/0500000_*"
+
+============================================================
+5. WHY THE SESSION STOPPED
+============================================================
+
+Two reasons, both governance-correct:
+
+  (a) Context exhaustion. The session length forced
+      condensation mid-work. Bill directive: "End session
+      here and prepare hand off documents." The condensation
+      degrades reasoning quality, which is the failure mode
+      that risks corrupting a no-guess forensic mission.
+
+  (b) No-guess sacred constraint (NSI sec 2; TB00435 sec 7).
+      STEP 1 evidence is incomplete. The authoritative enum
+      cannot be determined from one pickaxe query. Per
+      RR-SCOPE-011 + the no-guess gate, Claude did NOT:
+        - invent or guess the authoritative enum
+        - amend 0500000 (dv1_129 unchanged; no dv1_130)
+        - amend 0511004
+        - open an MDR entry
+        - consume DEC-065 (Decision_Register stays v1_57,
+          tail DEC-064)
+
+This is the correct STOP per the NSI's own clause: "If STEP 1
+evidence is incomplete in one session, STOP after the
+reconstruction + a written authoritative-enum recommendation
+... carry the amendment to the next session."
+
+No authoritative-enum recommendation can yet be made - the
+evidence to support one was not collected. The recommendation
+is therefore also carried forward, to be produced once the
+full pickaxe set + originating-version retrieval is complete.
+
+============================================================
+6. DELIVERABLES THIS SESSION
+============================================================
+
+  (1) TB00436 SL v1_0 (this document).
+  (2) TB00437 NSI v1_0 (re-attempt configuration; full
+      pickaxe set carried forward).
+
+NO canonical, spec, MDR, or DR deliverables. NO DEC consumed.
+This is a clean carry-forward close.
+
+============================================================
+7. CLAUDE ERRORS THIS SESSION
+============================================================
+
+  ERROR-TB00436-01 (context-exhaustion condensation).
+    The session was scoped such that mandatory reads +
+    grep-verification + STEP 1 collection exceeded the
+    single-session budget, forcing condensation before STEP 1
+    completed. Corrective: TB00437 NSI scopes STEP 1 as the
+    sole deliverable target until evidence is conclusive,
+    with explicit STOP-and-carry-forward if it does not fit.
+    No RR-SCOPE-011 ceiling breach occurred (zero non-SL/NSI
+    file artifacts produced).
+
+No DD-011, FM, RR-SCOPE-007, RR-SHELL, DR-008, or DR-009
+violations this session. No-guess gate held correctly.
+
+============================================================
+8. CLEANUP LIST EXECUTED THIS SESSION
+============================================================
+
+Documents to Remove this Session (project-folder reality
+check per DR-009.4(c); oldest consumed SL + consumed prior
+NSI + superseded Phase-2 gap register):
+
+  TB00434_S1XC_DD012_Phase2_Gap_Register_0511004_v1_0.txt
+  TB00434_TothBot_V2_Session_Log_2026-05-25_v1_0.txt
+  TB00435_Next_Session_Instructions_v1_0.txt
+
+============================================================
+9. CARRY-FORWARD TO TB00437
+============================================================
+
+  (a) exit_reason ENUM RECONSTRUCTION + REMEDIATION
+      (CF-TB00435-A, CRITICAL) - the entire mission. STEP 1
+      restart with the FULL pickaxe set (all six 0500000
+      tokens + both TB00153 queries) + originating-version
+      retrieval.
+  (b) Written authoritative-enum recommendation (deferred -
+      evidence not yet collected).
+  (c) Then DD-012 six-step amendment: 0500000 dv1_129 ->
+      dv1_130 (ONE internally-consistent enum), correct
+      0511004 sec 7, open MDR entry, consume DEC-065.
+  (d) PAIR_LIMIT_ONLY_EXIT disposition (in 0511004 + 1011007,
+      absent from canonical - resolve during reconstruction).
+  (e) EMERGENCY_SL_FIRED disposition (true exit_reason vs
+      event-code-only - resolve during reconstruction).
+
+============================================================
+END OF SESSION LOG TB00436
+============================================================
