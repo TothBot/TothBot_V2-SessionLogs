@@ -1,0 +1,166 @@
+DocDCN:     TB00459
+DocTitle:   TothBot_V2_Session_Log
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00459_TothBot_V2_Session_Log_2026-05-26_v1_0.txt
+DocDate:    05-26-2026
+DocTime:    23:59:59 UTC
+
+============================================================
+TB00459 SESSION LOG
+============================================================
+
+------------------------------------------------------------
+§1 MISSION
+------------------------------------------------------------
+
+  RA-3 (Track A real consolidation per 0911002 §5A):
+  reconcile the 1011007 Logger Coding Spec LG-TOB-002
+  exit_reason enum drift down to the now-canonical 0500000
+  D2 + D3 + D5 schema (DEC-065 seven-value set + DEC-066
+  EMERGENCY_SL_FIRED producer-partition) per DD-002 diagrams-
+  canonical-over-spec. Selected by Bill at chat-turn 1 as the
+  single primary mission. RV-gated live before execution
+  (no memory).
+
+------------------------------------------------------------
+§2 PREDECESSOR STATE VERIFIED (live read, not memory)
+------------------------------------------------------------
+
+  Live versions at session open:
+    0500000      dv1_139  (TB00458 deliverable)
+    0311001      v1_34
+    1011007      dv1_5    (RA-3 edit target)
+    0511006      dv1_4
+    TB00153 DR   v1_60    (max DEC = 067, next = DEC-068)
+    TB00000      v2_60
+    0911002      dv1_3    (campaign plan)
+
+  Folder confirmed: only the highest version of each document
+  present; 0500000 dv1_138 already absent (removed locally at
+  TB00458). TB00458 SL+NSI present (immediate predecessor
+  handoff — KEEP). TB00456/455/454 SL+NSI confirmed absent
+  from prior cleanup; not re-added.
+
+------------------------------------------------------------
+§3 RV GATE (live full-file grep — findings)
+------------------------------------------------------------
+
+  FINDING 1 — 1011007 LG-TOB-002 (live lines 564-572):
+    enumerated EIGHT exit_reason values = the canonical seven
+    PLUS a stale SIGNAL_DECAY. The 8th value was SIGNAL_DECAY,
+    NOT EMERGENCY_SL_FIRED — therefore NOT the Bill-reserved
+    new-DEC condition flagged in the TB00458 OCS. PAIR_LIMIT_
+    ONLY_EXIT already present. Reconciliation = drop the one
+    stale token. Derivable, single compliant path, no new DEC.
+
+  FINDING 2 — 0511006 dv1_4 (RV-gate live grep): carries NO
+    exit_reason VALUE enum. The TB00458 carry-forward "0511006
+    8-value drift" was authored from memory and is WRONG
+    against the live file (RR-SCOPE-007: NSI is not an
+    authoritative scope source). 0511006 holds only LOG EVENT
+    NAME registry entries (POSITION_CLOSED, PAIR_LIMIT_ONLY_
+    EXIT, EMERGENCY_SL_FIRED at lines 420/421/424/536) which
+    are distinct event names, already DEC-066-consistent; zero
+    SIGNAL_DECAY anywhere. NOTHING to reconcile in 0511006.
+
+  CANONICAL TRUTH (grepped from live 0500000 dv1_139):
+    DEC-065 ratified seven-value mod:Exit_Controller normal-
+    operation set: TP_FILL, MAE_THRESHOLD_BREACH, HTF_REGIME_
+    REVERSAL, DAILY_REGIME_DOWNGRADE, TIME_EXPIRY, TP_PARTIAL_
+    FILL_REMAINDER, PAIR_LIMIT_ONLY_EXIT. D2 (R8), D3 (R9),
+    D5 (R13) all render this set.
+    DEC-066: EMERGENCY_SL_FIRED is the layer:L3_Emergency_SL
+    crash-recovery reason (producer-partitioned on the same
+    contract:CIATS_Trade_Outcome_Bus), NOT an Exit-Controller
+    exit_reason.
+    DEC-065 Q2: SIGNAL_DECAY is a Selection-side pending-
+    entry-order CANCEL TRIGGER (CIATS-owned), NOT an
+    exit_reason value.
+
+------------------------------------------------------------
+§4 BILL-RESERVED DECISION — SURFACED AND RESOLVED IN CHAT
+------------------------------------------------------------
+
+  Mandate restated by Bill: consolidate ALL architectural
+  aspects into ONE canonical, authoritative, comprehensive
+  0500000 as the sole source of truth.
+
+  Option A (drop SIGNAL_DECAY from 1011007 LG-TOB-002, leaving
+  the canonical 7; record 0511006 RV-gate-clean, no edit)
+  SATISFIES the mandate: 0500000 already owns the canonical
+  enum (D2+D3+D5); the downstream contradiction is removed.
+  Option B (plant the canonical enum into a second downstream
+  doc, 0511006) VIOLATES the mandate — it proliferates the
+  canonical content outward and creates a new drift surface.
+  Bill confirmed Option A.
+
+  Noted (informational, OUT of RA-3 scope per 0911002 §5A
+  "reconciled IN PLACE here"): the fullest mandate expression
+  for this element is eventual DD-012 retirement of 1011007's
+  enum restatement to a pointer-to-0500000 — a separate
+  Phase-2/3 migration track, not RA-3.
+
+------------------------------------------------------------
+§5 EXECUTION (1011007 dv1_5 -> dv1_6)
+------------------------------------------------------------
+
+  EDIT 1 (header): DocVersion dv1_5 -> dv1_6; DocPath filename
+    suffix -> dv1_6; DocDate -> 05-26-2026; DocTime ->
+    23:59:59 UTC.
+
+  EDIT 2 (LG-TOB-002 enum): SIGNAL_DECAY removed, leaving the
+    ratified DEC-065 seven-value set. Added DEC-066 producer-
+    partition note (EMERGENCY_SL_FIRED is the L3_Emergency_SL
+    crash-recovery reason, not an exit_reason) and DEC-065 Q2
+    note (SIGNAL_DECAY is a Selection-side cancel trigger),
+    citing 0500000 D2+D3+D5 as canonical source per
+    DD-001/DD-002.
+
+  EDIT 3 (§12 Revision History): new dv1_6 entry inserted at
+    top recording RA-3/G-4 closure, the SIGNAL_DECAY removal,
+    reconciliation to 0500000 dv1_139 canonical set + DEC-066,
+    RV-gate live-grep provenance, 0511006 RV-gate-clean (no
+    edit), no new DEC. dv1_5 and dv1_4 entries preserved
+    byte-identical.
+
+  RR-SCOPE-001: removal of exactly one stale token
+    (SIGNAL_DECAY). RR-SCOPE-011: one mission.
+
+------------------------------------------------------------
+§6 VERIFICATION (live grep of working dv1_6)
+------------------------------------------------------------
+
+  - SIGNAL_DECAY: zero occurrences in the LG-TOB-002 value
+    list; survives only inside the explanatory "is NOT an
+    exit_reason" note (1 occurrence, line 586). PASS.
+  - Canonical seven present in the value list. PASS.
+  - Header reads dv1_6 / 05-26-2026 / 23:59:59 UTC. PASS.
+  - §12: single dv1_6 entry at top; dv1_5 (line 1101) and
+    dv1_4 (line 1152) entries intact. PASS.
+  - 0511006 dv1_4: unchanged (RV-gate-clean, no edit). PASS.
+
+------------------------------------------------------------
+§7 OUTCOME
+------------------------------------------------------------
+
+  RA-3 CLOSED. G-4 CLOSED. 1011007 dv1_5 -> dv1_6 delivered.
+  0511006 recorded RV-gate-clean (no edit). No new DEC
+  (DEC-065 / DEC-066 already ratified; max DEC remains 067).
+  0500000 remains the sole canonical source; downstream logger
+  spec now consistent with it for exit_reason.
+
+  Deliverable set (DR-008.6 OPERATION 4 routing):
+    1011007 dv1_6 .txt  -> TothBot_V2-Docs/10XXXXX_Coding_
+                           Specification/
+    TB00459 SL v1_0     -> TothBot_V2-SessionLogs/
+    TB00459 NSI v1_0    -> TothBot_V2-SessionLogs/
+
+------------------------------------------------------------
+§8 SESSION-OPEN CLEANUP (DR-009)
+------------------------------------------------------------
+
+  Removal list: EMPTY. Project folder holds only the highest
+  version of each document; no superseded/duplicate/retired
+  file present. (The 0500000 dv1_138 repo git rm was TB00458's
+  OP4 item, not this session's.)
