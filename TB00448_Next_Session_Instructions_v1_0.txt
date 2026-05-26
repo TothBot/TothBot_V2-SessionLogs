@@ -1,0 +1,157 @@
+DocDCN:     TB00448
+DocTitle:   Next_Session_Instructions
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    GitHub.com/TothBot/TothBot_V2-SessionLogs/TB00448_Next_Session_Instructions_v1_0.txt
+DocDate:    05-26-2026
+DocTime:    01:55:00 UTC
+
+============================================================
+TB00448 NEXT SESSION INSTRUCTIONS
+============================================================
+
+------------------------------------------------------------
+0. OPENING CHAT STATEMENT (OCS) — COPY-PASTE PAYLOAD
+------------------------------------------------------------
+
+Cold-load TB00448_Next_Session_Instructions_v1_0.txt.
+Primary mission: author DEC-065 Q2 SIGNAL_DECAY entry-cancel
+trigger (Track B / CF-TB00442-A) into 0711001 SSS_Signal_Model
+first. Do NOT re-open DEC-065 Q1/Q2/Q3; do NOT re-ask the D2
+exit_reason enum (empty by decision). Session-open per TB00000
+v2_60 DR-009; close per DR-008.6 FOUR-OP SEQUENTIAL + DD-011
+CHAT-TURN-1 GATE.
+
+============================================================
+1. HARD GUARDS — READ FIRST. THE CIRCLE IS CLOSED.
+============================================================
+
+These are settled. Do NOT re-open them. Do NOT surface them
+to Bill as questions. Bill is explicitly tired of revisiting
+this; re-asking is a defect.
+
+1.1 DEC-065 Q1/Q2/Q3 are RATIFIED (Bill, TB00442; recorded
+    TB00153 Decision_Register v1_59 lines 7256-7400). The
+    canonical shared exit_reason enum is SEVEN values:
+    { TP_FILL, MAE_THRESHOLD_BREACH, HTF_REGIME_REVERSAL,
+      DAILY_REGIME_DOWNGRADE, TIME_EXPIRY,
+      TP_PARTIAL_FILL_REMAINDER, PAIR_LIMIT_ONLY_EXIT }.
+    SIGNAL_DECAY is NOT in this enum.
+
+1.2 RA-6 D2 enum reconciliation is EMPTY BY DECISION. Figure
+    D2 (live dv1_132 lines 2156-2736) contains NO exit_reason
+    schema and NO enum — that is correct per the ratified
+    design, not an oversight. Do NOT search D2 for an enum to
+    fix. Do NOT re-ask "which figure did you mean." RA-6 D2 is
+    closed at the enum layer. (D6 still renders the old
+    6-value enum at line ~5240 and is a SEPARATE RA line, not
+    this mission.)
+
+1.3 The partial-fill behavior Bill kept restating ("filled
+    portion handled by Exit module, cancel the rest") is
+    DEC-065 Q2. Half A (already-filled portion) = ar:AR-054,
+    ALREADY CANONICAL in D2 governs (live line 2175; defined
+    0500000 §4 lines 5169-5195). Half A is DONE. Do NOT
+    re-author it.
+
+============================================================
+2. PRIMARY MISSION (ONE, per RR-SCOPE-011)
+============================================================
+
+Author the DEC-065 Q2 SIGNAL_DECAY pending-entry-order
+CANCEL TRIGGER — the open half (Half B / CF-TB00442-A /
+Track B). This is NET-NEW design that does not yet exist in
+any spec or diagram (TB00442 SL §2.4 confirmed).
+
+MECHANISM (verbatim intent, DEC-065 Q2): if the entry signal
+(SSS) deteriorates below threshold while the entry order is
+still working (unfilled or partially filled), cancel the
+unfilled / remaining qty; the Exit Controller owns any
+already-filled portion per the existing AR-054 partial-fill
+handling.
+
+2.1 RECOMMENDED ATOMIC SCOPE THIS SESSION (informational per
+    RR-SCOPE-007 v2_30 — the receiving session re-derives via
+    its own DD-011 CHAT-TURN-1 GATE FP/DP test; this is not
+    authoritative direction):
+    Author into 0711001 SSS_Signal_Model_Specification FIRST —
+    define the "SSS deteriorates below threshold" detection
+    condition that fires the cancel trigger. Rationale (least
+    errors / rework): the detection CONDITION (0711001) is the
+    input to the cancel ACTION (0511003); defining the
+    condition first avoids a forward reference from 0511003 to
+    an undefined condition.
+
+2.2 CARRY-FORWARD SUB-MISSION (next session after this one):
+    Author the cancel-the-working-order ACTION into 0511003
+    Execution_Engine_Specification — the cancel dispatch +
+    AR-053 Pending Order Registry clearance + AR-054 handoff
+    of the already-filled portion to the Exit Controller.
+
+2.3 AFTER BOTH SPECS: a diagram amendment may be required to
+    render the trigger in D2 (entry/pipeline domain) under the
+    DD-014 / V-040 design-completeness frame + DEC-003 Path A
+    one-diagram-per-session cadence. Sequence that as its own
+    later session. Do not bundle it into the spec-authoring
+    sessions.
+
+============================================================
+3. SOURCES (grep-verify against the LIVE files; do not cite
+   from memory — RR-SCOPE-010)
+============================================================
+
+- DEC-065 full text: TB00153_Decision_Register_v1_59.txt
+  lines 7256-7400 (Q1 ~7350; Q2 ~7375-7392; Q3 ~7364).
+- AR-053 / AR-054 canonical defs: 0500000 §4 lines 5122
+  (AR-053) and 5169-5195 (AR-054); also D2 governs list
+  live line 2175.
+- AR-067 SSS Signal Engine def: 0500000 §4 line ~5412; D2
+  sss_engine component live lines 261-294.
+- Target specs: 0711001_SSS_Signal_Model_Specification_
+  dv1_2.txt + 0511003_Execution_Engine_Specification_
+  dv1_1.txt (both in project folder; copy to working dir
+  before editing — project folder is read-only).
+- Campaign placement: 0911002 sec 5A Track B (CF-TB00442-A).
+
+============================================================
+4. STRUCTURAL CARRY-FORWARD (PRE-EXISTING, NOT THIS MISSION)
+============================================================
+
+D2 root <desc> stray duplicate R-increment / R-increment-
+prior / R-increment-prior-2 fields below the proper 4-level
+chain (live ~lines 2167-2171). Pre-existing carry-forward
+from TB00354 / TB00366 / TB00367-368. PRESERVE under
+RR-SCOPE-001 ADD-only; cleanup only on explicit Bill
+authorization. Relevant only if/when D2 is amended (2.3).
+
+============================================================
+5. SESSION-OPEN / SESSION-CLOSE PROTOCOL
+============================================================
+
+Session-open: render the DR-009 "Documents to Remove this
+Session" cleanup list (fenced code block, filenames only, no
+commentary) per TB00000 v2_60 §4.1.2 DR-009. Source for this
+session's cleanup list = TB00447 SL §8:
+  TB00446_Next_Session_Instructions_v1_0.txt
+  TB00446_TothBot_V2_Session_Log_2026-05-25_v1_0.txt
+
+Session-close: DR-008.6 FOUR-OPERATION SEQUENTIAL (OP1 OCS;
+OP2 non-SL/NSI docs; OP3 SL + NSI; OP4 GitHub copy box,
+RR-SHELL-005/006/008/009/010, git push origin HEAD,
+absolute paths, ASCII commit). DD-011 v2_56 CHAT-TURN-1 GATE
+applies at chat-turn 1.
+
+============================================================
+6. STATE SNAPSHOT
+============================================================
+
+0500000 at dv1_132 (unchanged this session). RA-6 D2 closed
+(empty by decision). D5 enum reconciled (TB00446). D3 enum
+at 7-value. D6 enum still 6-value (separate RA, not Track B).
+Track A reconciliation cascade status otherwise unchanged.
+Track B (this mission) = open, net-new, deferred here by Bill.
+Cumulative DD-011 violation count: unchanged.
+
+============================================================
+END OF NEXT SESSION INSTRUCTIONS
+============================================================
