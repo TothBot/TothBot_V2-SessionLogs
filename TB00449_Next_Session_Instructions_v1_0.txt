@@ -1,0 +1,170 @@
+DocDCN:     TB00449
+DocTitle:   Next_Session_Instructions
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    GitHub.com/TothBot/TothBot_V2-SessionLogs/TB00449_Next_Session_Instructions_v1_0.txt
+DocDate:    05-26-2026
+DocTime:    23:59:59 UTC
+
+============================================================
+TB00449 NEXT SESSION INSTRUCTIONS  (cold-load for TB00450)
+============================================================
+
+============================================================
+0. PRIOR-SESSION STATUS (READ FIRST)
+============================================================
+
+TB00449 was a VERIFICATION-ONLY session (Bill chat-turn-1
+directive overrode the cold-load Track B mission). It re-verified
+the TB00447 session work products (SL v1_1 + NSI v1_1) by direct
+live-file grep. VERDICT: ALL claims CONFIRMED ACCURATE. No
+defects. No re-do required. See TB00449 SL sec 4 for the eight
+confirmed findings.
+
+DO NOT re-verify the TB00447 work. It is verified. Proceed to the
+primary mission below.
+
+============================================================
+1. PRIMARY MISSION (single primary mission - RR-SCOPE-011)
+============================================================
+
+Author the DEC-065 Q2 SIGNAL_DECAY entry-cancel trigger
+(Track B / CF-TB00442-A) DETECTION CONDITION into:
+  0711001_SSS_Signal_Model_Specification (currently dv1_2)
+  -> produce dv1_3.
+
+1.1 WHAT TO AUTHOR
+    The SIGNAL_DECAY detection condition: the signal-model rule
+    that determines WHEN a still-working (unfilled or partially
+    unfilled) entry order's originating signal has decayed such
+    that the pending entry must be canceled. This is the
+    DETECTION half (0711001 SSS_Signal_Model). The cancel-DISPATCH
+    mechanics (0511003 Execution_Engine) and the cancel-CONTROL
+    decision ownership (Selection Controller) are SEPARATE targets
+    - see sec 2.2; do not conflate.
+
+1.2 OWNERSHIP MODEL (Bill-ratified, do NOT re-derive)
+    A single working entry order is owned by the Selection module
+    (entry-side control) while unfilled. On a PARTIAL fill the one
+    order BISECTS into two concurrently-owned objects:
+      - filled qty  -> a real position, owned by the Exit
+        Controller (AR-054 handles the unprotected-stub case).
+      - unfilled remainder -> stays owned by the Selection module
+        (entry-side).
+    If SIGNAL_DECAY fires before the remainder fills, the
+    SELECTION module (mod:Selection_Controller) cancels the
+    unfilled remainder. This cancel is a SELECTION-module action,
+    NOT an Exit-module / AR-054 action. AR-054 only handles the
+    already-filled portion. The boundary is the fill: filled ->
+    Exit; unfilled -> Selection.
+
+1.3 SCOPE DISCIPLINE
+    RR-SCOPE-001 ADD-only. No removal of existing 0711001
+    identifiers. Single-diagram/single-spec primary mission.
+    If the mission cannot be completed in one session, condense
+    and produce session-end handoff docs (DR-008.6) rather than
+    half-authoring.
+
+============================================================
+2. HARD GUARDS (do NOT re-open)
+============================================================
+
+2.1 DEC-065 Q1 / Q2 / Q3 are RATIFIED (Bill, TB00442; Decision
+    Register TB00153 v1_59, region 7256-7400). DO NOT re-open
+    them. Canonical exit_reason enum is 7-value:
+      TP_FILL, MAE_THRESHOLD_BREACH, HTF_REGIME_REVERSAL,
+      DAILY_REGIME_DOWNGRADE, TIME_EXPIRY,
+      TP_PARTIAL_FILL_REMAINDER, PAIR_LIMIT_ONLY_EXIT.
+    Q1 = 6 regime-based base values; Q3 adds PAIR_LIMIT_ONLY_EXIT
+    (7th); Q2 = SIGNAL_DECAY is RE-HOMED as a pending-entry cancel
+    trigger and is NOT in the exit enum.
+
+2.2 DO NOT re-ask the D2 exit_reason enum question. The RA-6
+    "D2 part" is EMPTY BY DECISION (DEC-065 Q2): SIGNAL_DECAY is
+    not an exit_reason, so there is nothing in D2 to reconcile.
+    D2 (figure span lines 2156-2736 in 0500000 dv1_132) correctly
+    contains NO exit_reason schema.
+
+2.3 The cancel-ACTION ownership target is to be DERIVED by the
+    DD-011 CHAT-TURN-1 GATE, not assumed: the control/decision
+    site (Selection Controller spec) vs the dispatch-mechanics
+    site (0511003 Execution_Engine) are distinct from THIS
+    mission's detection-condition target (0711001). The DEC-065
+    register text frames the cancel as net-new design across
+    "0511003 + 0711001" and references existing AR-054 handling;
+    it does NOT itself name mod:Selection_Controller as canceller.
+    The Selection-module attribution is the Bill-ratified TB00447
+    refinement (SL v1_1 sec 3.0) and supersedes the older register
+    framing. No conflict - but author ONLY the 0711001 detection
+    condition this session; do not silently expand into 0511003 or
+    the Selection Controller spec without a DD-011 gate decision.
+
+============================================================
+3. SOURCES (read live - do NOT work from memory)
+============================================================
+
+  - DEC-065 authority record: TB00153_Decision_Register_v1_59.txt,
+    region lines 7256-7400 (Q1/Q2/Q3 RATIFIED).
+  - AR-053 canonical entry: 0500000 sec 4 line 5122 (Per-module
+    Pending Order Registry - capital commitment tracking).
+  - AR-054 canonical entry: 0500000 sec 4 lines 5169-5195 (Entry
+    order partial fill + expiry/cancel - direction-symmetric
+    protection). Gate 7 USD check: lines 5134-5138.
+  - AR-053 + AR-054 in D2 root governs list: 0500000 line 2175.
+  - Target spec: 0711001_SSS_Signal_Model_Specification_dv1_2.txt.
+  - Campaign authority: 0911002_TothBot_V2_0500000_Consolidation_
+    Campaign_Plan_dv1_3.txt (Track B / CF-TB00442-A).
+  - Diagram source-of-truth: 0500000_System_Architecture_Overview_
+    dv1_132_Claude_Source.html.
+
+============================================================
+4. STRUCTURAL CARRY-FORWARD (pre-existing D2 defect)
+============================================================
+
+D2 root <desc> contains stray duplicate R-increment /
+R-increment-prior / R-increment-prior-2 fields below the proper
+4-level chain (0500000 dv1_132 live lines ~2167-2171).
+Pre-existing carry-forward from TB00354 / TB00366 / TB00367-368 /
+TB00447. PRESERVE under RR-SCOPE-001 ADD-only; cleanup ONLY on
+explicit Bill authorization. Relevant only if/when D2 is amended
+(this mission targets 0711001, not D2, so it should not arise -
+but do not "fix" it if encountered).
+
+============================================================
+5. PROJECT-FOLDER CLEANUP (DR-009 for the TB00450 session open)
+============================================================
+
+After the TB00449 SL + NSI commit lands, the following become
+removable from the Claude.ai project knowledge folder (prior
+session pair, fully superseded for forward cold-load by this
+TB00449 NSI):
+
+  TB00448_Next_Session_Instructions_v1_1.txt
+  TB00447_TothBot_V2_Session_Log_2026-05-26_v1_1.txt
+
+Render this list (filenames only) at the TB00450 session open per
+DR-009 after confirming the TB00449 commit is present in the
+SessionLogs repo.
+
+============================================================
+6. SESSION-OPEN / SESSION-CLOSE PROTOCOL
+============================================================
+
+OPEN: TB00000 v2_60 DR-009 (read live files, render removable-docs
+list, do not work from memory).
+
+CLOSE: DR-008.6 FOUR-OPERATION SEQUENTIAL (OP1 OCS copy box; OP2
+non-SL/NSI docs; OP3 SL + NSI -> SessionLogs; OP4 GitHub copy box).
+GitHub per RR-SHELL: PowerShell, per-repo cd, ASCII-only commit,
+git push origin HEAD, absolute paths, and RR-SHELL-010 v2_60
+NO-FILE-STAGING (cd + git add/rm/commit/push ONLY - no Copy-Item /
+cp / mv / robocopy; files assumed already in repo folder).
+
+GATE: DD-011 v2_56 CHAT-TURN-1 GATE - run the FP/DP-derivability
+test at chat-turn 1 and log the option-set before executing.
+Bill chat-turn direction supersedes Claude FP/DP analysis
+(exception (b)).
+
+============================================================
+END OF NEXT SESSION INSTRUCTIONS
+============================================================
