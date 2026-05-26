@@ -1,0 +1,196 @@
+DocDCN:     TB00460
+DocTitle:   TothBot_V2_Session_Log
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00460_TothBot_V2_Session_Log_2026-05-26_v1_0.txt
+DocDate:    05-26-2026
+DocTime:    23:59:59 UTC
+
+============================================================
+TB00460 SESSION LOG
+============================================================
+
+------------------------------------------------------------
+§1 SESSION MISSION
+------------------------------------------------------------
+
+  RA-4 (Track A real consolidation per 0911002 §5A.2):
+  0511004 §7.5 G-4 CARRY-FORWARD CLOSURE. Close the G-4
+  carry-forward recorded at 0511004 §7.5 against the ratified
+  exit_reason enum (DEC-065 7-value mod:Exit_Controller set +
+  DEC-066 EMERGENCY_SL_FIRED producer-partition), reconciled
+  to the canonical 0500000 D2+D3+D5 schema per DD-002
+  diagrams-canonical-over-spec.
+
+  Single primary mission per RR-SCOPE-011.
+
+------------------------------------------------------------
+§2 MANDATORY READING (live, this session)
+------------------------------------------------------------
+
+  TB00000      v2_60   (project instructions)
+  0311001      v1_34   (namespace — referenced)
+  0500000      dv1_139 (canonical diagrams — D2/D3/D5
+                        exit_reason enum source)
+  0911002      dv1_3   (consolidation campaign plan §5A.2)
+  TB00153 DR   v1_60   (DEC-065 + DEC-066; max DEC = 067)
+  1011007      dv1_6   (RA-3 logger enum closure)
+  0511004      dv1_7   (RA-4 edit target)
+  0511006      dv1_4   (RV-gate context)
+  TB00459 SL   v1_0
+  TB00459 NSI  v1_0
+
+------------------------------------------------------------
+§3 RV-GATE (live grep — not memory, not NSI)
+------------------------------------------------------------
+
+  PRE-FLIGHT CONFIRMED:
+    0511004 live version = dv1_7 (header line 3; NOT a
+      plan/NSI-asserted dv).
+    1011007 live = dv1_6 (RA-3 / G-4 logger closure present
+      in project folder — confirms RA-3 closed; RA-4 is
+      genuinely next per 0911002 §5A.2).
+    0500000 live = dv1_139.
+
+  CANONICAL TRUTH (live grep of 0500000 dv1_139):
+    D3 mod:Exit_Controller q5_logs (R9) renders the DEC-065
+      seven-value set:
+        { TP_FILL, MAE_THRESHOLD_BREACH, HTF_REGIME_REVERSAL,
+          DAILY_REGIME_DOWNGRADE, TIME_EXPIRY,
+          TP_PARTIAL_FILL_REMAINDER, PAIR_LIMIT_ONLY_EXIT }
+      + the DEC-066 producer-partition note (EMERGENCY_SL_
+      FIRED is the layer:L3_Emergency_SL crash-recovery
+      reason, NOT an Exit-Controller exit_reason).
+    D5 stream2_box schema_fields_canonical field-15 (R13)
+      renders the same seven-value set + the same DEC-066
+      producer-partition note + the visible exit_reason-enum
+      <text> at y=532 (seven values).
+    D2 contract:CIATS_Trade_Outcome_Bus schema_fields-15
+      (R8) renders the same seven-value set (TB00457 RA-6 D2,
+      dv1_138).
+
+  LIVE 0511004 dv1_7 §7.5 DRIFT (the RA-4 target):
+    (1) the 23-field schema enum (field 15) listed only SIX
+        values — missing PAIR_LIMIT_ONLY_EXIT.
+    (2) the closing "ENUM DRIFT (carry-forward — NOT silently
+        reconciled at this layer)" paragraph framed an OPEN
+        six-vs-eight drift, cited the STALE 0500000 dv1_50
+        Diagram 5/6, and deferred to a future cascade with a
+        pending Bill decision.
+    (3) the opening "Schema source-of-truth" line cited the
+        STALE 0500000 dv1_50 Diagram 5 + Diagram 6.
+
+  CARRY-FORWARD ACCURACY CHECK (RR-SCOPE-007 — NSI is not an
+  authoritative scope source): the NSI/plan dv references
+  were NOT trusted; every value above was grepped from the
+  live files this session.
+
+------------------------------------------------------------
+§4 BILL-RESERVED DECISION — NONE
+------------------------------------------------------------
+
+  The exit_reason enum is fully ratified (DEC-065 +
+  DEC-066, TB00153 v1_60, Bill-ratified at TB00442/TB00444).
+  The reconciliation target is fully specified by the
+  canonical 0500000 dv1_139 D2/D3/D5 rendering. This is a
+  derivable DD-002 prose-follows-diagram reconciliation —
+  not a Bill A/B choice. Executed under RR-SCOPE-005
+  derivable-decision authority + DD-011 v2_56 CHAT-TURN-1
+  GATE (OUTCOME 1: single compliant path = reconcile §7.5
+  to the canonical 7-value set; no second canonical home
+  created per DD-002). No new DEC required (max DEC remains
+  067).
+
+------------------------------------------------------------
+§5 EXECUTION (0511004 dv1_7 -> dv1_8)
+------------------------------------------------------------
+
+  EDIT 1 (header): DocVersion dv1_7 -> dv1_8; DocPath
+    filename suffix -> dv1_8; DocDate -> 05-26-2026;
+    DocTime 23:59:59 UTC.
+
+  EDIT 2 (§7.5 schema source-of-truth opening line):
+    stale "0500000 dv1_50 Diagram 5 stream2_box (Image5_T2_
+    R5) + Diagram 6 ciats_outcome (Image6_T2_R6)" re-pointed
+    to canonical "0500000 dv1_139 D5 stream2_box schema_
+    fields_canonical (field-15 exit_reason) + D2 contract:
+    CIATS_Trade_Outcome_Bus schema_fields" per DD-001/DD-002.
+
+  EDIT 3 (§7.5 exit_reason enum, field 15): ADDED the seventh
+    DEC-065 value PAIR_LIMIT_ONLY_EXIT. Enum now matches the
+    canonical 0500000 dv1_139 D2/D3/D5 verbatim. ADD-only
+    (RR-SCOPE-001); no removal of any existing field/value.
+
+  EDIT 4 (§7.5 closing paragraph): the OPEN "ENUM DRIFT
+    (carry-forward)" paragraph REPLACED with a "G-4 CLOSED"
+    reconciliation note recording: the DEC-065 7-value set
+    is canonical at 0500000 dv1_139 D2(R8)/D3(R9)/D5(R13);
+    EMERGENCY_SL_FIRED is the DEC-066 producer-partitioned
+    L3 crash-recovery reason (NOT an exit_reason);
+    SIGNAL_DECAY is the DEC-065 Q2 Selection-side cancel
+    trigger (NOT an exit_reason); the prior six-vs-eight
+    drift is RESOLVED because 1011007 dv1_6 (TB00459 RA-3)
+    dropped the stale SIGNAL_DECAY value, leaving the same
+    seven-value set; no open drift remains.
+
+  EDIT 5 (§11 RELATED DOCUMENTS): 0500000 entry extended
+    with a dv1_139 D2+D3+D5 canonical-source note for the
+    §7.5 enum; new 1011007 dv1_6 entry added.
+
+  EDIT 6 (§12 REVISION HISTORY): dv1_8 entry inserted at
+    top. Prior entries (dv1_7, dv1_6, dv1_5, dv1_4, dv1_3,
+    earlier) preserved byte-identical per CI-005/CI-006.
+
+------------------------------------------------------------
+§6 VERIFICATION (DR-007 — live grep of working dv1_8)
+------------------------------------------------------------
+
+  - Header reads dv1_8 / 05-26-2026 / 23:59:59 UTC. PASS.
+  - §7.5 enum (field 15): seven values present, including
+    PAIR_LIMIT_ONLY_EXIT. PASS.
+  - §7.5 opening + closing now cite 0500000 dv1_139 only;
+    zero dv1_50 in the live §7.5 region (568-642). PASS.
+  - "0500000 dv1_50" remaining occurrences are all inside
+    §12 historical revision entries (dv1_7/dv1_6/dv1_5),
+    preserved byte-identical per CI-005/CI-006. PASS.
+  - §12: single dv1_8 entry at top; dv1_7 + all prior
+    entries intact. PASS.
+  - exit_reason individual-value citations elsewhere (§3,
+    §6A, §8, §10) already correct — preserved byte-
+    identical. PASS.
+  - UTF-8 text, no encoding corruption. PASS.
+
+------------------------------------------------------------
+§7 OUTCOME
+------------------------------------------------------------
+
+  RA-4 CLOSED. G-4 carry-forward at 0511004 §7.5 CLOSED.
+  0511004 dv1_7 -> dv1_8 delivered. Three-way match achieved:
+  0500000 dv1_139 D2/D3/D5 (canonical) + 1011007 dv1_6
+  (logger, TB00459) + 0511004 dv1_8 (this session, parent
+  spec). No new DEC (DEC-065 / DEC-066 already ratified; max
+  DEC remains 067). 0500000 remains the sole canonical
+  source; 0511004 §7.5 reconciles TO it per DD-002. No
+  second canonical home created.
+
+  Deliverable set (DR-008.6 OPERATION 4 routing):
+    0511004 dv1_8 .txt -> TothBot_V2-Docs/05XXXXX_System_
+                          Architecture/
+    TB00460 SL v1_0    -> TothBot_V2-SessionLogs/
+    TB00460 NSI v1_0   -> TothBot_V2-SessionLogs/
+
+------------------------------------------------------------
+§8 CLAUDE ERRORS THIS SESSION
+------------------------------------------------------------
+
+  None.
+
+------------------------------------------------------------
+§9 SESSION-OPEN CLEANUP (DR-009)
+------------------------------------------------------------
+
+  Removal list: EMPTY. Project folder holds only the highest
+  version of each document; no superseded/duplicate/retired
+  file present. (0511004 dv1_7 -> dv1_8 supersession: the
+  dv1_7 file's removal from the project folder is Bill's
+  next-session upload action, not this session's cleanup.)
