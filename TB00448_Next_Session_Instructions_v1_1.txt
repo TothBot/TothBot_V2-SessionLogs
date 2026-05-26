@@ -1,0 +1,208 @@
+DocDCN:     TB00448
+DocTitle:   Next_Session_Instructions
+DocVersion: v1_1
+DocOwner:   Bill
+DocPath:    GitHub.com/TothBot/TothBot_V2-SessionLogs/TB00448_Next_Session_Instructions_v1_1.txt
+DocDate:    05-26-2026
+DocTime:    02:30:00 UTC
+
+============================================================
+TB00448 NEXT SESSION INSTRUCTIONS
+============================================================
+
+SUPERSEDES v1_0. v1_0 mis-attributed the unfilled-remainder
+cancel to the Exit side / AR-054; corrected here to the
+SELECTION-module dual-ownership model (see TB00447 SL v1_1
+Sections 3.0 and 10). v1_0 is removed from the SessionLogs
+repo HEAD by the same commit that adds this v1_1.
+
+------------------------------------------------------------
+0. OPENING CHAT STATEMENT (OCS) - COPY-PASTE PAYLOAD
+------------------------------------------------------------
+
+Cold-load TB00448_Next_Session_Instructions_v1_1.txt.
+Primary mission: author the DEC-065 Q2 SIGNAL_DECAY
+entry-cancel trigger (Track B / CF-TB00442-A) - detection
+condition into 0711001 SSS_Signal_Model FIRST. Ownership
+model: a partial fill splits one order into a Selection-owned
+unfilled remainder and an Exit-owned filled portion; the
+cancel of the unfilled remainder is a SELECTION-module action
+(mod:Selection_Controller), NOT Exit / AR-054. Do NOT re-open
+DEC-065 Q1/Q2/Q3; do NOT re-ask the D2 exit_reason enum
+(empty by decision). Session-open per TB00000 v2_60 DR-009;
+close per DR-008.6 FOUR-OP SEQUENTIAL + DD-011 CHAT-TURN-1
+GATE.
+
+============================================================
+1. HARD GUARDS - READ FIRST. THE CIRCLE IS CLOSED.
+============================================================
+
+These are settled. Do NOT re-open them. Do NOT surface them
+to Bill as questions. Bill is explicitly tired of revisiting
+this; re-asking is a defect.
+
+1.1 DEC-065 Q1/Q2/Q3 are RATIFIED (Bill, TB00442; recorded
+    TB00153 Decision_Register v1_59 lines 7256-7400). The
+    canonical shared exit_reason enum is SEVEN values:
+    { TP_FILL, MAE_THRESHOLD_BREACH, HTF_REGIME_REVERSAL,
+      DAILY_REGIME_DOWNGRADE, TIME_EXPIRY,
+      TP_PARTIAL_FILL_REMAINDER, PAIR_LIMIT_ONLY_EXIT }.
+    SIGNAL_DECAY is NOT in this enum.
+
+1.2 RA-6 D2 enum reconciliation is EMPTY BY DECISION. Figure
+    D2 (live dv1_132 lines 2156-2736) contains NO exit_reason
+    schema and NO enum - that is correct per the ratified
+    design, not an oversight. Do NOT search D2 for an enum to
+    fix. Do NOT re-ask "which figure did you mean." RA-6 D2 is
+    closed at the enum layer. (D6 still renders the old
+    6-value enum at line ~5240 and is a SEPARATE RA line, not
+    this mission.)
+
+1.3 THE PARTIAL-FILL OWNERSHIP MODEL (the thing Bill kept
+    restating; corrected from v1_0). Ownership is NOT one
+    order / one module. A single entry order, once partially
+    filled, BISECTS into two concurrently-owned objects:
+      - FILLED qty  -> owned by the EXIT Controller (a real
+        position; its safety net for an unprotected stub is
+        ar:AR-054).
+      - UNFILLED qty -> owned by the SELECTION module
+        (mod:Selection_Controller); still a working order.
+    On SIGNAL_DECAY before the remainder fills, the SELECTION
+    module - still in control of the unfilled qty - cancels
+    it. The Exit Controller and AR-054 do NOT cancel the
+    remainder.
+    Half A (already-filled portion + AR-054 safety net) is
+    ALREADY CANONICAL in D2 governs (live line 2175; defined
+    0500000 sec 4 lines 5169-5195). Half A is DONE. Do NOT
+    re-author it.
+
+============================================================
+2. PRIMARY MISSION (ONE, per RR-SCOPE-011)
+============================================================
+
+Author the DEC-065 Q2 SIGNAL_DECAY pending-entry-order
+CANCEL TRIGGER - the open half (Half B / CF-TB00442-A /
+Track B). This is NET-NEW design that does not yet exist in
+any spec or diagram (TB00442 SL sec 2.4 confirmed).
+
+MECHANISM (verbatim intent, DEC-065 Q2, corrected ownership):
+if the entry signal (SSS) deteriorates below threshold while
+the entry order is still working (unfilled or partially
+filled), the SELECTION module - which owns the unfilled
+remainder - cancels the unfilled / remaining qty. The EXIT
+Controller owns the already-filled portion (AR-054 is its
+safety net for an unprotected filled stub). AR-053 Pending
+Order Registry reconciles across the split: cancelled qty
+cleared from pending, filled qty registered as a position.
+
+2.1 RECOMMENDED ATOMIC SCOPE THIS SESSION (informational per
+    RR-SCOPE-007 v2_30 - the receiving session re-derives via
+    its own DD-011 CHAT-TURN-1 GATE FP/DP test; this is not
+    authoritative direction):
+    Author into 0711001 SSS_Signal_Model_Specification FIRST -
+    define the "SSS deteriorates below threshold" detection
+    condition that fires the cancel trigger. Rationale (least
+    errors / rework): the detection CONDITION (0711001) is the
+    input to the cancel ACTION; defining the condition first
+    avoids a forward reference to an undefined condition. This
+    primary mission is UNAFFECTED by the v1_0 ownership
+    correction - the detection condition is the trigger input
+    regardless of which module owns the cancel action.
+
+2.2 CARRY-FORWARD SUB-MISSION (next session after this one):
+    Author the cancel-the-working-order ACTION. CONTROL /
+    OWNERSHIP of that action = the SELECTION module
+    (mod:Selection_Controller) - it decides to cancel the
+    unfilled remainder it still owns. The mechanical cancel
+    DISPATCH to the exchange may route through the Execution
+    Engine (0511003). The exact spec target (Selection
+    Controller spec for the control/decision vs 0511003 for
+    the dispatch mechanics) is to be DERIVED by that session's
+    DD-011 CHAT-TURN-1 GATE FP/DP test - do NOT assume 0511003
+    owns the action. Include: AR-053 Pending Order Registry
+    clearance of the cancelled qty; confirmation that the
+    filled portion is registered to / owned by the Exit
+    Controller (AR-054 safety net unchanged).
+    CORRECTION NOTE: v1_0 stated this carry-forward as "author
+    into 0511003 ... AR-054 handoff of the filled portion to
+    Exit." That wrongly implied the Execution Engine + AR-054
+    own the cancel. Corrected: cancel ownership = Selection
+    module; AR-054 is only the Exit-side safety net for the
+    filled stub.
+
+2.3 AFTER BOTH SPECS: a diagram amendment may be required to
+    render the trigger in D2 (entry/pipeline domain) under the
+    DD-014 / V-040 design-completeness frame + DEC-003 Path A
+    one-diagram-per-session cadence. Sequence that as its own
+    later session. Do not bundle it into the spec-authoring
+    sessions.
+
+============================================================
+3. SOURCES (grep-verify against the LIVE files; do not cite
+   from memory - RR-SCOPE-010)
+============================================================
+
+- DEC-065 full text: TB00153_Decision_Register_v1_59.txt
+  lines 7256-7400 (Q1 ~7350; Q2 ~7375-7392; Q3 ~7364).
+- AR-053 / AR-054 canonical defs: 0500000 sec 4 lines 5122
+  (AR-053) and 5169-5195 (AR-054); also D2 governs list
+  live line 2175.
+- AR-067 SSS Signal Engine def: 0500000 sec 4 line ~5412; D2
+  sss_engine component live lines 261-294.
+- Selection module identity: mod:Selection_Controller
+  (gate:G5_Selection_Controller, ar:AR-072 / AR-073,
+  SC-Gate-1..6). Confirm the canonical Selection Controller
+  spec target by grep before authoring the cancel-action
+  ownership (do not assume the filename).
+- Target spec (detection condition, this mission): 0711001_
+  SSS_Signal_Model_Specification_dv1_2.txt (project folder;
+  copy to working dir before editing - project folder is
+  read-only).
+- Campaign placement: 0911002 sec 5A Track B (CF-TB00442-A).
+
+============================================================
+4. STRUCTURAL CARRY-FORWARD (PRE-EXISTING, NOT THIS MISSION)
+============================================================
+
+D2 root <desc> stray duplicate R-increment / R-increment-
+prior / R-increment-prior-2 fields below the proper 4-level
+chain (live ~lines 2167-2171). Pre-existing carry-forward
+from TB00354 / TB00366 / TB00367-368. PRESERVE under
+RR-SCOPE-001 ADD-only; cleanup only on explicit Bill
+authorization. Relevant only if/when D2 is amended (2.3).
+
+============================================================
+5. SESSION-OPEN / SESSION-CLOSE PROTOCOL
+============================================================
+
+Session-open: render the DR-009 "Documents to Remove this
+Session" cleanup list (fenced code block, filenames only, no
+commentary) per TB00000 v2_60 sec 4.1.2 DR-009. Source for
+this session's cleanup list = TB00447 SL v1_1 sec 8:
+  TB00446_Next_Session_Instructions_v1_0.txt
+  TB00446_TothBot_V2_Session_Log_2026-05-25_v1_0.txt
+(TB00447 SL v1_0 and TB00448 NSI v1_0 are already removed
+locally and from repo HEAD; do NOT list them.)
+
+Session-close: DR-008.6 FOUR-OPERATION SEQUENTIAL (OP1 OCS;
+OP2 non-SL/NSI docs; OP3 SL + NSI; OP4 GitHub copy box,
+RR-SHELL-005/006/008/009/010, git push origin HEAD,
+absolute paths, ASCII commit). DD-011 v2_56 CHAT-TURN-1 GATE
+applies at chat-turn 1.
+
+============================================================
+6. STATE SNAPSHOT
+============================================================
+
+0500000 at dv1_132 (unchanged this session). RA-6 D2 closed
+(empty by decision). D5 enum reconciled (TB00446). D3 enum
+at 7-value. D6 enum still 6-value (separate RA, not Track B).
+Track A reconciliation cascade status otherwise unchanged.
+Track B (this mission) = open, net-new, deferred here by Bill.
+Partial-fill ownership model = dual-ownership split (sec 1.3),
+corrected from v1_0. Cumulative DD-011 violation count:
+unchanged.
+
+============================================================
+END OF NEXT SESSION INSTRUCTIONS
+============================================================
