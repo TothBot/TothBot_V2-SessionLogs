@@ -1,0 +1,559 @@
+DocDCN:     TB00477
+DocTitle:   S1KR_DD012_Phase1_Gap_Register_0411002
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00477_S1KR_DD012_Phase1_Gap_Register_0411002_v1_0.txt
+DocDate:    05-27-2026
+DocTime:    23:00:00 UTC
+
+============================================================
+TB00477 S1KR PHASE 1 ELEMENT AUDIT GAP REGISTER
+        0411002 Kraken_REST_API_Specification dv1_1
+============================================================
+
+------------------------------------------------------------
+1. PURPOSE AND SCOPE
+------------------------------------------------------------
+
+This is the element-level architectural audit of 0411002
+Kraken_REST_API_Specification dv1_1 under the 0500000
+Consolidation Campaign (plan 0911002 dv1_4), Phase 1
+(ELEMENT AUDIT). Read-only. No migration. No Track A
+reconciliation. ONE source document per session per
+RR-SCOPE-011 (one-mission ceiling). THIRD E2 instance-spec
+element audit, SECOND AA=04.
+
+DD-012 three-bucket classification applied per element
+against canonical 0500000 dv1_139:
+  (a) ARCHITECTURAL RESTATEMENT — already canonical in
+      0500000; drops with the source document's
+      retirement.
+  (b) CODING-UNIQUE — no architectural meaning; pure
+      code-authoring contract; retained-home decision.
+  (c) ARCHITECTURAL CONTENT NOT YET IN DIAGRAMS — would
+      require 0500000 diagram amendment FIRST per DD-002
+      prose-follows-diagram + DD-003 4-step workflow.
+
+Per RR-SCOPE-007 v2_30 no-propagation: every element was
+independently grep-verified against live 0500000 dv1_139
+in this session. The TB00476 0411001 audit result was NOT
+inherited; the 0411001-pattern expectation was used as
+hypothesis only and verified per element here.
+
+------------------------------------------------------------
+2. ELEMENT INVENTORY (full read of 0411002 dv1_1, 872 lines)
+------------------------------------------------------------
+
+2.1 REST CHANNEL SET (8 endpoints):
+    GetWebSocketsToken, GetOHLCData, GetOpenOrders,
+    GetAccountBalance, CancelAllOrders, StatusAPI,
+    QueryOrdersInfo, Ticker.
+
+2.2 ARCHITECTURAL RULES CITED (by AR-token, direct + chain):
+    AR-009 (REST snapshot + executions seq gap reconcile;
+            Short via Kraken margin)
+    AR-014 (Logger async bounded queue — chain reference)
+    AR-017 (Daily regime REST GetOHLCData 00:00 UTC;
+            CRITICAL response[-1] exclusion)
+    AR-021 (Executions channel seq gap -> REST GetOpenOrders)
+    AR-025 (All REST via aiohttp; asyncio TaskManager;
+            systemd WatchdogSec=120)
+    AR-031 (Subscription ACK warnings[] parsing;
+            QueryOrdersInfo targeted reconciliation)
+    AR-033 (deadline parameter — chain reference)
+    AR-035 (aiohttp ClientSession config: total=10/
+            connect=5/sock_read=8 + TCPConnector
+            limit=10/limit_per_host=5/force_close=False)
+    AR-036 (Regime Engine REST 1.1s stagger)
+    AR-037 (DATA + TRADE keys IP-whitelisted to VPS IP)
+    AR-038 (Status API startup proactive maintenance)
+    AR-039 (Per-pair instrument channel status check —
+            chain reference)
+    AR-050 (Balances channel — per-module wallet sourcing;
+            spot/main wallet only rule)
+    AR-068 (SSS indicator seeding at startup — chain
+            reference for warm-up GetOHLCData)
+
+2.3 HARD-RULE REFERENCES (§6 Q3):
+    HR-EI-001..015 — block-cited as the HR-EI hard-rule
+    set this spec belongs under. Per 0500000 grep:
+    zero direct HR-EI-NNN occurrences in 0500000 (matches
+    0411001 pattern). The HR-EI architectural content is
+    carried by AR-* tokens at D1 governs + §8 AR registry
+    ★ entries.
+
+2.4 SPEC-LOCAL ENDPOINT-WIRE CONTRACT (50+ REST-* IDs):
+    REST-AUTH-001..005 (HMAC-SHA512 formula, headers,
+                       nonce arithmetic, 10,000ms window)
+    REST-HTTP-001..007 (aiohttp mandate, ClientSession
+                       config, base URLs, session
+                       lifecycle)
+    REST-KEY-001..004  (DATA + TRADE pair, IP whitelist,
+                       permissions, key storage)
+    REST-WST-001..006  (GetWebSocketsToken endpoint)
+    REST-OHLC-001..009 (GetOHLCData endpoint + response[-1]
+                       exclusion + 1.1s stagger + 720-
+                       entry window + warm-up A/B/C calls)
+    REST-OO-001..006   (GetOpenOrders endpoint +
+                       reconciliation triggers)
+    REST-BAL-001..007  (GetAccountBalance endpoint +
+                       spot wallet only + reconciliation
+                       triggers)
+    REST-CAO-001..006  (CancelAllOrders endpoint +
+                       EMERGENCY-ONLY restriction)
+    REST-STAT-001..006 (Status API endpoint + maintenance
+                       detection)
+    REST-QOI-001..005  (QueryOrdersInfo endpoint)
+    REST-TKR-001..010  (Ticker endpoint + 24h USD volume +
+                       DEFECT-SS-006 sole-source rule)
+    REST-ERR-001..006  (error[] taxonomy and per-prefix
+                       handling)
+
+2.5 SPEC-LOCAL EXTERNAL FACT CITATIONS:
+    A-14 / PL-014 (Oct 2025 auth change Futures-only; Spot
+                  unchanged — fact, not architecture)
+    A-22 (aiohttp explicit timeout/connector mandatory —
+         carried by AR-035)
+    GAP-03 (response[-1] exclusion — carried by AR-017)
+    IMP-06 (aiohttp pattern — carried by AR-025)
+    IMP-07 (asyncio TaskManager — carried by AR-025)
+    IMP-08 (systemd WatchdogSec=120 — carried by AR-025)
+    FLAG 2 (Daily regime computation — carried by AR-017)
+    DEFECT-SS-006 (instrument channel has NO volume;
+                  REST Ticker sole source — carried by D1
+                  kraken_rest container q1_do + AR-038
+                  chain)
+
+2.6 §6 FIVE CODING-READINESS QUESTIONS (Q1-Q5 answers in
+    0411002):
+    Derived from canonical D1 architecture; not architecture
+    -originating. Bucket (a) restatement.
+
+------------------------------------------------------------
+3. LIVE 0500000 dv1_139 GREP-VERIFICATION RESULTS
+   (RR-SCOPE-007 no-propagation; per-element)
+------------------------------------------------------------
+
+3.1 channel:kraken_rest_* TOKEN SET (8/8 PRESENT):
+    channel:kraken_rest_GetWebSocketsToken      8 hits
+    channel:kraken_rest_GetOHLCData            17 hits
+    channel:kraken_rest_GetOpenOrders           4 hits
+    channel:kraken_rest_GetAccountBalance       5 hits
+    channel:kraken_rest_CancelAllOrders        11 hits
+    channel:kraken_rest_StatusAPI               4 hits
+    channel:kraken_rest_QueryOrdersInfo         7 hits
+    channel:kraken_rest_Ticker                 10 hits
+    All 8 canonical in D1 Image1 Kraken_API_Connection_
+    Architecture (kraken_rest container governs list +
+    q1_do field at line 1602).
+
+3.2 ARCHITECTURAL AR TOKENS (PRESENT IN D1 GOVERNS +
+    §8 AR REGISTRY ★ ENTRIES):
+    AR-009 :  95 hits ; §8 ★ at L5555 (Short via Kraken
+                                       margin + REST
+                                       snapshot reconcile)
+    AR-014 :  67 hits ; D1 governs L1450 (Logger queue —
+                                          chain ref)
+    AR-017 :  35 hits ; §8 entry at L5587 (REST GetOHLCData
+                                          + response[-1]
+                                          EXCLUDED — CRITICAL)
+    AR-021 :   4 hits ; §8 ★ at L5592 (Executions seq gap
+                                       -> GetOpenOrders)
+    AR-025 :   8 hits ; §8 ★ at L5600 (aiohttp + asyncio
+                                       TaskManager + systemd
+                                       WatchdogSec=120)
+    AR-031 :   6 hits ; §8 ★ at L5611 (warnings[] +
+                                       QueryOrdersInfo)
+    AR-033 :   7 hits ; §8 ★ at L5617 (deadline param —
+                                       chain ref)
+    AR-035 :   9 hits ; §8 ★ at L5628 — INCLUDES THE EXACT
+                                       AIOHTTP CONFIG
+                                       VALUES (total=10,
+                                       connect=5,
+                                       sock_read=8,
+                                       limit=10,
+                                       limit_per_host=5,
+                                       force_close=False)
+    AR-036 :  19 hits ; §8 ★ at L5634 (Regime Engine 1.1s
+                                       stagger)
+    AR-037 :   8 hits ; §8 ★ at L5639 (DATA+TRADE keys
+                                       IP-whitelisted to
+                                       87.99.141.44)
+    AR-038 :  27 hits ; §8 ★ at L5643 (Status API startup
+                                       maintenance —
+                                       INCLUDES URL
+                                       https://status.
+                                       kraken.com/api/v2/)
+    AR-039 :  24 hits ; §8 ★ at L5649 (per-pair instrument
+                                       channel status —
+                                       chain ref)
+    AR-050 :  multiple ; §8 ★ at L5802 (Balances channel
+                                       per-module wallet
+                                       sourcing; spot/main
+                                       for Long, margin/
+                                       main for Short)
+    AR-068 :  32 hits ; D1 governs L1450 (SSS indicator
+                                          seeding via
+                                          startup REST
+                                          GetOHLCData)
+
+3.3 HR-EI-001..015:
+    Zero direct hits in 0500000 dv1_139. Same pattern as
+    0411001 — HR-EI hard-rule semantics are carried by the
+    AR-* tokens enumerated above (loss-prevention-adjacent
+    architectural rules registered as ★ ARs in §8 with
+    visible D1 governs binding). No HR-EI registry
+    presence in 0311001 §15.12 either; the HR-EI block
+    citation in 0411002 §6 Q3 is a wire-contract-spec
+    convention pointing back at the AR-carried rules, not
+    a separate hard-rule registry.
+
+3.4 DEFECT-SS-006 (instrument channel has NO volume; REST
+    Ticker sole source):
+    Encoded architecturally in D1 kraken_rest container
+    q1_do at L1602: "Ticker, QueryOrdersInfo (order detail
+    lookup)" enumerated; canonical via AR-038 chain and
+    the kraken_rest channel:Ticker token (10 hits). Bucket
+    (a) restatement.
+
+3.5 "DEGRADED state" terminology (REST-OO-006 +
+    REST-BAL-007):
+    Not registered as a system_state architectural token
+    in 0500000 (system_state values are NORMAL_per_wallet
+    / SESSION_PAUSE_per_wallet / FULL_HALT_per_wallet per
+    AR-052 + D7). The behavioral outcome 0411002 describes
+    (monitor only, no new entries; existing positions
+    managed by Exit Controller) IS architecturally present
+    via D2 Pre_Gate_1 SYSTEM_STATE_BLOCKED + D7 per-wallet
+    drawdown state machine + Exit Controller continuity.
+    "DEGRADED" is local-spec shorthand for the WAIT/defer
+    behavior already encoded. Bucket (b) coding-naming,
+    NOT bucket (c).
+
+3.6 Spec-local REST-* identifiers (REST-AUTH-* /
+    REST-HTTP-* / REST-KEY-* / REST-WST-* / REST-OHLC-* /
+    REST-OO-* / REST-BAL-* / REST-CAO-* / REST-STAT-* /
+    REST-QOI-* / REST-TKR-* / REST-ERR-*):
+    Zero presence in 0500000 — these are coding-spec local
+    identifiers, not 0311001 §15.12 registered tokens.
+    Their architectural rules are carried by the AR-tokens
+    above; their wire-contract detail is bucket (b)
+    coding-unique with the same retained-home decision as
+    0411001.
+
+------------------------------------------------------------
+4. THREE-BUCKET CLASSIFICATION (DD-012)
+------------------------------------------------------------
+
+BUCKET (a) ARCHITECTURAL RESTATEMENT — all canonical in
+            0500000 dv1_139:
+  - Full 8-endpoint REST channel set (D1 kraken_rest
+    container governs).
+  - All 14 architectural AR rules cited (D1 governs + §8
+    AR registry ★ entries).
+  - The 15 HR-EI-NNN hard-rule references (via AR-token
+    carriers).
+  - Reconciliation contract: executions seq gap -> REST
+    GetOpenOrders (AR-021); balances seq gap -> REST
+    GetAccountBalance (AR-009).
+  - Spot/main wallet only rule for REST GetAccountBalance
+    (AR-050).
+  - CancelAllOrders EMERGENCY-ONLY restriction (via
+    AR-001 + AR-055 Dead Man's Switch prohibition chain).
+  - DEFECT-SS-006 corrected sourcing rule (REST Ticker as
+    sole 24h volume source; D1 kraken_rest container
+    governs).
+  - aiohttp ClientSession exact config values verbatim in
+    AR-035 ★ (load-bearing for loss prevention; degraded-
+    network protection).
+  - 1.1s GetOHLCData stagger (AR-036 ★).
+  - DATA+TRADE key IP-whitelist requirement (AR-037 ★).
+  - response[-1] exclusion CRITICAL rule (AR-017 ★).
+  - Status API startup maintenance check URL + behavior
+    (AR-038 ★, includes the status.kraken.com URL
+    verbatim).
+  - REST-AUTH-002 Oct 2025 Futures-only auth-change
+    background fact (not architecture-originating).
+  - §6 five-questions answers (derived from canonical
+    architecture).
+
+BUCKET (b) CODING-UNIQUE WIRE CONTRACT — nonempty;
+            retained-home decision required:
+  - HMAC-SHA512 signature formula:
+      message = URI_path + SHA256(nonce + POST_data_string)
+      signature = HMAC-SHA512(message,
+                              base64_decode(api_secret))
+      API-Sign header = base64_encode(signature)
+  - Required HTTP headers (API-Key, API-Sign,
+    Content-Type: application/x-www-form-urlencoded).
+  - Nonce arithmetic: int(time.time() * 1000) and the
+    10,000ms acceptance window.
+  - Per-endpoint URLs and paths:
+      https://api.kraken.com/0/private/GetWebSocketsToken
+      https://api.kraken.com/0/public/OHLC
+      https://api.kraken.com/0/private/OpenOrders
+      https://api.kraken.com/0/private/Balance
+      https://api.kraken.com/0/private/CancelAll
+      https://api.kraken.com/0/private/QueryOrders
+      https://api.kraken.com/0/public/Ticker
+      https://status.kraken.com/api/v2/scheduled-
+                                       maintenances/
+                                       upcoming.json
+    (NOTE: the Status API URL is also in AR-038 ★ verbatim
+    — partial bucket-a coverage; the trading endpoint URLs
+    are wire-contract-only.)
+  - Per-endpoint request body field templates and exact
+    parameter strings (interval=1440; trades=true;
+    txid=[...]; pair=[...]; etc.).
+  - Per-endpoint response JSON field schemas (each
+    endpoint's result object shape — open/close/refid/
+    userref/opentm/starttm/expiretm/descr/vol/vol_exec/
+    cost/fee/price/stopprice/limitprice/misc/oflags for
+    GetOpenOrders; v[0]/v[1]/p[0]/p[1]/t/l/h/o for
+    Ticker; etc.).
+  - REST Ticker pair-name mapping (Kraken classic name
+    XXBTZUSD <-> WS v2 symbol BTC/USD; built from
+    instrument channel snapshot wsname field).
+  - REST Ticker usd_volume formula:
+      usd_volume_24h = Decimal(v[1]) * Decimal(p[1])
+  - error[] prefix taxonomy: EGeneral / EAPI / EOrder /
+    ETrade / EQuery / EService.
+  - Per-prefix error handling:
+      EAPI:Invalid key  -> CRITICAL alert, no retry
+      EService:Unavailable -> WARN, retry 5s x 3
+      EAPI:Rate limit exceeded -> WARN, back-off 5s,
+                                  escalate after 3 hits
+  - Specific retry/timeout/window constants not in the
+    AR-* set:
+      GetWebSocketsToken token validity ~900s
+      GetWebSocketsToken retry 3 x 1s
+      GetOpenOrders / GetAccountBalance retry 1 x 2s
+      GetOHLCData retry 1 x 2s
+      GetOHLCData up-to-720-entry response window
+      Status API "within 2 hours of startup" detection
+      window
+  - DEGRADED-state operational-shorthand naming
+    (REST-OO-006, REST-BAL-007).
+  - One-shared-ClientSession lifetime rule
+    (REST-HTTP-005) — operational pattern.
+  - API key permission lists (REST-KEY-003) and key
+    storage rule (REST-KEY-004 — env vars / encrypted
+    config).
+  - Spec-local REST-* identifiers (50+ identifiers
+    enumerated in §2.4 above) — coding-spec local
+    naming; not registered in 0311001 §15.12.
+
+  RETAINED HOME — TWO OPTIONS (decision deferred to
+  Phase 2/3):
+    Option H1: 0411002 RETAINED as the canonical Kraken
+               REST wire-contract spec, referenced by
+               1011002 WS_Manager_Coding_Spec (the
+               current state per 0411002 §7 Related
+               Documents).
+    Option H2: MIGRATE the wire contract into 1011002
+               WS_Manager_Coding_Spec, retire 0411002.
+
+  Same options as 0411001 (TB00476 finding). Home-confirm
+  is a separate downstream session per 0911002 §6.2
+  (separate from migration; separate from retirement).
+
+BUCKET (c) ARCHITECTURAL CONTENT NOT YET IN DIAGRAMS:
+            ZERO.
+
+  0411002 ORIGINATES no trading-organism architecture.
+  Every architectural element it carries is already
+  canonical in 0500000 dv1_139. The document is a
+  downstream wire-contract restatement subordinate to D1
+  (consistent with the dv1_1 revision history claim that
+  it is "the complete, coding-ready specification for all
+  Kraken REST API endpoints used by TothBot V2" — coding
+  spec, not architecture origin).
+
+------------------------------------------------------------
+5. DISPOSITION (TB00394 v1_1 LINE 163: MOVE -> §2 / D1)
+------------------------------------------------------------
+
+ARCHITECTURE AXIS: MOVE-COMPLETE. All architectural
+content is canonical in 0500000 dv1_139 D1 Image1 Kraken_
+API_Connection_Architecture + §8 AR registry ★ entries.
+Per RR-SCOPE-009 origin-investigation framing: nothing in
+0411002 is "load-bearing-by-default" content that would
+block retirement on the architecture axis — every load-
+bearing rule has an architectural carrier in 0500000
+verified above.
+
+BUCKET (b) HOME-CONFIRM: REQUIRED before retirement.
+Decision = Option H1 (retain 0411002, reference it from
+1011002) or Option H2 (migrate wire contract into 1011002,
+retire 0411002). Separate downstream session.
+
+E3 ANCHOR/DOMAIN-COLLAPSE: 0400000 Exchange_Interface
+(SPLIT P3/E3) and 0410000 Exchange_Interface_Kraken_Anchor
+(SPLIT P3/E3) collapse questions are dependency-LAST
+sub-stage E3 per 0911002 §10.
+
+CLASSIFICATION = THE 0411001 / 0511002 / 0511006 NONEMPTY-
+BUCKET-(b) PATTERN. NOT the 0610000 clean-PRESERVE
+pattern. Drop-with-retirement on the architecture axis is
+eligible but GATED on bucket-(b) home-confirm + E3 anchor
+collapse.
+
+------------------------------------------------------------
+6. OBSERVATIONS (housekeeping; not blocking; not architecture)
+------------------------------------------------------------
+
+OBS-1 (NONEMPTY BUCKET (b) - architectural-axis MOVE-
+       complete but retirement GATED). Same as 0411001.
+       Bucket (b) wire contract (per §4 above) is
+       coding-unique with retained home; retirement
+       requires either Option H1 (retain) or H2 (migrate
+       into 1011002) decision in a separate downstream
+       session per 0911002 §6.2.
+
+OBS-2 (TB00394 MOVE LINE: ARCHITECTURE-AXIS COMPLETE).
+       TB00394 line 163 classifies 0411002 as MOVE -> §2/
+       D1 (P3/E2). On the architecture axis the MOVE is
+       already complete (every architectural element
+       canonical in 0500000 dv1_139). The "MOVE" register
+       label remains accurate as Phase-0 document-level
+       scoping; element-level Phase-1 audit confirms it.
+       The §11.1 nonempty-bucket-(b) home decision is
+       carried separately (not a TB00394 register
+       refinement; carried by the bucket-(b) home-confirm
+       session).
+
+OBS-3 (GD-CLASS CITATION REFRESH; housekeeping; not
+       architecture; not blocking). 0411002 dv1_1 §7
+       Related Documents lists "0500000 System_
+       Architecture_Overview dv1_19" — 120 R-states stale
+       (live is dv1_139). Refresh in a future PRESERVE-
+       with-housekeeping amendment if 0411002 is retained
+       under Option H1; moot if Option H2 retires the
+       document. Tracking class matches TB00475 OBS-3
+       (0610000 dv1_83 -> dv1_139) and TB00476 OBS-3
+       (0411001 dv1_17/dv1_78 -> dv1_139).
+
+OBS-4 (REST-HTTP-002 ARCHITECTURAL CARRY-OVER VERIFIED).
+       The exact aiohttp ClientSession config values
+       (total=10, connect=5, sock_read=8, limit=10,
+       limit_per_host=5, force_close=False) are codified
+       verbatim in AR-035 ★ at 0500000 §8 L5628-5632.
+       This is a notable case where wire-contract-looking
+       detail is in fact architectural (load-bearing for
+       loss prevention against degraded networks). The
+       REST-HTTP-002 spec text is bucket (a) restatement,
+       not bucket (b). REST-HTTP-003 (timeout rationale
+       prose) and REST-HTTP-005 (one shared session
+       lifetime rule) remain bucket (b).
+
+------------------------------------------------------------
+7. EVIDENCE SUMMARY
+------------------------------------------------------------
+
+Read of 0411002 dv1_1: complete (872 lines, all eight
+endpoint subsections, §3 authentication, §5 error
+handling, §6 five questions, §7 related documents, §8
+revision history).
+
+Live 0500000 dv1_139 grep-verification: per-element,
+independent. 22 distinct grep queries executed
+(8 channel:kraken_rest_* tokens, 14 AR-* tokens). All
+results recorded with hit counts and at least one canonical
+line reference per token.
+
+No element required diagram amendment. No bucket (c)
+finding. The audit is read-only per Phase-1 contract; no
+0500000 edit, no 0411002 edit, no governance amendment,
+no migration this session.
+
+------------------------------------------------------------
+8. AUTHORITY AND COMPLIANCE
+------------------------------------------------------------
+
+Mission authority: TB00476 NSI §1.1 primary mission +
+Bill OCS chat-turn-1 directive (TB00477 session-open
+chat-turn 1).
+
+DD-011 v2_56 CHAT-TURN-1 GATE: OUTCOME 1 = A (single
+compliant option; executed under RR-SCOPE-005 derivable-
+decision authority). FP/DP-derivability test logged in
+TB00477 SL §3.
+
+RR-SCOPE-007 v2_30 SELF-AUTHORED-NSI-SOURCE-PROHIBITION:
+scope sourced from Bill OCS + TB00394 v1_1 + 0911002 dv1_4
+§5/§6/§7 + TB00000 §4.5 DD-012 — Bill-ratified governance,
+not Claude-authored NSI direction.
+
+RR-SCOPE-007 OPERATIONAL-ARTIFACT-SCOPE-EXTENSION
+(v2_37): this register's contents trace line-by-line to
+either (i) verbatim 0411002 dv1_1 text, (ii) verbatim
+0500000 dv1_139 grep results executed this session, or
+(iii) derivation from current-session ratified Bill
+direction + governance rules with the derivation chain
+stated.
+
+RR-SCOPE-009 origin investigation: no constraint is being
+removed, relaxed, or weakened — this is read-only audit.
+
+RR-SCOPE-011: ONE atomic primary mission (the 0411002
+element audit). One MDR / DR companion permitted but not
+required; DR-075 ready-to-append in TB00477 SL §6 alongside
+the still-deferred DEC-069 through DEC-074 (six earlier
+deferrals).
+
+DD-012 three-bucket per element executed per §4 above.
+
+PA-001..PA-009: not implicated this session (no paper-vs-
+live divergence introduced).
+
+CC-001..CC-007: not implicated (no TothBot V2 system code
+authored).
+
+------------------------------------------------------------
+9. REVISION HISTORY
+------------------------------------------------------------
+
+v1_0  05-27-2026  Initial element-level architectural
+                  audit gap register for 0411002 Kraken_
+                  REST_API_Specification dv1_1. Phase 1
+                  element audit under 0911002 dv1_4
+                  Consolidation Campaign. THIRD E2
+                  instance-spec audit, SECOND AA=04.
+                  Finding: zero bucket-(c); bucket (a) =
+                  full architectural restatement (8 REST
+                  channels + 14 architectural ARs + 15
+                  HR-EI carriers + spot/main wallet rule +
+                  DEFECT-SS-006 sourcing rule + aiohttp
+                  config + 1.1s stagger + response[-1]
+                  exclusion + IP-whitelist + Status API
+                  startup check); bucket (b) NONEMPTY
+                  (HMAC-SHA512 signature, nonce arithmetic,
+                  per-endpoint URLs/paths/request bodies/
+                  response schemas, error[] taxonomy,
+                  Ticker pair-mapping + usd_volume formula,
+                  retry/timeout constants, DEGRADED-state
+                  shorthand, REST-* spec identifiers — wire
+                  contract with retained home: 0411002 or
+                  1011002, home-confirm deferred).
+                  Disposition: MOVE-complete on
+                  architecture axis + bucket-(b) home-
+                  confirm DEFERRED + 0400000/0410000 E3
+                  anchor collapse dependency-LAST. Same
+                  pattern as TB00476 0411001 (nonempty-
+                  bucket-(b) wire-contract class); NOT the
+                  TB00475 0610000 clean-PRESERVE pattern.
+                  Four observations recorded (OBS-1
+                  nonempty bucket-(b); OBS-2 TB00394 MOVE
+                  architecture-axis complete; OBS-3
+                  GD-class dv1_19 -> dv1_139 citation
+                  drift; OBS-4 REST-HTTP-002 architectural
+                  carry-over via AR-035 verbatim values).
+                  Authority: TB00477 SL §3 chat-turn-1
+                  FP/DP-derivability test OUTCOME 1.
+                  Independent live grep-verification per
+                  element (RR-SCOPE-007 no-propagation; not
+                  inherited from TB00476 0411001 result).
+
+============================================================
+END TB00477 S1KR GAP REGISTER v1_0
+============================================================
