@@ -1,0 +1,486 @@
+DocDCN:     TB00483
+DocTitle:   S1CI_DD012_Phase1_Gap_Register_0211001
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00483_S1CI_DD012_Phase1_Gap_Register_0211001_v1_0.txt
+DocDate:    05-28-2026
+DocTime:    14:40:00 UTC
+
+============================================================
+TB00483 PHASE 1 E2 ELEMENT-AUDIT GAP REGISTER
+TARGET: 0211001 CIATS_Specification dv1_0
+============================================================
+
+------------------------------------------------------------
+1. SCOPE AND METHOD
+------------------------------------------------------------
+
+This gap register is the NINTH E2 element audit and the
+FIRST AA=02 audit of the Phase 1 consolidation campaign
+(0911002 dv1_4 + TB00394 v1_1). It is a read-only DD-012
+three-bucket architectural audit of 0211001
+CIATS_Specification dv1_0 against the canonical
+architectural baseline 0500000 System_Architecture_Overview
+dv1_139.
+
+0211001 is a SPLIT-verdict source (TB00394 v1_1 line 130:
+"0211001 CIATS_Specification SPLIT (arch -> section 6/D5;
+P3/E2)"). The SPLIT line separates 0211001's CIATS
+architectural content (canonical home 0500000 section 6 +
+D5 CIATS_Architecture + the seven mod:CIATS_* module set)
+from any operational / non-architectural remainder that
+stays in the AA=02 Operations domain.
+
+Method (per established TB00475-TB00482 cadence):
+  - Read 0211001 dv1_0 in full (1001 lines; 17 sections).
+  - Enumerate every architectural element across the
+    DD-012 element classes (rule / contract / decision /
+    gate / layer / regime / parameter / container / module /
+    indicator / event / channel / ar / pt_mode).
+  - Classify each element into the DD-012 three buckets:
+      (a) ARCHITECTURAL RESTATEMENT  — fully encoded in
+          0500000 dv1_139 diagrams (root governs: list,
+          labeled-group desc, or visual content); drop
+          with retirement.
+      (b) CODING-UNIQUE WIRE CONTRACT — no architectural
+          meaning; pure code-authoring contract; migrate
+          to parent AA spec or retain in an AA=10 spec.
+      (c) ARCHITECTURE NOT IN DIAGRAMS — would require a
+          0500000 amendment FIRST per DD-002 / DD-003.
+  - Apply the SPLIT line: identify any operational / non-
+    architectural remainder that stays in AA=02.
+  - Every 0500000-side citation independently grep-verified
+    for 0211001 this session per RR-SCOPE-007 v2_30 no-
+    propagation. NO finding inherited from TB00475-TB00482.
+
+Scope exclusions per OCS (Bill-ratified verbatim):
+  - NO migration this session.
+  - NO Track A reconciliation this session (Track A/B
+    observations carry forward per 0911002 dv1_4 section 5A).
+
+Authority: TB00394 v1_1 line 130 + line 273 "0211001
+CIATS_Specification -> SPLIT (FINAL). CIATS architecture/
+contracts/data-flows MOVE to section 6/D5". 0911002 dv1_4
+line 322 "the 0211001 CIATS architectural content -> section
+6/D5 per the TB00394 v1_1 AA=02 SPLIT verdict" in the E2
+instance-spec migration set.
+
+------------------------------------------------------------
+2. GREP-VERIFICATION EVIDENCE (0500000 dv1_139)
+------------------------------------------------------------
+
+All counts independently produced this session against the
+live /mnt/project/ HTML source-of-truth.
+
+2.1 SEVEN CIATS COMPONENT MODULES PRESENT (CI-AR-002).
+  The seven CIATS components named in 0211001 section 4
+  CI-AR-002 map 1:1 to seven canonical D5 mod:CIATS_*
+  modules, each a fully-described tier-2 component (own
+  desc with q1_do / q4_triggers / q5_logs / constraints /
+  consumes / produces):
+    mod:CIATS_EWMA_Monitor        42 occurrences
+    mod:CIATS_Trade_Outcome_Bus    7 occurrences
+    mod:CIATS_Statistical_Engine  45 occurrences
+    mod:CIATS_PDCA_Engine         50 occurrences
+    mod:CIATS_Proposal_Engine     52 occurrences
+    mod:CIATS_Regime_Library      38 occurrences
+    mod:CIATS_Parameter_Store     80 occurrences
+  All seven appear in the D5 root governs: list (line 4419)
+  and the D6 root governs: list (lines 4879-4880).
+
+2.2 TWELVE CIATS HARD RULES (section 13 HR-CI-001..012).
+  Eleven of twelve are encoded in D5 component constraints /
+  q1_do fields:
+    HR-CI-001  5    HR-CI-002 23    HR-CI-003 37
+    HR-CI-004 32    HR-CI-005 13    HR-CI-006 10
+    HR-CI-007 19    HR-CI-008 35    HR-CI-009 34
+    HR-CI-010  7    HR-CI-011 36
+  HR-CI-012 (CIATS does NOT send alerts directly; Logger
+  sends alerts on CIATS CRITICAL events): the rule TOKEN
+  "HR-CI-012" returns 0 occurrences in D5, BUT its
+  architectural FACT is fully encoded — the D5 logger_box
+  owns all SMTP alert dispatch (constraints rule:HR-LG-007 /
+  HR-LG-009 / LG-ALERT-005) and every CIATS component
+  q5_logs routes alerts THROUGH mod:Logger, never directly.
+  HR-CI-012 is bucket (a) by content; the missing rule:HR-
+  CI-012 token binding is a Track A registry/citation
+  housekeeping item (see OBS-3), not a bucket-(c)
+  architectural gap.
+
+2.3 CIATS CONTRACTS + INTERFACE RULES.
+  contract:CIATS_Trade_Outcome_Bus    148 occurrences
+  contract:Parameter_Store_Snapshot    67 occurrences
+  contract:Sizing_Curve_Per_Module     27 occurrences
+  CI-IF-003 (snapshot protocol)        15 occurrences
+  The four interface rules (CI-IF-001 sole input Logger;
+  CI-IF-002 sole output Parameter Store; CI-IF-003 snapshot
+  protocol; CI-IF-004 isolation rule) are encoded as D5
+  param_store_box + logger_box + stats_box constraints and
+  the contract:Parameter_Store_Snapshot binding.
+
+2.4 STATISTICAL THRESHOLDS + METHODS (section 6 + 7).
+  alpha=0.01        25    h=4 (CUSUM)        16
+  lambda=0.2        17    K%=W-(1-W)/R        7
+  Half-Kelly        86    200-trade          41
+  600 trades        11
+  All five thresholds (CI-ST-001..005: 50-eval / 200-trade /
+  600-trade floors, rolling 200-300 window, full corpus) and
+  all six statistical methods (CI-SE-001 Mann-Whitney U at
+  alpha=0.01; CI-SE-002 Spearman |rho|>0.3 AND p<0.05;
+  CI-SE-003 CUSUM k=0.5sigma h=4sigma; CI-SE-004 EWMA
+  lambda=0.2; CI-SE-005 Sharpe; CI-SE-006 ThreadPoolExecutor
+  rule) are encoded in the D5 stats_box + stream1_box +
+  prose section 6 (lines 4395-4396 "Rolling 200-300 / Full
+  corpus"). Half-Kelly K_full = W-(1-W)/R + K_half = K_full
+  x 0.5 + the HR-CI-009 normalization formula applied_pct =
+  min(K_half, tradeable_pct / max_concurrent) are encoded
+  in stats_box + proposal_box + param_store_box.
+
+2.5 CIATS LOG-EVENT NAMES (section 14) AS CANONICAL evt:
+    TOKENS.
+  Of the fourteen CIATS log-event names in section 14, only
+  two are canonical D5 evt: tokens:
+    evt:KELLY_UPDATE     36 occurrences  (canonical)
+    evt:KELLY_NEGATIVE   40 occurrences  (canonical)
+  The remaining twelve return 0 as canonical evt: tokens:
+    evt:TRADE_INGEST            0
+    evt:CUSUM_SIGNAL            0
+    evt:PDCA_PLAN               0
+    evt:PDCA_PROPOSAL           0
+    evt:PDCA_DO / CHECK / ACT   0
+    evt:PDCA_APPLIED / REJECTED 0
+    evt:NO_PROPOSAL             0
+    evt:REGIME_LIBRARY_UPDATE   0
+    evt:PARAMETER_CHANGE        0
+    (EWMA_UPDATE also not a canonical evt: token)
+  The LOGGING BEHAVIOR for all of these is described
+  architecturally in the D5 component q5_logs fields (e.g.
+  pdca_box.q5_logs "PLAN / DO / CHECK / ACT events at INFO
+  level"; param_store_box.q5_logs "every parameter write
+  logged ... at HIGH level"). What is absent is the literal
+  log-event NAME registry as canonical tokens. These names
+  are coding-unique log-event identifiers (bucket b) with a
+  retained home in 0511006 Logger + 1011007 + 1011010
+  CIATS_Coding_Spec.
+
+------------------------------------------------------------
+3. THREE-BUCKET ELEMENT CLASSIFICATION
+------------------------------------------------------------
+
+3.1 BUCKET (a) ARCHITECTURAL RESTATEMENT — already
+    canonical in 0500000 dv1_139 (drop with retirement).
+
+  The overwhelming majority of 0211001 is bucket (a). Every
+  CIATS architectural element is canonically encoded in D5 /
+  section 6 / section 9 mirror:
+
+    section 3  CI-IF-001..004 interface + isolation rules
+               -> D5 logger_box + param_store_box +
+                  contract:Parameter_Store_Snapshot +
+                  CI-IF-003 binding.
+    section 4  CI-AR-001 async operation; CI-AR-002 seven
+               components; CI-AR-003 event loop (two event
+               types) -> D5 seven mod:CIATS_* components +
+               their q4_triggers fields.
+    section 5  CI-DS-001 Stream 1 EWMA Monitor (3 signals)
+               -> D5 stream1_box mod:CIATS_EWMA_Monitor.
+               CI-DS-002 Stream 2 Trade Outcome Bus
+               -> D5 stream2_box contract:CIATS_Trade_
+               Outcome_Bus. NOTE: 0211001's 14-field
+               abbreviated Stream-2 field list is SUPERSEDED
+               by the D5 canonical 23-field schema
+               (stream2_box schema_fields_canonical;
+               D5 captured_fields_for_DR-012_L1_RETIRED at
+               line 4598 explicitly records the abbreviated
+               descriptor as superseded). The 14-field set
+               is a derived earlier restatement, not a
+               distinct architectural element.
+    section 6  CI-ST-001..005 thresholds + rolling window
+               -> D5 stats_box thresholds panel + prose
+               section 6 lines 4395-4396.
+    section 7  CI-SE-001..006 statistical methods
+               -> D5 stats_box methods panel + CI-SE-006
+               ThreadPoolExecutor via HR-CI-010.
+    section 8  CI-KE-001..006 Half-Kelly activation /
+               formula / normalization / negative-Kelly /
+               update interval -> D5 stats_box + proposal_
+               box + param_store_box (HR-CI-009 formula).
+    section 9  CI-PDCA-001..007 PDCA cycle four phases +
+               minimum interval + rejected-proposal handling
+               -> D5 pdca_box q1_do / q4_triggers / q5_logs
+               + constraints HR-CI-003/005/007/011.
+    section 10 CI-PE-001 activation + CI-PE-002 generation
+               rules -> D5 proposal_box (200-trade floor +
+               candidate-from-Spearman + mission-direction
+               gate + sacred-floor exclusion). [CI-PE-003
+               is the bucket-(c) exception — see 3.3.]
+    section 11 CI-RL-001..004 Regime Library
+               -> D5 library_box mod:CIATS_Regime_Library.
+    section 12 CI-PS-001 Parameter Store contents
+               -> D5 param_store_box produces list.
+    section 13 HR-CI-001..012 hard rules (see 2.2).
+
+3.2 BUCKET (b) CODING-UNIQUE — no architectural meaning;
+    retained home is an AA=10 / AA=05 coding or component
+    spec; home-confirm DEFERRED to Phase 2/3.
+
+  (b-1) section 14 CIATS ANALYTICAL LOG-EVENT NAME REGISTRY.
+        Twelve log-event NAME strings that are not canonical
+        evt: tokens and carry no architectural meaning beyond
+        the logging behavior already in the D5 q5_logs fields:
+          EWMA_UPDATE, TRADE_INGEST, CUSUM_SIGNAL,
+          PDCA_PLAN, PDCA_PROPOSAL, PDCA_DO, PDCA_CHECK,
+          PDCA_ACT, PDCA_APPLIED, PDCA_REJECTED, NO_PROPOSAL,
+          REGIME_LIBRARY_UPDATE, PARAMETER_CHANGE.
+        (KELLY_UPDATE + KELLY_NEGATIVE are canonical evt:
+        tokens -> bucket a.) Retained home: 0511006 Logger
+        event taxonomy + 1011007 + 1011010 CIATS_Coding_
+        Spec. Coding-unique log-event identifiers.
+
+  (b-2) CI-PS-002 PARAMETER STORE APPEND-ONLY HISTORY +
+        CI-PS-003 DISK PERSISTENCE.
+        The append-only parameter-change history structure
+        (CI-PS-002) and the disk-persistence / startup-load /
+        fallback-to-hardcoded-starting-values mechanics
+        (CI-PS-003) are not encoded in D5 ("append-only" +
+        "persisted to disk" + "fallback to starting"
+        returned 0 D5 hits). These are coding-unique
+        implementation/persistence details. Retained home:
+        1011010 CIATS_Coding_Spec.
+
+  (b-3) CI-KE-007 KELLY LOGGING FIELD LIST + CI-KE-006
+        UPDATE SCHEDULE TABLE.
+        The exact Kelly logging field enumeration (K_full,
+        K_half, max_per_trade, applied_pct, W, R, wins,
+        losses, total, normalization_binding bool, rolling
+        window bounds) and the explicit 200/250/300...
+        update-schedule table are coding-unique logging
+        contracts. The Kelly-logging BEHAVIOR (evt:KELLY_
+        UPDATE on every recompute) is bucket (a); the exact
+        field set + schedule table are bucket (b). Retained
+        home: 1011010 CIATS_Coding_Spec.
+
+3.3 BUCKET (c) ARCHITECTURE NOT IN DIAGRAMS — candidate;
+    Phase 2 confirms; a D5 amendment would encode it FIRST
+    per DD-002 / DD-003 before any retirement.
+
+  (c-1) CI-PE-003 ONE-PROPOSAL-PER-CYCLE + STRONGEST-
+        SPEARMAN-|rho| SELECTION RULE.
+        0211001 section 10 CI-PE-003: "CIATS generates one
+        proposal per PDCA cycle. If multiple candidate
+        parameters are identified in the PLAN phase, CIATS
+        selects the single parameter with the strongest
+        Spearman correlation |rho| and initiates one
+        proposal. The remaining candidates are retained and
+        evaluated in subsequent PDCA cycles."
+        Grep this session: "strongest" / "one proposal" /
+        "single proposal" / "one parameter per" return NO
+        match in D5 as a proposal-selection rule (the single
+        "strongest"/"one proposal" hits are parameter-
+        migration figcaption text, not this rule). This is a
+        DISTINCT rule from HR-CI-005 (which enforces TEMPORAL
+        50-trade spacing between changes, present 13x in D5):
+        CI-PE-003 enforces PER-CYCLE proposal CARDINALITY = 1
+        plus the strongest-|rho| selection criterion. It is a
+        deterministic control-flow / serialization rule
+        governing mod:CIATS_Proposal_Engine and is loss-
+        prevention-adjacent (it prevents simultaneous multi-
+        parameter changes that would confound CHECK-phase
+        inference). It is NOT in the D5 proposal_box desc.
+        DISPOSITION: bucket-(c) CANDIDATE. The Phase 3/E2
+        execution session that migrates 0211001 must FIRST
+        amend the D5 proposal_box (ADD-only ciats / q1_do
+        field encoding the per-cycle single-proposal +
+        strongest-|rho| selection rule) per DD-002 prose-
+        follows-diagram, then proceed. Read-only this
+        session; no amendment authored.
+
+  THIS IS THE FIRST NON-EMPTY BUCKET (c) IN THE E2 CAMPAIGN.
+  All eight prior E2 audits (0610000 + 0411001 + 0411002 +
+  0411003 + 0711001 + 0711002 + 0711003 + 0811005) returned
+  ZERO bucket (c). 0211001 returns ONE bucket-(c) candidate
+  (CI-PE-003). Brutally honest: this single element is the
+  only piece of CIATS architecture that 0211001 carries
+  which D5 does not yet encode.
+
+------------------------------------------------------------
+4. SPLIT-LINE FINDING (architectural -> section 6/D5 vs
+   operational remainder STAYS in AA=02)
+------------------------------------------------------------
+
+4.1 ARCHITECTURAL CONTENT (-> section 6 / D5).
+  Sections 3 through 14 of 0211001 are entirely CIATS
+  architecture. Disposition: bucket (a) restatement (the
+  bulk), bucket (b) coding-unique residue (3.2), and one
+  bucket-(c) candidate (CI-PE-003, 3.3). 0211001 ORIGINATES
+  no canonical architecture EXCEPT the CI-PE-003 candidate;
+  it is otherwise a derived restatement of D5 / section 6.
+  0211001 dv1_0 (dated 04-05-2026) is in fact a bottom-up
+  authoring SEED from which D5 was later built and then
+  SURPASSED (23-field schema vs 14-field; full producer-
+  binding; DEC-065 7-value exit_reason). It is a RECEIVER,
+  not a source-of-truth.
+
+4.2 OPERATIONAL / NON-ARCHITECTURAL REMAINDER (STAYS).
+  The TB00394 SPLIT verdict states "Operational-procedure
+  remainder STAYs" in AA=02. Brutally honest finding: that
+  remainder is NEAR-EMPTY. 0211001 contains essentially no
+  standalone CIATS operational PROCEDURE — CIATS operational
+  procedures live in 0211003 Startup_Shutdown and 0211005
+  Paper_Trading_Operations, not here. The only genuinely
+  non-architectural content in 0211001 is document-control
+  framing that drops with the document at retirement:
+    section 1  Purpose (document framing)
+    section 2  Parent chain (document control)
+    section 15 Five coding-readiness questions (self-
+               attestation; restates sections 3-14)
+    section 16 Related documents (document control)
+    section 17 Revision history (document control)
+  There is no operational-procedure body to carve out and
+  preserve as an AA=02 STAY artifact. The SPLIT is, in
+  practice, ~100% architectural-MOVE with a near-empty
+  operational remainder. This is recorded here so Phase 3/E3
+  (the 0210000 anchor / AA=02 collapse decision) does not
+  assume a substantive operational-procedure remnant that
+  does not exist.
+
+------------------------------------------------------------
+5. SOURCE-OF-TRUTH-CITATION GATE
+------------------------------------------------------------
+
+  NO unique source-of-truth-citation retirement gate. D5 +
+  section 6 are the canonical CIATS architectural source;
+  0211001 is the derived restatement / seed. The D5 stream2_
+  box q1_do explicitly states "no subordinate spec citation
+  - historical seed 1011005 dv1_3 section 9 retired" - i.e.
+  D5 already treats itself as canonical for the Trade
+  Outcome Bus, citing 0211001 only as provenance (CI-KE-002 /
+  CI-KE-003 derivation reference), never as a canonical
+  source absorbing retired content. There is therefore NO
+  retirement gate of the TB00478 0411003 (AR-080 + 7-entry
+  section 9 mirror) class and NONE of the TB00481 0711003
+  (AR-070 + AR-074 dual source-cite) class.
+
+  ONE PRECONDITION applies before retirement (distinct from
+  a source-cite gate): the CI-PE-003 bucket-(c) candidate
+  (3.3) must be encoded in D5 FIRST (a Phase 3/E2 D5
+  proposal_box amendment) before 0211001 is retired, or the
+  per-cycle single-proposal selection rule is lost.
+
+------------------------------------------------------------
+6. OBSERVATIONS (TRACK A/B CARRY-FORWARD - OUT OF SCOPE
+   THIS SESSION)
+------------------------------------------------------------
+
+  OBS-1  STALE Stream-2 exit_reason enum. 0211001 section 5
+         CI-DS-002 exit_reason enum = {signal | tp_fill |
+         mae_breach | emergency_sl | full_halt} (5 values).
+         Live canonical D5 = the DEC-065 7-value normal-
+         operation set + EMERGENCY_SL_FIRED producer-
+         partition per DEC-066. 0211001's enum is stale.
+         Track A reconciliation; superseded-by-D5; do-not-
+         chase this session.
+
+  OBS-2  STALE field count. 0211001 section 5 lists ~14
+         Trade-Outcome fields; D5 canonical is 23. The 14-
+         field set is the superseded seed (D5 line 4598
+         captured_fields_for_DR-012_L1_RETIRED). Track A;
+         not architecture (D5 governs).
+
+  OBS-3  rule:HR-CI-012 token-binding gap + HR-CI rules
+         registry. The D5 registry_gap_note (line 4422)
+         records that rule:HR-CI-002 / HR-CI-004 / HR-CI-008
+         / HR-CI-009 are NOT in 0311001 section 15.12.9 rule
+         registry (0211001 dv1_0 section 13 predates that
+         registry); rule:HR-CI-012 token is not bound in any
+         D5 governs-list (its content is encoded - see 2.2).
+         Track A registry / citation housekeeping; not a
+         bucket-(c) architectural gap.
+
+  OBS-4  GD-class citation refresh. 0211001 dv1_0 cites
+         0500000 dv1_18 (CI-IF-003, CI-SE-003) and 1011010
+         dv1_4 (CUSUM h discrepancy). Live 0500000 is
+         dv1_139; live 1011010 is dv1_8. Housekeeping; not
+         architecture.
+
+  OBS-5  CUSUM h cross-document discrepancy. 0211001 section
+         7 CI-SE-003 records h=4sigma authoritative vs
+         1011010 dv1_4 WD h=5.0. D5 stats_box encodes h=4sigma
+         (consistent with 0211001). The 1011010 correction is
+         a coding-spec reconciliation item (1011010 STAYS per
+         TB00394 line 222). Track A; do-not-chase.
+
+  OBS-6  mod:RegimeEngine vs mod:Regime_Engine token form.
+         0211001 references the regime engine; D5 uses both
+         mod:RegimeEngine (D5 regime_engine_box) and
+         mod:Regime_Engine (D4). Known cross-diagram token-
+         form divergence carried from prior AA=07 audits.
+         Track A naming; do-not-chase.
+
+  All OBS items are Track A/B per 0911002 dv1_4 section 5A,
+  explicitly out of scope this session, deferred.
+
+------------------------------------------------------------
+7. DISPOSITION AND AUTHORITY
+------------------------------------------------------------
+
+DISPOSITION:
+  SPLIT-complete on the architecture axis (TB00394 v1_1
+  line 130 + 273: arch -> section 6/D5). Element tally:
+    bucket (a) restatement : the bulk of sections 3-14
+                             (all 7 components, 4 interface
+                             rules, 5 thresholds, 6 stat
+                             methods, Half-Kelly, PDCA, 11
+                             of 12 hard rules, Param Store
+                             contents).
+    bucket (b) coding-unique: THREE groups (b-1 section 14
+                             12-name log-event registry;
+                             b-2 CI-PS-002/003 history +
+                             persistence; b-3 CI-KE-006/007
+                             logging field list + schedule).
+                             Retained homes 0511006 / 1011007
+                             / 1011010. Home-confirm DEFERRED.
+    bucket (c) candidate   : ONE (CI-PE-003 per-cycle single-
+                             proposal + strongest-|rho|
+                             selection rule). D5 proposal_box
+                             amendment required FIRST before
+                             retirement.
+  Operational remainder near-empty (section 4.2). OBS-1..
+  OBS-6 Track A/B DEFERRED. 0210000 anchor + AA=02 collapse
+  (TB00394 line 126 SPLIT P3/E3) dependency-LAST.
+
+PATTERN:
+  RECEIVER with NONEMPTY bucket-(b), same family as TB00476
+  0411001 + TB00477 0411002 + TB00479 0711001 + TB00480
+  0711002 + TB00481 0711003 + TB00482 0811005. NOT the
+  TB00475 0610000 clean-PRESERVE pattern. UNIQUE among the
+  nine E2 audits: FIRST and ONLY NON-EMPTY bucket (c) so far
+  (CI-PE-003) -> the one piece of CIATS architecture 0211001
+  carries that D5 does not yet encode. Carries a single
+  pre-retirement precondition (encode CI-PE-003 in D5
+  first), NOT a source-of-truth-citation gate.
+
+SUB-SET STATUS:
+  FIRST AA=02 element audit. NINTH E2 audit overall. AA=04
+  sub-set COMPLETE (3/3). AA=07 sub-set COMPLETE (3/3).
+  AA=08 instance-spec 0811005 audited. With 0211001 the E2
+  INSTANCE-SPEC AUDIT SET IS COMPLETE (the only AA=02 SPLIT
+  instance spec). Remaining Phase 1 element-audit targets
+  are the SPLIT domain/anchor docs (0210000; 0400000/
+  0410000; 0510000; 0600000/0610000; 0700000/0710000;
+  0800000/0810000) - all P3/E3 collapse, dependency-LAST -
+  then Phase 2 three-bucket sequencing.
+
+AUTHORITY:
+  RR-SCOPE-005 derivable-decision execution authority +
+  DD-011 v2_56 CHAT-TURN-1 GATE OUTCOME 1 + Bill OCS
+  explicit chat-turn-1 mission directive (exception (b)).
+  No paired MDR (no defect closed; the CI-PE-003 bucket-(c)
+  candidate is an in-scope Phase-2/3 sequencing finding, not
+  a tracked defect). Ready-to-append decision record:
+  DEC-081 (TB00483). Pending DR append now thirteen:
+  DEC-069 through DEC-081. Max DEC after append = 081.
+
+============================================================
+END TB00483 PHASE 1 E2 ELEMENT-AUDIT GAP REGISTER
+============================================================
