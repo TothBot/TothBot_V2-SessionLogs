@@ -1,0 +1,525 @@
+DocDCN:     TB00486
+DocTitle:   S1EI_DD012_Phase1_Gap_Register_0400000
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00486_S1EI_DD012_Phase1_Gap_Register_0400000_v1_0.txt
+DocDate:    05-28-2026
+DocTime:    18:30:00 UTC
+
+============================================================
+TB00486 PHASE 1 E3 ELEMENT-AUDIT GAP REGISTER
+TARGET: 0400000 Exchange_Interface dv1_0 (AA=04 Domain Document)
+============================================================
+
+------------------------------------------------------------
+1. SCOPE AND METHOD
+------------------------------------------------------------
+
+This gap register is the SECOND P3/E3 anchor/domain-class
+element audit and the FIRST AA=04 domain-document audit of the
+Phase 1 consolidation campaign (0911002 dv1_4 + TB00394 v1_1).
+It is a read-only DD-012 three-bucket architectural audit of
+0400000 Exchange_Interface dv1_0 against the canonical
+architectural baseline 0500000 System_Architecture_Overview
+dv1_139.
+
+0400000 is a SPLIT-verdict source (TB00394 v1_1 line 157:
+"0400000 Exchange_Interface SPLIT (P3/E3 collapse). Domain doc.
+Architectural content -> section 2/D1; structural-anchor
+existence decided in Phase 3 execution sub-stage E3").
+
+STRUCTURAL DISTINCTION FROM TB00485 (0210000). 0210000 was a
+pure structural ANCHOR that originated ZERO architectural
+elements. 0400000 is a DOMAIN DOCUMENT that DOES originate
+architectural elements: fifteen domain hard rules HR-EI-001
+through HR-EI-015 (section 7), four Kraken engine states
+(section 4.4), the rate-limit cost schedule + rate-counter
+parameters (section 5), the authentication model (section 6),
+and the two-connection WS topology (section 4.1). The audit
+therefore is NOT the 0210000 zero-element structural-anchor
+pattern. It is a DOMAIN-DOC pattern: a domain-scope / governing-
+principles wrapper PLUS a roll-up of domain hard rules, where
+every originated rule is a RESTATEMENT of architecture that is
+already canonical in 0500000 D1/D2 (encoded under different
+identifier families) or is a coding-unique wire-contract
+restatement carried by the AA=04 instance specs.
+
+Method (per established TB00475-TB00485 cadence):
+  - Read 0400000 dv1_0 in full (464 lines; 12 sections).
+  - Read 0410000 dv1_0 (sub-domain anchor) for chain context
+    only -- 0410000 is a SEPARATE audit session and is NOT
+    classified here.
+  - Enumerate every architectural element across the DD-012
+    element classes (rule / contract / decision / gate / layer
+    / regime / parameter / container / module / indicator /
+    event / channel / ar / pt_mode).
+  - Classify each element into the DD-012 three buckets:
+      (a) ARCHITECTURAL RESTATEMENT -- fully encoded in
+          0500000 dv1_139 diagrams (root governs: list,
+          labeled-group desc, or visual content); drop with
+          retirement.
+      (b) CODING-UNIQUE WIRE CONTRACT -- no architectural
+          meaning; pure code-authoring contract; the
+          canonical home is the AA=04 instance spec
+          (0411001/0411002/0411003) and the value home is
+          TB00000 section 9.17 per Option A (0911002 dv1_4
+          section 3.1).
+      (c) ARCHITECTURE NOT IN DIAGRAMS -- would require a
+          0500000 amendment FIRST per DD-002 / DD-003.
+  - Apply the SPLIT line: identify the structural domain-doc
+    remainder whose collapse is decided in E3.
+  - Every 0500000-side citation independently grep-verified
+    for 0400000 this session per RR-SCOPE-007 v2_30 no-
+    propagation. NO finding inherited from TB00475-TB00485
+    (including the TB00485 0210000 structural-anchor pattern;
+    the recurrence prediction is verified, not assumed).
+
+Scope exclusions per OCS (Bill-ratified verbatim):
+  - NO migration this session.
+  - NO Track A reconciliation this session (Track A/B
+    observations carry forward per 0911002 dv1_4 section 5A).
+
+Authority: TB00394 v1_1 line 157 (0400000 SPLIT; P3/E3
+collapse). 0911002 dv1_4 section 5 Phase 3 / E3 "ANCHOR /
+DOMAIN-DOC COLLAPSE + GOVERNANCE RECONCILIATION ... for the
+consolidated domains (0400000/0410000, ...)" (lines 327-332);
+E3 "sequenced LAST because it depends on every E1/E2 migration
+and retirement being complete" (lines 338-340).
+
+------------------------------------------------------------
+2. GREP-VERIFICATION EVIDENCE (0400000 vs 0500000 dv1_139)
+------------------------------------------------------------
+
+All counts independently produced this session against the
+live /mnt/project/ sources.
+
+2.1 HR-EI-* TOKEN FAMILY: ZERO VERBATIM CARRY INTO 0500000.
+  0400000 originates fifteen HR-EI domain hard rules. A
+  literal-token scan of 0500000 dv1_139 returns ZERO
+  occurrences of the "HR-EI" family (and zero of each
+  HR-EI-001..HR-EI-015). 0500000 encodes the SAME architecture
+  under different identifier families: HR-WM-* (WS Manager,
+  D1/D2), HR-EE-* (Execution Engine, D2), and ar:AR-* system-
+  level architectural rules. The HR-EI token name does not
+  survive; the architectural CONTENT does. This is the
+  expected domain-doc-roll-up signature: the domain document
+  rolls up instance-spec rules under a domain-local token
+  family that 0500000 does not adopt.
+
+2.2 SUBSTANTIVE-CONTENT VERIFICATION -- EACH HR-EI RULE
+    MAPS TO CANONICAL 0500000 CONTENT.
+  Per-rule grep of 0500000 dv1_139 for the substantive content
+  of each HR-EI rule (independent counts this session):
+
+    HR-EI-001 cancel_all_orders_after / DMS prohibition
+              -> cancel_all_orders_after 11; DMS/dead-man 16;
+                 ar:AR-001 67. CANONICAL (ar:AR-001 + AR-002
+                 + AR-014 govern crash protection).
+    HR-EI-002 FIX cancel-on-disconnect prohibition
+              -> same ar:AR-001 crash-protection cluster.
+                 CANONICAL.
+    HR-EI-003 edit_order PROHIBITED / amend_order sole
+              -> edit_order 9; amend_order 33. CANONICAL.
+    HR-EI-004 GetOHLCData response[-1] exclusion
+              -> response[-1]/not-yet-committed 14; encoded
+                 canonically as ar:AR-017 (REST GetOHLCData
+                 response[-1] exclusion). CANONICAL.
+    HR-EI-005 req_id (all outbound) + cl_ord_id (add/batch)
+              -> req_id 18; cl_ord_id 33. CANONICAL (D2
+                 Execution Engine wire contract).
+    HR-EI-006 stp_type:cancel_newest
+              -> stp_type/cancel_newest 44. CANONICAL.
+    HR-EI-007 order_status:true on executions subscribe
+              -> order_status 11. CANONICAL.
+    HR-EI-008 snap_orders:true / snap_trades:true
+              -> snap_orders/snap_trades 23. CANONICAL.
+    HR-EI-009 JSON ping every 20-30s
+              -> ping/keepalive 168; encoded canonically as
+                 rule:HR-WM-003 (application JSON ping every
+                 30s per active connection, ar:AR-059).
+                 CANONICAL.
+    HR-EI-010 zombie detection > 90s real-data timeout
+              -> zombie/90s 11; encoded canonically as
+                 rule:HR-WM-004 (zombie-detection timer reset
+                 on real channel events only, ar:AR-042).
+                 CANONICAL.
+    HR-EI-011 per-pair instrument-status NO-ENTRY gate
+              -> reduce_only/work_in_progress/limit_only 80;
+                 encoded canonically as rule:HR-WM-008
+                 (instrument channel price_increment/qty_min/
+                 cost_min + status). CANONICAL.
+    HR-EI-012 sequence gap detection (executions + balances)
+              -> sequence gap 19. CANONICAL.
+    HR-EI-013 deadline:now+5s on add_order / batch_add
+              -> deadline 24. CANONICAL (D2 EE wire contract).
+    HR-EI-014 Private WS endpoint = wss://ws-l3.kraken.com/v2;
+              ws-auth DEPRECATED
+              -> ws-l3 0; ws-auth 8 (AUTHORITATIVE in 0500000).
+                 *** DRIFT -- see 2.4. NOT a clean bucket (a). ***
+    HR-EI-015 CancelAllOrders REST kill switch = emergency only
+              -> CancelAllOrders 20. CANONICAL.
+
+  Engine states (section 4.4): online 11; post_only 30;
+  cancel_only 27; maintenance 42. All four CANONICAL in
+  0500000.
+
+  Rate-limit / rate-counter (section 5): ratecounter/rate
+  counter 35; threshold "125" 27; decay "2.34" 6. The
+  architectural FACT (rate counter exists; CIATS monitors;
+  shared-counter-per-pair) is CANONICAL; the numeric VALUES
+  are TB00000 section 9.17 territory per Option A (FEE_MAKER_PCT
+  / FEE_TAKER_PCT / rl_warning_threshold_pct /
+  rl_critical_threshold_pct grep-confirmed present in
+  TB00000 v2_67 section 9.17, count 6).
+
+2.3 ar:AR-001 IS 0500000-ORIGINATED, NOT 0400000-ORIGINATED.
+  0400000 references AR-001 twice (sections 3.3 HR-EI-001/002
+  parenthetical). 0500000 dv1_139 contains ar:AR-001 67 times
+  as a system-level architectural rule ("AR-001..AR-076
+  system-level architectural rules cumulative"). AR-001 is
+  ORIGINATED in 0500000; 0400000 only POINTS at it. Bucket (a)
+  pointer -- drops with retirement.
+
+2.4 DRIFT FINDING -- PRIVATE WS ENDPOINT (HR-EI-014).
+  0400000 HR-EI-014 (section 7 line 330-332) states the Private
+  WS v2 endpoint is wss://ws-l3.kraken.com/v2 and that the old
+  ws-auth endpoint is DEPRECATED (PL-009). 0500000 dv1_139
+  AUTHORITATIVELY declares the Private WS v2 endpoint as
+  wss://ws-auth.kraken.com/v2 -- in the D1 figure surface
+  ("Private WS v2 wss://ws-auth.kraken.com/v2"), in the
+  external-fact AR edge label, and in the PA-004 divergence-
+  point #1 label ("wss://ws-auth.kraken.com/v2 . PA-004 div #1:
+  SKIPPED in paper mode"). ws-l3 appears 0 times in 0500000.
+  These two canonical sources DISAGREE on the private WS
+  endpoint string. This is a genuine cross-document wire-
+  contract drift, exactly the failure class the diagrams-as-
+  canonical method is designed to surface (DD-008). It is NOT
+  resolvable in this read-only audit: determining which
+  endpoint is currently correct requires external Kraken-
+  documentation FP/DP verification, which is out of scope per
+  the OCS NO-Track-A constraint. RECORDED as OBS-1 (Track A
+  reconciliation carry-forward) and flagged for the receiving
+  session. Loss-prevention note: a wrong private-WS endpoint
+  breaks order dispatch and execution-fill reception entirely;
+  this drift is HIGH priority for Track A.
+
+------------------------------------------------------------
+3. THREE-BUCKET ELEMENT CLASSIFICATION
+------------------------------------------------------------
+
+3.1 BUCKET (a) ARCHITECTURAL RESTATEMENT -- already canonical
+    in 0500000 dv1_139 (drop with retirement).
+
+  Fourteen of the fifteen HR-EI hard rules (all except
+  HR-EI-014) are bucket (a): their architectural content is
+  fully encoded in 0500000 D1/D2 under the HR-WM-* / HR-EE-* /
+  ar:AR-* families (2.2). The four engine states (4.4), the
+  two-connection WS topology (4.1), the matching-engine
+  resting-order model (4.3), and the governing principles
+  (section 3.1 event-source/5-min-clock; 3.3 crash protection
+  = ar:AR-001; 3.5 rate-limit hard constraint) are bucket (a)
+  restatements of Tier 1 / D1 architecture. ar:AR-001 (2.3) is
+  a bucket (a) pointer. None of this is architectural content
+  that 0400000 ORIGINATES and 0500000 LACKS; all of it is
+  derived restatement that drops when 0400000 retires.
+
+3.2 BUCKET (b) CODING-UNIQUE WIRE CONTRACT -- no architectural
+    meaning; canonical home is the AA=04 instance spec + the
+    section 9.17 value home.
+
+  The detailed numeric content carried in 0400000 sections 5
+  and 6 is coding-unique wire contract, NOT architecture:
+    - The rate-limit cost schedule (add_order +1; amend_order
+      +1 fixed +3/+2/+1 by age; batch_add +(n/2); cancel_order
+      +8/+6/+1 by age; batch_cancel cumulative) and the rate-
+      counter numerics (threshold 125; decay 2.34/s; max open
+      orders 80). Canonical home: 0411003 Kraken_Fee_Rate_
+      Limit_Specification (TB00394 line 164: MOVE -> section
+      2/D1 + section 9; E2-audited TB00478). VALUES home:
+      TB00000 section 9.17 per Option A.
+    - The authentication model (section 6: HMAC-SHA512 REST
+      signing; GetWebSocketsToken; the Oct-1-2025 auth
+      breaking-change verification note GAP-02). Canonical
+      home: 0411002 Kraken_REST_API_Specification (TB00394
+      line 163: MOVE -> section 2/D1; E2-audited TB00477).
+  In the DOMAIN document these are RESTATEMENTS of instance-
+  spec wire contracts. They carry no architectural content the
+  instance specs and the section 9.17 registry do not already
+  own; they drop with 0400000's retirement. 0400000 itself
+  does not need a bucket-(b) migration target -- its bucket-(b)
+  content is already homed in the AA=04 instance specs (which
+  themselves MOVE to D1 + section 9 per their E2 verdicts) and
+  in section 9.17.
+
+3.3 BUCKET (c) ARCHITECTURE NOT IN DIAGRAMS -- candidate.
+
+  ONE candidate, and it is contingent: HR-EI-014's private WS
+  endpoint (2.4). IF Track A verification establishes that
+  0400000's wss://ws-l3.kraken.com/v2 is the currently-correct
+  endpoint, THEN 0500000 D1 (which carries the deprecated
+  ws-auth endpoint) is missing the correct architecture and a
+  0500000 D1 amendment is required FIRST per DD-002/DD-003
+  before any 0400000 retirement -- a bucket (c) action. IF
+  instead 0500000's ws-auth is correct and 0400000/HR-EI-014
+  is stale, the item is a 0400000-side stale-fact that simply
+  drops at retirement (bucket a) and the OBS-1 Track A item
+  corrects 0400000's prose, not the diagram. The audit CANNOT
+  decide the direction this session (NO Track A; external
+  Kraken-doc verification required). RECORDED as a CONTINGENT
+  bucket (c) candidate pending OBS-1 Track A resolution.
+
+  No other bucket (c) candidate exists: every other originated
+  element is verified canonical in 0500000 (2.2) under an
+  existing identifier.
+
+------------------------------------------------------------
+4. SPLIT-LINE FINDING (domain-document structural-collapse class)
+------------------------------------------------------------
+
+4.1 ARCHITECTURAL AXIS: NOTHING TO MOVE (one drift to
+    reconcile).
+  The TB00394 SPLIT verdict reads "(P3/E3 collapse). Domain
+  doc. Architectural content -> section 2/D1". The audit finds
+  the architectural axis is effectively EMPTY for migration:
+  every architectural element 0400000 carries is already
+  canonical in 0500000 D1/D2 (3.1) or is a coding-unique
+  instance-spec restatement (3.2). There is no architectural
+  CONTENT to MOVE from 0400000 into 0500000. The single open
+  architectural item is the HR-EI-014 endpoint DRIFT (2.4 /
+  3.3), which is a Track A reconciliation, not a migration.
+
+4.2 STRUCTURAL DOMAIN-DOC REMAINDER (E3 COLLAPSE DECISION).
+  The body of 0400000 outside the bucket-(a)/(b) rule roll-up
+  is domain-document structural content whose disposition is
+  the E3 anchor/domain-doc collapse decision:
+    section 1   Purpose (domain-document role statement)
+    section 2   Scope (domain ownership boundary -- "the
+                boundary is the wire"; namespace/domain-
+                structure content, governance class)
+    section 3   Governing principles (3.1-3.6; bucket (a)
+                restatements of Tier 1 / D1 architecture)
+    section 8   Document structure (one sub-domain 0410000;
+                three instance docs 0411001/2/3)
+    section 9   Relationships to other domains
+    section 10  Open items (OI-007 historical)
+    section 11  Related documents
+    section 12  Revision history (document control)
+  This is domain-document / document-control / governance
+  content. The E3 collapse decision (0911002 dv1_4 lines
+  327-340) must resolve whether 0400000 still anchors any
+  SURVIVING document after its sub-tree migrates.
+
+4.3 BRUTALLY HONEST E3 FINDING -- 0400000 IS COLLAPSE-ELIGIBLE
+    (OPPOSITE OF THE 0210000 FINDING).
+  This is the single most important E3 input from this audit,
+  and it INVERTS the TB00485 0210000 result. 0210000 had to
+  PERSIST because four of its five children were STAY. 0400000
+  is the opposite case:
+    - 0400000's ENTIRE child set is its one sub-domain anchor
+      0410000 (SPLIT; P3/E3) plus the three instance specs
+      0411001/0411002/0411003 (ALL MOVE -> section 2/D1;
+      TB00394 lines 162-164; E2-audited TB00476/TB00477/
+      TB00478).
+    - After E2 migrates and retires 0411001/0411002/0411003,
+      and E3 collapses 0410000 (no surviving children), 0400000
+      has ZERO surviving children.
+    - There is no second sub-domain under AA=04 (0400000
+      section 8: one sub-domain only) and no AA=04 instance
+      doc outside 0411001/2/3.
+  THEREFORE 0400000 is genuinely COLLAPSE-ELIGIBLE at E3 once
+  its full sub-tree has migrated and retired. Its only
+  remaining role after that point is to point at retired
+  instance specs -- the exact "collapse anchors and domain
+  docs whose only remaining role was to point at now-retired
+  instance specs" case in 0911002 dv1_4 line 333-334.
+  E3 action for 0400000 = DOMAIN-DOC COLLAPSE (retirement),
+  CONTINGENT on: (i) 0411001/2/3 migrated + retired; (ii)
+  0410000 collapsed; (iii) the OBS-1 endpoint drift reconciled
+  (so no live wire-contract correction is lost at retirement);
+  (iv) the GD-class source-of-truth check (5) clearing -- the
+  AA=04 hard rules must be confirmed canonical in 0500000 under
+  their HR-WM/HR-EE/AR homes before the HR-EI roll-up drops.
+  Recording explicitly so E3 does NOT retire 0400000 before
+  its sub-tree is gone (which would orphan any not-yet-migrated
+  instance spec) and does NOT retire it while the HR-EI-014
+  endpoint correction is still unreconciled (loss-prevention:
+  a dropped live wire-contract fact).
+
+------------------------------------------------------------
+5. SOURCE-OF-TRUTH-CITATION GATE
+------------------------------------------------------------
+
+  0400000 originates fifteen HR-EI domain hard rules. Unlike
+  0210000 (which originated nothing), 0400000 IS the nominal
+  origin of the HR-EI token family. BUT the audit verified
+  (2.2) that the architectural CONTENT of all fifteen is
+  canonical in 0500000 under HR-WM-* / HR-EE-* / ar:AR-*
+  identifiers -- so no 0500000 element depends on the HR-EI
+  token itself as its sole source. There is therefore NO
+  source-of-truth-citation retirement gate of the TB00478
+  0411003 class (AR-080 + 7-entry section 9 mirror) or the
+  TB00481 0711003 class (AR-070 + AR-074) originating in
+  0400000.
+
+  ONE PRE-RETIREMENT GATE applies, and it is the OBS-1 endpoint
+  drift: 0400000 HR-EI-014 carries a wire-contract fact
+  (ws-l3 endpoint + ws-auth-deprecated) that CONFLICTS with the
+  0500000 canonical (ws-auth). Before 0400000 retires at E3,
+  the OBS-1 Track A reconciliation MUST resolve which endpoint
+  is correct and ensure the correct value is canonical in
+  0500000 D1 -- otherwise retirement silently drops a possibly-
+  correct wire-contract fact. This is the only source-of-truth
+  preservation gate for 0400000.
+
+  NO pre-retirement precondition of the TB00483 0211001
+  CI-PE-003 D5-encode class applies (0400000 carries no
+  bucket-(c) architecture that 0500000 lacks, save the
+  contingent endpoint item which is a Track A drift, not a
+  net-new architecture to encode).
+
+------------------------------------------------------------
+6. OBSERVATIONS (TRACK A/B + HOUSEKEEPING CARRY-FORWARD --
+   OUT OF SCOPE THIS SESSION)
+------------------------------------------------------------
+
+  OBS-1  PRIVATE WS ENDPOINT DRIFT (Track A -- HIGH PRIORITY).
+         0400000 HR-EI-014 = wss://ws-l3.kraken.com/v2 (ws-auth
+         DEPRECATED, PL-009). 0500000 dv1_139 D1 = wss://ws-auth
+         .kraken.com/v2 (authoritative; ws-l3 absent). Genuine
+         cross-document wire-contract drift on the order-dispatch
+         /fill-reception endpoint. Resolution requires external
+         Kraken-documentation FP/DP verification (out of scope
+         per OCS NO-Track-A). Track A reconciliation carry-
+         forward. Loss-prevention: a wrong private-WS endpoint
+         breaks dispatch entirely -- HIGH priority. Do-not-chase
+         this session.
+
+  OBS-2  STALE CHILD-CHAIN (forward-looking, E3). section 8 +
+         section 11 list 0411001/0411002/0411003 as current
+         instance docs and 0410000 as the sub-domain anchor.
+         All four MOVE/SPLIT and retire/collapse in E2/E3. The
+         child references drop when 0400000 collapses at E3
+         (4.3). E3 structural action; NOT a this-session edit.
+         Recorded so E3 does not miss it. Deferred.
+
+  OBS-3  GD-CLASS CITATION REFRESH. 0400000 dv1_0 (dated
+         04-04-2026) cites 0500000 generically ("All content
+         derived from FP/DP validated 0500000 dv1_17", section
+         12) and cites 0311001/0311002 without version pins.
+         Live baselines: 0500000 dv1_139, 0311001 v1_34,
+         0311002 v1_13. Housekeeping; not architecture; do-not-
+         chase this session.
+
+  OBS-4  HISTORICAL GAP/AR REFERENCES. 0400000 hard rules cite
+         legacy GAP-/A-/PL- identifiers (GAP-03, GAP-A, GAP-B,
+         GAP-01, GAP-07, GAP-08, GAP-09, A-9, A-10, A-21,
+         PL-009, GAP-02). These are pre-0500000-canonical
+         provenance tags. The architecture they tag is canonical
+         in 0500000 under ar:AR-001/AR-017/AR-042/AR-059 and the
+         HR-WM/HR-EE families (2.2). The legacy tags drop with
+         0400000's retirement; no migration. Do-not-chase.
+
+  OBS-5  OI-007 HISTORICAL OPEN ITEM. section 10 references
+         OI-007 ("AA=04 Exchange Interface document writing")
+         as partially resolved. Historical document-control
+         open item, not architecture. Reconcile against the
+         live open-item ledger at E3 governance reconciliation.
+         Do-not-chase.
+
+  All OBS items are Track A/B + housekeeping per 0911002 dv1_4
+  section 5A, explicitly out of scope this session, deferred.
+
+------------------------------------------------------------
+7. DISPOSITION AND AUTHORITY
+------------------------------------------------------------
+
+DISPOSITION:
+  DOMAIN-DOC-ROLL-UP audit. Element tally:
+    bucket (a) restatement : fourteen of fifteen HR-EI domain
+                             hard rules + four engine states +
+                             two-connection WS topology +
+                             matching-engine model + governing
+                             principles + ar:AR-001 pointer.
+                             ALL already canonical in 0500000
+                             D1/D2 under HR-WM-* / HR-EE-* /
+                             ar:AR-* (2.2 / 3.1). Drop with
+                             retirement.
+    bucket (b) coding-unique: the rate-limit cost schedule +
+                             rate-counter numerics (section 5)
+                             and the authentication model
+                             (section 6). Canonical homes:
+                             0411003 (rate/fee) + 0411002
+                             (auth), both already MOVE -> D1 +
+                             section 9; VALUES in TB00000
+                             section 9.17 per Option A. 0400000's
+                             copies are restatements that drop
+                             with retirement. No 0400000-specific
+                             bucket-(b) migration target.
+    bucket (c) candidate   : ONE, CONTINGENT -- HR-EI-014
+                             private WS endpoint, pending OBS-1
+                             Track A direction (3.3). Becomes a
+                             0500000 D1 amendment ONLY IF Track A
+                             confirms ws-l3 is correct; otherwise
+                             a 0400000-side stale-fact (bucket a).
+  Architectural MOVE axis EMPTY: there is no architectural
+  content 0400000 originates that 0500000 lacks (save the
+  contingent endpoint drift). 0400000's "SPLIT" is a domain-
+  document structural-collapse decision deferred to E3 (4.2),
+  not an architecture-MOVE-plus-STAY split.
+  CRITICAL E3 FINDING (4.3): 0400000 is COLLAPSE-ELIGIBLE at
+  E3 -- the INVERSE of the 0210000 result. Its entire child
+  sub-tree (0410000 + 0411001/2/3) is MOVE/SPLIT/retiring; it
+  retains ZERO surviving children and may be retired at E3
+  contingent on (i) sub-tree migration+retirement, (ii) 0410000
+  collapse, (iii) OBS-1 endpoint drift reconciled, (iv) HR-EI
+  canonical-home confirmation (5).
+  OBS-1..OBS-5 Track-A/housekeeping DEFERRED.
+
+PATTERN:
+  DOMAIN-DOC ROLL-UP -- a pattern distinct from the TB00485
+  0210000 zero-element STRUCTURAL ANCHOR and from the
+  TB00476-TB00483 instance-spec RECEIVER pattern. 0400000
+  originates a non-empty domain hard-rule set (fifteen HR-EI
+  rules) but every rule is a restatement already canonical in
+  0500000 under a different identifier family; the domain doc
+  contributes a token family (HR-EI-*) that 0500000 does not
+  adopt and no net-new architecture (one contingent endpoint
+  drift excepted). The audit's product is an E3 domain-doc-
+  COLLAPSE input plus one HIGH-priority Track A drift (OBS-1),
+  not a content-migration map. The NSI prediction of the
+  0210000 structural pattern is PARTIALLY confirmed (structural-
+  collapse-decision class) and PARTIALLY refuted (0400000
+  originates rules where 0210000 originated none; 0400000
+  collapses where 0210000 persists) -- verified independently
+  per RR-SCOPE-007, not inherited. Expected to recur for the
+  other SPLIT domain docs (0510000; 0600000; 0700000; 0800000)
+  and their anchors -- each independently audited per
+  RR-SCOPE-007 v2_30 no-propagation.
+
+SUB-SET STATUS:
+  FIRST AA=04 domain-document element audit. SECOND P3/E3
+  anchor/domain-class audit (after TB00485 0210000). E2
+  INSTANCE-SPEC AUDIT SET remains COMPLETE (AA=04 3/3 + AA=07
+  3/3 + AA=08 0811005 + AA=02 0211001). Remaining Phase-1
+  element-audit targets: 0410000 (the AA=04 sub-domain anchor,
+  next in the AA=04 chain); 0510000; 0600000/0610000;
+  0700000/0710000; 0800000/0810000 -- all P3/E3 collapse,
+  dependency-LAST -- then Phase 2 three-bucket sequencing.
+
+AUTHORITY:
+  RR-SCOPE-005 derivable-decision execution authority + DD-011
+  v2_56 CHAT-TURN-1 GATE OUTCOME 1 + Bill OCS explicit chat-
+  turn-1 mission directive. Single surviving compliant option
+  after FP/DP elimination (alternates B/C/D/E/F/G eliminated on
+  named-target, phase-order, write-vs-read, scope-expansion,
+  and NO-Track-A dimensions). No paired MDR (no defect closed;
+  the OBS-1 endpoint drift is a Track A reconciliation carry-
+  forward, not a tracked defect this session; the 4.3 E3
+  collapse-eligibility finding is an in-scope Phase-3/E3
+  sequencing input, not a defect). Ready-to-append decision
+  record: DEC-083 (TB00486). DR-append debt now two entries
+  pending (DEC-082 from TB00485 + DEC-083 from TB00486).
+
+============================================================
+END TB00486 PHASE 1 E3 ELEMENT-AUDIT GAP REGISTER
+============================================================
