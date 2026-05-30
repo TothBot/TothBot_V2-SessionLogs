@@ -1,0 +1,205 @@
+DocDCN:     TB00511
+DocTitle:   TothBot_V2_Session_Log
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    GitHub.com/TothBot/TothBot_V2-SessionLogs/TB00511_TothBot_V2_Session_Log_2026-05-30_v1_0.txt
+DocDate:    05-30-2026
+DocTime:    08:45:00 UTC
+
+============================================================
+TB00511 SESSION LOG
+============================================================
+
+------------------------------------------------------------
+1. SESSION SCOPE
+------------------------------------------------------------
+
+Cold-load TB00511 NSI v1_0 (inbound: 0511003 dv1_1 DD-012
+downstream disposition / retirement). Bill redirected the
+session mid-stream, first to a register-verified 0500000
+consolidation status report, then to direct execution of the
+consolidation per the binary architecture test. Net primary
+outcome: 0500000 D1 amendment dv1_140 -> dv1_141 closing the
+final Execution Engine code-completeness gap. Sources pulled
+from GitHub HEAD via public tarball (DEC-097); both doc repos
+PUBLIC. Governing version: TB00000 v2_73.
+
+Mandatory reading (section 2), versions from GitHub HEAD:
+  TB00000  v2_73   (system-prompt copy == HEAD).
+  TB00510  Session Log v1_0 (most recent SL).
+  TB00511  NSI v1_0 (cold-load target).
+  0311001  v1_34   (matches section 8.1).
+  0311002  v1_13   (matches section 8.2).
+  0500000  dv1_140 (highest HEAD; amended to dv1_141 this
+                   session).
+Supporting: TB00471 gap register; 0510000 anchor dv1_2;
+TB00153 DR v1_68 / MDR v1_50; TB00394 Master_Consolidation_
+Register v1_1; 0911002 dv1_4; TB00501 SL (DEC-096 binary
+test).
+
+------------------------------------------------------------
+2. WHAT THIS SESSION PRODUCED
+------------------------------------------------------------
+
+(1) 0511003 DISPOSITION - STEP 1 then BILL BINARY-TEST
+    RESOLUTION.
+    The chat-turn-1 derivability test executed STEP 1 of the
+    inbound mission and found the bucket-(b) home gap: the
+    designated coding-unique home 1011004 Execution_Engine_
+    Coding_Spec is ABSENT from HEAD, so a naive retirement
+    would have silently dropped B-1/B-2/B-3/B-5. Retirement
+    was correctly NOT performed at that point.
+    Bill then applied the binary architecture test (DEC-096)
+    strictly: every leftover element is EITHER architectural
+    (-> a 0500000 diagram) OR not (only a transient seed
+    value goes to section 9.17); there is no coding-unique
+    gray bucket. Re-evaluated each leftover against the live
+    D1/D2 diagram:
+      - cl_ord_id <=18 / dispatch-time assignment / registry
+        correlation: already canonical in D1 (A-2).
+      - req_id + pending-request registry: already canonical
+        in D1 (A-2).
+      - estimated_cost formula: already canonical in D2.
+      - Decimal-not-float (AR-047) + 5s deadline (AR-033):
+        already canonical.
+      - cl_ord_id + req_id UNIQUENESS: architectural (the
+        correlation-key invariant; a collision misattributes
+        a fill) and NOT explicit in the diagram = the single
+        real gap.
+      - example ID string + construction recipe: not
+        architecture; not preserved.
+
+(2) 0500000 D1 AMENDMENT dv1_140 -> dv1_141 (PRIMARY
+    DELIVERABLE; RR-SCOPE-011 one diagram = D1).
+    ADD-only encoding of the cl_ord_id + req_id uniqueness
+    hard rule into:
+      (a) D1 mod:WS_Manager add_order component constraints
+          <desc> (the diagram authority), and
+      (b) section 2 A-2 canonical narration (DD-002 prose-
+          follows-diagram), and
+      (c) D1 figcaption OPTION R EXTENSION (xiv) recording the
+          amendment.
+    No new namespace token minted (extends ar:AR-006 add_order
+    construction + ar:AR-053 Pending Order Registry).
+    R HELD AT R9 per the TB00453 bright line (desc-level
+    constraints addition; no visible <text> or geometry
+    change; no SVG title / diagram_canonical / title-bar /
+    viewBox change; no R-increment rotation; no figure-count
+    change).
+    VALIDATION: DR-007.9 HTML well-formedness html.parser feed
+    PASS (no exceptions). Geometry byte-identical src vs out
+    (rect 313=313, path 30=30, polygon 6=6, line 97=97,
+    text 954=954, g 220=220). 10 figures preserved. viewBox
+    count unchanged (233). Diff = 6 intended hunks only
+    (header title + DocVersion + DocPath/Date/Time + A-2 prose
+    + add_order constraints + figcaption EXTENSION xiv).
+    DD-014 / V-040 design-completeness PRESERVED and IMPROVED
+    at the add_order interface (Q3 hard rules now answerable
+    from the diagram).
+    EFFECT: closes the LAST Execution Engine code-completeness
+    gap. The EE is now fully code-complete in the diagrams,
+    which CLEARS 0511003 dv1_1 for retirement in a subsequent
+    session (separate mission per 0911002 section 6.2;
+    RR-SCOPE-011).
+
+(3) REGISTER-VERIFIED CONSOLIDATION STATUS (delivered in
+    chat). Stream 2 / Phase 3 E1 active. Retired MOVE docs =
+    3 of 14 (0511001 DEC-059, 0511002 DEC-100, 0811005
+    TB00305). 0511003/4/5/6 all bucket (c) = NONE (DEC-069/
+    070/071/072), architecturally ready. 0 open V-038 /
+    0 open V-040 (register-verified via DEC-100 + MDR v1_49->
+    v1_50 delta). The diagrams ARE canonical for every
+    architectural class; the unfinished half is retiring the
+    remaining dispersed source docs (E1 remainder + E2 + E3).
+
+------------------------------------------------------------
+3. DEFECT FOUND THIS SESSION
+------------------------------------------------------------
+
+NONE NEW. No defect opened; no defect closed. The D1
+amendment is a forward architectural-gap fill (binary test),
+not a latent-defect closure -> NO paired MDR entry
+(TB00431/TB00432 no-MDR precedent).
+
+------------------------------------------------------------
+4. CLAUDE ERRORS THIS SESSION
+------------------------------------------------------------
+
+ERROR-TB00511-CHAT-01 (RR-SCOPE-008 tools-exhaustion miss).
+In the consolidation status report, Claude flagged 0811005
+Short_Module_Specification as "absent from HEAD - provenance
+unverifiable (retired vs never authored)" after only a
+filename find on the extracted working tree. Bill corrected:
+the Short module existed. A full-corpus grep then confirmed
+0811005 dv1_3 was AUTHORED and RETIRED at TB00305 (git rm +
+0810000 dv1_4 -> dv1_5 anchor cascade; architecture migrated
+to D2/section 7/section 9.10). Corrective: ran the exhaustive
+grep, corrected the retirement ledger to 3 of 14 MOVE docs
+retired, and owned the error to Bill. Root cause: declared a
+fact unverifiable before exhausting available tools
+(RR-SCOPE-008). Logged per RR-VIOL-002.
+
+------------------------------------------------------------
+5. CARRY-FORWARDS
+------------------------------------------------------------
+
+CF-TB00512-A  PUBLIC-REPO ACCESS (DEC-097) - tarball first.
+CF-TB00512-J  0511003 RETIREMENT - PRIMARY for TB00512. EE is
+              now code-complete in the diagrams (D1 dv1_141 +
+              D2). Retire 0511003 dv1_1 via Claude-authored
+              `git rm --cached` (section 4.9 CD-003; C:
+              untouched) + 0510000 dv1_2 -> dv1_3 anchor
+              cascade (drop 0511003; mirror TB00507 DEC-100)
+              + DEC-102. NO paired MDR. RR-SCOPE-011 ceiling:
+              primary (retirement) + 1 DR companion.
+CF-TB00512-L  E1 COMPLETION QUEUE after 0511003: 0511004
+              (DEC-070), 0511005 (DEC-071), 0511006 (DEC-072),
+              all bucket (c) = NONE - one retirement per
+              session. Then E2 (0411001/2/3, 0610000,
+              0711001/2/3) and E3 (SPLIT anchors/domain-doc
+              collapse).
+CF-TB00512-D  Residual reconciliation: plain-`git rm` mentions
+              + archive-folder practice + 0311002 DC-CLEANUP +
+              0311001/0311003 retirement text; + stale-HEAD-
+              version hygiene (0500000 dv1_31 + dv1_139
+              leftover at HEAD; DR v1_66/v1_67; 0911002
+              dv1_1/dv1_2; 1010000 dv1_17; 0800000 dv1_0;
+              0810000 dv1_1/dv1_4). Per DR-005.4 each doc
+              keeps ONE HEAD version.
+CF-TB00512-E  Position-model + procedure-text reconciliation.
+CF-TB00512-F  0500000 section-14 revision-history housekeeping
+              (dv1_100-110 absent; positioning defect).
+CF-TB00512-G  D2 descriptor stale-token drift.
+CF-TB00512-H  SD-5 final mismatch sweep - hard gate before
+              coding.
+CF-TB00512-I  RE-PRIVATIZE-BEFORE-LIVE (DEC-097 OPEN sub-item).
+
+DR-APPEND DEBT: 0. DEC-102 (0511003 retirement) is queued for
+TB00512, not a carried debt.
+
+============================================================
+6. REVISION HISTORY
+============================================================
+
+  v1_0  05-30-2026  First issue. Session TB00511. Inbound
+                    0511003 disposition; Bill redirect to
+                    register-verified consolidation status then
+                    to binary-test execution. PRIMARY: 0500000
+                    D1 amendment dv1_140 -> dv1_141 - ADD-only
+                    cl_ord_id + req_id uniqueness hard rule into
+                    the D1 add_order constraints desc + section
+                    2 A-2 prose + figcaption EXTENSION xiv;
+                    R held R9 (TB00453 bright line); no new
+                    token; DR-007.9 PASS; geometry byte-
+                    identical; closes the last EE code-
+                    completeness gap and clears 0511003 for
+                    retirement. Status: 3 of 14 MOVE docs
+                    retired; 0 open V-038/V-040. Claude error
+                    ERROR-TB00511-CHAT-01 (RR-SCOPE-008) logged
+                    + corrected (0811005 retired at TB00305,
+                    not unverifiable). Runs under TB00000 v2_73;
+                    GitHub HEAD via public tarball (DEC-097).
+
+============================================================
+END OF TB00511 SESSION LOG v1_0
+============================================================
