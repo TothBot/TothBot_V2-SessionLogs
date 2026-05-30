@@ -1,0 +1,198 @@
+DocDCN:     TB00519
+DocTitle:   0411001_Binary_Test_Reaudit_Register
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    GitHub.com/TothBot/TothBot_V2-SessionLogs/TB00519_0411001_Binary_Test_Reaudit_Register_v1_0.txt
+DocDate:    05-30-2026
+DocTime:    22:00:00 UTC
+
+============================================================
+TB00519 0411001 BINARY-TEST RE-AUDIT REGISTER
+============================================================
+
+------------------------------------------------------------
+1. PURPOSE
+------------------------------------------------------------
+
+Re-audit 0411001 Kraken_WS_v2_Specification dv1_12 under the
+BINARY ARCHITECTURE TEST (TB00000 v2_74 section 3 DD-015 /
+DEC-096 / TB00501), correcting the TB00476 bucket-(b)
+classification (authored 05-27, before the binary test locked
+05-29). Primary mission per TB00518 NSI section 1.1, executed
+under chat-turn-1 FP/DP-derivability OUTCOME 1.
+
+This register is the AUDIT deliverable. It does not migrate
+and does not retire. Migration and retirement are separate
+sessions per 0911002 dv1_4 section 6.2.
+
+------------------------------------------------------------
+2. METHOD
+------------------------------------------------------------
+
+Source documents pulled fresh from GitHub HEAD via public
+tarball (DEC-097), both repos PUBLIC:
+  - 0411001 Kraken_WS_v2_Specification dv1_12 (audit target).
+  - 0500000 System_Architecture_Overview dv1_141 (live D1 =
+    Kraken_API_Connection_Architecture; identity confirmed at
+    HTML lines 10043 / 11635 / 1446).
+  - TB00394 Master_Consolidation_Register v1_1 (line 162).
+  - 0911002 dv1_4 section 6.2 (migrate/retire separate
+    sessions).
+
+Each 0411001 element was classified under the binary test and,
+where it asserts a wire fact, grep-verified for presence in
+live D1 dv1_141.
+
+------------------------------------------------------------
+3. BINARY CLASSIFICATION OF 0411001
+------------------------------------------------------------
+
+TB00394 v1_1 line 162 (verbatim):
+  "0411001 Kraken_WS_v2_Specification  MOVE -> section 2 / D1
+   (P3/E2)"
+  "Kraken interface contracts/params/rate limits are
+   architectural. section 4(c)."
+
+Binary test result: EVERY element of 0411001 is TothBot-
+organism trading architecture (the Kraken WS interface that
+the WS Manager implements) -> binary test = YES -> destination
+is the 0500000 D1 design diagram. There is NO section-9.17
+seed-value residue: per TB00394 section 4(c), the Kraken
+interface contracts, params, and rate limits are architectural
+(their existence and behavior are fixed by the protocol and
+the WS Manager design, not transient CIATS-owned starting
+values). The retracted "coding-unique / wire-contract stays in
+a subordinate spec (e.g. 1011002)" bucket does NOT apply
+(DD-015; the TB00476 bucket-(b) finding is corrected here).
+
+Disposition class: MOVE -> D1, then RETIRE (separate sessions).
+
+------------------------------------------------------------
+4. ELEMENT-GROUP DISPOSITION (grep-verified vs live D1 dv1_141)
+------------------------------------------------------------
+
+4.1 ALREADY CANONICAL IN D1 -- CONFIRM (no migration needed)
+    Verified present in live D1 by token grep (count in
+    parentheses):
+      - Public WS endpoint wss://ws.kraken.com/v2 (7).
+      - Channel field facts: order_status (11), snap_orders
+        (22), ratecounter (6), maxratecount (6), cl_ord_id
+        (34), req_id (21), interval_begin (13), connection_id
+        (3).
+      - Gate-8 instrument facts: qty_min (24), cost_min (24),
+        price_increment incl. "price_increment replaces" tick
+        deprecation note (18 / 4).
+      - Self-trade-prevention underscore format: cancel_newest
+        (21), stp_type (23).
+      - Outbound order facts: batch_add (57), amend_order (33),
+        post_only (29), deadline (23), exec_type dispatch (55),
+        batch_add cost arithmetic n/2 (2).
+      - Connect() template params (WS-LIB-004): max_size (7),
+        open_timeout (5), ping_interval (4) present.
+      - Token TTL "15 min" (3); AR reasoning set incl. AR-080
+        Cloudflare 150-conn / 10-min rate limit; HR-EI
+        references (per TB00476 + TB00517 known state).
+    These confirm: the bulk of 0411001's wire architecture is
+    encoded in D1.
+
+4.2 NOT IN D1 / WRONG IN D1 -- MIGRATION ITEMS (block retire)
+
+    MIG-1 (DISPOSITIVE) -- PRIVATE WS ENDPOINT CORRECTION.
+      0411001 WS-EP-003 (verbatim): "The old private WS
+      endpoint wss://ws-auth.kraken.com/v2 is DEPRECATED. The
+      correct private endpoint is wss://ws-l3.kraken.com/v2.
+      (PL-009 / GAP-06)".
+      Live D1 carries the DEPRECATED endpoint
+      wss://ws-auth.kraken.com/v2 at: governs-desc line 540,
+      SVG label line 557, AR-080 desc line 1449.
+      Corrected endpoint wss://ws-l3.kraken.com/v2: count = 0
+      in D1 (ABSENT).
+      Binary test = YES (the actual private-WS connection
+      endpoint is architecture a coder needs). D1 is WRONG.
+      DD-014: a coder authoring the WS Manager from D1 alone
+      today would connect to the deprecated endpoint. This
+      single fact is dispositive: 0411001 CANNOT be a clean
+      retire. (Matches and elevates CF-TB00519-J from
+      non-blocking to the blocking migration item.)
+
+    MIG-2 (VERIFY) -- amend_order rate-cost integer ladder.
+      0411001 WS-AMD-004: "+1 always; +3 if age < 5s; +2 if
+      age < 10s; +1 if age < 15s; +2 total for resting age
+      > 300s." Literal "rate cost" token = 0 in D1; batch n/2
+      (2) and maxratecount (6) present, but the amend_order
+      age-bracketed cost ladder presence in D1 is UNCONFIRMED.
+      Migration session must verify/encode the full per-
+      message rate-cost schedule as D1 governs facts.
+
+    MIG-3 (VERIFY) -- connect() max_queue param.
+      0411001 WS-LIB-004 template = max_size, open_timeout,
+      max_queue=None, ping_interval=None. D1 has max_size /
+      open_timeout / ping_interval; max_queue presence in D1
+      UNCONFIRMED. (close_timeout / ping_timeout are NOT used
+      by the 0411001 template and are correctly absent -- not
+      a gap.) Verify in migration.
+
+    MIG-4 (VERIFY -- exhaustive sweep deferred to migration).
+      This re-audit grep-verified the representative wire-fact
+      set named in TB00518 NSI section 1.1 known-state plus the
+      dispositive endpoint. 0411001 contains ~80 WS-* contracts
+      (WS-EP/LIB/AUTH/ACK/INST/STAT/OHLC/TKR/EXE/OSTA/AMEND/
+      BAL/OUT/STP/DL/ADD/AMD/BA/TP). The migration session
+      performs the exhaustive contract-by-contract D1-encoding
+      verification as it amends D1 (the migration unit is the
+      vehicle for the full sweep per 0911002 section 6.3).
+
+------------------------------------------------------------
+5. OUTCOME
+------------------------------------------------------------
+
+NOT A CLEAN RETIRE. The re-audit finds trading-architecture
+wire facts not yet correctly encoded in D1 -- at minimum the
+corrected private endpoint (MIG-1), plus MIG-2/3/4 to verify.
+Per TB00518 NSI section 1.1 OUTCOMES and DD-014:
+
+  0411001 = D1 MIGRATION SESSION REQUIRED FIRST.
+  Amend D1 (DD-002 / DD-003 / DEC-003 Path A): correct the
+  private endpoint to wss://ws-l3.kraken.com/v2 (governs-desc
+  540, SVG label 557, AR-080 desc 1449), then verify/encode
+  MIG-2 / MIG-3 and complete the MIG-4 exhaustive sweep.
+  Retirement of 0411001 follows in a LATER session per
+  0911002 section 6.2, only after the migration session closes
+  clean.
+
+The binary disposition itself is unchanged and confirmed:
+0411001 = MOVE -> D1, no section-9.17 residue, retract the
+TB00476 bucket-(b) finding. The corrected disposition from
+TB00517 (MOVE, not HOME-A retain) stands.
+
+------------------------------------------------------------
+6. SCOPE AND LIMITS OF THIS RE-AUDIT
+------------------------------------------------------------
+
+Grep verification was at element-GROUP level against live D1
+dv1_141, covering the TB00518 known-state wire-fact set and
+the dispositive endpoint fact. The endpoint gap (MIG-1) is
+dispositive for the binary OUTCOME on its own; the exhaustive
+per-contract D1-encoding verification (MIG-4) is correctly the
+work of the migration session, not this audit. No element of
+0411001 was found that fails the binary test (all = YES /
+architecture). No fabricated classifications: every presence/
+absence claim above is a grep result against the named live
+HEAD file and line.
+
+============================================================
+7. REVISION HISTORY
+============================================================
+
+  v1_0  05-30-2026  First issue. Authored at TB00519.
+                    Binary-test re-audit of 0411001 dv1_12
+                    under DD-015. Confirms MOVE -> D1 (TB00394
+                    line 162), corrects TB00476 bucket-(b).
+                    OUTCOME: NOT a clean retire -- D1 migration
+                    required first (MIG-1 deprecated endpoint
+                    dispositive; MIG-2/3/4 verify). Retire is a
+                    later separate session per 0911002 6.2.
+
+============================================================
+END OF TB00519 0411001 BINARY-TEST RE-AUDIT REGISTER v1_0
+============================================================
