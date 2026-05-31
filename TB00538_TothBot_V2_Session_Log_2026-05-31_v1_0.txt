@@ -1,0 +1,311 @@
+DocDCN:     TB00538
+DocTitle:   TothBot_V2_Session_Log
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    GitHub.com/TothBot/TothBot_V2-SessionLogs/TB00538_TothBot_V2_Session_Log_2026-05-31_v1_0.txt
+DocDate:    05-31-2026
+DocTime:    17:50:00 UTC
+============================================================
+TB00538 TOTHBOT V2 SESSION LOG
+============================================================
+
+------------------------------------------------------------
+1. SESSION SUMMARY
+------------------------------------------------------------
+
+Primary mission EXECUTED (TB00538 NSI sec 1.1, confirmed by the
+SD-13 status check): continue the D1 diagram-first migration -
+ONE 0500000 amendment (DEC-003 Path A / RR-SCOPE-011), diagram-
+first (DD-002/DD-003/DD-014). Migrated the GROUP 1 connection/
+library/auth trio from the TB00530 D1 Fact-Level Gap Register
+into the live 0500000 D1 figure: 0500000 dv1_148 -> dv1_149,
+figure D1 Kraken_API_Connection_Architecture R10 HELD.
+
+Facts migrated (all three SD-9-verified vs 0411001 dv1_13, all
+three re-confirmed ABSENT from live dv1_148 per RR-SCOPE-010):
+  WS-EP-003   Kraken WS v2 endpoint scope: the general private/
+              authenticated Spot WS v2 endpoint (executions,
+              balances, order events, add/cancel order,
+              openOrders/ownTrades) is wss://ws-auth.kraken.com/
+              v2, CURRENT and NOT deprecated; only the level3
+              order-book WS endpoint moved to wss://ws-l3.kraken.
+              com/v2 (Kraken API change log 2 Dec 2025, L3 scope
+              only); TothBot subscribes to NO level3 channel, so
+              ws-l3 is used nowhere in TothBot architecture;
+              0411001 L68-80 + L1250-1256 (closes PL-009/GAP-06)
+  WS-LIB-001  Python WS client library: the websockets asyncio-
+              native client, import path "from websockets.
+              asyncio.client import connect"; legacy "websockets.
+              connect()" PROHIBITED; 0411001 L86-91 (the WS-LIB-
+              002..004 connection invariants max_size=10MB /
+              open_timeout=10 / max_queue=None / ping_interval=
+              None are already canonical at rule:HR-WM-002)
+  WS-AUTH-002 Kraken Spot REST authentication signing model (the
+              model the GetWebSocketsToken REST call + every Spot
+              REST request signs with): HMAC-SHA512 of (URI path
+              + SHA256(nonce + POST data)) using the base64-
+              decoded API secret; the 1 Oct 2025 Kraken auth
+              breaking change applied to Kraken FUTURES REST
+              ONLY, so Spot REST auth is UNCHANGED; 0411001
+              L128-137 (A-14 / PL-014)
+All three into the mod:WS_Manager constraints <desc> as one
+coherent "D1 CONNECTION/LIBRARY/AUTH WIRE FACTS (dv1_149
+TB00538; GROUP 1)" cluster, matching the TB00532/533/535/536/
+537 <desc>-cluster encoding precedent.
+
+RR-SCOPE-010 CONFIRM-ABSENT FINDING (the key check this
+session): WS-AUTH-002 was the partial-present case. The live D1
+already carries the unchanged-STATUS note in a visible REST-API
+decoration <text> ("Spot REST UNCHANGED (A-14 Oct 2025 only
+Futures)"), but the HMAC-SHA512 signing CONSTRUCTION a coder
+needs (HMAC-SHA512 of URI path + SHA256(nonce + POST data),
+base64-decoded secret) was NOT derivable from the diagram alone.
+Under the strict DD-014 from-the-diagram-alone standard the
+fact was therefore genuinely ABSENT in its codeable form; the
+signing model was encoded into the <desc> and the visible status
+<text> was left unchanged. WS-EP-003 and WS-LIB-001 were both
+fully absent. GROUP 1 is CLOSED (3 migrated). 4 -> 1 D1 gaps.
+
+WS-OHLC-005 (the single remaining gap) was NOT migrated this
+session: it targets mod:Signal_Pipeline (the previous-candle-on-
+close signal-evaluation fact), a distinct domain from the GROUP
+1 connection-establishment cluster. Per RR-SCOPE-011 one
+coherent amendment, it was carried forward to TB00539 rather
+than bundled. Migrating it next makes D1 fact-level
+comprehensive and unblocks 0411001 retirement.
+
+------------------------------------------------------------
+2. CHAT-TURN-1 DECISION RECORD (DD-011 + SD-13)
+------------------------------------------------------------
+
+Cold-load executed from GitHub HEAD via public tarball (DEC-097;
+both repos PUBLIC per TB00000 v2_76 sec 2). Documents read:
+  TB00000 v2_76 (governing instructions; newest)
+  TB00538 NSI v1_0 (governing this session)
+  TB00537 SL v1_0 (most-recent completed SL)
+  TB00530 D1 Fact-Level Gap Register v1_0
+  0311001 v1_34 (namespace), 0311002 v1_13 (workflow),
+  0500000 dv1_148 (live HEAD)
+  SD-13 live registers: TB00394 v1_1, 0911002 dv1_4,
+    TB00153 Decision_Register v1_72, TB00153 MDR v1_52,
+    0411001 dv1_13
+
+DD-011 CHAT-TURN-1 GATE: the SD-13 5-part status check (folded
+into the chat-turn-1 derivability test per the NSI) confirmed
+the campaign is ON-TRACK and the NSI sec 1.1 primary (continue
+D1 diagram-first migration, one amendment) is the correct single
+next step. Independent four-item test, option-set considered
+beyond the NSI candidate: (A) continue D1 migration; (B) new
+governance amendment; (C) D2-D9 fact-level audit; (D) 0411001
+retirement; (E) CF housekeeping (CF-TRACK-STALE/RECON/DUP).
+Discriminator = least errors/rework toward the sole mandate
+(0500000 as canonical source). Eliminations: D REJECTED (D1 not
+yet fact-level comprehensive - 4 gaps open at start; retirement
+is a separate downstream session per DEC-003 Path A / RR-SCOPE-
+011); C REJECTED (D1 is the open in-progress thread; dependency
+order puts D2-D9 after D1); B REJECTED (no active recurrence
+requires a new rule); E REJECTED (E3-class, deferred, non-
+blocking). OUTCOME 1 single compliant option = continue D1
+migration. Executed under RR-SCOPE-005 + DD-011 OUTCOME 1
+EXECUTION MANDATORY (SD-10); not surfaced as ratification.
+
+DD-011 OUTCOME 2 register-conflict check: NONE. The 0911002
+dv1_4 "Phase NOT STARTED" labels (L267/279/299) and the
+retracted binary-test "(b) CODING-UNIQUE" text (0911002 dv1_4
+L287; TB00394 v1_1 PHASE-MODEL) are already-logged carry-
+forwards CF-TRACK-STALE / CF-RECON, non-authoritative per SD-0,
+non-blocking. TB00394 v1_1 L162 confirms 0411001 = MOVE -> sec2/
+D1 (P3/E2). No new blocking ambiguity rose to OUTCOME 2.
+
+------------------------------------------------------------
+3. SD-13 SESSION-OPEN CONSOLIDATION STATUS CHECK (5-PART)
+------------------------------------------------------------
+Method: verified against LIVE HEAD registers (grep), not recall.
+Binary architecture test (SD-0 / DD-015 / DEC-096) applied.
+
+(1) CAMPAIGN POSITION. Stream 2 / Phase 3 EXECUTION, sub-stage
+    E2 active. E1 COMPLETE (AA=05 component specs migrated). E2:
+    0411001 Kraken_WS_v2 = MOVE -> sec2/D1 (TB00394 v1_1 L162),
+    verified, D1 migration ACTIVE; 0411002/3, 0610000, 0711001/
+    2/3 pending. E3 not started. Consolidated vs remaining: D1
+    fact-level migration now 34 of 37 register entries in-diagram
+    (31 prior + 3 this session) plus 2 reclassified already-
+    present (WS-PING-004, WS-ZOM-002); 1 absent fact remains
+    (GROUP 2 WS-OHLC-005).
+
+(2) COVERAGE PER ARCHITECTURAL CLASS (live 0500000 dv1_149,
+    from-the-diagram-alone DD-014 standard):
+      - Kraken<->TothBot connection (D1): NEAR-COMPLETE
+        canonical; GROUP 1 closed; 1 absent (G2 WS-OHLC-005,
+        Signal_Pipeline candle-close).
+      - 8 gates (D2): figure present R8; V-040 attestation
+        UNVERIFIED at fact level (CF-V040-METHOD).
+      - Exit layers (D3): present R9; fact-level UNVERIFIED.
+      - Regime taxonomy (D4): present; fact-level UNVERIFIED.
+      - CIATS data flows (D5): present R13; fact-level
+        UNVERIFIED.
+      - Complete system / dispatch / gate detail
+        (D6/D7/D8/D9): present; fact-level UNVERIFIED.
+    Only D1 has a fact-level (DD-014) register; D2-D9 carry
+    V-040 attestations UNVERIFIED until re-audited (CF-V040-
+    METHOD).
+
+(3) RETIREMENT LEDGER. E1 component specs retired in prior
+    sessions per TB00394. 0411001 NOT retired (deferred,
+    CF-D1-MIGRATE; unblocks when D1 reaches fact-level
+    comprehensive - now 1 gap away). No retirement this session.
+
+(4) DRIFT / RISK.
+      - MDR v1_52 V-038/V-040 ledger: 0 open V-038 conflicts
+        (OPEN-LEDGER STATE AT dv1_140); ledger TRAILS live
+        dv1_149 (known ledger lag, not a conflict; D1 dv1_141-
+        149 amendments are diagram-canonical + self-attested).
+      - DR-078 HIGH OBSERVE PARTIAL-CLOSED: D1 V-040 attestation
+        defect; OPEN portion = D1 fact-level comprehensiveness,
+        worked via CF-D1-MIGRATE. No new MDR entry required.
+      - CF-TRACK-STALE: 0911002 dv1_4 Phase 1/2/3 "NOT STARTED"
+        labels (L267/279/299); TB00394 v1_1 phase note. Live
+        ground truth = E2 active. Logged CF, non-blocking.
+      - CF-RECON: retracted binary-test "(b) CODING-UNIQUE" text
+        live in 0911002 dv1_4 (L287) + TB00394 v1_1. Non-
+        authoritative per SD-0; non-blocking.
+      - CF-TRACK-DUP: 0500000 dv1_142..dv1_149 co-present in
+        HEAD - DR-005.4 one-version rule deferred E3
+        housekeeping; this session adds dv1_149 and does NOT
+        remove priors (NSI scope: out of scope).
+      - OBSERVATION (Parking Lot, not chased): CF-D1-TITLEBAR -
+        D1 title-bar decoration <text> R-display lag still reads
+        R9 vs the SVG <title> + diagram_canonical R10; a
+        visible-<text> MODIFY own session - captured, not chased.
+
+(5) BOTTOM LINE. ON-TRACK. Single next step CONFIRMED = the
+    NSI sec 1.1 primary (continue D1 diagram-first migration).
+    Executed this session.
+
+------------------------------------------------------------
+4. DELIVERABLES
+------------------------------------------------------------
+  (1) 0500000_System_Architecture_Overview_dv1_149_Claude_Source.html
+      -> TothBot_V2-Docs/05XXXXX_System_Architecture/
+      (md5 fbcbe9e3fa04c8c004c0ebfcb3d799fd)
+  (2) TB00538_TothBot_V2_Session_Log_2026-05-31_v1_0.txt
+      -> TothBot_V2-SessionLogs/
+  (3) TB00539_Next_Session_Instructions_v1_0.txt
+      -> TothBot_V2-SessionLogs/
+DR-007.9 well-formedness on dv1_149: PASS (0 orphan close tags,
+0 unclosed at EOF, 0 parser exceptions; exactly ONE
+<h2>14. Revision History</h2>). Structural diff vs dv1_148
+confirms ONLY the intended regions changed: 4 DC-header lines
+(HTML title + DocVersion + DocPath + DocTime) + sec-2 A-31 prose
+insert + mod:WS_Manager constraints <desc> GROUP 1 cluster +
+figcaption (a) version pointer + figcaption (d) running
+narrative/gap-tally + sec-14 dv1_149 entry. ZERO SVG geometry /
+<text> / viewBox / SVG <title> change (counts byte-stable:
+<text> 954=954, <rect> 313=313, <path> 30=30, <line> 97=97,
+<polygon> 6=6, <figure> 10=10, <svg> 10=10, viewBox 35=35;
+D1 SVG title 0500000_Image1_T2_R10 preserved) -> R HELD at R10
+(TB00453 bright line; a <desc>-only edit holds R). No MDR/DR
+entry this session (DR-078 covers the D1 method defect; no new
+defect class surfaced). DR-APPEND debt: 0.
+
+DR-011 CHECKPOINT DISCIPLINE (TB00000 v2_76): dv1_149 written to
+outputs immediately on completion (md5 verified) BEFORE this SL
+and the TB00539 NSI were authored; no large unsaved batch held.
+
+------------------------------------------------------------
+5. CLAUDE ERRORS THIS SESSION
+------------------------------------------------------------
+None.
+
+NOTES (not errors):
+ (a) RR-SCOPE-010 confirm-absent surfaced the WS-AUTH-002
+     partial-present case (visible "Spot REST UNCHANGED" status
+     note present; HMAC-SHA512 signing construction absent). The
+     fact was correctly classified ABSENT in its codeable form
+     under strict DD-014 and the signing model encoded into the
+     <desc> with the visible <text> left unchanged. This is the
+     RR-SCOPE-010 gate working as designed (the same gate that
+     reclassified WS-PING-004 / WS-ZOM-002 at TB00537), not an
+     error.
+ (b) R-state HELD at R10 was verified from what the amendment
+     actually changed (desc cluster + figcaption + A-31 prose +
+     DC header; zero visible <text>/geometry/viewBox/SVG-title
+     change, confirmed by byte-stable element counts) per the
+     TB00453 bright line - NOT predicted (RR-SCOPE-007). The
+     TB00538 NSI flagged a possible R10 -> R11 bump only "if a
+     GROUP 1 fact requires a visible <text> change"; the minimal
+     binary-test-correct encoding is desc-only (matching the
+     TB00532-537 wire-fact precedent), so no visible <text> was
+     modified and R HELD at R10.
+ (c) WS-OHLC-005 carried forward (not bundled) because it is a
+     Signal_Pipeline candle-close fact, a distinct domain from
+     the GROUP 1 connection-establishment cluster - RR-SCOPE-011
+     one-coherent-amendment discipline working as designed.
+
+------------------------------------------------------------
+6. CARRY-FORWARDS (to TB00539)
+------------------------------------------------------------
+CF-D1-MIGRATE    NEXT PRIMARY. 1 D1 gap REMAINS: GROUP 2
+                 WS-OHLC-005 (mod:Signal_Pipeline; on candle-
+                 close the PREVIOUS just-committed candle's OHLC
+                 is used for all signal computations, the new in-
+                 progress candle is NOT used; 0411001 L323-326).
+                 Migrate one 0500000 amendment, diagram-first
+                 (DD-002/003/014), confirm-absent against live
+                 dv1_149 per RR-SCOPE-010, SD-9-verify vs 0411001
+                 dv1_13. When WS-OHLC-005 lands, D1 is fact-level
+                 comprehensive -> 0411001 retirement (git rm
+                 --cached, CD-003) UNBLOCKS as the TB00540
+                 primary (separate downstream session per DEC-003
+                 Path A / RR-SCOPE-011; do NOT bundle).
+CF-STATUS-AUDIT  STANDING SD-13 (every session, chat-turn 1).
+CF-V040-METHOD   D2-D9 fact-level (DD-014) audits PENDING; their
+                 attestations UNVERIFIED. D1 method defect MDR
+                 DR-078.
+CF-TRACK-STALE   Reconcile 0911002 dv1_4 + TB00394 v1_1 phase
+                 labels to live ground truth. E3-class.
+CF-RECON         Reconcile retracted binary-test 2(b) text in
+                 0911002 dv1_4 (L287) + TB00394 v1_1 +
+                 0311001/0311003.
+CF-TRACK-DUP     0500000 dv1_142..dv1_149 co-present in HEAD;
+                 git rm --cached priors down to single canonical
+                 latest (DR-005.4). Also 0800000/0810000/1010000
+                 dup sets. E3 housekeeping.
+CF-MDR-HIGHCOUNT PARKING LOT. MDR sec-9 HIGH bucket count.
+CF-RECON-EXEC    Revisit at 0411001 retire.
+CF-REBASE-MIG    MIG-2/MIG-3 endpoint fact (WS-EP-003) now
+                 migrated in the GROUP 1 amendment (dv1_149);
+                 re-base at 0411001 retire.
+CF-AR046-CITE    PARKING LOT. HR-WM-014 cites AR-046; deadline
+                 AR is AR-033.
+CF-D1-TITLEBAR   PARKING LOT. D1 title-bar decoration <text>
+                 R-display lag (reads R9 vs SVG title R10) - own
+                 visible-<text> session.
+CF-H             SD-5 final mismatch sweep - hard gate before
+                 coding. Blocked.
+CF-I             Re-privatize-before-live (DEC-097 sub-item).
+CF-STREAMLINE    TB00000 Option B factoring - deferred.
+
+DR-APPEND DEBT: 0.
+
+============================================================
+7. REVISION HISTORY
+============================================================
+  v1_0  05-31-2026  First issue, authored at TB00538 close.
+                    Records the D1 diagram-first migration of the
+                    GROUP 1 connection/library/auth trio
+                    (WS-EP-003 + WS-LIB-001 + WS-AUTH-002 into
+                    mod:WS_Manager constraints <desc>) into
+                    0500000 dv1_148 -> dv1_149, D1 R10 HELD; the
+                    RR-SCOPE-010 confirm-absent finding that
+                    WS-AUTH-002 was partial-present (visible
+                    status note present, HMAC-SHA512 signing
+                    construction absent); the SD-13 5-part on-
+                    track status report; OUTCOME 1 chat-turn-1
+                    derivation; WS-OHLC-005 carried forward (not
+                    bundled, distinct Signal_Pipeline domain);
+                    4 -> 1 D1 gaps.
+
+============================================================
+END OF TB00538 TOTHBOT V2 SESSION LOG v1_0
+============================================================
