@@ -1,0 +1,273 @@
+DocDCN:     TB00536
+DocTitle:   TothBot_V2_Session_Log
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    GitHub.com/TothBot/TothBot_V2-SessionLogs/TB00536_TothBot_V2_Session_Log_2026-05-31_v1_0.txt
+DocDate:    05-31-2026
+DocTime:    10:35:00 UTC
+============================================================
+TB00536 TOTHBOT V2 SESSION LOG
+============================================================
+
+------------------------------------------------------------
+1. SESSION SUMMARY
+------------------------------------------------------------
+
+Primary mission EXECUTED (TB00536 NSI sec 1.1, confirmed by the
+SD-13 status check): continue the D1 diagram-first migration -
+ONE 0500000 amendment (DEC-003 Path A / RR-SCOPE-011), diagram-
+first (DD-002/DD-003/DD-014). Migrated the GROUP 4 outbound-order
+cluster (5 facts) from the TB00530 D1 Fact-Level Gap Register
+into the live 0500000 D1 figure: 0500000 dv1_146 -> dv1_147,
+figure D1 Kraken_API_Connection_Architecture R10 HELD.
+
+Facts migrated (all SD-9-verified vs 0411001 dv1_13, all
+re-confirmed ABSENT from live dv1_146 per RR-SCOPE-010):
+  WS-DL-002   deadline field accepts 500ms-60s range from
+              current time; TothBot uses the 5s standard
+              value; stale deadline -> Kraken reject
+              [0411001 L670-680]
+  WS-ADD-002  entry add_order is GTD (time_in_force=gtd) with
+              expire_time bounded 30-60s; starting value is
+              CIATS-owned param:entry_timeout_sec seed (30s)
+              in sec 9.17 (NOT the diagram); diagram fact is
+              the GTD-with-bounded-expiry contract
+              [0411001 L697-709]
+  WS-AMD-002  amend_order PRESERVES order-book queue position;
+              cancel+resubmit LOSES it; sole-method rationale
+              (ar:AR-018) [0411001 L725-743]
+  WS-BA-002   batch_add on-fill atomic template: TP leg
+              limit/sell/post_only:true (maker-fee guarantee;
+              taker TP fill violates the Sacred R:R fee
+              baseline, ar:AR-007/AR-046) + emergSL leg
+              stop-loss/triggers.reference=last/price_type=
+              static; both stp_type=cancel_newest + deadline
+              [0411001 L772-816]
+  WS-TP-003   partial TP fill -> remaining_qty = tp_order_qty
+              - cum_qty; amend_order resting emergSL down to
+              remaining_qty (preserves queue position);
+              below-min remainder -> cancel emergSL +
+              market-sell [0411001 L843-870]
+
+WS-DL-002 + WS-ADD-002 + WS-AMD-002 + WS-BA-002 -> mod:WS_Manager
+constraints desc; WS-TP-003 -> mod:Exit_Controller constraints
+desc. DD-002 prose-follows-diagram sec-2 A-29 narration added
+same session.
+
+13 D1 gaps at session start -> 8 D1 gaps remain at close.
+
+ONE primary mission this session per RR-SCOPE-011. 0411001
+retirement DEFERRED (CF-D1-MIGRATE; until D1 fact-level
+comprehensive). No D2-D9 work. No code authored (CC-001).
+C: drive untouched (CD-001). DR-011 checkpoint discipline
+applied: dv1_147 checkpointed to outputs before SL/NSI authoring.
+
+------------------------------------------------------------
+2. CHAT-TURN-1 DECISION RECORD (DD-011 + SD-13)
+------------------------------------------------------------
+
+Cold-load executed from GitHub HEAD via public tarball (DEC-097;
+both repos PUBLIC per TB00000 v2_76 sec 2). Documents read:
+  TB00000 v2_76 (governing instructions; newest)
+  TB00536 NSI v1_0 (governing this session)
+  TB00535 SL v1_0 (most-recent completed SL)
+  TB00530 D1 Fact-Level Gap Register v1_0
+  0311001 (namespace), 0311002 (workflow), 0500000 dv1_146
+  SD-13 live registers: TB00394 v1_1, 0911002 dv1_4,
+    TB00153 Decision_Register v1_72, TB00153 MDR v1_52,
+    0411001 dv1_13
+
+DD-011 CHAT-TURN-1 GATE: the SD-13 5-part status check (folded
+into the chat-turn-1 derivability test per the NSI) confirmed
+the campaign is ON-TRACK and the NSI sec 1.1 primary (continue
+D1 diagram-first migration, one amendment) is the correct single
+next step. Independent four-item test, option-set considered
+beyond the NSI candidate: (A) continue D1 migration; (B) new
+governance amendment; (C) D2-D9 fact-level audit; (D) 0411001
+retirement; (E) CF housekeeping (CF-TRACK-STALE/RECON/DUP).
+Discriminator = least errors/rework toward the sole mandate
+(0500000 as canonical source). Eliminations: D REJECTED (D1 not
+yet fact-level comprehensive - 13 gaps open at start); C
+REJECTED (D1 is the open in-progress thread; dependency-order
+puts D2-D9 after D1); B REJECTED (no active recurrence requires
+a new rule); E REJECTED (E3-class, deferred, non-blocking).
+OUTCOME 1 single compliant option = continue D1 migration.
+Executed under RR-SCOPE-005 + DD-011 OUTCOME 1 EXECUTION
+MANDATORY; not surfaced as ratification. No register conflict
+rose to DD-011 OUTCOME 2 (the 0911002 dv1_4 / TB00394 v1_1
+stale-phase labels + retracted binary-test 2(b) text are
+already-logged carry-forwards CF-TRACK-STALE / CF-RECON, not new
+blocking ambiguities).
+
+------------------------------------------------------------
+3. SD-13 SESSION-OPEN CONSOLIDATION STATUS CHECK (5-PART)
+------------------------------------------------------------
+Method: verified against LIVE HEAD registers (grep), not recall.
+Binary architecture test (SD-0 / DD-015 / DEC-096) applied.
+
+(1) CAMPAIGN POSITION. Stream 2 / Phase 3 EXECUTION, sub-stage
+    E2 active. E1 COMPLETE (AA=05 component specs migrated). E2:
+    0411001 Kraken_WS_v2 = MOVE -> sec2/D1 (TB00394 v1_1 line
+    162), verified, D1 migration ACTIVE; 0411002/3, 0610000,
+    0711001/2/3 pending. E3 not started. Consolidated vs
+    remaining: D1 fact-level migration 29 of 37 register entries
+    now in-diagram (24 prior + 5 this session); 8 remain.
+
+(2) COVERAGE PER ARCHITECTURAL CLASS (live 0500000 dv1_147,
+    from-the-diagram-alone DD-014 standard):
+      - Kraken<->TothBot connection (D1): PARTIAL-canonical;
+        29/37 wire facts migrated; 8 absent (G1 x3, G2 x1,
+        G4 x0 after this session, G5 x4).
+      - 8 gates (D2): figure present R8; V-040 attestation
+        UNVERIFIED at fact level (CF-V040-METHOD).
+      - Exit layers (D3): present R9; fact-level UNVERIFIED.
+      - Regime taxonomy (D4): present; fact-level UNVERIFIED.
+      - CIATS data flows (D5): present R13; fact-level
+        UNVERIFIED.
+      - Complete system / dispatch / gate detail
+        (D6/D7/D8/D9): present; fact-level UNVERIFIED.
+    Only D1 has a fact-level (DD-014) register; D2-D9 carry
+    V-040 attestations that are UNVERIFIED until re-audited
+    (CF-V040-METHOD).
+
+(3) RETIREMENT LEDGER. E1 component specs retired in prior
+    sessions per TB00394. 0411001 NOT retired (deferred,
+    CF-D1-MIGRATE). No retirement this session.
+
+(4) DRIFT / RISK.
+      - MDR v1_52 V-038/V-040 ledger: 0 open V-038 conflicts
+        (OPEN-LEDGER STATE AT dv1_140); ledger current to
+        dv1_140 (TRAILS live dv1_147 - known ledger lag, not a
+        conflict; D1 dv1_141-147 amendments are diagram-
+        canonical + self-attested).
+      - DR-078 HIGH OBSERVE PARTIAL-CLOSED: D1 V-040 attestation
+        defect; OPEN portion = D1 fact-level comprehensiveness,
+        being worked via CF-D1-MIGRATE. No new MDR entry
+        required (DR-078 covers the method defect).
+      - CF-TRACK-STALE: 0911002 dv1_4 Phase 1/2/3 "NOT STARTED"
+        labels; TB00394 v1_1 Phase-1-not-started note. Live
+        ground truth = E2 active (SD-1). Logged CF, non-blocking.
+      - CF-RECON: retracted binary-test "coding-unique 2(b)"
+        text live in 0911002 dv1_4 + TB00394 v1_1. Non-
+        authoritative per SD-0; non-blocking.
+      - CF-TRACK-DUP: 0500000 dv1_142..dv1_146 (+dv1_147 this
+        session) co-present in HEAD - DR-005.4 one-version rule
+        deferred E3 housekeeping; this session adds dv1_147 and
+        does NOT remove priors (NSI scope: out of scope).
+      - OBSERVATION (Parking Lot, not chased): CF-D1-TITLEBAR -
+        D1 title-bar decoration <text> R-display lag still reads
+        R9 vs the SVG <title> + diagram_canonical R10; a
+        visible-<text> MODIFY (own session) - captured, not
+        chased.
+
+(5) BOTTOM LINE. ON-TRACK. Single next step CONFIRMED = the
+    NSI sec 1.1 primary (continue D1 diagram-first migration).
+    Executed this session.
+
+------------------------------------------------------------
+4. DELIVERABLES
+------------------------------------------------------------
+  (1) 0500000_System_Architecture_Overview_dv1_147_Claude_Source.html
+      -> TothBot_V2-Docs/05XXXXX_System_Architecture/
+      (md5 1d22e347fb580c7ce8d485c01986c0a2)
+  (2) TB00536_TothBot_V2_Session_Log_2026-05-31_v1_0.txt
+      -> TothBot_V2-SessionLogs/
+  (3) TB00537_Next_Session_Instructions_v1_0.txt
+      -> TothBot_V2-SessionLogs/
+DR-007.9 well-formedness on dv1_147: PASS (0 orphan close tags,
+0 unclosed at EOF, 0 parser exceptions; exactly ONE
+<h2>14. Revision History</h2>; 10 figures; D1 viewBox 1500x1600
+preserved; D1 SVG title R10 held). Structural diff vs dv1_146
+confirms ONLY the intended regions changed: 4 DC-header lines +
+sec-2 A-29 prose insert + mod:WS_Manager constraints + mod:Exit_
+Controller constraints + figcaption (a) version pointer +
+figcaption (d) running narrative/gap-tally + sec-14 dv1_147
+entry. ZERO SVG geometry / <text> / viewBox change -> R held at
+R10 (TB00453 bright line).
+No MDR/DR entry this session (DR-078 covers the D1 method
+defect; no new defect class surfaced). DR-APPEND debt: 0.
+
+------------------------------------------------------------
+5. CLAUDE ERRORS THIS SESSION
+------------------------------------------------------------
+None.
+
+NOTES (not errors):
+ (a) R-state HELD at R10 was verified from what the amendment
+     actually changed (desc constraints + figcaption + A-29
+     prose + DC header; no visible <text>/geometry change), per
+     the TB00453 bright line - not predicted (RR-SCOPE-007). The
+     TB00536 NSI flagged GROUP 4 "may include visible-<text>
+     changes (e.g. a deadline/expire decoration)" with a
+     possible R10 -> R11 bump; the minimal binary-test-correct
+     encoding is desc-only (matching the TB00532/533/535 wire-
+     fact precedent), so NO visible <text> was modified and R
+     HELD at R10. The NSI R-prediction is superseded by the live
+     rule per RR-SCOPE-007.
+ (b) WS-ADD-002 binary-test split: the GTD-with-bounded-expiry
+     CONTRACT is architecture (-> D1 diagram); the numeric
+     starting value entry_timeout_sec=30s is a transient sec-9.17
+     seed (already CIATS-ownership-migrated at D2 order_dispatch,
+     TB00399/DEC-043) and is NOT encoded in the diagram.
+
+------------------------------------------------------------
+6. CARRY-FORWARDS (to TB00537)
+------------------------------------------------------------
+CF-D1-MIGRATE    NEXT PRIMARY. 8 D1 gaps REMAIN (all non-loss-
+                 flagged absent). By group: G1 WS-EP-003 /
+                 WS-LIB-001 / WS-AUTH-002; G2 WS-OHLC-005;
+                 G5 WS-PING-004 / WS-ZOM-002 / WS-REC-003 /
+                 WS-REC-004. Migrate one 0500000 amendment per
+                 session, diagram-first, next coherent absent
+                 subset (select + confirm-absent against live
+                 HEAD per RR-SCOPE-010; natural next cluster =
+                 GROUP 5 keepalive/reconnect residual WS-PING-004
+                 / WS-ZOM-002 / WS-REC-003 / WS-REC-004); THEN
+                 retire 0411001 (git rm --cached, CD-003).
+CF-STATUS-AUDIT  STANDING SD-13 (every session, chat-turn 1).
+CF-V040-METHOD   D2-D9 fact-level (DD-014) audits PENDING; their
+                 attestations UNVERIFIED. D1 method defect MDR
+                 DR-078.
+CF-TRACK-STALE   Reconcile 0911002 dv1_4 + TB00394 v1_1 phase
+                 labels to live ground truth. E3-class.
+CF-RECON         Reconcile retracted binary-test 2(b) text in
+                 0911002 dv1_4 + TB00394 v1_1 + 0311001/0311003.
+CF-TRACK-DUP     0500000 dv1_142..dv1_147 co-present in HEAD;
+                 git rm --cached priors down to single canonical
+                 latest (DR-005.4). Also 0800000/0810000/1010000
+                 dup sets. E3 housekeeping.
+CF-MDR-HIGHCOUNT PARKING LOT. MDR sec-9 HIGH bucket count.
+CF-RECON-EXEC    Revisit at 0411001 retire.
+CF-REBASE-MIG    Re-base MIG-2/MIG-3 on verified endpoint fact.
+CF-AR046-CITE    PARKING LOT. HR-WM-014 cites AR-046; deadline
+                 AR is AR-033 (note: WS-DL-002 migrated this
+                 session cites HR-WM-014 / WS-DL-001 consistent
+                 with the live D1 desc; the AR-033-vs-AR-046
+                 citation reconciliation remains a parking-lot
+                 item).
+CF-D1-TITLEBAR   PARKING LOT. D1 title-bar decoration <text>
+                 R-display lag (reads R9 vs SVG title R10) - own
+                 visible-<text> session.
+CF-H             SD-5 final mismatch sweep - hard gate before
+                 coding. Blocked.
+CF-I             Re-privatize-before-live (DEC-097 sub-item).
+CF-STREAMLINE    TB00000 Option B factoring - deferred.
+
+DR-APPEND DEBT: 0.
+
+============================================================
+7. REVISION HISTORY
+============================================================
+  v1_0  05-31-2026  First issue, authored at TB00536 close.
+                    Records the D1 diagram-first migration of the
+                    GROUP 4 outbound-order cluster (WS-DL-002,
+                    WS-ADD-002, WS-AMD-002, WS-BA-002 into
+                    mod:WS_Manager; WS-TP-003 into mod:Exit_
+                    Controller) into 0500000 dv1_146 -> dv1_147,
+                    D1 R10 HELD; the SD-13 5-part on-track status
+                    report; OUTCOME 1 chat-turn-1 derivation;
+                    13 -> 8 D1 gaps.
+
+============================================================
+END OF TB00536 TOTHBOT V2 SESSION LOG v1_0
+============================================================
