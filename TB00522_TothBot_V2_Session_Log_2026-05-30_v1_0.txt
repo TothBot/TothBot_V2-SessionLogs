@@ -1,0 +1,270 @@
+DocDCN:     TB00522
+DocTitle:   TothBot_V2_Session_Log
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    GitHub.com/TothBot/TothBot_V2-SessionLogs/TB00522_TothBot_V2_Session_Log_2026-05-30_v1_0.txt
+DocDate:    05-30-2026
+DocTime:    02:00:00 UTC
+
+============================================================
+TB00522 SESSION LOG
+============================================================
+
+------------------------------------------------------------
+1. SESSION SCOPE
+------------------------------------------------------------
+
+Opened against the TB00522 NSI primary mission: 0500000 D1
+MIG-1 -- correct the "deprecated" private WS endpoint
+wss://ws-auth.kraken.com/v2 -> wss://ws-l3.kraken.com/v2
+(WS-EP-003), one diagram amendment, prose-follows-diagram.
+
+Per the NSI's own RR-SCOPE-010 verification gate (the three D1
+locations and the WS-EP-003 fact were flagged UNVERIFIED,
+"confirm against current 0500000 HEAD before amending"),
+the session verified the mission premise before amending.
+The premise failed verification. No diagram amendment was
+made. Bill directed this log be written to record the
+correction and stop the bad mission chain.
+
+------------------------------------------------------------
+2. OUTCOMES
+------------------------------------------------------------
+
+(1) MIG-1 PREMISE IS FALSE. MISSION KILLED -- DO NOT EXECUTE.
+    The mission rests on 0411001 WS-EP-003: "the old private
+    WS endpoint wss://ws-auth.kraken.com/v2 is DEPRECATED; the
+    correct private endpoint is wss://ws-l3.kraken.com/v2."
+    That claim is tagged (PL-009 / GAP-06) with NO external
+    source anywhere in the chain (NSI -> TB00519 register ->
+    0411001 WS-EP-003). Kraken's authoritative documentation
+    contradicts it (see section 3 VERIFICATION BASIS):
+
+      - Kraken moved ONLY the Level-3 (level3 order-book)
+        WebSocket endpoint to wss://ws-l3.kraken.com/v2, dated
+        2 December 2025 (Spot WS v2 change-log entry).
+      - The GENERAL private/authenticated endpoint -- the one
+        carrying executions, balances, order events,
+        addOrder/cancelOrder, openOrders/ownTrades -- REMAINS
+        wss://ws-auth.kraken.com/v2 (current; not deprecated).
+      - TothBot subscribes to NO level3 channel (0 occurrences
+        of "level3" in 0500000 dv1_141), so ws-l3 is not part
+        of TothBot's architecture at all.
+
+    Executing MIG-1 as specified would have pointed TothBot's
+    order/execution/balance feed at the L3 order-book host. In
+    generated code that means no order confirmations, no
+    balance updates, no execution events in live trading -- a
+    direct, severe loss event. Loss prevention is mission
+    priority #1; the change was not made.
+
+(2) GREP VERIFICATION -- NSI LOCATION LIST WAS INCOMPLETE AND
+    THE TARGET STRING SHOULD NOT CHANGE. The NSI cited three
+    D1 locations (governs-desc 540, SVG 557, AR-080 desc 1449).
+    In 0500000 dv1_141 (HEAD) the string
+    wss://ws-auth.kraken.com/v2 actually occurs SIX times:
+    lines 540, 557, 1569, 6801, 8234, plus the AR-080
+    historical narrative at 1449. Every occurrence labels
+    either the general private connection (executions/balances/
+    order events) or the AR-080 Cloudflare-edge connection
+    rate-limit. NONE is a level3 endpoint. None should change.
+    D1 dv1_141 is ALREADY CORRECT.
+
+(3) SOURCE DEFECT IN 0411001 dv1_12 (flag only; not corrected
+    this session). The same false fact is already baked into
+    the spec: WS-EP-002 "Private WS v2" endpoint is set to
+    wss://ws-l3.kraken.com/v2 (lines 60-61), and WS-EP-003
+    (lines 67-69) asserts the general private endpoint is
+    deprecated. Both are wrong for the same reason. Not moot
+    on retirement: 0411001 disposition is MOVE -> D1 (TB00519
+    register section 5; 0911002 section 6.2) -- its content
+    migrates INTO the canonical D1 diagram and 0411001 retires
+    only AFTER that migration closes clean. Left uncorrected,
+    a future migration/coding pass re-injects the error into
+    the permanent diagram and into code. Recommended fix is
+    surgical: two lines (WS-EP-002 + WS-EP-003), 0411001
+    dv1_12 -> dv1_13. Pending Bill go-ahead (carry-forward
+    CF-FIX-0411001).
+
+(4) MISSION CHAIN STOPPED. MIG-1 is killed. MIG-2/3/4 (the
+    amend_order rate-cost ladder, connect max_queue, and the
+    ~80-contract D1 sweep) and the 0411001 retirement must be
+    RE-BASED on the verified endpoint fact before any further
+    0411001 -> D1 migration proceeds. The TB00519 re-audit
+    register and the TB00522 NSI are SUPERSEDED on the
+    endpoint fact by this SL + the TB00523 NSI. The TB00519
+    register is retained as the forensic record of what was
+    believed at the time (CI-005 / CI-006).
+
+(5) 0411001 vs 0500000 COMPARISON + RETIRE DETERMINATION
+    (Bill chat-turn directive, this session; run while the
+    endpoint finding was fresh).
+      - 0411001 carries ~80 Kraken wire contracts (WS-EP,
+        WS-LIB, WS-AUTH, WS-ACK, WS-INST, WS-STAT, WS-OHLC,
+        WS-TKR, WS-EXE/WS-OSTA, WS-AMEND, WS-BAL, WS-OUT,
+        WS-STP, WS-DL, WS-ADD, WS-AMD, WS-BA, WS-TP, WS-CAN,
+        WS-DMS, WS-PING, WS-ZOM, WS-REC, rate limits, exit-
+        controller status). This is the MIG-4 exhaustive sweep.
+      - 0500000 is CLEAN of the ws-l3 fabrication (0
+        occurrences) and ALREADY encodes the major external
+        facts: GetWebSocketsToken (25x), Dead Man's Switch /
+        cancel_all_orders_after (11-12x), ratecounter /
+        maxratecount (6x), deadline (23x), post_only (29x),
+        ws-auth endpoint (7x, correct).
+      - The ONLY verified divergence is the endpoint, where
+        0500000 is CORRECT and 0411001 is WRONG.
+
+    0500000 UPDATE: NOT necessary. It is clean of the
+    fabrication and correct on every fact verified this
+    session. No safe, verified 0500000 change is warranted now;
+    any other change would require trusting unverified 0411001
+    facts.
+
+    RETIRE 0411001 NOW: NO.
+      (i) 0411001 is a PROVEN-CONTAMINATED source (it contains
+          a fabricated external fact). Its ~80 facts are
+          already encoded in 0500000 but their CORRECTNESS is
+          unverified, and 0411001 was their likely original
+          source. Retiring it deletes the cross-check while
+          possibly-wrong values stay baked in the canonical
+          diagram. Correct order: externally verify each Kraken
+          fact 0500000 encodes (use 0411001 as a CHECKLIST, not
+          as truth), correct any that are wrong, THEN retire
+          0411001 once it adds nothing verified-correct beyond
+          0500000.
+      (ii) Scope: the verify-then-retire pass is the ~80-
+           contract sweep with per-fact external verification
+           (SD-9), a multi-session campaign, not a fresh-memory
+           pass (RR-SCOPE-011 one-mission discipline).
+    Defined as campaign CF-VERIFY-RETIRE.
+
+------------------------------------------------------------
+3. VERIFICATION BASIS (auditable; no fabricated claims)
+------------------------------------------------------------
+
+Internal (grep against files pulled fresh from GitHub HEAD via
+public tarball, DEC-097):
+  - 0500000 dv1_141 is the live HEAD revision (confirms the
+    NSI's unverified dv1_141 citation).
+  - "level3" occurs 0 times in 0500000 dv1_141.
+  - wss://ws-auth.kraken.com/v2 occurs at dv1_141 lines 540,
+    557, 1569, 6801, 8234 (+ historical AR-080 narrative 1449).
+  - 0411001 dv1_12 WS-EP-002 (lines 60-61) = ws-l3;
+    WS-EP-003 (lines 67-69) = "ws-auth deprecated", tag
+    (PL-009 / GAP-06), no external source cited.
+
+External (Kraken authoritative documentation):
+  - Kraken API Change Log, docs.kraken.com/api/docs/change-log,
+    entry "2 December 2025 Spot WS v2: Change of url for L3
+    Websocket endpoint. wss://ws-auth.kraken.com/v2 is replaced
+    by wss://ws-l3.kraken.com/v2" -- scoped to the L3 endpoint
+    only.
+  - Kraken WebSocket FAQ, support.kraken.com: private
+    (authenticated) account data feeds and trading endpoints =
+    wss://ws-auth.kraken.com/.
+  - Kraken's own official Go SDK, github.com/krakenfx/api-go:
+    KRAKEN_API_SPOT_WS_AUTH_URL = wss://ws-auth.kraken.com/v2
+    (current authenticated Spot WS connection).
+  - Kraken WS v2 executions and balances channel docs
+    (docs.kraken.com/api/docs/websocket-v2/): authenticated
+    channels requiring a token on the standard private
+    connection (ws-auth), not the L3 host.
+
+VERIFIED FACT (canonical for downstream correction):
+  - General private/authenticated Spot WS v2 endpoint
+    (executions, balances, order events, add/cancel order,
+    openOrders/ownTrades) = wss://ws-auth.kraken.com/v2.
+    CURRENT, not deprecated.
+  - Only the level3 order-book WS endpoint moved to
+    wss://ws-l3.kraken.com/v2 (2 Dec 2025). TothBot uses no
+    level3 channel, so ws-l3 belongs nowhere in TothBot's
+    architecture.
+
+------------------------------------------------------------
+4. DELIVERABLES
+------------------------------------------------------------
+
+  TB00522_TothBot_V2_Session_Log_2026-05-30_v1_0.txt  (this SL)
+  TB00523_Next_Session_Instructions_v1_0.txt          (NSI,
+    X+1 naming; stops MIG-1; sets the re-based forward path)
+
+Routing: TB-prefix -> TothBot_V2-SessionLogs (DD-013 (i)).
+Upload by explicit filename only (SD-7). C: drive not touched
+(CD-001); GitHub HEAD maintained via git push only (CD-003).
+No 0411001 file is delivered this session (correction pending
+Bill go-ahead per CF-FIX-0411001).
+
+------------------------------------------------------------
+5. CLAUDE ERRORS THIS SESSION
+------------------------------------------------------------
+
+None. The mission's false premise was caught by the NSI
+verification gate BEFORE any amendment was authored. No
+diagram change, no commit, no C: operation was made. The
+guard worked as intended.
+
+------------------------------------------------------------
+6. CARRY-FORWARDS
+------------------------------------------------------------
+
+CF-FIX-0411001  Surgical 2-line correction of 0411001 WS-EP-002
+                + WS-EP-003 (dv1_12 -> dv1_13) to the VERIFIED
+                FACT in section 3. RECOMMENDED next mission;
+                pending Bill go-ahead. D1 needs NO change.
+CF-REBASE-MIG   Re-base MIG-2 (amend_order rate-cost ladder
+                WS-AMD-004), MIG-3 (connect max_queue
+                WS-LIB-004), MIG-4 (~80-contract D1 sweep) and
+                the 0411001 retirement on the verified endpoint
+                fact before any further 0411001 -> D1
+                migration. Re-audit the TB00519 register's
+                other wire-fact citations the same way (verify
+                against an external source, not an uncited
+                internal note) before trusting them.
+CF-VERIFY-RETIRE  SAFE 0411001 RETIREMENT CAMPAIGN. Before
+                retiring 0411001: externally verify (against
+                Kraken authoritative docs, per SD-9) each
+                Kraken wire-fact that 0500000 encodes -- using
+                0411001's ~80-contract list as the checklist,
+                NOT as truth. Correct any 0500000 value found
+                wrong. One contract-group per session (DEC-003
+                Path A). Retire 0411001 only once it adds
+                nothing verified-correct beyond 0500000.
+                Subsumes / supersedes the trust-based CF-REBASE
+                MIG-4 sweep.
+CF-RECON        Reconcile contrary text to the binary test in
+                other docs (0911002 section 3.1; TB00394 notes;
+                0311001 / 0311003 retirement text). Carried
+                from TB00522 NSI.
+CF-H            SD-5 final mismatch sweep -- hard gate before
+                coding. Carried.
+CF-I            Re-privatize-before-live (DEC-097 open sub-item).
+                Carried.
+
+DR-APPEND DEBT: 0.
+
+============================================================
+7. REVISION HISTORY
+============================================================
+
+  v1_0  05-30-2026  First issue. Verified the TB00522 MIG-1
+                    premise against Kraken authoritative docs
+                    and KILLED MIG-1: only the level3 endpoint
+                    moved to ws-l3 (2 Dec 2025); the general
+                    private endpoint remains ws-auth; TothBot
+                    uses no level3 channel; D1 dv1_141 already
+                    correct. Flagged the same defect baked into
+                    0411001 dv1_12 (WS-EP-002/003); not moot
+                    because disposition is MOVE -> D1. Ran the
+                    0411001-vs-0500000 comparison (Bill
+                    directive): 0500000 clean of ws-l3 and
+                    already encodes the major wire-facts;
+                    determined RETIRE-NOW = NO (contaminated
+                    source + ~80-contract scope) and 0500000
+                    UPDATE = not necessary; defined the safe
+                    CF-VERIFY-RETIRE campaign. Stopped the
+                    mission chain; set forward path in TB00523
+                    NSI. No Claude errors; no changes made.
+
+============================================================
+END OF TB00522 SESSION LOG v1_0
+============================================================
