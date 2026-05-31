@@ -1,0 +1,279 @@
+DocDCN:     TB00539
+DocTitle:   Lessons_Learned_and_Governance_Proposals
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    GitHub.com/TothBot/TothBot_V2-SessionLogs/TB00539_Lessons_Learned_and_Governance_Proposals_v1_0.txt
+DocDate:    05-31-2026
+DocTime:    18:45:00 UTC
+============================================================
+TB00539 LESSONS LEARNED AND GOVERNANCE-AMENDMENT PROPOSALS
+============================================================
+
+------------------------------------------------------------
+1. PURPOSE AND STATUS
+------------------------------------------------------------
+
+This document captures the lessons learned during the TB00539
+session, focused on the POST-FORMAL-CLOSE operational friction
+that occurred after the SD-13-confirmed primary mission (the D1
+diagram-first migration completing WS-OHLC-005 into dv1_150) was
+delivered, pushed, and DR-010-verified.
+
+It is authored per Bill chat-turn directive: "Create new end-of-
+session documents capturing all of the lessons learned and
+incorporate them into new governance documents in the next
+session." The CAPTURE happens here (this document). The
+INCORPORATION INTO GOVERNANCE is deferred to the next session
+(TB00540 primary mission), so this document also enumerates the
+proposed governance amendments for that session to enact.
+
+This document SUPPLEMENTS TB00539 SL v1_0. TB00539 SL v1_0
+remains accurate as of formal session close (mission executed,
+all three deliverables verified MATCH in HEAD, "Claude Errors
+This Session: None"). The friction recorded here occurred AFTER
+that formal close, during the post-close push-correction cycle,
+and was not in the SL v1_0 record. Per CI-005 / CI-006 (no
+silent loss; corrections are new records, not in-place edits),
+the post-close events are recorded here rather than by silently
+editing SL v1_0.
+
+------------------------------------------------------------
+2. CONTEXT -- WHAT HAPPENED AFTER FORMAL CLOSE
+------------------------------------------------------------
+
+After the session formally closed (dv1_150 + TB00539 SL +
+TB00540 NSI all pushed and DR-010-verified MATCH), Bill asked
+whether the TB00540 NSI/OCS actually CARRIED the SD-13 5-part
+consolidation status check or merely TRIGGERED it. Verification
+against live registers showed the NSI triggered the check and
+named the registers but did NOT carry the substantive parts 1-3
+(consolidated-vs-remaining count, per-class coverage, full
+retirement ledger). Claude added section 3.5 LIVE CONSOLIDATION
+LEDGER to TB00540 to fix this.
+
+Pushing that single corrected file then consumed multiple
+chat-turns due to a structural mechanical issue (LL-1 below):
+the corrected file was delivered to Bill's browser download
+area, not the repo working tree, so every "git add" reported
+"Everything up-to-date" and every working-tree content check
+returned 0 hits for the new section. The loop resolved only
+when the corrected file was physically moved into the repo
+folder, after which the commit landed (471a91d..47be198) and
+DR-010 verified MATCH (md5 346acdb639ccb0dcee9cda68f17ebed2).
+
+During the same window, git status surfaced superseded untracked
+files (TB00000 v2_75; TB00153 Decision_Register v1_69/70/71;
+TB00501 NSI v1_0) and modified-but-already-in-HEAD files
+(TB00000 v2_68; TB00059 Part7; TB00501 NSI v1_1). Verification
+against live HEAD established these untracked files are all
+superseded by newer versions already canonical in HEAD (v2_76 /
+v1_72 / TB00501 v1_1), so they were correctly NOT pushed.
+
+------------------------------------------------------------
+3. LESSONS LEARNED
+------------------------------------------------------------
+
+LL-1  PRESENT_FILES DELIVERS TO THE DOWNLOAD AREA, NOT THE REPO
+      WORKING TREE.
+      A file Claude delivers (via the present_files mechanism)
+      lands in Bill's browser download location. It does NOT
+      enter the git working tree. Until Bill physically moves
+      the delivered file into the repo folder (overwriting any
+      prior copy), the working-tree copy is unchanged, so
+      "git add <file>" stages nothing and "git commit" reports
+      "Everything up-to-date." This is STRUCTURAL, not
+      incidental: the deliver step and the working-tree-place
+      step are two different actions, and only Bill can do the
+      second. It bites hardest on a CORRECTED file re-delivered
+      after an initial push, because the old (already-pushed)
+      copy is still sitting in the working tree and looks
+      identical by filename.
+
+LL-2  THERE IS NO PRE-COMMIT WORKING-TREE-CONFIRM GATE.
+      DR-010 verifies a deliverable landed in HEAD byte-for-byte
+      AFTER the push. There is no rule requiring a BEFORE-commit
+      confirmation that the working-tree copy actually contains
+      the intended (corrected) content. The DR-010 post-push
+      gate cannot fire until a push happens, and the push cannot
+      happen until the right file is in the working tree -- so a
+      wrong/stale working-tree file produces an endless "up-to-
+      date" loop that DR-010 never gets a chance to catch. A
+      pre-commit working-tree content-confirm (grep / Select-
+      String for a distinctive marker that MUST return the
+      expected hit before git add) would have caught this on
+      turn one.
+
+LL-3  TRUST A CLEAN VERIFY RESULT.
+      When a working-tree content check (Select-String for the
+      new section) returned 0, that was correct, conclusive
+      evidence the content was absent. Claude nonetheless hedged
+      on a later turn ("maybe my search pattern is wrong")
+      instead of trusting the 0, which wasted a turn. A clean
+      negative from a verify command is evidence; do not
+      undermine it with speculation unless there is a CONCRETE
+      reason to doubt the command itself (and if there is,
+      re-run with a looser pattern immediately rather than
+      narrating doubt).
+
+LL-4  LEAD WITH THE ROOT-CAUSE STEP, NOT THE REPEATED COMMAND.
+      After the FIRST "Everything up-to-date," Claude should
+      have immediately diagnosed the download-vs-working-tree
+      gap (LL-1) and led with the file-move step. Instead it
+      re-issued commit commands that could only ever repeat
+      "up-to-date," costing several turns. When a command's
+      output proves the precondition is unmet, fix the
+      precondition; do not re-issue the command.
+
+LL-5  UNTRACKED IS NOT THE SAME AS MISSING-WORK; VERIFY
+      SUPERSESSION BEFORE ADDING.
+      git status listed superseded older files as untracked.
+      The instinct "they're not pushed, push them" (and the
+      explicit request to "skip verification") would have
+      injected four stale, superseded files into HEAD alongside
+      their newer canonical successors -- degrading the cold-
+      load source of truth and creating exactly the duplicate-
+      version drift DR-005.4 / CF-TRACK-DUP exist to prevent.
+      Verification against live HEAD (which already held v2_76 /
+      v1_72 / TB00501 v1_1) is what protected the source of
+      truth. LESSON: an untracked file is not automatically
+      missing work; confirm whether a newer version already
+      holds its content in HEAD before adding it.
+
+LL-6  STANDING CHECKS MUST BE CARRIED, NOT MERELY TRIGGERED.
+      The SD-13 5-part consolidation status check was TRIGGERED
+      by the NSI (a pointer to "run the check") but its
+      substantive baseline (parts 1-3) was not CARRIED in the
+      NSI. A triggered-but-not-carried check forces full
+      reconstruction every session and risks being done
+      shallowly or skipped. Adding section 3.5 LIVE
+      CONSOLIDATION LEDGER to TB00540 fixed this by recording
+      the HEAD-verified baseline (informational per RR-SCOPE-007;
+      SD-13 still re-verifies live). LESSON: an NSI that invokes
+      a recurring status check should carry a recorded baseline
+      for it.
+
+LL-7  PAST SESSION-CLOSE PUSHES HAVE INTERMITTENTLY DROPPED
+      FILES.
+      The superseded untracked files (and the v2_75-absent-from-
+      HEAD finding earlier in the session) are evidence that
+      past session-close pushes occasionally authored a file
+      that never landed in HEAD. DR-011 (incremental checkpoint-
+      and-push) targets this going forward, but it does not
+      reconcile the already-orphaned backlog. A periodic
+      working-tree-vs-HEAD reconciliation pass (CF-TRACK-DUP) is
+      needed to clear the backlog and confirm no NON-superseded
+      work was dropped.
+
+------------------------------------------------------------
+4. PROPOSED GOVERNANCE AMENDMENTS (FOR TB00540 TO ENACT)
+------------------------------------------------------------
+
+These are PROPOSALS. They are NOT enacted by this document.
+TB00540 (next session) enacts the agreed subset into TB00000
+(and any other controlled document) per the binary-test +
+DD-002/DD-003 + RR-SCOPE-011 one-mission discipline.
+
+GP-1  NEW DR RULE -- WORKING-TREE-CONFIRM-BEFORE-COMMIT FOR
+      CORRECTED / RE-DELIVERED FILES (closes LL-1 + LL-2 + LL-4).
+      Proposed as a new absolute standing rule in TB00000 §4.1.2
+      (candidate identifier DR-012), the pre-push analog of
+      DR-010:
+        (a) Whenever Claude delivers a CORRECTED or REVISED file
+            for re-push (any post-initial-delivery correction),
+            Claude MUST state explicitly, in the same turn, that
+            (i) the file lands in Bill's download area, NOT the
+            repo working tree, and (ii) Bill must move-and-
+            overwrite it into the canonical repo folder per §11
+            STORAGE before any git add.
+        (b) Claude MUST provide a WORKING-TREE CONTENT-CONFIRM
+            command (grep / Select-String for a distinctive
+            marker unique to the corrected content) that Bill
+            runs against the repo-folder copy, and MUST instruct
+            that this command MUST return the expected hit
+            BEFORE git add. If it returns the wrong result, the
+            file is not in place and the commit must NOT proceed.
+        (c) Claude MUST NOT re-issue git add / commit / push for
+            a corrected file until the working-tree-confirm
+            returns the expected hit. After the FIRST "Everything
+            up-to-date" (or equivalent no-op), Claude treats the
+            working-tree-place precondition as unmet and leads
+            with the move + confirm step (LL-4), not another
+            commit attempt.
+        (d) The existing DR-010 post-push HEAD verification is
+            unchanged and still runs after the push. GP-1 is the
+            BEFORE-commit gate; DR-010 is the AFTER-push gate.
+
+GP-2  BEHAVIORAL NOTE -- TRUST A CLEAN VERIFY RESULT (closes
+      LL-3). Proposed as an RR-class note (candidate under
+      §4.3.1 / a new RR-SCOPE clause or an FM/DD behavioral
+      note): a clean negative from a verify command is evidence;
+      Claude does not undermine it with speculation absent a
+      concrete reason to doubt the command. If there is such a
+      reason, Claude re-runs with a corrected/looser command in
+      the same turn rather than narrating doubt across turns.
+
+GP-3  NSI-CARRIES-BASELINE FOR STANDING CHECKS (closes LL-6).
+      Proposed as an addition to the SD-13 / DR-008 NSI-authoring
+      discipline: every NSI that invokes a recurring status
+      check (e.g., the SD-13 consolidation status check) MUST
+      carry a recorded baseline ledger for it (the section 3.5
+      LIVE CONSOLIDATION LEDGER pattern), explicitly marked
+      informational per RR-SCOPE-007 (the live re-verification at
+      session open remains authoritative).
+
+GP-4  PERIODIC WORKING-TREE-VS-HEAD RECONCILIATION (closes LL-5
+      + LL-7). Proposed as a CF-TRACK-DUP elevation / a standing
+      housekeeping directive: a dedicated session periodically
+      reconciles the local working tree against HEAD to (a)
+      confirm no NON-superseded authored work was dropped from
+      past pushes, and (b) git rm --cached the superseded
+      duplicate-version files down to the single canonical
+      latest per DR-005.4. Untracked files are classified
+      superseded-vs-missing by checking whether a newer version
+      already holds their content in HEAD BEFORE any add.
+
+------------------------------------------------------------
+5. NEXT-SESSION DIRECTIVE SUMMARY
+------------------------------------------------------------
+
+Per Bill chat-turn directive, the NEXT session (TB00540)
+incorporates the GP-1..GP-4 proposals into governance. Per
+RR-SCOPE-011 one-primary-mission, the governance amendment is
+TB00540's single primary; the 0411001 retirement that TB00540
+v1_0 originally directed is DEFERRED one session to TB00541
+(re-prioritization is a Bill business-judgment call recorded in
+TB00540 v1_1). TB00540 v1_1 carries this document as the input
+and the GP-1..GP-4 proposals as the amendment scope.
+
+NOTE on scope discipline: enacting four proposals across
+possibly more than one controlled document risks exceeding the
+RR-SCOPE-011 one-primary-mission boundary. The TB00540 session
+must decide at chat-turn 1 (DD-011 derivability test) whether
+GP-1..GP-4 fit in ONE TB00000 amendment (they are all TB00000-
+resident behavioral rules, so plausibly yes as one v2_77
+amendment) or must be split across sequential sessions. If they
+do not fit in one amendment, enact GP-1 (the highest-value
+loss-prevention gate) first and carry the rest forward.
+
+------------------------------------------------------------
+6. REVISION HISTORY
+------------------------------------------------------------
+  v1_0  05-31-2026  First issue, authored post-formal-close at
+                    TB00539 per Bill chat-turn directive to
+                    capture lessons learned and incorporate them
+                    into governance next session. Records the
+                    post-close push-correction friction (LL-1
+                    download-vs-working-tree gap; LL-2 missing
+                    pre-commit working-tree-confirm gate; LL-3
+                    trust-clean-verify; LL-4 lead-with-root-cause;
+                    LL-5 untracked-is-not-missing-work; LL-6
+                    standing-checks-carried-not-triggered; LL-7
+                    intermittent past-push drops) and the GP-1..
+                    GP-4 governance-amendment proposals for
+                    TB00540 to enact. Supplements TB00539 SL v1_0
+                    (which remains accurate as of formal close);
+                    no in-place edit of SL v1_0 per CI-005/CI-006.
+
+============================================================
+END OF TB00539 LESSONS LEARNED AND GOVERNANCE PROPOSALS v1_0
+============================================================
