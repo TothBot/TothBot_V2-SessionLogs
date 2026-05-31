@@ -1,10 +1,10 @@
 DocDCN:     TB00000
 DocTitle:   TothBot_V2_Project_Instructions_for_Claude
-DocVersion: v2_75
+DocVersion: v2_76
 DocOwner:   Bill
-DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00000_TothBot_V2_Project_Instructions_for_Claude_v2_75.txt
-DocDate:    05-30-2026
-DocTime:    23:55:00 UTC
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00000_TothBot_V2_Project_Instructions_for_Claude_v2_76.txt
+DocDate:    05-31-2026
+DocTime:    08:35:25 UTC
 
 ============================================================
 TOTHBOT V2 PROJECT INSTRUCTIONS FOR CLAUDE
@@ -34,10 +34,50 @@ in the following ways:
   - The current version is the sole authoritative version.
   - Prior versions are retained by Bill for reference.
 
-This document supersedes and retires TB00000 v2_74 and all
-prior versions. TB00000 v2_75 is the sole authoritative
+This document supersedes and retires TB00000 v2_75 and all
+prior versions. TB00000 v2_76 is the sole authoritative
 document governing how Claude operates in every TothBot V2
 session.
+
+------------------------------------------------------------
+v2_76 CHANGE RECORD (PR-3 / CI-006 — no silent loss)
+------------------------------------------------------------
+
+Per Bill chat-turn directive (this session): two additions,
+no LIVE rule weakened, narrowed, or dropped. Enumerated
+changes:
+
+  1. section 4.1.2 ADDED DR-011 (INCREMENTAL CHECKPOINT-AND-
+     PUSH) — a new absolute standing rule requiring Claude to
+     persist each completed deliverable to GitHub HEAD as it
+     is finished, rather than holding all session work to a
+     single end-of-session push. A session crash or context
+     exhaustion then loses at most the one in-progress
+     artifact, never the whole session. Enacted per Bill
+     verbatim directive: crash recovery / "save your work at
+     each step so if you crap out you don't lose an entire
+     session ... crapping out about every other session."
+     DR-011 is checkpoint-additive: it does NOT replace the
+     DR-008.6 FOUR-OPERATION session-close sequence or the
+     DR-010 HEAD-landing verification; it adds intra-session
+     checkpoints ahead of them.
+
+  2. section 2 ADDED a prominent GITHUB-IS-PUBLIC ACCESS
+     statement (Bill verbatim: "GitHub is Public. You can
+     access any documents you need from GitHub.") to the
+     MANDATORY READING access-mechanism paragraph, reinforcing
+     DEC-097. section 11 STORAGE cross-reference unchanged
+     (already states both repos PUBLIC).
+
+  3. HEADER + DOCUMENT STATUS updated to v2_76 (DocVersion,
+     DocPath filename, DocDate, DocTime, supersession
+     sentence: v2_76 supersedes and retires v2_75).
+
+  NOT IN SCOPE this session (one-mission-per-session per
+  RR-SCOPE-011): the CF-STREAMLINE Option B factoring; the
+  D1 diagram-first migration (TB00534 NSI PRIMARY) is
+  deferred to the next session and runs under the new DR-011
+  checkpoint discipline.
 
 ------------------------------------------------------------
 v2_75 CHANGE RECORD (PR-3 / CI-006 — no silent loss)
@@ -281,6 +321,16 @@ source of truth; tarball-pull from HEAD
 (codeload.github.com/TothBot/<repo>/tar.gz/HEAD) is the
 first access move every session. There is no Claude.ai
 project folder in the workflow.
+
+GITHUB IS PUBLIC. Claude can access any document it needs
+from GitHub. Both TothBot_V2-SessionLogs and TothBot_V2-Docs
+are PUBLIC repositories; Claude pulls any file it requires
+directly from GitHub HEAD via the public tarball (DEC-097)
+at any point in a session — not only the mandatory-reading
+set, but any controlled document, register, spec, diagram,
+session log, or NSI in either repository. Claude never
+declares a document inaccessible without first pulling it
+from GitHub HEAD.
 
 If any document listed below is not present in GitHub
 HEAD, Claude must stop and tell Bill before
@@ -2024,6 +2074,91 @@ DR-010  POST-PUSH GITHUB HEAD LANDING VERIFICATION --
                  VERIFICATION) and MUST include the HEAD-
                  landing verification as the final session-
                  close step after the GitHub upload.
+
+DR-011  INCREMENTAL CHECKPOINT-AND-PUSH -- MANDATORY
+        (v2_76).
+        A session crash, context exhaustion, or tool-budget
+        exhaustion that occurs mid-session must lose at most
+        ONE in-progress deliverable -- never the whole
+        session's work. Claude has recurrently lost entire
+        sessions by holding all authored work in the chat
+        container until a single end-of-session push, then
+        crashing before that push. DR-011 closes that failure
+        mode by requiring each completed deliverable to be
+        persisted as it is finished. Enacted per Bill verbatim
+        directive (this session): save work at each step so a
+        crash does not lose an entire session; crashes were
+        recurring roughly every other session.
+
+        DR-011.1 CHECKPOINT AFTER EACH COMPLETED ARTIFACT.
+                 As soon as any session deliverable (a
+                 controlled-document amendment, a register
+                 entry, a gap-register, an SL, an NSI, a
+                 diagram amendment, or any other authored
+                 artifact) reaches a self-consistent, deliver-
+                 able state, Claude immediately writes the
+                 finished file to /mnt/user-data/outputs/
+                 BEFORE beginning the next artifact. Partial
+                 in-progress files MAY also be checkpointed at
+                 natural sub-boundaries (e.g., header done,
+                 each major section done) so a crash mid-
+                 artifact loses only the current section, not
+                 the whole artifact.
+
+        DR-011.2 INTERMEDIATE GITHUB PERSISTENCE PERMITTED.
+                 For a multi-artifact session, Claude MAY
+                 surface an OPERATION-4-form GitHub upload copy
+                 box (cd + git add + git commit + git push per
+                 section 4.9 CD-003; cd + git only, no C:
+                 mutation per CD-001) for a completed artifact
+                 mid-session, rather than deferring every push
+                 to session close. Each such intermediate push
+                 is a self-contained copy box obeying
+                 RR-SHELL-001 through RR-SHELL-010 and is
+                 verified per DR-010 HEAD landing in the turn
+                 after Bill confirms it. Intermediate pushes do
+                 NOT replace the DR-008.6 session-close
+                 FOUR-OPERATION sequence; they reduce the blast
+                 radius of a crash before that sequence is
+                 reached. A single-artifact session needs no
+                 intermediate push; the section-close OPERATION
+                 4 already persists the one artifact.
+
+        DR-011.3 NO LARGE UNSAVED BATCHES.
+                 Claude does NOT accumulate multiple finished
+                 deliverables in the chat container while
+                 deferring all persistence to one terminal
+                 action. The standing default is: finish an
+                 artifact, checkpoint it, then start the next.
+                 If Claude finds itself holding two or more
+                 finished-but-unsaved deliverables, that is a
+                 DR-011 miss.
+
+        DR-011.4 SCOPE-DISCIPLINE COMPANION.
+                 DR-011 reduces crash blast radius; it does
+                 NOT license taking on more than one primary
+                 mission. RR-SCOPE-011 (one primary mission per
+                 session) remains the first-line defense
+                 against overload. DR-011 is the second-line
+                 defense for the work that IS in scope.
+
+        DR-011.5 SELF-CATCH.
+                 If Claude detects itself about to begin a new
+                 artifact while a just-completed artifact has
+                 not been checkpointed to outputs, or about to
+                 hold a large unsaved batch to a single
+                 terminal push, the guard fired. Self-catch
+                 signal:
+
+                   DR-011 self-caught -- uncheckpointed work --
+                   saving before proceeding.
+
+        DR-011.6 NSI SECTION 0 OCS REFERENCE REQUIREMENT.
+                 Every NSI section 0 OCS payload MUST reference
+                 TB00000 section 4.1.2 DR-011 (INCREMENTAL
+                 CHECKPOINT-AND-PUSH) so each receiving session
+                 operates under the checkpoint discipline from
+                 its first artifact forward.
 
 ------------------------------------------------------------
 4.1.3 CONTENT INTEGRITY RULES (CI-001 THROUGH CI-012)
