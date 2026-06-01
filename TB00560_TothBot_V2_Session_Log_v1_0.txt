@@ -1,0 +1,278 @@
+DocDCN:     TB00560
+DocTitle:   TothBot_V2_Session_Log
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    GitHub.com/TothBot/TothBot_V2-SessionLogs/TB00560_TothBot_V2_Session_Log_v1_0.txt
+DocDate:    06-01-2026
+DocTime:    06:40:00 UTC
+
+============================================================
+TB00560 SESSION LOG
+============================================================
+
+MISSION (this session): make the 0500000 design diagrams the
+sole canonical source for every TothBot-organism architectural
+element, then retire each source. Phase 3 / E2. Primary
+executed: D1 REST CLUSTER R2 migration (dv1_152 -> dv1_153).
+Directed secondary: CF-V038-LEDGER re-attestation (MDR v1_52
+-> v1_53).
+
+============================================================
+1. COLD LOAD
+============================================================
+
+Read from GitHub HEAD (public tarball, branch master):
+  - TB00560_Next_Session_Instructions_v1_0.txt
+  - TB00000 v2_82 (md5 efc133bf13afdbbcccd2e058b9685508 --
+    byte-confirmed in HEAD)
+Then load-on-demand for the mission:
+  - TB00559_TothBot_V2_Session_Log_v1_0.txt (prior log)
+  - TB00558_D1_REST_API_Fact_Level_Gap_Register_v1_0.txt
+    (R2 source register)
+  - 0411002 Kraken_REST_API_Specification dv1_1 (SD-9 source)
+  - 0500000 dv1_152 (md5 01844990058d6c3317a1a062b9710e0b --
+    byte-confirmed vs the TB00560 NSI baseline)
+  - TB00153 DR v1_72 + MDR v1_52; TB00394 v1_1; 0911002 dv1_4
+    (live-register re-verification, not recall).
+
+============================================================
+2. DD-011 CHAT-TURN-1 FP/DP TEST (full option space)
+============================================================
+
+OUTCOME 1 -- single compliant primary = D1 REST CLUSTER R2.
+  A (R2 migration): source register TB00558 already built; the
+    9 R2 facts SD-9-verified vs 0411002 dv1_1 and RR-SCOPE-010
+    confirmed-absent vs live D1; ADD-only desc, figure R held;
+    retires nothing (no 0911002 sec 6.1 two-retirement
+    conflict); continues the in-progress 0411002 cluster
+    sequence; resolves the open R-D8 RECONCILE. LEAST
+    errors/rework.
+  B (open a different E2 spec 0411003 / 0610000 / 0711001/2/3):
+    each needs a FIRST DD-014 fact-audit of an unaudited
+    diagram (CF-V040-METHOD) before any migration, and abandons
+    the in-progress 0411002 mid-cluster -- MORE rework, higher
+    error surface. REJECTED (no Bill phase-sequencing directive).
+  C (governance/housekeeping only): non-blocking; does not
+    advance the HIGH/loss REST migration. REJECTED as a
+    primary. (The CF-V038-LEDGER re-attestation was carried as
+    a DIRECTED secondary tied to this migration, not a
+    substitute primary -- see section 5.)
+  Executed per RR-SCOPE-005; not surfaced as ratification.
+
+============================================================
+3. FIVE CONSOLIDATION CHECKS (live-register verified)
+============================================================
+
+CHECK 1 POSITION: Stream 2 / Phase 3 / E2 active. MOVE 14 =
+  8 RETIRED (0411001, 0511001-6, 0811005) + 6 remaining
+  (0411002 in progress -- R1 done, R2 this session, R3..R6 +
+  re-audit remain; 0411003, 0610000, 0711001/2/3 not started).
+  TARGET = 0411002 REST, CLUSTER R2. Verified against live
+  TB00394 v1_1 (0411002 = MOVE -> sec 2 / D1, P3/E2) + TB00153
+  DR v1_72 (max DEC-105 = 0511006 retirement, E1 complete;
+  next DEC-106).
+CHECK 2 CANONICAL vs DISPERSED: pre-session D1/WS + D1/REST-R1
+  fact-level canonical; all other classes dispersed. This
+  session adds D1/REST CLUSTER R2 (GetWebSocketsToken +
+  GetOHLCData wire). D1/REST still NOT fully canonical (R3..R6
+  remain). D2-D9 dispersed (coarse q1-q5, CF-V040-METHOD).
+CHECK 3 RETIREMENT LEDGER (DD-012): 8 retired -- do not touch.
+  0411002 in progress; DR-078 blocks its retirement until D1
+  is REST fact-comprehensive (R1..R6 + clean re-audit). R2
+  retires nothing. Confirmed.
+CHECK 4 DRIFT/RISK: remaining REST wire (R3..R6) + un-migrated
+  MOVE/SPLIT architecture = expected open work, not silent
+  drift. V-038: re-attested this session through dv1_153
+  (MDR v1_53, section 5) -- 0 open V-038, 0 open V-040;
+  CF-V038-LEDGER CLEARED. 0911002 dv1_4 status still reads
+  "PHASE 1/2/3 NOT STARTED" while E1 complete / E2 active
+  (CF-0911002-STALE confirmed, non-blocking). 0611001/0611002
+  still untracked in TB00394 (CF-0611-CLASSIFY). No blocking
+  drift for R2.
+CHECK 5 ON/OFF-TRACK + NEXT STEP: ON-TRACK but INCOMPLETE
+  (D1/WS + D1/REST R1+R2 canonical; D2-D9 + REST R3..R6 + the
+  un-migrated specs still hold live architecture). Derived
+  single next step = migrate D1 REST CLUSTER R2 -> executed;
+  CLUSTER R3 is next (TB00561 NSI section 2).
+
+============================================================
+4. PRIMARY EXECUTED -- D1 REST CLUSTER R2 (dv1_153)
+============================================================
+
+Migrated the 9 CLUSTER R2 wire facts (GetWebSocketsToken +
+GetOHLCData; 1 loss-prevention-flagged: REST-WST-006 no-token
+startup-halt) from the TB00558 register into the D1
+container:Kraken_REST_API governs <desc>, diagram-first per
+DD-002/DD-003:
+
+  REST-WST-002  POST /0/private/GetWebSocketsToken, nonce body,
+                TRADE key
+  REST-WST-003  response {token (str), expires (int sec)}
+  REST-WST-004  token validity ~900s; fresh per reconnect, do
+                NOT cache (adds the 900s value + do-not-cache
+                rule; fresh-per-reconnect already canonical via
+                WS-REC-004, NOT duplicated)
+  REST-WST-006  [LP] error: retry 3x @1s, then HALT startup +
+                alert operator
+  REST-OHLC-002 GET /0/public/OHLC, pair + interval=1440 +
+                since(optional), public no-auth
+  REST-OHLC-003 response [time,open,high,low,close,vwap,volume,
+                count] + last; each field string -> Decimal
+  REST-OHLC-005 up to 720; 719 committed after the HR-WM-013
+                [-1] forming-candle exclusion, ~2yr daily
+  REST-OHLC-008 startup warm-up triple per pair: interval=5
+                (ATR seed) + interval=60 (EMA20/50 seed) +
+                interval=1440 (initial regime), same [-1]
+                exclusion + AR-035 stagger
+  REST-OHLC-009 general-error path: retry once @2s, then
+                OHLC_FETCH_FAILED + use prior regime, do NOT
+                halt
+
+R-D8 RECONCILE RESOLVED (SD-3, diagram is authority): the
+  REST-OHLC-009 GENERAL-error path (retry once @2s) and the
+  A-24 prose RATE-LIMIT / HTTP-429 path (retry 3x, then stale
+  regime; 0411002 REST-ERR-005) are DISTINCT Kraken error
+  classes, NOT a contradiction. The 1-vs-3 retry-count
+  difference is correct; both policies are preserved under
+  their own labels, neither value overwritten. The forming-
+  candle [-1] exclusion remains governed solely by rule
+  HR-WM-013 (cites AR-033) and was NOT re-stated.
+
+VERIFICATION:
+  - SD-9: all 9 confirmed present in 0411002 dv1_1 (L187-319).
+  - RR-SCOPE-010 confirm-absent vs live dv1_152: all 9 absent
+    from the D1 diagram-alone corpus -- the call NAMES appear
+    in drill_targets + q1_do/q4_triggers and purposes are
+    present, but the wire (endpoints, bodies, response schemas,
+    900s value, warm-up intervals, general-error retry policy)
+    was not derivable. The already-canonical WS-REC-004 fresh-
+    token, HR-WM-013/AR-033 [-1] exclusion, AR-035 stagger, and
+    GetOHLCData purpose were NOT re-migrated (no duplication).
+  - BINARY TEST (DEC-096): GetWebSocketsToken + GetOHLCData wire
+    is TothBot-organism (Kraken event-source) connection
+    architecture -> D1 (YES). No non-architecture seed value in
+    this cluster (the only such value in 0411002, param
+    liquidity_refresh_hours, stays in TB00000 sec 8 / 0500000
+    sec 9 and is not in R2).
+  - SD-4 prose-in-sync: D1 sec-2 A-34 narration added same
+    session (diagrams govern; prose follows).
+
+R-STATE: figure D1 HELD at R10 per the TB00453 bright line --
+  a <desc>-only edit (plus figcaption (a) identifier dv1_152 ->
+  dv1_153 + A-34 prose + section-14 entry + DC header) touches
+  no visible SVG <text>/geometry; no SVG <title>/
+  diagram_canonical/title-bar/viewBox change (1500x1600
+  preserved). Document version bumped dv1_152 -> dv1_153.
+
+VALIDATION (pre-delivery):
+  - Geometry byte-identical to dv1_152 (676 SVG geometry tags,
+    0 diffs).
+  - Visible <text> byte-identical (954 elements, 0 diffs).
+  - <desc> count identical (130 open / 127 close; no desc
+    added/removed -- R2 encoded into the existing
+    Kraken_REST_API desc).
+  - Tag balance: <p>/<\/p> +1/+1 (the A-34 paragraph, balanced);
+    figure 10/10, svg 10/10, figcaption 10/10, pre 126/126;
+    exactly ONE <h2>14. Revision History</h2>.
+  - DR-007.9: NEW parses identically to dv1_152 HEAD under both
+    strict-XML (same 5 entity-bearing SVG blocks fail at the
+    same positions -- NO regression; the D1 block, index 1, is
+    WELL-FORMED) and html5lib (PARSE OK). No stray ampersand or
+    raw angle bracket in the added R2 desc / A-34 prose.
+  - dv1_153 outputs md5 (pre-push, download-area copy):
+    1b952319207d7be6bf8a8aeb4147e21b. Authoritative HEAD md5 is
+    re-computed post-push (DR-010).
+
+SCOPE NOT TOUCHED (carry forward): 0411002 NOT retired (2 of 6
+  clusters); REST R3..R6 (29 gaps) carry forward; D1-REST
+  retirement remains DR-078-gated until the full register
+  migrates + a clean re-audit confirms zero remaining gaps.
+
+============================================================
+5. DIRECTED SECONDARY -- CF-V038-LEDGER RE-ATTESTATION
+   (MDR v1_52 -> v1_53)
+============================================================
+
+The TB00560 NSI CHECK 4 + CF-V038-LEDGER directed re-attesting
+the V-038 / V-040 open-ledger at this migration, dv1_153
+included. Executed as a bounded register-hygiene amendment tied
+to the primary (not a substitute primary):
+
+  - Extended the v1_49 dv1_140 consolidation ledger FORWARD:
+    the dv1_140 baseline (0 open V-038, 0 open V-040; Tier 1 +
+    D1-D9 design-complete) is reconciled through dv1_153.
+  - Every increment dv1_141..dv1_153 was a D1-region <desc>
+    edit with its DD-002 prose authored the SAME session, so no
+    V-038 diagram-vs-prose conflict was ever left open; the
+    two dv1_143 conflict cells (WS-RL-002, WS-REC-002) were
+    RESOLVED. Each increment was ADD-only / R-held, so no V-040
+    regression; non-D1 figures untouched since dv1_140.
+  - NET: 0 open V-038, 0 open V-040 at dv1_153. CF-V038-LEDGER
+    CLEARED.
+  - Honesty bound: this is a no-new-open-defect reconciliation,
+    NOT a fresh 510-cell V-040 re-audit (that method work is
+    CF-V040-METHOD, separate). Sourced from the live dv1_153
+    figcaptions + the in-range session logs.
+  - No new DR-NNN (highest remains DR-078). CI-012 footer inner
+    title + END marker advanced v1_52 -> v1_53.
+
+============================================================
+6. CLAUDE ERRORS THIS SESSION
+============================================================
+
+None. All edits anchored on strings re-verified unique (count=1)
+before applying; geometry/visible-text byte-identity and
+DR-007.9 no-regression confirmed before delivery. No bad
+artifact emitted.
+
+============================================================
+7. CARRY-FORWARD LEDGER (-> TB00561)
+============================================================
+
+  CF-REST-MIGRATE   HIGH/loss. D1 REST backlog now 29 gaps
+                    (R1+R2 LANDED). CLUSTERS R3..R6, one per
+                    session, LP-flagged first within a cluster.
+                    R3 next = reconciliation endpoints wire
+                    (GetOpenOrders + GetAccountBalance +
+                    QueryOrders; 8 gaps, LP: R-E4 + R-E8
+                    DEGRADED-state on reconcile fail). After R6:
+                    re-audit (register zeroed), then DR-078-gated
+                    0411002 retire (preceded by the TB00511
+                    cold-load precondition check).
+  CF-V040-METHOD    HIGH/loss. D2-D9 coarse q1-q5, NOT DD-014
+                    fact-audited; each E2 migration into D2-D9
+                    runs the fact audit first.
+  CF-0611-CLASSIFY  0611001/0611002 live in HEAD, absent from
+                    TB00394 AA=06. Classify MOVE/STAY/SPLIT
+                    (binary test); amend TB00394.
+  CF-0911002-STALE  0911002 dv1_4 status reads "Phase 1/2/3 NOT
+                    STARTED" while E1 complete / E2 active.
+                    Update (STAY doc).
+  CF-E3-REFREF      POST-MIGRATION per-doc keep-vs-repoint
+                    reference sweep after MOVE migrations land.
+  CF-STREAMLINE     Non-blocking. TB00000 items.
+  CF-A              Non-blocking. TB00546 SL absent from HEAD;
+                    Get-ChildItem TB00546_* C: check.
+  CF-14-ABSENT      Preservation. 0500000 sec-14 absent entries
+                    preserved as-is in 0521001; not rebuilt.
+  [CLEARED]         CF-V038-LEDGER -- re-attested through
+                    dv1_153 at MDR v1_53 this session; removed
+                    from the ledger.
+
+============================================================
+8. SESSION CLOSE
+============================================================
+
+Artifacts produced:
+  - 0500000 dv1_153 (Docs) -- D1 REST CLUSTER R2 migration.
+  - TB00153 MDR v1_53 (SessionLogs) -- V-038/V-040 re-attest.
+  - TB00560 SL (this) + TB00561 NSI (SessionLogs).
+Push: OP4 box in TB00561 NSI section 0 / and the chat OP4 box.
+Post-push: DR-010 HEAD landing verification (fresh tarball
+  pull + md5) on the dv1_153 + MDR v1_53 files before treating
+  the session closed; one-version rule confirmed (dv1_152 +
+  MDR v1_52 gone from HEAD).
+
+============================================================
+END
+============================================================

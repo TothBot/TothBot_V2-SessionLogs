@@ -1,0 +1,216 @@
+DocDCN:     TB00561
+DocTitle:   Next_Session_Instructions
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    GitHub.com/TothBot/TothBot_V2-SessionLogs/TB00561_Next_Session_Instructions_v1_0.txt
+DocDate:    06-01-2026
+DocTime:    06:45:00 UTC
+
+============================================================
+TB00561 NEXT SESSION INSTRUCTIONS
+============================================================
+
+Authored at TB00560 close (D1 REST CLUSTER R2 landed; 0500000
+dv1_152 -> dv1_153; CF-V038-LEDGER re-attested + CLEARED at MDR
+v1_53). Streamlined per the established NSI pattern: each
+element stated once; the five consolidation checks live in
+section 1 only; the OCS points to them rather than repeating.
+
+============================================================
+0. OPENING CHAT STATEMENT (OCS) -- COPY BOX
+============================================================
+
+Cold-load TB00561_Next_Session_Instructions_v1_0.txt + TB00000
+from GitHub HEAD (both repos PUBLIC, branch master) and follow
+it.
+
+============================================================
+1. FIVE CONSOLIDATION CHECKS -- DO THESE (NOT A REPORT)
+============================================================
+
+These are the live-register operations that drive the
+migration. Re-verify every value against fresh HEAD (TB00394,
+0911002, TB00153 DR + MDR, the live 0500000 figures); do not
+trust the printed baseline. Apply the binary architecture test
+(TB00501/DEC-096) to each classification -- architecture goes
+in a 0500000 figure (then retire the source); the only thing
+that stays out is a transient seed VALUE (TB00000 sec 8 /
+0500000 sec 9). FLAG anything unverifiable rather than guessing.
+
+CHECK 1 -- ESTABLISH POSITION, to pick the next source to
+  migrate. Baseline: Stream 2 / Phase 3 / E2 active (E1
+  complete, E3 not started). MOVE 14 = 8 retired (0411001,
+  0511001-6, 0811005) + 6 remaining (0411002 in progress --
+  CLUSTERS R1+R2 migrated, R3..R6 + re-audit remain; 0411003,
+  0610000, 0711001, 0711002, 0711003 not started). SPLIT 10 =
+  0 collapsed (all E3). STAY 30. TARGET 1 (0500000).
+
+CHECK 2 -- DETERMINE, per architectural class, whether it is
+  FULLY CANONICAL in a 0500000 figure (fact-level comprehensive
+  via a DD-014 audit, source retired) or STILL DISPERSED
+  (architecture live in a source doc, or figure only coarse
+  q1-q5 design-complete, not fact-audited). Read it off the
+  live figures. Baseline:
+    Kraken connection (D1)   -- CANONICAL for WS (0411001
+                                retired) + REST CLUSTERS R1+R2
+                                (conn/auth/HTTP-client +
+                                GetWebSocketsToken + GetOHLCData
+                                wire, dv1_153). REST R3..R6
+                                (0411002) NOT yet (29 gaps,
+                                TB00558 register).
+    Data/info flows (D6,6/7) -- dispersed (D6 coarse only).
+    8 gates G1-G8 (D2,D8,D9) -- dispersed (Gate-7 risk 0610000
+                                + signal params 0711001/3 live).
+    Exit layers L1/L2/L3 (D3)-- dispersed (coarse only).
+    Regime taxonomy (D4)     -- dispersed (0711002/0711003 live).
+    CIATS flows (D5)         -- dispersed (0211001 arch live).
+    Inter-entity K<->T<->C   -- dispersed (only D1/WS + D1/REST
+                                R1+R2 canonical).
+  Net: D1/WS + D1/REST R1+R2 are the only fact-level canonical
+  surfaces; all other classes dispersed.
+
+CHECK 3 -- CHECK THE RETIREMENT LEDGER (DD-012): do not touch a
+  retired spec; know which still hold un-migrated architecture.
+  Baseline: retired (8) 0411001, 0511001-6, 0811005. In
+  progress (1) 0411002 -- DR-078 blocks its retirement until D1
+  is fact-comprehensive for REST (R1+R2 done; R3..R6 + a clean
+  re-audit remain). Un-migrated, live (not started): 0411003,
+  0610000, 0711001, 0711002, 0711003, 0211001, + 9 SPLIT
+  domain/anchor docs.
+
+CHECK 4 -- DETECT DRIFT / RISK and resolve or flag before
+  proceeding. Element in a dispersed doc but not in a figure:
+  the remaining REST wire contract (R3..R6) + all un-migrated
+  MOVE/SPLIT architecture (expected open work, not silent
+  drift). V-038 diagram-vs-prose: 0 open through dv1_153 (A-34
+  prose-follows-diagram in sync same session); the historical
+  re-attestation gap is CLEARED -- MDR v1_53 reconciled the
+  V-038/V-040 ledger forward through dv1_153 at TB00560
+  (CF-V038-LEDGER removed). CFs blocking the SD-5 final sweep:
+  CF-REST-MIGRATE, CF-V040-METHOD, the 5 un-migrated E2 specs,
+  the SPLIT-10 collapse, and CF-0611-CLASSIFY (0611001/0611002
+  untracked until classified). Others (section 3) are
+  non-blocking or post-migration.
+
+CHECK 5 -- DERIVE on-track/off-track and the single next step
+  from checks 1-4, then DO it. Expected from the baseline:
+  ON-TRACK but INCOMPLETE (D1/WS + D1/REST R1+R2 canonical;
+  R3..R6 + D2-D9 unverified; 16 sources still hold live
+  architecture), and the single next step = migrate D1 REST
+  CLUSTER R3 (section 2).
+
+BASELINE REGISTERS (re-verify): TB00394 v1_1; TB00153 DR v1_72
+(max DEC-105, next DEC-106); MDR v1_53; 0911002 dv1_4 (status
+stale, CF-0911002-STALE); 0500000 dv1_153, md5 = the post-push
+DR-010 HEAD value (re-verify against fresh HEAD) -> dv1_154 when
+R3 lands.
+
+============================================================
+2. PRIMARY MISSION (PROPOSED) -- D1 REST CLUSTER R3
+============================================================
+
+Migrate the CLUSTER R3 gaps (reconciliation endpoints wire:
+GetOpenOrders + GetAccountBalance + QueryOrders) from the
+TB00558 register into the D1 figure, diagram-first, ADD-only.
+8 gaps; LP-flagged first within the cluster = R-E4 + R-E8
+(reconcile-fail -> DEGRADED state). Steps:
+  S-1  Re-pull TB00558 register + 0411002 dv1_1 + live D1. For
+       each R3 gap: SD-9 source-verify vs 0411002, RR-SCOPE-010
+       confirm-absent vs live D1 before encoding. For R-E7
+       (partial -- spot/main balance present via WS-BAL-002;
+       ZUSD->Decimal parse + portfolio_baseline_USD absent),
+       encode only the missing wire, do NOT duplicate the
+       already-canonical purpose. The R-E1/R-E5/R-E9 purposes
+       are already in D1 (WS-EXE-019, WS-BAL-005/002, REST
+       container) -- NOT re-migrated.
+  S-2  Encode into the D1 container (Kraken_REST_API governs
+       <desc> for wire/behavioral facts; SVG <text> only if a
+       visual fact). R-state HELD per TB00453 if desc-only.
+  S-3  SD-4 prose-in-sync same session (diagrams govern).
+  S-4  Bump 0500000 dv1_153 -> dv1_154; one-version rule git rm
+       --cached dv1_153. OP4 push box (Docs: 0500000;
+       SessionLogs: SL/NSI). Post-push DR-010 md5 verify.
+  S-5  Do NOT retire 0411002 (3 of 6 clusters after R3). Carry
+       R4..R6.
+
+  R3 GAPS (8, from TB00558):
+    R-E2  REST-OO-002   GetOpenOrders POST /0/private/OpenOrders
+    R-E3  REST-OO-003   GetOpenOrders response open{order_id:{...}}
+    R-E4  REST-OO-006   [LP] error: retry once @2s, then
+                        RECONCILIATION_FAILED + alert + DEGRADED
+    R-E6  REST-BAL-002  GetAccountBalance POST /0/private/Balance
+    R-E7  REST-BAL-003/004 [partial] response {ZUSD,XXBT,...}
+                        strings -> Decimal; returned USD as
+                        portfolio_baseline_USD
+    R-E8  REST-BAL-007  [LP] error: retry once @2s, then
+                        BALANCE_RECONCILIATION_FAILED + DEGRADED
+    R-E10 REST-QOI-002/003 QueryOrders POST /0/private/QueryOrders
+    R-E11 REST-QOI-005  error: fall back to GetOpenOrders for
+                        full reconciliation
+
+CLUSTER ORDER (one per session): R1 conn/auth [DONE dv1_152] ->
+R2 GetWebSocketsToken + GetOHLCData [DONE dv1_153, R-D8 RECONCILE
+resolved] -> R3 recon endpoints [NEXT] -> R4 CancelAllOrders +
+Status API -> R5 Ticker full contract -> R6 general error
+taxonomy. After R6: re-audit (register zeroed), then DR-078-
+gated 0411002 retirement (DD-012 git rm --cached, preceded by
+the TB00511 cold-load precondition check).
+
+ALTERNATIVE (Bill business judgment -- phase sequencing): open a
+different E2 spec instead (0411003 D1/sec9; 0610000 risk D8;
+0711001/2/3 D2/D4) -- each needs a FIRST DD-014 audit of an
+unaudited diagram (CF-V040-METHOD). The DD-011 gate governs.
+
+============================================================
+3. CARRY-FORWARD LEDGER
+============================================================
+
+  CF-REST-MIGRATE   HIGH/loss. D1 REST backlog: 29 gaps remain
+                    (R1+R2 LANDED dv1_153), CLUSTERS R3..R6, one
+                    per session, R3 next, LP-flagged first
+                    within a cluster (R3 LP: R-E4 + R-E8); then
+                    re-audit, then DR-078-gated 0411002 retire.
+  CF-V040-METHOD    HIGH/loss. D2-D9 used coarse q1-q5, NOT
+                    DD-014 fact-audited; each E2 migration into
+                    D2-D9 runs the fact audit first.
+  CF-0611-CLASSIFY  0611001/0611002 live in HEAD, absent from
+                    TB00394 AA=06. Classify MOVE/STAY/SPLIT
+                    (binary test); amend TB00394.
+  CF-0911002-STALE  0911002 dv1_4 status reads "Phase 1/2/3 NOT
+                    STARTED" while E1 is complete + E2 active.
+                    Update to E1 complete / E2 active (STAY doc).
+  CF-E3-REFREF      POST-MIGRATION. Per-doc keep-vs-repoint
+                    reference sweep after MOVE migrations land.
+  CF-STREAMLINE     Non-blocking. TB00000 items 4/5/G/L.
+  CF-A              Non-blocking. TB00546 SL absent from HEAD;
+                    Get-ChildItem TB00546_* C: check.
+  CF-14-ABSENT      Preservation. 0500000 sec-14 absent entries
+                    preserved as-is in 0521001; not rebuilt.
+  [CLEARED]         CF-V038-LEDGER -- re-attested through dv1_153
+                    at MDR v1_53 (TB00560). Removed from ledger.
+
+============================================================
+4. STANDING DIRECTIVES
+============================================================
+
+  - Binary test (DEC-096) + DR-078 fact-audit gate: mandatory
+    before any classification / retirement.
+  - Diagrams govern (sec 4.2): author architecture in the
+    figure first; prose narrates; conflict -> diagram wins,
+    prose updated (V-038). ADD-only amendments hold R-state
+    (TB00453).
+  - GitHub HEAD is the sole source of truth; pull fresh. One-
+    version rule on every bump (git rm --cached the superseded).
+  - C: drive (sec 4.4): Claude authors only cd + git add +
+    commit + push + git rm --cached; never mutates C:; plain
+    git rm prohibited.
+  - Push box (sec 4.5): literal absolute paths; branch master
+    both repos; ASCII commit msg; PowerShell single-quote wrap;
+    no file-staging.
+  - One primary per session; ceiling 3 non-SL/NSI/OCS/push
+    artifacts; question-box tools prohibited; TothBot V2 code
+    authored only in Claude Code.
+
+============================================================
+END OF DOCUMENT
+============================================================
