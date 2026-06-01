@@ -1,0 +1,193 @@
+DocDCN:     TB00568
+DocTitle:   Next_Session_Instructions
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    GitHub.com/TothBot/TothBot_V2-SessionLogs/TB00568_Next_Session_Instructions_v1_0.txt
+DocDate:    06-01-2026
+DocTime:    18:25:10 UTC
+
+============================================================
+TB00568 NEXT SESSION INSTRUCTIONS
+============================================================
+
+Authored at TB00567 close. PRIMARY EXECUTED: CF-G2-VOL-FORMULA
+D2 reconcile (0500000 dv1_157 -> dv1_158; D2 R8 HELD; D2
+gate:G2_Liquidity q1_do now references the D1-owned REST-TKR-005
+value; divergent vol_24h * mid_price removed). No DEC (DR stays
+v1_73); no MDR increment (drift was a CF, not an open MDR
+entry; MDR v1_53). CF-G2-VOL-FORMULA CLOSED. Each element
+stated once; the five checks live in section 1 only; the OCS
+points to them.
+
+============================================================
+0. OPENING CHAT STATEMENT (OCS) -- COPY BOX
+============================================================
+
+Cold-load TB00568_Next_Session_Instructions_v1_0.txt + TB00000
+from GitHub HEAD (both repos PUBLIC, branch master; use
+tarball, not the API) and follow it.
+
+============================================================
+1. FIVE CONSOLIDATION CHECKS -- DO THESE (NOT A REPORT)
+============================================================
+
+Re-verify every value against fresh HEAD (TB00394, 0911002,
+TB00153 DR + MDR, the live 0500000 figures); do not trust the
+printed baseline. Apply the binary architecture test
+(TB00501/DEC-096): architecture goes in a 0500000 figure (then
+retire the source); the only thing that stays out is a
+transient seed VALUE (TB00000 sec 8 / 0500000 sec 9). FLAG
+anything unverifiable rather than guessing.
+
+CHECK 1 POSITION: Stream 2 / Phase 3 / E2 active (E1 complete,
+  E3 not started). MOVE 14 = 9 retired (0411001, 0511001-6,
+  0811005, 0411002) + 5 remaining (0411003, 0610000, 0711001,
+  0711002, 0711003 -- none started). SPLIT 10 = 0 collapsed.
+  STAY 30. TARGET 1 (0500000).
+CHECK 2 CANONICAL vs DISPERSED: D1 surface canonical + re-
+  audited (dv1_157, REST R1-R6); D2 gate:G2_Liquidity now
+  reconciled to D1 (dv1_158). D2-D9 + the 5 un-migrated E2
+  specs still dispersed (D2-D9 are coarse q1-q5, NOT DD-014
+  fact-audited -- CF-V040-METHOD).
+CHECK 3 RETIREMENT LEDGER (DD-012): retired (9) 0411001,
+  0511001-6, 0811005, 0411002 -- do not touch. Un-migrated,
+  live (not started): 0411003, 0610000, 0711001, 0711002,
+  0711003, 0211001, + 9 SPLIT domain/anchor docs. The DD-012
+  ledger is this CHECK-3 baseline (NOT TB00394, per DEC-106).
+CHECK 4 DRIFT/RISK: un-migrated MOVE/SPLIT = expected open
+  work, not drift. CF-G2-VOL-FORMULA CLOSED at TB00567 (D2
+  agrees with D1). V-038 0 open through dv1_158; V-040 0 open
+  (MDR v1_53). CFs blocking the SD-5 final sweep: CF-V040-
+  METHOD, the 5 un-migrated E2 specs, the SPLIT-10 collapse,
+  CF-0611-CLASSIFY.
+CHECK 5 ON/OFF-TRACK + NEXT STEP: expected ON-TRACK (D1 surface
+  canonical and clean; D2 reconciled; D3-D9 + 5 specs still
+  hold live architecture). The single next step = begin the
+  next E2 source migration (section 2). Each non-D1 spec needs
+  a FIRST DD-014 fact audit of its target diagram (CF-V040-
+  METHOD) before any retirement.
+
+BASELINE REGISTERS (re-verify): TB00394 v1_1; TB00153 DR v1_73
+(max DEC-106, next DEC-107); MDR v1_53; 0911002 dv1_4 (status
+stale, CF-0911002-STALE); 0500000 dv1_158, md5
+04870b6b5bbf22aead77b32f25080007 (re-verify against fresh HEAD).
+
+============================================================
+2. PRIMARY MISSION (PROPOSED) -- 0411003 E2 MIGRATION
+============================================================
+
+Continue the Kraken-interface (AA=04) consolidation now that
+both 0411001 (WS) and 0411002 (REST) are retired. 0411003
+Kraken_Fee_Rate_Limit_Spec is the remaining AA=04 MOVE source
+(TB00394: MOVE -> sec 2 / D1 + sec 9). Its target D1 is already
+the DD-014-audited diagram, so the fact audit reuses the D1
+frame rather than auditing a fresh unaudited diagram. Steps:
+
+  S-1  Pull fresh 0411003 + 0500000 dv1_158. Build a DD-014
+       fact-level gap register for 0411003 vs the D1 diagram-
+       alone corpus (which facts are already canonical in D1
+       vs absent): the fee schedule (FEE_MAKER_PCT /
+       FEE_TAKER_PCT are SEED VALUES -> stay in sec 9 per the
+       binary test; the fee-tier MECHANISM is architecture ->
+       D1) and the rate-limit ceiling/decrement architecture
+       (cross-check against the already-canonical ar:AR-030
+       maxratecount + the REST-ERR-005 rate-limit policy).
+  S-2  Migrate the absent architectural facts into the D1
+       container <desc> diagram-first (DD-002/DD-003), one
+       coherent cluster, ADD-only where possible (R held per
+       TB00453 if <desc>-only). Seed VALUES stay in sec 9.
+       Bump 0500000 dv1_158 -> dv1_159; one-version rule (git
+       rm --cached dv1_158).
+  S-3  REGISTERS: MDR only if a V-038/V-040 conflict is closed.
+       Mint DEC-107 only if a new decision is taken; else DR
+       stays v1_73. 0411003 retirement is DR-078-gated and
+       does NOT occur until the full 0411003 gap register
+       migrates AND a clean DD-014 re-audit confirms zero
+       remaining gaps (the 0411002 precedent: migrate-then-
+       re-audit-then-retire, never in the same session).
+  S-4  OP4 push box (Docs: add dv1_159 + git rm --cached
+       dv1_158; SessionLogs: SL/NSI + any register edits), then
+       post-push DR-010 verification.
+
+ALTERNATIVE (Bill business judgment -- phase sequencing): take
+a different E2 spec instead -- 0610000 (risk D8), 0711001
+(SSS D2/sec9), 0711002 (regime D4), or 0711003 (asset selection
+D2/D4); each non-D1 target needs a FIRST DD-014 audit of an
+unaudited diagram (CF-V040-METHOD). Or take a light non-blocking
+cleanup as primary: CF-0611-CLASSIFY (classify 0611001/0611002
+in TB00394) or CF-0911002-STALE (update the plan status). The
+DD-011 gate governs; one primary per session.
+
+============================================================
+3. CARRY-FORWARD LEDGER
+============================================================
+
+  CF-REST-FEE-MIGRATE   E2. THIS session's proposed primary --
+                        0411003 Kraken_Fee_Rate_Limit_Spec MOVE
+                        -> D1 + sec 9. DD-014 fact audit first;
+                        seed VALUES (FEE_MAKER/TAKER_PCT) stay
+                        in sec 9; retirement DR-078-gated.
+  CF-V040-METHOD        HIGH/loss. D2-D9 used coarse q1-q5, NOT
+                        DD-014 fact-audited; each E2 migration
+                        into D2-D9 runs the fact audit first.
+                        (D1 is already audited.)
+  CF-0611-CLASSIFY      0611001/0611002 live in HEAD, absent
+                        from TB00394 AA=06. Classify
+                        MOVE/STAY/SPLIT (binary test); amend
+                        TB00394.
+  CF-0911002-STALE      0911002 dv1_4 status reads "Phase
+                        1/2/3 NOT STARTED" while E1 complete +
+                        E2 active. Update to E1 complete / E2
+                        active (STAY doc).
+  CF-E3-REFREF          POST-MIGRATION. Per-doc keep-vs-repoint
+                        reference sweep after MOVE migrations
+                        land; includes the retired 0411001 +
+                        0411002 references.
+  CF-STREAMLINE         Non-blocking. TB00000 items 4/5/G/L.
+  CF-A                  Non-blocking. TB00546 SL absent from
+                        HEAD; Get-ChildItem TB00546_* C: check.
+  CF-14-ABSENT          Preservation. 0500000 sec-14 absent
+                        entries preserved as-is in 0521001; not
+                        rebuilt.
+
+  CLOSED THIS SESSION: CF-G2-VOL-FORMULA (D2 reconciled to D1,
+          dv1_158).
+
+============================================================
+4. STANDING DIRECTIVES
+============================================================
+
+  - Binary test (DEC-096) + DR-078 fact-audit gate: mandatory
+    before any classification / retirement.
+  - Retirement = git rm --cached + commit + push (Claude-
+    authored); C: copy preserved; git history keeps prior
+    versions; no rt-file, no tombstone (TB00000 sec 6). Bill
+    approves; Claude never self-approves -- but a DR-078-gated,
+    DD-014-cleared retirement is rule-bound and executed.
+  - Retirement tracking (DEC-106): a retirement is recorded
+    ONLY in the DD-012 ledger (this CHECK-3 retired list +
+    count). TB00394 is amended ONLY for MOVE/STAY/SPLIT
+    classification changes, NEVER for retirement status. Do
+    NOT author or honor any instruction to bump TB00394 on a
+    retirement.
+  - Diagrams govern (sec 4.2): author architecture in the
+    figure first; prose narrates; conflict -> diagram wins,
+    prose updated (V-038). ADD-only / <desc>-only edits hold
+    R-state (TB00453).
+  - GitHub HEAD is the sole source of truth; pull fresh. One-
+    version rule on every bump (git rm --cached the superseded).
+  - C: drive (sec 4.4): Claude authors only cd + git add +
+    commit + push + git rm --cached; never mutates C:; plain
+    git rm prohibited.
+  - Push box (sec 4.5): literal absolute paths; branch master
+    both repos; ASCII commit msg; PowerShell single-quote wrap;
+    no file-staging.
+  - Diagram-bearing deliverable = single well-formed .html with
+    inline SVG; DR-007.9 well-formedness check pre-delivery.
+  - One primary per session; ceiling 3 non-SL/NSI/OCS/push
+    artifacts; question-box tools prohibited; TothBot V2 code
+    authored only in Claude Code.
+
+============================================================
+END OF DOCUMENT
+============================================================

@@ -1,0 +1,130 @@
+DocDCN:     TB00567
+DocTitle:   TothBot_V2_Session_Log
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    GitHub.com/TothBot/TothBot_V2-SessionLogs/TB00567_TothBot_V2_Session_Log_v1_0.txt
+DocDate:    06-01-2026
+DocTime:    18:25:10 UTC
+
+============================================================
+TB00567 SESSION LOG
+============================================================
+
+PRIMARY: CF-G2-VOL-FORMULA D2 RECONCILE (the TB00567 NSI v1_1
+proposed primary). Outcome: EXECUTED. 0500000 dv1_157 ->
+dv1_158, figure D2 Trading_Pipeline R8 HELD. The D2
+gate:G2_Liquidity q1_do was reconciled to reference the
+D1-owned REST-TKR-005 value; the divergent vol_24h * mid_price
+formula was removed. No DEC, no MDR increment (drift was a
+carry-forward, not an open MDR entry); DR stays v1_73.
+
+============================================================
+1. DOCUMENTS READ (GitHub HEAD, tarball)
+============================================================
+
+  - TB00000 v2_82 (md5 efc133bf13afdbbcccd2e058b9685508).
+  - TB00567 NSI v1_1 (inbound, OCS-named; md5 8b1c99...e4ae).
+  - 0500000 dv1_157 (md5 ece24b67be59a8182f006ef4951fe684 --
+    matched the NSI baseline; HEAD unchanged since dv1_157).
+
+============================================================
+2. FIVE CONSOLIDATION CHECKS (live-HEAD verified)
+============================================================
+
+CHECK 1 POSITION: Stream 2 / Phase 3 / E2 active. MOVE 14 =
+  9 retired + 5 remaining (0411003, 0610000, 0711001, 0711002,
+  0711003). TARGET 1. Source action: the D2 reconcile.
+CHECK 2 CANONICAL vs DISPERSED: D1 surface canonical (WS + REST
+  R1-R6, re-audited); D2-D9 + the 5 un-migrated E2 specs
+  dispersed. D2 carried one cross-diagram drift to D1
+  (CF-G2-VOL-FORMULA), resolved this session.
+CHECK 3 RETIREMENT LEDGER (DD-012): retired (9) 0411001,
+  0511001-6, 0811005, 0411002 -- unchanged this session (a
+  diagram reconcile, not a retirement). DD-012 ledger lives in
+  this CHECK-3 baseline, not TB00394 (DEC-106).
+CHECK 4 DRIFT/RISK: CF-G2-VOL-FORMULA resolved (section 3).
+  V-038 0 open through dv1_158 (D2 q1_do now matches the
+  D1-canonical fact). V-040 0 open (MDR v1_53). Remaining open:
+  CF-V040-METHOD, the 5 un-migrated E2 specs, SPLIT-10 collapse,
+  CF-0611-CLASSIFY, CF-0911002-STALE.
+CHECK 5 ON/OFF-TRACK + NEXT STEP: ON-TRACK. Single next step =
+  the CF-G2-VOL-FORMULA D2 reconcile. EXECUTED (section 3).
+
+BASELINE REGISTERS RE-VERIFIED: TB00394 v1_1; TB00153 DR v1_73
+(max DEC-106); MDR v1_53; 0911002 dv1_4; 0500000 dv1_157 md5
+ece24b67...684. All matched the NSI baseline.
+
+============================================================
+3. PRIMARY EXECUTED -- CF-G2-VOL-FORMULA D2 RECONCILE
+============================================================
+
+S-1 CONFIRM DIVERGENCE (fresh HEAD): D2 gate:G2_Liquidity q1_do
+  stated the 24h-USD-volume as "(vol_24h * mid_price for the
+  pair)", diverging from the canonical D1 REST-TKR-005
+  (usd_volume_24h = Decimal(v[1]) * Decimal(p[1]), p[1] = 24h
+  VWAP in USD; read from liquidity_24h[ws_pair]). Divergence
+  confirmed present at dv1_157.
+S-2 AMEND D2 (diagram-first): the q1_do <desc> was reconciled
+  to REFERENCE the D1-owned REST-TKR-005 value (Gate 2 consumes
+  liquidity_24h, does not recompute); the divergent
+  vol_24h * mid_price formula was removed. A new D2 figcaption
+  attestation note records the reconcile; a dv1_158 section-14
+  entry was added. 0500000 dv1_157 -> dv1_158.
+  R-STATE: HELD at R8 per the TB00453 bright line -- a
+  <desc>-only q1_do edit (plus figcaption note + DC header
+  bump) touches NO visible SVG <text> or geometry; the G2
+  visible text names no formula; no SVG <title> /
+  diagram_canonical / title-bar / viewBox change (1500x1700
+  preserved). All 10 figures geometry byte-identical.
+  BINARY TEST (DEC-096): the 24h-volume computation is
+  Kraken-event-source connection architecture -> D1-owned; D2
+  references, no seed value involved.
+S-3 REGISTERS: no V-038 conflict closure required an MDR entry
+  (the drift was tracked as carry-forward CF-G2-VOL-FORMULA,
+  not an open V-038/V-040 MDR entry; MDR v1_53 unchanged; V-038
+  remains 0 open). No new decision taken -> no DEC-107; DR
+  stays v1_73. The D1 REST-TKR-005 value was already canonical
+  (dv1_156), so the reconcile is a rule-bound diagrams-govern
+  edit, not a ratification.
+DR-007.9 VALIDATION: html parser pass, no exception; SVG /
+  figcaption / pre balanced; exactly one section-14 header;
+  the edit changed zero tag counts (structurally inert except
+  the intended text). PASS.
+
+============================================================
+4. CF-G2-VOL-FORMULA -- CLOSED
+============================================================
+
+D2 now agrees with D1 on the 24h-USD-volume computation.
+Loss-prevention: Gate 2 liquidity accuracy -- a wrong-volume
+read would corrupt the liquidity decision and admit illiquid
+pairs. Closed this session.
+
+============================================================
+5. OP4 PUSH BOX (delivered in chat) + POST-PUSH VERIFY
+============================================================
+
+Docs:        git add dv1_158 + git rm --cached dv1_157 (one-
+             version rule).
+SessionLogs: git add TB00567 SL + TB00568 NSI.
+POST-PUSH DR-010 (after Bill pushes): fresh tarball pull;
+confirm dv1_158 present in Docs HEAD byte-for-byte (md5
+04870b6b5bbf22aead77b32f25080007), dv1_157 ABSENT, and the
+SessionLogs files landed byte-for-byte.
+
+============================================================
+6. FILES TO PUSH
+============================================================
+
+  Docs:
+    add:            05XXXXX_System_Architecture/
+                    0500000_System_Architecture_Overview_dv1_158_Claude_Source.html
+    git rm --cached 05XXXXX_System_Architecture/
+                    0500000_System_Architecture_Overview_dv1_157_Claude_Source.html
+  SessionLogs (git add):
+    TB00567_TothBot_V2_Session_Log_v1_0.txt
+    TB00568_Next_Session_Instructions_v1_0.txt
+
+============================================================
+END OF DOCUMENT
+============================================================
