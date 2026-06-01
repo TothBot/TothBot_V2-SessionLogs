@@ -1,0 +1,238 @@
+DocDCN:     TB00564
+DocTitle:   Next_Session_Instructions
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    GitHub.com/TothBot/TothBot_V2-SessionLogs/TB00564_Next_Session_Instructions_v1_0.txt
+DocDate:    06-01-2026
+DocTime:    10:25:00 UTC
+
+============================================================
+TB00564 NEXT SESSION INSTRUCTIONS
+============================================================
+
+Authored at TB00563 close (D1 REST CLUSTER R5 landed; 0500000
+dv1_155 -> dv1_156). Streamlined per the established NSI
+pattern: each element stated once; the five consolidation
+checks live in section 1 only; the OCS points to them rather
+than repeating.
+
+============================================================
+0. OPENING CHAT STATEMENT (OCS) -- COPY BOX
+============================================================
+
+Cold-load TB00564_Next_Session_Instructions_v1_0.txt + TB00000
+from GitHub HEAD (both repos PUBLIC, branch master; use
+tarball, not the API) and follow it.
+
+============================================================
+1. FIVE CONSOLIDATION CHECKS -- DO THESE (NOT A REPORT)
+============================================================
+
+These are the live-register operations that drive the
+migration. Re-verify every value against fresh HEAD (TB00394,
+0911002, TB00153 DR + MDR, the live 0500000 figures); do not
+trust the printed baseline. Apply the binary architecture test
+(TB00501/DEC-096) to each classification -- architecture goes
+in a 0500000 figure (then retire the source); the only thing
+that stays out is a transient seed VALUE (TB00000 sec 8 /
+0500000 sec 9). FLAG anything unverifiable rather than guessing.
+
+CHECK 1 -- ESTABLISH POSITION, to pick the next source to
+  migrate. Baseline: Stream 2 / Phase 3 / E2 active (E1
+  complete, E3 not started). MOVE 14 = 8 retired (0411001,
+  0511001-6, 0811005) + 6 remaining (0411002 in progress --
+  CLUSTERS R1+R2+R3+R4+R5 migrated, R6 + re-audit remain;
+  0411003, 0610000, 0711001, 0711002, 0711003 not started).
+  SPLIT 10 = 0 collapsed (all E3). STAY 30. TARGET 1 (0500000).
+
+CHECK 2 -- DETERMINE, per architectural class, whether it is
+  FULLY CANONICAL in a 0500000 figure (fact-level comprehensive
+  via a DD-014 audit, source retired) or STILL DISPERSED
+  (architecture live in a source doc, or figure only coarse
+  q1-q5 design-complete, not fact-audited). Read it off the
+  live figures. Baseline:
+    Kraken connection (D1)   -- CANONICAL for WS (0411001
+                                retired) + REST CLUSTERS
+                                R1+R2+R3+R4+R5 (conn/auth/HTTP-
+                                client + GetWebSocketsToken +
+                                GetOHLCData wire + reconciliation
+                                endpoints + CancelAllOrders +
+                                Status API + Ticker full
+                                contract, dv1_156). REST R6
+                                (0411002) NOT yet (4 gaps,
+                                TB00558 register).
+    Data/info flows (D6,6/7) -- dispersed (D6 coarse only).
+    8 gates G1-G8 (D2,D8,D9) -- dispersed (Gate-7 risk 0610000
+                                + signal params 0711001/3 live).
+    Exit layers L1/L2/L3 (D3)-- dispersed (coarse only).
+    Regime taxonomy (D4)     -- dispersed (0711002/0711003 live).
+    CIATS flows (D5)         -- dispersed (0211001 arch live).
+    Inter-entity K<->T<->C   -- dispersed (only D1/WS + D1/REST
+                                R1..R5 canonical).
+  Net: D1/WS + D1/REST R1+R2+R3+R4+R5 are the only fact-level
+  canonical surfaces; all other classes dispersed.
+
+CHECK 3 -- CHECK THE RETIREMENT LEDGER (DD-012): do not touch a
+  retired spec; know which still hold un-migrated architecture.
+  Baseline: retired (8) 0411001, 0511001-6, 0811005. In
+  progress (1) 0411002 -- DR-078 blocks its retirement until D1
+  is fact-comprehensive for REST (R1+R2+R3+R4+R5 done; R6 + a
+  clean re-audit remain). Un-migrated, live (not started):
+  0411003, 0610000, 0711001, 0711002, 0711003, 0211001, + 9
+  SPLIT domain/anchor docs.
+
+CHECK 4 -- DETECT DRIFT / RISK and resolve or flag before
+  proceeding. Element in a dispersed doc but not in a figure:
+  the remaining REST wire (R6) + all un-migrated MOVE/SPLIT
+  architecture (expected open work, not silent drift). NEW
+  cross-diagram drift from TB00563: CF-G2-VOL-FORMULA -- D2
+  gate:G2_Liquidity q1_do states vol_24h * mid_price, diverging
+  from the now-canonical D1 REST-TKR-005 (v[1] * p[1], p[1] =
+  24h VWAP); a dedicated D2 reconcile (loss-prevention: Gate 2
+  liquidity accuracy). V-038 diagram-vs-prose: 0 open through
+  dv1_156 (A-37 prose-follows-diagram in sync same session);
+  V-040: 0 open (MDR v1_53 reconciled forward through dv1_153;
+  the dv1_154..dv1_156 ADD-only / R-held increments open no new
+  V-040). CFs blocking the SD-5 final sweep: CF-REST-MIGRATE,
+  CF-G2-VOL-FORMULA, CF-V040-METHOD, the 5 un-migrated E2
+  specs, the SPLIT-10 collapse, and CF-0611-CLASSIFY
+  (0611001/0611002 untracked until classified). Others
+  (section 3) are non-blocking or post-migration.
+
+CHECK 5 -- DERIVE on-track/off-track and the single next step
+  from checks 1-4, then DO it. Expected from the baseline:
+  ON-TRACK but INCOMPLETE (D1/WS + D1/REST R1+R2+R3+R4+R5
+  canonical; R6 + D2-D9 unverified; 16 sources still hold live
+  architecture), and the single next step = migrate D1 REST
+  CLUSTER R6 (section 2).
+
+BASELINE REGISTERS (re-verify): TB00394 v1_1; TB00153 DR v1_72
+(max DEC-105, next DEC-106); MDR v1_53; 0911002 dv1_4 (status
+stale, CF-0911002-STALE); 0500000 dv1_156, md5 = the post-push
+DR-010 HEAD value (re-verify against fresh HEAD) -> dv1_157 when
+R6 lands.
+
+============================================================
+2. PRIMARY MISSION (PROPOSED) -- D1 REST CLUSTER R6
+============================================================
+
+Migrate the CLUSTER R6 gaps (general error taxonomy + policies)
+from the TB00558 register into the D1 figure, diagram-first,
+ADD-only. 4 gaps; LP-flagged within the cluster = R-H3
+(EAPI:Invalid key -> CRITICAL + alert, no-retry). Steps:
+  S-1  Re-pull TB00558 register + 0411002 dv1_1 + live D1. For
+       each R6 gap: SD-9 source-verify vs 0411002,
+       RR-SCOPE-010 confirm-absent vs live D1 before encoding.
+       NOTE: REST-ERR-005 (EAPI:Rate limit exceeded back-off)
+       is already narrated in sec 2 / referenced by the
+       REST-OHLC-009 path -- run confirm-absent to settle
+       whether it is re-migrated or already-present, exactly
+       as R-D8 / WS-PING-004 were reclassified.
+  S-2  Encode into the D1 container (Kraken_REST_API governs
+       <desc> for wire/behavioral facts; SVG <text> only if a
+       visual fact). R-state HELD per TB00453 if desc-only.
+  S-3  SD-4 prose-in-sync same session (diagrams govern).
+  S-4  Bump 0500000 dv1_156 -> dv1_157; one-version rule git rm
+       --cached dv1_156. OP4 push box (Docs: 0500000;
+       SessionLogs: SL/NSI). Post-push DR-010 md5 verify.
+  S-5  After R6 lands, D1 REST is fact-comprehensive for all 6
+       clusters. RE-AUDIT (DD-014 from-the-diagram-alone, the
+       TB00558 register zeroed). Only on a clean re-audit does
+       0411002 retirement unblock -- and that is a SEPARATE
+       downstream session (DEC-003 Path A / RR-SCOPE-011),
+       preceded by the TB00511 cold-load precondition check
+       (every 0411002 fact confirmed in-diagram in live HEAD +
+       the designated home D1 present in HEAD). Do NOT retire
+       0411002 in the same session as R6.
+
+  R6 GAPS (4, from TB00558 -- general error taxonomy):
+    R-H1  REST-ERR-001  success criterion: error[] empty AND
+                        result present = success
+    R-H2  REST-ERR-002  error-prefix taxonomy (EGeneral, EAPI,
+                        EService, ...) dispatch
+    R-H3  REST-ERR-003  [LP] EAPI:Invalid key -> log CRITICAL +
+                        alert operator; NO retry (operating
+                        with a bad key = blind, unmanaged)
+    R-H4  REST-ERR-004  EService:Unavailable -> WARN, retry @5s
+    (R-H5 REST-ERR-005  EAPI:Rate limit exceeded -> WARN, back
+                        off -- run confirm-absent; likely
+                        already canonical, may reclassify)
+
+CLUSTER ORDER (one per session): R1 conn/auth [DONE dv1_152] ->
+R2 GetWebSocketsToken + GetOHLCData [DONE dv1_153] -> R3 recon
+endpoints [DONE dv1_154] -> R4 CancelAllOrders + Status API
+[DONE dv1_155] -> R5 Ticker full contract [DONE dv1_156] -> R6
+general error taxonomy [NEXT]. After R6: re-audit (register
+zeroed), then DR-078-gated 0411002 retirement (DD-012 git rm
+--cached, preceded by the TB00511 cold-load precondition check).
+
+ALTERNATIVE (Bill business judgment -- phase sequencing): open a
+different E2 spec instead (0411003 D1/sec9; 0610000 risk D8;
+0711001/2/3 D2/D4), or take the CF-G2-VOL-FORMULA D2 reconcile
+as the primary -- each is a single-diagram amendment; the
+non-0411002 specs need a FIRST DD-014 audit of an unaudited
+diagram (CF-V040-METHOD). The DD-011 gate governs.
+
+============================================================
+3. CARRY-FORWARD LEDGER
+============================================================
+
+  CF-REST-MIGRATE   HIGH/loss. D1 REST backlog: 4 gaps remain
+                    (R1+R2+R3+R4+R5 LANDED dv1_156). CLUSTER R6
+                    only (general error taxonomy + policies),
+                    R6 next, LP-flagged within the cluster
+                    (R-H3 EAPI:Invalid key); then re-audit,
+                    then DR-078-gated 0411002 retire.
+  CF-G2-VOL-FORMULA HIGH/loss. NEW (TB00563). D2 gate:G2_
+                    Liquidity q1_do canonical <desc> states
+                    vol_24h * mid_price; the now-canonical D1
+                    REST-TKR-005 is usd_volume_24h = v[1] *
+                    p[1] (p[1] = 24h VWAP). The computation is
+                    REST-Ticker wire architecture homed in D1,
+                    so RECONCILE D2 to reference the D1-owned
+                    value rather than restate an incorrect
+                    formula. Dedicated D2 amendment (one-
+                    diagram-per-session). Loss-prevention: Gate
+                    2 liquidity accuracy.
+  CF-V040-METHOD    HIGH/loss. D2-D9 used coarse q1-q5, NOT
+                    DD-014 fact-audited; each E2 migration into
+                    D2-D9 runs the fact audit first.
+  CF-0611-CLASSIFY  0611001/0611002 live in HEAD, absent from
+                    TB00394 AA=06. Classify MOVE/STAY/SPLIT
+                    (binary test); amend TB00394.
+  CF-0911002-STALE  0911002 dv1_4 status reads "Phase 1/2/3 NOT
+                    STARTED" while E1 is complete + E2 active.
+                    Update to E1 complete / E2 active (STAY doc).
+  CF-E3-REFREF      POST-MIGRATION. Per-doc keep-vs-repoint
+                    reference sweep after MOVE migrations land.
+  CF-STREAMLINE     Non-blocking. TB00000 items 4/5/G/L.
+  CF-A              Non-blocking. TB00546 SL absent from HEAD;
+                    Get-ChildItem TB00546_* C: check.
+  CF-14-ABSENT      Preservation. 0500000 sec-14 absent entries
+                    preserved as-is in 0521001; not rebuilt.
+
+============================================================
+4. STANDING DIRECTIVES
+============================================================
+
+  - Binary test (DEC-096) + DR-078 fact-audit gate: mandatory
+    before any classification / retirement.
+  - Diagrams govern (sec 4.2): author architecture in the
+    figure first; prose narrates; conflict -> diagram wins,
+    prose updated (V-038). ADD-only amendments hold R-state
+    (TB00453).
+  - GitHub HEAD is the sole source of truth; pull fresh. One-
+    version rule on every bump (git rm --cached the superseded).
+  - C: drive (sec 4.4): Claude authors only cd + git add +
+    commit + push + git rm --cached; never mutates C:; plain
+    git rm prohibited.
+  - Push box (sec 4.5): literal absolute paths; branch master
+    both repos; ASCII commit msg; PowerShell single-quote wrap;
+    no file-staging.
+  - One primary per session; ceiling 3 non-SL/NSI/OCS/push
+    artifacts; question-box tools prohibited; TothBot V2 code
+    authored only in Claude Code.
+
+============================================================
+END OF DOCUMENT
+============================================================
