@@ -1,0 +1,207 @@
+DocDCN:     TB00568
+DocTitle:   TothBot_V2_Session_Log
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    GitHub.com/TothBot/TothBot_V2-SessionLogs/TB00568_TothBot_V2_Session_Log_v1_0.txt
+DocDate:    06-01-2026
+DocTime:    20:10:00 UTC
+
+============================================================
+TB00568 SESSION LOG
+============================================================
+
+PRIMARY: 0411003 KRAKEN_FEE_RATE_LIMIT E2 FEE-ARCHITECTURE
+MIGRATION INTO D1 (CLUSTER F) -- the TB00568 NSI proposed
+primary. Outcome: EXECUTED. 0500000 dv1_158 -> dv1_159, figure
+D1 Kraken_API_Connection_Architecture R10 HELD. The sole ABSENT
+0411003 architectural cluster (fee tier + fee calculation +
+CIATS fee-tier-change detection) was migrated ADD-only into
+mod:WS_Manager constraints diagram-first per DD-002/DD-003. No
+DEC (DR stays v1_73), no MDR increment (forward architectural-
+gap fill, not a defect closure; MDR v1_53). 0411003 retirement
+NOT performed (DR-078-gated; re-audit-then-retire downstream).
+
+GOVERNANCE NOTE (raised by Bill this session): Bill questioned
+whether "one primary mission per session" had been retired in
+the crash-prevention redesign. Live-HEAD verification: the rule
+is in force in FOUR places -- TB00000 v2_82 sec 4.1; RR-SCOPE-011;
+DEC-003 Path A; 0911002 dv1_4 sec 6 -- and the campaign was
+explicitly re-phased to it at 0911002 dv1_0 -> dv1_1 (TB00397).
+The crash-prevention change Bill recalled is the DISTINCT
+TB00000 sec 4.6 deliver-as-you-go / no-mega-turn rule (delivery
+cadence within a session), which did not touch the mission-scope
+cap. No drift; rule confirmed standing. Bill directed: proceed,
+cap kept.
+
+============================================================
+1. DOCUMENTS READ (GitHub HEAD, tarball)
+============================================================
+
+  - TB00000 v2_82 (in chat).
+  - TB00568 NSI v1_0 (inbound, OCS-named).
+  - TB00567 SL v1_0 (most recent).
+  - 0500000 dv1_158 (md5 04870b6b5bbf22aead77b32f25080007 --
+    matched the NSI baseline; HEAD unchanged since dv1_158;
+    dv1_157 ABSENT confirmed = TB00567 push landed).
+  - 0411003 Kraken_Fee_Rate_Limit_Specification dv1_0 (MOVE
+    source).
+  - Registers re-verified: TB00394 v1_1; TB00153 DR v1_73 (max
+    ratified DEC = DEC-106; the "DEC-107" string is a change-
+    history forward-pointer, not a ratified entry); MDR v1_53;
+    0911002 dv1_4.
+
+============================================================
+2. FIVE CONSOLIDATION CHECKS (live-HEAD verified)
+============================================================
+
+CHECK 1 POSITION: Stream 2 / Phase 3 / E2 active. MOVE 14 =
+  9 retired + 5 remaining (0411003, 0610000, 0711001, 0711002,
+  0711003). TARGET 1 (0500000). Source action: 0411003 fee
+  cluster migrated into D1 (NOT a retirement).
+CHECK 2 CANONICAL vs DISPERSED: D1 surface canonical (WS + REST
+  R1-R6 + now 0411003 fee cluster). D2 reconciled to D1. D3-D9
+  + the 4 remaining un-migrated E2 specs (0610000, 0711001,
+  0711002, 0711003) still dispersed (D2-D9 are coarse q1-q5,
+  NOT DD-014 fact-audited -- CF-V040-METHOD).
+CHECK 3 RETIREMENT LEDGER (DD-012): retired (9) 0411001,
+  0511001-6, 0811005, 0411002 -- UNCHANGED this session (a
+  diagram migration, not a retirement). 0411003 is migrated-
+  not-retired (live). DD-012 ledger lives here, not TB00394
+  (DEC-106).
+CHECK 4 DRIFT/RISK: 0411003 fee cluster landed; the rate-limit
+  (sec 4) + key (sec 5) facts were already canonical via the
+  0411001/0411002 D1 clusters and were NOT re-migrated. V-038
+  0 open through dv1_159; V-040 0 open (MDR v1_53). New CF-
+  0411003-REAUDIT (clean DD-014 re-audit gate before retirement).
+  Remaining open: CF-V040-METHOD, the 4 un-migrated E2 specs,
+  SPLIT-10 collapse, CF-0611-CLASSIFY, CF-0911002-STALE.
+CHECK 5 ON/OFF-TRACK + NEXT STEP: ON-TRACK. Single next step =
+  the 0411003 clean DD-014 re-audit, then DR-078-gated
+  retirement (section 2 of the TB00569 NSI). EXECUTED this
+  session: the CLUSTER F migration.
+
+BASELINE REGISTERS RE-VERIFIED: TB00394 v1_1; TB00153 DR v1_73
+(max DEC-106); MDR v1_53; 0911002 dv1_4; 0500000 dv1_158 md5
+04870b6b5bbf22aead77b32f25080007. All matched the NSI baseline.
+
+============================================================
+3. PRIMARY EXECUTED -- 0411003 CLUSTER F MIGRATION
+============================================================
+
+S-1 DD-014 FACT-LEVEL GAP REGISTER (0411003 dv1_0 vs the live
+  D1 diagram-alone corpus = SVG visual + mod:WS_Manager /
+  container:Kraken_REST_API constraints desc + figcaption):
+
+  PRESENT (already canonical, NOT re-migrated):
+   - sec 4 rate limits: full cost schedule (add_order +1;
+     amend_order +1/+3/+2/+1; batch_add +n/2; cancel_order
+     +8/+6/+1; batch_cancel cumulative), decay 2.34/s, max-open
+     80, edit_order PROHIBITED -- D1 visible Rate-Limits
+     decoration + ar:AR-018; maxratecount-from-ACK ceiling /
+     never-hardcode-125 -- ar:AR-030; shared REST/WS/FIX budget
+     -- D1 visible text; Cloudflare 150/10min -- ar:AR-080 +
+     visible text.
+   - sec 5 keys: DATA/TRADE split, IP-whitelist, keys-never-in-
+     source, permission scopes, nonce 10,000ms / NTP --
+     rule:HR-WM-001/020 + REST-KEY-003/004 + REST-AUTH-004/005.
+   - post_only entry=maker, TP maker / emergSL taker -- WS-BA-002.
+   - Kelly-uses-net-P/L + sacred-floor-includes-fees + 0.42%
+     round-trip -- ar:AR-065 + D9 g8d.
+   - rate_counter_by_pair + rejection_rate_by_regime monitoring
+     SIGNALS -- D1 Stream-1 visible text + D5 mod:CIATS_EWMA_
+     Monitor.
+
+  SEED VALUES (stay in section 9 per the binary test):
+   FEE_MAKER_PCT 0.0016, FEE_TAKER_PCT 0.0026, rl_warning 0.80,
+   rl_critical 0.95, fee_tier_divergence_threshold 0.0002,
+   fee_tier_divergence_sustained_trades 50.
+
+  ABSENT -> MIGRATED (CLUSTER F): the fee-tier mechanism + fee-
+   calculation + CIATS fee-tier-change detection --
+   FEE-TIER-001/002 (tier C-2, maker/taker model, 30-day-volume
+   tier determination); FEE-BASE-002/005 (round-trip 0.32%/0.42%
+   + net-R:R-after-fees); FEE-CALC-001..005 (Decimal fee +
+   net_pnl formulas); FEE-CALC-006 (Logger executions-fee
+   actuals authoritative; calculated fees only for pre-trade R:R
+   + Gate 8); FEE-BASE-001/006 + CIATS-FEE-002/003 (fee-monitor
+   signals + FEE_TIER_CHANGE_DETECTED detection mechanism);
+   CIATS-FEE-004 (net-P/L on the Trade Outcome Bus, cross-ref).
+
+S-2 MIGRATE (diagram-first): the ABSENT cluster encoded ADD-only
+  into the D1 mod:WS_Manager constraints desc as the "D1 KRAKEN
+  FEE ARCHITECTURE (dv1_159 TB00568; CLUSTER F)" wire-fact block,
+  SD-9-verified vs 0411003 dv1_0; RR-SCOPE-010 confirm-absent
+  re-checked vs live dv1_158. Seed VALUES left in section 9. A
+  D1 figcaption OPTION R EXTENSION (xv) attestation + a dv1_159
+  section-14 entry were added. 0500000 dv1_158 -> dv1_159.
+  R-STATE: HELD at R10 per the TB00453 bright line -- a desc-only
+  constraints ADD touches no visible SVG text or geometry; SVG
+  title + diagram_canonical (Image1_T2_R10) + title-bar + viewBox
+  (1500x1600) all unchanged; all 10 figures geometry byte-
+  identical (verified: rect 313, path 30, polygon 6, line 97,
+  text 954 unchanged 158 vs 159).
+  BINARY TEST (DEC-096): the Kraken fee tier/model/calculation +
+  CIATS fee-tier-change detection are TothBot-organism (Kraken
+  event-source) connection architecture -> D1 (YES); the only
+  non-architecture elements (the fee/threshold seed VALUES) stay
+  in section 9.
+
+S-3 REGISTERS: no V-038/V-040 conflict closed -> no MDR entry
+  (MDR v1_53 unchanged; V-038/V-040 remain 0 open). No new
+  decision taken -> no DEC-107; DR stays v1_73 (this E2
+  migration runs under the existing DEC-096 binary-test
+  ratification). No 0311001 amendment (no namespace token
+  minted -- cites pre-existing ar:AR-065/AR-007 + FEE-* /
+  CIATS-FEE-* spec IDs + the section-9 param tokens).
+
+DR-007.9 VALIDATION: PASS. The strict-XML failing-block set is
+  IDENTICAL in dv1_158 and dv1_159 (blocks 2,4,6,8,9 fail only
+  on pre-existing HTML entities and render correctly as HTML),
+  proving the edit introduced no new malformedness; D1 SVG desc
+  open/close balanced 14/14; the sole D1 delta is the CLUSTER F
+  text inside one constraints desc; full-document html.parser
+  feed completed with 0 errors.
+
+============================================================
+4. CF-REST-FEE-MIGRATE -- EXECUTED (CLUSTER F LANDED)
+============================================================
+
+0411003 fee architecture is now fact-level comprehensive in D1;
+combined with the already-canonical sec-4/sec-5 facts, the
+0411003 MOVE content is migrated. The retirement is DR-078-gated
+and deferred to a clean DD-014 re-audit (new CF-0411003-REAUDIT),
+preceded by the TB00511 cold-load precondition check (the
+designated home D1 exists in HEAD). Loss-prevention relevance of
+the migrated cluster: FEE-CALC-006 (actual Logger fees are the
+record-of-truth) and the net-P/L Half-Kelly binding keep sizing
+conservative against real fee drag, protecting the Sacred 1:1.5
+R:R floor.
+
+============================================================
+5. OP4 PUSH BOX (delivered in chat) + POST-PUSH VERIFY
+============================================================
+
+Docs:        git add dv1_159 + git rm --cached dv1_158 (one-
+             version rule).
+SessionLogs: git add TB00568 SL + TB00569 NSI.
+POST-PUSH DR-010 (after Bill pushes): fresh tarball pull;
+confirm dv1_159 present in Docs HEAD byte-for-byte (md5
+f77e74fa6c30e321a32b0a08cb783306), dv1_158 ABSENT, and the
+SessionLogs files landed byte-for-byte.
+
+============================================================
+6. FILES TO PUSH
+============================================================
+
+  Docs:
+    add:            05XXXXX_System_Architecture/
+                    0500000_System_Architecture_Overview_dv1_159_Claude_Source.html
+    git rm --cached 05XXXXX_System_Architecture/
+                    0500000_System_Architecture_Overview_dv1_158_Claude_Source.html
+  SessionLogs (git add):
+    TB00568_TothBot_V2_Session_Log_v1_0.txt
+    TB00569_Next_Session_Instructions_v1_0.txt
+
+============================================================
+END OF DOCUMENT
+============================================================
