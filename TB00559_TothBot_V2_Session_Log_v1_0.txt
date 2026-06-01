@@ -1,0 +1,222 @@
+DocDCN:     TB00559
+DocTitle:   TothBot_V2_Session_Log
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    GitHub.com/TothBot/TothBot_V2-SessionLogs/TB00559_TothBot_V2_Session_Log_v1_0.txt
+DocDate:    06-01-2026
+DocTime:    05:25:00 UTC
+
+============================================================
+TB00559 SESSION LOG
+============================================================
+
+MISSION (this session): make the 0500000 design diagrams the
+sole canonical source for every TothBot-organism architectural
+element, then retire each source. Phase 3 / E2. Primary
+executed: D1 REST CLUSTER R1 migration.
+
+============================================================
+1. COLD LOAD
+============================================================
+
+Read from GitHub HEAD (public tarball, branch master):
+  - TB00559_Next_Session_Instructions_v1_3.txt
+  - TB00000 v2_82 (md5 efc133bf13afdbbcccd2e058b9685508)
+Then load-on-demand for the mission:
+  - TB00558_D1_REST_API_Fact_Level_Gap_Register_v1_0.txt
+  - 0411002 Kraken_REST_API_Specification dv1_1 (SD-9 source)
+  - 0500000 dv1_151 (md5 b5e3d488c940759f4e390ba13719367f --
+    byte-confirmed vs the NSI baseline)
+  - TB00153 DR v1_72 + MDR v1_52; TB00394 v1_1; 0911002 dv1_4
+    (live-register re-verification, not recall).
+
+============================================================
+2. DD-011 CHAT-TURN-1 FP/DP TEST (full option space)
+============================================================
+
+OUTCOME 1 -- single compliant primary = D1 REST CLUSTER R1.
+  A (R1 migration): source register TB00558 already built; the
+    11 R1 facts SD-9-verified vs 0411002 dv1_1 and RR-SCOPE-010
+    confirmed-absent vs live D1; ADD-only desc, figure R held;
+    retires nothing (no 0911002 sec 6.1 two-retirement
+    conflict); no new fact-audit needed. LEAST errors/rework.
+  B (open a different E2 spec 0411003 / 0610000 / 0711001/2/3):
+    each needs a FIRST DD-014 fact-audit of an unaudited
+    diagram (CF-V040-METHOD) before any migration, and abandons
+    the in-progress 0411002 mid-cluster -- MORE rework, higher
+    error surface. REJECTED (no Bill phase-sequencing directive).
+  C (governance/housekeeping: CF-0911002-STALE, CF-V038-LEDGER,
+    CF-0611-CLASSIFY): non-blocking; does not advance the
+    HIGH/loss REST migration. REJECTED.
+  Executed per RR-SCOPE-005; not surfaced as ratification.
+
+============================================================
+3. FIVE CONSOLIDATION CHECKS (live-register verified)
+============================================================
+
+CHECK 1 POSITION: Stream 2 / Phase 3 / E2 active. MOVE 14 =
+  8 RETIRED (0411001, 0511001-6, 0811005) + 6 remaining
+  (0411002 in progress; 0411003, 0610000, 0711001/2/3 not
+  started). TARGET = 0411002 REST, CLUSTER R1. NOTE: prior
+  recall held "3 retired"; the live TB00153 DR (DEC-095..100..
+  105 + the dv1_150 0411001-retirement narrative) governs --
+  8 retired. Live test beats recall.
+CHECK 2 CANONICAL vs DISPERSED: D1/WS fact-level canonical;
+  D1/REST NOT yet (TB00558: 65 wire-facts checked, 49 gap
+  entries, CLUSTER R1 first). D2-D9 dispersed (coarse q1-q5).
+  Net pre-session: D1/WS only fact-level-canonical class. This
+  session adds D1/REST CLUSTER R1.
+CHECK 3 RETIREMENT LEDGER (DD-012): 8 retired -- do not touch.
+  0411002 in progress; DR-078 blocks its retirement until D1
+  is REST fact-comprehensive (R1..R6 + clean re-audit). R1
+  retires nothing. Confirmed.
+CHECK 4 DRIFT/RISK: REST wire-contract absent from the figure
+  = expected open work, not silent drift. V-038: MDR v1_52
+  open-ledger at dv1_140 = 0 open V-038 / 0 open V-040;
+  dv1_144-151 not re-attested (CF-V038-LEDGER). A-33 prose
+  authored same session as the desc (prose-follows-diagram), so
+  0 open V-038 holds through dv1_152; the dv1_144-151
+  re-attestation gap stays flagged (CF-V038-LEDGER). 0911002
+  dv1_4 status reads "PHASE 1/2 NOT STARTED" while E1 is
+  complete / E2 active (CF-0911002-STALE confirmed). No
+  blocking drift for R1.
+CHECK 5 ON/OFF-TRACK + NEXT STEP: ON-TRACK but INCOMPLETE
+  (D1/WS + now D1/REST-R1 canonical; D2-D9 + REST R2..R6 + 5
+  un-migrated specs still hold live architecture). Derived
+  single next step = migrate D1 REST CLUSTER R1 -> executed.
+
+============================================================
+4. PRIMARY EXECUTED -- D1 REST CLUSTER R1 (dv1_152)
+============================================================
+
+Migrated the 11 CLUSTER R1 entries (REST connection / auth /
+HTTP-client primitives; 2 loss-prevention-flagged: REST-AUTH-005
+nonce-window/NTP + REST-KEY-003 per-key permission scopes) from
+the TB00558 register into the D1 container:Kraken_REST_API
+governs <desc>, diagram-first per DD-002/DD-003:
+
+  REST-AUTH-003  3 private-call headers (API-Key / API-Sign /
+                 Content-Type:application/x-www-form-urlencoded)
+  REST-AUTH-004  nonce = int(time.time()*1000) strictly-inc int
+  REST-AUTH-005  nonce window 10,000 ms + NTP-synced VPS clock
+  REST-HTTP-001  aiohttp mandatory, synchronous requests
+                 prohibited (the no-requests rule AR-035 lacked)
+  REST-HTTP-002  ClientTimeout total=10/connect=5/sock_read=8 +
+                 TCPConnector limit=10/limit_per_host=5/
+                 force_close=False
+  REST-HTTP-004  force_close=False = HTTP keepalive
+  REST-HTTP-005  one shared ClientSession for process lifetime
+  REST-HTTP-006  private base URL https://api.kraken.com, POST
+                 /0/private/[Endpoint]
+  REST-HTTP-007  public base URL, GET|POST /0/public/[Endpoint]
+  REST-KEY-003   per-key scopes: DATA query-only MUST-NOT-trade
+                 vs TRADE +create/modify/cancel
+  REST-KEY-004   keys VPS-stored, never hardcoded, env/encrypted
+                 config at startup
+
+VERIFICATION:
+  - SD-9: all 11 confirmed present in 0411002 dv1_1 (L81-185).
+  - RR-SCOPE-010 confirm-absent vs live dv1_151: all 11 absent
+    from the D1 diagram-alone corpus; nearby nonce/aiohttp/
+    api.kraken.com strings belong to the cl_ord_id timestamp
+    note, the ar:AR-035 token, and the WS endpoint URLs (the
+    TB00558 RR-SCOPE-008 no-guess re-check).
+  - BINARY TEST (DEC-096): REST connection/auth/HTTP-client
+    primitives are TothBot-organism (Kraken event-source)
+    connection architecture -> D1 (YES). Sole non-architecture
+    seed value param:liquidity_refresh_hours stays in TB00000
+    sec 8 / 0500000 sec 9 (not in this cluster).
+  - SD-4 prose-in-sync: D1 sec-2 A-33 narration added same
+    session (diagrams govern; prose follows).
+
+R-STATE: figure D1 HELD at R10 per the TB00453 bright line --
+  a <desc>-only edit (plus figcaption (a) identifier + A-33
+  prose + DC header) touches no visible SVG <text>/geometry; no
+  SVG <title>/diagram_canonical/title-bar/viewBox change
+  (1500x1600 preserved). Document version bumped dv1_151 ->
+  dv1_152 (the file changed; the figure R held).
+
+VALIDATION (pre-delivery):
+  - Geometry byte-identical to dv1_151 (content-only diff, 0
+    diffs across all rect/path/line/polygon/svg).
+  - Visible <text> byte-identical (0 diffs).
+  - desc balance identical to dv1_151 (no <desc> added/removed).
+  - Tag balance even: p 108/108, figure 10/10, svg 10/10,
+    figcaption 10/10, pre 126/126, exactly ONE <h2>14.
+    Revision History</h2>.
+  - DR-007.9: NEW parses identically to dv1_151 HEAD under both
+    strict-XML (same 5 entity-bearing SVG blocks, D1 well-
+    formed) and html5lib (identical behavior) -- NO regression
+    vs the HEAD-verified baseline.
+  - dv1_152 outputs md5 (pre-push, download-area copy):
+    01844990058d6c3317a1a062b9710e0b. Authoritative HEAD md5 is
+    re-computed post-push (DR-010).
+
+SCOPE NOT TOUCHED (carry forward): 0411002 NOT retired (1 of 6
+  clusters); REST R2..R6 (38 gaps) carry forward; D1-REST
+  retirement remains DR-078-gated until full register migrates
+  + clean re-audit.
+
+============================================================
+5. CLAUDE ERRORS THIS SESSION
+============================================================
+
+ERROR-TB00559-CHAT-01 (self-caught, corrected pre-delivery):
+  during the A-33 prose insertion the first str_replace left a
+  misplaced </p> (A-32 closer landed after A-33 open). Caught
+  at the tag-balance/structure re-view; fixed with two surgical
+  str_replaces; final structure verified well-formed (p
+  108/108). No bad artifact emitted. Root cause: anchored the
+  insert on the figure-open transition without re-closing the
+  preceding paragraph in the same edit. Mitigation already in
+  practice: post-edit structural re-view before delivery.
+
+============================================================
+6. CARRY-FORWARD LEDGER (-> TB00560)
+============================================================
+
+  CF-REST-MIGRATE   HIGH/loss. D1 REST backlog now 38 gaps
+                    (R1 LANDED). CLUSTERS R2..R6, one per
+                    session, LP-flagged first within a cluster.
+                    R2 next = GetWebSocketsToken + GetOHLCData
+                    wire (resolve the R-D8 RECONCILE here).
+                    After R6: re-audit (register zeroed), then
+                    DR-078-gated 0411002 retire (preceded by
+                    the TB00511 cold-load precondition check).
+  CF-V040-METHOD    HIGH/loss. D2-D9 coarse q1-q5, NOT DD-014
+                    fact-audited; each E2 migration into D2-D9
+                    runs the fact audit first.
+  CF-V038-LEDGER    MDR V-038/V-040 current through ~dv1_143;
+                    dv1_144-152 not re-attested in the MDR.
+                    Re-attest at next migration (dv1_152
+                    included).
+  CF-0611-CLASSIFY  0611001/0611002 live in HEAD, absent from
+                    TB00394 AA=06. Classify MOVE/STAY/SPLIT
+                    (binary test); amend TB00394.
+  CF-0911002-STALE  0911002 dv1_4 status reads "Phase 1/2 NOT
+                    STARTED" while E1 complete / E2 active.
+                    Update (STAY doc).
+  CF-E3-REFREF      POST-MIGRATION per-doc keep-vs-repoint
+                    reference sweep after MOVE migrations land.
+  CF-STREAMLINE     Non-blocking. TB00000 items.
+  CF-A              Non-blocking. TB00546 SL absent from HEAD;
+                    Get-ChildItem TB00546_* C: check.
+  CF-14-ABSENT      Preservation. 0500000 sec-14 absent entries
+                    (dv1_100..110/120/130/140/141) preserved
+                    as-is in 0521001; not rebuilt.
+
+============================================================
+7. SESSION CLOSE
+============================================================
+
+Artifacts produced:
+  - 0500000 dv1_152 (Docs) -- D1 REST CLUSTER R1 migration.
+  - TB00559 SL (this) + TB00560 NSI (SessionLogs).
+Push: OP4 box in TB00560 NSI sec 0 / and below.
+Post-push: DR-010 HEAD landing verification (fresh tarball
+  pull + md5) on the dv1_152 file before treating the session
+  closed; one-version rule confirmed (dv1_151 gone from HEAD).
+
+============================================================
+END
+============================================================
