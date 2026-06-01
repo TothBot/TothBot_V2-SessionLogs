@@ -1,0 +1,251 @@
+DocDCN:     TB00569
+DocTitle:   TothBot_V2_Session_Log
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    GitHub.com/TothBot/TothBot_V2-SessionLogs/TB00569_TothBot_V2_Session_Log_v1_0.txt
+DocDate:    06-01-2026
+DocTime:    21:00:00 UTC
+
+============================================================
+TB00569 SESSION LOG
+============================================================
+
+PRIMARY: 0411003 KRAKEN_FEE_RATE_LIMIT E2 CLEAN DD-014 RE-AUDIT
+vs the live dv1_159 D1 diagram-alone corpus, then the section-2
+gap branch -- the TB00569 NSI proposed primary. Outcome:
+EXECUTED, re-audit NOT clean. The re-audit found ONE residual
+bucket-(c) architectural gap; the one coherent cluster (CLUSTER
+RL-PROTECT -- the rate_counter_by_pair two-tier protective
+mechanism) was migrated ADD-only into D1 mod:WS_Manager
+constraints diagram-first per DD-002/DD-003. 0500000 dv1_159 ->
+dv1_160, figure D1 Kraken_API_Connection_Architecture R10 HELD.
+No DEC (DR stays v1_73), no MDR increment (forward architectural-
+gap fill, not a defect closure; MDR v1_53). 0411003 retirement
+NOT performed (DR-078-gated; re-audit-then-retire downstream) --
+the migrate-then-re-audit-then-retire sequence (0411001/0411002
+precedent: never migrate and retire in the same session).
+
+============================================================
+1. DOCUMENTS READ (GitHub HEAD, tarball)
+============================================================
+
+  - TB00000 v2_82 (in chat).
+  - TB00569 NSI v1_0 (inbound, OCS-named).
+  - TB00568 SL v1_0 (most recent).
+  - 0500000 dv1_159 (md5 f77e74fa6c30e321a32b0a08cb783306 --
+    matched the NSI baseline; HEAD unchanged since dv1_159;
+    dv1_158 ABSENT confirmed = TB00568 push landed).
+  - 0411003 Kraken_Fee_Rate_Limit_Specification dv1_0 (re-audit
+    source).
+  - Registers re-verified: TB00394 v1_1; TB00153 DR v1_73 (max
+    ratified DEC = DEC-106); MDR v1_53; 0911002 dv1_4.
+
+TB00511 COLD-LOAD PRECONDITION CHECK: the designated home
+(figure D1 in 0500000 dv1_159) EXISTS in HEAD -- precondition
+satisfied; the re-audit proceeded. (Retirement would HALT if the
+home were absent; it is not.)
+
+============================================================
+2. FIVE CONSOLIDATION CHECKS (live-HEAD verified)
+============================================================
+
+CHECK 1 POSITION: Stream 2 / Phase 3 / E2 active. MOVE 14 =
+  9 retired + 5 remaining (0411003, 0610000, 0711001, 0711002,
+  0711003). TARGET 1 (0500000). Source action: 0411003 rate-
+  counter protective cluster migrated into D1 (NOT a retirement).
+CHECK 2 CANONICAL vs DISPERSED: D1 surface canonical (WS + REST
+  R1-R6 + the 0411003 fee cluster CLUSTER F + now the 0411003
+  rate-counter protective cluster CLUSTER RL-PROTECT). D2
+  reconciled to D1. D3-D9 + the 4 remaining un-migrated E2 specs
+  (0610000, 0711001, 0711002, 0711003) still dispersed (D2-D9 are
+  coarse q1-q5, NOT DD-014 fact-audited -- CF-V040-METHOD).
+CHECK 3 RETIREMENT LEDGER (DD-012): retired (9) 0411001,
+  0511001-6, 0811005, 0411002 -- UNCHANGED this session (a
+  diagram migration, not a retirement). 0411003 is migrated-
+  not-retired (live; CLUSTER F dv1_159 + CLUSTER RL-PROTECT
+  dv1_160). DD-012 ledger lives here, not TB00394 (DEC-106).
+CHECK 4 DRIFT/RISK: the 0411003 rate-counter protective cluster
+  landed; the sec-3 fee facts (CLUSTER F dv1_159), the sec-4
+  rate-limit cost-schedule / decay / max-open / edit_order-
+  prohibited / Cloudflare facts, the sec-5 key facts, and the
+  sec-6 CIATS fee-monitoring + rejection_rate F6 + rate_counter
+  signal were already canonical and were NOT re-migrated. V-038
+  0 open through dv1_160; V-040 0 open (MDR v1_53). New CF-
+  0411003-RLPROTECT-REAUDIT (clean DD-014 re-audit gate before
+  retirement). Remaining open: CF-V040-METHOD, the 4 un-migrated
+  E2 specs, CF-0611-CLASSIFY, CF-0911002-STALE, CF-E3-REFREF,
+  CF-STREAMLINE, CF-A, CF-14-ABSENT.
+CHECK 5 ON/OFF-TRACK + NEXT STEP: ON-TRACK. Single next step =
+  a fresh clean DD-014 re-audit of 0411003 vs dv1_160, then the
+  DR-078-gated retirement (section 2 of the TB00570 NSI).
+  EXECUTED this session: the re-audit + the CLUSTER RL-PROTECT
+  migration.
+
+BASELINE REGISTERS RE-VERIFIED: TB00394 v1_1; TB00153 DR v1_73
+(max DEC-106); MDR v1_53; 0911002 dv1_4; 0500000 dv1_159 md5
+f77e74fa6c30e321a32b0a08cb783306. All matched the NSI baseline.
+
+============================================================
+3. PRIMARY EXECUTED -- 0411003 CLEAN DD-014 RE-AUDIT + CLUSTER
+   RL-PROTECT MIGRATION
+============================================================
+
+S-1 CLEAN DD-014 RE-AUDIT (0411003 dv1_0 re-derived from the
+  live dv1_159 D1 diagram-alone corpus = SVG visual +
+  mod:WS_Manager / container:Kraken_REST_API constraints desc +
+  figcaption). RESULT: NOT clean -- one residual bucket-(c) gap.
+
+  DIAGRAM-DERIVABLE (confirmed canonical, NOT re-migrated):
+   - sec 3 fee facts: CLUSTER F (dv1_159) in mod:WS_Manager
+     constraints (fee tier C-2, maker/taker model, 30-day-volume
+     tier determination, fee-calc formulas, FEE-CALC-006 Logger-
+     fees-authoritative hard rule, CIATS FEE_TIER_CHANGE_DETECTED).
+   - sec 4 rate limits: cost schedule (add_order +1; amend_order
+     +1/+3/+2/+1; batch_add +n/2; cancel_order +8/+6/+1;
+     batch_cancel cumulative), decay 2.34/s, max-open 80,
+     edit_order DEPRECATED/PROHIBITED -- D1 visible Rate-Limits
+     decoration + ar:AR-018; maxratecount-from-ACK ceiling /
+     never-hardcode-125 -- ar:AR-030; shared REST/WS/FIX budget
+     (RL-ARCH-001) -- D1 visible text; Cloudflare ~150/10min/IP
+     -- ar:AR-080 + visible text (RL-MON-004).
+   - sec 5 keys: the dv1_152 REST-KEY-003/004 + REST-AUTH-
+     003/004/005 cluster in container:Kraken_REST_API constraints
+     + rule:HR-WM-001/020.
+   - sec 6 CIATS hooks: rejection_rate_by_regime (F6 signal) +
+     rate_counter_by_pair monitoring SIGNAL -- D1 Stream-1 visible
+     text + D5 mod:CIATS_EWMA_Monitor (CIATS-RL-003 monitor-only/
+     signals-only rule confirmed in the D5 EWMA desc).
+
+  SEED VALUES (confirmed correctly section-9-resident, NOT gaps):
+   FEE_MAKER_PCT 0.0016, FEE_TAKER_PCT 0.0026,
+   fee_tier_divergence_threshold / fee_tier_divergence_sustained_
+   trades, rl_warning_threshold_pct 0.80, rl_critical_threshold_
+   pct 0.95, rejection_rate_*.
+
+  ABSENT -> MIGRATED (CLUSTER RL-PROTECT): the rate_counter_by_
+   pair TWO-TIER PROTECTIVE MECHANISM (0411003 RL-MON-002 +
+   RL-MON-003). Whole-document grep proved this behaviour existed
+   ONLY in the section-9 parameter-registry prose (the rl_
+   critical_threshold_pct entry parenthetical "triggers entry-
+   order suppression..."), NEVER in any figure SVG/desc/
+   figcaption. The two figure-interior "suppress" hits were
+   unrelated (PA-004 paper-mode suppression in the Context
+   figure; exit-layer suppression in D3). Under the binary test
+   (DEC-096) + the DD-014 from-the-diagram-alone standard, the
+   mechanism is TothBot-organism order-dispatch architecture and
+   must be in a diagram; the threshold VALUES stay in section 9.
+   This parallels CLUSTER F (which migrated the FEE-tier-change
+   mechanism but left this rate-limit-protection mechanism un-
+   migrated) -- exactly what a clean re-audit catches.
+
+S-2 MIGRATE (diagram-first): the ABSENT cluster encoded ADD-only
+  into the D1 mod:WS_Manager constraints desc as the "D1 RATE-
+  COUNTER PROTECTIVE RESPONSE ... CLUSTER RL-PROTECT (dv1_160
+  TB00569)" wire-fact block, SD-9-verified vs 0411003 dv1_0;
+  RR-SCOPE-010 confirm-absent re-checked vs live dv1_159. The
+  block encodes:
+   (i)  RL-MON-002 WARNING TIER -- rate_counter > rl_warning_
+        threshold_pct fraction of maxratecount (ar:AR-030 ACK
+        ceiling, never hardcode 125) -> log RL_WARNING; if
+        SUSTAINED over more than 3 consecutive pipeline
+        evaluations, alert the operator.
+   (ii) RL-MON-003 CRITICAL TIER [loss-prevention HARD RULE] --
+        rate_counter > rl_critical_threshold_pct fraction ->
+        log RL_CRITICAL, alert operator PRIORITY_HIGH
+        immediately, and SUPPRESS new entry add_order placement
+        for that pair until the rate_counter decays (2.34/s)
+        below the warning fraction. The suppression gates ENTRY
+        orders ONLY -- exits/cancels (TP, emergSL, MAE Layer-2
+        cancel, Full-Halt batch_cancel) are NEVER suppressed,
+        because the purpose is to PRESERVE rate-counter budget
+        for the loss-prevention exit path (a suppressed exit
+        would leave a live position unmanaged).
+   OWNERSHIP: both tiers owned by mod:WS_Manager (owns add_order
+   dispatch + the per-pair rate-counter ceiling); DISTINCT from
+   the mod:CIATS_EWMA_Monitor signals-only monitoring (D5; CIATS
+   monitors/alerts only, never adjusts exchange rate-limit params
+   -- 0411003 CIATS-RL-003). Seed VALUES left in section 9. A D1
+   figcaption OPTION R EXTENSION (xvi) attestation + a dv1_160
+   section-14 revision-history entry were added. 0500000 dv1_159
+   -> dv1_160.
+  R-STATE: HELD at R10 per the TB00453 bright line -- a desc-only
+  constraints ADD touches no visible SVG text or geometry. D1 SVG
+  element counts identical (rect 69, path 3, polygon 0, line 7,
+  text 170, g 34); viewBox "0 0 1500 1600" unchanged; SVG title
+  "0500000_Image1_T2_R10_Kraken_API_Connection_Architecture"
+  unchanged. D1 SVG with all desc blocks stripped is BYTE-
+  IDENTICAL dv1_159 vs dv1_160 -> the sole delta is inside desc
+  index 5 (mod:WS_Manager constraints).
+  BINARY TEST (DEC-096): the rate-counter two-tier warning/
+  critical protective response, including critical-threshold
+  entry-order suppression, is TothBot-organism (Kraken rate-
+  limit-driven order-dispatch protection) connection architecture
+  -> D1 (YES); the only non-architecture elements (the rl_warning
+  / rl_critical threshold seed VALUES) stay in section 9.
+
+S-3 REGISTERS: no V-038/V-040 conflict closed -> no MDR entry
+  (MDR v1_53 unchanged; V-038/V-040 remain 0 open). No new
+  decision taken -> no DEC-107; DR stays v1_73 (this E2 migration
+  runs under the existing DEC-096 binary-test ratification). No
+  0311001 amendment (no namespace token minted -- cites pre-
+  existing ar:AR-030 / ar:AR-080 + the RL-MON-* / CIATS-RL-003
+  spec IDs + the section-9 param:rl_warning_threshold_pct /
+  param:rl_critical_threshold_pct tokens).
+
+DR-007.9 VALIDATION: PASS. Full-document html.parser feed = 0
+  errors; D1 SVG desc open/close balanced 14/14; whole-document
+  figure open/close balanced 10/10; the sole D1 delta is the
+  CLUSTER RL-PROTECT text inside one constraints desc.
+
+DELIVERABLE: 0500000_System_Architecture_Overview_dv1_160_Claude_
+  Source.html -- md5 93a6d7d79c1348637cf0010a715dae06; 10278
+  lines; no stale dv1_159 filename remains; new filename present
+  once in DocPath. (POST-PUSH DR-010 baseline.)
+
+============================================================
+4. CF-0411003-REAUDIT -- EXECUTED (RE-AUDIT DONE, GAP FOUND)
+============================================================
+
+The clean DD-014 re-audit gated by CF-0411003-REAUDIT was
+performed this session against the live dv1_159 D1 diagram-alone
+corpus. RESULT: not clean -- one residual bucket-(c) gap (the
+rate_counter_by_pair two-tier protective mechanism). Per the NSI
+section-2 gap branch the cluster was migrated (CLUSTER RL-PROTECT,
+dv1_160) and 0411003 retirement was DEFERRED AGAIN -- NOT retired
+this session. CF-0411003-REAUDIT is CLOSED (re-audit executed) and
+superseded by the new CF-0411003-RLPROTECT-REAUDIT (a fresh clean
+DD-014 re-audit of D1 vs dv1_160 now gates the DR-078 retirement),
+preceded by the TB00511 cold-load precondition check.
+Loss-prevention relevance of the migrated cluster: RL-MON-003
+preserves rate-counter budget for the exit path under rate
+pressure (exits/cancels never suppressed), protecting against a
+live position being left unmanaged when the rate limit is hot.
+
+============================================================
+5. OP4 PUSH BOX (delivered in chat) + POST-PUSH VERIFY
+============================================================
+
+Docs:        git add dv1_160 + git rm --cached dv1_159 (one-
+             version rule).
+SessionLogs: git add TB00569 SL + TB00570 NSI.
+POST-PUSH DR-010 (after Bill pushes): fresh tarball pull;
+confirm dv1_160 present in Docs HEAD byte-for-byte (md5
+93a6d7d79c1348637cf0010a715dae06), dv1_159 ABSENT, and the
+SessionLogs files landed byte-for-byte.
+
+============================================================
+6. FILES TO PUSH
+============================================================
+
+  Docs:
+    add:            05XXXXX_System_Architecture/
+                    0500000_System_Architecture_Overview_dv1_160_Claude_Source.html
+    git rm --cached 05XXXXX_System_Architecture/
+                    0500000_System_Architecture_Overview_dv1_159_Claude_Source.html
+  SessionLogs (git add):
+    TB00569_TothBot_V2_Session_Log_v1_0.txt
+    TB00570_Next_Session_Instructions_v1_0.txt
+
+============================================================
+END OF DOCUMENT
+============================================================
