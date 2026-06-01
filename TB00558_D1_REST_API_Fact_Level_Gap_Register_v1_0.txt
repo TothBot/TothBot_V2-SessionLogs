@@ -1,0 +1,364 @@
+DocDCN:     TB00558
+DocTitle:   D1_REST_API_Fact_Level_Gap_Register
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    GitHub.com/TothBot/TothBot_V2-SessionLogs/TB00558_D1_REST_API_Fact_Level_Gap_Register_v1_0.txt
+DocDate:    06-01-2026
+DocTime:    03:30:00 UTC
+
+============================================================
+TB00558 D1 REST-API FACT-LEVEL GAP REGISTER
+0411002 dv1_1  vs  0500000 dv1_151 D1
+============================================================
+
+PURPOSE
+  The exhaustive fact-level gap register for the SECOND D1
+  source, 0411002 Kraken_REST_API_Specification dv1_1, against
+  the live D1 figure (Kraken API Connection Architecture) in
+  0500000 dv1_151. It enumerates every architectural wire-fact
+  carried by 0411002 and marks each PRESENT-IN-D1, ABSENT, or
+  RECONCILE, where "in D1" means derivable from the D1 figure
+  ALONE per the strict DD-014 standard (SVG visual <text> +
+  governs <desc> descriptors + figcaption ONLY; NO 0500000
+  prose, NO section-8 AR registry, NO subordinate spec).
+
+  This is the REST counterpart to the TB00530 D1 gap register
+  (which covered the FIRST D1 source, 0411001 WS v2). The 37
+  TB00530 0411001 entries are now all resolved and D1 is
+  fact-level comprehensive FOR 0411001 (dv1_143..dv1_150,
+  closed at TB00539; 0411001 retired TB00541). 0411002 is a
+  DISTINCT source: the REST wire contract was never migrated,
+  so most REST-specific facts are absent from the diagram-alone
+  corpus even though several REST-ADJACENT facts already landed
+  via the 0411001 migration (HMAC signing model WS-AUTH-002,
+  GetOHLCData [-1] exclusion HR-WM-013, the 8-channel
+  drill_targets enumeration, spot-only balance WS-BAL-002).
+
+  This register is read-only and is the input that drives the
+  one-amendment-per-session D1 REST migration (CLUSTERS R1..R6
+  below) and the eventual DR-078-gated 0411002 retirement.
+  Read-only this session: no 0500000 edit, no retirement, no
+  git rm, no C: operation (sec 4.4 CD-001).
+
+METHOD
+  Source of truth = GitHub HEAD via public tarball (DEC-097);
+  both repos PUBLIC. The D1 "diagram-alone" corpus = the
+  component <desc> governs blocks (incl. mod:WS_Manager,
+  container:Kraken_REST_API, mod:Signal_Pipeline) + the
+  figcaption + the visible SVG <text> of the D1 figure, decoded
+  from the live 0500000 dv1_151 HTML (md5
+  b5e3d488c940759f4e390ba13719367f, byte-confirmed at cold-load
+  vs the TB00558 NSI baseline). Each 0411002 REST-* wire-fact
+  was checked for derivability against that corpus ONLY.
+
+  BINARY TEST (DEC-096): every 0411002 element is TothBot-
+  organism (Kraken event-source) connection architecture ->
+  D1/section 2. The sole non-architecture is the transient seed
+  VALUE param:liquidity_refresh_hours (=4), already homed in
+  TB00000 section 8 and mirrored in 0500000 section 9; the
+  diagram fact is the Ticker periodic-refresh trigger, NOT the
+  numeric value. 0411002 is therefore a clean MOVE -> section 2
+  / D1, matching TB00394 v1_1.
+
+  NO-GUESS NOTE (RR-SCOPE-008): three facts the coarse keyword
+  scan first marked PRESENT were re-checked verbatim against
+  the desc and corrected to ABSENT - the nonce construction
+  (R-A4) and nonce window (R-A5) matched only the unrelated
+  cl_ord_id "millisecond timestamp" desc note (dv1_141), and
+  the aiohttp config VALUES (R-B2) are carried only as the
+  token "ar:AR-035" with no explicit values in the desc.
+
+============================================================
+1. SUMMARY
+============================================================
+
+  Wire-facts checked (8 groups):        65
+  PRESENT-IN-D1 (DD-014 derivable):      16
+  PARTIAL (rule present, wire detail absent): 3
+  ABSENT (gap):                          45
+  RECONCILE (prose value vs spec, verify): 1
+  GAP-REGISTER ENTRIES (absent+partial+reconcile): 49
+
+  Migration clusters (one 0500000 amendment per session,
+  ADD-only <desc>, R-state held per TB00453 bright line):
+    CLUSTER R1  REST connection / auth primitives    11
+    CLUSTER R2  GetWebSocketsToken + GetOHLCData wire  9
+    CLUSTER R3  reconciliation endpoints wire          8
+    CLUSTER R4  CancelAllOrders + Status API           7
+    CLUSTER R5  Ticker full contract                  10
+    CLUSTER R6  general error taxonomy + policies      4
+
+  D1 is fact-level comprehensive for 0411001 but NOT for
+  0411002. 0411002 retirement is DR-078-BLOCKED until all
+  CLUSTER R1..R6 gaps are migrated diagram-first and a re-audit
+  confirms zero remaining 0411002 gaps.
+
+============================================================
+2. GAP REGISTER - ABSENT / PARTIAL SET (by cluster)
+============================================================
+
+A "gap" is a 0411002 wire-fact a coder CANNOT derive from the
+D1 figure alone. Each entry: ID | 0411002 source | fact | flag.
+
+  ----------------------------------------------------------
+  CLUSTER R1 - REST CONNECTION / AUTH PRIMITIVES (11)
+  ----------------------------------------------------------
+  R-A3  REST-AUTH-003  required headers API-Key + API-Sign +
+        Content-Type: application/x-www-form-urlencoded   ABSENT
+  R-A4  REST-AUTH-004  nonce = strictly-increasing int,
+        int(time.time()*1000)                             ABSENT
+  R-A5  REST-AUTH-005  nonce window 10,000ms; NTP-synced VPS
+        clock (drift management)                          ABSENT [LP]
+  R-B2  REST-HTTP-002  aiohttp timeout total=10/connect=5/
+        sock_read=8 + connector limit=10/limit_per_host=5/
+        force_close=False (values; only ar:AR-035 token present)
+                                                          ABSENT
+  R-B3  REST-HTTP-004  force_close=False = HTTP keepalive    ABSENT
+  R-B4  REST-HTTP-005  one shared ClientSession for process
+        lifetime (no per-call session)                    ABSENT
+  R-B5  REST-HTTP-006  private base URL https://api.kraken.com;
+        POST /0/private/[Endpoint]                        ABSENT
+  R-B6  REST-HTTP-007  public base URL; GET|POST /0/public/
+        [Endpoint]                                        ABSENT
+  R-B9  REST-KEY-003   per-key permission scopes: DATA = Query
+        Funds + Query Open Orders and Trades + Query Closed
+        Orders; TRADE = + Create and Modify Orders + Cancel
+        and Close Orders (DATA key MUST NOT trade)        ABSENT [LP]
+  R-B10 REST-KEY-004   keys stored on VPS, never hardcoded,
+        loaded from env var / encrypted config at startup ABSENT
+  R-B1  REST-HTTP-001  aiohttp mandatory, never synchronous
+        requests (explicit prohibition; AR-035 implies aiohttp
+        but the no-requests rule is not stated)        PARTIAL
+
+  ----------------------------------------------------------
+  CLUSTER R2 - GetWebSocketsToken + GetOHLCData WIRE (9)
+  ----------------------------------------------------------
+  R-C2  REST-WST-002   endpoint POST /0/private/GetWebSocketsToken,
+        body nonce                                        ABSENT
+  R-C3  REST-WST-003   response {token (str), expires (int sec)} ABSENT
+  R-C6  REST-WST-006   on error: retry 3x @1s, then halt startup
+        + alert operator                                  ABSENT
+  R-C4  REST-WST-004   token validity ~900s (15 min); fresh token
+        per reconnect, do NOT cache (the fresh-per-reconnect
+        rule IS present via WS-REC-004; the 900s value absent)
+                                                          PARTIAL
+  R-D2  REST-OHLC-002  endpoint GET /0/public/OHLC, params
+        pair + interval=1440 (daily) + since(optional)    ABSENT
+  R-D3  REST-OHLC-003  response candle field order [time, open,
+        high, low, close, vwap, volume, count] + last; each
+        field a string -> Decimal(str(value))             ABSENT
+  R-D5  REST-OHLC-005  returns up to 720 (719 committed after
+        [-1] exclusion, ~2yr daily history)               ABSENT
+  R-D7  REST-OHLC-008  startup warm-up triple per pair:
+        interval=5 (ATR seed) + interval=60 (EMA20/50 seed) +
+        interval=1440 (initial regime)                    ABSENT
+  R-D8  REST-OHLC-009  general-error path: retry once @2s, then
+        OHLC_FETCH_FAILED + use prior regime, do NOT halt RECONCILE
+
+  ----------------------------------------------------------
+  CLUSTER R3 - RECONCILIATION ENDPOINTS WIRE (8)
+  ----------------------------------------------------------
+  R-E2  REST-OO-002    GetOpenOrders POST /0/private/OpenOrders,
+        body nonce, optional trades=true                  ABSENT
+  R-E3  REST-OO-003    GetOpenOrders response open{order_id:{
+        refid,userref,status,opentm,starttm,expiretm,descr,
+        vol,vol_exec,cost,fee,price,stopprice,limitprice,
+        misc,oflags}}                                     ABSENT
+  R-E4  REST-OO-006    GetOpenOrders error: retry once @2s, then
+        RECONCILIATION_FAILED + alert + DEGRADED state    ABSENT [LP]
+  R-E6  REST-BAL-002   GetAccountBalance POST /0/private/Balance,
+        body nonce                                        ABSENT
+  R-E7  REST-BAL-003/004 response {ZUSD,XXBT,...} strings ->
+        Decimal; use returned USD as portfolio_baseline_USD
+        (spot/main-only rule IS present via WS-BAL-002)   PARTIAL
+  R-E8  REST-BAL-007   GetAccountBalance error: retry once @2s,
+        then BALANCE_RECONCILIATION_FAILED + DEGRADED     ABSENT [LP]
+  R-E10 REST-QOI-002/003 QueryOrders POST /0/private/QueryOrders,
+        body nonce + txid + trades=true; response = OpenOrders
+        subset for queried txids                          ABSENT
+  R-E11 REST-QOI-005   QueryOrders error: fall back to
+        GetOpenOrders for full reconciliation             ABSENT
+
+  ----------------------------------------------------------
+  CLUSTER R4 - CancelAllOrders + Status API (7)
+  ----------------------------------------------------------
+  R-F2  REST-CAO-002/003 CancelAll POST /0/private/CancelAll;
+        response {count (int)}                            ABSENT
+  R-F3  REST-CAO-004/005 EMERGENCY-ONLY use restriction: manual
+        operator action OR explicit EMERGENCY_HALT only; NOT
+        for MAE Layer-2 (use cancel_order), NOT for Full-Halt
+        circuit breaker (use WS batch_cancel - preserves TP +
+        emergSL), NOT for any routine operation           ABSENT [LP]
+  R-F4  REST-CAO-006   post-call: log EMERGENCY_KILL_SWITCH_
+        ACTIVATED(count) + alert PRIORITY_CRITICAL + HALT
+        state + manual review before restart              ABSENT [LP]
+  R-F6  REST-STAT-002/005 endpoint GET https://status.kraken.com
+        /api/v2/scheduled-maintenances/upcoming.json; no auth,
+        no nonce; same ClientSession + timeout (URL is in
+        section 2 PROSE only, not diagram-alone)          ABSENT
+  R-F7  REST-STAT-003  response fields name + scheduled_for +
+        scheduled_until + status (scheduled|in_progress|
+        verifying|completed)                              ABSENT
+  R-F8  REST-STAT-004  processing: if scheduled_for within 2h of
+        startup -> log KRAKEN_MAINTENANCE_SCHEDULED + alert
+        PRIORITY_HIGH; informational, does NOT block startup ABSENT
+  R-F9  REST-STAT-006  on error/timeout: MAINTENANCE_CHECK_
+        FAILED, do not retry, continue startup            ABSENT
+
+  ----------------------------------------------------------
+  CLUSTER R5 - TICKER FULL CONTRACT (10) - entirely absent;
+  D1 carries only the WS ticker channel (WS-TKR-002/003), NOT
+  the REST Ticker endpoint
+  ----------------------------------------------------------
+  R-G1  REST-TKR-001   purpose: 24h rolling USD volume for the
+        liquidity_24h cache; the SOLE correct 24h-volume source ABSENT
+  R-G2  REST-TKR-002   endpoint GET /0/public/Ticker?pair=
+        comma-separated classic pair names                ABSENT
+  R-G3  REST-TKR-003   request format = Kraken CLASSIC names
+        (XXBTZUSD), map WS-v2 symbols -> classic via the
+        instrument-channel wsname reverse map at startup  ABSENT
+  R-G4  REST-TKR-004   response keys = classic names; v=[vol_today,
+        vol_24h], p=[vwap_today,vwap_24h], a/b/c/t/l/h/o; all
+        numeric strings -> Decimal                        ABSENT
+  R-G5  REST-TKR-005   usd_volume_24h = Decimal(v[1]) *
+        Decimal(p[1]); store in liquidity_24h[ws_pair]    ABSENT
+  R-G6  REST-TKR-006   reverse-map classic -> ws before store;
+        pair not found -> LIQUIDITY_PAIR_NOT_FOUND, excluded
+        (fail-safe: Gate 2 blocks that pair)              ABSENT
+  R-G7  REST-TKR-007   triggers: startup _warm_up_all_pairs()
+        (after instrument snapshot, before SYSTEM_OPERATIONAL)
+        + periodic every liquidity_refresh_hours (seed 4h,
+        TB00000 sec 8); NOT on candle close                ABSENT
+  R-G8  REST-TKR-008   rate limit: single Ticker call for up to
+        50 pairs = 1 request; NO staggering (unlike OHLC) ABSENT
+  R-G9  REST-TKR-009   errors: startup fail -> retry once @2s ->
+        LIQUIDITY_SEED_FAILED, cache empty, Gate 2 blocks all
+        (fail-safe), no halt; refresh fail -> LIQUIDITY_
+        REFRESH_FAILED, preserve prior cached values      ABSENT
+  R-G10 REST-TKR-010   HARD RULE: the instrument channel snapshot
+        provides ONLY pair metadata (symbol/base/quote/status/
+        precisions/increments/cost_min/tick_size/qty_min) and
+        NO volume; REST Ticker is the ONLY correct 24h-volume
+        source; reading volume from instrument = defect
+        (DEFECT-SS-006)                                   ABSENT [LP]
+
+  ----------------------------------------------------------
+  CLUSTER R6 - GENERAL ERROR TAXONOMY + POLICIES (4)
+  ----------------------------------------------------------
+  R-H1  REST-ERR-001   error[] empty + result = success;
+        non-empty error[] = failed call                   ABSENT
+  R-H2  REST-ERR-002   error prefix taxonomy: EGeneral, EAPI,
+        EOrder, ETrade, EQuery, EService                  ABSENT
+  R-H3  REST-ERR-003   EAPI:Invalid key -> log CRITICAL + alert
+        immediately + do NOT retry (cannot operate)       ABSENT [LP]
+  R-H4  REST-ERR-004   EService:Unavailable -> WARN, retry @5s
+        up to 3x, then maintenance-condition alert        ABSENT
+  R-H5  REST-ERR-005   EAPI:Rate limit exceeded -> WARN, back off
+        5s, escalate if >3 hits/session (CIATS review).
+        (WS rate-limit handling AR-030/AR-080 is present but is
+        a DISTINCT mechanism from the REST backoff)    PARTIAL
+
+============================================================
+3. RECONCILE SET (1) - prose value vs spec; verify at migration
+============================================================
+
+  R-D8  GetOHLCData error/retry. 0500000 section 2 PROSE (A-24,
+        dv1_10) states the RATE-LIMIT (HTTP 429) path: exponential
+        backoff, "retry up to 3 times", then use stale regime.
+        0411002 REST-OHLC-009 states the GENERAL-error path:
+        "retry once after 2 seconds", then use prior regime.
+        These appear to be DIFFERENT error paths (rate-limit vs
+        general), not a contradiction - but the retry COUNT differs
+        (3 vs 1) and neither REST retry policy is in the diagram-
+        alone corpus. At CLUSTER R2 migration: confirm the two
+        paths are distinct against the canonical 0411002 source +
+        Kraken docs (SD-3, diagram is authority); do NOT silently
+        copy either value. NO-GUESS: not asserted as a CONFLICT
+        without same-path confirmation.
+
+============================================================
+4. LOSS-PREVENTION-FLAGGED GAPS [LP]
+============================================================
+
+  Migrate-first priority within each cluster (minimize-loss
+  paramount, TB00000 mission + DR-078):
+    R-F3   CancelAll EMERGENCY-ONLY restriction  destroying crash
+                                                 protection (TP+
+                                                 emergSL) in normal
+                                                 op
+    R-F4   CancelAll post-call HALT + critical   unmanaged-state
+           alert                                 trading
+    R-G10  instrument-channel-has-NO-volume rule wrong liquidity ->
+           (DEFECT-SS-006)                        Gate 2 bypass
+    R-B9   per-key permission scopes (DATA key    trade via a key
+           must NOT trade)                        that should be
+                                                  read-only
+    R-H3   EAPI:Invalid key CRITICAL + no-retry   operating without
+                                                  valid auth
+    R-E4   GetOpenOrders fail -> DEGRADED         trading on stale
+                                                  order state
+    R-E8   GetAccountBalance fail -> DEGRADED     trading on stale
+                                                  balance / sizing
+    R-A5   nonce window 10,000ms + NTP            silent auth
+                                                  failure on clock
+                                                  drift
+
+============================================================
+5. PRESENT-IN-D1 SET (16 full + 3 partial) - for completeness
+============================================================
+
+  Derivable from the D1 figure alone today (location noted):
+
+  R-A1  HMAC-SHA512 signing construction (URI path + SHA256(
+        nonce + POST data), base64-decoded secret)  mod:WS_Manager
+                                                    desc WS-AUTH-002
+  R-A2  Oct-2025 auth change = Futures-only, Spot   WS-AUTH-002 +
+        UNCHANGED                                   visible decoration
+  R-B7  two key pairs DATA / TRADE                  rule:HR-WM-001
+  R-B8  both keys IP-whitelisted, update on VPS     HR-WM-001/020
+        migration (rule; literal IP not required in D1) (AR-037)
+  R-C1  GetWebSocketsToken purpose (WS auth token)  REST container q1_do
+  R-C5  token call timing: startup + before every   q4_triggers +
+        private WS reconnect                        WS-REC-004
+  R-D1  GetOHLCData purpose (daily regime)          q1_do + visible
+  R-D4  response[-1] / forming-candle EXCLUDED      rule:HR-WM-013 +
+        (CRITICAL)                                  visible
+  R-D6  daily 00:00 UTC + 1.1s stagger              q4_triggers +
+                                                    ar:AR-035 + visible
+  R-E1  GetOpenOrders purpose + exec-gap/restart    WS-EXE-019 +
+        reconcile trigger                           visible
+  R-E5  GetAccountBalance purpose + balances-gap     WS-BAL-005 +
+        reconcile trigger                           WS-BAL-002
+  R-E9  QueryOrdersInfo purpose (targeted order      REST container
+        detail lookup)                              drill_target + q1_do
+  R-F1  CancelAllOrders purpose (emergency kill      visible + q1_do
+        switch)
+  R-F5  Status API purpose (startup proactive        ar:AR-038 + visible
+        maintenance detection)
+  R-D-seed  8-channel REST drill_targets             REST container
+        enumeration (all 8 endpoints named)         drill_targets
+  R-H6  all REST calls + errors logged at TothBot    REST container q5_logs
+        side (never-swallow)
+  PARTIAL: R-B1 (aiohttp implied via AR-035, no-requests rule
+        absent); R-C4 (fresh-token-per-reconnect present, 900s
+        validity absent); R-E7 (spot/main-only present via
+        WS-BAL-002, ZUSD parse + portfolio_baseline absent).
+
+============================================================
+6. NEXT ACTIONS (downstream; not this session)
+============================================================
+
+  - One 0500000 amendment per session, CLUSTER R1 first
+    (REST connection/auth primitives; foundational + 2 LP
+    gaps), ADD-only into container:Kraken_REST_API <desc>,
+    R-state held (TB00453), SD-4 prose-in-sync same session,
+    each fact SD-9-verified vs 0411002 dv1_1 and confirmed-
+    absent vs live HEAD before encoding (RR-SCOPE-010).
+  - After CLUSTER R6 lands: re-audit (this register zeroed),
+    then 0411002 retirement via git rm --cached (DD-012),
+    preceded by the TB00511 cold-load precondition check.
+  - The RECONCILE entry (R-D8) resolved at CLUSTER R2.
+
+============================================================
+END OF DOCUMENT
+============================================================

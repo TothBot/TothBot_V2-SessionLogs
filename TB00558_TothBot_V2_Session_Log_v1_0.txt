@@ -1,0 +1,230 @@
+DocDCN:     TB00558
+DocTitle:   TothBot_V2_Session_Log
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    GitHub.com/TothBot/TothBot_V2-SessionLogs/TB00558_TothBot_V2_Session_Log_v1_0.txt
+DocDate:    06-01-2026
+DocTime:    03:45:00 UTC
+
+============================================================
+TB00558 SESSION LOG
+============================================================
+
+============================================================
+1. MISSION
+============================================================
+
+Cold-load TB00558 NSI + TB00000 from GitHub HEAD; run the
+section-4 CAMPAIGN-STATE VERIFICATION and flag divergence; run
+the DD-011 chat-turn-1 FP/DP-derivability test over the full
+option space under the binary architecture test (DEC-096) and
+the DR-078 fact-audit gate; execute the single compliant
+primary. Phase 3 / E2, resuming forward 0500000 consolidation.
+
+============================================================
+2. AUTHORITY / COLD-LOAD
+============================================================
+
+Read fresh from HEAD (both repos PUBLIC, branch master):
+TB00558 NSI, TB00000 v2_82, TB00557 SL, DEC-096 / TB00501
+binary-test entry, TB00394, TB00530 register + SL (read-only
+fact-audit precedent), full 0411002 dv1_1, and the section 2 /
+D1 region of 0500000 dv1_151. Standing rules applied: binary
+architecture test (DEC-096) + DR-078 fact-audit gate; diagrams
+govern (sec 4.2); GitHub HEAD sole source of truth; sec 4.4 C:
+drive (Claude authors git only; CD-002); sec 4.5 push box; one
+primary per session.
+
+============================================================
+3. WHAT WAS DONE
+============================================================
+
+3a. CAMPAIGN-STATE VERIFICATION (section 4, run at cold-load).
+NO DIVERGENCE across all five dimensions. Registers re-verified
+live against fresh HEAD:
+  TB00394                = v1_1            MATCH
+  TB00153 Decision_Reg   = v1_72 (max ratified DEC-105;
+                           DEC-106 forward-ref only)  MATCH
+  TB00153 MDR            = v1_52 (max V-040)           MATCH
+  0911002                = dv1_4                       MATCH
+  0500000                = dv1_151,
+    md5 b5e3d488c940759f4e390ba13719367f               EXACT
+The 8 retired MOVE specs (0411001, 0511001-6, 0811005) confirmed
+ABSENT from Docs HEAD live folders (_Archive holds only
+.gitkeep). 6 E2 specs live (0411002, 0411003, 0610000, 0711001,
+0711002, 0711003). CF-0611-CLASSIFY confirmed (0611001/0611002
+live in HEAD, absent from TB00394 AA=06) -- tracked CF, not a
+divergence. D1 confirmed fact-comprehensive FOR 0411001
+(TB00530 37 gaps resolved dv1_143..dv1_150; 0411001 retired
+TB00541).
+
+3b. DD-011 CHAT-TURN-1 FP/DP TEST (full option space). OUTCOME
+1 = a READ-ONLY DD-014 fact-level gap register of 0411002 vs
+the D1 figure. Discriminating criterion (least errors + rework):
+  - Target selection: 0411002 targets D1, the ONLY diagram
+    already fact-level comprehensive (TB00540/541). Every D2-D9
+    alternative requires a first-ever DD-014 audit of an
+    unaudited diagram (CF-V040-METHOD, HIGH) -- strictly more
+    error + rework. So 0411002 first.
+  - Action selection: REGISTER-ONLY over audit-and-amend, on
+    direct TB00530 precedent (the FIRST D1 source, 0411001, was
+    handled as a standalone read-only fact-level register, then
+    migrated one cluster per session across dv1_143..dv1_150).
+    DR-078 hard-blocks 0411002 retirement until D1 is fact-
+    comprehensive for ALL 0411002 facts -- unachievable in one
+    turn -- so the compliant turn-1 product is the register that
+    drives the subsequent one-cluster-per-session migration.
+
+3c. S-1 BINARY ARCHITECTURE TEST (0411002). 0411002 Kraken_REST_
+API_Specification is ALL TothBot-organism Kraken-connection
+architecture -> MOVE to section 2 / D1 (matches TB00394; D1 =
+Kraken API Connection Architecture, covers WS and REST). Sole
+non-architecture element = the transient seed value param:
+liquidity_refresh_hours (=4), already mirrored in TB00000 sec 8
+/ 0500000 sec 9. No element stays in a subordinate spec.
+
+3d. S-2 DD-014 FACT-LEVEL AUDIT (0411002 dv1_1 vs D1 figure
+ALONE -- strict: SVG visual <text> + governs <desc> descriptors
++ figcaption ONLY; NO 0500000 prose, NO section-8 AR registry,
+NO subordinate spec). 65 wire-facts checked:
+  PRESENT-IN-D1:  16
+  PARTIAL:         3
+  ABSENT:         45
+  RECONCILE:       1
+  GAP ENTRIES:    49  (45 ABSENT + 3 PARTIAL + 1 RECONCILE)
+The REST wire contract is almost entirely absent: only the WS
+spec was ever migrated. PRESENT facts ride on the prior 0411001
+migration (HMAC signing WS-AUTH-002; OHLC [-1] exclusion
+HR-WM-013; 8-channel drill_targets enum; spot-only balance
+WS-BAL-002). Six migration clusters: R1 connection/auth
+primitives (11), R2 GetWebSocketsToken + GetOHLCData (9), R3
+recon endpoints (8), R4 CancelAll + StatusAPI (7), R5 Ticker
+full contract (10), R6 error taxonomy (4).
+  NO-GUESS CORRECTION (RR-SCOPE-008): nonce construction (R-A4),
+  nonce window (R-A5) and aiohttp config values (R-B2) were
+  initial heuristic false-positives; corrected to ABSENT after
+  strict diagram-alone re-check.
+  RECONCILE (R-D8): D1 prose A-24 "GetOHLCData retry up to 3x"
+  (rate-limit path) vs 0411002 REST-OHLC-009 "retry once @2s"
+  (general path) -- flagged for SD-3 reconcile at R2 migration,
+  NOT asserted as a live conflict.
+  LOSS-PREVENTION-FLAGGED gaps (migrate first): R-F3/R-F4
+  (CancelAll emergency-only), R-G10 (instrument-channel-no-
+  volume DEFECT-SS-006), R-B9 (DATA key must-not-trade), R-H3
+  (invalid-key halt), R-E4/R-E8 (DEGRADED on recon fail), R-A5
+  (nonce window).
+
+============================================================
+4. PRIMARY MISSION RESULT -- D1 REST GAP REGISTER
+============================================================
+
+Deliverable: TB00558_D1_REST_API_Fact_Level_Gap_Register_v1_0
+.txt. The REST counterpart to the TB00530 D1 (0411001 WS)
+register. 49 gap entries organized into 6 migration clusters
+(R1..R6), a reconcile set (R-D8), an LP-flagged set, the
+present-in-D1 set, and downstream next actions. Read-only: no
+0500000 edit, no retirement, no git rm, no MDR/DR entry (the D1
+V-040 attestation-defect MDR entry remains deferred to
+migration start per CF-V040-METHOD). Full detail in the
+register.
+
+============================================================
+5. BINARY ARCHITECTURE TEST (DEC-096) -- APPLICABILITY
+============================================================
+
+Applied in S-1: 0411002 = architecture -> D1 / section 2; sole
+non-architecture = seed value liquidity_refresh_hours (already
+mirrored sec 8 / sec 9). No subordinate-spec disposition. No
+MOVE/STAY/SPLIT verdict altered; classification matches TB00394.
+
+============================================================
+6. STATE AFTER THIS SESSION
+============================================================
+
+HEAD UNCHANGED for Docs (read-only session; 0500000 still
+dv1_151, md5 b5e3d488c940759f4e390ba13719367f). Campaign state
+verified on-track, no divergence.
+
+D1 fact-audit status:
+  - 0411001 (WS): D1 fact-comprehensive (TB00530/540/541).
+  - 0411002 (REST): 49 fact-level gaps now enumerated; D1 is
+    NOT yet fact-comprehensive for REST. Migration backlog
+    R1..R6 defined; DR-078 blocks 0411002 retirement until R6
+    lands and a clean re-audit confirms zero gaps.
+
+Forward-consolidation backlog (MOVE specs live in HEAD,
+architecture not yet migrated):
+  0411002 Kraken_REST_API dv1_1   (gaps registered TB00558;
+                                   R1..R6 pending)
+  0411003 Kraken_Fee_Rate_Limit dv1_0
+  0610000 Risk_Rules_Anchor dv1_5
+  0711001 SSS_Signal_Model dv1_3
+  0711002 Regime_Taxonomy dv1_2
+  0711003 Asset_Selection dv1_3
+  0611001 / 0611002 -- TB00394 AA=06 classification to RE-READ
+    before touching (CF-0611-CLASSIFY, no-guess).
+
+============================================================
+7. CLAUDE ERRORS THIS SESSION
+============================================================
+
+None persisted. The no-guess re-check (RR-SCOPE-008) caught
+three heuristic false-positives (R-A4 nonce construction, R-A5
+nonce window, R-B2 aiohttp values) flagged PRESENT on first
+pass; all corrected to ABSENT before the register was finalized.
+Surfacing-not-mislabeling preserved (no fact asserted present
+that is not diagram-alone derivable).
+
+============================================================
+8. CARRY-FORWARDS (POST-SESSION)
+============================================================
+
+  CF-REST-MIGRATE   NEW / loss-relevant. D1 REST fact-level
+                    migration backlog: CLUSTERS R1..R6 (49
+                    gaps) from TB00558 register, one amendment
+                    per session, R1 first, then re-audit, then
+                    DR-078-gated 0411002 retirement. Drives the
+                    next several sessions.
+  CF-V040-METHOD    HIGH / loss-relevant. D2-D9 "design-
+                    complete" attestations used the coarse q1-q5
+                    method (DR-078); NOT DD-014 fact-audited.
+                    Each E2 migration into D2-D9 runs the fact-
+                    level audit first. D1 REST audit done this
+                    session narrows this to D2-D9.
+  CF-0611-CLASSIFY  OPEN. 0611001 / 0611002 live in HEAD, absent
+                    from TB00394 AA=06. Classify MOVE/STAY/SPLIT
+                    under the binary test; amend TB00394.
+  CF-0911002-STALE  OPEN. 0911002 dv1_4 status fields read
+                    "Phase 1/2/3 NOT STARTED" while E1 is
+                    COMPLETE (DEC-100..105). Update the living
+                    plan: E1 complete / E2 active. (STAY doc.)
+  CF-V038-LEDGER    OPEN. MDR v1_52 V-038/V-040 ledger current
+                    through ~dv1_143; dv1_144-151 parity not
+                    formally re-attested. Re-attest or note.
+  CF-E3-REFREF      POST-MIGRATION (TB00557 sec 4). Per-doc
+                    keep-vs-repoint reference reconciliation
+                    AFTER forward MOVE migrations land. ~20 live
+                    docs reference retired specs; mix of keep
+                    (forensic/campaign) and repoint (dangling).
+  CF-STREAMLINE     OPEN, non-blocking. TB00000 v2_82 items
+                    4/5/G/L (recover defs from history first).
+  CF-A              OPEN, non-blocking. TB00546 SL absent from
+                    HEAD; needs the Get-ChildItem TB00546_* C:
+                    check (trivial re-add vs C: restore).
+  CF-14-ABSENT      OPEN (preservation). 0500000 section-14
+                    absent entries preserved as-is in 0521001;
+                    NOT to be reconstructed (no-guess).
+
+============================================================
+9. SESSION-CLOSE / PUSH STATUS
+============================================================
+
+Read-only session: NO Docs push (0500000 untouched). This SL +
+the TB00558 register + the TB00559 NSI push to TothBot_V2-
+SessionLogs per the OP4 box. Post-push HEAD landing verification
+(fresh tarball + md5, DR-010) runs next turn after Bill confirms
+the push.
+
+============================================================
+END OF SESSION LOG
+============================================================
