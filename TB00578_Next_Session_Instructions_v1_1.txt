@@ -1,0 +1,249 @@
+DocDCN:     TB00578
+DocTitle:   Next_Session_Instructions
+DocVersion: v1_1
+DocOwner:   Bill
+DocPath:    GitHub.com/TothBot/TothBot_V2-SessionLogs/TB00578_Next_Session_Instructions_v1_1.txt
+DocDate:    06-02-2026
+DocTime:    23:59:30 UTC
+
+============================================================
+TB00578 NEXT SESSION INSTRUCTIONS
+============================================================
+
+OCS COPY BOX (paste verbatim to open the next session):
+------------------------------------------------------------
+Cold-load TB00578_Next_Session_Instructions_v1_1.txt + TB00000
+from GitHub HEAD and follow it.
+------------------------------------------------------------
+
+============================================================
+1. THE MANDATE (Bill, TB00577 -- verbatim intent)
+============================================================
+Change ALL 0500000 design diagrams AND prose so that ALL trading
+values are CIATS-OWNED. The ONLY hardcoded value in the entire
+system is the net 1:1.5 R:R MINIMUM -- and it is a FLOOR, never a
+cap or ceiling.
+
+There is NO per_trade_ceiling_pct. There is NO ceiling, cap, or
+limit on trade size of any kind. The amount traded is 100% CIATS
+owned. The wallet (operator-funded with what Bill can afford to
+lose, TB00000 sec 7) is the loss boundary; nothing else
+constrains size except the 1:1.5 R:R floor.
+
+This is settled and absolute. Do NOT re-raise whether sizing is
+CIATS-owned, do NOT propose any ceiling, do NOT ask Bill to
+confirm the model again. Execute.
+
+============================================================
+2. REQUIRED CHANGES (the mission)
+============================================================
+DELETE three tokens entirely from the canonical 0500000 corpus
+(diagrams + prose) and their governing docs, then reconcile prose:
+
+  TOKEN A: per_trade_ceiling_pct  -- DELETE EVERYWHERE. No ceiling.
+  TOKEN B: tradeable_pct          -- DELETE EVERYWHERE. Obsolete.
+  TOKEN C: per_trade_pct          -- DELETE EVERYWHERE. Obsolete.
+
+CANONICAL TARGET STATE for sizing (write this everywhere sizing
+is described):
+  - Trade size = param:per_trade_size_usd, a CIATS-owned per-
+    module dollar allocation. Paper seed ~Kraken per-pair minimum
+    (~$0.50). From the 200-trade per-module inference threshold
+    forward it is a CIATS-owned function f(expected_R_R) via
+    contract:Sizing_Curve_Per_Module (Long_Module owns f_long;
+    Short_Module owns f_short).
+  - per_trade_USD = f(expected_R_R). raw_qty = per_trade_USD /
+    entry_limit_price. NO "bounded above by" clause. NO ceiling.
+  - The wallet balance (operator-funded) is the only size
+    boundary. CIATS sizes freely within it.
+  - The ONLY hardcoded constraint is the net 1:1.5 R:R MINIMUM
+    (floor). Acceptance Rule A1: reject any candidate whose point-
+    estimate expected R:R is below 1:1.5. CIATS owns the curve
+    ABOVE the floor.
+
+SCOPE BOUNDARY (do NOT over-reach): the per-wallet drawdown
+circuit breakers (session_pause_drawdown 5%, full_halt_drawdown
+10%) and the other CIATS parameters (mae_mult, emergency_sl_mult,
+etc.) are ALREADY CIATS-owned starting values and STAY -- they
+are loss circuit-breakers, not size ceilings. The mandate removes
+the per-trade SIZE CEILING (per_trade_ceiling_pct) + the two
+obsolete fixed-% tokens. Do NOT remove drawdown halts or other
+CIATS-owned parameters. If any wording frames a CIATS-owned
+parameter as "hardcoded" or "not CIATS-owned," correct it to
+CIATS-owned.
+
+------------------------------------------------------------
+2.1 EXACT SITE INVENTORY  (line numbers vs live HEAD dv1_164;
+     re-grep at chat-turn 1 to confirm -- HEAD unchanged since
+     TB00577 so numbers should hold)
+------------------------------------------------------------
+NOTE: lines 10218+ are the section-14 Revision History (HISTORICAL
+record) -- DO NOT edit historical entries; leave all dv1_NNN
+narrative text there intact.
+
+per_trade_ceiling_pct (TOKEN A) live sites:
+  Context/headers/prose:
+    L837   (sec 1 prose "bounded by per_trade_ceiling_pct ...25%")
+    L5656  (sec 8 LOCKED DECISIONS sizing prose "...bounded by")
+    L5936  (sec 8 / D6 region sizing prose "bounded above by")
+    L7058  (sec 9 PARAMETER REGISTRY entry "= 25% ... Hard
+            concentration ceiling ... CIATS-adjustable") -- DELETE
+            the whole registry entry.
+  D2 (Image2, ~2246-2840): L2336 (snapshot enum), L2583, L2585,
+    L2813 (drill/param lists)
+  D8 Gate 7 Risk Guard Detail (Image8, ~2841-3150): L2852, L3038-
+    L3055 = the ENTIRE g7d_check5_per_trade_ceiling CHECK BLOCK
+    (consumes/produces evt:G7_PER_TRADE_CEILING_BREACH/ciats_
+    ownership/evaluation_order:5/q1_do CRITICAL LOSS-LIMITER/
+    q4_triggers/q5_logs) + L3055 VISIBLE <text> "per_trade_ceiling
+    _pct (25% starting)" + figcaption attestation L3102/3108/3110/
+    3115/3131. REMOVE the whole CHECK 5; drop evt:G7_PER_TRADE_
+    CEILING_BREACH; renumber/adjust the Gate 7 check count + the
+    figcaption cell tally; remove "absolute-loss-limiter / last
+    line of defense against CIATS sizing wipeout" framing.
+  D9 Gate 8 Position Sizer Detail (Image9, ~3151-3550): L3378
+    VISIBLE <text> "...bounded by per_trade_ceiling_pct per Gate 7
+    CHECK 5)" -- remove the bounded clause.
+  D5 CIATS Architecture (Image5, ~4495-4940, R13): L4503/4504/4507
+    (governs/registry-note), L4788/4792/4794 (Proposal_Engine
+    desc), L4854/4855/4857 (Parameter_Store desc), L4928/4934
+    (figcaption).
+  D6 Complete System (Image6, ~4953-5611, R12): L5243 (Risk_Engine
+    constraints "bounded above by ...enforced at G7 CHECK 5"),
+    L5451 (param list), L5609 (param list), L5936/5939 (G8 sizing
+    block "bounded above by per_trade_ceiling_pct x portfolio_USD").
+
+tradeable_pct (TOKEN B) live sites:
+  L387 (Context produces), L2016 (D1 VISIBLE <text>), L4504 (D5
+  governs), L4788/4850 (D5 HR-CI-009 formula -- see 2.2), L4855
+  (D5 produces), L4863 (D5 VISIBLE <text>), L4922 (D5 figcaption),
+  L5956 (D6 LEGACY annotation -- delete the annotation).
+
+per_trade_pct (TOKEN C) live sites:
+  L387 (Context), L1905/1986/1988 (D1 desc), L2016 (D1 VISIBLE
+  <text>), L4504 (D5 governs), L4792 (D5 legacy clause), L4800/
+  4805 (D5 VISIBLE <text>), L4850 (D5 HR-CI-009 formula), L4855
+  (D5 produces), L4863 (D5 VISIBLE <text>), L4977 (D5 list), L5176
+  (D6 G5), L5242 (D6 Risk_Engine), L5402/5403 (D6 q1_do/constraints),
+  L5414 (D6 VISIBLE <text>), L5956 (D6 LEGACY annotation).
+
+FIGURES WITH VISIBLE <text> CHANGES (each is an R-BUMP -> full
+R-increment chain rotation per TB00453: SVG <title> + diagram_
+canonical + title-bar + figcaption (a) + 3-deep root <desc> chain):
+  D1 (L2016), D5 (L4800/4805/4863), D6 (L5414), D8 (L3055),
+  D9 (L3378).  -> FIVE R-bump figures.
+FIGURES WITH desc/figcaption-ONLY CHANGES (R-HELD): D2, Context,
+plus the desc portions of D5/D6/D8.
+
+------------------------------------------------------------
+2.2 HR-CI-009 HALF-KELLY NORMALIZATION
+------------------------------------------------------------
+D5 q1_do (L4788) + constraints (L4850) read applied_pct =
+min(K_half, tradeable_pct / max_concurrent). D6 (L5403) already
+reads applied_pct = K_half / max_concurrent (token-free). Harmonize
+D5 to the token-free K_half / max_concurrent form. This removes
+the last COMPUTING reader of tradeable_pct. CIATS owns the
+normalization; no cap. (Both edits are <desc>-only -> R held on
+D5/D6.)
+
+------------------------------------------------------------
+2.3 GOVERNING DOCS (companion edits, same campaign)
+------------------------------------------------------------
+  TB00000 (Bill's working doc):
+    - sec 7 TRADING SYSTEM: remove "capped by per_trade_ceiling_
+      pct" from the sizing-curve sentence; state size is CIATS-
+      owned, sole hardcoded value is the 1:1.5 R:R floor.
+    - sec 8 PARAMETER REGISTRY: DELETE the per_trade_ceiling_pct
+      line ("= 25% of module wallet (hard concentration cap)").
+      Confirm tradeable_pct / per_trade_pct are absent (they are).
+      Author as a TB00000 version bump (v2_82 -> v2_83); Bill
+      ratifies.
+  0311001 Namespace_Specification: de-register per_trade_ceiling_
+    pct (sec 15.12.8) + confirm tradeable_pct / per_trade_pct
+    handling. Version bump; companion artifact.
+  evt:G7_PER_TRADE_CEILING_BREACH: remove from D8 and de-register
+    from 0311001 (it only existed for the deleted CHECK 5).
+
+------------------------------------------------------------
+2.4 0611001 RETIREMENT (unblocked at TB00577)
+------------------------------------------------------------
+DD-014 re-audit was CLEAN at TB00577 (all 0611001 architecture in
+HEAD; only obsolete fixed-% model dropped). Retire 0611001 dv1_0
+(git rm --cached, DR-078 close) -- either folded into this
+campaign or as a clean separate step (one retirement/session per
+0911002 sec 6.1; precedent TB00573).
+
+============================================================
+3. EXECUTION APPROACH + CADENCE
+============================================================
+This is a large multi-figure + multi-prose + multi-doc change.
+Bill has EXPLICITLY authorized "Change ALL diagrams and prose" --
+this OVERRIDES the one-figure-per-session DEC-003 Path A default
+for this campaign. Execute the full mandate; deliver as you go
+(present_files per artifact; surgical str_replace; never one end-
+of-session mega-turn -- that risks the whole-session crash per
+TB00000 sec 4.6).
+
+Per artifact: build in /home/claude from the live HEAD file, apply
+exact-match edits, run DR-007.9 HTML well-formedness (tag-balance
+0; exactly ONE "<h2>14. Revision History</h2>"), confirm md5, then
+present. For each R-bump figure author the R-increment narrative +
+rotate the 3-deep visible chain + bump SVG <title> + diagram_
+canonical + title-bar + figcaption (a). Doc version bumps once for
+the whole 0500000 change (dv1_164 -> dv1_165...); one-version rule
+git rm --cached on the superseded version at push.
+
+If the full sweep cannot land safely in one session, stage it but
+keep momentum: do NOT defer the whole thing again. State progress
+honestly in the SL; carry only the unfinished figures.
+
+============================================================
+4. CHAT-TURN-1 GATE (mandatory)
+============================================================
+Re-derive scope vs live HEAD (DD-011). Five precondition checks:
+  (1) N-2: live HEAD 0500000 md5 == TB00577 SL recorded value
+      (dv1_164 c565d2cd1451c6aebe8606cfcad419ba). Halt on mismatch.
+  (2) BINARY TEST (DEC-096): sizing values are TothBot-organism
+      (CIATS) architecture -> diagrams. The seed VALUES that
+      survive (per_trade_size_usd ~$0.50, drawdown halts, etc.)
+      stay in TB00000 sec 8; the deleted per_trade_ceiling_pct is
+      NOT a seed that survives -- it is removed outright.
+  (3) ZERO-COMPUTING-READER (ERROR-TB00496-CHAT-01): before
+      deleting each token at a site, confirm nothing downstream is
+      stranded; per_trade_size_usd already supplies all sizing.
+  (4) R-STATE (TB00453): visible-<text> edits BUMP R (D1/D5/D6/D8/
+      D9); desc/figcaption-only edits HOLD R.
+  (5) Cross-thread cleanup cross-check: removals strand no consumer
+      and are not pending source for an open append debt.
+Do NOT surface derivable steps as ratification questions (OUTCOME
+1 execution mandatory). The mandate itself is NOT a question.
+
+============================================================
+5. CARRY-FORWARD LEDGER (open, not consumed by the mandate)
+============================================================
+  CF-0610-ANCHOR / CF-0610-CHILDCHAIN: after 0611001 retires,
+    assess 0610000 anchor disposition; confirm 0611001 ABSENT from
+    HEAD; reconcile the TB00257 git rm anomaly.
+  CF-V040-METHOD; CF-0411003-RLPROTECT-REAUDIT; CF-0911002-STALE;
+    CF-E3-REFREF; CF-STREAMLINE; CF-14-ABSENT; CF-A (DR OPTION-1
+    DEC append backlog DEC-082+); N-1 (rounding-direction watch);
+    N-2 (SL md5 capture).
+  REMAINING E2 source specs after this campaign: 0711001, 0711002,
+    0711003 (0611001 + 0611002 retired). Reconcile MOVE-14 tally vs
+    0911002 dv1_4 + TB00394 (do not assert an unverified count).
+
+============================================================
+6. SESSION-CLOSE PROTOCOL
+============================================================
+SL + next NSI (OCS box + carry-forward ledger) + OPERATION 4 push
+box (literal absolute cd paths; branch master BOTH repos; ASCII-
+only commit messages no parens/special chars; git add not file-
+copy; one-version git rm --cached on superseded 0500000; git rm
+--cached on retired 0611001). Post-push DR-010 HEAD-landing
+verification (fresh tarball + md5). TB-files -> SessionLogs repo;
+0500000 + 0611001 -> Docs repo; TB00000 -> SessionLogs repo;
+0311001 -> Docs repo.
+
+============================================================
+END OF DOCUMENT
+============================================================

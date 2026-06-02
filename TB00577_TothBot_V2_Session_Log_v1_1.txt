@@ -1,0 +1,88 @@
+DocDCN:     TB00577
+DocTitle:   TothBot_V2_Session_Log
+DocVersion: v1_1
+DocOwner:   Bill
+DocPath:    GitHub.com/TothBot/TothBot_V2-SessionLogs/TB00577_TothBot_V2_Session_Log_v1_1.txt
+DocDate:    06-02-2026
+DocTime:    23:59:00 UTC
+
+============================================================
+TB00577 SESSION LOG
+============================================================
+
+OUTCOME: NOTHING PUSHED THIS SESSION. The session is handed off
+to TB00578 to execute one large mandate from Bill (below). Any
+dv1_165 draft built mid-session is SUPERSEDED and must NOT be
+pushed; the next session builds fresh from HEAD dv1_164.
+
+------------------------------------------------------------
+1. WHAT HAPPENED (the arc)
+------------------------------------------------------------
+Cold-loaded HEAD: TB00000 v2_82; TB00577 NSI; TB00576 SL;
+TB00572 F-1 register; 0500000 dv1_164 (md5 c565d2cd1451c6aebe86
+06cfcad419ba, N-2 match); 0611001 dv1_0 (full).
+
+The session opened on the F-1 OPTION A stale-token sweep but
+repeatedly mis-stated Bill's sizing model. Bill issued a chain
+of escalating corrections, ending in a single unambiguous
+mandate. The corrections, in order, are the authoritative record:
+
+  (1) tradeable_pct + per_trade_pct are OBSOLETE. CIATS owns the
+      per-trade percentage and the per-trade size. Paper starts
+      $5,000; trades start ~$0.50 (seeds, TB00000 sec 8).
+  (2) There is NO cap on the percentage of portfolio that can be
+      traded. It is CIATS owned.
+  (3) The only sacred hardcoded value is the net 1:1.5 R:R
+      MINIMUM. It is a FLOOR, not a cap.
+  (4) FINAL MANDATE: there is NO per_trade_ceiling_pct. There is
+      NO ceiling of any kind. The amount traded is 100% CIATS
+      owned. Change ALL 0500000 design diagrams AND prose to make
+      ALL trading values CIATS-owned EXCEPT the 1:1.5 R:R floor.
+
+ROOT CAUSE of the recurrence (stated plainly for the record): the
+live diagram + TB00000 sec 8 still encode per_trade_ceiling_pct
+as a "hard concentration ceiling / last line of defense against
+CIATS sizing wipeout / absolute-loss-limiter at Gate 7 CHECK 5."
+Each session re-derives from that stale framing and reintroduces
+a non-CIATS ceiling Bill has repeatedly removed. The fix is to
+DELETE the ceiling everywhere so it cannot regenerate.
+
+------------------------------------------------------------
+2. WORK PRODUCT THIS SESSION (all superseded / not pushed)
+------------------------------------------------------------
+  - A dv1_165 draft harmonizing the D5 HR-CI-009 formula to
+    K_half / max_concurrent was built, then its "hard cap
+    preserved" wording was corrected. SUPERSEDED by the mandate
+    (the whole per_trade_ceiling_pct construct is being deleted,
+    not preserved). DO NOT PUSH IT.
+  - DD-014 re-audit of 0611001 dv1_0 was completed and is CLEAN:
+    every 0611001 architectural element (five-value R:R formula;
+    fee math 0.0016/0.0026; sacred net_gain=net_loss*1.5; per-
+    parameter Decimal rounding directions; qty_min/cost_min SKIP
+    validation; realized-capital/no-MTM rule; Half-Kelly W/R +
+    K_full<=0 handling; NON_DIR 50% modifier; Gate 8 output
+    contract) is present in live HEAD dv1_164. Only the obsolete
+    fixed-% model (PS-TRADE-001 / PS-PTA-001) is dropped. 0611001
+    retirement is UNBLOCKED and may proceed in TB00578 (fold into
+    the mandate or do as a clean git rm --cached + DR-078 close).
+
+------------------------------------------------------------
+3. GOVERNANCE STATE (unchanged this session)
+------------------------------------------------------------
+HEAD 0500000 = dv1_164 (md5 c565d2cd1451c6aebe8606cfcad419ba).
+DR v1_73. MDR v1_53. V-038 0 open. 0311001 v1_38. TB00000 v2_82.
+0911002 dv1_4. TB00394 v1_1. No DEC added. No seed moved.
+
+------------------------------------------------------------
+4. CARRY-FORWARD
+------------------------------------------------------------
+All carry-forwards fold into the single TB00578 mandate (sec 2 of
+TB00578). Pre-existing CFs not consumed by the mandate (CF-V040-
+METHOD, CF-0411003-RLPROTECT-REAUDIT, CF-0911002-STALE,
+CF-E3-REFREF, CF-STREAMLINE, CF-14-ABSENT, CF-A DR-append backlog,
+CF-0610-ANCHOR/CHILDCHAIN, N-1, N-2) remain open and are listed
+in TB00578 sec 5.
+
+============================================================
+END OF DOCUMENT
+============================================================
