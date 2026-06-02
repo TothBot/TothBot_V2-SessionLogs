@@ -1,0 +1,208 @@
+DocDCN:     TB00575
+DocTitle:   Next_Session_Instructions
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    GitHub.com/TothBot/TothBot_V2-SessionLogs/TB00575_Next_Session_Instructions_v1_0.txt
+DocDate:    06-01-2026
+DocTime:    23:59:00 UTC
+
+============================================================
+OCS -- COPY BOX (paste as the first chat turn next session)
+============================================================
+
+Cold-load TB00575_Next_Session_Instructions_v1_0.txt + TB00000
+from GitHub HEAD and follow it.
+
+============================================================
+TB00575 NEXT SESSION INSTRUCTIONS
+============================================================
+
+MISSION FRAME: 0911002 Stream 2 / Phase 3 / E2 -- migrate the
+remaining un-migrated source-document architecture into the
+canonical 0500000 diagrams, then retire each source on a
+DR-078-gated clean DD-014 re-audit. Binary architecture test
+(DEC-096): either content is trading-organism architecture and
+belongs in a 0500000 design diagram, or it does not -- no gray
+bins. One primary mission per session; one diagram per session
+(DEC-003 Path A / TB00000 sec 4.1 / 0911002 sec 6).
+
+STATE AT CLOSE OF TB00574:
+  - M-2 COMPLETE. D2 gate:G6_Regime_Sizer reconciled to size
+    off param:per_trade_size_usd (consumes / q1_do / q5_logs
+    base relabel); contract:Parameter_Store_Snapshot +
+    contract:Pre_Computation_Cache_Read extended/relabelled
+    (ADD-only). 0500000 dv1_161 -> dv1_162. Figure D2
+    Trading_Pipeline R8 HELD (all <desc>-only). No new token
+    (param:per_trade_size_usd already in 0311001 v1_38).
+  - TRANSIENT KNOWN STATE: G6 base is now per_trade_size_usd
+    while D6/D9 gate:G8_Position_Sizer STILL computes
+    per_trade_pct x Half-Kelly x balance and reads
+    per_trade_pct from the frozen snapshot. The stale
+    per_trade_pct / tradeable_pct tokens REMAIN in the D2
+    snapshot + the D5/D6/D9 producer/consumer sites BY DESIGN
+    (removing them at M-2 would have stranded G8). They are
+    removed at M-3 only after G8 is reconciled.
+  - DR stays v1_73 (no new DEC). No paired MDR authored.
+  - 0611001 dv1_0 STILL LIVE in Docs HEAD behind F-1.
+  - 0500000 now at dv1_162.
+
+------------------------------------------------------------
+1. COLD-LOAD (mandatory, GitHub HEAD via tarball)
+------------------------------------------------------------
+  - TB00000 (current version).
+  - This NSI (TB00575 v1_0).
+  - TB00574 SL v1_0.
+  - TB00572_S1PS_DD014_Gap_Register_0611001_v1_0 (F-1 source
+    of record).
+  - 0500000 dv1_162 (EXPECT single version; no newer
+    present; capture + record its md5 at cold-load and
+    confirm it matches the TB00574 OP4 DR-010 verification
+    value).
+  - 0311001 v1_38; 0611001 dv1_0; 0610000 dv1_6.
+  - Registers: TB00394 v1_1; TB00153 DR v1_73 (HEAD max
+    DEC-107); MDR v1_53; 0911002 dv1_4.
+  Run the FP/DP-derivability test at chat-turn 1 against
+  section 2; execute the single compliant path.
+
+------------------------------------------------------------
+2. PRIMARY MISSION (F-1 OPTION A cleanup -- Bill-ruled)
+------------------------------------------------------------
+F-1 (0611001 sizing-model parameterization) was RULED OPTION
+A by Bill at TB00572. The cleanup is multi-diagram, so one
+diagram per session. M-2 (D2 G6 base relabel) landed at
+TB00574.
+
+PROPOSED PRIMARY (default, pending Bill redirect):
+M-3 = gate:G8_Position_Sizer COMPUTATION reconcile + stale-
+  token removal. Two coordinated parts on ONE figure (the
+  figure that carries the G8 sizing computation -- verify in
+  live HEAD which figure owns G8's q1_do computation:
+  D6/Complete_System and/or D9; do NOT assume -- grep the
+  live dv1_162 for gate:G8_Position_Sizer and confirm the
+  owning figure before scoping):
+    PART A -- reconcile the G8 per-trade-size computation so
+      it sizes from param:per_trade_size_usd (the CIATS-
+      owned per-module dollar allocation, bounded by
+      param:per_trade_ceiling_pct 25%) instead of
+      per_trade_pct x Half-Kelly x balance. Preserve the
+      Half-Kelly / MAE / emergency-SL risk semantics that are
+      NOT part of the sizing-base change (binary test each
+      sub-edit).
+    PART B -- ONCE PART A removes the last computation that
+      reads per_trade_pct / tradeable_pct, remove those now-
+      orphaned stale tokens from the D2 Parameter_Store_
+      Snapshot consumes + q1_do enumeration AND from every
+      D5/D6/D9 producer/consumer site. CROSS-CHECK first
+      (ERROR-TB00496-CHAT-01): grep the live dv1_162 for ALL
+      remaining per_trade_pct / tradeable_pct readers and
+      confirm ZERO live consumers remain before any removal,
+      so no gate is stranded.
+  Diagram-first (DD-002/DD-003); SD-9-verify against 0611001
+  dv1_0 sec 5 / sec 6.1 + TB00000 v2_82 sec 8 seed registry.
+  R-state per TB00453: a removal that touches only <desc>
+  lines holds R; any visible-<text>/geometry/viewBox change
+  bumps R and propagates the R-increment chain. The G8
+  computation likely lives in <desc> (q1_do) -> expect R
+  held, but VERIFY against the live figure before asserting.
+
+  SCOPE CAUTION (RR-SCOPE-007 / DD-011): this NSI's default
+  cannot by itself bind the outcome. If G8's computation
+  and the stale-token readers span MORE than one figure such
+  that PART A + PART B cannot both complete on a single
+  figure without a second diagram, SPLIT: do the single
+  owning-figure G8 computation reconcile this session and
+  carry the cross-figure token sweep to M-4. Do NOT touch a
+  second figure in one session (DEC-003 Path A).
+
+THEN (subsequent sessions):
+  Then 0611001 dv1_0 retirement S-1..S-6 once F-1 cleanup
+      lands AND a clean DD-014 re-audit of 0611001 vs live
+      HEAD confirms zero residual bucket-(c) gaps. After
+      0611001 retires, 0610000 anchor sub-domain retirement
+      unblocks (the anchor itself stays per V-039 if any
+      future instance doc is anticipated; else assess anchor
+      disposition).
+
+After the M-3 mission lands + HEAD-verified, do NOT proceed
+to a second diagram or any retirement in the same session.
+
+------------------------------------------------------------
+3. CHAT-TURN-1 FP/DP-DERIVABILITY GATE (DD-011)
+------------------------------------------------------------
+Read live HEAD, then run the test against section 2. If a
+single compliant path exists (OUTCOME 1), EXECUTE it -- do
+not surface it as a ratification question. Surface ONLY
+genuine Bill business-judgment / phase-sequencing decisions
+(not governance-rule-bound outcomes). Self-authored-NSI
+content (this file's "proposed default") cannot by itself
+bind the outcome -- re-derive from live HEAD + TB00000 +
+the F-1 register. NOTE the TB00574 precedent: the prior NSI
+"remove the residue" instruction was correctly NARROWED at
+chat-turn 1 to avoid a stranded consumer -- apply the same
+re-derivation discipline to the G8 computation + token
+sweep this session.
+
+------------------------------------------------------------
+4. PRECONDITION CHECKS (apply before any S-2 edit or
+   any retirement git rm)
+------------------------------------------------------------
+  (1) BINARY TEST (DEC-096): confirm the content is trading-
+      organism architecture (-> a 0500000 diagram) vs a
+      seed value / non-architecture home (stays put). No seed
+      VALUE enters 0500000.
+  (2) HOME-EXISTS: a retirement cannot proceed unless the
+      designated canonical home exists in GitHub HEAD and is
+      DR-010-verified (the TB00511 halt precedent).
+  (3) DR-010 HEAD LANDING: after every push, fresh tarball
+      pull + md5 byte-for-byte; confirm superseded versions
+      ABSENT (one-version rule via git rm --cached).
+  (4) CROSS-THREAD CLEANUP CROSS-CHECK (ERROR-TB00496-CHAT-01):
+      before authoring any git rm OR any stale-token removal,
+      confirm the file/token is not pending source material
+      or a live consumer dependency for an open thread. For
+      M-3 PART B this is the explicit zero-live-reader grep
+      gate.
+  (5) R-STATE (TB00453): ADD-only / <desc>-only edits hold R;
+      visible-<text>/geometry/viewBox changes bump R and
+      propagate to SVG <title> + diagram_canonical +
+      title-bar + figcaption (a) + the root <desc>
+      R-increment chain.
+
+------------------------------------------------------------
+5. CARRY-FORWARD LEDGER
+------------------------------------------------------------
+  F-1 OPTION A: M-3 (this NSI default: G8 computation
+    reconcile + stale-token sweep) -> 0611001 retirement
+    (see section 2). M-4 only if M-3 splits across figures.
+  CF-0610-CHILDCHAIN (Bill out-of-chat forensic): how
+    0611001 survived its TB00257 git rm record; DD-012
+    numeric ledger reconciliation; any paired MDR; TB00394
+    MCR append. 0611001 still live in HEAD; 0610000 dv1_6
+    sec 2 documents the anomaly.
+  CF-0411003-RLPROTECT-REAUDIT: 0411003 retirement DR-078-
+    gated pending a clean DD-014 re-audit (D1).
+  CF-V040-METHOD; CF-0911002-STALE; CF-E3-REFREF;
+    CF-STREAMLINE; CF-14-ABSENT; CF-A (DR OPTION-1 DEC
+    append backlog DEC-082+); N-1 rounding-direction watch
+    -- carried unchanged.
+  REMAINING E2 source specs (by name): 0610000 anchor
+    (BLOCKED by F-1 / 0611001), 0711001, 0711002, 0711003.
+    Reconcile the exact MOVE-14 numeric tally against
+    0911002 dv1_4 + TB00394 (do not assert an unverified
+    count; tied to CF-0610-CHILDCHAIN).
+
+------------------------------------------------------------
+6. SESSION-CLOSE PROTOCOL
+------------------------------------------------------------
+On mission completion: author the TB00575 SL + the TB00576
+NSI (+ OCS copy box + OP4 push box). OP4 box uses literal
+absolute repo paths, branch master (NEVER main), single-
+quote PowerShell wrap, ASCII commit message, no file-staging
+variables (placement is Bill's download step). Run DR-010
+HEAD-landing verification after the push. OCS stays minimal
+(a pointer to the next NSI only; do NOT restate the mission
+frame, binary test, DR-078 gate, or these checks).
+
+============================================================
+END OF DOCUMENT
+============================================================

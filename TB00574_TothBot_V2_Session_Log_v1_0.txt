@@ -1,0 +1,262 @@
+DocDCN:     TB00574
+DocTitle:   TothBot_V2_Session_Log
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    GitHub.com/TothBot/TothBot_V2-SessionLogs/TB00574_TothBot_V2_Session_Log_v1_0.txt
+DocDate:    06-01-2026
+DocTime:    23:59:00 UTC
+
+============================================================
+TB00574 SESSION LOG
+0911002 Stream 2 / Phase 3 / E2 -- M-2 F-1 OPTION A
+sizing-model reconcile (D2 G6_Regime_Sizer)
+============================================================
+
+============================================================
+1. COLD-LOAD + STATE VERIFICATION
+============================================================
+
+Read from GitHub HEAD (public tarball):
+  - TB00000 v2_82 (current; matches inbound inline copy).
+  - TB00574 NSI v1_0 (inbound).
+  - TB00573 SL v1_0.
+  - TB00572_S1PS_DD014_Gap_Register_0611001_v1_0 (F-1 source
+    of record).
+  - 0500000 dv1_161 -- md5 dd9dfa6ef10b41bb8f17cc716e62b0a6
+    CONFIRMED (matches NSI); SINGLE version in HEAD;
+    per-figure viewBox structure.
+  - 0311001 v1_38; 0611001 dv1_0; 0610000 dv1_6.
+  - Registers: TB00394 MCR v1_1; TB00153 DR v1_73 (HEAD max
+    = DEC-107); TB00153 MDR v1_53; 0911002 dv1_4.
+  - 0611002 ABSENT from HEAD CONFIRMED (retired TB00573).
+  - 0711001 dv1_3 / 0711002 dv1_2 / 0711003 dv1_3 present.
+
+PRECONDITION CHECKS:
+  - HOME-EXISTS: param:per_trade_size_usd already registered
+    in 0311001 v1_38 sec 15.12.8 (annotated TB00000 sec 8
+    seed registry) -- NO new token, NO P-2 step this session.
+    Diagram home (0500000 D2 G6 node) live + DR-010-verified
+    PASS.
+  - G6 node consumes/q1_do/q5_logs grep on live dv1_161 =
+    per_trade_pct present (stale base) CONFIRMED -> reconcile
+    target valid.
+  - D6/Complete_System gate:G8_Position_Sizer STILL computes
+    per_trade_pct x Half-Kelly x balance + reads per_trade_pct
+    from the frozen Parameter_Store_Snapshot -> snapshot
+    per_trade_pct is a LIVE consumer dependency (drives the
+    M-2 scope narrowing in sec 2/3).
+
+============================================================
+2. FP/DP-DERIVABILITY TEST (chat-turn 1)
+============================================================
+
+OUTCOME 1 -- single compliant path. F-1 was RULED OPTION A by
+Bill at TB00572; G6-first is the settled lowest-risk slice
+(NSI sec 2 default). No genuine Bill business-judgment fork
+exists. Executed M-2 under RR-SCOPE-005 + DD-011 OUTCOME 1
+EXECUTION MANDATORY; NOT surfaced as a ratification question.
+
+DD-011 SCOPE RE-DERIVATION (self-authored-NSI-does-not-bind,
+RR-SCOPE-007): the NSI sec 2 literal phrasing -- "REMOVE the
+stale base per_trade_pct / tradeable_pct residue" -- was
+re-derived against live HEAD and NARROWED. Removing
+per_trade_pct / tradeable_pct from the D2
+Parameter_Store_Snapshot THIS session would STRAND the D6/D9
+gate:G8_Position_Sizer, which still computes per-trade size
+from per_trade_pct x Half-Kelly x balance and reads
+per_trade_pct from the frozen snapshot. A stranded-consumer
+architectural defect is the loss event the binary-test +
+cross-check regime exists to prevent. Therefore M-2 =
+relabel the G6 NODE base to per_trade_size_usd only; the
+snapshot KEEPS per_trade_pct (transient) until M-3 reconciles
+the G8 computation. This matches the NSI's own M-3 line
+("remove any remaining tradeable_pct / per_trade_pct"). Loss-
+minimizing, no-stranded-consumer, one-figure scope.
+
+============================================================
+3. WORK PERFORMED
+============================================================
+
+S-2 DIAGRAM RECONCILE (D2 gate:G6_Regime_Sizer sizing base),
+diagram-first per DD-002/DD-003, SD-9-verified vs 0611001
+dv1_0 sec 5 / sec 6.1 + TB00000 v2_82 sec 8 seed registry:
+  0500000 dv1_161 -> dv1_162. Figure D2
+  0500000_Image2_T2_R8_Trading_Pipeline. THREE coordinated
+  <desc>-only edits on the G6 node:
+    (E1a) consumes: param:per_trade_pct -> param:
+          per_trade_size_usd.
+    (E1b) q1_do: "100% of base per_trade_pct" -> "100% of
+          base per_trade_size_usd" (the ar:AR-074 regime
+          multiplier 50%/100% now modulates the
+          per_trade_size_usd base; regime-mapping semantics
+          unchanged).
+    (E1c) q5_logs: G6_REGIME_SIZED field base_per_trade_pct
+          -> base_per_trade_size_usd.
+  Plus two ADD-only completeness edits + one downstream-
+  reference relabel:
+    (E2a) contract:Parameter_Store_Snapshot consumes-list
+          EXTENDED with param:per_trade_size_usd (ADD-only;
+          per_trade_pct / tradeable_pct RETAINED for G8).
+    (E2b) contract:Parameter_Store_Snapshot q1_do frozen-
+          parameter enumeration EXTENDED with
+          per_trade_size_usd (ADD-only) -- so a coder reading
+          D2 alone sees the G6 base sourced from the frozen
+          snapshot.
+    (E3)  contract:Pre_Computation_Cache_Read q4_triggers
+          downstream reference "G6 (per_trade_pct)" -> "G6
+          (per_trade_size_usd)".
+
+  BINARY TEST (DEC-096): the per-trade sizing basis + regime
+  multiplier are TothBot-organism (CIATS/pipeline)
+  architecture -> the D2 diagram (YES). No seed VALUE moved
+  (per_trade_size_usd / per_trade_ceiling_pct starting values
+  stay in TB00000 sec 8; param:per_trade_size_usd already in
+  0311001 v1_38 -> NO 0311001 amendment, NO new token, NO
+  P-2).
+
+  R-STATE HELD at R8 (TB00453 bright line): all edits are
+  <desc>-only (consumes / q1_do / q5_logs / cache trigger
+  fields). D2 visible SVG <text> shows only the G6 regime
+  labels ("50% size" / status text), never the sizing-base
+  token, so NO visible-text change; NO geometry, NO SVG
+  <title>, NO diagram_canonical, NO title-bar, NO figcaption
+  (a) R change; NO viewBox change (1500x1700 preserved); NO
+  R-increment chain rotation; NO figure-count change.
+
+VERIFICATION (pre-delivery, DR-007.9 + geometry byte-
+identity vs pristine dv1_161):
+  - HTML well-formedness parser pass: 0 errors, all tags
+    balanced.
+  - Exactly ONE <h2>14. Revision History</h2>.
+  - D2 viewBox "0 0 1500 1700" byte-identical.
+  - Drawable-primitive counts byte-identical 161 vs 162:
+    rect 313, path 30, line 97, circle 0, polygon 6,
+    polyline 1, text 954, svg 10, viewBox 35.
+  - Whole-doc diff = the 3 header version bumps + the 3 G6
+    <desc> edits + the 2 ADD-only snapshot lines + the 1
+    cache-trigger relabel + the single new dv1_162 revision-
+    history line. NO geometry / <text> / <title>(figure) /
+    diagram_canonical lines in the diff.
+  - G6 node desc residual per_trade_pct = 0; snapshot
+    per_trade_pct RETAINED (transient for G8) + snapshot now
+    also lists per_trade_size_usd.
+
+NO P-2 (token pre-registered). NO S-4/S-5 retirement this
+session (M-2 is reconcile-only; 0611001 + 0610000 stay live
+behind F-1).
+
+============================================================
+4. DR-010 HEAD-LANDING VERIFICATION
+============================================================
+
+OP4 PUSH (this session close): DR-010 verification to be
+performed post-push (fresh tarball pull; md5 byte-for-byte):
+  - 0500000 dv1_162 present in TothBot_V2-Docs HEAD; md5
+    match against the delivered file.
+  - Superseded dv1_161 ABSENT from HEAD (one-version rule via
+    git rm --cached).
+  - TB00574 SL v1_0 + TB00575 NSI v1_0 present in
+    TothBot_V2-SessionLogs HEAD.
+
+============================================================
+5. DD-012 RETIREMENT LEDGER
+============================================================
+
+No retirement this session (M-2 is a reconcile slice).
+0611001 dv1_0 retirement remains BLOCKED behind the F-1
+cleanup (M-3 + clean DD-014 re-audit). DD-012 numeric tally
+unchanged.
+
+NO new TB00153 DECISION (runs under DEC-096 + the TB00572
+OPTION A ruling; DR stays v1_73). NO Claude-authored paired
+MDR (forward reconcile; F-1 tracked as a carry-forward, not
+an open V-038/V-040 entry; MDR v1_53 unchanged; V-038 = 0
+open through dv1_162). TB00394 MCR unchanged (forward fill).
+No 0500000 seed (sec 8 / sec 9) value touched.
+
+============================================================
+6. FINDINGS
+============================================================
+
+FINDING-1 (stranded-consumer hazard averted): the NSI sec 2
+literal "remove the stale per_trade_pct / tradeable_pct
+residue" could not be executed at the snapshot/token level
+this session without stranding D6/D9 gate:G8_Position_Sizer,
+which still computes per_trade_pct x Half-Kelly x balance and
+reads per_trade_pct from the frozen Parameter_Store_Snapshot.
+M-2 scope narrowed to the G6 node base relabel; full token
+removal sequenced into M-3 after G8 is reconciled. This is
+the loss-minimizing ordering.
+
+FINDING-2 (transient corpus state, intentional): until M-3,
+the corpus carries the G6 regime-multiplier base on
+per_trade_size_usd (D2) while G8 still computes off
+per_trade_pct. This is a deliberate, recorded transient (see
+the dv1_162 revision entry "TRANSIENT KNOWN STATE"), not a
+V-038 diagram-vs-prose conflict -- it is a planned multi-
+session reconcile across one figure per session (DEC-003
+Path A).
+
+FINDING-3 (provenance note, no action): NSI sec 2 cites
+"TB00000 sec 9.17" for the sizing model; that section is a
+v2_38-era reference now living in TB00000 v2_82 sec 8 seed
+registry + sec 3 binary test. SD-9 verification used the
+v2_82 sec 8 location. Historical provenance only; not a
+blocker.
+
+============================================================
+7. CLAUDE ERRORS THIS SESSION
+============================================================
+
+None logged. ERROR-TB00496-CHAT-01 cross-thread cleanup
+cross-check N/A this session (no git rm authored beyond the
+one-version git rm --cached of the superseded dv1_161, which
+strands no open debt -- dv1_161 is a prior version of the
+same live diagram, fully superseded by dv1_162).
+
+============================================================
+8. CARRY-FORWARD LEDGER
+============================================================
+
+  F-1 OPTION A cleanup (multi-diagram, one/session):
+    M-3 reconcile D6/D9 gate:G8_Position_Sizer per-trade-size
+        COMPUTATION to per_trade_size_usd; THEN remove the
+        now-orphaned stale per_trade_pct / tradeable_pct
+        tokens across the D2 snapshot + D5/D6/D9 producer/
+        consumer sites (only once nothing computes from
+        them).
+    Then 0611001 dv1_0 retirement (S-1..S-6) once F-1
+    cleanup lands + a clean DD-014 re-audit confirms zero
+    residual bucket-(c) gaps.
+  CF-0610-CHILDCHAIN -- Bill out-of-chat forensic: how
+    0611001 survived its TB00257 git rm record; DD-012
+    numeric ledger reconciliation; any paired MDR; TB00394
+    MCR append. 0611001 still live in HEAD; 0610000 dv1_6
+    sec 2 documents the anomaly.
+  CF-0411003-RLPROTECT-REAUDIT -- 0411003 retirement DR-078-
+    gated pending a clean DD-014 re-audit (D1).
+  CF-V040-METHOD; CF-0911002-STALE; CF-E3-REFREF;
+    CF-STREAMLINE; CF-14-ABSENT; CF-A (DR OPTION-1 DEC
+    append backlog DEC-082+); N-1 rounding-direction watch
+    -- all carried unchanged.
+  REMAINING E2 un-migrated/un-retired source specs (by
+    name): 0610000 anchor (BLOCKED -- 0611001 lives behind
+    F-1), 0711001, 0711002, 0711003. Exact MOVE-14 numeric
+    tally to be reconciled against 0911002 dv1_4 + TB00394
+    (tied to CF-0610-CHILDCHAIN; not asserted here, to avoid
+    an unverified count).
+
+============================================================
+9. OPERATION 4 -- GITHUB PUSH RECORD
+============================================================
+
+OP4 push (this session close): TothBot_V2-Docs -- add
+0500000 dv1_162; git rm --cached dv1_161 (one-version rule).
+TothBot_V2-SessionLogs -- add TB00574 SL v1_0 + TB00575 NSI
+v1_0. Branch master, literal absolute paths, single-quote
+PowerShell wrap, ASCII commit message. DR-010 verification
+follows the push.
+
+============================================================
+END OF DOCUMENT
+============================================================
