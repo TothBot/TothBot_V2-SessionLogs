@@ -1,0 +1,232 @@
+DocDCN:     TB00573
+DocTitle:   TothBot_V2_Session_Log
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    GitHub.com/TothBot/TothBot_V2-SessionLogs/TB00573_TothBot_V2_Session_Log_v1_0.txt
+DocDate:    06-01-2026
+DocTime:    23:59:00 UTC
+
+============================================================
+TB00573 SESSION LOG
+0911002 Stream 2 / Phase 3 / E2 -- M-1 peak_portfolio_USD
+migration into D5 + 0611002 retirement
+============================================================
+
+============================================================
+1. COLD-LOAD + STATE VERIFICATION
+============================================================
+
+Read from GitHub HEAD (public tarball):
+  - TB00000 v2_82 (current).
+  - TB00573 NSI v1_1 (inbound).
+  - TB00572 SL v1_1 + the two TB00572 DD-014 gap registers
+    (TB00572_S1PS_..._0611001 [F-1] +
+    TB00572_S1DH_..._0611002 [F-2]).
+  - 0500000 dv1_160 -- md5 93a6d7d79c1348637cf0010a715dae06
+    CONFIRMED (matches NSI); SINGLE version in HEAD.
+  - Sources: 0611001_Position_Sizing_Rules_dv1_0 +
+    0611002_Drawdown_and_Halt_Rules_dv1_0.
+  - Anchor: 0610000_Risk_Rules_Anchor_dv1_5.
+  - Token spec: 0311001_Namespace_Specification_v1_37.
+  - Registers: TB00394 MCR v1_1; TB00153 DR v1_73 (HEAD max
+    = DEC-107); TB00153 MDR v1_53; 0911002 dv1_4.
+
+PRECONDITION CHECKS (TB00511 pattern):
+  - peak_portfolio_USD grep on live dv1_160 = 0 hits ->
+    F-2 ABSENT CONFIRMED (Bucket C, not the TB00258
+    Bucket-B claim).
+  - Designated migration home (0500000 D5) exists in HEAD:
+    PASS.
+  - 0611002 + 0610000 dv1_5 + 0611001 all CONFIRMED live in
+    Docs HEAD (06XXXXX_Risk/) -- CF-0610-CHILDCHAIN stands
+    (both 0611001 + 0611002 persist despite TB00257/258
+    retirement records).
+
+============================================================
+2. FP/DP-DERIVABILITY TEST (chat-turn 1)
+============================================================
+
+OUTCOME 1 -- single compliant path. F-1 and F-2 were both
+RULED OPTION A by Bill at TB00572. The TB00573 NSI M-1 sets
+the single lowest-risk first step: migrate F-2
+peak_portfolio_USD into D5 (ADD-only, R held), then retire
+0611002. F-1 cleanup (M-2/M-3 + 0611001 retirement) is
+multi-diagram and is carried forward (one diagram/session).
+No gray area; executed M-1 under RR-SCOPE-005 + DD-011
+OUTCOME 1 EXECUTION MANDATORY. Not surfaced as a
+ratification question (governance-rule-bound).
+
+============================================================
+3. WORK PERFORMED
+============================================================
+
+S-2 DIAGRAM AMENDMENT (migrate peak into D5), ADD-only,
+diagram-first per DD-002/DD-003, SD-9-verified vs 0611002
+dv1_0 sec 11 DD-PEAK-001..005:
+  0500000 dv1_160 -> dv1_161. Owning element
+  mod:CIATS_Statistical_Engine. Three coordinated <desc>
+  sites: (i) new ciats_tracking field; (ii) consumes-list
+  token param:peak_portfolio_USD; (iii) D5 root governs
+  token. peak_portfolio_USD = highest current_portfolio_USD
+  since startup; init to param:portfolio_baseline_USD;
+  monotonic (max only, never decreased); reset only on full
+  process restart; read via contract:CIATS_Trade_Outcome_Bus
+  for max-drawdown + future HWM analysis; DD-LOG-007
+  PEAK_PORTFOLIO_UPDATED to mod:Logger at INFO. CIRCUIT-
+  BREAKER ISOLATION (DD-PEAK-003): peak does NOT feed the
+  Gate 7 breakers (cascade computes against the immutable
+  param:portfolio_baseline) -- NO D8 gate-input binding
+  added. BINARY TEST (DEC-096): CIATS-tracked, Logger-
+  emitted, Trade-Outcome-Bus-read statistic -> D5 (YES); no
+  seed VALUE (computed running maximum; nothing added to
+  TB00000 sec 8). R HELD at R13 (TB00453 bright line: a
+  <desc>-only field ADD touches no visible text / geometry
+  / viewBox; 1500x1200 preserved; all 9 other figures byte-
+  identical per DEC-003 Path A). DR-007.9 HTML well-
+  formedness: D5 SVG parses clean; figure/figcaption/g/svg
+  tag balance OK; the pre-existing 5-of-10 strict-XML
+  entity flags + 130/127 <desc literal-prose count are
+  byte-identical to pristine dv1_160 (NOT introduced).
+
+P-2 TOKEN REGISTRATION:
+  0311001 v1_37 -> v1_38. param:peak_portfolio_USD added to
+  sec 15.12.8 annotated "0500000 D5; CIATS-tracked running-
+  maximum drawdown statistic; NOT a seed/tunable parameter
+  -- no TB00000 sec 8 value". Previously ABSENT (grep-
+  verified). sec 17 revision entry added.
+
+S-4 SPEC RETIREMENT:
+  0611002_Drawdown_and_Halt_Rules_dv1_0 removed from HEAD
+  via git rm --cached at the OP4 push (history + Bill C:
+  copy preserved). This is the ACTUAL file removal the
+  TB00258 record always intended but never landed on the
+  HEAD file (CF-0610-CHILDCHAIN). One retirement this
+  session (0911002 sec 6.1).
+
+S-5 CASCADE ANCHOR REVISION:
+  0610000 dv1_5 -> dv1_6. sec 2 child-chain 0611002 line
+  annotated with the actual TB00573 HEAD-file removal +
+  CF-0610-CHILDCHAIN note; sec 3 traceability peak sentence
+  CORRECTED from the TB00258 Bucket-B misclassification to
+  the genuine TB00573 D5 dv1_161 migration; sec 7 dv1_6
+  entry. 0610000 anchor itself NOT retired (V-039; 0611001
+  still lives behind F-1). One-version rule: dv1_5 removed
+  from HEAD via git rm --cached at OP4.
+
+============================================================
+4. DR-010 HEAD-LANDING VERIFICATION
+============================================================
+
+MIGRATION PUSH (commit b453d72, TothBot_V2-Docs, branch
+master): VERIFIED. Fresh tarball pull; md5 byte-for-byte:
+  0500000 dv1_161 = dd9dfa6ef10b41bb8f17cc716e62b0a6 MATCH.
+  0311001 v1_38   = f9e2f8a28b38e45e379f35a4eb2d5d93 MATCH.
+  Superseded dv1_160 + v1_37 ABSENT from HEAD (one-version
+  rule holds).
+
+RETIREMENT + CLOSE PUSH (OP4): DR-010 verification to be
+performed post-push (fresh tarball pull; confirm 0611002
+ABSENT from HEAD; confirm 0610000 dv1_6 present + md5 match;
+confirm dv1_5 ABSENT; confirm SL + NSI present in
+SessionLogs HEAD).
+
+============================================================
+5. DD-012 RETIREMENT LEDGER
+============================================================
+
+0611002_Drawdown_and_Halt_Rules dv1_0 -- HEAD-file
+retirement EXECUTED at TB00573 (git rm --cached). This
+RECONCILES the prior TB00258 retirement record, which had
+recorded the retirement but never removed the live HEAD
+file. The DD-012 numeric tally reconciliation (whether
+TB00258 was double-counted, and the parallel 0611001 HEAD
+persistence) is folded into the CF-0610-CHILDCHAIN Bill
+out-of-chat forensic; this SL records the EVENT, not a new
+total, to avoid an unverified count.
+
+NO new TB00153 DECISION (E2 migration + retirement run under
+the existing DEC-096 binary-test ratification; DR stays
+v1_73). NO Claude-authored paired MDR (forward gap-fill;
+the TB00258 audit-defect + childchain reconciliation is the
+Bill out-of-chat forensic). TB00394 MCR unchanged (forward
+fill). No 0500000 seed (sec 8 / sec 9) value touched.
+
+============================================================
+6. FINDINGS
+============================================================
+
+FINDING-1 (CF-0610-CHILDCHAIN, confirmed + widened): both
+0611001 dv1_0 AND 0611002 dv1_0 persist live in Docs HEAD
+despite being recorded retired at TB00257 (0611001) and
+TB00258 (0611002), and 0610000 dv1_5 describing the AA=06
+child chain as EMPTY since dv1_2. The TB00257/258 git rm
+commands were recorded in governance but never landed on
+the HEAD files. TB00573 removes 0611002 (mission scope);
+0611001 stays behind the open F-1 thread. The persistence
+forensic + DD-012 numeric reconciliation + any MDR entry
+are flagged as a Bill out-of-chat action.
+
+FINDING-2 (TB00258 S-1 audit defect, corrected): the
+TB00258 three-bucket audit classified peak_portfolio_USD as
+Bucket B "already canonical in 0500000 D5 Trade Outcome Bus
+scope" and declared zero Bucket C. The TB00572 F-2 0-hit
+grep proves peak was ABSENT (Bucket C, S-2 amendment
+required). Corrected at TB00573: S-2 amendment performed
+(dv1_161); 0610000 dv1_6 sec 3 records the correction.
+
+============================================================
+7. CLAUDE ERRORS THIS SESSION
+============================================================
+
+None logged. ERROR-TB00496-CHAT-01 cross-thread cleanup
+cross-check applied before authoring the 0611002 git rm:
+0611002 is not pending source material for any open append
+debt (peak, its only outstanding architectural content, was
+migrated and HEAD-verified first); the F-1 thread depends on
+0611001, not 0611002. Removal strands no open debt.
+
+============================================================
+8. CARRY-FORWARD LEDGER
+============================================================
+
+  F-1 OPTION A cleanup (multi-diagram, one/session):
+    M-2 reconcile D2 G6 Regime_Sizer to size off
+        per_trade_size_usd; remove stale base per_trade_pct.
+    M-3 reconcile D2 / G6 / D9 sizing-model coherence;
+        remove stale tradeable_pct / per_trade_pct residue.
+    Then 0611001 dv1_0 retirement (S-1..S-6) once F-1
+    cleanup lands + clean DD-014 re-audit.
+  CF-0610-CHILDCHAIN -- Bill out-of-chat forensic: how
+    0611001/0611002 survived their TB00257/258 git rm
+    records; DD-012 numeric ledger reconciliation; any
+    paired MDR; MCR append. 0611001 still live in HEAD.
+  CF-0411003-RLPROTECT-REAUDIT -- 0411003 retirement DR-078-
+    gated pending a clean DD-014 re-audit (D1).
+  CF-V040-METHOD; CF-0911002-STALE; CF-E3-REFREF;
+    CF-STREAMLINE; CF-14-ABSENT; CF-A (DR OPTION-1 DEC
+    append backlog DEC-082+); N-1 rounding-direction watch
+    -- all carried unchanged.
+  REMAINING E2 un-migrated/un-retired source specs (by
+    name): 0610000 anchor (BLOCKED -- 0611001 lives behind
+    F-1), 0711001, 0711002, 0711003. Exact MOVE-14 numeric
+    tally to be reconciled against 0911002 dv1_4 + TB00394
+    (tied to CF-0610-CHILDCHAIN; not asserted here, to
+    avoid an unverified count).
+
+============================================================
+9. OPERATION 4 -- GITHUB PUSH RECORD
+============================================================
+
+PUSH 1 (executed + DR-010 verified): TothBot_V2-Docs
+commit b453d72 -- add dv1_161 + 0311001 v1_38; git rm
+--cached dv1_160 + v1_37.
+
+PUSH 2 (OP4 box, this session close): TothBot_V2-Docs --
+git rm --cached 0611002 dv1_0; add 0610000 dv1_6; git rm
+--cached 0610000 dv1_5. TothBot_V2-SessionLogs -- add
+TB00573 SL v1_0 + TB00574 NSI v1_0. Branch master, literal
+absolute paths. DR-010 verification follows.
+
+============================================================
+END OF DOCUMENT
+============================================================
