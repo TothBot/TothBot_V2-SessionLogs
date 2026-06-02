@@ -1,0 +1,138 @@
+DocDCN:     TB00572
+DocTitle:   TothBot_V2_Session_Log
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    GitHub.com/TothBot/TothBot_V2-SessionLogs/TB00572_TothBot_V2_Session_Log_v1_0.txt
+DocDate:    06-01-2026
+DocTime:    23:59:00 UTC
+
+============================================================
+TB00572 SESSION LOG
+0911002 Stream 2 / Phase 3 / E2 -- CF-0611-CLASSIFY STEP 1
+============================================================
+
+============================================================
+1. COLD-LOAD + STATE VERIFICATION
+============================================================
+
+Read from GitHub HEAD (public tarball):
+  - TB00000 v2_82 (current).
+  - TB00572 NSI v1_0 (inbound).
+  - TB00571 SL v1_0 + TB00571_S1RA_DD014_Gap_Register_0610000
+    v1_0 (the 0610000 finding).
+  - 0500000 dv1_160 -- md5 93a6d7d79c1348637cf0010a715dae06
+    CONFIRMED (matches NSI expectation); SINGLE version in
+    HEAD; no newer version present.
+  - Sources: 0611001_Position_Sizing_Rules_dv1_0 +
+    0611002_Drawdown_and_Halt_Rules_dv1_0.
+  - Registers: TB00394 MCR v1_1; TB00153 DR (HEAD = v1_73,
+    max DEC = DEC-107 -- one past the NSI-stated DEC-106);
+    TB00153 MDR v1_53; 0911002 dv1_4.
+
+Both 0611001 + 0611002 CONFIRMED live in Docs HEAD
+(06XXXXX_Risk/) -- CF-0610-CHILDCHAIN stands.
+
+============================================================
+2. FP/DP-DERIVABILITY TEST (chat-turn 1)
+============================================================
+
+Primary-mission SELECTION among E2 items is a Bill phase-
+sequencing decision point (DP) per TB00000 sec 4.1; NSI sec 2
+sets CF-0611-CLASSIFY as the default with alternatives flagged
+Bill-business-judgment. Resolution: executed the default --
+CF-0611-CLASSIFY STEP 1 is non-destructive read-only audit,
+the highest-priority open item (risk-substantive stale specs
+live in HEAD), and the mandatory precursor to ANY disposition
+of these files regardless of which alternative Bill might pick.
+No retirement or diagram edit performed (those remain gated).
+
+============================================================
+3. WORK PERFORMED -- CF-0611-CLASSIFY STEP 1
+============================================================
+
+Authored two fresh fact-level (DD-014) gap registers, each
+re-grepped against live HEAD this session (nothing inherited):
+
+  TB00572_S1PS_DD014_Gap_Register_0611001_v1_0
+  TB00572_S1DH_DD014_Gap_Register_0611002_v1_0
+
+EXPECTED-outcome confirmation (NSI sec 2 "confirm, do not
+assume"): both specs are overwhelmingly RESTATEMENT of content
+already canonical in 0500000 dv1_160 + TB00000 sec 8 -- NOT a
+fresh full migration. Two genuine items were found that BLOCK
+retirement (so it is re-audit-then-NOT-yet-retire):
+
+  F-1 (0611001) SIZING-MODEL PARAMETERIZATION. TB00000 sec 8
+    lists ONLY per_trade_size_usd + per_trade_ceiling_pct (no
+    tradeable_pct / per_trade_pct). dv1_160 carries BOTH the
+    percent-of-tradeable params (tradeable_pct/per_trade_pct;
+    G6 sizes off per_trade_pct) AND per_trade_size_usd +
+    Sizing_Curve_Per_Module (G7 CHECK 5 ceiling). 0611001
+    implements the percent model. Which is the live canonical
+    sizing parameterization is a genuine Bill determination
+    (Option A stale-residue-cleanup / B percent-model-live-
+    fix-sec-8 / C hybrid-reconcile). Exposes a latent 0500000-
+    internal / 0500000-vs-sec-8 inconsistency independent of
+    0611001. LOSS-PREVENTION-RELEVANT.
+
+  F-2 (0611002) peak_portfolio_USD / HWM. DD-PEAK-001..005
+    (peak tracking, monotonic, logged DD-LOG-007, CIATS HWM
+    future analysis) is CONFIRMED ABSENT from dv1_160 (full-
+    corpus grep = 0 hits). Binary test: CIATS-owned tracked
+    value = trading-organism architecture -> belongs in a
+    diagram. Determination: migrate diagram-first (Option A)
+    vs declare future/not-yet-canonical (Option B). The only
+    genuinely-absent architecture across both specs.
+
+RULINGS (Bill, this chat):
+  F-1 = OPTION A. Trade size is CIATS-owned: per_trade_size_usd
+    (paper seed = Kraken per-pair min ~$0.50, chosen to acquire
+    CIATS data fast; expected-R:R-driven from 200 trades) sized
+    against the $5,000 paper wallet, bounded by per_trade_
+    ceiling_pct 25%. tradeable_pct (0.50) + per_trade_pct (0.05)
+    are STALE/OBSOLETE -> next-session diagram-first cleanup
+    (remove from dv1_160, reconcile G6 to per_trade_size_usd),
+    then 0611001 retires.
+  F-2 = OPTION A (current design). Migrate peak_portfolio_USD
+    tracking diagram-first into D5 CIATS (ADD-only, R held),
+    then 0611002 retires.
+  Both rulings carried into TB00573 NSI as the decided next-
+    mission sequence.
+
+INVESTIGATED-AND-REJECTED: a suspected MTM-vs-cash drawdown
+contradiction. dv1_160 holds BOTH the MTM current_portfolio_USD
+drawdown formula (L3574-3581) and the Gate-7 cash-form entry-
+gate check (L1606); they coexist by role. No contradiction
+carried forward (RR-SCOPE-008 -- verified, not assumed).
+
+SECONDARY NOTE N-1: order-param rounding directions (qty down
+/ tp up / sl down / mae down) are loss-prevention semantics;
+0500000-architecture vs 1011011-coding-spec is a binary-test
+edge call -- recorded, non-blocking, not a genuine gap.
+
+============================================================
+4. STATE AT CLOSE
+============================================================
+
+  - 0500000 UNCHANGED at dv1_160 (no edit this session;
+    R-state unchanged).
+  - DD-012 retirement ledger = 10 retired (UNCHANGED).
+  - 0611001 + 0611002 retirement BLOCKED (S-2): F-1 + F-2
+    open. 0610000 sub-domain retirement remains BLOCKED.
+  - TB00394 stays v1_1.
+  - Artifacts produced (2; within the 3-artifact ceiling):
+    the two DD-014 registers above.
+
+============================================================
+5. ERRORS / DEVIATIONS
+============================================================
+
+None. NSI DEC-max stated as DEC-106; HEAD DR v1_73 actually
+carries DEC-107 (NSI stale by one) -- logged, no impact on
+this mission. 0311001/0311002 in HEAD are v1_37/v1_14 while
+TB00000 sec 6 cites v1_34/v1_13 -- pre-existing stale-pointer
+(CF-0911002-STALE territory), not this mission's scope.
+
+============================================================
+END OF DOCUMENT
+============================================================

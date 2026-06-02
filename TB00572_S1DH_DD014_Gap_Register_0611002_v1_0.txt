@@ -1,0 +1,279 @@
+DocDCN:     TB00572
+DocTitle:   S1DH_DD014_Gap_Register_0611002
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    GitHub.com/TothBot/TothBot_V2-SessionLogs/TB00572_S1DH_DD014_Gap_Register_0611002_v1_0.txt
+DocDate:    06-01-2026
+DocTime:    23:59:00 UTC
+
+============================================================
+TB00572 S1DH DD-014 FACT-LEVEL GAP REGISTER -- 0611002
+DRAWDOWN AND HALT RULES  (Stream 2 / Phase 3 / E2)
+============================================================
+
+============================================================
+1. PURPOSE AND METHOD
+============================================================
+
+CF-0611-CLASSIFY STEP 1 for 0611002: a fresh fact-level
+(DD-014) gap register enumerating every architectural element
+in 0611002 Drawdown_and_Halt_Rules dv1_0 and classifying each
+against the LIVE 0500000 dv1_160 diagram-alone corpus + the
+LIVE TB00000 v2_82 section 8 seed registry. Every claim was
+re-grepped against live HEAD this session; nothing inherited.
+
+Context: 0611002 is LIVE in Docs HEAD despite TB00257/258
+recording the 0610000 child chain retired, and is absent from
+the DD-012 ledger (CF-0610-CHILDCHAIN). It is dv1_0 dated
+04-05-2026, self-stated "derived from FP/DP validated 0500000
+dv1_18" -- 142 diagram revisions behind current canonical.
+
+Classification taxonomy identical to TB00572_S1PS register
+(CANON / SEED / STRUCT / ABSENT / OPEN). Binary test DEC-096
+is the sole entry gate.
+
+Source: 0611002_Drawdown_and_Halt_Rules_dv1_0.txt (HEAD).
+Target corpus: 0500000_..._dv1_160_Claude_Source.html
+  (md5 93a6d7d79c1348637cf0010a715dae06, HEAD-verified) +
+  TB00000_..._v2_82 section 8.
+
+============================================================
+2. ELEMENT INVENTORY (0611002 dv1_0, by section)
+============================================================
+
+sec 1-3 PURPOSE / PARENT CHAIN / SCOPE              -> STRUCT
+sec 16-17 RELATED DOCS / REVISION HISTORY           -> STRUCT
+
+sec 4 PORTFOLIO BASELINE (capture + lifecycle)
+  DD-BASE-001 portfolio_baseline_USD = spot_usd_balance
+  DD-BASE-002 captured ONCE after startup Step 6 (snap_orders
+              reconciled, Position Mirror populated)
+  DD-BASE-003/004 never updated in operation; never reset on
+              reconnect (reconnect != restart)
+  DD-BASE-005 resets ONLY on full process restart
+  DD-BASE-006 logged INFO at startup
+  DD-BASE-007 session-based baseline rationale; HWM is a
+              future CIATS evaluation post-200 trades
+   -> CANON. dv1_160 L3570 / L3233 "portfolio_baseline_USD =
+      spot_usd_balance captured ONCE"; param:portfolio_baseline
+      + param:portfolio_baseline_USD in CIATS param store
+      produces (L2745/L3131); AR-056 reconnect-is-not-restart
+      (24 hits) keeps baseline across reconnect; D1 startup /
+      0211003 Step 6 timing canonical. (NOTE: DD-BASE-007's
+      future-HWM clause is the seed of OPEN FINDING F-2.)
+
+sec 5 CURRENT PORTFOLIO VALUE (MTM)
+  DD-CURR-001 current_portfolio_USD = spot_usd_balance
+              + sum(bid_price[sym]*position_qty[sym])
+  DD-CURR-002 bid price (realizable exit; ask PROHIBITED)
+  DD-CURR-003 position_qty from Position Mirror (filled qty)
+  DD-CURR-004 empty mirror -> current = spot_usd_balance
+  DD-CURR-005 drawdown portfolio (MTM) != sizing portfolio
+              (cash)
+   -> CANON. dv1_160 L3574-3576 verbatim canonical: "CURRENT
+      PORTFOLIO (for drawdown -- includes MTM):
+      current_portfolio_USD = spot_usd_balance + sum(bid_price
+      [sym] * position_qty[sym])"; per-module form at L3469-
+      3472 (current_long_wallet_USD / current_short_wallet_USD
+      with bid*qty MTM); bid-not-ask is the conservative
+      canonical choice (AR-048). The cash-vs-MTM split
+      (sizing=cash, drawdown=MTM) is canonical and is NOT a
+      contradiction -- both bases coexist by design.
+
+sec 6 DRAWDOWN FORMULA
+  DD-FORM-001 drawdown_pct = max(0, (baseline-current)/baseline)
+  DD-FORM-002 one-directional (gains never negative drawdown)
+  DD-FORM-003 Decimal range [0, unbounded)
+  DD-FORM-004 Decimal only
+   -> CANON. dv1_160 L3580-3581 verbatim: "drawdown_pct =
+      max(0, (portfolio_baseline_USD - current_portfolio_USD)
+      ...)". (The Gate-7 CHECK 1 q1_do continuous-gate form
+      L1606 uses spot_usd_balance for the entry-gate check;
+      the full MTM formula at L3580 is the canonical drawdown
+      computation. Both are present; consistent by role.)
+
+sec 7 EVALUATION TRIGGERS
+  DD-EVAL-001 continuous bbo-ticker recompute for open-position
+              pairs
+  DD-EVAL-002 Gate 7 pipeline recompute each candle close
+  DD-EVAL-003 bbo is primary protection; Gate 7 is confirmation
+  DD-EVAL-004 skip when no open positions
+   -> CANON. dv1_160 G7 CHECK 1 "Continuous monitoring between
+      candle closes via channel:kraken_ws_ticker" (L1445 / I-7);
+      WS-TKR-002/003 bbo for open-position pairs (D1); Gate 7
+      pipeline trigger canonical.
+
+sec 8 SYSTEM STATE MACHINE (NORMAL / SESSION_PAUSE / FULL_HALT)
+  + all transitions; FULL_HALT supersedes SESSION_PAUSE;
+  FULL_HALT->NORMAL only via manual restart
+   -> CANON. dv1_160 per-wallet state machine: state:NORMAL_
+      per_wallet + state:SESSION_PAUSE_per_wallet + state:
+      FULL_HALT_per_wallet (D7 module / L5424); AR-052 per-
+      wallet drawdown formula + state machine (16 hits);
+      Long/Short halt independence (L5424). Two-threshold
+      cascade HALT vs PAUSE at G7 CHECK 1 (L1606).
+
+sec 9 SESSION PAUSE (5%)
+  DD-SP-001 trigger drawdown_pct >= session_pause_drawdown 0.05
+  DD-SP-002 block entries (SESSION_PAUSE_DRAWDOWN), log, WARNING
+            alert
+  DD-SP-003 does NOT close positions / cancel TP / cancel
+            emergSL / halt Exit Controller / halt CIATS
+  DD-SP-004 auto-resume when drawdown < 5%
+  DD-SP-005 oscillation monitored by CIATS
+   -> CANON. dv1_160 G7 CHECK 1 session_pause_drawdown_pct
+      (default 5%) PAUSE disposition "resumes next session"
+      (L1606); param:session_pause_drawdown_pct (53 hits) in
+      param store; SEED value 5% in TB00000 sec 8
+      (session_pause_drawdown_pct = 5%). Exit-layer-preserved-
+      through-pause canonical at D3 Exit_Controller.
+
+sec 10 FULL HALT (10%)
+  DD-FH-001 trigger drawdown_pct >= full_halt_drawdown 0.10
+  DD-FH-002 block entries (FULL_HALT_DRAWDOWN), batch_cancel
+            open entry GTD, log, CRITICAL alert
+  DD-FH-003 batch_cancel SCOPE = entry GTD ONLY; TP + emergSL
+            NOT canceled (rate-counter-bypass rationale AR-041)
+  DD-FH-004 does NOT close positions / cancel TP / cancel
+            emergSL / auto-resume
+  DD-FH-005 manual resume via process restart; fresh baseline
+  DD-FH-006 no-auto-resume rationale (loss prevention)
+   -> CANON. dv1_160 G7 CHECK 1 full_halt_drawdown_pct
+      (default 10%) HALT disposition "module-wide stop until
+      Bill ratifies" (L1606); batch_cancel (34 hits) entry-
+      GTD-only with AR-041 rate-counter-bypass canonical at
+      D1 outbound-order + WS_Manager; TP/emergSL preserved
+      through halt canonical (WS-BA-002 TP + emergSL legs;
+      RL-MON-003 never suppresses exit/cancel). SEED value 10%
+      in TB00000 sec 8 (full_halt_drawdown_pct = 10%).
+
+sec 11 PEAK PORTFOLIO TRACKING (CIATS use)
+  DD-PEAK-001 maintain peak_portfolio_USD (highest current
+              since startup)
+  DD-PEAK-002 monotonic update rule
+  DD-PEAK-003 does NOT affect circuit breakers; for CIATS
+              max-drawdown + future HWM trailing analysis
+  DD-PEAK-004 init to baseline; can only increase
+  DD-PEAK-005 logged DD-LOG-007; CIATS reads via Trade Outcome
+              Bus
+   -> ABSENT (candidate). peak_portfolio_USD / HWM has ZERO
+      representation in dv1_160 (full-corpus grep:
+      peak_portfolio / "high water" / HWM / "trailing
+      drawdown" = 0 hits). See OPEN FINDING F-2.
+
+sec 12 INTERFACES (WS Manager, Position Mirror, Parameter
+  Store live-read for ticker eval, startup seq, Gate 7, Logger,
+  Alert)
+   -> CANON. All consumers/producers canonical at D1/D5/D6/D7/
+      G7. HR-DD-012 live-Parameter-Store-read (not frozen
+      snapshot) for continuous ticker eval is canonical at the
+      D8 CHECK 1 continuous-monitoring note.
+
+sec 13 LOGGING DD-LOG-001..007
+   -> CANON for 001-006 (startup baseline, eval DEBUG,
+      SESSION_PAUSE trig/recover, FULL_HALT trig + batch_cancel
+      result) via Logger + G7 CHECK 1 q5_logs.
+   -> DD-LOG-007 (PEAK_PORTFOLIO_UPDATED) follows the ABSENT
+      peak element -> tied to OPEN FINDING F-2.
+
+sec 14 HARD RULES HR-DD-001..013
+   -> CANON for 001-012 (each restates a CANON element above:
+      baseline-once, MTM-bid-not-ask, max(0,...), Decimal,
+      continuous eval, pause/halt no-close-no-cancel-TP/SL,
+      batch_cancel entry-GTD-only, AR-041 bypass, no-auto-
+      resume-from-FULL_HALT, auto-resume-from-PAUSE, live-
+      Parameter-Store-read).
+   -> HR-DD-013 (peak does not affect breakers) follows the
+      ABSENT peak element -> tied to F-2.
+
+sec 15 FIVE CODING-READINESS QUESTIONS              -> STRUCT
+
+============================================================
+3. CLASSIFICATION SUMMARY
+============================================================
+
+  CANON  : sec 4, 5, 6, 7, 8, 9, 10, 12; sec 13 (001-006);
+           sec 14 (001-012).
+  SEED   : 5% / 10% thresholds -- already TB00000 sec 8.
+  STRUCT : sec 1-3, 15, 16, 17.
+  ABSENT : sec 11 peak_portfolio_USD / HWM (DD-PEAK-001..005),
+           + dependent DD-LOG-007 + HR-DD-013.
+  OPEN   : F-2 (peak_portfolio / HWM disposition).
+
+NET: 0611002 originates NO new architecture EXCEPT the
+peak_portfolio_USD / HWM tracking element, which is confirmed
+absent from dv1_160. Everything else is restatement of content
+already canonical. Re-audit-then-retire in form, but retirement
+is BLOCKED pending OPEN FINDING F-2.
+
+NOTE: the suspected "MTM-vs-cash drawdown contradiction" was
+investigated and REJECTED -- dv1_160 holds BOTH the MTM
+current_portfolio_USD drawdown formula (L3574-3581, matching
+DD-CURR/DD-FORM) and the Gate-7 cash-form entry-gate check
+(L1606); they coexist by role, not in conflict. No contradiction
+is carried forward (RR-SCOPE-008 -- verified, not assumed).
+
+============================================================
+4. OPEN FINDING F-2 -- peak_portfolio_USD / HWM TRACKING
+============================================================
+
+FACTS (HEAD-verified this session):
+  (a) 0611002 sec 11 specifies peak_portfolio_USD: maintained
+      by TothBot, initialized to baseline, monotonic, logged
+      (DD-LOG-007), read by CIATS via the Trade Outcome Bus
+      for maximum-drawdown tracking and FUTURE HWM trailing-
+      drawdown analysis (DD-PEAK-003/005 + DD-BASE-007).
+  (b) dv1_160 contains NO peak_portfolio_USD / HWM / trailing-
+      drawdown element anywhere (full-corpus grep = 0 hits).
+  (c) Binary test (DEC-096): a CIATS-owned, TothBot-maintained,
+      Logger-emitted tracked value IS trading-organism
+      architecture -> belongs in a 0500000 diagram (D5 CIATS
+      or D8 Risk). It is NOT a seed value.
+
+THE QUESTION (genuine Bill determination; not derivable):
+    OPTION A: peak_portfolio_USD is current canonical design ->
+      migrate diagram-first (ADD-only, R-state per TB00453) to
+      D5 CIATS (peak tracking + Trade Outcome Bus read) and/or
+      D8, then 0611002 retires.
+    OPTION B: peak_portfolio_USD is a FUTURE/aspirational CIATS
+      capability (the spec itself frames HWM as a post-200-
+      trade CIATS evaluation, not current design) -> declare
+      not-yet-canonical, do NOT migrate now, and either (i)
+      retire 0611002 with an explicit recorded note that the
+      future-HWM concept is deferred CIATS scope, or (ii) hold
+      the concept in a CIATS-roadmap home.
+
+CONSEQUENCE: until F-2 is settled, 0611002 retirement is
+BLOCKED (0911002 sec 7 S-2). This is a small, bounded element
+-- the only genuinely-absent architecture across both 0611001
+and 0611002.
+
+RULING (Bill, TB00572 chat): OPTION A -- current design.
+Migrate the peak-tracking element diagram-first (the
+peak_portfolio_USD value + monotonic update + CIATS read via
+the Trade Outcome Bus + DD-LOG-007 emission) into D5 CIATS
+(primary owning diagram; the value is CIATS-tracked and does
+NOT gate the breakers, so no D8 gate-input binding is required)
+as an ADD-only edit (R held per TB00453). THEN 0611002 clears
+S-2 and retires.
+
+============================================================
+5. DISPOSITION
+============================================================
+
+0611002 STEP 1 classification COMPLETE. Outcome:
+  - Bucket-(c) architectural originator content: ONE element
+    (peak_portfolio_USD / HWM), confirmed absent.
+  - F-2 RULED (Bill, TB00572 chat) = OPTION A; migrate
+    peak_portfolio_USD tracking diagram-first into D5 CIATS
+    (ADD-only, R held), then 0611002 clears S-2 and retires.
+  - No diagram migration is authored this session (S-2 gate
+    not cleared; F-2 disposition is a Bill determination, not
+    guessed -- RR-SCOPE-008).
+  - Coupled (Bill, outside chat): git-history forensic on why
+    0611002 persists in HEAD vs TB00257/258, + DD-012 ledger
+    reconciliation (CF-0610-CHILDCHAIN).
+
+============================================================
+END OF DOCUMENT
+============================================================

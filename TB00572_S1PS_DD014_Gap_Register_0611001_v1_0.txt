@@ -1,0 +1,299 @@
+DocDCN:     TB00572
+DocTitle:   S1PS_DD014_Gap_Register_0611001
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    GitHub.com/TothBot/TothBot_V2-SessionLogs/TB00572_S1PS_DD014_Gap_Register_0611001_v1_0.txt
+DocDate:    06-01-2026
+DocTime:    23:59:00 UTC
+
+============================================================
+TB00572 S1PS DD-014 FACT-LEVEL GAP REGISTER -- 0611001
+POSITION SIZING RULES  (Stream 2 / Phase 3 / E2)
+============================================================
+
+============================================================
+1. PURPOSE AND METHOD
+============================================================
+
+CF-0611-CLASSIFY STEP 1 for 0611001: a fresh fact-level
+(DD-014) gap register enumerating every architectural element
+in 0611001 Position_Sizing_Rules dv1_0 and classifying each
+against the LIVE 0500000 dv1_160 diagram-alone corpus + the
+LIVE TB00000 v2_82 section 8 seed registry. Every claim was
+re-grepped against live HEAD this session; nothing inherited.
+
+Context: 0611001 is LIVE in Docs HEAD despite TB00257/258
+recording the 0610000 child chain retired, and is absent from
+the DD-012 ledger (CF-0610-CHILDCHAIN). It is dv1_0 dated
+04-05-2026, self-stated "derived from FP/DP validated 0500000
+dv1_18" -- 142 diagram revisions behind current canonical.
+
+Binary architecture test (DEC-096) is the sole entry gate:
+either an element is TothBot-trading-organism architecture
+(-> a 0500000 diagram) or it is not (-> the only survivor is
+a transient parameter SEED VALUE, home = TB00000 sec 8).
+
+Per-element classification:
+  CANON  -- trading-organism architecture, already canonical
+            in dv1_160 (verified present); nothing to migrate.
+  SEED   -- numeric seed value only; home = TB00000 sec 8.
+  STRUCT -- governance/structural content (parent chain,
+            scope, related-docs, revision history); not
+            subject to the binary test (TB00000 sec 3).
+  ABSENT -- trading-organism architecture NOT yet in any
+            0500000 diagram; must be migrated diagram-first.
+  OPEN   -- a genuine contradiction or canonical-consistency
+            question that this old spec cannot resolve;
+            blocks retirement; surfaced to Bill.
+
+Source: 0611001_Position_Sizing_Rules_dv1_0.txt (HEAD).
+Target corpus: 0500000_..._dv1_160_Claude_Source.html
+  (md5 93a6d7d79c1348637cf0010a715dae06, HEAD-verified) +
+  TB00000_..._v2_82 section 8.
+
+============================================================
+2. ELEMENT INVENTORY (0611001 dv1_0, by section)
+============================================================
+
+sec 1-3 PURPOSE / PARENT CHAIN / SCOPE              -> STRUCT
+sec 14-16 5-Q / RELATED DOCS / REVISION HISTORY     -> STRUCT
+
+sec 4 PORTFOLIO_USD FOR SIZING
+  PS-PORT-001 portfolio_USD = spot_usd_balance (spot/main/USD)
+  PS-PORT-002 sizing basis is REALIZED CASH only; MTM of open
+              positions NEVER included (feedback-loop avoid)
+  PS-PORT-003 sizing portfolio != drawdown portfolio
+   -> CANON. dv1_160 L3536 encodes the dv1_13 MTM feedback-
+      loop avoidance rationale; L3570-3581 split cash-basis
+      sizing from MTM-basis drawdown; WS-BAL-002 (D1) binds
+      spot/main/USD-only balance. Sizing-cash-only is canonical.
+
+sec 5 TRADEABLE CAPITAL
+  PS-TRADE-001 tradeable_USD = portfolio_USD * tradeable_pct
+               (tradeable_pct starting value 0.50)
+  PS-TRADE-002 frozen-snapshot read (I-4), stable per pipeline
+   -> param:tradeable_pct TOKEN is CANON (dv1_160 L185 / L1124
+      / L1287 / L2745 CIATS Parameter Store produces; frozen
+      snapshot discipline canonical at D2/D5).
+   -> the VALUE 0.50 and the percent-of-tradeable SIZING MODEL
+      itself -> see OPEN FINDING F-1 (sec 4 of this register).
+
+sec 6.1 PHASE 1 FIXED ALLOCATION
+  PS-PTA-001 per_trade_USD = tradeable_USD * per_trade_pct
+             (per_trade_pct starting value 0.05)
+  PS-PTA-002 frozen-snapshot read
+   -> param:per_trade_pct TOKEN is CANON (dv1_160 81 hits;
+      G6 Regime_Sizer L1430 applies regime multiplier to
+      "base per_trade_pct"; param store produces L2745).
+   -> the VALUE 0.05 and the percent model -> OPEN FINDING F-1.
+
+sec 6.2 PHASE 2 HALF-KELLY
+  PS-HK-001 activate at 200 closed trades; per_trade_pct
+            replaced by Kelly fraction; CIATS writes effective
+            fraction to Parameter Store
+  PS-HK-002 K_full = W - ((1-W)/R); K_half = K_full*0.5;
+            per_trade_USD = min(K_half*tradeable_USD,
+            tradeable_USD/max_concurrent)
+  PS-HK-003 W = net-win rate (positive NET P/L after all fees)
+  PS-HK-004 R = mean(net win)/mean(|net loss|), realized not
+            theoretical
+  PS-HK-005 cap = tradeable_USD/max_concurrent (loss-prevention)
+  PS-HK-006 recompute W,R every 50 trades post-200; 50-trade
+            min change interval (CIATS-PDCA-001)
+  PS-HK-007 K_full<=0 -> per_trade_USD=0, stop entries, alert
+   -> CANON. dv1_160 L1136 "Half-Kelly: K%=W-(1-W)/R . apply
+      50% at 200 trades"; L2503 "200 trades HARD FLOOR ...
+      Half-Kelly activates"; param:half_kelly_applied_pct +
+      param:max_concurrent + contract:Sizing_Curve_Per_Module
+      L2745; evt:KELLY_UPDATE + evt:KELLY_NEGATIVE (K_full<=0)
+      per rule:HR-CI-008; D5 Half-Kelly persistence path A2.
+      Kelly-uses-NET-P/L is canonical at AR-065 + D9 + FEE
+      cluster (dv1_159). rule:PS-HK-001 is a pre-existing
+      registry-gap carry-forward (D5 registry_gap_note); the
+      ARCHITECTURE it names is canonical. TB00000 sec 5 carries
+      the 200/600 thresholds + Half-Kelly method (SEED/STRUCT).
+
+sec 6.3 NON_DIR 50% SIZE MODIFIER
+  PS-MOD-001/002 halve per_trade size in NON_DIRECTIONAL +
+                 NORMAL_VOL regime; full size in TRENDING_POS
+   -> CANON. dv1_160 G6 Regime_Sizer L1430: NON_DIR_NORMAL =
+      50% (REGIME_50PCT marker); TRENDING_POS = 100%; per
+      AR-074.
+
+sec 7 GATE 8 R:R FORMULA (five values)
+  PS-RR-001 mae_pct = (ATR(14)*mae_mult)/entry_fill_price
+  PS-RR-002 mae_pct is the loss side
+  PS-RR-003 net_loss = mae_pct + 0.0016 + 0.0026 (maker entry
+            + taker MAE exit fees)
+  PS-RR-004 net_gain = net_loss * 1.5  (SACRED, hardcoded)
+  PS-RR-005 gross_target = net_gain + 0.0016 (TP maker fee)
+  PS-RR-006 emergSL_dist = (ATR(14)*emergency_sl_mult)/
+            entry_fill_price
+  PS-RR-007 emergSL_dist NEVER in R:R formula
+  PS-RR-008 emergSL is crash protection only
+   -> CANON. D9 Gate_8_Position_Sizer detail; dv1_160 L1874
+      "SACRED: net_gain = net_loss x 1.5 HARDCODED"; mae_pct
+      (27) / net_loss (55) / net_gain (56) / gross_target (32)
+      / emergSL (141) all present; fee values 0.0016/0.0026 are
+      SEED (TB00000 sec 8 FEE_MAKER_PCT/FEE_TAKER_PCT) with the
+      fee-calc MECHANISM canonical at FEE cluster dv1_159
+      (FEE-CALC-001..006). R:R uses ACTUAL fill price not limit
+      (AR-008 OTO rejection) -- canonical at D9 + L1968/L2079
+      MAE bid-based detection.
+
+sec 8 DECIMAL ROUNDING (order params)
+  PS-QTY/TP/SL/MAE-00x: Decimal(str()) on API values; float
+  PROHIBITED; ROUND_DOWN qty, ROUND_UP tp, ROUND_DOWN emergSL,
+  ROUND_DOWN mae; quantize to pair increments
+   -> Decimal-not-float SYSTEM rule is CANON (dv1_160 L1253
+      HR-SP-008 SYSTEM-WIDE Decimal-via-Decimal(str()), float
+      PROHIBITED across the organism incl. G8 sizing/R:R math;
+      AR-047). The PER-PARAMETER ROUNDING DIRECTIONS (qty down
+      / tp up / sl down / mae down) and quantize-to-increment
+      are loss-prevention implementation semantics; their home
+      under DEC-096 is the binary test -- see SECONDARY NOTE N-1.
+
+sec 9 MIN VIABLE POSITION (qty_min, cost_min; SKIP not HALT)
+   -> CANON. dv1_160 L1069 G8 "qty_min/cost_min validation per
+      ar:AR-028"; SKIP-not-HALT is canonical G8 disposition.
+
+sec 10 GATE 8 OUTPUT CONTRACT (10-field dict; never dispatches)
+   -> CANON. D9 produces evt:G8_SIZED five-field bundle
+      {entry_fill_price, net_loss, net_gain, gross_target,
+      emergSL_dist} to mod:Execution_Engine (L1884); G8 ->
+      Execution Engine (0511003) dispatch boundary canonical.
+
+sec 11 INTERFACES (WS Manager, Parameter Store, executions,
+  Execution Engine, Position Mirror, Logger, CIATS)
+   -> CANON. D9 IV TB00384 verified all G8 inbound/outbound
+      interface families at destination diagrams.
+
+sec 12 LOGGING (PS-LOG-001/002/003)
+   -> CANON/DERIV. D9 q5_logs + Logger (sole CIATS source);
+      POSITION_TOO_SMALL + K_full<=0 (KELLY_NEGATIVE) alerts
+      canonical.
+
+sec 13 HARD RULES HR-PS-001..011
+   -> CANON. Every rule restates an element classified CANON
+      above (sacred floor, fill-price-not-limit, Decimal-only,
+      never-blocks, Half-Kelly@200, K_full<=0, NON_DIR 50%,
+      ATR from cache). HR-PS-* are subordinate-spec rule IDs;
+      the architecture they encode is canonical.
+
+============================================================
+3. CLASSIFICATION SUMMARY
+============================================================
+
+  CANON  : sec 4, 6.2, 6.3, 7, 9, 10, 11, 12, 13; the
+           param:tradeable_pct + param:per_trade_pct TOKENS.
+  SEED   : fee values (0.0016/0.0026), Half-Kelly thresholds
+           (200/600) -- already in TB00000 sec 5/8.
+  STRUCT : sec 1-3, 14-16.
+  ABSENT : none cleanly attributable to 0611001 (the sizing
+           model question is an inconsistency, not a gap --
+           see F-1).
+  OPEN   : F-1 (sizing-model parameterization).
+
+NET: 0611001 originates NO new architecture. It is a
+restatement of content already canonical in dv1_160 + sec 8,
+EXCEPT for one unresolved canonical-consistency question (F-1)
+that must be settled before retirement. This is re-audit-then-
+retire in form, but retirement is BLOCKED pending F-1.
+
+============================================================
+4. OPEN FINDING F-1 -- SIZING-MODEL PARAMETERIZATION
+============================================================
+
+LOSS-PREVENTION-RELEVANT. Sizing governs capital at risk;
+this must be settled deliberately, not assumed.
+
+FACTS (all HEAD-verified this session):
+  (a) TB00000 v2_82 sec 8 CIATS-sizing block lists ONLY
+      per_trade_size_usd (Kraken per-pair min ~$0.50 start,
+      "becomes a function of expected R:R from 200 trades on")
+      and per_trade_ceiling_pct (25%). It does NOT list
+      tradeable_pct or per_trade_pct at all.
+  (b) 0500000 dv1_160 CARRIES BOTH parameterizations:
+      - param:tradeable_pct + param:per_trade_pct in the CIATS
+        Parameter Store produces set (L2745) and frozen
+        snapshot (L1287); G6 Regime_Sizer L1430 sizes off
+        "base per_trade_pct".
+      - param:per_trade_size_usd + per_trade_ceiling_pct +
+        contract:Sizing_Curve_Per_Module (expected-R:R ->
+        allocation), with G7 CHECK 5 the absolute ceiling and
+        G6 elsewhere described (L1730) as outputting "regime-
+        sized per_trade_size_usd".
+  (c) 0611001 implements the percent-of-tradeable model
+      (tradeable_pct 0.50 -> per_trade_pct 0.05 -> Half-Kelly),
+      matching the dv1_18-era design it was derived from.
+
+THE QUESTION (genuine Bill determination; not derivable):
+  Which is the live canonical sizing parameterization?
+    OPTION A: per_trade_size_usd / Sizing_Curve_Per_Module is
+      authoritative (consistent with sec 8 + G7 CHECK 5 +
+      AR-051 R:R-driven curve); tradeable_pct/per_trade_pct are
+      STALE diagram residue to be removed from dv1_160 (one-
+      version cleanup) and 0611001 retires as superseded.
+    OPTION B: the percent-of-tradeable model is live; then
+      sec 8 is MISSING the tradeable_pct/per_trade_pct seed
+      values and must gain them, and dv1_160 G6/G7 must be
+      reconciled.
+    OPTION C: hybrid (per_trade_pct feeds an initial size that
+      the Sizing_Curve/ceiling then bounds) -- if so, dv1_160
+      G6-vs-G7 internal wording needs an explicit reconciling
+      edit so a coder cannot read two sizing bases.
+
+CONSEQUENCE: until F-1 is settled, 0611001 retirement is
+BLOCKED (0911002 sec 7 S-2: an architectural item's canonical
+status is ambiguous). F-1 also exposes a latent 0500000-
+internal / 0500000-vs-sec-8 inconsistency independent of
+0611001.
+
+RULING (Bill, TB00572 chat): OPTION A. Trade size is CIATS-
+owned: per_trade_size_usd (paper seed = Kraken per-pair minimum
+~$0.50, chosen to generate many small trades fast so CIATS
+acquires data quickly; becomes an expected-R:R-driven function
+at the 200-trade floor) sized against the $5,000-per-module
+paper wallet (operator-owned), bounded by per_trade_ceiling_pct
+(25%). The fixed-percentage figures tradeable_pct (0.50) and
+per_trade_pct (0.05) are STALE/OBSOLETE residue. Action
+(next-session, diagram-first): remove stale tradeable_pct /
+per_trade_pct from dv1_160 and reconcile G6 to size off
+per_trade_size_usd (one-version cleanup; R-state per TB00453;
+multi-diagram D2/D5/D6 so one-diagram-per-session cadence
+applies); THEN 0611001 clears S-2 and retires as superseded.
+
+============================================================
+5. SECONDARY NOTE N-1 -- ORDER-PARAM ROUNDING DIRECTIONS
+============================================================
+
+The Decimal-not-float discipline is canonical (HR-SP-008).
+The per-parameter rounding DIRECTIONS (qty ROUND_DOWN, tp
+ROUND_UP, emergSL ROUND_DOWN, mae ROUND_DOWN) and quantize-to-
+pair-increment are loss-prevention semantics (tp-up protects
+the sacred floor; qty-down never over-commits). Whether these
+are 0500000-diagram architecture (candidate D9 enrichment) or
+1011011 Risk_Engine_Coding_Spec implementation detail is a
+binary-test edge call. Low-risk; non-blocking; recorded for
+the next E2 disposition pass, NOT asserted as a genuine gap.
+
+============================================================
+6. DISPOSITION
+============================================================
+
+0611001 STEP 1 classification COMPLETE. Outcome:
+  - Bucket-(c) architectural originator content: NONE.
+  - F-1 RULED (Bill, TB00572 chat) = OPTION A; retirement
+    still gated behind the next-session diagram-first cleanup
+    (remove stale tradeable_pct/per_trade_pct, reconcile G6),
+    after which 0611001 clears S-2.
+  - No diagram migration is authored this session (S-2 gate
+    not cleared; F-1 unresolved; per RR-SCOPE-008 the model
+    question is surfaced, not guessed).
+  - Coupled (Bill, outside chat): git-history forensic on
+    why 0611001 persists in HEAD vs TB00257/258, + DD-012
+    ledger reconciliation (CF-0610-CHILDCHAIN).
+
+============================================================
+END OF DOCUMENT
+============================================================
