@@ -1,0 +1,188 @@
+DocDCN:     TB00580
+DocTitle:   Session_Log
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    GitHub.com/TothBot/TothBot_V2-SessionLogs/TB00580_Session_Log_v1_0.txt
+DocDate:    06-02-2026
+DocTime:    17:15:00 UTC
+
+============================================================
+TB00580 SESSION LOG
+============================================================
+
+MISSION (inbound TB00580 NSI v1_0): complete the dv1_165 rebuild
+of 0500000 -- finish the per-trade-ceiling purge, the D8 Gate 7
+CHECK 5 structural removal, the HR-CI-009 D5 harmonization, the
+Option-2 historical neutralization, R-state finalization, sec-14
+entry + version bump, and the 0311001 / 0611001 companions.
+
+OUTCOME: PARTIAL. Chunk 1 (operative purge) and Chunk 2 (D8 CHECK 5
+structural removal) COMPLETE. HR-CI-009 D5 harmonization COMPLETE
+(folded into Chunk 1). Chunks 3-4 + both companions NOT started.
+dv1_165 is NOT finished. Working copy handed off DO_NOT_PUSH via the
+project folder per NSI sec 6. NO 0500000 / 0611001 / 0311001 push
+this session.
+
+============================================================
+1. COLD-LOAD + CHAT-TURN-1 GATE
+============================================================
+Read: TB00580 NSI v1_0 (GitHub HEAD), TB00000 v2_83 (in context).
+Resume baseline: 0500000_dv1_165_2_WORKING_chunk1_partial_IN_
+PROGRESS_DO_NOT_PUSH.html from the project folder.
+
+GATE OUTCOME: PASS.
+  (1) Working-copy md5 = 7dfa886312a76eec892f623233cd7717 -- EXACT
+      match to the NSI checkpoint. Baseline confirmed; 10281 lines.
+  (2) COUNT-METHOD RECONCILIATION: the NSI-stated 33/12/23 are
+      whole-file LINES-CONTAINING counts. The true edit target is
+      ZERO OCCURRENCES outside sec 14. Starting occurrence counts
+      outside sec 14: per_trade_ceiling_pct 38, tradeable_pct 9,
+      per_trade_pct 21, G7_PER_TRADE_CEILING_BREACH 20. Sec-14
+      boundary: <h2>14. Revision History</h2> at line 10214
+      (present exactly once). Inside sec 14: 3/3/3 lines (dated
+      history -- stays truthful).
+  (3) BINARY TEST (DEC-096): per_trade_ceiling_pct removed (not a
+      surviving seed); per_trade_size_usd ~$0.50 + drawdown halts
+      stay in TB00000 sec 8; concentration/exposure stay value-less
+      CIATS-owned (rename only, already done in checkpoint).
+  (4) ZERO-COMPUTING-READER: producers + consumers migrated
+      together each edit; no stranded reader created.
+  (5) CROSS-THREAD CLEANUP: no removal stranded a consumer or an
+      open append-debt source.
+
+============================================================
+2. WORK COMPLETED
+============================================================
+
+2.1 CHUNK 1 -- OPERATIVE PURGE (COMPLETE)
+Migrated the two obsolete fixed-% tokens to the canonical sizing
+token param:per_trade_size_usd (already the G6/G8 sizer target and
+the registry sizing param -- no new token, no guess). Removed the
+"bounded above by ceiling" clauses; wallet is the sole boundary.
+Sites edited (occurrences in live operative fields -> 0):
+  Context: CIATS produces (migrated).
+  D1 (Image1 R10): Risk_Engine consumes; CIATS_Trade_Outcome_Bus
+    produces + q4_triggers; Parameter Store visible <text> (L2016).
+  D5 (Image5 R13): Proposal Engine q1_do (HR-CI-009 harmonized to
+    applied_pct = K_half / max_concurrent -- this satisfies NSI 2.2),
+    produces, registry_gap_note, 2 visible <text>; Parameter Store
+    constraints (HR-CI-009 + PS-HK-001), consumes, produces (+ P-CC2
+    count note 3->2), registry_gap_note, visible contents <text>;
+    root governs (both obsolete tokens + ceiling removed).
+  D6 (Image6 R12): root governs; Signal_Pipeline constraints;
+    Risk_Engine constraints + q1_do (ceiling clause removed);
+    Proposal Engine constraints/q1_do/visible <text>; Parameter
+    Store produces (ceiling removed); parallel-module prose
+    (ceiling clause -> "bounded only by the module wallet
+    balance"); SIZING block (both ceiling clauses -> "no ceiling
+    per TB00000 v2_83 sec 7"); LEGACY-token line neutralized to
+    token-free prose.
+RESULT: tradeable_pct + per_trade_pct = 0 in all live operative
+fields. (1 occurrence each remains at D5 figcaption L4922 "from the
+diagram alone" attestation -- CHUNK-3 historical neutralization.)
+
+2.2 CHUNK 2 -- D8 GATE 7 CHECK 5 STRUCTURAL REMOVAL (COMPLETE)
+  - Deleted the g7d_check5_per_trade_ceiling <g> block (title +
+    desc + polygon points 610,640 870,680 610,720 350,680 + 2
+    visible <text>), its Inputs decoration, and its FAIL decoration
+    (red arrow + BLOCK rect + breach-event text).
+  - Re-routed CHECK 4 PASS arrow from 610,600->610,638 to
+    610,600->610,758 (direct to the ALL-PASS exit box top y760).
+  - Cascade renumber: title-bar "(5 Sequential Checks)"->"(4...)";
+    exit "ALL 5 CHECKS PASS"->"ALL 4 CHECKS PASS"; footer eval-order
+    line dropped the per-trade-ceiling clause; footer CHECK 5
+    loss-limiter line removed entirely; footer migration "All five
+    checks"->"All four checks".
+  - evt:G7_PER_TRADE_CEILING_BREACH dropped from BOTH the D8
+    producer (root governs evt: list) AND the D6 Logger consumer
+    (tb_logger consumes enumeration). No stranded reference in a
+    live binding.
+  - D2 (Image2) G7-drill q1_do recounted five->four; removed the
+    (5) per-trade ceiling check; corrected the (2) concentration
+    check token from per_trade_ceiling_pct to
+    concentration_limit_per_module (it was mislabeled).
+  VERIFICATION: D8 live SVG now has 4 check polygons; g/text/desc/
+  title tag-balanced within the D8 <svg>.
+
+============================================================
+3. WORK NOT DONE (carries to TB00581)
+============================================================
+3.1 CHUNK 3 -- OPTION-2 HISTORICAL NEUTRALIZATION + R-STATE.
+  Neutralize ceiling / obsolete-token framing in the preserved
+  historical blocks (NOT live bindings):
+    - D8 figcaption attestation (refs "5 check components", "25
+      cells", CHECK 5, G7_PER_TRADE_CEILING_BREACH; OPTION R EXT
+      blocks at ~L3063/3069/3071) + the D8 PRIOR-FIGCAPTION block
+      (~L3092/3131).
+    - D6 figcaption verification prose (~L9160-9172: "5 of 5
+      outbound evt", "ALL-5-PASS exit", G7_PER_TRADE_CEILING_BREACH).
+    - root-<desc> R-narratives / registry-gap blocks at D5 ~L4503/
+      4507/4922/4928/4934, D6 ~L5609.
+    - rename harmonization (concentration_cap/exposure_cap ->
+      *_limit_*) in preserved zones 3131 / 4934 / 5609 per NSI 2.3.
+    - sec-14 entries KEEP old names (true historical identifiers) --
+      do NOT rename in sec 14.
+  R-STATE FINALIZATION (TB00453): NOT applied to ANY figure yet.
+    *** IMPORTANT WORKING-COPY STATE: visible <text> has been
+    changed on D1/D5/D6/D8 WITHOUT rotating the corresponding
+    R-state tokens (SVG <title>, diagram_canonical, title-bar
+    R-label, figcaption (a), 3-deep root <desc> chain). The file is
+    therefore INTERNALLY R-INCONSISTENT and must not be pushed until
+    Chunk 3 R-finalization completes. ***
+    R-bump set per NSI 2.4: D1, D4, D5, D6, D8, D9 PLUS D4 rename
+    (D4 R5->R6). D8 is a TRUE STRUCTURAL R-increment (R2->R3).
+    HONEST FLAG: I made NO edit to D9 this session. D9's R-bump is
+    only valid if a Chunk-3 D9 edit changes a VISIBLE <text>; a
+    desc/figcaption-only D9 neutralization HOLDS R per TB00453. Do
+    NOT bump D9 without a verified visible-<text> change -- verify
+    in Chunk 3 and remove D9 from the bump set if the only D9 edit
+    is desc/figcaption.
+3.2 CHUNK 4 -- FINALIZE. DR-007.9 well-formedness (resolve or
+    document the PRE-EXISTING <desc> 130/127 imbalance carried in
+    the NSI; ensure exactly ONE "<h2>14. Revision History</h2>");
+    zero-token audit (all three tokens + G7_PER_TRADE_CEILING_BREACH
+    outside sec 14 = 0); final md5; doc version bump dv1_164 ->
+    dv1_165; ONE new sec-14 dv1_165 revision-history entry (truthful:
+    per-trade ceiling removed; concentration/exposure caps renamed
+    to *_limit_*).
+3.3 COMPANIONS (NOT started): 0311001 de-register/register;
+    0611001 retirement (DR-078 close, one retirement per session).
+
+============================================================
+4. DELIVERABLES THIS SESSION (DO_NOT_PUSH checkpoints)
+============================================================
+  0500000_dv1_165_3_WORKING_chunk1_DONE_IN_PROGRESS_DO_NOT_PUSH.html
+    md5 e2be5b6edf3573875b17f2003f0d958b
+  0500000_dv1_165_4_WORKING_chunk2_DONE_IN_PROGRESS_DO_NOT_PUSH.html
+    md5 635b61d4edff376ef2e6223be2724ea0  (10243 lines)  <-- RESUME BASELINE
+LINE-COUNT TRAIL: 10281 (baseline) -> 10282 (chunk 1; D6 sizing-block
+rewrite +1 net) -> 10243 (chunk 2; CHECK-5 removal -39 net).
+
+============================================================
+5. ERRORS / LESSONS THIS SESSION
+============================================================
+ERROR-TB00580-CHAT-01 (recovered, no net loss): the first execution
+turn hit the tool-call limit mid-Chunk-1 with the edits applied only
+in the container and NOT delivered via present_files. Container reset
+discarded them. Recovered by re-copying the project checkpoint
+(md5 re-confirmed 7dfa886312a76eec892f623233cd7717) and re-applying
+Chunk 1 via a single batched script with exactly-one-occurrence
+assertions per edit. Net cost: one turn. REINFORCES the NSI sec 3
+crash rule -- deliver the working .html via present_files after EACH
+chunk; an undelivered mega-turn is unrecoverable. Applied thereafter:
+chunk 1 and chunk 2 each delivered before proceeding.
+
+============================================================
+6. STATE FOR NEXT SESSION
+============================================================
+  - 0500000 dv1_164 remains HEAD (un-purged baseline); working copy
+    is the live edit surface, NOT pushed.
+  - TB00000 at v2_83 (unchanged this session).
+  - Resume baseline = the chunk-2 checkpoint, md5
+    635b61d4edff376ef2e6223be2724ea0. If Bill re-uploads the same
+    file, md5 must match; if different, re-grep to establish the
+    true resume baseline and note it.
+
+============================================================
+END OF DOCUMENT
+============================================================
