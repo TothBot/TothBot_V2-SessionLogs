@@ -1,0 +1,255 @@
+DocDCN:     TB00530
+DocTitle:   D1_Fact_Level_Gap_Register
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    GitHub.com/TothBot/TothBot_V2-SessionLogs/TB00530_D1_Fact_Level_Gap_Register_v1_0.txt
+DocDate:    05-31-2026
+DocTime:    23:59:00 UTC
+
+============================================================
+TB00530 D1 FACT-LEVEL GAP REGISTER
+0411001 dv1_13  vs  0500000 dv1_142 D1
+============================================================
+
+PURPOSE
+  The exhaustive fact-level gap register for D1 (Kraken API
+  Connection Architecture, figure R9 in 0500000 dv1_142). It
+  enumerates every architectural wire-fact carried by 0411001
+  dv1_13 across all five SD-9-verified contract groups and
+  marks each PRESENT-IN-D1, ABSENT, or CONFLICT, where
+  "in D1" means derivable from the D1 figure ALONE per the
+  strict DD-014 standard (SVG visual + governs <desc>
+  descriptors + figcaption ONLY; NO 0500000 prose, NO
+  section-8 AR registry, NO subordinate spec).
+
+  This register is the corrected fact-level replacement for
+  the over-claimed D1 V-040 65-cell "design-complete"
+  attestation (TB00376; flagged over-claimed in TB00529).
+  It is the input that drives the D1 diagram-first migration
+  sessions (CF-D1-MIGRATE) and the eventual 0411001
+  retirement. Read-only: no 0500000 edit, no retirement.
+
+METHOD
+  Source of truth = GitHub HEAD via public tarball (DEC-097).
+  The D1 "diagram-alone" corpus = the 14 <desc> governs blocks
+  (1 root + 13 components) + the figcaption + the visible SVG
+  <text> labels of the D1 figure, decoded from the live
+  0500000 dv1_142 HTML. Each 0411001 dv1_13 WS-* wire-fact was
+  checked for derivability against that corpus ONLY.
+
+  NOTE ON VERSION: the inbound NSI/figcaption cite D1 at
+  dv1_141 / dv1_83 in places; the live HEAD figure is dv1_142
+  (figure title R9). This register is built against live HEAD
+  dv1_142 per the TB00000 section 2 reading rule. The dv1_141
+  cl_ord_id/req_id desc addition IS present in the dv1_142
+  D1 desc and is counted.
+
+============================================================
+1. SUMMARY
+============================================================
+
+  Wire-facts checked (5 groups):     87
+  PRESENT-IN-D1 (DD-014 derivable):   50
+  ABSENT (gap):                       35
+  CONFLICT (D1 value contradicts spec): 2
+  GAP-REGISTER ENTRIES (absent+conflict): 37
+
+  Per group (present / gaps):
+    G1 connection/auth:    10 / 3
+    G2 public market data: 12 / 11
+    G3 private inbound:     7 / 8
+    G4 outbound orders:    19 / 5
+    G5 keepalive/reconnect: 2 / 10
+
+  TB00529 named >=7 gaps; this exhaustive pass confirms all of
+  them and extends the set to 37. The exec_type 10-value
+  enumeration, maxratecount operative ceiling, ping/pong +
+  10s dead-connection timeout, 8-state pair-status set, the
+  Exit-Controller pair-status adaptation matrix (incl. IOC
+  limit_only), interval_begin, and connection_id are all
+  CONFIRMED ABSENT/CONFLICT below.
+
+============================================================
+2. GAP REGISTER - ABSENT SET (35)
+============================================================
+
+  GROUP 1 - CONNECTION / ENDPOINT / AUTH / ACK
+    WS-EP-003     Private_WS_v2              Endpoint scope (no level3) note
+    WS-LIB-001    WS_Manager                 Python websockets asyncio import path
+    WS-AUTH-002   Kraken_REST_API            HMAC-SHA512 spot auth model unchanged
+
+  GROUP 2 - PUBLIC MARKET DATA (instrument / status / ohlc / ticker)
+    WS-INST-008   WS_Manager/Exit_Controller 8 pair-status states enumerated (online..delisted)
+    WS-INST-009   WS_Manager                 NO-ENTRY status set (6 states block entry)
+    WS-STAT-002   WS_Manager                 4 global engine states enumerated
+    WS-STAT-005   WS_Manager                 connection_id field present in status msg
+    WS-STAT-006   WS_Manager                 MANDATORY log connection_id every new conn  [LOSS-PREVENTION]
+                  loss risk: diagnostic loss
+    WS-OHLC-001   WS_Manager                 two ohlc subs (5m + 60)
+    WS-OHLC-002   WS_Manager                 interval_begin canonical; timestamp deprecated
+    WS-OHLC-003   WS_Manager                 interval_begin RFC3339 nanosecond format
+    WS-OHLC-005   Signal_Pipeline            on close: previous candle OHLC used
+    WS-TKR-002    WS_Manager                 event_trigger modes (trades vs bbo)
+    WS-TKR-003    WS_Manager                 WS Manager switches event_trigger per pair on open pos
+
+  GROUP 3 - PRIVATE CHANNEL INBOUND (executions / balances)
+    WS-EXE-009    WS_Manager                 exec_type full 10-value enumeration
+    WS-EXE-011    Matching_Engine            exec_type=trade fires each partial fill
+    WS-EXE-012    Position_Mirror            fill fields cum_qty/avg_price/last_qty/last_price
+    WS-EXE-019    WS_Manager                 seq gap -> EXECUTIONS_SEQUENCE_GAP + REST GetOpenOrders  [LOSS-PREVENTION]
+                  loss risk: Position Mirror desync
+    WS-EXE-019b   WS_Manager                 maxratecount extracted from executions ACK (NOT hardcode 125)  [LOSS-PREVENTION]
+                  loss risk: rate-limit ceiling
+    WS-BAL-002    WS_Manager                 wallets[type=spot][id=main] ONLY
+    WS-BAL-003    WS_Manager                 balances snapshot vs update delta merge
+    WS-BAL-005    WS_Manager                 balances seq gap -> BALANCES_SEQUENCE_GAP + REST  [LOSS-PREVENTION]
+                  loss risk: capital calc error
+
+  GROUP 4 - OUTBOUND ORDERS (section 6)
+    WS-DL-002     WS_Manager                 deadline range 500ms-60s
+    WS-ADD-002    WS_Manager                 entry GTD expire_time 30-60s (start 30s)
+    WS-AMD-002    WS_Manager                 amend_order preserves queue position
+    WS-BA-002     WS_Manager                 batch_add template incl post_only TP + static emergSL
+    WS-TP-003     Exit_Controller            partial TP fill -> amend emergSL to remaining_qty
+
+  GROUP 5 - KEEPALIVE / ZOMBIE / RECONNECT / RATE LIMIT
+    WS-PING-002   WS_Manager                 pong expected; no pong in 10s = dead -> reconnect  [LOSS-PREVENTION]
+                  loss risk: dead-connection detection
+    WS-PING-004   WS_Manager                 pong does NOT reset zombie timer
+    WS-ZOM-002    WS_Manager                 track last_real_data_time monotonic
+    WS-ZOM-003    WS_Manager                 zombie threshold 90s  [LOSS-PREVENTION]
+                  loss risk: stale-feed trading
+    WS-REC-003    WS_Manager                 reconnect scenario B maint: min 5s delay
+    WS-REC-004    WS_Manager                 on reconnect 7-step restore incl maxratecount + Position Mirror
+    WS-RL-003     WS_Manager                 maxratecount operative ceiling (NOT hardcode 125)  [LOSS-PREVENTION]
+                  loss risk: rate-limit ceiling
+    WS-EXIT-003   Exit_Controller            Exit Controller pair-status adaptation matrix incl IOC limit_only  [LOSS-PREVENTION]
+                  loss risk: wrong-exit-mode loss
+
+============================================================
+3. GAP REGISTER - CONFLICT SET (2)
+============================================================
+  A CONFLICT is a wire-fact whose token IS present in the D1
+  visible text but whose VALUE contradicts the verified
+  0411001 dv1_13 fact. A coder reading D1 alone would code
+  the WRONG value. Conflicts are higher-severity than plain
+  absences and must be resolved diagram-side (DD-002).
+
+  GROUP 5 - KEEPALIVE / ZOMBIE / RECONNECT / RATE LIMIT
+    WS-REC-002    WS_Manager                 reconnect scenario A random: 5 immediate then backoff
+                  CONFLICT: D1 visible text says '10 attempts, backoff 1s->30s'; spec says 5 immediate then backoff -> value conflict
+    WS-RL-002     WS_Manager                 decay 2.34/sec, max 80 open/pair  [LOSS-PREVENTION]
+                  CONFLICT: D1 visible hardcodes 'Threshold per pair:125'; spec WS-RL-003 mandates maxratecount, do NOT hardcode 125 (AR-030)
+
+============================================================
+4. LOSS-PREVENTION-FLAGGED GAPS
+============================================================
+  The following gaps carry direct loss-prevention weight
+  (primary mission function, TB00000 section 1.2). They are
+  prioritized first in the D1 migration sequence:
+
+    WS-STAT-006   diagnostic loss              (ABSENT)
+    WS-EXE-019    Position Mirror desync       (ABSENT)
+    WS-EXE-019b   rate-limit ceiling           (ABSENT)
+    WS-BAL-005    capital calc error           (ABSENT)
+    WS-PING-002   dead-connection detection    (ABSENT)
+    WS-ZOM-003    stale-feed trading           (ABSENT)
+    WS-RL-002     rate-limit ceiling           (CONFLICT)
+    WS-RL-003     rate-limit ceiling           (ABSENT)
+    WS-EXIT-003   wrong-exit-mode loss         (ABSENT)
+
+============================================================
+5. PRESENT-IN-D1 SET (50) - for completeness
+============================================================
+  Recorded so the register is exhaustive (every checked fact
+  accounted for, PR-3 no-silent-loss). These need no migration.
+
+  GROUP 1 - CONNECTION / ENDPOINT / AUTH / ACK
+    WS-EP-001     Public_WS_v2               Public WS v2 URL wss://ws.kraken.com/v2
+    WS-EP-002     Private_WS_v2              Private WS v2 URL wss://ws-auth.kraken.com/v2
+    WS-LIB-002    WS_Manager                 max_size=10MB, open_timeout=10
+    WS-LIB-003    WS_Manager                 max_queue=None, ping_interval=None
+    WS-LIB-004    WS_Manager                 full connect() template (4 conns)
+    WS-AUTH-001   WS_Manager                 token from REST GetWebSocketsToken pre-connect
+    WS-AUTH-003   WS_Manager                 token ~15min, refresh every reconnect, in subscribe msg
+    WS-AUTH-004   WS_Manager                 two key pairs DATA+TRADE, IP-whitelisted
+    WS-ACK-001    WS_Manager                 subscribe ACK may carry warnings[]
+    WS-ACK-002    WS_Manager                 parse warnings[] each ACK; INFO known / WARN+alert unknown
+
+  GROUP 2 - PUBLIC MARKET DATA (instrument / status / ohlc / ticker)
+    WS-INST-001   WS_Manager                 instrument subscribe snapshot:true at startup
+    WS-INST-002   WS_Manager                 parse price_increment/qty_increment/qty_min/cost_min as Decimal
+    WS-INST-003   WS_Manager                 price_increment replaces deprecated tick_size
+    WS-INST-004   WS_Manager                 qty_min and cost_min mandatory Gate-8 inputs
+    WS-INST-005   WS_Manager                 qty_increment rounding base
+    WS-INST-006   WS_Manager                 instrument channel sole source for pair specs
+    WS-INST-010   Exit_Controller            post_only no-position: entries valid
+    WS-INST-011   Exit_Controller            post_only w/ open pos -> Exit Controller adapt
+    WS-STAT-001   WS_Manager                 status subscribe snapshot:true
+    WS-STAT-004   WS_Manager                 scheduled-maintenance detection via REST StatusAPI
+    WS-OHLC-004   WS_Manager                 candle-close detection rule
+    WS-TKR-001    WS_Manager                 ticker real-time price
+
+  GROUP 3 - PRIVATE CHANNEL INBOUND (executions / balances)
+    WS-EXE-001    WS_Manager                 executions subscribe order_status:true MANDATORY
+    WS-OSTA-001   WS_Manager                 order_status:true silent-drop of amended/restated if omitted
+    WS-EXE-002    WS_Manager                 snap_orders/snap_trades (NOT snapshot)
+    WS-EXE-010    WS_Manager                 reason field; cancel_reason deprecated
+    WS-EXE-018    WS_Manager                 executions sequence integer tracked per conn
+    WS-BAL-001    WS_Manager                 balances snapshot:true real-time settlement
+    WS-BAL-004    WS_Manager                 balances sequence integer tracked
+
+  GROUP 4 - OUTBOUND ORDERS (section 6)
+    WS-OUT-001    WS_Manager                 all outbound msgs include req_id (unique/session)
+    WS-OUT-002    WS_Manager                 req_id tracked in Pending Order Registry
+    WS-STP-001    WS_Manager                 stp_type cancel_newest on all add_order/batch_add
+    WS-STP-002    WS_Manager                 WS v2 underscore format (not hyphen)
+    WS-DL-001     WS_Manager                 deadline on all add_order/batch_add = now+5s
+    WS-ADD-001    WS_Manager                 add_order entry limit template (full field set)
+    WS-ADD-003    WS_Manager                 limit_price = last close quantized down to price_increment
+    WS-ADD-004    Risk_Engine                order_qty Gate-8 validation (qty>=qty_min etc)
+    WS-ADD-005    WS_Manager                 post_only:true all entry (maker-only)
+    WS-AMD-001    WS_Manager                 amend_order sole method; edit_order prohibited
+    WS-AMD-004    WS_Manager                 amend_order rate cost schedule (+1..+4 by age)
+    WS-BA-001     WS_Manager                 batch_add TP+emergSL atomic on fill
+    WS-BA-003     WS_Manager                 emergSL triggers.reference='last'
+    WS-BA-004     WS_Manager                 batch_add rate cost +(n/2) round up
+    WS-CAN-001    Exit_Controller            cancel_order per-order responses (Layer-2 MAE)
+    WS-CAN-003    Exit_Controller            NEVER batch_cancel for MAE exit
+    WS-CAN-004    WS_Manager                 cancel_order rate cost +1..+8 by age
+    WS-CAN-006    Risk_Engine                batch_cancel bypasses rate counter max (Full Halt)
+    WS-DMS-001    WS_Manager                 cancel_all_orders_after (DMS) PROHIBITED  [LOSS-PREVENTION]
+                  loss risk: destroys L3 crash protection
+
+  GROUP 5 - KEEPALIVE / ZOMBIE / RECONNECT / RATE LIMIT
+    WS-PING-001   WS_Manager                 app JSON ping every 30s per active conn
+    WS-RL-001     WS_Manager                 rate limits shared REST+WS+FIX, one counter/pair
+
+============================================================
+6. NEXT STEP
+============================================================
+  This register is read-only. The next session (TB00531)
+  begins the D1 diagram-first migration: one 0500000 amendment
+  per session (DEC-003 Path A / RR-SCOPE-011), diagram-first
+  (DD-002 / DD-003), migrating the loss-prevention-flagged
+  gaps first, until D1 is fact-level comprehensive; THEN
+  0411001 is retired (Claude-authored git rm --cached, CD-003;
+  C: copy preserved). A D1 V-040 attestation-defect MDR entry
+  is logged when migration starts (CF-V040-METHOD).
+
+============================================================
+7. REVISION HISTORY
+============================================================
+
+  v1_0  05-31-2026  First issue. Exhaustive D1 fact-level gap
+                    register: 87 wire-facts from 0411001 dv1_13
+                    (5 SD-9 groups) checked against live HEAD
+                    0500000 dv1_142 D1 figure under strict
+                    from-the-diagram-alone DD-014. 50 present,
+                    35 absent, 2 conflict; 37 gap entries.
+                    Corrected fact-level replacement for the
+                    over-claimed D1 V-040 65-cell attestation.
+
+============================================================
+END OF TB00530 D1 FACT-LEVEL GAP REGISTER v1_0
+============================================================

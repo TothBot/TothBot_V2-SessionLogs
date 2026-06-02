@@ -1,0 +1,953 @@
+DocDCN:     TB00480
+DocTitle:   S1SR_DD012_Phase1_Gap_Register_0711002
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00480_S1SR_DD012_Phase1_Gap_Register_0711002_v1_0.txt
+DocDate:    05-28-2026
+DocTime:    02:00:00 UTC
+
+============================================================
+TB00480 PHASE 1 ELEMENT-AUDIT GAP REGISTER -- 0711002
+REGIME_TAXONOMY_SPECIFICATION dv1_2
+============================================================
+
+------------------------------------------------------------
+0. AUDIT SCOPE AND METHOD
+------------------------------------------------------------
+
+Audit target  : 0711002 Regime_Taxonomy_Specification dv1_2
+                (1085 lines; 13 sections; dated 05-17-2026)
+Audit type    : 0911002 dv1_4 Phase 1 ELEMENT AUDIT
+                (read-only DD-012 three-bucket per element;
+                NO migration; NO Track A reconciliation)
+Canonical ref : 0500000 dv1_139 (live grep-verified per
+                element; RR-SCOPE-007 v2_30 no-propagation;
+                NOT inherited from TB00475 0610000 result
+                NOR from TB00476 0411001 / TB00477 0411002
+                / TB00478 0411003 / TB00479 0711001
+                nonempty-bucket-(b) results)
+Sequence      : SIXTH E2 audit; SECOND AA=07 audit
+                (continuing AA=07 instance-spec sub-set
+                1 of 3 complete after TB00479 0711001;
+                remaining: 0711003 per TB00394 v1_1
+                lines 188-198).
+Authority     : RR-SCOPE-005 derivable + DD-011 v2_56
+                CHAT-TURN-1 GATE OUTCOME 1 (sole compliant
+                option after FP/DP-derivability test
+                eliminated B/C/D).
+TB00394 line  : 195 -- "0711002 Regime_Taxonomy_Specification
+                        MOVE -> §5 / D4 (P3/E2)"
+
+DD-012 THREE-BUCKET KEY:
+  (a) ARCHITECTURAL RESTATEMENT -- element is canonically
+      encoded in a 0500000 diagram; element is a derived
+      restatement; drops with source-document retirement.
+  (b) CODING-UNIQUE -- no architectural meaning; pure code-
+      authoring contract; migrates to parent AA spec prose
+      or to preserved AA=10 spec; needs a retained home.
+  (c) ARCHITECTURAL CONTENT NOT YET IN DIAGRAMS -- amend
+      0500000 diagram FIRST (DD-002 prose-follows-diagram;
+      DD-003 4-step workflow) before any consolidation.
+
+------------------------------------------------------------
+1. PER-ELEMENT BUCKET CLASSIFICATION (29 elements)
+------------------------------------------------------------
+
+§3 REGIME TAXONOMY OVERVIEW (1 element):
+
+  E1   Six-regime classification grid (3 directional x 2
+       volatility); regime computed daily at 00:00 UTC,
+       does not change intra-day; computed independently
+       for asset_regime (per-pair) + market_regime
+       (BTC/USD); every trade tagged with both at entry
+       time.
+       BUCKET (a). Canonical: 0500000 dv1_139 §5 Regime
+       Taxonomy prose L3826-3828 ("Six-regime grid is
+       foundation of CIATS regime-segmented analysis.
+       Every trade tagged with both asset_regime and
+       market_regime (BTC proxy). Computed daily at
+       00:00 UTC."); D4 root <desc> governs list L3879
+       (6 regime: tokens + mod:Regime_Engine + ar:AR-074
+       + indicator/param/gate set); D4 mod:Regime_Engine
+       q1_do L3921 ("Daily 00:00 UTC: pull 720 daily
+       OHLC candles ... emit one of six regime tokens
+       per pair (asset_regime) and one for BTC/USD
+       (market_regime)").
+
+§4 THE 6-REGIME GRID (4 elements):
+
+  E2   RE-001 Directional state definitions
+       (TRENDING_POSITIVE: ADX>25 AND EMA20>EMA50;
+       TRENDING_NEGATIVE: ADX>25 AND EMA20<EMA50;
+       NON_DIRECTIONAL: ADX<=25).
+       BUCKET (a). Canonical: 0500000 dv1_139 §5 prose
+       L3851-3853 (identical inequality definitions);
+       D4 regime cell q1_do per cell (e.g.,
+       regime:TRENDING_POS_NORMAL q1_do "ADX(14) >
+       param:adx_threshold AND EMA20_daily >
+       EMA50_daily AND ATR(14) percentile <=
+       param:atr_percentile_thresh"; regime:TRENDING_
+       NEG_NORMAL q1_do L4097 "ADX(14) > param:adx_
+       threshold AND EMA20_daily < EMA50_daily AND
+       ATR(14) percentile <= param:atr_percentile_
+       thresh"); D4 V-040 PASS per TB00357 (60 cells)
+       carried at TB00379 V-040 IV.
+
+  E3   RE-002 Volatility state definitions
+       (NORMAL_VOL: ATR percentile <= 67th;
+       ELEVATED_VOL: ATR percentile > 67th).
+       BUCKET (a). Canonical: 0500000 dv1_139 §5 prose
+       L3854-3855 (identical percentile thresholds);
+       D4 regime cell q1_do per cell carries the
+       percentile comparator; param:atr_percentile_
+       thresh + param:atr_rolling_window in D4 governs
+       list L3879.
+
+  E4   RE-003 6-regime 3x2 grid with per-cell entry
+       permission + sizing semantics (REGIME 1-2: LONG
+       PERMITTED full size; REGIME 3: LONG PERMITTED
+       50%; REGIME 4: NO ENTRY; REGIMES 5-6: LONG
+       blocked, SHORT permitted).
+       BUCKET (a). Canonical: D4 six regime: tokens in
+       governs list L3879 (regime:TRENDING_POS_NORMAL
+       + regime:TRENDING_POS_ELEVATED + regime:NON_DIR_
+       NORMAL + regime:NON_DIR_ELEVATED + regime:
+       TRENDING_NEG_NORMAL + regime:TRENDING_NEG_
+       ELEVATED). Per-cell q1_do encodes the four
+       classifier conditions + Entry Permission +
+       sizing multiplier semantics (e.g., regime:NON_
+       DIR_NORMAL "ALLOW + half-size reduction" per
+       L4051; regime:NON_DIR_ELEVATED "Entry Permission
+       = FALSE unconditionally per rule:HR-REGIME-008"
+       per L4073; regime:TRENDING_NEG_* "LONG blocked
+       at gate:G3_Regime_Filter ... SHORT permitted
+       via mod:Short_Module dispatch per ar:AR-009 +
+       ar:AR-072 + ar:AR-073"). gate:G3_Regime_Filter
+       + gate:G6_Regime_Sizer canonical at D4 governs
+       + D2 V-040 PASS per TB00354.
+
+  E5   RE-004 Entry blocking rules / directional
+       cascade per cell (TRENDING_NEGATIVE: LONG
+       BLOCKED + SHORT PERMITTED; NON_DIR + ELEVATED_
+       VOL: both BLOCKED; NON_DIR + NORMAL_VOL: LONG
+       PERMITTED 50%; TRENDING_POS + *: LONG PERMITTED
+       100%; short side not permitted outside
+       TRENDING_NEGATIVE).
+       BUCKET (a). Canonical: D4 visible SVG text +
+       per-cell q4_triggers + q1_do encode the
+       cascade. Visible D4 SVG text L4082 "blocked at
+       gate:G3_Regime_Filter unconditionally (HR-
+       REGIME-008)"; L4106 "per HR-REGIME-007
+       directional cascade (ar:AR-072 + ar:AR-073)";
+       L4129 "SHORT permitted via mod:Short_Module
+       (HR-REGIME-007 directional cascade)". D4 mod:
+       Signal_Pipeline constraints carry rule:HR-
+       REGIME-007 + ar:AR-009 + ar:AR-072 + ar:AR-073
+       + decision:DEC-011 per TB00357 V-040.3 Q3
+       fail-closure ADD-only token propagation.
+
+§5 DATA SOURCE AND TIMING (3 elements):
+
+  E6   RE-005 Data source: REST GetOHLCData at 1440
+       minute interval; 720 committed daily candles;
+       one call per monitored pair; daily candles NOT
+       available from WS ohlc channel.
+       BUCKET (a). Canonical: D4 mod:Regime_Engine
+       consumes channel:kraken_rest_GetOHLCData
+       (governs list L3879); D4 mod:Regime_Engine
+       constraints ar:AR-017 L3916; q1_do L3921
+       "pull 720 daily OHLC candles via channel:
+       kraken_rest_GetOHLCData per monitored pair +
+       BTC/USD anchor"; visible D4 SVG text L3905
+       "INPUT DATA -- DAILY 00:00 UTC REGIME
+       COMPUTATION (REST GetOHLCData per AR-017)".
+       0411002 dv1_1 carries the GetOHLCData wire
+       contract (bucket (b) per TB00477 audit;
+       receiver here).
+
+  E7   RE-006 Timing: 00:00 UTC daily computation
+       trigger (not candle-close); one-shot per day;
+       regime state cached for re-use; Gate 3 reads
+       cache, not REST.
+       BUCKET (a). Canonical: D4 mod:Regime_Engine
+       q4_triggers L3922 "Triggered by daily 00:00
+       UTC scheduler tick (one-shot per day, per
+       pair + BTC/USD)"; visible D4 SVG text "DAILY
+       00:00 UTC REGIME COMPUTATION" L3905 + L3926
+       "mod:Regime_Engine -- daily 00:00 UTC
+       computation, one regime cell per pair, drives
+       asset_regime + market_regime"; visible D4
+       text L4146 "cached daily; does NOT change
+       intra-day (HR-REGIME-002)".
+
+  E8   RE-007 response[-1] exclusion (GAP-03 / AR-
+       017): GetOHLCData returns current not-yet-
+       committed candle as last entry; MUST be
+       excluded from ALL calculations; silent defect
+       if included.
+       BUCKET (a). Canonical via ar:AR-017 ★. §8 AR
+       registry L64 entry "AR-017: Daily regime via
+       REST GetOHLCData at 00:00 UTC. CRITICAL:
+       exclude response[-1]"; §5 prose CRITICAL
+       block L3841-3844 ("The last entry
+       (response[-1]) is ALWAYS the current not-yet-
+       committed candle. MUST be excluded ... See
+       0711002 Regime_Taxonomy_Specification dv1_1
+       RE-007 + AR-017"); D4 governs ar:AR-017 +
+       mod:Regime_Engine constraints ar:AR-017 +
+       q1_do "exclude response[-1] per ar:AR-017";
+       visible D4 SVG text L3950 "response[-1]
+       EXCLUDED (ar:AR-017)" (font-weight 700,
+       fill #7f1d1d; load-bearing visual). HR-
+       REGIME-001 by name not cited in 0500000
+       (0 grep hits) -- ar:AR-017 IS the canonical
+       encoding; HR-REGIME-001 is the derived rule
+       statement.
+
+§6 COMPUTATION SPECIFICATIONS (6 elements):
+
+  E9   RE-008 ADX(14) computation (6-step Wilder
+       algorithm: TR; +DM/-DM; Wilder SMMA of TR +
+       DM at period 14 with seed sum/14 and
+       incremental smoothed = (prev*13 + current)/14;
+       +DI/-DI; DX; ADX as Wilder SMMA of DX; min 28
+       candles required; state dict atr_14_daily +
+       adx_14 + plus_di + minus_di + smoothed_tr +
+       smoothed_plus_dm + smoothed_minus_dm +
+       adx_smma).
+       BUCKET (a) architectural-fact portion +
+       BUCKET (b) wire-contract portion.
+       Architectural fact (ADX(14) computed and
+       consumed by mod:Regime_Engine): canonical at
+       D4 mod:Regime_Engine.produces indicator:ADX_14
+       (governs list L3879 + cited in OPTION R
+       EXTENSION (iii) at L3312 "indicator:ATR_14
+       inbound from D4 mod:Regime_Engine indicator
+       computation"); q1_do "compute ADX(14) +
+       ATR(14) 50-day percentile rank + EMA(20)/
+       EMA(50) classification" L3921.
+       Wire-contract portion (the 6-step Wilder
+       formulas + numeric seed/incremental
+       arithmetic + state-dict field names) is
+       coding-unique with a retained home (0711002
+       retained + referenced by 1011003 Signal_
+       Pipeline_Coding_Spec, OR migrate to 1011003;
+       home-confirm deferred to Phase 2/3).
+
+  E10  RE-009 Daily EMA(20)/EMA(50) computation
+       (standard EMA; alpha = 2/(N+1) so alpha_20 =
+       2/21 ~ 0.09524 + alpha_50 = 2/51 ~ 0.03922;
+       SMA seed = sum(close[:N])/N; incremental EMA
+       = (close - prev_ema) * alpha + prev_ema;
+       Decimal arithmetic mandatory; state dict
+       ema_20_daily + ema_50_daily).
+       BUCKET (a) architectural-fact portion +
+       BUCKET (b) wire-contract portion.
+       Architectural fact: canonical at D4 mod:
+       Regime_Engine.produces indicator:EMA20_daily +
+       indicator:EMA50_daily (governs L3879).
+       Wire-contract portion (alpha values + SMA
+       seed formula + incremental EMA formula +
+       state-dict field names) is coding-unique
+       with a retained home (same as E9).
+
+  E11  RE-010 ATR(14) daily + percentile rank
+       (Wilder SMMA of TR period 14; 50-day rolling
+       buffer of ATR values; percentile_rank = count
+       (ATR<current)/len*100 at each daily update;
+       buffer push/pop mechanics; min 64 candles
+       required; state dict atr_14_daily + atr_
+       buffer + atr_percentile_now).
+       BUCKET (a) architectural-fact portion +
+       BUCKET (b) wire-contract portion.
+       Architectural fact (ATR_14 + percentile rank
+       + 50-day rolling window): canonical at D4
+       mod:Regime_Engine.produces indicator:ATR_14
+       + q1_do L3921 "ATR(14) 50-day percentile rank
+       (param:atr_rolling_window)" + visible D4 SVG
+       text L1804 "ATR-percentile classification
+       uses param:atr_rolling_window 50-day window
+       per ar:AR-074"; param:atr_rolling_window in
+       D4 governs L3879 + ciats_ownership field
+       L3919 + §9 mirror L7061-7066. Wire-contract
+       portion (Wilder SMMA formula + rolling buffer
+       push/pop mechanics + percentile arithmetic
+       formula + state-dict field names) is coding-
+       unique with a retained home (same as E9).
+
+  E12  RE-011 Directional state determination logic
+       (if ADX > adx_threshold then if EMA20>EMA50
+       then TRENDING_POSITIVE else TRENDING_NEGATIVE
+       else NON_DIRECTIONAL).
+       BUCKET (a). Canonical: each regime cell q1_do
+       per cell encodes the four classifier
+       conditions (e.g., regime:TRENDING_NEG_NORMAL
+       q1_do L4097 "ADX(14) > param:adx_threshold
+       AND EMA20_daily < EMA50_daily ..."); D4 mod:
+       Regime_Engine q1_do "compute ... EMA(20)/
+       EMA(50) classification ... emit one of six
+       regime tokens" L3921.
+
+  E13  RE-012 Volatility state determination logic
+       (if percentile_rank <= atr_percentile_thresh
+       then NORMAL_VOL else ELEVATED_VOL).
+       BUCKET (a). Canonical: each regime cell q1_do
+       per cell encodes the percentile comparator
+       (NORMAL/ELEVATED variants); D4 governs param:
+       atr_percentile_thresh L3879.
+
+  E14  RE-013 Regime assembly: asset_regime =
+       f"{directional_state}_{volatility_state}";
+       six valid regime strings (TRENDING_POSITIVE_
+       NORMAL_VOL + TRENDING_POSITIVE_ELEVATED_VOL +
+       NON_DIRECTIONAL_NORMAL_VOL + NON_DIRECTIONAL_
+       ELEVATED_VOL + TRENDING_NEGATIVE_NORMAL_VOL +
+       TRENDING_NEGATIVE_ELEVATED_VOL); stored in
+       pre-computation cache.
+       BUCKET (a). Canonical: 0500000 namespace
+       registers six regime: tokens (regime:TRENDING_
+       POS_NORMAL + regime:TRENDING_POS_ELEVATED +
+       regime:NON_DIR_NORMAL + regime:NON_DIR_
+       ELEVATED + regime:TRENDING_NEG_NORMAL +
+       regime:TRENDING_NEG_ELEVATED -- note: 0500000
+       uses the abbreviated TRENDING_POS / NON_DIR /
+       TRENDING_NEG form while 0711002 prose uses
+       the spelled-out TRENDING_POSITIVE / NON_
+       DIRECTIONAL / TRENDING_NEGATIVE form. The
+       abbreviated tokens are the canonical
+       namespace identifiers per 0311001 §15.12
+       registry; the prose form is the human-
+       readable narration of the same six regime
+       cells.). D4 mod:Regime_Engine q1_do L3921
+       "emit one of six regime tokens per pair
+       (asset_regime) and one for BTC/USD (market_
+       regime); ... write to pre-comp regime cache
+       for downstream consumers".
+
+§7 TWO-LEVEL TRADE TAGGING (2 elements):
+
+  E15  RE-014 asset_regime + market_regime two-level
+       tagging on every closed trade; both written
+       to Trade Outcome Bus on TRADE_CLOSE; enables
+       per-regime P&L analysis at 600+ trades / 100+
+       per bucket.
+       BUCKET (a). Canonical: D4 visible SVG text
+       L4137 "TWO-LEVEL TAGGING -- Every closed trade
+       carries asset_regime AND market_regime (HR-
+       REGIME-010)" (load-bearing visual); D4
+       visible text L3858 "asset_regime + market_
+       regime (BTC/USD proxy) both tagged on every
+       trade"; D4 contract:CIATS_Trade_Outcome_Bus
+       in governs list (TB00357 V-040 attestation
+       includes contract:CIATS_Trade_Outcome_Bus
+       Q1-Q5 PASS at L4336); each regime cell
+       q5_logs field "asset_regime tag persists on
+       TRADE_CLOSE per HR-REGIME-010" (e.g., L4005);
+       D4 mod:Regime_Engine q4_triggers "Triggers
+       downstream cache fill consumed by ... mod:
+       Logger (TRADE_CLOSE tagging)" L3922; mod:
+       Logger q4_triggers L4527 "triggers asset_
+       regime + market_regime field-write on each
+       contract:CIATS_Trade_Outcome_Bus record at
+       evt:TRADE_CLOSE per rule:HR-REGIME-010".
+
+  E16  RE-015 BTC/USD as market_regime proxy (AR-
+       074): BTC/USD always in monitored universe
+       regardless of volume ranking; regime computed
+       the same way as all other pairs at 00:00 UTC;
+       all other pairs read BTC/USD market_regime
+       from cache.
+       BUCKET (a). Canonical via ar:AR-074 ★. §8 AR
+       registry L956 "AR-074 (dv1_15) ★: BTC/USD
+       always in monitored universe -- market_regime
+       proxy commitment"; D4 governs ar:AR-074
+       L3879; D4 mod:Regime_Engine constraints ar:
+       AR-074 L3916 "(BTC/USD as market_regime
+       proxy)"; visible D4 SVG text L3949 "Per-pair
+       + BTC/USD anchor (ar:AR-074)"; L4151 "BTC/USD
+       always in monitored universe (HR-REGIME-005);
+       cannot be removed"; D4 mod:Regime_Engine
+       q4_triggers "(one-shot per day, per pair +
+       BTC/USD)" L3922.
+
+§8 1H HTF CONFIRMATION (1 element):
+
+  E17  §8 1H HTF Gate 4 (AR-053) cross-reference:
+       Gate 4 implements 1H EMA(20)>EMA(50)
+       alignment check for TRENDING_POSITIVE pairs;
+       ohlc(60) WS stream; pre-computation cache;
+       NON_DIR + NORMAL_VOL skips Gate 4; short-
+       side 1H confirmation logic in 0811002 +
+       0811005, not here.
+       BUCKET (a). Canonical: gate:G4_HTF_
+       Confirmation in D2 governs (TB00357 V-040
+       PASS attestation; D2 R8 V-040 INDEPENDENT
+       VERIFICATION TB00377); AR-053 in §8 AR
+       registry. This 0711002 section is a pure
+       cross-reference + short-side scope note;
+       the architectural fact lives at D2.
+
+§9 HARD RULES -- REGIME TAXONOMY (10 elements):
+
+  E18  HR-REGIME-001 response[-1] MUST be excluded
+       (GAP-03, AR-017).
+       BUCKET (a). Canonical via ar:AR-017 (see E8).
+       HR-REGIME-001 by name not cited in 0500000
+       (0 grep hits) -- ar:AR-017 IS the canonical
+       encoding; HR-REGIME-001 is the derived rule
+       statement. Drops with retirement.
+
+  E19  HR-REGIME-002 Regime computed once per day
+       at 00:00 UTC; does NOT change intra-day; no
+       computation triggered by ohlc(5) events.
+       BUCKET (a). Canonical: visible D4 SVG text
+       L4146 "cached daily; does NOT change intra-
+       day (HR-REGIME-002)"; D4 mod:Regime_Engine
+       q4_triggers "Triggered by daily 00:00 UTC
+       scheduler tick (one-shot per day ...)"
+       L3922. HR-REGIME-002 cited by name in
+       visible D4 text.
+
+  E20  HR-REGIME-003 Daily candles obtained from
+       REST GetOHLCData only; WS ohlc channel does
+       NOT provide daily intervals; never attempt
+       to compute daily from WS.
+       BUCKET (a) architectural binding portion +
+       BUCKET (b) wire-fact-restatement portion.
+       Architectural binding: D4 mod:Regime_Engine
+       consumes channel:kraken_rest_GetOHLCData
+       only (governs L3879); 0411001 Kraken_WS_v2
+       wire contract enumerates the WS ohlc
+       intervals as {1m,5m,15m,30m,1h,4h} -- daily
+       is NOT in the set (wire fact). The "never
+       WS" prohibition is the negative restatement
+       of the wire contract + binding constraint.
+       HR-REGIME-003 by name not cited in 0500000
+       (0 grep hits); the architectural binding is
+       canonical. The negative-statement restatement
+       portion is coding-rule restatement (same
+       pattern as TB00479 0711001 HR-SSS-006
+       bucket-(b) coding-rule-restatement portion).
+
+  E21  HR-REGIME-004 One REST GetOHLCData call per
+       pair per day; not per gate evaluation;
+       regime state cached and re-used all day;
+       REST called once at 00:00 UTC.
+       BUCKET (a). Canonical: D4 mod:Regime_Engine
+       q4_triggers L3922 "Triggered by daily 00:00
+       UTC scheduler tick (one-shot per day, per
+       pair + BTC/USD)"; ar:AR-036 (REST call
+       staggering at 1.1s intervals between calls
+       for the same pair) in D4 governs L3879 +
+       constraints L3916. HR-REGIME-004 by name not
+       cited in 0500000 (0 grep hits); the
+       architectural fact is fully canonical via
+       q4_triggers + ar:AR-036.
+
+  E22  HR-REGIME-005 BTC/USD regime computed every
+       day; cannot be removed; market_regime on
+       every trade requires BTC/USD to be available
+       (AR-074).
+       BUCKET (a). Canonical via ar:AR-074 ★ (see
+       E16). Visible D4 SVG text L4151 "BTC/USD
+       always in monitored universe (HR-REGIME-005);
+       cannot be removed" (HR-REGIME-005 cited by
+       name in visible D4 text).
+
+  E23  HR-REGIME-006 All regime arithmetic MUST use
+       Python Decimal; float arithmetic is
+       PROHIBITED.
+       BUCKET (b). Decimal-only is a cross-spec
+       coding rule (same applies to SSS per HR-SSS-
+       003 audited at TB00479 + classified bucket
+       (b)). HR-REGIME-006 by name not cited in
+       0500000 (0 grep hits). Same coding-only-rule
+       classification as TB00479 0711001 HR-SSS-003.
+       Coding-unique with a retained home (0711002
+       retained + referenced by 1011003, OR migrate
+       to 1011003; home-confirm deferred).
+
+  E24  HR-REGIME-007 TRENDING_NEGATIVE applies
+       directional cascade at Gate 3 regardless of
+       volatility state: LONG entry BLOCKED + SHORT
+       entry PERMITTED via Short_Module dispatch
+       per AR-009 amended dv1_41 + AR-072 + AR-073;
+       no exception; applies to both Regime 5 and
+       Regime 6.
+       BUCKET (a). Canonical: rule:HR-REGIME-007 in
+       D4 governs L3879; 72 grep hits in 0500000
+       dv1_139; D4 visible SVG text L4106 "per HR-
+       REGIME-007 directional cascade (ar:AR-072 +
+       ar:AR-073)" + L4129 "SHORT permitted via
+       mod:Short_Module (HR-REGIME-007 directional
+       cascade)" + L4130 "per HR-REGIME-007 cascade
+       (ar:AR-072 + ar:AR-073); never reaches Long
+       sizing"; regime:TRENDING_NEG_NORMAL +
+       regime:TRENDING_NEG_ELEVATED cell q1_do +
+       q4_triggers + q5_logs (L4097-4099, L4121-
+       4129) encode the cascade dispatch; D4 mod:
+       Signal_Pipeline constraints carry rule:HR-
+       REGIME-007 + ar:AR-009 + ar:AR-072 + ar:AR-
+       073 + decision:DEC-011 per TB00357 V-040.3
+       Q3 fail-closure ADD-only token propagation.
+
+  E25  HR-REGIME-008 NON_DIR + ELEVATED_VOL blocks
+       entry unconditionally at Gate 3; no
+       exception; both directions blocked.
+       BUCKET (a). Canonical: regime:NON_DIR_
+       ELEVATED cell q1_do L4073 "Entry Permission
+       = FALSE unconditionally per rule:HR-REGIME-
+       008"; visible D4 SVG text L4082 "blocked at
+       gate:G3_Regime_Filter unconditionally (HR-
+       REGIME-008)" (HR-REGIME-008 cited by name).
+       13 grep hits in 0500000.
+
+  E26  HR-REGIME-009 Regime thresholds are CIATS-
+       owned starting values; no threshold may be
+       changed by CIATS below the 200-trade floor.
+       BUCKET (a) architectural-fact portion +
+       BUCKET (b) coding-rule-restatement portion.
+       Architectural fact (regime parameters are
+       CIATS-owned starting values per-module): D4
+       mod:Regime_Engine ciats_ownership field
+       L3919 "param:adx_threshold + param:atr_
+       percentile_thresh + param:atr_rolling_window
+       + param:htf_ema_periods are CIATS-OWNED
+       PER-MODULE INSTANTIATED" per 0911002
+       Campaign Phase 1 (TB00401 / DEC-043); §9
+       mirror "Regime engine + signal model" block
+       L7058-7106; TB00000 v2_67 §9.17 canonical
+       value home. The "200-trade floor" portion
+       is the cross-cutting CIATS HR (Statistical
+       Methods §7 + §9.17 parameter philosophy) --
+       restatement here. Coding-rule-restatement
+       portion is bucket (b) with a retained home
+       (same pattern as TB00479 HR-SSS-006/HR-SSS-
+       009 coding-rule-restatement portion).
+       HR-REGIME-009 by name not cited in 0500000
+       (0 grep hits).
+
+  E27  HR-REGIME-010 Both asset_regime and market_
+       regime MUST be written to every trade log
+       record; partial tagging is a defect; CIATS
+       requires both.
+       BUCKET (a). Canonical: rule:HR-REGIME-010 in
+       D4 governs L3879; 31 grep hits in 0500000;
+       D4 visible SVG text L4137 "TWO-LEVEL TAGGING
+       -- Every closed trade carries asset_regime
+       AND market_regime (HR-REGIME-010)" (HR-
+       REGIME-010 cited by name; load-bearing
+       visual); each regime cell q5_logs field
+       "per HR-REGIME-010" (L4005, L4029, L4052,
+       etc.); D4 mod:Logger q4_triggers L4527
+       "triggers asset_regime + market_regime
+       field-write on each contract:CIATS_Trade_
+       Outcome_Bus record at evt:TRADE_CLOSE per
+       rule:HR-REGIME-010"; TB00379 V-040 IV
+       cross-diagram audit notes "HR-REGIME-010
+       dual-tag enforcement rule canonical at D4".
+
+§10 CIATS PARAMETER REGISTRY (1 element):
+
+  E28  §10 CIATS parameter registry: five regime-
+       engine parameters (adx_threshold = 25;
+       htf_ema_short = 20; htf_ema_long = 50;
+       atr_percentile_thresh = 67th; atr_rolling_
+       window = 50) all CIATS-owned starting
+       values; evidence base 5+ independent
+       sources per parameter; break-even win rate
+       40% for 1:1.5 R:R; per-module CIATS
+       framework cited.
+       BUCKET (a). Canonical: D4 mod:Regime_Engine
+       ciats_ownership field L3919 (4 of 5 tokens
+       -- adx_threshold + atr_percentile_thresh +
+       atr_rolling_window + htf_ema_periods; the
+       0711002 dv1_2 prose lists htf_ema_short +
+       htf_ema_long separately while the canonical
+       D4 + §9 mirror folds them into the single
+       compound token param:htf_ema_periods =
+       "20/50 daily" per the namespace registry
+       form); §9 mirror "Regime engine + signal
+       model" block L7058-7106 (canonical value
+       home pointer to TB00000 §9.17); TB00000
+       v2_67 §9.17 canonical value home (starting
+       values live there permanently per Option A /
+       DEC-039). CIATS-ownership architectural
+       fact migrated to D4 at TB00401 / DEC-043.
+       Token registration: all four tokens
+       registered in 0311001 §15.12.8 (param:atr_
+       rolling_window registered at 0311001 v1_25
+       -> v1_26 per TB00401 P-2; the other three
+       pre-existing).
+       NOTE: The 0711002 §10 prose lists htf_ema_
+       short = 20 + htf_ema_long = 50 as two
+       separate parameters. The canonical D4 +
+       §9 mirror + TB00000 §9.17 form folds these
+       into a single compound parameter param:
+       htf_ema_periods = "20/50 daily starting".
+       Per DD-001/DD-002 diagram-canonical-over-
+       prose, the compound form governs; the
+       split-pair prose form is a colloquial
+       presentation of the same parameter. Note
+       carried forward as OBS-1 below (not a
+       bucket-(c) finding).
+       NOTE: The 0711002 §10 paragraph "Per-module
+       CIATS framework (TB00000 v2_50 §9.6)" cites
+       a stale TB00000 version. Live TB00000 is
+       v2_67 (§9.6 byte-identical per TB00000
+       revision-history record per TB00327 dv1_2
+       amendment record at L673). Citation refresh
+       carry-forward only; not architecture; not
+       blocking (OBS-4 below).
+
+§11 + §12 + §13 (3 N/A meta-elements):
+
+  E29  §11 Five Q1-Q5 coding-readiness questions
+       (inputs->outputs; interfaces; hard rules;
+       triggers; logging).
+       BUCKET (a). Canonical: D4 V-040 design-
+       completeness attestation per TB00357 -- 12
+       D4 components x 5 questions = 60 PASS cells
+       attested at TB00357 L4336 PRIOR V-040 IV
+       ATTESTATION; D4 R5 V-040 INDEPENDENT
+       VERIFICATION TB00379 cross-diagram Q2 audit
+       PASS with 3 of 5 destination diagrams
+       VERIFIED + 2 PENDING-CASCADE later resolved.
+       Per-component q1_do/q2 (via consumes +
+       produces + constraints)/q3 (via constraints
+       + rule: tokens)/q4_triggers/q5_logs on
+       mod:Regime_Engine + 6 regime cells + mod:
+       Signal_Pipeline + mod:Logger + mod:CIATS +
+       mod:Risk_Engine + contract:CIATS_Trade_
+       Outcome_Bus. DD-014 PASS verdict for D4: a
+       coder reading D4 R5 alone (SVG + governs
+       descs + figcaption) can write the daily
+       00:00 UTC regime-classification pipeline,
+       the 6-cell taxonomy with per-cell Entry
+       Permission + position-size multiplier
+       semantics, the HR-REGIME-007 directional
+       cascade dispatch, the gate:G3_Regime_Filter
+       + gate:G6_Regime_Sizer behavior, the HR-
+       REGIME-010 dual-tag requirement, and the
+       Regime Library bucket accumulation in
+       mod:CIATS without consulting any other
+       document.
+
+§12 RELATED DOCUMENTS + §13 REVISION HISTORY:
+
+  N/A. Informational meta-content (governing-
+  documents list + dv1_2/dv1_1/dv1_0 forensic
+  record per CI-005 + CI-006). Not architectural
+  elements; not bucket-classified.
+
+------------------------------------------------------------
+2. BUCKET-CLASS SUMMARY
+------------------------------------------------------------
+
+  Bucket (a) ARCHITECTURAL RESTATEMENT (CANONICAL IN 0500000):
+    E1, E2, E3, E4, E5, E6, E7, E8, E9 (arch fact only),
+    E10 (arch fact only), E11 (arch fact only), E12, E13,
+    E14, E15, E16, E17, E18, E19, E20 (arch binding only),
+    E21, E22, E24, E25, E26 (arch fact only), E27, E28,
+    E29.
+    => 27 architectural-restatement elements / element-
+       portions, ALL CANONICAL IN 0500000 dv1_139.
+
+  Bucket (b) CODING-UNIQUE (NEEDS RETAINED HOME):
+    E9 (6-step Wilder algorithm formulas + numeric seed/
+    incremental arithmetic + state-dict field names
+    atr_14_daily/adx_14/plus_di/minus_di/smoothed_tr/
+    smoothed_plus_dm/smoothed_minus_dm/adx_smma),
+    E10 (alpha numeric values 2/21 ~ 0.09524 + 2/51 ~
+    0.03922 + SMA seed formula + incremental EMA formula
+    + state-dict field names ema_20_daily/ema_50_daily),
+    E11 (Wilder SMMA arithmetic + rolling buffer push/
+    pop mechanics + percentile arithmetic formula +
+    state-dict field names atr_buffer/atr_percentile_now),
+    E20 (HR-REGIME-003 negative-statement restatement
+    of WS-ohlc-not-daily wire fact),
+    E23 (HR-REGIME-006 Decimal-only coding-only rule),
+    E26 (HR-REGIME-009 200-trade-floor coding-rule-
+    restatement portion).
+    => 6 coding-unique element-portions with a retained
+       home (0711002 retained + referenced by 1011003
+       Signal_Pipeline_Coding_Spec, OR migrate to 1011003;
+       home-confirm deferred to Phase 2/3 -- same retained-
+       home pattern as TB00479 0711001).
+
+  Bucket (c) ARCHITECTURAL CONTENT NOT YET IN DIAGRAMS:
+    ZERO bucket-(c) elements. Every architectural element
+    of 0711002 dv1_2 is canonically encoded in 0500000
+    dv1_139 (D4 mod:Regime_Engine + 6 regime cells for
+    the 6-regime taxonomy + computation + per-cell entry
+    permission + directional cascade; D2 gate:G3_Regime_
+    Filter + gate:G6_Regime_Sizer for pipeline consumption;
+    D2 gate:G4_HTF_Confirmation for the 1H HTF rule cross-
+    reference; §8 AR registry AR-017 + AR-072 + AR-073 +
+    AR-074 with ★ load-bearing marks where applicable;
+    §9 mirror "Regime engine + signal model" block for
+    the 4 regime parameters with TB00000 §9.17 source-
+    pointer).
+
+  N/A (NOT BUCKET-CLASSIFIED):
+    §12 RELATED DOCUMENTS list; §13 REVISION HISTORY
+    forensic record per CI-005 + CI-006.
+
+------------------------------------------------------------
+3. KEY FINDINGS
+------------------------------------------------------------
+
+FIND-1  ZERO BUCKET-(c) ON ARCHITECTURE AXIS. 0711002
+        dv1_2 ORIGINATES NO trading-organism architecture
+        on the diagrams axis -- every architectural
+        element is a derived restatement of canonical
+        0500000 dv1_139 content. The spec is subordinate
+        to D4 mod:Regime_Engine + 6 regime cells (the
+        canonical Regime Taxonomy site per DD-001) +
+        §8 AR registry (AR-017 + AR-074 the two ★
+        load-bearing regime-anchor reasoning entries +
+        AR-072 + AR-073 the directional-cascade
+        dispatch reasoning entries) + §9 mirror (the
+        four regime-engine parameter source-pointers).
+
+FIND-2  D4 REGIME_TAXONOMY IS DESIGN-COMPLETE FOR REGIME
+        PER DD-014. The D4 R5 element set (mod:Regime_
+        Engine + 6 regime cells + mod:Signal_Pipeline +
+        mod:Logger + mod:CIATS + mod:Risk_Engine +
+        contract:CIATS_Trade_Outcome_Bus) carries all
+        five Q1-Q5 fields per TB00357 V-040 design-
+        completeness amendment (#6 of 10; lineage closed
+        at TB00361 D9 #10). 12 components x 5 questions
+        = 60 PASS cells per TB00357 L4336 PRIOR V-040 IV
+        ATTESTATION; D4 R5 V-040 INDEPENDENT
+        VERIFICATION TB00379 PASS. DD-014 PASS verdict
+        for D4: a coder reading D4 R5 alone (SVG +
+        governs descs + figcaption) can write the
+        complete regime-classification pipeline without
+        recourse to 0711002 prose.
+
+FIND-3  CIATS-OWNERSHIP FACT MIGRATION COMPLETE. The
+        four regime-engine parameters (adx_threshold +
+        atr_percentile_thresh + atr_rolling_window +
+        htf_ema_periods) had their EXISTENCE + CIATS-
+        OWNERSHIP architectural fact migrated to D4
+        mod:Regime_Engine ciats_ownership field at
+        TB00401 / DEC-043 per 0911002 dv1_1 §8
+        migration pattern P-1..P-6 (Option A / DEC-039).
+        Token registration: param:atr_rolling_window
+        registered 0311001 v1_25 -> v1_26 per TB00401
+        P-2; the other three (adx_threshold + atr_
+        percentile_thresh + htf_ema_periods) pre-
+        existing in §15.12.8. The fifth §9.17 token
+        param:min_volume_usd_daily (signal-model
+        liquidity floor) migrated to D2 gate:G2 at
+        TB00402 / DEC-044 (different owning element;
+        completes the named "Regime engine + signal
+        model" §9.17 group). Values stay in TB00000
+        §9.17 (pointer, not value) per Option A
+        campaign rule.
+
+FIND-4  BUCKET (b) NONEMPTY -- wire contract has a
+        retained home. The 6-step ADX(14) Wilder SMMA
+        arithmetic + standard EMA alpha values and
+        seeding/incremental formulas + ATR percentile-
+        rank rolling-buffer mechanics + the indicator
+        state-dict field names + HR-REGIME-003 negative
+        WS-ohlc restatement + HR-REGIME-006 Decimal-only
+        + HR-REGIME-009 200-trade-floor coding-rule-
+        restatement portion are coding-unique with a
+        retained home (0711002 retained + referenced by
+        1011003 Signal_Pipeline_Coding_Spec, OR migrate
+        into 1011003; home-confirm deferred to a
+        separate downstream Phase 2/3 session).
+
+FIND-5  SAME NONEMPTY-BUCKET-(b) PATTERN AS TB00476
+        0411001 + TB00477 0411002 + TB00478 0411003 +
+        TB00479 0711001. NOT the TB00475 0610000 clean-
+        PRESERVE pattern. AA=07 instance-spec sub-set
+        2 of 3 audits complete with the same consistent
+        retirement-decision architecture: MOVE-complete
+        on architecture axis + bucket-(b) home-confirm
+        pending + 0700000/0710000 E3 anchor/domain-doc
+        collapse dependency-LAST.
+
+FIND-6  NO UNIQUE 0711002 SOURCE-OF-TRUTH-CITATION
+        PRESERVATION GATE OBSERVED THIS SESSION. Unlike
+        TB00478 0411003 (which carried the AR-080 §8
+        source-of-truth-citation cascade + seven-entry
+        §9 mirror source-cite cascade), 0711002 dv1_2
+        is not the canonical-source-cite source for any
+        0500000 §8 AR entry. Its content is fully
+        RECEIVED FROM AR-017 + AR-072 + AR-073 + AR-074
+        (the spec IS the derived restatement; the §8
+        AR entries originate it). The §5 prose
+        reference "See 0711002 Regime_Taxonomy_
+        Specification dv1_1 RE-007 + AR-017" at L3844
+        is a back-reference TO the spec for human-
+        reader convenience (the canonical source is
+        AR-017 itself; the dv1_1 citation is stale at
+        live dv1_2). Reference refresh on 0711002
+        retirement; not a substantive cite-preservation
+        gate. Retirement is gated on bucket-(b) home-
+        confirm + OBS-1 + OBS-3 prose-follows-diagram
+        reconciliation (Track A) + 0700000/0710000 E3
+        anchor/domain-doc collapse.
+
+FIND-7  AA=07 INSTANCE-SPEC SUB-SET AUDIT 2 OF 3
+        COMPLETE. Remaining AA=07 element audit:
+          0711003 Asset_Selection_Specification
+                  (MOVE -> §3/D2 + §5/D4 per TB00394
+                  line 196)
+        One source per session per RR-SCOPE-011. E2
+        cycle also has AA=08 (0811005 Short_Module
+        per TB00394 line 206 MOVE -> §3/D2 + §7 +
+        §9.10) + AA=02 (0211001 CIATS architectural
+        content per TB00394 line 130 SPLIT -> §6/D5).
+
+------------------------------------------------------------
+4. OBSERVATIONS (drift surfaces, NOT bucket-(c) findings)
+------------------------------------------------------------
+
+OBS-1  htf_ema parameter form divergence. 0711002 dv1_2
+       §10 lists "htf_ema_short = 20" and "htf_ema_long
+       = 50" as two separate parameters. 0500000 dv1_139
+       D4 governs L3879 + ciats_ownership field L3919
+       + §9 mirror L7067 fold these into the single
+       compound token "param:htf_ema_periods = 20/50
+       daily starting". TB00000 v2_67 §9.17 uses the
+       compound form. Per DD-001/DD-002 diagram-
+       canonical-over-prose, the compound form governs;
+       the dv1_2 prose split-pair form is the human-
+       readable narration of the same parameter. Prose-
+       follows-diagram reconciliation surface (not in
+       scope this session per OCS verbatim "NO Track A
+       reconciliation"); flagged as carry-forward.
+
+OBS-2  Regime token naming divergence. 0711002 dv1_2
+       prose uses the spelled-out form "TRENDING_
+       POSITIVE_NORMAL_VOL / TRENDING_POSITIVE_
+       ELEVATED_VOL / NON_DIRECTIONAL_NORMAL_VOL /
+       NON_DIRECTIONAL_ELEVATED_VOL / TRENDING_
+       NEGATIVE_NORMAL_VOL / TRENDING_NEGATIVE_
+       ELEVATED_VOL" (RE-013 L402-408). 0500000 dv1_139
+       namespace + D4 governs L3879 + per-cell
+       <desc> + visible D4 text use the abbreviated
+       form "regime:TRENDING_POS_NORMAL / regime:
+       TRENDING_POS_ELEVATED / regime:NON_DIR_NORMAL /
+       regime:NON_DIR_ELEVATED / regime:TRENDING_NEG_
+       NORMAL / regime:TRENDING_NEG_ELEVATED" per the
+       0311001 §15.12 namespace registry form. Same
+       six regime cells; different token-form
+       conventions across the prose vs the namespace
+       registry. Per DD-001/DD-002 diagram-canonical-
+       over-prose, the namespace-registry form governs;
+       the dv1_2 prose spelled-out form is human-
+       readable narration. Prose-follows-diagram
+       reconciliation surface; flagged as carry-
+       forward.
+
+OBS-3  Stale TB00000 version citation. 0711002 dv1_2
+       §10 closing paragraph cites "TB00000 v2_50 §9.6"
+       (per-module CIATS framework reference). Live
+       TB00000 is v2_67; §9.6 is byte-identical to
+       v2_50 §9.6 per the TB00000 revision-history
+       record (the citation-refresh-only nature is
+       confirmed by TB00327 dv1_2 amendment record
+       at L673 which already noted §9.6 byte-identical
+       across the v2_29 -> v2_50 refresh). Per RR-
+       SCOPE-010 LOCAL-C-DRIVE-SCOPE-EXTENSION, this
+       is a stale-citation drift class -- not an
+       architectural divergence. Citation refresh
+       carry-forward (sibling pattern matches TB00475
+       OBS-3 0610000 + TB00476 OBS-3 0411001 + TB00477
+       OBS-3 0411002 + TB00478 OBS-3 0411003 + TB00479
+       OBS-4 0711001).
+
+OBS-4  GD-CLASS citation refresh housekeeping. 0711002
+       dv1_2 §2 GOVERNING DOCUMENTS cites "0500000
+       System_Architecture_Overview / Primary source:
+       AR-017, AR-074, dv1_5 FLAG 2, GAP-03, Section
+       5 (Regime Taxonomy)". The "dv1_5" reference is
+       a historical version anchor (the source-tracing
+       breadcrumb to the originating dv1_5 FLAG 2 +
+       GAP-03 entries); live 0500000 is dv1_139. §12
+       RELATED DOCUMENTS cites "0500000 ... AR-009
+       amended dv1_41 + AR-072 + AR-073 amended dv1_43
+       M-2" -- these dv1_41 + dv1_43 references are
+       historical-amendment anchors (when AR-009 was
+       amended + when AR-072/AR-073 were amended); not
+       wrong, but visible-stack rotation may be
+       appropriate at retirement-prep. Not blocking;
+       not architecture; sibling-pattern housekeeping
+       carry-forward.
+
+OBS-5  Cross-reference to 0811002 Selection_
+       Controller_Specification. 0711002 dv1_2 §8 +
+       §9 HR-REGIME-007 + §12 cite 0811002 as the
+       short-side 1H confirmation logic spec. Live
+       project folder does NOT contain 0811002 (only
+       0811005 Short_Module_Specification dv1_3 is
+       present; 0811002 is referenced but not
+       audited yet). Per RR-SCOPE-010 LOCAL-C-DRIVE-
+       SCOPE-EXTENSION, 0811002 may exist on Bill's
+       local C: working tree not yet synced to the
+       project folder, OR 0811002 may be a planned-
+       but-not-yet-authored spec. Not blocking this
+       audit (which audits the named target 0711002
+       dv1_2 per OCS verbatim); flagged as carry-
+       forward for AA=08 sub-set planning (when E2
+       AA=08 audit cycle reaches 0811005 + any 08110xx
+       siblings).
+
+------------------------------------------------------------
+5. DISPOSITION
+------------------------------------------------------------
+
+5.1  ARCHITECTURE AXIS. 0711002 dv1_2 is MOVE-complete --
+     every architectural element has a canonical
+     encoding in 0500000 dv1_139. No new diagram
+     amendment is required to satisfy the architecture-
+     axis half of the §9 de-dup retirement gate per
+     0911002 dv1_4 §9(a). RR-SCOPE-009 four-question
+     origin investigation N/A (no constraint removed
+     this session -- read-only audit).
+
+5.2  RETIREMENT GATE. 0711002 retirement is GATED on:
+       (i)   Bucket (b) HOME-CONFIRM (0711002 retained +
+             referenced by 1011003 Signal_Pipeline_
+             Coding_Spec wire-contract, OR migrate to
+             1011003); separate downstream session.
+       (ii)  OBS-1 + OBS-2 prose-follows-diagram
+             reconciliation in 0711002 to align htf_ema
+             parameter form + regime-token form to
+             diagram-canonical: separate downstream
+             session (Track A).
+       (iii) OBS-3 + OBS-4 GD-class citation refresh
+             (TB00000 v2_50 -> v2_67; 0500000 dv1_5 +
+             dv1_41 + dv1_43 -> dv1_139): housekeeping
+             carry-forward.
+       (iv)  OBS-5 0811002 Selection_Controller_
+             Specification existence + audit verdict:
+             carry-forward for AA=08 sub-set planning.
+       (v)   0700000 + 0710000 E3 anchor/domain-doc
+             collapse: dependency-LAST per 0911002 §10.
+     Architecture axis is READY; the five gates above
+     are bucket-(b) + prose-follows-diagram + Track A
+     + housekeeping + E3 ordering -- not architectural
+     gaps.
+
+5.3  AA=07 SUB-SET PROGRESS. Sub-set audit 2 of 3
+     complete. Next session (RR-SCOPE-011 one-mission)
+     advances to 0711003 Asset_Selection_Specification
+     (TB00394 line 196 MOVE -> §3/D2 + §5/D4) per NSI
+     §3 ledger.
+
+5.4  AUTHORITY. Audit executed under RR-SCOPE-005
+     derivable + DD-011 v2_56 CHAT-TURN-1 GATE OUTCOME
+     1 (sole compliant option after FP/DP-derivability
+     test). NOT surfaced to Bill as ratification
+     question.
+
+============================================================
+END TB00480 PHASE 1 ELEMENT-AUDIT GAP REGISTER 0711002 v1_0
+============================================================

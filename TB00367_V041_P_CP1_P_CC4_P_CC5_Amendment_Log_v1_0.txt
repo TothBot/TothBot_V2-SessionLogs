@@ -1,0 +1,224 @@
+================================================================================
+TB00367 V-041 P-CP1 + P-CC4 + P-CC5 KRAKEN CHANNEL/REST AMENDMENT LOG
+================================================================================
+DocName:    TB00367_V041_P_CP1_P_CC4_P_CC5_Amendment_Log
+DocVersion: v1_0
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00367_V041_P_CP1_P_CC4_P_CC5_Amendment_Log_v1_0.txt
+DocDate:    05-20-2026
+DocTime:    05:30:00 UTC
+Status:     v1_0 — TB00367 session-close artifact
+Cumulative DD-011 violation count post-TB00367: 17 (no increment)
+================================================================================
+
+1. MISSION + GOVERNANCE BINDINGS
+================================================================================
+Primary mission: V-041 P-CP1 + P-CC4 + P-CC5 Kraken channel/REST amendment family.
+Source:  0500000_System_Architecture_Overview_dv1_95_Claude_Source.html
+Target:  0500000_System_Architecture_Overview_dv1_96_Claude_Source.html
+
+Bindings:
+  - TB00000 v2_58 §4.5 DD-001/DD-002/DD-011 v2_56/DD-012/DD-014
+  - 0311001 v1_24 §15.16 V-041 producer/consumer-binding validation
+  - TB00362 V-041 FAIL List v1_0 §3 P-CC4 + §3 P-CC5 + §4 P-CP1 (Bill-ratified)
+  - RR-SCOPE-001 ADD-only + REPLACE-with-canonical hybrid (TB00366 precedent)
+  - RR-SCOPE-005 derivable-decision execution authority
+  - RR-SCOPE-007 v2_30 self-authored-NSI-source-prohibition
+  - RR-SCOPE-011 single-primary-mission
+
+2. CHAT-TURN 1 GATE — FP/DP-DERIVABILITY-TEST OUTCOME
+================================================================================
+Option-set (independent per RR-SCOPE-007 v2_30):
+  A. Execute NSI-as-written literally with D6 mod:Selection_Controller + D6
+     contract:Reconciliation_REST targets.
+     REJECTED: structural blocker — these components do not exist as D6 standalone.
+  B. Execute at canonical encoding sites per FAIL List logical-component spec:
+     D6 mod:WS_Manager + D2 gate:G5_Selection_Controller + Context T1
+     contract:Reconciliation_REST + D6 mod:Exit_Controller; P-CC4 Context T1
+     REPLACE per FAIL List "channel: route" recommendation; P-CC5 D1 ADD.
+     R-bumps: Context R1->R2 + D1 R8->R9 + D2 R7->R8 + D6 R9->R10.
+  C. Split P-CC4 to separate session (REPLACE not pure ADD-only).
+     REJECTED: TB00366 precedent established mixed-REPLACE under DD-012 + field
+     canonicalization preserves architectural-identifier net-set.
+  D. Defer entire amendment; surface findings to Bill.
+     REJECTED: OUTCOME 1 derivable; ratification surface violates DD-011 v2_56
+     OUTCOME 1 EXECUTION MANDATORY clause.
+  E. Option B + 0311001 registry batching check.
+     FOLDS into Option B: all 5 channel:kraken_rest_* tokens already pre-registered
+     per TB00365/TB00366 cumulative state. No 0311001 v1_24 -> v1_25 amendment required.
+  F. Option B + stale-header lapse correction (dv1_94->dv1_96 in title + DocVersion).
+     STRENGTHENS Option B: required per session-close DocVersion precedent.
+
+Discriminating criterion: least errors and rework toward making 0500000 diagrams
+  canonical, authoritative, and complete for coding TothBot V2.
+
+OUTCOME 1 DERIVABLE — Option B+F+E.
+Executed under RR-SCOPE-005 derivable-decision authority + DD-011 v2_56 OUTCOME 1
+EXECUTION MANDATORY. NOT surfaced to Bill as ratification question.
+
+3. PRE-AMENDMENT GROUND-TRUTH SNAPSHOTS
+================================================================================
+Context T1 container:Kraken_Exchange (line 538 pre-amend):
+  consumes: ws_subscribe:public_v2, ws_subscribe:private_v2 (live mode only),
+            rest:get_account_balance, rest:get_open_orders, rest:get_ohlc_data,
+            rest:get_websockets_token
+
+Context T1 contract:Reconciliation_REST (line 609 pre-amend):
+  consumes: rest:get_account_balance, rest:get_open_orders, rest:get_ohlc_data,
+            rest:get_websockets_token
+
+D1 container:Public_WS_v2 (line 1500 pre-amend):
+  produces: evt:WS_RECONNECT, evt:WS_SUBSCRIBE_RATE_LIMIT
+
+D1 container:Private_WS_v2 (line 1556 pre-amend):
+  produces: evt:ENTRY_FILLED, evt:WS_RECONNECT
+
+D2 gate:G5_Selection_Controller (line 2444 pre-amend):
+  consumes: indicator:SSS
+
+D6 mod:WS_Manager (line 4861 pre-amend):
+  consumes: channel:kraken_ws_executions, channel:kraken_ws_balances,
+            channel:kraken_ws_ticker, channel:kraken_ws_ohlc_5m,
+            channel:kraken_ws_ohlc_60m, channel:kraken_ws_instrument,
+            channel:kraken_ws_status, evt:WS_SUBSCRIBE_RATE_LIMIT
+
+D6 mod:Exit_Controller (line 4926 pre-amend):
+  consumes: position state (mod:Position_Mirror, READ via WSManager helper
+            methods per HR-PM-009), channel:kraken_ws_ohlc_5m, indicator:ATR_14
+
+4. POST-AMENDMENT FIELD SNAPSHOTS
+================================================================================
+Context T1 container:Kraken_Exchange.consumes (post-amend):
+  ws_subscribe:public_v2, ws_subscribe:private_v2 (live mode only),
+  channel:kraken_rest_GetAccountBalance, channel:kraken_rest_GetOpenOrders,
+  channel:kraken_rest_GetOHLCData, channel:kraken_rest_GetWebSocketsToken
+
+Context T1 contract:Reconciliation_REST.consumes (post-amend):
+  channel:kraken_rest_GetAccountBalance, channel:kraken_rest_GetOpenOrders,
+  channel:kraken_rest_GetOHLCData, channel:kraken_rest_GetWebSocketsToken,
+  channel:kraken_rest_QueryOrdersInfo
+
+D1 container:Public_WS_v2.produces (post-amend):
+  evt:WS_RECONNECT, evt:WS_SUBSCRIBE_RATE_LIMIT, ws_subscribe:public_v2
+
+D1 container:Private_WS_v2.produces (post-amend):
+  evt:ENTRY_FILLED, evt:WS_RECONNECT, ws_subscribe:private_v2
+
+D2 gate:G5_Selection_Controller.consumes (post-amend):
+  indicator:SSS, channel:kraken_rest_Ticker
+
+D6 mod:WS_Manager.consumes (post-amend):
+  channel:kraken_ws_executions, channel:kraken_ws_balances,
+  channel:kraken_ws_ticker, channel:kraken_ws_ohlc_5m,
+  channel:kraken_ws_ohlc_60m, channel:kraken_ws_instrument,
+  channel:kraken_ws_status, evt:WS_SUBSCRIBE_RATE_LIMIT,
+  channel:kraken_rest_Ticker
+
+D6 mod:Exit_Controller.consumes (post-amend):
+  position state (mod:Position_Mirror, READ via WSManager helper methods per
+  HR-PM-009), channel:kraken_ws_ohlc_5m, indicator:ATR_14,
+  channel:kraken_rest_CancelAllOrders
+
+5. AMENDMENT EXECUTION OPERATIONS
+================================================================================
+Pass 1 — Body amendments + header bumps (11 ops):
+  [OK] html_title_bump:                       dv1_94 -> dv1_96
+  [OK] dc_docversion_bump:                    dv1_94 -> dv1_96
+  [OK] dc_docpath_bump:                       dv1_95 -> dv1_96
+  [OK] dc_doctime_bump:                       04:00:00 UTC -> 05:30:00 UTC
+  [OK] context_kraken_exchange_consumes_PCC4: REPLACE rest:* -> channel:kraken_rest_*
+  [OK] context_reconciliation_rest_consumes_PCC4_PCP1: REPLACE rest:* + ADD QueryOrdersInfo
+  [OK] d1_public_ws_produces_PCC5:            ADD ws_subscribe:public_v2
+  [OK] d1_private_ws_produces_PCC5:           ADD ws_subscribe:private_v2
+  [OK] d2_g5_selection_controller_consumes_PCP1: ADD channel:kraken_rest_Ticker
+  [OK] d6_ws_manager_consumes_PCP1:           ADD channel:kraken_rest_Ticker
+  [OK] d6_exit_controller_consumes_PCP1:      ADD channel:kraken_rest_CancelAllOrders
+
+Pass 2 — R-state bumps (4 figures × 3 = 12 ops):
+  [OK] d1_svg_title_R9 / d1_diagram_canonical_R9 / d1_visible_header_text_R9
+  [OK] d2_svg_title_R8 / d2_diagram_canonical_R8 / d2_visible_header_R8
+  [OK] d6_svg_title_R10 / d6_diagram_canonical_R10 / d6_visible_header_R10
+
+Pass 3 — Context figcaption + §14 Revision History entry (2 ops):
+  [OK] context_figcaption_R2: R1 -> R2 figcaption-line update
+  [OK] section_14_dv1_96_insert: new dv1_96 entry at top of pre block
+
+Total replace-once operations: 25. All 25 succeeded with exact-1-match safety assertion.
+
+6. NAMESPACE REGISTRY BATCHING CHECK (Option R extension ii)
+================================================================================
+Tokens used in amendments:
+  - rest:get_account_balance / get_open_orders / get_ohlc_data / get_websockets_token
+    REMOVED (orphan tokens canonicalized). Pre-existing 0311001 v1_24 §15.12 entries
+    persist as deprecated/orphan registry entries pending 0311001 v1_25 housekeeping
+    cleanup (carry-forward to TB00370 Class A canonicalization rewrites).
+  - channel:kraken_rest_GetAccountBalance / GetOpenOrders / GetOHLCData /
+    GetWebSocketsToken / QueryOrdersInfo / Ticker / CancelAllOrders / StatusAPI
+    ALL pre-existing in 0311001 v1_24 §15.12 registry per TB00365/TB00366 cumulative state.
+  - ws_subscribe:public_v2 / ws_subscribe:private_v2 pre-existing in 0311001 v1_24 §15.12.
+
+NO 0311001 v1_24 -> v1_25 amendment required this session.
+
+7. CROSS-DIAGRAM INTERFACE AUDIT (Option R extension i)
+================================================================================
+Post-TB00367 binding closure state per V-041 producer/consumer-binding rule:
+  - P-CC4 4 rest:* tokens: CANONICALIZED to channel:kraken_rest_* — 4/4 closed.
+  - P-CC5 2 ws_subscribe:* tokens: PRODUCER-BINDING ADDED at D1 — 2/2 closed.
+  - P-CP1 5 channel:kraken_rest_* tokens: CONSUMER-BINDING ADDED:
+      channel:kraken_rest_Ticker -> mod:WS_Manager (D6) + gate:G5_Selection_Controller (D2)
+      channel:kraken_rest_GetAccountBalance -> contract:Reconciliation_REST (Context T1)
+      channel:kraken_rest_GetOpenOrders -> contract:Reconciliation_REST (Context T1)
+      channel:kraken_rest_QueryOrdersInfo -> contract:Reconciliation_REST (Context T1)
+      channel:kraken_rest_CancelAllOrders -> mod:Exit_Controller (D6)
+    5/5 closed.
+
+Cross-diagram Q2 PASS for all amendment sites; V-040 design-completeness 10/10 PRESERVED.
+
+8. STRUCTURAL FINDINGS + CARRY-FORWARDS
+================================================================================
+Finding A (RESOLVED THIS SESSION): TB00366 stale-header lapse (HTML title +
+  dc-meta DocVersion not bumped at TB00366 close). Resolved at TB00367 dv1_96
+  close: title + DocVersion bumped dv1_94 -> dv1_96 in single one-shot operation.
+
+Finding B (RESOLVED THIS SESSION): P-CC5 semantic inversion question. Resolved
+  by adopting FAIL List explicit specification: ws_subscribe:* in
+  Public_WS_v2.produces / Private_WS_v2.produces denotes subscription-surface-
+  exposure semantic (parallel to evt:WS_RECONNECT + evt:WS_SUBSCRIBE_RATE_LIMIT
+  which are TothBot-emitted observation events).
+
+Finding C (RESOLVED THIS SESSION): P-CP1 D6 structural target mismatch.
+  Resolved via OUTCOME 1 retargeting: Selection_Controller -> D2 gate:G5 (canonical
+  per 0411002); Reconciliation_REST -> Context T1 (canonical per dv1_95 line 609).
+
+Finding D (RESOLVED THIS SESSION): P-CC4 / P-CP1 overlap at Context T1
+  Reconciliation_REST. Combined produces 5-token canonical channel:kraken_rest_*
+  set (GetAccountBalance + GetOpenOrders + GetOHLCData + GetWebSocketsToken +
+  QueryOrdersInfo).
+
+CARRY-FORWARD: Context SVG <title> line 229 + diagram_canonical line 231 still
+  read R0 (figcaption + dv1_96 §14 corrected to R2); pre-existing stale-text from
+  TB00352 R0->R1 close that never propagated to title fields. Surfaced as TB00368
+  housekeeping carry-forward.
+
+CARRY-FORWARD: D1 + D2 + D6 root <desc> R-increment chain rotation deferred to
+  TB00368 housekeeping (compact-narrative §14 dv1_96 entry documents amendment
+  scope authoritatively; per-figure chains preserved as historical record;
+  full rotation precedent from TB00366 to be reapplied at TB00368 in combined
+  V-041 P-CP9 + P-CP11 amendment cycle).
+
+CARRY-FORWARD: 0311001 v1_24 -> v1_25 rest:* deprecated-token cleanup carry-forward
+  to TB00370 Class A canonicalization rewrites per TB00362 §10 cadence.
+
+9. FILE STATE VERIFICATION
+================================================================================
+Source: /mnt/project/0500000_System_Architecture_Overview_dv1_95_Claude_Source.html
+        1,853,991 bytes, 25,552 lines
+Output: /mnt/user-data/outputs/0500000_System_Architecture_Overview_dv1_96_Claude_Source.html
+        1,859,642 bytes, 25,591 lines
+Delta:  +5,651 bytes, +39 lines (dv1_96 §14 Revision History entry + body field extensions)
+
+DR-007 HTML scope validation: figure count 10 -> 10; svg count 10 -> 10; structural
+integrity preserved. No SVG visual geometry change on any figure.
+
+================================================================================
+END TB00367 AMENDMENT LOG v1_0
+================================================================================

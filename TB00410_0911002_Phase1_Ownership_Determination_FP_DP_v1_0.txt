@@ -1,0 +1,261 @@
+DocDCN:     TB00410
+DocTitle:   0911002_Phase1_Ownership_Determination_FP_DP
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00410_0911002_Phase1_Ownership_Determination_FP_DP_v1_0.txt
+DocDate:    05-24-2026
+DocTime:    23:59:59 UTC
+
+============================================================
+TB00410 FP/DP OWNERSHIP DETERMINATION (CORRECTED)
+Remaining 0911002 Phase 1 sec 9.17 candidate groups
+============================================================
+
+------------------------------------------------------------
+0. WHAT THIS DOCUMENT IS
+------------------------------------------------------------
+
+Independent re-determination of the owning-element question for
+the five remaining TB00000 sec 9.17 candidate groups (17 tokens).
+This SUPERSEDES the prior, distrusted determination. Every
+disposition below was re-derived from a live grep of
+0500000_System_Architecture_Overview_dv1_123_Claude_Source.html
+this session; nothing is carried from memory or from the prior
+work product.
+
+NO ARCHITECTURE WAS EDITED THIS SESSION. This is a determination
++ planning artifact only. 0500000 stays dv1_123, 0311001 stays
+v1_28, TB00153 stays v1_41 (last DEC-049), TB00000 NOT amended.
+Migrations (where directed) execute in the per-group sessions
+defined in the companion Action Plan (TB00410 Action Plan v1_0).
+
+------------------------------------------------------------
+1. METHOD (and an honesty note on method)
+------------------------------------------------------------
+
+The question "which element owns this token" is an ARCHITECTURAL-
+FIT question, not a statistical one. There is no numeric sample
+data attached to these tokens in 0500000. Inferential statistics
+(Mann-Whitney, EWMA-on-samples, etc.) do NOT apply and were not
+used; claiming them would be fabrication. The correct method is
+First-Principles structural analysis plus grep evidence:
+
+  (a) Count structured param: binding sites for each token
+      (q1_do / consumes / produces / ciats_ownership fields).
+  (b) Read the q1_do role of each candidate owning element and
+      test whether the element's DESCRIBED FUNCTION consumes or
+      computes that exact token.
+  (c) Apply the settled exclusions: the D5/D6
+      mod:CIATS_Parameter_Store universal producer is NOT an
+      owning element (DEC-042); universal/shared machinery with
+      no per-module owner stays in sec 9.17 (CF-TB00405-A).
+
+GROUND TRUTH (live grep, dv1_123): all 17 tokens have ZERO
+structured param: sites. "Unbound" means no structured binding
+exists YET -- it does NOT mean no identifiable owner. Where a
+single element's q1_do role demonstrably consumes the token, a
+clean owner exists and a structure-adding migration (0911002
+Option B) is warranted. Where the role evidence is absent or
+split, NO clean owner exists and the token stays in sec 9.17.
+
+------------------------------------------------------------
+2. DETERMINATION SUMMARY (one line per group)
+------------------------------------------------------------
+
+  G1 SSS signal-model (7 tokens) ...... CHOICE 1 -> mod:Signal_Pipeline (D2). FIRM.
+  G2 Threshold-monitoring (6 tokens) .. SPLITS. 2 -> mod:CIATS_EWMA_Monitor (optional); 4 -> CHOICE 3 (stay sec 9.17).
+  G3 VPS deployment (2 tokens) ........ CHOICE 3. No migration (already canonical at D1 as contract:VD-SYS-008).
+  G4a leverage_cap_short (1 token) .... UNDETERMINED. Dedicated FP/DP required. NOT G8.
+  G4b min_order_size_usd (1 token) .... CHOICE 3 likely (Kraken exchange floor). Dedicated FP/DP to confirm. NOT a clean G8 CHOICE 1.
+
+CHOICE 2 (new diagram) is ELIMINATED for every group: Long and
+Short are parallel modules flowing through the same D2 8-gate
+pipeline, differentiated per direction-side. No standalone
+Long/Short diagram exists or is warranted.
+
+------------------------------------------------------------
+3. GROUP DETERMINATIONS (evidence)
+------------------------------------------------------------
+
+3.1  G1 -- SSS SIGNAL-MODEL (7 tokens)  ==>  CHOICE 1, FIRM
+     Tokens: rsi_long_low, rsi_long_high, rsi_short_low,
+             rsi_short_high, sss_ema_short, sss_ema_long,
+             volume_sss_threshold
+     OWNING ELEMENT: mod:Signal_Pipeline
+       (element id "sss_engine", D2; canonical mod:Signal_Pipeline)
+
+     Evidence (sss_engine q1_do, dv1_123 line ~2426): "Runs the
+     SSS Signal Engine (ar:AR-067) on the pair: computes RSI_14 +
+     EMA9 + EMA21 + VolumeMA20 + SSS three-factor momentum score
+     (RSI in zone + EMA9 crosses EMA21 + Volume confirmation)
+     direction-symmetrically (long-side scoring + short-side
+     scoring per mod:Short_Module)."
+
+     First-Principles fit: every one of the 7 tokens is a direct
+     input to this single computation -- RSI long+short zone
+     bounds (rsi_long_low/high, rsi_short_low/high), the two EMA
+     periods (sss_ema_short=EMA9, sss_ema_long=EMA21), and the
+     volume-confirmation threshold (volume_sss_threshold). The
+     phrase "direction-symmetrically (long-side scoring +
+     short-side scoring)" is decisive: the SHORT-side RSI bounds
+     are signal-computation inputs to THIS engine, not sizing
+     parameters.
+
+     Single owning element confirmed: mod:Signal_Pipeline is the
+     specific consuming element, not the universal CIATS producer
+     (DEC-042 exclusion does not apply). Distinct from
+     gate:G5_Selection_Controller, whose q1_do does 6-gate quality
+     filtering (body / cooldown / consecutive-loss / position
+     checks) and does NOT compute RSI/EMA/Volume.
+
+     CORRECTION vs the inbound NSI sec 3 grouping: the NSI lists
+     rsi_short_low / rsi_short_high under "Short-side specific"
+     alongside leverage_cap_short / min_order_size_usd. FP/DP
+     refutes that grouping -- the short RSI bounds are
+     signal-computation tokens owned by mod:Signal_Pipeline,
+     identical in kind to the long RSI bounds. Only
+     leverage_cap_short and min_order_size_usd are genuinely
+     "short-side specific" and they are sizing/exchange concerns,
+     handled separately at G4a/G4b below.
+
+     Migration type: 0911002 Option B (structure-adding) -- add 7
+     structured param: bindings at sss_engine, then attest. No
+     value moves (Option A invariant). Register 7 tokens in
+     0311001 sec 15.12.8.
+
+3.2  G2 -- THRESHOLD-MONITORING (6 tokens)  ==>  SPLITS (NOT one owner)
+     Tokens: rl_warning_threshold_pct, rl_critical_threshold_pct,
+             fee_tier_divergence_threshold,
+             fee_tier_divergence_sustained_trades,
+             rejection_rate_regime_threshold_pct,
+             rejection_rate_eval_window_count
+
+     The dv1_123 sec 9 value-mirror (line ~7126) labels this group
+     verbatim: "Threshold-monitoring (UNIVERSAL -- same values
+     apply to the single account-level monitoring cycles, not
+     per-module)." A universal/account-level group is, by nature,
+     a CF-TB00405-A pattern (shared machinery, no single per-module
+     owning element). Per-token evidence:
+
+     (a) rejection_rate_regime_threshold_pct,
+         rejection_rate_eval_window_count  ->  CHOICE 1 candidate,
+         owner mod:CIATS_EWMA_Monitor (D5). Evidence: monitor
+         q1_do (line ~4549) computes EWMA (lambda=0.2) on
+         "rejection_rate_by_regime (F6 -- gate rejection ratio per
+         regime)" and is "valid at 50 evals ~4hrs". The sec 9
+         mirror states rejection_rate_by_regime is "encoded as
+         EWMA Monitor Stream 1 signal F6 in D5" and the
+         eval-window is "50 evaluations starting". Clean role
+         match. These 2 tokens are Option-B migratable to
+         mod:CIATS_EWMA_Monitor IF Bill wants them bound.
+
+     (b) rl_warning_threshold_pct, rl_critical_threshold_pct  ->
+         NO clean single owner -> CHOICE 3 (stay sec 9.17). The
+         source signal (rate_counter_by_pair EWMA) is a monitor
+         signal, BUT rl_critical's action -- "triggers entry-order
+         suppression" (sec 9 mirror) -- is ENFORCED at a separate
+         entry/dispatch element, while the EWMA monitor is
+         "MONITORING ONLY -- never directly drives parameter
+         changes" (q1_do). Source/enforcer split = the same
+         failure mode as expected_rr_acceptance_rule (CF-TB00406-B,
+         DEFERRED). No single owning element.
+
+     (c) fee_tier_divergence_threshold,
+         fee_tier_divergence_sustained_trades  ->  NO owning
+         element -> CHOICE 3 (stay sec 9.17). Grep confirms ZERO
+         structured-field hits anywhere; fee-tier divergence is
+         NOT one of the EWMA monitor's three encoded signals
+         (rejection_rate_by_regime, rate_counter_by_pair,
+         ws_roundtrip_latency_ms). These are exchange-fee-adjacent
+         monitoring values -- the same class as the fee schedule
+         (FEE_MAKER_PCT / FEE_TAKER_PCT), which was ELIMINATED as
+         a prose-only exchange fact.
+
+     GROUP DISPOSITION: predominantly CHOICE 3 (universal
+     monitoring values stay in sec 9.17), with an OPTIONAL Option-B
+     carve-out of the 2 rejection_rate_* tokens to
+     mod:CIATS_EWMA_Monitor. There is NO disposition under which a
+     single owning element takes all 6.
+
+     CORRECTION (self): an earlier in-session pass asserted "all 6
+     -> mod:CIATS_EWMA_Monitor." Grep refutes that for 4 of the 6
+     tokens (rl_* and fee_tier_*). Recorded here for honesty.
+
+3.3  G3 -- VPS DEPLOYMENT (2 tokens)  ==>  CHOICE 3, no migration
+     Tokens: StartLimitBurst, StartLimitIntervalSec
+
+     Already canonical in D1: contract:VD-SYS-008
+     (StartLimitBurst=3 / StartLimitIntervalSec=600) appears in the
+     mod:WS_Manager "governs" field (line ~1450) and is rendered as
+     D1 SVG caption text (line ~1670). These are systemd OS-level
+     restart-policy settings (VPS infrastructure), not per-module
+     trading parameters. The operational fact already lives at D1;
+     no sec 9.17 migration is warranted. The values stay in sec
+     9.17 (canonical pointer home). No session required -- record
+     the disposition only.
+
+3.4  G4a -- leverage_cap_short (1 token)  ==>  UNDETERMINED
+     Zero structured sites. Appears only in R:R / sizing reasoning
+     prose (e.g. line ~5915: "leverage_cap_short = 3x starting per
+     TB00000 ... sec 9.17") and the sec 9 mirror (line ~7098: "3x
+     starting; Kraken native max 10x"). No element q1_do consumes
+     it.
+
+     NOT gate:G8_Position_Sizer. G8 q1_do (line ~2519) sizes via
+     "ATR-incremental math ... MAE_stop = ... param:mae_mult (1.5x);
+     emergency_SL = ... param:emergency_sl_mult (3.0x); TP = ...
+     enforcing rule:Sacred_R_R_1_to_1_5". It sizes by ATR and
+     enforces the R:R floor -- it does NOT size by leverage. The
+     prior determination's assignment of leverage_cap_short to G8
+     is REFUTED.
+
+     Candidate owners (undecided): mod:Short_Module (routes short
+     margin entries per Kraken margin trading) or a sizing gate.
+     Requires a dedicated FP/DP session before any migration.
+
+3.5  G4b -- min_order_size_usd (1 token)  ==>  CHOICE 3 LIKELY
+     Zero structured sites. Sec 9 mirror (line ~7100): "Kraken
+     per-pair minimum (~$0.50) starting". This is an EXCHANGE FACT
+     (Kraken's per-pair cost_min / qty_min floor), validated -- not
+     owned as a strategy parameter -- at Gate 8 per ar:AR-028
+     ("qty_min/cost_min validation in Gate 8 BEFORE every add_order
+     dispatch"). Because it is an exchange-imposed floor, it is the
+     same class as the eliminated fee schedule and most likely
+     CHOICE 3 (stays sec 9.17; validation behavior already captured
+     at G8 via AR-028). A thin Option-B binding at G8 is possible
+     only if Bill wants the floor bound as a token. NOT a clean G8
+     CHOICE 1 (the prior determination's clean-CHOICE-1 G8
+     assignment is REFUTED). Dedicated FP/DP to confirm CHOICE 3
+     vs G8 Option-B binding.
+
+------------------------------------------------------------
+4. WHAT CHANGED VS THE DISTRUSTED PRIOR DETERMINATION
+------------------------------------------------------------
+
+  - SSS signal-model: prior split rsi_short_low/high away from the
+    signal engine; CORRECTED -- all 7 SSS tokens own at
+    mod:Signal_Pipeline.
+  - Threshold-monitoring: prior treated as one owner; CORRECTED --
+    splits 2 (EWMA monitor, optional) + 4 (CHOICE 3).
+  - leverage_cap_short: prior assigned to G8 CHOICE 1; REFUTED --
+    G8 has no leverage role; UNDETERMINED.
+  - min_order_size_usd: prior assigned to G8 CHOICE 1; REFUTED --
+    exchange floor, CHOICE 3 likely.
+  - VPS deployment: CONFIRMED CHOICE 3 (already at D1 VD-SYS-008).
+
+------------------------------------------------------------
+5. SETTLED EXCLUSIONS HONORED
+------------------------------------------------------------
+
+  - Liquidity-cache liquidity_refresh_hours -> G2: NOT re-attempted
+    (CF-TB00405-A, disconfirmed).
+  - expected_rr_acceptance_rule -> universal producer: NOT migrated
+    (CF-TB00406-B, deferred).
+  - Fee schedule FEE_MAKER_PCT / FEE_TAKER_PCT: ELIMINATED
+    (prose-only exchange fact).
+  - mod:CIATS_Parameter_Store universal producer: EXCLUDED from
+    owning-element selection (DEC-042).
+
+============================================================
+END OF TB00410 FP/DP OWNERSHIP DETERMINATION (CORRECTED) v1_0
+============================================================

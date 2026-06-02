@@ -1,0 +1,185 @@
+DocDCN:     TB00457
+DocTitle:   TothBot_V2_Session_Log
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00457_TothBot_V2_Session_Log_2026-05-26_v1_0.txt
+DocDate:    05-26-2026
+DocTime:    23:59:59 UTC
+
+============================================================
+TB00457 SESSION LOG
+============================================================
+
+------------------------------------------------------------
+§1 MISSION
+------------------------------------------------------------
+
+  Track A RA-6 D2 schema-field reconciliation (CF-TB00444-C).
+  Selected from the TB00456 NSI candidate set (the NSI named
+  (d) explicitly). RV-gated live before execution per the
+  read-live-never-memory discipline.
+
+------------------------------------------------------------
+§2 PREDECESSOR STATE VERIFIED (live read, not memory)
+------------------------------------------------------------
+
+  Live versions at session open:
+    0500000      dv1_137  (TB00456 deliverable)
+    0311001      v1_34
+    TB00153 DR   v1_60    (max DEC = 067, next = DEC-068)
+    TB00000      v2_60
+
+  Mandatory reads completed + confirmed: TB00000 v2_60,
+  TB00456 NSI, 0311001 v1_34, TB00153 DR v1_60, 0500000
+  dv1_137. TB00456 GitHub push confirmed landed prior to
+  scoping (Docs 6e3a6cc / SessionLogs 312db50). Two GitHub
+  cleanup cycles run this session left BOTH repos clean
+  (Docs HEAD 0fce9d8; SessionLogs HEAD cb3684a).
+
+------------------------------------------------------------
+§3 RV GATE (live full-file grep — findings)
+------------------------------------------------------------
+
+  RA-6 scope (0911002 dv1_3 §5A lines 394-408): reconcile the
+  0500000 D2 CIATS schema exit_reason FIELD-15 (the 23-field
+  contract:CIATS_Trade_Outcome_Bus record) to the DEC-065
+  ratified 7-value set + the EMERGENCY_SL_FIRED producer-
+  partition note (DEC-066), MIRRORING D3 (RA-1, TB00444) +
+  D5 (RA-6, TB00446, dv1_132). D2 is its own session per
+  DEC-003 Path A. RA-6 D5 DONE; RA-6 D2 was NEXT.
+
+  DEC-065 ratified 7-value set:
+    { TP_FILL, MAE_THRESHOLD_BREACH, HTF_REGIME_REVERSAL,
+      DAILY_REGIME_DOWNGRADE, TIME_EXPIRY,
+      TP_PARTIAL_FILL_REMAINDER, PAIR_LIMIT_ONLY_EXIT }
+  EMERGENCY_SL_FIRED = layer:L3_Emergency_SL crash-recovery
+  reason, producer-partitioned per DEC-066 (NOT an Exit-
+  Controller exit_reason).
+
+  D2 edit site located: LINE 5248 schema_fields field-15,
+  inside the contract:CIATS_Trade_Outcome_Bus component
+  (<title> line 5236; component runs 5236-5262, next <title>
+  mod:CIATS_Statistical_Engine at 5263) — CONFIRMED D2, not
+  D3. It rendered the LAGGING 6-value enum ending
+  TP_PARTIAL_FILL_REMAINDER — missing PAIR_LIMIT_ONLY_EXIT +
+  the DEC-066 producer-partition note. This is the RA-6 D2
+  gap.
+
+  Mirror templates (live, already 7-value + DEC-066 note):
+    D5 line 4597 schema_fields_canonical field-15
+    D5 line 4613 visible enum <text> x=775 y=532
+    D5 line 4506 trade_close_box q4_triggers
+    D3 line 3515 q5_logs
+  Phrasing copied verbatim from the D5 field-15 (line 4597).
+
+  D2 visible <text> nodes that name exit_reason but render NO
+  enum values (so NO visible MODIFY, R held): line 5256
+  (field-name label), line 5458 (§7.5 23-field literal). Left
+  byte-identical.
+
+  R-DISPOSITION: D2 R-number HELD at R8. A <desc>-level
+  field-15 reconciliation touches NO visible SVG geometry per
+  the TB00451 D2 + TB00452 D3 + TB00456 same-campaign
+  precedent (TB00453: a visible-<text> MODIFY is what bumps
+  R; this session changes no visible text).
+
+  FP/DP-DERIVABILITY-TEST (DD-011 CHAT-TURN-1 GATE): OUTCOME 1
+  single-compliant-option. A = execute D2 field-15
+  reconciliation (SURVIVES); B = also edit a visible enum
+  <text> (REJECTED — D2 renders none); C = bundle another
+  figure (REJECTED — RR-SCOPE-011 + DEC-003 Path A). Sole
+  compliant disposition = A. NOT a Bill A/B choice; executed
+  under RR-SCOPE-005 derivable-decision authority; NOT
+  surfaced as a ratification question.
+
+------------------------------------------------------------
+§4 EDIT EXECUTED (ADD-only)
+------------------------------------------------------------
+
+  (1) D2 schema_fields field-15 (line 5248): extended the
+      enum with PAIR_LIMIT_ONLY_EXIT (restoring the DEC-065
+      7-value mod:Exit_Controller normal-operation set) +
+      added the EMERGENCY_SL_FIRED producer-partition note
+      (DEC-066), phrasing mirroring D5 line 4597 verbatim.
+      Field boundary (15)->(16) intact.
+
+  (2) D2 figcaption (line 2687): prepended the TB00457 RA-6
+      R-HELD narrative; prior V-040 INDEPENDENT VERIFICATION
+      (TB00377) attestation preserved verbatim below per
+      CI-005 + CI-006.
+
+  (3) §14 Revision History (line 10129 region): prepended the
+      dv1_138 TB00457 entry above the dv1_137 TB00456 entry.
+
+  (4) DC-version bump dv1_137 -> dv1_138 at three sites:
+      HTML title (line 6), DocVersion (line 135), DocPath
+      (line 137, with filename rename to ..._dv1_138_...).
+
+  ADD-only: token PAIR_LIMIT_ONLY_EXIT + producer-partition
+  note added; NO identifier removed; no rect/path/polygon/
+  line/text-position byte change; no visible <text> change;
+  no viewBox change (1500x1700 preserved); no SVG <title> /
+  diagram_canonical R-token change; no figure-count change;
+  all 9 other figures byte-identical per DEC-003 Path A.
+
+  0311001 namespace UNCHANGED (PAIR_LIMIT_ONLY_EXIT +
+  EMERGENCY_SL_FIRED already canonical enum tokens per
+  DEC-065/DEC-066 — no token minted/renamed; no pairing).
+  NO NEW TB00153 DECISION (reconciliation-drift; DEC-065 +
+  DEC-066 already ratified) — max DEC remains 067.
+
+  V-040 DESIGN-COMPLETENESS RE-VERIFY: 16 components x 5
+  questions = 80 cells PASS preserved; field-15 now renders
+  the complete DEC-065 7-value enum (diagram MORE design-
+  complete; no Q1-Q5 cell regresses).
+
+------------------------------------------------------------
+§5 PRE-DELIVERY CHECK
+------------------------------------------------------------
+
+  DR-007.9 HTML well-formedness: PASS (lxml HTML parser, no
+  fatal structural error). All three edit sites verified
+  intact post-edit; field-15 7-value + DEC-066 note present;
+  field boundary intact; figcaption RA-6 narrative present +
+  prior V-040 preserved; §14 dv1_138 entry present + dv1_137
+  entry preserved.
+
+------------------------------------------------------------
+§6 DELIVERABLES (DR-008.6 four-operation routing)
+------------------------------------------------------------
+
+  0500000 dv1_138 .html  -> TothBot_V2-Docs/05XXXXX_System_Architecture/
+  TB00457 SL v1_0        -> TothBot_V2-SessionLogs/
+  TB00457 NSI v1_0       -> TothBot_V2-SessionLogs/
+
+  Removal list (superseded, safe to git rm — see NSI §0 box):
+    0500000 dv1_137 .html (superseded by dv1_138)
+    TB00455_Next_Session_Instructions_v1_0.txt (superseded)
+    TB00454_Next_Session_Instructions_v1_0.txt (superseded)
+    TB00454_TothBot_V2_Session_Log_2026-05-26_v1_0.txt (superseded)
+
+------------------------------------------------------------
+§7 CLAUDE ERRORS THIS SESSION (RR-VIOL self-report)
+------------------------------------------------------------
+
+  RR-VIOL-002 (obtuse-question): at chat-turn 1 Claude
+  surfaced the candidate-mission set back to Bill as a choice
+  when the TB00456 NSI already named (d) RA-6 D2 as the
+  recommended candidate and nothing in live state contradicted
+  it. Bill corrected. Claude apologized and proceeded with (d)
+  without further questions. No scope or content impact;
+  logged for discipline.
+
+------------------------------------------------------------
+§8 LIVE STATE AT CLOSE
+------------------------------------------------------------
+
+  0500000      dv1_138  (this session's deliverable)
+  0311001      v1_34    (unchanged)
+  TB00153 DR   v1_60    (unchanged; max DEC = 067)
+  TB00000      v2_60    (unchanged)
+
+  Track A status: RA-1 (D3) DONE; RA-6 D5 DONE; RA-6 D2 DONE
+  (this session). RA-2 prose-follows DONE per plan. RA-3/RA-4
+  (logger + spec enum drift) sequenced NEXT in Track A, now
+  aligned to a corrected 0500000 schema diagram set.

@@ -1,0 +1,893 @@
+DocDCN:     TB00481
+DocTitle:   S1AS_DD012_Phase1_Gap_Register_0711003
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00481_S1AS_DD012_Phase1_Gap_Register_0711003_v1_0.txt
+DocDate:    05-28-2026
+DocTime:    03:30:00 UTC
+
+============================================================
+TB00481 PHASE 1 E2 ELEMENT AUDIT — 0711003 ASSET_SELECTION
+============================================================
+
+SEVENTH E2 ELEMENT AUDIT.
+THIRD AND FINAL AA=07 INSTANCE-SPEC ELEMENT AUDIT.
+CLOSES AA=07 INSTANCE-SPEC SUB-SET (3 of 3).
+
+------------------------------------------------------------
+1. METHOD
+------------------------------------------------------------
+
+Read-only DD-012 three-bucket element-level audit of
+0711003 Asset_Selection_Specification dv1_3 against
+0500000_System_Architecture_Overview_dv1_139_Claude_
+Source.html. NO migration this session. NO Track A
+reconciliation this session (observations carried
+forward per 0911002 §5A).
+
+Per element, classify under DD-012 three-bucket per
+TB00000 §4.5 DD-012(c)(b):
+  (a) Architectural restatement of canonical 0500000
+      content — drop-with-retirement eligible on the
+      architecture axis.
+  (b) Coding-unique wire contract with no architectural
+      meaning — migrate to parent AA spec or to a
+      preserved AA=10 coding spec; home-confirm deferred.
+  (c) Architectural content NOT yet encoded in 0500000
+      diagrams — amend 0500000 FIRST per DD-002 / DD-003
+      / DD-014 / DEC-003 Path A before retirement.
+
+All grep/index references against 0500000 dv1_139
+INDEPENDENTLY VERIFIED per element per RR-SCOPE-007 v2_30
+no-propagation — NOT inherited from TB00471-TB00480
+results.
+
+Authority: TB00394 v1_1 line 196
+  "0711003 Asset_Selection MOVE -> §3 / D2 + §5 / D4
+   (P3/E2)".
+
+DD-011 v2_56 CHAT-TURN-1 GATE: OUTCOME 1 single-
+compliant-option execution under RR-SCOPE-005 derivable-
+decision authority. Test logged in TB00481 SL §3.
+
+------------------------------------------------------------
+2. TARGET DOCUMENT INVENTORY
+------------------------------------------------------------
+
+  Target:    0711003_Asset_Selection_Specification_dv1_3
+  Length:    994 lines, 11 sections (1 Purpose,
+             2 Governing Documents, 3 Universe Definition,
+             4 Startup Procedure, 5 Live Updates,
+             6 CIATS Adjustment, 7 Hard Rules,
+             8 CIATS Parameter Registry + Evidence,
+             9 Coding-readiness Q1-Q5,
+             10 Related Documents, 11 Revision History)
+
+  Architectural elements enumerated:  38
+  Meta / non-architectural elements:    3 (§1 Purpose,
+                                          §10 Related,
+                                          §11 Revision History)
+
+------------------------------------------------------------
+3. ELEMENT-LEVEL BUCKET CLASSIFICATION
+------------------------------------------------------------
+
+------------------------------------------------------------
+E1   AS-001 Universe Definition (3-criteria gate logic)
+------------------------------------------------------------
+Bucket: (a) ARCHITECTURAL RESTATEMENT.
+Live evidence in 0500000 dv1_139:
+  - D1 root governs L1450 enumerates
+    decision:D-03_Universe_Scope (USD+USDC+USDT) +
+    decision:D-04_Liquidity_Floor +
+    decision:D-08_Top_N_Cap_Retired + ar:AR-070 (amended
+    dv1_20).
+  - D2 root governs L2177 lists decision:D-03_Universe_
+    Scope + decision:D-04_Liquidity_Floor +
+    decision:D-06_Paper_Live_Parity + decision:D-08_Top_
+    N_Cap_Retired.
+  - §8 AR-070 ★ entry L6320-6336 carries the 3-criteria
+    universe definition (USD+USDC+USDT quote, online
+    status, 24h volume >= min_volume_usd_daily) verbatim.
+
+------------------------------------------------------------
+E2   AS-001 Criterion 1 (Quote = USD, USDC, USDT)
+------------------------------------------------------------
+Bucket: (a) ARCHITECTURAL RESTATEMENT.
+Live evidence in 0500000 dv1_139:
+  - D1 visible text L1544 + L1744 + L2219 + L2681 all
+    render "Universe: USD + USDC + USDT (decision:D-03_
+    Universe_Scope <- ar:AR-070 amended)".
+  - D2 visible text L2219 + L2681 mirror.
+  - §8 AR-070 amended dv1_20 entry L6320.
+  - decision:D-03_Universe_Scope canonical token in
+    0311001 §15.12 decision registry.
+
+------------------------------------------------------------
+E3   AS-001 Criterion 2 (Instrument Status = ONLINE)
+------------------------------------------------------------
+Bucket: (a) ARCHITECTURAL RESTATEMENT.
+Live evidence in 0500000 dv1_139:
+  - D2 gate:Pre_Gate_1_Per_Pair_Status q1_do L2294
+    verbatim: "Reads per-pair instrument trading status
+    from Kraken WS v2 channel:kraken_ws_instrument
+    (online | post_only | cancel_only | limit_only |
+    reduce_only). PASS if status=online (pair tradeable
+    for new entries); SKIP INSTRUMENT_STATUS_BLOCKED
+    otherwise. Enforces decision:D-03_Universe_Scope."
+  - constraints L2291 rule:HR-SP-003 + decision:D-03_
+    Universe_Scope canonical.
+  - evt:INSTRUMENT_STATUS_BLOCKED registered TB00432 /
+    0311001 v1_32 -> v1_33 / DEC-064.
+
+------------------------------------------------------------
+E4   AS-001 Criterion 3 (24h Volume >= min_volume_usd_daily)
+------------------------------------------------------------
+Bucket: (a) ARCHITECTURAL RESTATEMENT.
+Live evidence in 0500000 dv1_139:
+  - D2 gate:G2_Liquidity q1_do L2347 verbatim: "Compares
+    24h USD-denominated trading volume (vol_24h *
+    mid_price for the pair) to param:min_volume_usd_
+    daily floor (decision:D-04_Liquidity_Floor = $500k
+    USD/day starting). PASS if vol_24h_usd >= floor;
+    SKIP LIQUIDITY_REJECTED otherwise per HR-SP-004."
+  - constraints L2343 decision:D-04_Liquidity_Floor +
+    rule:HR-SP-004.
+  - ciats_ownership field L2346 (TB00402 / DEC-044
+    migration COMPLETED).
+  - §9 mirror L7068 carries "min_volume_usd_daily =
+    $500k USD starting" with TB00000 §9.17 source-
+    pointer.
+  - D2 visible text L2354 + L2681 + footer renders the
+    $500k USD/day floor.
+
+------------------------------------------------------------
+E5   AS-002 RETIRED per D-08 (no top-N cap)
+------------------------------------------------------------
+Bucket: (a) ARCHITECTURAL RESTATEMENT.
+Live evidence in 0500000 dv1_139:
+  - decision:D-08_Top_N_Cap_Retired canonical token in
+    0311001 §15.12 decision registry.
+  - D1 visible text L1544 "NO TOP-N CAP (D-08 retired);
+    AR-070 amended dv1_20".
+  - D1 visible text L2030 "Top-N retired verified (DR-
+    002)".
+  - D2 visible text L1744 + L2458 + L2681 carry D-08
+    retired.
+  - D2 gate:G5_Selection_Controller constraints L2445
+    decision:D-08_Top_N_Cap_Retired binding.
+  - §9 L7175 "monitored_universe_n parameter RETIRED
+    per TB00128 D-08 LOCKED. No top-N cap."
+
+------------------------------------------------------------
+E6   AS-003 BTC/USD Regime Anchor + CIATS-Owned
+     Pipeline Evaluation (AR-074)
+------------------------------------------------------------
+Bucket: (a) ARCHITECTURAL RESTATEMENT.
+Live evidence in 0500000 dv1_139:
+  - §8 AR-074 ★ entry L6479-6486 verbatim: "BTC/USD
+    always in monitored universe -- market_regime proxy
+    commitment." Entry L6486 cites "canonical authority
+    is 0711002 dv1_1 RE-014/RE-015 + Diagram 4 BTC/USD
+    market_regime anchor cell + 0711003 dv1_3 HR-AS-001/
+    HR-AS-009 (BTC/USD always-subscribed + CIATS-owned
+    pipeline evaluation)" -- 0711003 IS A SOURCE on this
+    AR (UNIQUE 0711003 RETIREMENT GATE 2 of 2; see §4).
+  - D4 mod:Regime_Engine constraints L3916 ar:AR-074.
+  - D4 visible text L3949 + L4149 + L4151 render BTC/USD
+    anchor.
+  - D8 G7 Risk Guard constraints L4243 ar:AR-074.
+
+------------------------------------------------------------
+E7   AS-004 Startup Procedure (8-step umbrella)
+------------------------------------------------------------
+Bucket: (b) CODING-UNIQUE WIRE CONTRACT.
+Architectural concept (the existence of a startup
+universe-population path that combines WS instrument +
+REST Ticker) is bucket (a) -- canonical at D1
+mod:WS_Manager + channel:kraken_rest_Ticker + ar:AR-068
++ rule:HR-WM-017 startup-WARM_UP-to-READY chain.
+
+The 8-step procedural ordering and step-text narrative
+itself is coding-unique with retained home: 0711003
+retained + referenced by 1011002 WS_Manager_Coding_
+Spec + 1011009 Selection_Controller_Coding_Spec, OR
+migrate split by consumer. Home-confirm deferred.
+
+------------------------------------------------------------
+E8   AS-004 Step 1 (Subscribe instrument channel)
+------------------------------------------------------------
+Bucket: (a) ARCHITECTURAL RESTATEMENT.
+Live evidence in 0500000 dv1_139:
+  - D1 mod:WS_Manager consumes channel:kraken_ws_
+    instrument canonical.
+  - D6 kraken_public_ws produces channel:kraken_ws_
+    instrument.
+
+------------------------------------------------------------
+E9   AS-004 Step 2 (Receive instrument snapshot; no
+     volume)
+------------------------------------------------------------
+Bucket: (b) CODING-UNIQUE WIRE CONTRACT.
+Architectural fact "instrument channel does NOT provide
+volume" IS bucket (a) -- canonical at HR-AS-006 +
+DEFECT-SS-006 + the AS-005 REST-TKR-001 binding (see
+E17/E30 below).
+
+The snapshot-processing detail (field enumeration:
+price_increment, qty_min, cost_min, qty_increment,
+status; how the snapshot is consumed by candidate-list
+construction) is coding-unique wire contract sourced
+from 0411001 Kraken_WS_v2_Specification instrument
+channel schema. Retained home: 0711003 retained +
+referenced by 1011009 / 1011002, OR migrate to
+1011002 + 1011009 split by consumer.
+
+------------------------------------------------------------
+E10  AS-004 Step 3 (Build candidate list — USD/USDC/USDT
+     + ONLINE)
+------------------------------------------------------------
+Bucket: (a) ARCHITECTURAL RESTATEMENT.
+Live evidence in 0500000 dv1_139:
+  - decision:D-03_Universe_Scope (USD+USDC+USDT)
+    canonical at D1 + D2.
+  - D2 gate:Pre_Gate_1_Per_Pair_Status enforces D-03
+    quote scope and the ONLINE status gate per E3.
+  - AR-070 amended dv1_20 §8 entry encodes the
+    candidate-list construction directly.
+
+------------------------------------------------------------
+E11  AS-004 Step 4 (REST Ticker call + USD volume
+     formula Decimal(v[1]) * Decimal(p[1]))
+------------------------------------------------------------
+Bucket: (a) for the REST Ticker channel binding;
+        (b) for the USD-volume Decimal-arithmetic
+            formula.
+
+The REST Ticker channel binding IS bucket (a):
+  - channel:kraken_rest_Ticker canonical in D1 mod:
+    Kraken_REST_API produces L1598 + D6 kraken_rest
+    produces L5021.
+  - D2 gate:G5_Selection_Controller consumes channel:
+    kraken_rest_Ticker L2446 (TB00367 P-CP1
+    consumer-binding).
+  - D6 mod:WS_Manager consumes channel:kraken_rest_
+    Ticker L5071 (TB00367 P-CP1 retargeted
+    consumer-binding L10436).
+  - 0411002 REST-TKR-001 + REST-TKR-010 (audited
+    TB00477 / DEC-075 bucket (b) wire contract with
+    retained home; see TB00477).
+
+The Decimal-arithmetic formula `usd_volume_24h =
+Decimal(v[1]) * Decimal(p[1])` itself is bucket (b)
+coding-unique wire contract derived from 0411002
+Kraken_REST_API_Specification REST-TKR-001 response
+schema (v[1] base volume + p[1] VWAP fields).
+Retained home: 0411002 retained + referenced by
+1011002, OR migrate to 1011002 (precedent: TB00477
+0411002 audit DEC-075 NONEMPTY bucket-(b) wire
+contract).
+
+------------------------------------------------------------
+E12  AS-004 Step 5 (Apply volume filter; BTC/USD
+     exemption)
+------------------------------------------------------------
+Bucket: (a) ARCHITECTURAL RESTATEMENT.
+Live evidence in 0500000 dv1_139:
+  - D2 gate:G2_Liquidity q1_do L2347 canonical filter
+    arithmetic (vol_24h_usd >= min_volume_usd_daily =>
+    PASS; else SKIP LIQUIDITY_REJECTED).
+  - BTC/USD exemption canonical at ar:AR-074 + HR-
+    AS-001 (see E25 below) -- BTC/USD always retained
+    for regime computation regardless of volume.
+
+------------------------------------------------------------
+E13  AS-004 Step 6 (Finalize tradeable_universe; no
+     top-N)
+------------------------------------------------------------
+Bucket: (a) ARCHITECTURAL RESTATEMENT.
+Live evidence in 0500000 dv1_139:
+  - decision:D-08_Top_N_Cap_Retired canonical at D1 +
+    D2 + §9.
+  - "Store the set for O(1) membership tests" is a
+    coding-unique implementation detail (see E28
+    HR-AS-004 bucket (b)).
+
+------------------------------------------------------------
+E14  AS-004 Step 7 (Register BTC/USD as regime_anchor)
+------------------------------------------------------------
+Bucket: (a) ARCHITECTURAL RESTATEMENT.
+Live evidence in 0500000 dv1_139:
+  - ar:AR-074 ★ §8 L6479 verbatim "BTC/USD always in
+    monitored universe — market_regime proxy
+    commitment".
+  - D4 mod:Regime_Engine consumes BTC/USD anchor for
+    market_regime computation (L3949 + L4149).
+  - HR-REGIME-005 "BTC/USD always in monitored universe
+    (HR-REGIME-005); cannot be removed" canonical at D4
+    visible text L4151.
+
+------------------------------------------------------------
+E15  AS-004 Step 8 (Cache metadata + subscribe ohlc(5)
+     + subscribe ticker + begin WARM_UP)
+------------------------------------------------------------
+Bucket: (a) ARCHITECTURAL RESTATEMENT.
+Live evidence in 0500000 dv1_139:
+  - rule:HR-WM-017 "all five SSS indicators seeded
+    before pair reaches READY" canonical at D1
+    mod:WS_Manager constraints L1681.
+  - ar:AR-068 "SSS indicator seeding at startup —
+    startup REST GetOHLCData seeding of all five
+    per-pair indicators ATR/RSI/EMA9/EMA21/VolumeMA20
+    with WARM_UP -> READY transition gating" canonical
+    at D1 root governs L1450.
+  - HR-WM-021 + OI-NEW-001 "ohlc(60) NOT subscribed via
+    WS" canonical at D1 mod:WS_Manager governs L1450
+    (rule:HR-WM-021).
+  - channel:kraken_ws_ohlc_5m + channel:kraken_ws_
+    ticker canonical at D1 mod:Kraken_Public_WS
+    produces.
+
+------------------------------------------------------------
+E16  AS-004 Paper-mode parity (D-06)
+------------------------------------------------------------
+Bucket: (a) ARCHITECTURAL RESTATEMENT.
+Live evidence in 0500000 dv1_139:
+  - decision:D-06_Paper_Live_Parity canonical at D1
+    mod:WS_Manager constraints L1681 + D2 + D4 + D5 +
+    D6 + D7 (pervasive).
+  - PA-001 + PA-005 paper-as-master rule canonical at
+    TB00000 §4.4 + 0500000 §4 PA-* AR registry.
+  - D7 contract:WSManager_Dispatch_Seam canonical
+    paper/live divergence boundary (L8189) -- the
+    SOLE PA-004(2) order-dispatch divergence point;
+    universe population + REST Ticker + volume filter
+    + subscriptions + WARM_UP execute identically per
+    PA-005 outside the PA-004 four points.
+
+------------------------------------------------------------
+E17  AS-005 24h Volume Data Source (REST Ticker only)
+------------------------------------------------------------
+Bucket: (a) ARCHITECTURAL RESTATEMENT.
+Live evidence in 0500000 dv1_139:
+  - channel:kraken_rest_Ticker canonical in D1
+    mod:Kraken_REST_API produces L1598 + D6 produces
+    L5021.
+  - 0411002 REST-TKR-001 Ticker endpoint canonical
+    binding (audited TB00477 / DEC-075).
+  - "instrument channel does NOT provide volume" is the
+    architectural fact underpinning HR-AS-006 (see
+    E30).
+
+------------------------------------------------------------
+E18  AS-005 USD Volume Formula (Decimal(v[1])*Decimal
+     (p[1]))
+------------------------------------------------------------
+Bucket: (b) CODING-UNIQUE WIRE CONTRACT.
+The Decimal-arithmetic formula and the field-extraction
+mechanics (v[1] = base volume; p[1] = VWAP; product is
+USD-denominated volume) are coding-unique wire contract
+sourced from 0411002 REST-TKR-001 response schema.
+Retained home: 0411002 retained + referenced by 1011002
+(precedent: TB00477 / DEC-075 NONEMPTY bucket (b)).
+
+------------------------------------------------------------
+E19  AS-005 USDC/USDT depeg-monitoring note + USD
+     native (no conversion)
+------------------------------------------------------------
+Bucket: (b) CODING-UNIQUE WIRE CONTRACT.
+The treatment-equivalent-to-USD policy and the
+"no exchange rate conversion" rule are operational
+mechanics. The CIATS stability-monitoring binding is
+canonical (per CIATS architecture D5), but the
+filter-side treatment (USDC and USDT each treated
+identically to USD for the volume-floor comparison)
+is a coding-unique mechanic of the G2_Liquidity
+evaluation. Retained home: 0711003 retained +
+referenced by 1011009 / 1011002.
+
+------------------------------------------------------------
+E20  AS-005 Periodic refresh (liquidity_refresh_hours
+     = 4h starting)
+------------------------------------------------------------
+Bucket: (a) for the parameter EXISTENCE and value.
+        (b) for the asyncio-task refresh mechanic.
+
+The parameter EXISTENCE + value:
+  - liquidity_refresh_hours canonical at 0500000 §9
+    mirror L7115 "= 4 hours starting (CIATS-adjustable
+    per 0411002 REST-TKR-007)".
+  - TB00000 §9.17 entry "liquidity_refresh_hours = 4
+    hours starting".
+  - 0311001 §15.12.8 param: registry contains the
+    token (per TB00477 audit cross-reference).
+  - DEFERRED: CIATS-ownership migration of
+    liquidity_refresh_hours to a 0500000 owning
+    element is CF-TB00405-A (CARRY-FORWARD; figcaption
+    refs L2733 + L3038 + L4332 explicitly defer as
+    "Liquidity-cache (liquidity_refresh_hours,
+    CF-TB00405-A) -- unbound, no single owner").
+
+The asyncio-task background-refresh mechanic and the
+exact REST-rate-counter cost analysis (4 calls/pair/
+24h * ~30 pairs = ~180 REST units/day) is bucket (b)
+coding-unique wire contract. Retained home: 0711003
+retained + referenced by 1011002 WS_Manager_Coding_
+Spec.
+
+------------------------------------------------------------
+E21  AS-005 On refresh failure: preserve existing
+     values (do NOT zero out)
+------------------------------------------------------------
+Bucket: (b) CODING-UNIQUE WIRE CONTRACT.
+Operational fail-safe policy. The fact that Gate 2
+continues using prior liquidity_24h values on REST
+refresh failure (rather than zeroing the cache and
+locking out universe membership) is a coding-unique
+operational mechanic. The G2_Liquidity gate's
+behavior under stale-data conditions is not
+explicitly encoded in 0500000 diagrams as an
+architectural rule but is a derivable consequence of
+the G2 architecture (compares cached liquidity_24h
+to floor — the cache content is the implementation
+side). Retained home: 0711003 retained + referenced
+by 1011002.
+
+------------------------------------------------------------
+E22  AS-006 Runtime Universe Updates (a/b/c/d)
+------------------------------------------------------------
+Bucket: MIXED.
+  - (a) Sub-rule (a) status-change removal -- the
+    architectural rule "pair status change away from
+    online removes pair from tradeable_universe" is
+    canonical at rule:HR-WM-031 anti-AR-070 (D1
+    visible text L1712: "no automatic universe
+    removal (HR-WM-031 anti-AR-070); TB00142 Rabbit 1
+    closure"). The AR-070 amended dv1_20 + HR-WM-031
+    encode the architectural removal rule.
+  - (b) Sub-rule (b) status-restored re-add -- the
+    re-add rule is the natural consequence of the
+    AS-001 gate cascade (D-03 + ONLINE + min_volume)
+    canonical at D2.
+  - (b) Sub-rule (c) new-listing detection mechanics
+    -- the wait-for-next-liquidity-refresh-cycle
+    mechanic is a coding-unique operational policy.
+    Retained home: 0711003 retained + referenced by
+    1011002.
+  - (b) Sub-rule (d) instrument metadata update
+    (price_increment, qty_min, cost_min cache
+    refresh) -- the cache-update mechanic is
+    coding-unique. The fact that these values are
+    cached is architectural (ar:AR-028 references
+    qty_min/cost_min validation in Gate 8 BEFORE
+    every add_order dispatch; price_increment-
+    replaces-tick_size in instrument channel parsing
+    per TB00244 AMENDMENT-8); the cache update
+    mechanic itself is coding-unique.
+
+------------------------------------------------------------
+E23  AS-007 Open Position Protection on Removal
+------------------------------------------------------------
+Bucket: (a) ARCHITECTURAL RESTATEMENT.
+Live evidence in 0500000 dv1_139:
+  - rule:HR-WM-031 "subscribe-count vs max-concurrent
+    decoupling" + the anti-AR-070 protection
+    canonical at D1 mod:WS_Manager governs L1450
+    + D1 visible text L1712 "no automatic universe
+    removal (HR-WM-031 anti-AR-070); TB00142 Rabbit
+    1 closure".
+  - The 4-step protocol (block entries, allow exit,
+    alert Bill, remove after close) is the
+    operational expression of HR-WM-031 anti-AR-070.
+
+------------------------------------------------------------
+E24  AS-008 CIATS Universe Adjustment Procedure
+------------------------------------------------------------
+Bucket: (a) ARCHITECTURAL RESTATEMENT.
+Live evidence in 0500000 dv1_139:
+  - rule:HR-CI-003 (inter-trade boundary CIATS writes
+    only) canonical at D5 mod:CIATS_Parameter_Store
+    constraints + figcaption.
+  - D2 gate:G2_Liquidity ciats_ownership L2346
+    "param:min_volume_usd_daily is CIATS-OWNED
+    PER-MODULE INSTANTIATED" canonical.
+  - HR-AS-007 (CIATS cannot change quote-currency
+    enumeration; only the threshold value) maps to
+    the architectural-not-parameter status of
+    decision:D-03_Universe_Scope.
+
+------------------------------------------------------------
+E25  HR-AS-001 (BTC/USD always subscribed; CIATS-
+     owned pipeline default-disabled)
+------------------------------------------------------------
+Bucket: (a) ARCHITECTURAL RESTATEMENT.
+SOURCE-OF-TRUTH CITATION GATE: AR-074 §8 entry L6486
+explicitly cites "0711003 dv1_3 HR-AS-001/HR-AS-009
+(BTC/USD always-subscribed + CIATS-owned pipeline
+evaluation)" as part of the canonical-authority
+chain absorbing the retired 1011012 RE-MKT-001..003.
+0711003 IS A SOURCE on this AR. See §4 below.
+
+Live evidence in 0500000 dv1_139:
+  - ar:AR-074 ★ canonical at §8 L6479-6486.
+  - HR-REGIME-005 "BTC/USD always in monitored
+    universe ... cannot be removed" canonical at
+    D4 visible text L4151.
+
+------------------------------------------------------------
+E26  HR-AS-002 (Pair with open position NEVER removed)
+------------------------------------------------------------
+Bucket: (a) ARCHITECTURAL RESTATEMENT.
+Live evidence in 0500000 dv1_139:
+  - rule:HR-WM-031 anti-AR-070 canonical at D1 L1450
+    + L1712 (see E23).
+
+------------------------------------------------------------
+E27  HR-AS-003 (All three AS-001 criteria must pass)
+------------------------------------------------------------
+Bucket: (a) ARCHITECTURAL RESTATEMENT.
+Live evidence in 0500000 dv1_139:
+  - The D2 gate cascade (Pre_Gate_1_Per_Pair_Status
+    [D-03 quote + ONLINE status] -> G2_Liquidity
+    [D-04 volume floor]) IS the all-three-criteria
+    enforcement.
+
+------------------------------------------------------------
+E28  HR-AS-004 (Universe membership check is O(1) set
+     lookup)
+------------------------------------------------------------
+Bucket: (b) CODING-UNIQUE WIRE CONTRACT.
+"Stored as a set; O(1) lookup; never linear search"
+is an implementation-complexity directive, not an
+architectural element. Retained home: 0711003
+retained + referenced by 1011009 Selection_
+Controller_Coding_Spec.
+
+------------------------------------------------------------
+E29  HR-AS-005 (CIATS universe changes applied at
+     inter-trade boundaries only)
+------------------------------------------------------------
+Bucket: (a) ARCHITECTURAL RESTATEMENT.
+Live evidence in 0500000 dv1_139:
+  - rule:HR-CI-003 inter-trade-boundary-only CIATS
+    parameter writes canonical at D5
+    mod:CIATS_Parameter_Store constraints + governs.
+
+------------------------------------------------------------
+E30  HR-AS-006 (24h USD volume ONLY from REST Ticker;
+     instrument channel does NOT provide volume;
+     DEFECT-SS-006 root cause)
+------------------------------------------------------------
+Bucket: (a) ARCHITECTURAL RESTATEMENT.
+Live evidence in 0500000 dv1_139:
+  - channel:kraken_rest_Ticker canonical binding (see
+    E17).
+  - 0411002 REST-TKR-001 + REST-TKR-010 audited
+    TB00477.
+  - DEFECT-SS-006 root cause architectural fact: the
+    instrument channel snapshot does not carry
+    volume; this is encoded in the D1 channel
+    semantics (channel:kraken_ws_instrument has no
+    volume in its produces field) and the
+    channel:kraken_rest_Ticker is the canonical
+    volume source per 0411002.
+
+------------------------------------------------------------
+E31  HR-AS-007 (CIATS may not change quote-currency
+     enumeration or online-status requirement —
+     architectural, not parameter)
+------------------------------------------------------------
+Bucket: (a) ARCHITECTURAL RESTATEMENT.
+Live evidence in 0500000 dv1_139:
+  - decision:D-03_Universe_Scope (USD+USDC+USDT) is
+    an architectural decision canonical at D1 + D2 +
+    §8 AR-070. CIATS-owned parameters appear in
+    ciats_ownership fields per Phase 1 migration
+    pattern; decision: tokens do NOT carry
+    ciats_ownership (architectural-not-parameter
+    classification).
+  - HR-AS-007's constraint that the threshold value
+    (min_volume_usd_daily) IS CIATS-owned but the
+    criteria enumeration is NOT is exactly the
+    Phase 1 architectural fact migrated at TB00402 /
+    DEC-044 for min_volume_usd_daily (D2 G2 ciats_
+    ownership field L2346; decision:D-03 remains
+    decision-class without ciats_ownership).
+
+------------------------------------------------------------
+E32  HR-AS-008 (Universe changes logged with reason
+     codes; silent universe changes are defect)
+------------------------------------------------------------
+Bucket: (a) ARCHITECTURAL RESTATEMENT.
+Live evidence in 0500000 dv1_139:
+  - rule:HR-LG-004 (Logger receives every TothBot
+    module event) canonical at D1 mod:WS_Manager
+    governs L1450 + D5 + D6.
+  - mod:Logger sole CIATS data source per CI-IF-001
+    canonical at D5.
+  - Defense-in-depth logging architecture canonical
+    in D5 Logger fan-in + 4-level SMTP alert path.
+
+------------------------------------------------------------
+E33  HR-AS-009 (BTC/USD pipeline evaluation
+     CIATS-owned + DISABLED BY DEFAULT)
+------------------------------------------------------------
+Bucket: (a) ARCHITECTURAL RESTATEMENT.
+SOURCE-OF-TRUTH CITATION GATE: AR-074 §8 entry L6486
+cites 0711003 HR-AS-009 as part of canonical
+authority. See E25 + §4 below.
+
+Live evidence in 0500000 dv1_139:
+  - ar:AR-074 ★ canonical at §8 L6479-6486.
+  - The CIATS-owned-default-disabled rule is the
+    explicit content of HR-AS-009 + AR-074
+    "preserves the optionality AR-074 grants CIATS
+    to enable BTC/USD entries after statistical
+    inference becomes valid".
+
+------------------------------------------------------------
+E34  HR-AS-010 (Paper-mode executes AS-004 Steps 1-8
+     IDENTICALLY to live mode; only private WS sub +
+     auth skipped)
+------------------------------------------------------------
+Bucket: (a) ARCHITECTURAL RESTATEMENT.
+Live evidence in 0500000 dv1_139:
+  - decision:D-06_Paper_Live_Parity canonical at D1
+    + D2 + D4 + D5 + D6 + D7 (pervasive).
+  - PA-004 four divergence points canonical at
+    TB00000 §4.4 + D7 contract:WSManager_Dispatch_
+    Seam q1_do L8189.
+  - PA-005 byte-identical-outside-PA-004 canonical
+    at TB00000 §4.4 PA-005.
+
+------------------------------------------------------------
+E35  §8 CIATS Parameter Registry — min_volume_usd_
+     daily + liquidity_refresh_hours; monitored_
+     universe_n RETIRED per D-08
+------------------------------------------------------------
+Bucket: (a) for both parameter EXISTENCE entries.
+Live evidence in 0500000 dv1_139:
+  - param:min_volume_usd_daily ciats_ownership
+    migrated TB00402 / DEC-044 to D2 gate:G2_
+    Liquidity (L2346). §9 mirror L7068. TB00000
+    §9.17.
+  - param:liquidity_refresh_hours canonical at §9
+    mirror L7115 (CIATS-ownership migration
+    DEFERRED per CF-TB00405-A; OBS-1 carry-forward).
+  - monitored_universe_n parameter retired per D-08
+    canonical at §9 L7175.
+
+------------------------------------------------------------
+E36  §8 Evidence Base for $500k starting
+     (TB00012/13/14 + TB00001 pre-architecture)
+------------------------------------------------------------
+Bucket: (b) CODING-UNIQUE / NON-ARCHITECTURAL.
+The evidence-base narrative is an audit-trail
+artifact, not architectural content. It documents
+the derivation provenance for the $500k starting
+value. Retained home: 0711003 retained + AS-005/§8
+evidence-base prose carries it; no migration
+candidate.
+
+------------------------------------------------------------
+E37  §8 Evidence Base for liquidity_refresh_hours
+     = 4 starting
+------------------------------------------------------------
+Bucket: (b) CODING-UNIQUE / NON-ARCHITECTURAL.
+Same disposition as E36 -- evidence-base narrative
+documenting the 4-hour-refresh rationale (rolling-
+window adequacy + REST rate-counter cost analysis
+~180 REST units/day). Audit-trail artifact, not
+architectural content. Retained home: 0711003
+retained.
+
+------------------------------------------------------------
+E38  §9 Q1-Q5 Coding-Readiness Answers
+------------------------------------------------------------
+Bucket: (a) ARCHITECTURAL DESIGN-COMPLETENESS
+        EVIDENCE.
+Per DD-014 + V-040 design-completeness contract, the
+five-question (Q1 inputs/outputs, Q2 interfaces,
+Q3 hard rules, Q4 triggers, Q5 logs) answers are
+the architectural design-completeness attestation.
+For 0711003: Q1 inputs/outputs are derivable from
+the D2 G2 + Pre_Gate_1 + D1 channel set; Q2
+interfaces from D1 + D2 + D4 + D5 component
+consumes/produces; Q3 from HR-AS-001..010 mapped to
+their canonical 0500000 sources per E25-E34; Q4 from
+the D2 trigger chain + D5 CIATS PDCA inter-trade
+boundary; Q5 from D5 Logger 5-level SMTP dispatch +
+ar:AR-070/AR-074 logging. The Q1-Q5 prose in 0711003
+§9 is a derived restatement of canonical 0500000
+content. Same pattern as TB00479 0711001 §9 +
+TB00480 0711002 §11 audits.
+
+------------------------------------------------------------
+META  §1 Purpose, §10 Related Documents, §11
+      Revision History
+------------------------------------------------------------
+Non-architectural meta content. Document control
++ navigation aids. Not subject to DD-012 bucket
+classification.
+
+------------------------------------------------------------
+4. UNIQUE 0711003 RETIREMENT GATES
+------------------------------------------------------------
+
+0711003 ORIGINATES no trading-organism architecture on
+the diagrams axis -- it is the canonical Asset
+Selection derived restatement subordinate to D1 + D2 +
+D4 + §8 AR registry (AR-070 + AR-074).
+
+HOWEVER, 0711003 IS A SOURCE on TWO source-of-truth-
+citation preservation axes via §8 AR entries:
+
+GATE 1: AR-070 §8 source-cite at L6332 verbatim:
+  "Assign: 0711003 AS-001 through -008. 1011009
+   SC-UNI-001 through -006 retired TB00226 --
+   canonical authority is 0711003 AS-001..008 +
+   Diagram 1 universe-scope visual (see 0500000
+   dv1_54 §12.5 Bind block)."
+  This makes 0711003 AS-001..008 the canonical-
+  authority absorbing the retired 1011009
+  SC-UNI-001..006 universe-scope detail.
+
+GATE 2: AR-074 §8 source-cite at L6486 verbatim:
+  "1011012 RE-MKT-001 through -003 retired TB00227 --
+   canonical authority is 0711002 dv1_1 RE-014/RE-015
+   (two-level trade tagging) + Diagram 4 BTC/USD
+   market_regime anchor cell + 0711003 dv1_3
+   HR-AS-001/HR-AS-009 (BTC/USD always-subscribed +
+   CIATS-owned pipeline evaluation)."
+  This makes 0711003 dv1_3 HR-AS-001 + HR-AS-009 part
+  of the canonical-authority chain absorbing the
+  retired 1011012 RE-MKT-001..003 BTC/USD market_
+  regime architectural content.
+
+Before any Phase 3 retirement of 0711003 these TWO §8
+source-cites MUST either:
+  - Be repointed to a new canonical home, OR
+  - Be absorbed in-place with the 0711003 citation
+    retired (i.e., the AR-070 entry rewritten to drop
+    the 0711003 source-cite + the AR-074 entry
+    rewritten to drop the 0711003 source-cite).
+
+This retirement gate is MORE substantive than the
+TB00476 0411001 / TB00477 0411002 / TB00479 0711001 /
+TB00480 0711002 gates (which were RECEIVERS of
+canonical §8 AR content; no unique source-cite to
+preserve), and SECOND in significance only to the
+TB00478 0411003 gate (AR-080 §8 single source-cite +
+seven-entry §9 mirror cascade).
+
+The 0711003 gate has TWO §8 source-cites (AR-070 +
+AR-074) but NO §9 mirror cascade (0711003's
+parameters min_volume_usd_daily + liquidity_refresh_
+hours are §9 mirror entries but neither §9 entry
+cites 0711003 as the source -- §9 cites TB00000 §9.17
+and 0411002 REST-TKR-007).
+
+------------------------------------------------------------
+5. SUMMARY
+------------------------------------------------------------
+
+  Total architectural elements:                    38
+  Bucket (a) ARCHITECTURAL RESTATEMENT (clean +
+    mixed-(a) sub-elements):                       27
+  Bucket (b) CODING-UNIQUE WIRE CONTRACT (with
+    retained home + sub-elements):                 11
+  Bucket (c) ARCHITECTURAL CONTENT NOT IN
+    DIAGRAMS:                                       0
+
+ZERO bucket-(c) on the architecture axis.
+NONEMPTY bucket-(b) wire contract with retained home
+(0711003 retained + referenced by 1011002 + 1011009,
+OR migrate split by consumer; home-confirm deferred).
+
+------------------------------------------------------------
+6. PATTERN VS PRIOR SIX E2 AUDITS
+------------------------------------------------------------
+
+Same NONEMPTY-bucket-(b) pattern as TB00476 0411001 +
+TB00477 0411002 + TB00478 0411003 + TB00479 0711001 +
+TB00480 0711002.
+
+NOT the TB00475 0610000 clean-PRESERVE pattern (zero
+(c) + zero (b)).
+
+UNIQUE 0711003 RETIREMENT GATE on source-of-truth-
+citation axis: TWO §8 source-cites (AR-070 + AR-074).
+More substantive than TB00476/77/79/80 (RECEIVERS).
+Less substantive than TB00478 0411003 (AR-080 + 7-
+entry §9 mirror cascade).
+
+AA=07 INSTANCE-SPEC SUB-SET COMPLETE (3 of 3).
+
+------------------------------------------------------------
+7. DISPOSITION
+------------------------------------------------------------
+
+MOVE-complete on architecture axis (§3 / D1 + D2 +
+§5 / D4 + §9 mirror).
+
+BUCKET-(b) HOME-CONFIRM: DEFERRED (separate downstream
+session per 0911002 §6.2).
+
+UNIQUE SOURCE-OF-TRUTH-CITATION PRESERVATION GATE:
+DEFERRED (Phase 3 retirement prerequisite; before any
+0711003 retirement, AR-070 §8 L6332 + AR-074 §8 L6486
+source-cites MUST be repointed or absorbed).
+
+0400000 / 0410000 + 0700000 / 0710000 E3 ANCHOR /
+DOMAIN-COLLAPSE QUESTION: Phase 3 sub-stage E3,
+dependency-LAST. Not blocking.
+
+TRACK A RECONCILIATION OBSERVATIONS (carry-forward
+per 0911002 §5A; OOS this session per OCS):
+
+  OBS-1  liquidity_refresh_hours CIATS-ownership
+         migration DEFERRED per CF-TB00405-A
+         (figcaption references 0500000 dv1_139
+         L2733 + L3038 + L4332 explicitly defer as
+         "Liquidity-cache (liquidity_refresh_hours,
+         CF-TB00405-A) -- unbound, no single owner")
+
+  OBS-2  GD-class citation refresh:
+         0711003 dv1_3 §2 + §11 cite 0500000 dv1_18
+         + dv1_20 + dv1_54 historical anchors (live
+         is dv1_139); housekeeping refresh required.
+
+  OBS-3  Stale 1011009 Selection_Controller_Coding_
+         Spec citation: 0711003 §2 + §10 cite 1011009
+         SC-UNI-* but per 0500000 §8 AR-070 L6332
+         "1011009 SC-UNI-001 through -006 retired
+         TB00226 -- canonical authority is 0711003
+         AS-001..008 + Diagram 1 universe-scope
+         visual". The retirement of 1011009 SC-UNI-*
+         means 0711003's §2 + §10 cite of 1011009
+         is stale and should be reconciled.
+
+  OBS-4  DEFECT-SS-006 + fabricated-citation +
+         post-hoc-rationalization history in §8: the
+         evidence-base text explicitly documents
+         prior dv1_1 defects (DEFECT-SS-006 + the
+         "TB00020 Search 4" fabricated citation +
+         post-hoc-rationalization linkage). This is
+         transparent audit-trail prose; no current
+         defect; no reconciliation needed.
+
+  OBS-5  AR-074 §8 entry L6486 cite of "0711003
+         dv1_3 HR-AS-001/HR-AS-009" is currently
+         correct (dv1_3 is the live version of
+         0711003 per project folder). When 0711003
+         is incremented (Phase 2/3 reconciliation),
+         the AR-074 cite MUST be refreshed.
+
+------------------------------------------------------------
+8. AUTHORITY
+------------------------------------------------------------
+
+RR-SCOPE-005 derivable-decision execution (DD-011
+v2_56 CHAT-TURN-1 GATE OUTCOME 1; FP/DP-derivability
+test logged in TB00481 SL §3).
+
+No paired MDR entry (clean architectural-axis pass;
+NONEMPTY bucket-(b) wire contract with retained home
+is not a defect; UNIQUE source-of-truth-citation
+gate is a Phase 3 retirement prerequisite, not a
+defect closure).
+
+One paired TB00153 DR entry ready-to-append per
+TB00481 NSI §3 DR-APPEND MICRO-COMPANION ledger:
+  DEC-079 (TB00481) 0711003 Asset_Selection element
+  audit (SEVENTH E2 / THIRD AND FINAL AA=07).
+
+Combined with the ten ready-to-append entries from
+TB00471-TB00480 (DEC-069 through DEC-078), ELEVEN
+DEC entries are now pending the dedicated DR-append
+micro-session per CI-006 regeneration risk
+(TB00153 DR v1_61 -> v1_62 micro-session pattern).
+
+============================================================
+END TB00481 PHASE 1 E2 GAP REGISTER 0711003 v1_0
+============================================================

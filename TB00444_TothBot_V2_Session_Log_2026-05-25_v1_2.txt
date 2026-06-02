@@ -1,0 +1,353 @@
+DocDCN:     TB00444
+DocTitle:   TothBot_V2_Session_Log_2026-05-25
+DocVersion: v1_2
+DocOwner:   Bill
+DocPath:    GitHub.com/TothBot/TothBot_V2-SessionLogs/TB00444_TothBot_V2_Session_Log_2026-05-25_v1_2.txt
+DocDate:    05-25-2026
+DocTime:    23:59:59 UTC
+
+============================================================
+TB00444 SESSION LOG
+============================================================
+
+------------------------------------------------------------
+1. SESSION IDENTITY
+------------------------------------------------------------
+
+Session:      TB00444
+Cold-load:    TB00444 Next Session Instructions (authored at
+              TB00443 close).
+Primary mission (per TB00444 NSI / 0911002 sec 5A.2 RA-1):
+              reconcile the 0500000 D3 Exit Architecture figure's
+              stale signal-based exit_reason enum to the DEC-065
+              ratified regime-based scheme, and integrate
+              EMERGENCY_SL_FIRED conflict-free per Bill's explicit
+              directive (keep SETTLED; determine WHERE it belongs
+              and HOW it integrates without conflict). Single-
+              diagram amendment; Path A byte-identical preservation
+              of the other figures.
+Outcome:      COMPLETE. 0500000 dv1_129 -> dv1_130 (D3 Exit
+              Architecture R7 -> R8). TB00153 v1_58 -> v1_59
+              (DEC-066 producer-partition authority record). No
+              other diagram or spec edited. DEC-065 Q1/Q2/Q3 NOT
+              re-opened. (RA-1 output independently REVERIFIED at
+              the extended close - see section 10.)
+Reads:        FRESH reads this session, project-folder authoritative
+              (never memory): TB00444 NSI; TB00000 v2_60 (RR-SHELL-
+              010 v2_60 NO-FILE-STAGING confirmed); TB00443 SL;
+              0911002 dv1_2 (sec 5A.2 RA-1); TB00153 v1_58 (DEC-065
+              + DEC format + tail); 0511004 dv1_7 (sec 3.1 EC-L1A-
+              001/002/003 canonical regime triggers + sec 6 TOB
+              schema + sec 3.4/8 L3 recovery semantics); live
+              0500000 dv1_129 (D3 line-by-line re-verification +
+              registered-token grep).
+
+------------------------------------------------------------
+2. WORK PERFORMED
+------------------------------------------------------------
+
+2.1 Completed mandatory reading before any edit. Confirmed
+    RR-SHELL-010 v2_60 NO-FILE-STAGING (OP4 = cd + git only;
+    files already in repo working tree at OP4 time).
+
+2.2 RE-VERIFIED D3 line numbers against live 0500000 dv1_129
+    (NSI requirement). D3 = Image3 Exit Architecture, figure
+    lines 3457-3815. Stale-enum sites confirmed by grep:
+    owner q5_logs 3511; L1a desc q4_triggers 3545 / q5_logs
+    3546; L1a SVG exit-reason text 3568; figcaption HR-EC-016
+    suppressed-reasons 3758. L3 EMERGENCY_SL_FIRED at 3689 /
+    3705 confirmed CORRECT (kept).
+
+2.3 FP/DP analysis on EMERGENCY_SL_FIRED (Bill directive: keep
+    SETTLED; "keep"/"remove" rejected as framings). Outcome:
+    EMERGENCY_SL_FIRED already belongs to layer:L3_Emergency_SL;
+    its bus interface (evt:TRADE_CLOSE -> CIATS_Trade_Outcome_Bus
+    via executions backfill on recovery) already exists in the L3
+    desc. The conflict was an authorship error - the owner q5_logs
+    falsely listed EMERGENCY_SL_FIRED among Exit-Controller-emitted
+    reasons, contradicting its own q1_do. Resolution = PRODUCER-
+    PARTITION the bus exit_reason: Producer 1 mod:Exit_Controller
+    = the 7-value normal-operation set; Producer 2 layer:L3_
+    Emergency_SL = EMERGENCY_SL_FIRED via crash-recovery. NEW
+    DIAGRAM NOT NECESSARY for conflict-free integration (L3 home +
+    existing recovery interface suffice); a dedicated Emergency-SL
+    recovery-mechanics diagram is carried forward as a DD-014 item.
+
+2.4 Authored 0500000 dv1_129 -> dv1_130 (D3 R7 -> R8). Edits, all
+    confined to the header + the D3 figure (Path A verified - the
+    other 9 figures byte-identical via full diff):
+    (1) header DocVersion/DocPath dv1_130, DocDate 05-25-2026;
+    (2) D3 root diagram_canonical R7 -> R8; R-increment rolled
+        3-deep (new R7->R8 TB00444 top; dropped R3->R4 TB00214);
+        SVG title R-string R6->R7 P-CC7 -> R7->R8 RA-1;
+    (3) exit_controller_owner q1_do "L1a (signal-based)" ->
+        "(regime-based)"; q4_triggers signal conditions -> EC-L1A-
+        001/002/003 regime conditions; q5_logs 6-value stale list
+        -> ratified 7-value set { TP_FILL, MAE_THRESHOLD_BREACH,
+        HTF_REGIME_REVERSAL, DAILY_REGIME_DOWNGRADE, TIME_EXPIRY,
+        TP_PARTIAL_FILL_REMAINDER, PAIR_LIMIT_ONLY_EXIT } + explicit
+        EMERGENCY_SL_FIRED producer-partition note (DEC-066);
+    (4) layer:L1a_Signal_Exit consumes indicator:SSS/RSI/EMA9/EMA21
+        -> mod:Regime_Engine + indicator:EMA20_daily + EMA50_daily;
+        q1_do signal-deterioration -> regime exit path; q4_triggers
+        + q5_logs -> regime triggers/enum; 3 SVG trigger boxes
+        relabelled (Signal deterioration -> HTF Regime Reversal
+        EC-L1A-001; Time-based -> Max Hold EC-L1A-003; Momentum
+        loss -> Daily Regime Downgrade EC-L1A-002); SVG exit-reason
+        text -> HTF_REGIME_REVERSAL / DAILY_REGIME_DOWNGRADE /
+        TIME_EXPIRY;
+    (5) figcaption HR-EC-016(b) suppressed-reasons enum -> regime
+        names; figcaption header marker (R7) -> (R8) + R7->R8 RA-1
+        narrative (prior R7 attestation preserved per CI-005/006).
+    layer:L3_Emergency_SL 3689/3705 EMERGENCY_SL_FIRED UNCHANGED
+    (correct recovery producer). Validation: HTML well-formed
+    (DR-007.9 parser pass); grep confirms zero SIGNAL_DECAY / zero
+    MOMENTUM_LOSS remain in D3; all 7 values present.
+
+2.5 0311001 namespace spec UNCHANGED. All tokens used in the
+    reconciliation (mod:Regime_Engine, indicator:EMA20_daily,
+    indicator:EMA50_daily, regime:*) are pre-registered (live
+    grep-verified in 0500000). Zero new tokens.
+
+2.6 Authored TB00153 v1_58 -> v1_59. DEC-066 inserted above
+    DEC-065 (producer-partitioned TOB exit_reason; EMERGENCY_SL_
+    FIRED = the L3 crash-recovery producer's reason, distinct from
+    the Exit-Controller 7-value set; resolves DEC-065 Q1 grouping).
+    next-DEC pointer advanced to DEC-067. v1_59 revision-history
+    line added.
+
+------------------------------------------------------------
+3. DECISIONS RATIFIED THIS SESSION (BILL)
+------------------------------------------------------------
+
+DEC-066 (RATIFIED by Bill directive this session): keeping
+EMERGENCY_SL_FIRED is SETTLED; it is integrated into 0500000 by
+PRODUCER-PARTITIONING the contract:CIATS_Trade_Outcome_Bus
+exit_reason field - mod:Exit_Controller emits the 7-value normal-
+operation set; layer:L3_Emergency_SL emits EMERGENCY_SL_FIRED via
+its crash-recovery interface on the same bus. DEC-066 also fixes
+the canonical RENDERING: EMERGENCY_SL_FIRED is "explicitly OUTSIDE
+the 7-value set," rendered as "the 7-value set plus an explicit
+producer-partition note." Full text: TB00153 v1_59 DEC-066.
+
+------------------------------------------------------------
+4. DECISIONS MADE / NOT MADE
+------------------------------------------------------------
+
+MADE (derivable, RR-SCOPE-005): new Emergency-SL recovery-mechanics
+diagram is NOT necessary for conflict-free integration this session
+- carried forward as a DD-014 item rather than built (would breach
+one-diagram-per-session RR-SCOPE-011 / DEC-003 Path A).
+NOT MADE / NOT RE-OPENED: DEC-065 Q1/Q2/Q3 (the 7-value enum,
+SIGNAL_DECAY re-home, PAIR_LIMIT_ONLY_EXIT 7th value). No spec
+edit (0511004 sec 6/7.5 = RA-4, separate session).
+NO OPEN DECISION on the D5/D2 schema-field representation: the
+CF-TB00444-C schema-field rendering is ALREADY DECIDED by DEC-066
+(EMERGENCY_SL_FIRED outside the 7-value set; render as 7-value set
++ producer-partition note; D3 dv1_130 already renders it that way).
+The D5/D2 fix MIRRORS D3 and is DERIVABLE (RR-SCOPE-005) - it needs
+no Bill decision and no DEC-067. (v1_1 of this log mis-framed this
+as an open question; corrected at v1_2 - see section 9.)
+
+------------------------------------------------------------
+5. CLEANUP LIST (DR-009) - project-folder, list-only
+------------------------------------------------------------
+
+  0911002_TothBot_V2_0500000_Consolidation_Campaign_Plan_dv1_1.txt   (superseded by dv1_2)
+  TB00153_Decision_Register_v1_57.txt                                (superseded by v1_59)
+  TB00153_Decision_Register_v1_58.txt                                (superseded by v1_59)
+  TB00443_Next_Session_Instructions_v1_0.txt                         (consumed; TB00443 closed)
+  TB00444_Next_Session_Instructions_v1_0.txt                         (consumed; TB00444 closing)
+  TB00445_Next_Session_Instructions_v1_0.txt                         (superseded at extended close)
+  TB00445_Next_Session_Instructions_v1_1.txt                         (superseded by v1_2)
+  TB00444_TothBot_V2_Session_Log_2026-05-25_v1_0.txt                 (superseded at extended close)
+  TB00444_TothBot_V2_Session_Log_2026-05-25_v1_1.txt                 (superseded by v1_2)
+  0500000_System_Architecture_Overview_dv1_129_Claude_Source.html    (superseded by dv1_130 on acceptance)
+
+  NOTE (DR-009 event, extended close): mid-session the project
+  folder hit a space ceiling (~97%). Resolved by removing the
+  stale Decision Register copies (v1_57 ~588K, v1_58 ~593K) and
+  other superseded docs, then re-uploading the active document
+  set; folder now at ~82% with all active documents present. No
+  active/authoritative file was lost.
+
+------------------------------------------------------------
+6. CLAUDE ERRORS THIS SESSION
+------------------------------------------------------------
+
+E-1 (minor, self-corrected, no bad output): first edit-script run
+    used a non-unique anchor for the L1a consumes line (matched 2
+    occurrences); the script's assert-each-match guard halted
+    before writing. Re-anchored with a trailing-newline-unique
+    string. Fixed.
+E-2 (minor, self-corrected, no bad output): R-increment-roll logic
+    initially searched the whole 2.3MB file and matched another
+    diagram's R-increment; guarded by an assert that caught it.
+    Scoped the search to the D3 root-desc window. Fixed.
+E-3 (process, no bad output persisted): during the original close
+    this session re-asked the SETTLED "keep EMERGENCY_SL_FIRED"
+    decision (a DEC-065-adjacent re-open Bill had already closed).
+    Bill rebuked it; the re-open was transient and was NEVER
+    written into any work product (confirmed at the extended-close
+    reverification, section 10). No CC-* assessed - caught and
+    contained in-chat.
+E-4 (process, no bad output persisted): at the FIRST extended-close
+    delivery (v1_1) this session over-flagged the CF-TB00444-C
+    schema-field representation as an OPEN design question possibly
+    needing DEC-067, and flagged "formalize RA-6 in 0911002" as if
+    it were a pending Bill action. Both are wrong: DEC-066 already
+    decides the representation (derivable, mirror D3), and adding
+    an RA item to the campaign plan is routine plan editing, not a
+    Bill decision. Bill challenged it; corrected at v1_2 (this log,
+    section 4 + section 10.4; TB00445 NSI v1_2 section 3 + 6). The
+    incorrect framing was caught and corrected before any RA-6
+    session executed - no downstream bad output. No CC-* assessed.
+No CC-* violations this session. Cumulative CC-* count unchanged
+at 1.
+
+FOUND (pre-existing, not introduced this session): TB00153 as
+received at v1_58 was MISSING the v1_57 and v1_58 revision-history
+lines (sec 9 top entry was v1_56 while DocVersion was v1_58). Not
+reconstructed (no authoritative source for v1_57 text); flagged
+here and carried forward.
+
+------------------------------------------------------------
+7. CARRY-FORWARDS / OPEN ITEMS
+------------------------------------------------------------
+
+CF-TB00444-A: dedicated Emergency-SL crash-recovery diagram (full
+    contract:Reconciliation_REST detect-on-restart recovery
+    mechanics; evt:RECONCILE_COMPLETE; Position Mirror
+    reconciliation) - DD-014 design-completeness, its own one-
+    diagram session. Not required for the RA-1 conflict resolution.
+CF-TB00444-B: TB00153 sec 9 revision-history reconstruction of the
+    missing v1_57 / v1_58 lines (pre-existing gap).
+CF-TB00444-C: 0500000 D5/D2 canonical contract:CIATS_Trade_Outcome_
+    Bus schema exit_reason field (23-field record, field 15) is
+    still on the STALE 6-value enum - does not reflect DEC-065
+    (missing PAIR_LIMIT_ONLY_EXIT) or DEC-066 (no EMERGENCY_SL_
+    FIRED representation). NEW, found at the extended-close
+    reverification (section 10). Track A reconciliation item
+    (prospective RA-6), NOT an MDR entry. The target rendering is
+    DERIVABLE (RR-SCOPE-005): 7-value set + EMERGENCY_SL_FIRED
+    producer-partition note, MIRRORING D3 dv1_130 per DEC-066 - no
+    open question, no DEC-067. Captured in TB00445 NSI v1_2 section
+    6. See section 10.
+0911002 sec 5A Track A remaining (each its own one-mission session):
+    RA-2 AR-073 mixed loss-exit list (0500000 ~6434-6436); RA-3
+    1011007 LG-TOB-002 (564-572) + 0511006; RA-4 0511004 sec 7.5
+    (+ sec 6 TOB schema); RA-5 0811005 sec 7.5. RA-6 (CF-TB00444-C,
+    D5/D2 schema) is not yet formalized in 0911002 sec 5A - add it
+    at the next campaign-plan revision (routine; sequence it BEFORE
+    RA-3/RA-4 since D5/D2 are canonical diagrams that RA-3/RA-4
+    reconcile to, per DD-002).
+0911002 sec 5A Track B (separate): RB-1/RB-2 CF-TB00442-A
+    SIGNAL_DECAY cancel-trigger new design into 0511003 + 0711001.
+
+------------------------------------------------------------
+8. DELIVERABLES THIS SESSION
+------------------------------------------------------------
+
+  0500000_System_Architecture_Overview_dv1_130_Claude_Source.html
+        -> TothBot_V2-Docs/05XXXXX_System_Architecture/
+  TB00153_Decision_Register_v1_59.txt
+        -> TothBot_V2-SessionLogs/
+  TB00444_TothBot_V2_Session_Log_2026-05-25_v1_2.txt   (this file)
+        -> TothBot_V2-SessionLogs/
+  TB00445_Next_Session_Instructions_v1_2.txt
+        -> TothBot_V2-SessionLogs/
+
+  (v1_0 and v1_1 of this SL and of TB00445 NSI are superseded by
+  these v1_2 files.)
+
+------------------------------------------------------------
+9. REVISION HISTORY
+------------------------------------------------------------
+
+  v1_0  2026-05-25  First issue. TB00444 RA-1: 0500000 D3 exit-
+                    enum reconciliation (dv1_129 -> dv1_130, R7 ->
+                    R8) + EMERGENCY_SL_FIRED producer-partition;
+                    TB00153 v1_58 -> v1_59 (DEC-066).
+  v1_1  2026-05-25  Extended close (post-condense). Added section
+                    10 (independent RA-1 reverification + verdict
+                    + D5/D2 schema-field gap finding). Added
+                    CF-TB00444-C (section 7) and recorded it into
+                    TB00445 NSI v1_1. Recorded E-3 and the DR-009
+                    space event/resolution (section 5). No 0500000
+                    / TB00153 edit - RA-1 output stands as at v1_0.
+  v1_2  2026-05-25  CORRECTION. Restated the CF-TB00444-C schema-
+                    field representation as DERIVABLE (mirror D3
+                    per DEC-066; no open question, no DEC-067) in
+                    sections 4, 7, and 10.4; removed the FP/DP-
+                    required / DEC-067 / open-question framing.
+                    Recorded E-4 (the v1_1 over-flag). Noted RA-6
+                    should sequence before RA-3/RA-4 (section 7).
+                    Refreshed section 3 (DEC-066 rendering),
+                    section 5 (cleanup adds v1_1 files), and
+                    section 8 (v1_2 deliverables). RA-1 output and
+                    the RA-2 next-mission are UNCHANGED.
+
+------------------------------------------------------------
+10. EXTENDED CLOSE - POST-CONDENSE REVERIFICATION
+------------------------------------------------------------
+
+CONTEXT: the original TB00444 session condensed during/near close.
+Bill reopened to independently reverify the RA-1 work products
+before trusting the condensed output, then directed capture of any
+gap and a full session-end close. All checks below were run against
+LIVE project-folder files (never memory).
+
+10.1 DEC-066 delta check (TB00153 v1_59 vs v1_58): DEC-066 is a
+     clean addition - absent in v1_58 except the pre-existing
+     "next DEC = DEC-066" pointer; v1_59 advances the pointer to
+     DEC-067. DEC-066 text records the "keep" as SETTLED, frames
+     the work as placement + integration, and does NOT re-open
+     DEC-065 Q1/Q2/Q3. VERIFIED SOUND.
+
+10.2 dv1_130 D3 edit check (live): SIGNAL_DECAY / MOMENTUM_LOSS
+     removed from L1a and replaced with HTF_REGIME_REVERSAL /
+     DAILY_REGIME_DOWNGRADE / TIME_EXPIRY matching 0511004 dv1_7
+     EC-L1A-001/002/003; EMERGENCY_SL_FIRED retained at L3 and
+     re-attributed to the recovery producer; owner q5_logs / q1_do
+     contradiction resolved; HR-EC-016 suppression rule updated;
+     R7 -> R8 + figcaption recorded. HTML well-formed (0 orphan
+     close tags, 0 unclosed at EOF; file 2,291,015 bytes). Edits
+     confined to header + D3 (3457-3815); D5 / D2 / AR-073 / mirror
+     sites byte-unchanged (Path A preserved). Residual SIGNAL_DECAY
+     at line 6436 is the AR-073 list = correctly out of RA-1 scope
+     (that is RA-2). VERIFIED SOUND.
+
+10.3 VERDICT: the RA-1 work products (0500000 dv1_130, TB00153
+     v1_59) are trustworthy and correct as issued at v1_0. The
+     transient settled-decision re-open (E-3) never persisted into
+     any artifact. No correction to RA-1 output is required; v1_0
+     of dv1_130 and v1_59 STAND.
+
+10.4 GAP FOUND (the one real finding): after RA-1, D3 declares the
+     bus carries the 7-value set + EMERGENCY_SL_FIRED (partitioned),
+     BUT the canonical 23-field Trade-Outcome-Bus schema rendered in
+     D5 (lines ~4589 / ~4605) and D2 (line ~5240), field 15
+     exit_reason, still lists only the stale 6 values (missing
+     PAIR_LIMIT_ONLY_EXIT; no EMERGENCY_SL_FIRED representation).
+     This D3-vs-D5/D2 drift was NOT covered by any existing
+     sequenced item (RA-2..RA-5) and was NOT flagged at the original
+     close. Per DEC-065 / DEC-066 precedent it is reconciliation
+     work (Track A / G-item), NOT an MDR latent-defect entry.
+     ACTION TAKEN: captured as CF-TB00444-C / prospective RA-6 in
+     TB00445 NSI v1_2 (section 6). The target representation is
+     DERIVABLE, NOT an open question: per DEC-066 the field is set
+     to the 7-value set + an EMERGENCY_SL_FIRED producer-partition
+     note, MIRRORING the D3 dv1_130 rendering - RR-SCOPE-005
+     derivable execution, no DEC-067, no Bill A/B choice. A possible
+     section-prose schema mirror near line ~19874 is flagged for
+     re-verification in that item. (The first extended-close
+     delivery mis-stated this as an open question - corrected here;
+     E-4, section 6.)
+
+10.5 No new 0500000 / TB00153 edits at the extended close - this
+     was verification + NSI/SL governance amendment only, within
+     RR-SCOPE-011. RA-2 (the next session's mission) is UNCHANGED.
+
+============================================================
+END OF TB00444 SESSION LOG v1_2
+============================================================

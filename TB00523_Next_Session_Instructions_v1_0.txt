@@ -1,0 +1,181 @@
+DocDCN:     TB00523
+DocTitle:   Next_Session_Instructions
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    GitHub.com/TothBot/TothBot_V2-SessionLogs/TB00523_Next_Session_Instructions_v1_0.txt
+DocDate:    05-30-2026
+DocTime:    02:00:00 UTC
+
+============================================================
+TB00523 NEXT SESSION INSTRUCTIONS
+============================================================
+
+NAMING NOTE (SD-8): session X produces NSI X+1. This NSI is
+authored by session TB00522 and is therefore numbered TB00523.
+
+------------------------------------------------------------
+0. OPENING CHAT STATEMENT (OCS) -- COPY-PASTE PAYLOAD
+------------------------------------------------------------
+
+MIG-1 IS KILLED -- do NOT amend the D1 endpoint. Verified
+against Kraken docs (change log 2 Dec 2025): only the level3
+endpoint moved to wss://ws-l3.kraken.com/v2; the general
+private endpoint stays wss://ws-auth.kraken.com/v2; TothBot
+uses no level3 channel; D1 dv1_141 is already correct. See
+TB00522 SL section 2-3. Source of truth = GitHub HEAD via
+public tarball (DEC-097); both repos PUBLIC. C: drive never
+touched (CD-001); GitHub HEAD removals Claude-authored via
+git rm --cached (CD-003).
+
+----- BEGIN OCS -----
+Cold-load TB00523_Next_Session_Instructions_v1_0.txt and TB00522 SL. MIG-1 is KILLED (false premise, verified vs Kraken docs; D1 already correct). Run the chat-turn-1 FP/DP-derivability test (DD-011 v2_56) against the full option space. RECOMMENDED PRIMARY (pending Bill confirm): surgical 2-line correction of 0411001 WS-EP-002 + WS-EP-003 to the verified fact (general private endpoint = wss://ws-auth.kraken.com/v2; only level3 moved to ws-l3), dv1_12 -> dv1_13. Pull via tarball (DEC-097). This session produces NSI TB00524. Deliver SL+NSI+OCS+GitHub upload, then verify HEAD per DR-008.6 + DR-010.
+----- END OCS -----
+
+------------------------------------------------------------
+1.1 PRIMARY MISSION (RR-SCOPE-011) -- RE-BASED OFF KILLED MIG-1
+------------------------------------------------------------
+
+ONE atomic mission. The receiving session runs its own
+chat-turn-1 FP/DP-derivability test against the full option
+space; this framing is Claude-authored and NOT authoritative
+per RR-SCOPE-007 v2_30, but is backed by the TB00522 SL
+verified-fact finding.
+
+MIG-1 (the D1 endpoint change) is KILLED. D1 dv1_141 is already
+correct -- DO NOT amend the D1 endpoint, and DO NOT replace any
+wss://ws-auth.kraken.com/v2 occurrence with ws-l3.
+
+RECOMMENDED primary mission, PENDING BILL CONFIRMATION at
+session open: surgical correction of the source defect in
+0411001 dv1_12 -> dv1_13:
+  - WS-EP-002 "Private WS v2" endpoint: ws-l3.kraken.com/v2
+    -> wss://ws-auth.kraken.com/v2.
+  - WS-EP-003: replace the "ws-auth deprecated / ws-l3 is the
+    correct private endpoint" assertion with the verified fact:
+    only the level3 order-book WS endpoint moved to
+    wss://ws-l3.kraken.com/v2 (Kraken change log 2 Dec 2025);
+    the general private endpoint (executions/balances/order
+    events) remains wss://ws-auth.kraken.com/v2; TothBot uses
+    no level3 channel, so ws-l3 is not used.
+  - line 1159 summary entry: correct to match.
+This is a pure-prose .txt spec edit (no diagram). It is NOT a
+TothBot-V2-Code code change (CC-001 not engaged).
+
+VERIFIED FACT (authoritative basis -- TB00522 SL section 3):
+general private/authenticated Spot WS v2 endpoint =
+wss://ws-auth.kraken.com/v2 (executions, balances, order
+events, add/cancel order, openOrders/ownTrades), current and
+not deprecated; only the level3 order-book WS endpoint moved
+to wss://ws-l3.kraken.com/v2 (2 Dec 2025). Sources: Kraken API
+change log, Kraken FAQ, Kraken official Go SDK krakenfx/api-go,
+Kraken WS v2 executions/balances channel docs.
+
+If Bill prefers a different next mission at session open, the
+chat-turn-1 derivability test governs and this recommendation
+yields to Bill direction.
+
+NOT IN SCOPE: any D1 endpoint amendment (killed); MIG-2/3/4 and
+0411001 retirement (must be re-based first per CF-REBASE-MIG);
+RECON and stale-HEAD hygiene (carry-forwards).
+
+------------------------------------------------------------
+2. CONTEXT -- WHAT TB00522 PRODUCED
+------------------------------------------------------------
+
+TB00522 opened against the MIG-1 endpoint correction, ran the
+NSI's own RR-SCOPE-010 verification gate, and found the mission
+premise FALSE against Kraken authoritative documentation. Only
+the level3 WebSocket endpoint moved to ws-l3 (2 Dec 2025); the
+general private endpoint that TothBot uses stays ws-auth; and
+TothBot subscribes to no level3 channel. D1 dv1_141 is already
+correct, so no amendment was made (executing MIG-1 would have
+pointed the order/execution/balance feed at the L3 host -- a
+loss-critical defect). The same false fact is baked into
+0411001 dv1_12 (WS-EP-002 + WS-EP-003); it is not moot on
+retirement because 0411001 disposition is MOVE -> D1 (content
+migrates into the canonical diagram before retire). Full record
+and verification basis: TB00522 SL sections 2-3.
+
+TB00522 also ran the 0411001-vs-0500000 comparison (Bill
+directive): 0500000 is clean of the ws-l3 fabrication and
+already encodes the major wire-facts (token, DMS, deadline,
+rate counters, post_only, ws-auth). Determination: 0500000
+needs NO update; RETIRE 0411001 NOW = NO (proven-contaminated
+source + ~80-contract scope). Safe path = CF-VERIFY-RETIRE
+(section 4).
+
+------------------------------------------------------------
+3. STANDING DIRECTIVES
+------------------------------------------------------------
+
+SD-0  BINARY ARCHITECTURE TEST GOVERNS (DD-015 / DEC-096).
+SD-1  Stream 2 active; Phase 3 order E1 -> E2 -> E3. E1
+      complete; E2 was resuming with 0411001 -> D1 but MIG-1 is
+      killed; E2 resumes with the re-based correction.
+SD-2  No standalone mismatch-reconciliation sessions.
+SD-3  Fix-as-encountered; the diagram is authority (DD-001 /
+      DD-002).
+SD-4  Prose in sync per session (DD-002 / DD-003).
+SD-5  Mandatory final mismatch sweep (hard gate) before coding.
+SD-6  DR-010 DISCIPLINE. A session is NOT closed until every
+      pushed deliverable is byte-for-byte verified in HEAD.
+SD-7  EXPLICIT-FILENAME STAGING. Every upload stages by exact
+      filename only; never `git add .`. C: drive never touched
+      (CD-001).
+SD-8  NSI NAMING: session X produces NSI X+1.
+SD-9  VERIFY EXTERNAL FACTS AGAINST AN EXTERNAL SOURCE. Wire
+      facts (endpoints, rate limits, API behavior) carried in
+      internal specs/registers/NSIs as uncited assertions
+      (e.g. tagged PL-/GAP- only) MUST be verified against
+      Kraken authoritative documentation before they drive a
+      diagram amendment or code. (New, TB00522 -- MIG-1 false-
+      premise lesson.)
+
+------------------------------------------------------------
+4. CARRY-FORWARDS
+------------------------------------------------------------
+
+CF-FIX-0411001  Surgical 2-line 0411001 correction (this NSI
+                section 1.1). Recommended primary; pending Bill
+                confirm.
+CF-REBASE-MIG   Re-base MIG-2 (WS-AMD-004), MIG-3 (WS-LIB-004),
+                MIG-4 (~80-contract D1 sweep), and 0411001
+                retirement on the verified endpoint fact. Re-
+                verify the TB00519 register's other wire-fact
+                citations against external sources before
+                trusting them.
+CF-VERIFY-RETIRE  SAFE 0411001 RETIREMENT CAMPAIGN. Externally
+                verify (per SD-9) each Kraken wire-fact that
+                0500000 encodes, using 0411001's ~80-contract
+                list as the checklist NOT as truth; correct any
+                0500000 value found wrong; one contract-group
+                per session; retire 0411001 only once it adds
+                nothing verified-correct beyond 0500000.
+                Subsumes the trust-based CF-REBASE MIG-4 sweep.
+CF-RECON        Reconcile contrary binary-test text (0911002
+                3.1; TB00394 notes; 0311001 / 0311003
+                retirement text).
+CF-H            SD-5 final mismatch sweep -- hard gate before
+                coding.
+CF-I            Re-privatize-before-live (DEC-097 open sub-item).
+
+DR-APPEND DEBT: 0.
+
+============================================================
+5. REVISION HISTORY
+============================================================
+
+  v1_0  05-30-2026  First issue, authored at TB00522 close.
+                    Kills MIG-1 (false premise verified vs
+                    Kraken docs; D1 already correct). Sets the
+                    re-based forward path: recommended surgical
+                    0411001 WS-EP-002/003 correction (pending
+                    Bill confirm), MIG-2/3/4 + retirement to be
+                    re-based. Adds SD-9 (verify external facts
+                    against external sources). X+1 naming: this
+                    NSI = TB00523; next session produces
+                    TB00524.
+
+============================================================
+END OF TB00523 NEXT SESSION INSTRUCTIONS v1_0
+============================================================

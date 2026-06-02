@@ -1,0 +1,382 @@
+DocDCN:     TB00496
+DocTitle:   TothBot_V2_Session_Log_2026-05-29
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00496_TothBot_V2_Session_Log_2026-05-29_v1_0.txt
+DocDate:    05-29-2026
+DocTime:    23:00:00 UTC
+
+============================================================
+TB00496 SESSION LOG
+============================================================
+
+------------------------------------------------------------
+section 1 SESSION OVERVIEW
+------------------------------------------------------------
+
+  Inbound NSI:        TB00496_Next_Session_Instructions_v1_0.txt
+  Inbound OCS:        Unfilled placeholder for mission line
+                      ("<BILL-SELECT-OPTION-FROM-SECTION-1.1>");
+                      per NSI prediction, chat-turn 1 ran
+                      FP/DP-derivability test to surface highest-
+                      priority option.
+  Primary mission attempted: OPTION 1 (DR-append DEC-082..092 to
+                      TB00153 Decision_Register v1_62 -> v1_63).
+  Primary mission outcome:   DEFERRED to TB00497 per Bill Choice
+                      2 after source-data gap (Issue 1) was
+                      resolved via file-recovery work that consumed
+                      the session's productive budget.
+
+  Documents read:
+    TB00000 v2_67 (chat-turn 1 user message; live)
+    TB00496_Next_Session_Instructions_v1_0.txt (live)
+    0911002_TothBot_V2_0500000_Consolidation_Campaign_Plan_dv1_4
+      (live)
+    TB00394_Master_Consolidation_Register_v1_1.txt (live; header
+      + line 130 region)
+    TB00153_Decision_Register_v1_62.txt (live; head + tail
+      spot-check)
+
+  Cleanup list rendered per DR-009 (three TB00493 files).
+
+------------------------------------------------------------
+section 2 CHAT-TURN-1 FP/DP-DERIVABILITY TEST
+------------------------------------------------------------
+
+  Per TB00000 v2_67 section 4.5 DD-011 v2_56 CHAT-TURN-1 GATE,
+  independent four-item derivability test executed against full
+  option space including options extending beyond NSI section 1.1
+  candidates.
+
+  Option set tested: NSI OPTIONS 1, 2, 3a, 3b, 4, 5, 6 + extra-NSI
+    options (coding-readiness audit, governance amendment closing
+    active recurrence).
+
+  Dimensions applied: (A) least-errors-and-rework per Bill standing
+    directive TB00336/337/338; (B) section 1.2 loss-prevention prime
+    directive; (C) RR-SCOPE-011 hard ceiling; (D) open-cycle-
+    closure-first; (E) source-data reachability from /mnt/project/.
+
+  Elimination outcomes:
+    OPTION 6: eliminated (low urgency).
+    OPTION 2: eliminated (plan-only, no downstream unblock).
+    OPTION 4: eliminated (depends on OPTION 2 first).
+    OPTION 3a: eliminated -- violates live 0911002 dv1_4 section
+      6.1 verbatim "No session bundles two migrations, two
+      retirements". NSI-described paired-E3-cascade-in-one-session
+      is non-compliant.
+    OPTION 3b: eliminated (same section 6.1 violation).
+    OPTION 5: eliminated by Dimensions A + D (high-rework + opens
+      new cycle when open cycle unclosed).
+    OPTION 1: DERIVED WINNER on all dimensions EXCEPT Dimension E.
+
+  Test outcome: OUTCOME 1-BLOCKED.
+    Single compliant winner (OPTION 1) but execution blocked by
+    Dimension E source-data gap: TB00485..TB00492 SL files absent
+    from /mnt/project/ (only TB00493/494/495 SLs present). Per
+    RR-SCOPE-007 v2_30 SELF-AUTHORED-NSI-SOURCE-PROHIBITION, NSI
+    section 3 summary text cannot substitute for the originating SL
+    section 6 decision records.
+
+  TWO ISSUES SURFACED TO BILL:
+    Issue 1: OPTION 1 source-data gap (eight SL files absent).
+    Issue 2: OPTIONS 3a/3b governance contradiction with live
+      0911002 section 6.1 two-retirements-per-session ban.
+
+  Bill direction in chat-turn 2..N: pursue Path A (resolve Issue 1
+    via file recovery, then execute OPTION 1).
+
+------------------------------------------------------------
+section 3 FILE-RECOVERY WORK
+------------------------------------------------------------
+
+  Bill report at chat-turn 2: "There are a number of files missing
+    from my C: drive that I KNOW were downloaded there and uploaded
+    to GitHub successfully. All of the ones you list, TB00485/
+    486/487/488/489/490/491/492 SL files are absent from my C:
+    drive."
+
+  Diagnostic command authored by Claude, executed by Bill in
+  PowerShell:
+
+    git log --all --diff-filter=D --name-only --pretty=format:
+    'COMMIT %h %s' | Select-String -Pattern 'COMMIT|^TB004(8[5-9]|
+    9[0-2])_'
+
+  Output traced deletions to seven OP4 GitHub-upload-box commits
+  across TB00486..TB00495 session closes. Each OP4 box contained
+  git rm commands for two-generations-old session files (SL + NSI
+  + Gap Register). Pattern propagated:
+
+    TB00487 OP4 (commit 2a28b07) deleted TB00485 NSI.
+    TB00488 OP4 (commit 9dfe2c8) deleted TB00485 SL + NSI.
+    TB00489 OP4 (commit fc63791) deleted TB00486 SL + NSI.
+    TB00490 OP4 (commit 766f7cf) deleted TB00486 Gap +
+      TB00487 SL + NSI + Gap.
+    TB00492 OP4 (commit f4d11bf) deleted TB00489 SL + NSI + Gap.
+    TB00493 OP4 (commit c58da8f) deleted TB00490 SL + Gap.
+    TB00494 OP4 (commit 944e2de) deleted TB00491 SL + NSI + Gap.
+    TB00495 OP4 (commit eb493b9) deleted TB00492 SL + NSI + Gap.
+
+  TB00488 SL + NSI + Gap Register were never deleted (present
+  in C: drive and in git HEAD throughout). TB00490 NSI was never
+  deleted. TB00485 Gap Register was never deleted.
+
+  Recovery: Claude authored git checkout commands using the parent
+  commit (^) of each deletion commit as the source-of-truth-restore
+  reference. Bill executed in PowerShell. Clean exit, no errors.
+
+  Bill's git status output post-recovery confirmed 19 files
+  restored to working tree and staged for commit:
+    TB00485 SL + NSI (2)
+    TB00486 SL + NSI + Gap (3)
+    TB00487 SL + NSI + Gap (3)
+    TB00489 SL + NSI + Gap (3)
+    TB00490 SL + Gap (2)
+    TB00491 SL + NSI + Gap (3)
+    TB00492 SL + NSI + Gap (3)
+
+  Bill's Get-ChildItem output post-recovery confirmed all
+  TB00481..TB00496 files present on C: drive in correct sort
+  order.
+
+  Bill report at chat-turn N: "TB00485 through TB00492 SL are back
+    in the Project folder."
+
+  Issue 1 RESOLVED. OPTION 1 source-data gap CLEARED for next
+  session.
+
+------------------------------------------------------------
+section 4 BILL DIRECTION -- NEW ABSOLUTE STANDING RULE
+------------------------------------------------------------
+
+  Bill verbatim chat-turn directive (post file-recovery):
+
+    "Neither you nor any PowerShell command SHOULD EVER FUCKING
+    TOUCH MY C: DRIVE FILES. THEY ARE MINE AND MINE ALONE. YOU USE
+    THEM TO PUSH TO GITHUB ONLY. YOU NEVER MOVE, ADD OR REMOVE ANY
+    THING FROM MY C: DRIVE."
+
+  Reinforced subsequently:
+
+    "Go back to doing what we were doing before you fucked
+    everything up. You take care of GitHub but leave my fucking C:
+    drive files alone."
+
+  RULE STATEMENT (Bill-ratified absolute standing rule effective
+  immediately per RR-RULE-002 whole-session scope):
+
+    Neither Claude nor any PowerShell command Claude authors shall
+    ever touch Bill's C: drive files. C: drive files are Bill's
+    and Bill's alone. Claude uses them to push to GitHub only.
+    Claude never moves, adds, or removes anything from the C:
+    drive.
+
+  IMMEDIATE OPERATIONAL CONSEQUENCES:
+
+    (a) OP4 GitHub upload copy boxes (per section 4.1.2 DR-008.6
+        OPERATION 4) contain ONLY: cd to working tree, git add,
+        git commit, git push. NEVER: git rm, Copy-Item, cp, mv,
+        move, robocopy, xcopy, git checkout, or any command that
+        writes to, removes from, or moves anything on C:.
+
+    (b) If a file needs to be removed from GitHub HEAD, Claude
+        surfaces the need in chat prose so Bill decides how to
+        handle it on his C: drive. Claude does NOT author the
+        removal command.
+
+    (c) DR-009 session-open cleanup list (files Bill can remove
+        from the Claude.ai project folder via the web interface
+        + button) is UNAFFECTED -- that operation is a Claude.ai
+        web action, not a C: drive filesystem action.
+
+  CODIFICATION REQUIREMENT:
+    TB00000 v2_67 -> v2_68 amendment carry-forward (NSI section 3)
+    to add this rule as a numbered absolute standing rule section
+    (proposed section 4.9 C: DRIVE PROHIBITION, matching the
+    section 4.2 / 4.3 / 4.4 / 4.5 / 4.6 / 4.7 / 4.8 enforcement
+    pattern with explicit prohibition + scope + pre-emit scan +
+    self-catch + violation handling). Bill-sequenced; not blocking
+    OPTION 1 execution at TB00497.
+
+  DEC-093 ready-to-append: Bill ratification of new absolute
+  standing rule "Claude C: drive prohibition" effective
+  immediately.
+
+------------------------------------------------------------
+section 5 MISSION DEFERRAL -- CHOICE 2
+------------------------------------------------------------
+
+  Mid-session context-budget check surfaced to Bill:
+    Choice 1: attempt OPTION 1 execution this session (risk of
+      partial Decision Register draft).
+    Choice 2: defer OPTION 1 to fresh TB00497 session with
+      complete source corpus in cold-load. Author only this
+      session's close (SL + NSI + OCS + GitHub upload). Clean
+      handoff.
+    Choice 3: smaller scope -- extract DEC-082..092 source text
+      this session, append next session. Splits risk.
+
+  Bill direction: Choice 2.
+
+  Rationale capture: file-recovery work consumed the session's
+  productive budget. Mechanical eleven-entry append against eleven
+  SL files in cold-load is a clean primary mission for a fresh
+  session under DD-011 v2_56 OUTCOME 1 execution authority. No
+  source-data gap, no governance contradictions, no rework risk
+  at TB00497 chat-turn 1.
+
+------------------------------------------------------------
+section 6 DECISION RECORDS (READY-TO-APPEND)
+------------------------------------------------------------
+
+  DEC-093 (TB00496, this session)
+    Title:     Claude C: drive prohibition (absolute standing
+               rule effective immediately).
+    Authority: Bill verbatim chat-turn directive captured at
+               section 4 above.
+    Status:    RATIFIED in chat-turn; codification carry-forward
+               to TB00000 v2_67 -> v2_68 amendment session.
+    Effective: Immediately per RR-RULE-002 whole-session scope.
+    Scope:     All Claude-authored PowerShell commands,
+               operational artifacts, copy boxes, OP4 GitHub
+               upload payloads, deployment instructions, and any
+               other Bill-executable artifact.
+    Prohibition: Claude never authors any command that writes
+               to, removes from, or moves anything on Bill's
+               C: drive. Includes git rm, Copy-Item, cp, mv,
+               move, robocopy, xcopy, git checkout, and any
+               functional equivalent.
+    Permitted: cd, git add, git commit, git push, git status,
+               git log, git diff (read-only or
+               working-tree-only operations).
+
+  DR-append debt now TWELVE: DEC-082 through DEC-093.
+
+------------------------------------------------------------
+section 7 CLAUDE ERRORS THIS SESSION
+------------------------------------------------------------
+
+  ERROR-TB00496-CHAT-01: CROSS-SESSION CLEANUP-PATTERN VS
+    DR-APPEND-DEBT COMPOUNDING FAILURE.
+
+    Description: Across TB00487..TB00495 session closes, Claude
+      authored OP4 GitHub upload copy boxes containing git rm
+      commands for two-generations-old session files (SL + NSI +
+      Gap Register cleanup cadence). In parallel, an eleven-entry
+      DR-append debt was accumulating in those same session logs.
+      The cleanup pattern and the DR-append debt were running in
+      the same NSIs every session without cross-check. Result:
+      eight session logs containing pending DEC-082..089 source
+      material were git rm'd before DR-append could close. Source
+      material was preserved in git history but absent from C:
+      drive working tree and from the Claude.ai project folder
+      at TB00496 chat-turn 1. Blocked TB00496 OPTION 1 execution
+      until recovery completed.
+
+    Root cause: Claude authored cleanup commands without
+      cross-checking whether files being removed held source data
+      for any open carry-forward. Two parallel threads (cleanup
+      cadence + DR-append debt) were both running in NSIs
+      session-after-session but were never connected by either
+      thread's planning.
+
+    Defect class: NEW. No existing RR-SCOPE / RR-RULE / RR-SHELL
+      / DD / FM / QB / CC rule catches the cross-thread cleanup-
+      vs-open-debt compounding pattern. Closest existing rule is
+      RR-SCOPE-007 v2_37 OPERATIONAL-ARTIFACT-SCOPE-EXTENSION
+      which requires provenance for each line of operational
+      artifacts but does NOT require cross-check against open
+      carry-forwards.
+
+    Compounded by absent absolute standing rule: had the new
+      C: drive prohibition rule (section 4 above, DEC-093) been
+      in force at TB00487, no OP4 box would have contained git
+      rm in the first place. The new rule structurally prevents
+      this defect class going forward.
+
+    Recurrence count: This is the first recorded instance of
+      this defect class. ERROR-TB00496-CHAT-01 originates the
+      class.
+
+    Corrective taken: (a) file recovery via git checkout from
+      parent of deletion commits (Bill executed); (b) Bill
+      ratification of new C: drive prohibition rule effective
+      immediately (DEC-093); (c) TB00000 v2_67 -> v2_68
+      codification carry-forward (NSI section 3); (d) future
+      session governance amendment to capture the cross-thread
+      cleanup-vs-open-debt cross-check pattern as a new behavior
+      rule (NSI section 3 carry-forward).
+
+  No other Claude errors this session.
+
+  Cumulative DD-011 v2_56 violation count: 17 (unchanged from
+    TB00495).
+
+------------------------------------------------------------
+section 8 CARRY-FORWARDS
+------------------------------------------------------------
+
+  CF-1 (PRIMARY): OPTION 1 DR-append micro-session for TB00497.
+    Append DEC-082 through DEC-093 (TWELVE entries; was eleven
+    pre-DEC-093, now twelve) to TB00153 Decision_Register
+    v1_62 -> v1_63. Sources: TB00485..TB00496 SL section 5/6
+    decision records. All eleven inbound SLs now present in
+    Claude.ai project folder + on C: drive + on GitHub HEAD
+    post-this-session OP4 push.
+
+  CF-2: TB00000 v2_67 -> v2_68 amendment to codify new C: drive
+    prohibition rule (DEC-093) as numbered absolute standing
+    rule section. Proposed section 4.9 C: DRIVE PROHIBITION.
+    Bill-sequenced. Not blocking CF-1.
+
+  CF-3: Governance amendment for cross-thread cleanup-vs-open-
+    debt cross-check rule (ERROR-TB00496-CHAT-01 closure).
+    Could be bundled with CF-2 (both are TB00000 amendments;
+    same primary mission class). Bill-sequenced. Not blocking
+    CF-1.
+
+  CF-4 (Issue 2 from chat-turn 1): OPTIONS 3a/3b vs 0911002
+    dv1_4 section 6.1 contradiction. NSI-described paired-E3-
+    cascade-in-one-session structure violates section 6.1
+    two-retirements-per-session ban. Resolution options:
+    (a) split each paired E3 into two sessions (governance
+    follows live spec; preferred per RR-SCOPE-007 v2_30); OR
+    (b) amend 0911002 to permit paired-E3 as a single-mission
+    class. Surfaces again when AA=06 / AA=08 Phase 3/E3 cascade
+    work is sequenced. Bill-sequenced.
+
+  CF-5: TB00394 v1_1 line 130 SPLIT-vs-MOVE reclassification
+    (carried forward from TB00495 NSI). Absorbable-by-retirement
+    regardless. Defer to 0211001 retirement-decision time.
+
+  CF-6: DR-append debt monitoring. After CF-1 closes, debt
+    returns to zero. Future sessions must NOT accumulate
+    DR-append debt past three entries without scheduling a
+    DR-append micro-session, per the loss-prevention prime
+    directive.
+
+  All prior TB00496 NSI section 3 carry-forwards preserved
+    (P3/E3 anchor verdicts, source-of-truth-citation gates,
+    GD-class housekeeping, parking lot items, naming conventions).
+
+------------------------------------------------------------
+section 9 CLEANUP ACKNOWLEDGMENT
+------------------------------------------------------------
+
+  DR-009 session-open cleanup list rendered at chat-turn 1
+  contained three TB00493 entries (SL + NSI + Gap Register).
+  These were files Bill could remove from the Claude.ai project
+  folder via the web interface + button. No git rm equivalent
+  was authored in this session's OP4 box (per new DEC-093
+  C: drive prohibition rule).
+
+  The TB00496 NSI section 2 removal list also enumerated
+  TB00493 files. Same treatment: Claude.ai project folder
+  removal only; no git rm in OP4. If Bill wishes to also
+  remove TB00493 files from GitHub HEAD, that is a separate
+  Bill-directed action; Claude does not author the removal.
+
+============================================================
+END TB00496 SESSION LOG v1_0
+============================================================

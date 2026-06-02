@@ -1,0 +1,300 @@
+DocDCN:     TB00401
+DocTitle:   TothBot_V2_Session_Log_2026-05-23
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00401_TothBot_V2_Session_Log_2026-05-23_v1_0.txt
+DocDate:    05-23-2026
+DocTime:    23:29:43 UTC
+
+============================================================
+TB00401 SESSION LOG
+============================================================
+
+------------------------------------------------------------
+1. SESSION IDENTITY AND SCOPE
+------------------------------------------------------------
+
+Session TB00401. Follow-on to TB00400. ONE primary mission
+per TB00000 v2_59 sec 4.3.1 RR-SCOPE-011:
+
+  Execute Phase 1 of the 0500000 Consolidation Campaign
+  (0911002 dv1_1, Option A / DEC-039) for ONE TB00000
+  sec 9.17 parameter-group — migrate the CIATS-OWNERSHIP
+  ARCHITECTURAL FACT (parameter EXISTENCE + CIATS-OWNERSHIP)
+  into the owning 0500000 diagram element per the 0911002
+  dv1_1 sec 8 pattern P-1..P-6. The VALUE does NOT move;
+  sec 9.17 is NOT retired and NOT edited (Option A). No
+  value invented. TB00000 NOT amended.
+
+Group selected this session: the REGIME-ENGINE sub-group of
+the sec 9.17 "Regime engine + signal model" group —
+param:adx_threshold + param:atr_percentile_thresh +
+param:atr_rolling_window + param:htf_ema_periods. Owning
+element mod:Regime_Engine on Diagram 4 (Regime Taxonomy).
+Already migrated in prior sessions (NOT re-done): Drawdown-
+halts (TB00398 / DEC-040), Entry-timing (TB00399 / DEC-041),
+Sizing-curve (TB00400 / DEC-042).
+
+------------------------------------------------------------
+2. MANDATORY READING (SESSION OPEN)
+------------------------------------------------------------
+
+Read from the project folder (not from memory):
+  - TB00000 v2_59 (sec 4.1.2 DR-008.6 FOUR-OPERATION
+    SEQUENTIAL close + DR-009 cleanup; sec 4.3.1
+    RR-SCOPE-011; sec 9.16/9.17 parameter registry — group
+    membership confirmed at L9235-9240).
+  - 0911002 dv1_1 (corrected Option A campaign plan; sec 8
+    migration pattern P-1..P-6).
+  - 0500000 dv1_116 (live architecture — migration target;
+    2.18MB; baseline geometry captured for integrity diff).
+  - 0311001 v1_25 (sec 15.12.8 param token registry).
+  - TB00153 Decision Register v1_34 (highest present;
+    DEC-042 newest).
+  - TB00153 Master Defect Register v1_48 (highest present;
+    DR-071 the relevant prior D4 atr_rolling_window closure).
+  - TB00394 Master Consolidation Register v1_0 (audit-first
+    basis).
+  - TB00401 NSI v1_0 (cold-load driver).
+  - TB00400 SL v1_0 (predecessor; migration precedent).
+
+------------------------------------------------------------
+3. PARAMETER-GROUP SELECTION
+------------------------------------------------------------
+
+Bill gave no group preference at OCS -> NSI sec 3 default
+rule applies (smallest self-contained group with an
+unambiguous owning 0500000 element, preferring a group whose
+owning element's live governs/consumes already names the
+token(s)). Selected the regime-engine sub-group: its owning
+element mod:Regime_Engine is explicitly named in the D4 root
+governs list (live grep L3849, which already cites all four
+tokens) and the engine's consumes/q1_do fields — the single
+unambiguous owner.
+
+CROSS-DIAGRAM OWNERSHIP FINDING (forces sub-group scope). The
+sec 9.17 group is named "Regime engine + signal model" and
+lists FIVE tokens; the fifth, param:min_volume_usd_daily, is
+the signal-model 24h-volume liquidity floor. Live grep
+confirmed min_volume_usd_daily appears NOWHERE among D4
+component consumes fields — its owning element is the D2
+gate:G2 liquidity check (L2344), NOT mod:Regime_Engine and
+NOT on D4. Migrating the whole named group atomically would
+require amending TWO diagrams (D4 + D2) in one session,
+violating DEC-003 Path A (one diagram per session) and the
+byte-identical-geometry discipline on a second figure, and
+breaking P-4 attestation-truth at mod:Regime_Engine.
+Disposition (loss-minimization + accuracy): migrate the
+four mod:Regime_Engine-owned tokens on the single owning
+element on D4 this session; carry param:min_volume_usd_daily
+forward to its own one-mission/one-diagram session at D2.
+Executed under RR-SCOPE-005 derivable-decision authority;
+not surfaced as a ratification question (OUTCOME 1 single
+compliant path).
+
+------------------------------------------------------------
+4. WORK PERFORMED -- MIGRATION (0500000 dv1_116 -> dv1_117)
+------------------------------------------------------------
+
+P-1 IDENTIFY. Regime-engine sub-group; owning element
+mod:Regime_Engine (D4 Regime Taxonomy, g-element
+tothbot_regime_engine). adx_threshold + atr_percentile_thresh
++ htf_ema_periods named in the engine consumes field;
+atr_rolling_window the historical window over which
+atr_percentile_thresh is computed per q1_do + ar:AR-017.
+
+P-2 TOKEN REGISTER. Three tokens already in 0311001 v1_25
+sec 15.12.8. param:atr_rolling_window was GENUINELY ABSENT
+from the registry (cited in D4 governs + engine q1_do + sec 9
+mirror, but zero matches in the registry — live grep). The
+ONE regime-engine registry gap. Companion 0311001
+v1_25 -> v1_26 EXECUTED: registered param:atr_rolling_window
+("seed; TB00000 sec 9.17"; no value carried into registry) +
+sec 17 revision-history v1_26 entry + header bump.
+
+P-3 MIGRATE THE FACT (NOT THE VALUE). Three coordinated
+ADD-only edits to D4:
+  (i)   mod:Regime_Engine governs <desc> — ADD-only
+        ciats_ownership field inserted after produces; names
+        the four tokens as CIATS-OWNED PER-MODULE INSTANTIATED
+        (per sec 9.16/9.17), with explicit scope note that
+        min_volume_usd_daily is owned at D2 gate:G2 and not
+        migrated this session.
+  (ii)  D4 figcaption — ADD-only OPTION R EXTENSION (iv)
+        migration attestation (full P-1..P-6 narrative) +
+        EXTENSION (v) campaign subsequent-session pointer,
+        inserted after the existing EXTENSION (iii); all
+        prior figcaption blocks (TB00379 V-040 IV + CI-005/
+        CI-006 stack policy + TB00357 R5 preserved-for-
+        reference) preserved verbatim per CI-005/CI-006.
+  (iii) sec 9 mirror "Regime engine + signal model" block —
+        ADD-only canonical-source pointer; value text (25 /
+        67th pct / 50 days / 20/50 daily / $500k) UNCHANGED.
+Doc metadata bumped (HTML <title> + DocVersion + DocPath +
+DocTime) and sec 14 revision-history dv1_117 entry added
+above dv1_116.
+
+P-4 ATTESTATION TRUTH. The D4 attestation states only the
+grep-verified live fact + the sec 9.17 value-pointer.
+mod:Regime_Engine is the true owner of exactly the four
+tokens; min_volume_usd_daily is not claimed at this element.
+No prior false attestation for this sub-group to correct.
+
+P-5 sec 9.17 UNCHANGED. TB00000 not opened. All five starting
+values remain canonical in sec 9.17 (Option A; dv1_0
+"retire sec 9.17" step SUPERSEDED under DEC-039).
+
+P-6 GOVERNANCE. See sec 5.
+
+INTEGRITY VERIFICATION (DEC-003 Path A; byte-identical
+geometry). Diff of working copy vs source dv1_116:
+  - SVG geometry counts src -> new, ALL UNCHANGED:
+    path 30, rect 313, polygon 6, line 97, polyline 1,
+    text 954, svg 11, figure 10, figcaption 10.
+  - Real viewBox attributes (viewBox="...") 35 -> 35
+    UNCHANGED (D4 viewBox 1500x1280 preserved). [The bare-
+    word "viewBox" count rose 188 -> 190 solely from two
+    prose mentions of the word in the added figcaption/
+    revision text — not an attribute change.]
+  - <strong> balanced: 108 open / 108 close (was 106/106;
+    +2 balanced pairs from the two added figcaption
+    EXTENSION blocks — figcaption is HTML outside the SVG
+    and is in-scope per the migration pattern).
+  - Lines REMOVED from source: exactly 4 (the <title>,
+    DocVersion, DocPath, DocTime metadata lines). All other
+    changes are pure insertions (35 lines added).
+  Result: PASS. ADD-only; SVG geometry byte-identical; only
+  D4 figcaption/<desc> + sec 9 mirror + metadata + sec 14
+  touched; all 10 figures' geometry intact; D4 R-number
+  unchanged at R5.
+
+------------------------------------------------------------
+5. WORK PERFORMED -- DECISION REGISTER (DEC-043)
+------------------------------------------------------------
+
+TB00153 Decision Register v1_34 -> v1_35. Appended DEC-043
+(detail-only, after the DEC-042 STATUS block, before the
+sec 4 banner; index sec 2 unchanged per the established
+post-DEC-027 detail-only pattern). DEC-043 records the FOURTH
+Phase 1 execution under Option A / DEC-039: the regime-engine
+sub-group CIATS-ownership migration to D4 mod:Regime_Engine,
+the sub-group scope rationale (min_volume_usd_daily owned at
+D2, carried forward), the three-place encoding, the P-2
+one-token (atr_rolling_window) registration, P-5 sec 9.17
+unchanged, the no-paired-MDR rationale, and the byte-identical-
+geometry integrity record. Added sec 9 revision-history v1_35
+entry + header bump.
+
+NO paired MDR entry. The one-token registry gap
+(atr_rolling_window) is in-scope migration plumbing (P-2),
+not a tracked defect closure: the D4 governs list and sec 9
+mirror correctly cited the token (no false attestation to
+correct), only the namespace registry lacked it. Consistent
+with TB00398/399/400 (none paired an MDR entry) and distinct
+from the TB00395 Phase 0 seed case (which DID pair an MDR
+entry because it corrected a FALSE attestation).
+
+------------------------------------------------------------
+6. DELIVERABLES THIS SESSION
+------------------------------------------------------------
+
+  PRIMARY:
+    1. 0500000_System_Architecture_Overview_dv1_117_Claude_Source.html
+       (D4 regime-engine sub-group CIATS-ownership migration)
+  COMPANION:
+    2. 0311001_Namespace_Specification_v1_26.txt
+       (P-2: param:atr_rolling_window registered in
+       sec 15.12.8)
+    3. TB00153_Decision_Register_v1_35.txt
+       (DEC-043)
+  SESSION DOCS:
+    4. TB00401_TothBot_V2_Session_Log_2026-05-23_v1_0.txt
+       (this log)
+    5. TB00402_Next_Session_Instructions_v1_0.txt
+       (next-session driver)
+
+RR-SCOPE-011 ceiling: one primary deliverable + one in-scope
+P-2 companion + one paired DR entry + mandatory companions
+(SL + NSI + OCS + GitHub). No MDR entry. No TB00000
+amendment. Ceiling respected.
+
+------------------------------------------------------------
+7. CLAUDE ERRORS THIS SESSION
+------------------------------------------------------------
+
+None requiring correction in the delivered artifacts. One
+scope judgement flagged for the record: the cold-load summary
+framed the "Regime engine + signal model" group as a single-
+owning-element group; live grep showed min_volume_usd_daily
+is owned at a different element/diagram (D2), so the session
+correctly narrowed scope to the regime-engine sub-group (four
+tokens, one element, one diagram) to preserve DEC-003 Path A
+and P-4 attestation-truth, carrying min_volume_usd_daily
+forward. This is a deliberate, documented scope decision, not
+an error in a delivered artifact.
+
+------------------------------------------------------------
+8. CARRY-FORWARD / NEXT MISSION
+------------------------------------------------------------
+
+NEXT (TB00402): continue Phase 1, ONE group. RECOMMENDED:
+param:min_volume_usd_daily (the signal-model half of the
+"Regime engine + signal model" group; liquidity floor owned
+at D2 gate:G2 liquidity check) — completes the named group
+for continuity. Owning element to confirm at D2 (live grep
+L2344 consumes param:min_volume_usd_daily; D-04_Liquidity_Floor
+$500k). Single-token, single-element, single-diagram (D2).
+
+Other remaining candidate groups (each its own one-mission
+session): Exit-controller (mae_mult / emergency_sl_mult /
+cancel_timeout_window / mpp_retry_count / max_hold_candles),
+SSS signal-model groups, Selection-Controller, Short-side-
+specific (leverage_cap_short / rsi_short_low / rsi_short_high
+/ min_order_size_usd), VPS-deployment (StartLimitBurst /
+StartLimitIntervalSec), Liquidity-cache (liquidity_refresh_
+hours), Fee-schedule (FEE_MAKER_PCT / FEE_TAKER_PCT),
+Threshold-monitoring, Acceptance-rule
+(expected_rr_acceptance_rule), and the two D8 caps
+(concentration_cap_per_module / exposure_cap_pct — value-less
+pending CIATS derivation). Group selection is Bill's
+sequencing decision per 0911002 sec 6 (not computable).
+
+KNOWN CARRY-FORWARD DEFECTS (NOT this scope; flagged for a
+dedicated documentation-housekeeping session): 0500000 sec 14
+Revision-History positioning defect (entries sit above the
+<h2>14. Revision History</h2> header) + absent dv1_100..dv1_110
+revision-history entries; Tier 1 Context root <desc>
+R-increment chain stale (R2..R23 narratives never rotated in).
+
+------------------------------------------------------------
+9. PROJECT-FOLDER CLEANUP (DR-009)
+------------------------------------------------------------
+
+Files identified as safely removable from the project folder
+this session (read from the live folder, not from memory):
+  - TB00362_V041_FAIL_List_v1_1.txt
+    (spent V-041 audit vs SUPERSEDED 0500000 dv1_100)
+  - TB00363_V042_FAIL_List_v1_0.txt
+    (spent V-042 audit vs SUPERSEDED 0500000 dv1_93)
+  - TB00400_TothBot_V2_Session_Log_2026-05-23_v1_0.txt
+    (prior session log; superseded by TB00401 NSI carry-
+    forward + this TB00401 SL)
+
+------------------------------------------------------------
+10. SESSION-CLOSE NOTE
+------------------------------------------------------------
+
+Close performed per TB00000 v2_59 sec 4.1.2 DR-008.6
+FOUR-OPERATION SEQUENTIAL protocol: OP1 OCS copy box; OP2
+present non-SL/NSI deliverables (0500000 dv1_117 + 0311001
+v1_26 + TB00153 DR v1_35); OP3 present SL (TB00401) + NSI
+(TB00402); OP4 GitHub upload copy box (PowerShell, per-repo
+cd, ASCII-only commit, git push origin HEAD). Files placed in
+the folders designated by the 03XXXXX-series conventions:
+05XXXXX docs in TothBot_V2-Docs/05XXXXX_System_Architecture;
+SL + NSI in TothBot_V2-SessionLogs; 0311001 (AA=03) +
+TB00153 registers per their repo conventions.
+
+============================================================
+END OF TB00401 SESSION LOG v1_0
+============================================================

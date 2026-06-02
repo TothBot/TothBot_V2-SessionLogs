@@ -1,0 +1,457 @@
+DocDCN:     TB00367
+DocTitle:   Next_Session_Instructions
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00367_Next_Session_Instructions_v1_0.txt
+DocDate:    05-20-2026
+DocTime:    05:15:00 UTC
+
+============================================================
+TOTHBOT V2 NEXT SESSION INSTRUCTIONS -- TB00367
+============================================================
+
+============================================================
+0. OPENING CHAT STATEMENT (OCS) -- COPY VERBATIM
+============================================================
+
+```
+Cold-load TB00367_Next_Session_Instructions_v1_0.txt.
+
+Execute TB00367 primary mission: V-041 P-CP1 + P-CC4 +
+P-CC5 Kraken channel/REST amendment family on 0500000
+dv1_95 -> dv1_96. Mission scope:
+container:Kraken_REST_API.produces (D6) ALREADY contains
+the 5 channel:kraken_rest_* tokens; ADD-only consumer
+mirrors at mod:WS_Manager.consumes +
+contract:Reconciliation_REST.consumes +
+mod:Exit_Controller.consumes +
+mod:Selection_Controller.consumes per FAIL List §3 P-CP1
+producer-binding closure (5 channel tokens, 4 consumer
+sites). P-CC4 rest:* (4 tokens): REPLACE rest:*
+references in Context container:Kraken_Exchange +
+contract:Reconciliation_REST consumes with canonical
+channel:kraken_rest_* tokens per FAIL List §3 P-CC4
+recommendation. P-CC5 ws_subscribe:* (2 tokens): ADD
+ws_subscribe:public_v2 to container:Public_WS_v2.produces
+and ws_subscribe:private_v2 to container:Private_WS_v2.
+produces (D1). Estimated ~11 tokens producer/consumer
+bindings closed.
+
+Chat-turn 1 mandatory: Documents-read confirmation +
+DR-009 cleanup list + independent FP/DP-derivability-
+test per TB00000 v2_58 §4.5 DD-011 v2_56 CHAT-TURN-1
+GATE. Option-set MUST be authored independently against
+full option space; NSI-listed scopes are NOT
+authoritative per RR-SCOPE-007 v2_30 SELF-AUTHORED-
+NSI-SOURCE-PROHIBITION.
+
+Mission frame: diagrams ARE the design source;
+0500000 diagrams ARE canonical and authoritative;
+prose FOLLOWS diagrams; eliminate prose-driven error
+class; coding proceeds from design-complete diagrams
+without drift per TB00000 v2_58 §4.5 DD-001 + DD-002
++ DD-012 + DD-014 + 0311001 v1_24 §15.16 V-040.
+
+After OUTCOME 1 (DERIVABLE) emerges from FP/DP test,
+execute selected path under RR-SCOPE-005 derivable-
+decision execution authority without surfacing as
+ratification question.
+
+Reference TB00000 v2_58 §4.1.2 DR-008.6 FOUR-OPERATION
+SEQUENTIAL (session-close) and DR-009 (session-open
+cleanup list).
+
+Session-close deliverables: 0500000 dv1_96 + TB00367_
+V041_P_CP1_P_CC4_P_CC5_Amendment_Log_v1_0 + TB00367 SL +
+TB00368 NSI per DR-008.6 four-operation sequential
+close.
+```
+
+============================================================
+1. PRIMARY MISSION
+============================================================
+
+============================================================
+1.1 MISSION DIRECTIVE
+============================================================
+
+PRIMARY MISSION: V-041 P-CP1 + P-CC4 + P-CC5 Kraken
+channel/REST amendment family ADD-only on 0500000
+dv1_95 -> dv1_96 from canonical /mnt/project/ source
+(after TB00366 GitHub upload + Bill project-folder swap
+completes).
+
+Amendment family targets per TB00362 V-041 FAIL List
+v1_0:
+
+  V-041 P-CP1 (5 channel:kraken_rest_* tokens):
+    channel:kraken_rest_Ticker -> mod:WS_Manager.consumes
+                               +  mod:Selection_Controller.consumes
+                                  (universe liquidity filter
+                                   per 0411002 dv1_*)
+    channel:kraken_rest_GetAccountBalance
+                               -> contract:Reconciliation_REST.consumes
+    channel:kraken_rest_GetOpenOrders
+                               -> contract:Reconciliation_REST.consumes
+    channel:kraken_rest_QueryOrdersInfo
+                               -> contract:Reconciliation_REST.consumes
+    channel:kraken_rest_CancelAllOrders
+                               -> mod:Exit_Controller.consumes
+                                  (emergency-cancel path per
+                                   0511004 dv1_*)
+
+  V-041 P-CC4 (4 rest:* tokens):
+    REMOVE-then-ADD pattern (not pure ADD-only — flagged
+    for chat-turn 1 FP/DP-derivability-test consideration):
+    rest:get_account_balance     -> REPLACE with channel:
+                                    kraken_rest_GetAccountBalance
+    rest:get_ohlc_data           -> REPLACE with channel:
+                                    kraken_rest_Ticker
+                                    (or new channel:kraken_
+                                    rest_GetOHLCData per
+                                    chat-turn 1 ground-truth
+                                    inspection)
+    rest:get_open_orders         -> REPLACE with channel:
+                                    kraken_rest_GetOpenOrders
+    rest:get_websockets_token    -> REPLACE with new channel:
+                                    kraken_rest_GetWebsocketsToken
+                                    (or other canonical
+                                    Kraken-WS-v2 token registry
+                                    entry — requires 0311001
+                                    v1_24 §15.12.5 channel
+                                    registry verification at
+                                    chat-turn 1)
+    Locations: Context container:Kraken_Exchange consumes +
+               contract:Reconciliation_REST consumes (T1)
+
+  V-041 P-CC5 (2 ws_subscribe:* tokens):
+    Pure ADD-only:
+    ws_subscribe:public_v2       -> ADD to container:Public_WS_v2.produces
+                                    (D1)
+    ws_subscribe:private_v2      -> ADD to container:Private_WS_v2.produces
+                                    (D1)
+
+PREREQUISITE: Chat-turn 1 independent FP/DP-derivability-
+test per DD-011 v2_56 CHAT-TURN-1 GATE.
+
+CARRY-FORWARDS RETIRED AT TB00367 CLOSE:
+  V-041 P-CP1 (5 channel:kraken_rest_* tokens producer-
+    binding closure — Kraken_REST_API producer side
+    already canonical; consumer mirrors are the gap).
+  V-041 P-CC4 (4 rest:* tokens REPLACE-with-channel
+    canonicalization — if FP/DP test confirms remove-
+    then-add is justified per least-errors criterion;
+    otherwise defer to TB00368+ for namespace registry
+    extension first).
+  V-041 P-CC5 (2 ws_subscribe:* tokens producer ADD on
+    container:Public_WS_v2 + container:Private_WS_v2).
+
+============================================================
+1.2 MISSION FRAME -- DISCRIMINATING CRITERION
+============================================================
+
+Bill verbatim (TB00364 close-turn + TB00365 close-turn
++ TB00366 close-turn preserved):
+  "Our mission is to make the diagrams in 0500000 to
+  be canonical, authoritative, and complete for coding
+  TothBot_V2 in the most efficient way with the least
+  errors and rework, even if it is not one of the
+  options listed.
+
+  REMEMBER THE MISSION: Produce 0500000 diagrams that
+  show all interfaces, gates, and information flows,
+  etc. so coding can proceed coherently without drift.
+  The diagrams ARE the design source. The 0500000
+  diagrams ARE canonical and authoritative. The prose
+  FOLLOW the diagrams. Eliminate the prose-driven
+  error class."
+
+GOVERNANCE BINDING:
+  TB00000 v2_58 §4.5 DD-001 (diagrams canonical).
+  TB00000 v2_58 §4.5 DD-002 (diagram-over-prose).
+  TB00000 v2_58 §4.5 DD-012 (0500000-canonical-all-
+    docs).
+  TB00000 v2_58 §4.5 DD-014 (design-complete diagram
+    requirement).
+  0311001 v1_24 §15.16 V-040 (design-completeness
+    validation).
+  0311001 v1_24 §15.16 V-041 + V-042 (producer-binding
+    + cross-diagram integration).
+
+============================================================
+2. MANDATORY READING AT SESSION OPEN
+============================================================
+
+  TB00000   v2_58 (project knowledge)
+  0311001   v1_24
+  0311002   v1_13
+  0500000   dv1_95 (Claude Source HTML at /mnt/project/)
+  TB00367   Next Session Instructions v1_0 (this
+            document)
+  TB00366   Session_Log v1_0
+  TB00365   Session_Log v1_0
+  TB00364   Session_Log v1_0  (via transcript)
+  TB00362   V041_FAIL_List v1_0
+  TB00363   V042_FAIL_List v1_0
+  TB00366   V041_V042_Logger_Amendment_Log v1_0
+
+============================================================
+3. EXECUTION SEQUENCE
+============================================================
+
+============================================================
+3.1 CHAT-TURN-1 GATE (MANDATORY FIRST ACTION)
+============================================================
+
+Per TB00000 v2_58 §4.5 DD-011 v2_56 CHAT-TURN-1
+INDEPENDENT FP/DP-DERIVABILITY-TEST GATE:
+
+  (1) Documents-read confirmation per §2 + DR-009.3.
+  (2) Cleanup list rendered per DR-009 in fenced code
+      block (filenames only; no commentary inside
+      box). Expected removals:
+        - TB00367_Next_Session_Instructions_v1_0.txt
+        - TB00364_TothBot_V2_Session_Log_2026-05-19
+          _v1_0.txt (out-of-window per CI-005/CI-006
+          3-deep rolling at TB00367 cold-load)
+  (3) Independent four-item FP/DP-derivability-test
+      log executed in chat-turn 1 response body:
+
+        (a) Option-set enumeration. MUST extend beyond
+            this NSI per RR-SCOPE-007 v2_30 + Bill
+            close-turn directive precedent. Acceptable
+            extension classes include but are not
+            limited to:
+              - NSI-as-written: P-CP1 + P-CC4 + P-CC5
+                combined pass.
+              - Split execution: P-CP1 + P-CC5 only
+                this session; defer P-CC4 remove-then-
+                add to TB00369 Bill-ratification.
+              - P-CC4 reclassification: rest:* tokens
+                should remain as a separate registry-
+                managed token class rather than channel:
+                canonical replacement; defer P-CC4 to
+                0311001 v1_24 namespace registry
+                extension session.
+              - Cross-diagram producer mirror
+                extensions: P-CP1 channel tokens may
+                require Context-tier mirror at
+                container:Kraken_Exchange.consumes if
+                Context is the canonical T1 cross-
+                boundary encoding.
+              - Pre-flight ground-truth inspection: D1
+                vs D6 canonical Kraken_REST_API
+                encoding question — verify which Tier
+                contains the canonical producer entry
+                before consumer-mirror amendments.
+              - Other extensions per TB00367 chat-
+                turn 1 FP/DP-derivability-test
+                discovery.
+
+        (b) First-principles dimensions applied:
+              - Mission frame (§1.2 above):
+                diagrams-canonical-authoritative-
+                complete.
+              - DD-001 diagram-source-of-truth.
+              - DD-014 design-completeness from-
+                the-diagram-alone.
+              - V-041 producer-binding + consumer-
+                binding closure priority.
+              - V-042 cross-diagram producer-binding
+                closure.
+              - RR-SCOPE-001 absolute-scope-respect
+                (ADD-only authorization; remove-then-
+                add reclassifications require explicit
+                ratification gate).
+              - RR-SCOPE-007 v2_30 SELF-AUTHORED-
+                NSI-SOURCE-PROHIBITION.
+              - RR-SCOPE-011 v2_53 single-primary-
+                mission per session.
+              - Least-errors-and-rework criterion.
+              - Loss-prevention-priority criterion.
+              - Ground-truth diagram inspection
+                requirement (verify producer + consumer
+                site locations before amendment per
+                TB00364 SL §5 ISSUE 1 + ISSUE 2
+                precedent).
+
+        (c) Data sources cited:
+              - TB00362 V-041 FAIL List per-token
+                producer/consumer assignments §3 + §4
+                + §6 cadence.
+              - TB00363 V-042 FAIL List pattern groups
+                (no overlap expected for P-CP1/P-CC4/
+                P-CC5 per §10 overlap matrix; verify
+                at chat-turn 1).
+              - 0500000 dv1_95 figure structure +
+                component inventory (mandatory ground-
+                truth grep of D1 container:Public_WS_v2
+                + container:Private_WS_v2 + D6
+                container:Kraken_REST_API + Context-tier
+                container:Kraken_Exchange +
+                contract:Reconciliation_REST locations).
+              - 0311001 v1_24 §15.12 token registry +
+                §15.16 V-040 + V-041 + V-042 validation
+                rules.
+              - TB00366 V-041 + V-042 Logger Amendment
+                Log v1_0 (precedent for cross-diagram
+                mirror amendment pattern).
+
+        (d) Decision rule:
+              OUTCOME 1 (DERIVABLE): single compliant
+              option survives all first-principles
+              eliminations -> execute under RR-SCOPE-005
+              derivable-decision execution authority +
+              DD-011 v2_56 OUTCOME 1 MANDATORY clause.
+              NOT surfaced as ratification question.
+
+              OUTCOME 2 (UNDERDETERMINED): multiple
+              compliant options survive -> surface to
+              Bill for ratification per DD-011 v2_56
+              ratification path; increment cumulative
+              counter; do not execute amendment until
+              ratified.
+
+============================================================
+3.2 PROPOSED AMENDMENT SCOPE (PER-COMPONENT, NSI-AS-WRITTEN)
+============================================================
+
+D1 container:Public_WS_v2.produces
+    ADD: ws_subscribe:public_v2
+    (V-041 P-CC5)
+
+D1 container:Private_WS_v2.produces
+    ADD: ws_subscribe:private_v2
+    (V-041 P-CC5)
+
+D6 mod:WS_Manager.consumes
+    ADD: channel:kraken_rest_Ticker
+    (V-041 P-CP1 — universe liquidity filter consumer
+    site per 0411002)
+
+D6 mod:Selection_Controller.consumes
+    ADD: channel:kraken_rest_Ticker
+    (V-041 P-CP1 — universe liquidity filter consumer
+    site per 0411002)
+
+D6 contract:Reconciliation_REST.consumes (or D1 depending
+on ground-truth inspection)
+    ADD: channel:kraken_rest_GetAccountBalance,
+         channel:kraken_rest_GetOpenOrders,
+         channel:kraken_rest_QueryOrdersInfo
+    (V-041 P-CP1 — reconciliation REST consumer site
+    per 0500000 §6 + RR-RECON-* family)
+
+D6 mod:Exit_Controller.consumes
+    ADD: channel:kraken_rest_CancelAllOrders
+    (V-041 P-CP1 — emergency-cancel path per 0511004)
+
+Context container:Kraken_Exchange.consumes (T1)
+    REPLACE: rest:get_account_balance ->
+             channel:kraken_rest_GetAccountBalance
+             rest:get_ohlc_data ->
+             channel:kraken_rest_Ticker (or new channel
+             per chat-turn 1 verification)
+             rest:get_open_orders ->
+             channel:kraken_rest_GetOpenOrders
+             rest:get_websockets_token ->
+             channel:kraken_rest_GetWebsocketsToken (new
+             channel registration may be required per
+             chat-turn 1 verification — gated on namespace
+             registry session sequencing)
+    (V-041 P-CC4 — pending FP/DP-test OUTCOME 1 / 2
+    decision on remove-then-add scope)
+
+Context contract:Reconciliation_REST.consumes (T1)
+    Same REPLACE pattern as container:Kraken_Exchange
+    (V-041 P-CC4)
+
+R-state bumps expected:
+  D1: R8 -> R9
+  D6: R9 -> R10
+  Context: R1 -> R2 (if P-CC4 executes this session)
+
+NSI §3.2 targets ARE NOT AUTHORITATIVE per RR-SCOPE-007
+v2_30. Chat-turn 1 FP/DP-derivability-test owns final
+scope determination. The §3.2 enumeration above is
+informational only.
+
+============================================================
+3.3 GROUND-TRUTH INSPECTION CHECKLIST (PRE-AMENDMENT)
+============================================================
+
+Before executing any amendment, perform line-targeted
+grep verification in /home/claude/0500000_dv1_95.html:
+
+  (a) D1 container:Public_WS_v2 location + current
+      produces field byte-identical content.
+  (b) D1 container:Private_WS_v2 location + current
+      produces field byte-identical content.
+  (c) D6 container:Kraken_REST_API location + current
+      produces field byte-identical content (verify 5
+      channel:kraken_rest_* tokens present per TB00362
+      V-041 FAIL List §4 P-CP1 producer-side).
+  (d) D6 mod:WS_Manager location + current consumes
+      field byte-identical content.
+  (e) D6 mod:Selection_Controller location + current
+      consumes field byte-identical content (or D2
+      if Selection_Controller is encoded there per
+      ground-truth verification).
+  (f) D6 contract:Reconciliation_REST OR D1 location
+      + current consumes field byte-identical content.
+  (g) D6 mod:Exit_Controller OR D3 location +
+      current consumes field byte-identical content.
+  (h) Context container:Kraken_Exchange location +
+      current consumes field byte-identical content
+      (verify rest:* tokens currently present).
+  (i) Context contract:Reconciliation_REST location
+      (T1 vs T2 question) + current consumes field
+      byte-identical content.
+
+Any structural blocker discovery (component non-
+existence, canonical-tier ambiguity, etc.) is grounds
+for surfacing OUTCOME 2 UNDERDETERMINED at chat-turn 1
+or self-correcting the amendment scope pre-execution
+per TB00365 (ε) -> (ε') precedent.
+
+============================================================
+4. SESSION-CLOSE FOUR-OPERATION SEQUENTIAL (DR-008.6)
+============================================================
+
+OP1: OCS copy box (fenced code block; byte-identical to
+     TB00368 NSI §0).
+
+OP2: present_files for 0500000 dv1_96 + TB00367_V041_
+     P_CP1_P_CC4_P_CC5_Amendment_Log_v1_0.txt (non-SL/
+     NSI deliverables).
+
+OP3: present_files for TB00367 Session_Log v1_0 +
+     TB00368 Next_Session_Instructions v1_0.
+
+OP4: GitHub upload PowerShell copy box per RR-SHELL-005
+     /006/008/009/010 v2_58 §4.3.3 (executable-only
+     fenced block).
+     Multi-repo per DD-013 v2_48 routing:
+       TothBot_V2-Docs         : 0500000 dv1_96
+       TothBot_V2-SessionLogs  : TB00367 SL + TB00368 NSI
+                                + TB00367 Amendment Log
+
+============================================================
+5. POST-TB00367 CADENCE
+============================================================
+
+  TB00368: V-041 P-CP9 + P-CP11 (layer + half_kelly)
+  TB00369: Bill-ratification gate for V-041 P-CC7
+           (ar:AR-040 remove-then-add to constraints)
+           + P-CP10 (mod:* in produces semantics)
+  TB00370: Class A token-canonicalization rewrites
+           (49 entries per 0311001 v1_24 §15.12
+           registry audit)
+  TB00371: V-041 P-CP8 external-boundary documentation
+           (LOW priority)
+  TB00372: V-042 V042-PG-EN-AGG + EN-LS + PO-LEDGER
+           (remaining V-042 pattern groups)
+
+============================================================
+END OF NSI TB00367
+============================================================

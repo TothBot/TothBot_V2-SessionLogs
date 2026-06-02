@@ -1,0 +1,188 @@
+DocDCN:     TB00557
+DocTitle:   TothBot_V2_Session_Log
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    GitHub.com/TothBot/TothBot_V2-SessionLogs/TB00557_TothBot_V2_Session_Log_v1_0.txt
+DocDate:    06-01-2026
+DocTime:    02:55:15 UTC
+
+============================================================
+TB00557 SESSION LOG
+============================================================
+
+============================================================
+1. MISSION
+============================================================
+
+Bill directive (in-thread, continuation of the TB00555/556
+close): clear the open one-version / HEAD-hygiene debt so
+forward 0500000 consolidation can resume without open items
+hanging over it. Executed as a repo-wide one-version-rule pass
+(supersedes the narrower CF-ARCHIVE-SWEEP scope from TB00556),
+plus parent-chain repair, plus the CF-E3-REFREF read-only scan
+to determine whether it is a pre- or post-consolidation item.
+
+============================================================
+2. AUTHORITY / COLD-LOAD
+============================================================
+
+Continuation of the TB00555/556 session (TB00000 v2_82,
+TB00554 NSI, TB00553 SL already cold-loaded). This session
+read fresh Docs HEAD tarballs after each push for verification.
+Standing rules applied: one-version rule + sec-6 retirement
+mechanism; sec 4.4 C: drive (Claude authors git only; never
+mutates C:); sec 4.5 push box; ERROR-TB00496 open-debt cross-
+check before any git rm.
+
+============================================================
+3. WHAT WAS DONE
+============================================================
+
+3a. REPO-WIDE ONE-VERSION AUDIT (read-only). Found superseded
+versions lingering in HEAD beyond the 05XXXXX scope: archive
+residue in 03/07/09 domains AND multi-version duplicates in
+LIVE folders (04/08/09/10). Each keep-candidate header was
+version-verified before removal.
+
+3b. CORRECTIVE REMOVAL (TB00557 commit e08259d; Bill-pushed;
+verified). 12 files git rm --cached (C: + git history
+preserved):
+  Archive residue (5):
+    03XXXXX 0311001 v1_33      (live successor v1_37)
+    07XXXXX 0711001 dv1_2      (live dv1_3)
+    09XXXXX 0911001 dv1_0,dv1_1 (live dv1_2)
+    09XXXXX 0911002 dv1_0      (live dv1_4)
+  Live-folder duplicates (7):
+    04XXXXX 0410000 dv1_0      (keep dv1_1)
+    08XXXXX 0800000 dv1_0      (keep dv1_1)
+    08XXXXX 0810000 dv1_1,dv1_4 (keep dv1_5)
+    09XXXXX 0911002 dv1_1,dv1_2 (keep dv1_4)
+    10XXXXX 1010000 dv1_17     (keep dv1_19)
+  POST-PUSH VERIFY: all 12 absent from HEAD; every listed DCN
+  now holds exactly one live version (the current). PASS.
+
+3c. PARENT-CHAIN REPAIR (TB00557 commit f5e162a; Bill-pushed;
+verified). 0910000_Master_Plan_Anchor_dv1_0 was found ONLY in
+09XXXXX_Plans_Archive with no live copy, while its live children
+0911001/0911002 require a live parent anchor (sec 6) and its
+sibling 0920000_Business_Plan_Anchor is live. Diagnosis: mis-
+archived anchor. Bill moved the file on C: from the archive
+subfolder to the live 09XXXXX_Plans folder (C: action; Claude
+cannot mutate C:); Claude then git add (live path) + git rm
+--cached (archive path). Git recorded a 100% rename (bytes
+identical). POST-PUSH VERIFY: 0910000 live in 09XXXXX_Plans,
+absent from archive; Plans namespace well-formed (0900000 ->
+0910000/0920000 -> 0911001/0911002/0921001). PASS. 09XXXXX_
+Plans_Archive now empty (drops from HEAD).
+
+3d. CF-E3-REFREF READ-ONLY SCAN. Live (non-archive) docs were
+grepped for references to retired specs (0411001, 0511001..
+0511006, 0811005). Result: a large reference web spanning ~20
+live docs. Sample-characterized as a MIX:
+  - LEGITIMATE (KEEP): forensic revision-history entries
+    (0521001), campaign-tracking mentions (0911001/0911002),
+    namespace/workflow registry context (0311001/0311002).
+  - DANGLING POINTERS (REPOINT to 0500000): authoritative
+    "parent specs (0511001..0511006)" in 0810000; retired-spec
+    table entries (0211003 lists 0411001 dv1_11); etc.
+  - MOOT-PENDING: several referencing docs (0711001/2/3,
+    0411002/3, 0610000, 0611001/2) are THEMSELVES pending-MOVE
+    specs awaiting migration + retirement; their internal refs
+    will be obviated by migration.
+
+============================================================
+4. CF-E3-REFREF DISPOSITION -- POST-MIGRATION (FINDING)
+============================================================
+
+CF-E3-REFREF is NOT a clean pre-consolidation debt. Resolving
+it now carries (1) high error risk (mechanical removal would
+strip legitimate forensic/campaign references) and (2)
+significant rework (repoint targets in 0500000 are not final
+until migration completes, and several referencing docs are
+about to be retired). RECLASSIFIED as a POST-MIGRATION
+reference-reconciliation sweep, run per-doc with keep-vs-
+repoint context judgment AFTER the forward MOVE migrations
+land. No edits made this session.
+
+============================================================
+5. BINARY ARCHITECTURE TEST (DEC-096) -- APPLICABILITY
+============================================================
+
+No consolidation classification performed. All actions were
+HEAD-hygiene (one-version removals, parent-chain repair) and a
+read-only reference scan. No 0500000 diagram touched; no
+MOVE/STAY/SPLIT verdict made.
+
+============================================================
+6. STATE AFTER THIS SESSION
+============================================================
+
+HEAD is CLEAN for forward consolidation:
+  - One-version rule satisfied across all audited domains
+    (every DCN single-version in HEAD).
+  - Parent chains intact (0910000 anchor restored).
+  - Archive subfolders emptied / dropped from HEAD (the
+    05XXXXX_Archive from TB00555; 03/07/09 archives this
+    session).
+Remaining CFs are non-blocking or downstream (sec 8).
+
+Forward-consolidation backlog (MOVE specs live in HEAD,
+architecture not yet migrated to 0500000):
+  0411002 Kraken_REST_API dv1_1
+  0411003 Kraken_Fee_Rate_Limit dv1_0
+  0610000 Risk_Rules_Anchor dv1_5
+  0711001 SSS_Signal_Model dv1_3
+  0711002 Regime_Taxonomy dv1_2
+  0711003 Asset_Selection dv1_3
+  0611001 / 0611002 present in HEAD -- TB00394 AA=06
+    classification to RE-READ before touching (no-guess).
+
+============================================================
+7. CLAUDE ERRORS THIS SESSION
+============================================================
+
+None. The no-guess audit caught two issues a mechanical sweep
+would have mishandled: the 0910000 mis-archived anchor (would
+have been wrongly deleted, orphaning children) and the CF-E3-
+REFREF keep-vs-repoint mix (would have stripped legitimate
+references). Both handled correctly (HOLD+restore; defer).
+
+============================================================
+8. CARRY-FORWARDS (POST-SESSION)
+============================================================
+
+  CF-E3-REFREF      RECLASSIFIED post-migration (sec 4). Per-
+                    doc keep-vs-repoint reference reconciliation
+                    AFTER forward MOVE migrations land. ~20 live
+                    docs reference retired 0411001/0511001-6/
+                    0811005; mix of keep (forensic/campaign) and
+                    repoint (dangling). NOT a pre-consolidation
+                    item.
+  CF-STREAMLINE     OPEN, non-blocking. TB00000 v2_82 streamline
+                    items 4/5/G/L (definitions must be recovered
+                    from session-log history first). Working-doc
+                    tidy; does not gate consolidation.
+  CF-A              OPEN, non-blocking. TB00546 SL absent from
+                    HEAD. Needs the Get-ChildItem TB00546_*
+                    C: check to determine trivial re-add vs C:
+                    restore. SessionLogs hygiene, independent of
+                    consolidation.
+  CF-14-ABSENT      OPEN (preservation directive). 0500000
+                    section-14 absent entries preserved as-is in
+                    0521001; NOT to be reconstructed (no-guess).
+  CF-ARCHIVE-SWEEP  CLOSED (subsumed by sec 3b/3c).
+  CF-SD13-DRIFT     CLOSED (TB00555).
+
+============================================================
+9. SESSION-CLOSE / PUSH STATUS
+============================================================
+
+Corrective work already pushed and verified this session
+(Docs commits e08259d + f5e162a). This SL + the TB00558 NSI
+push to TothBot_V2-SessionLogs per the OP4 box. Post-push HEAD
+landing verification (fresh tarball + md5) runs next turn after
+Bill confirms.
+
+============================================================
+END OF SESSION LOG
+============================================================

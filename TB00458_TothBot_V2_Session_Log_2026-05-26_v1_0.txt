@@ -1,0 +1,173 @@
+DocDCN:     TB00458
+DocTitle:   TothBot_V2_Session_Log
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00458_TothBot_V2_Session_Log_2026-05-26_v1_0.txt
+DocDate:    05-26-2026
+DocTime:    23:59:59 UTC
+
+============================================================
+TB00458 SESSION LOG
+============================================================
+
+------------------------------------------------------------
+§1 MISSION
+------------------------------------------------------------
+
+  §14 Revision History POSITIONING-DEFECT fix in 0500000
+  (carry-forward (e), positioning portion only). Selected by
+  Bill at chat-turn 1 as a single finishable hygiene chunk
+  after the predecessor session burned out producing no
+  deliverable. Explicitly NOT a consolidation mission — Bill
+  acknowledged §14 is document hygiene; Track A RA-3 is the
+  next consolidation mission (full budget, next session).
+  RV-gated live before execution (no memory).
+
+------------------------------------------------------------
+§2 PREDECESSOR STATE VERIFIED (live read, not memory)
+------------------------------------------------------------
+
+  Live versions at session open:
+    0500000      dv1_138  (TB00457 deliverable)
+    0311001      v1_34
+    TB00153 DR   v1_60    (max DEC = 067, next = DEC-068)
+    TB00000      v2_60
+
+  Folder confirmed: TB00456/455/454 SL+NSI already removed in
+  the prior GitHub cleanup; TB00457 SL+NSI present (immediate
+  predecessor handoff — KEEP). Only 0500000 source present
+  was dv1_138.
+
+------------------------------------------------------------
+§3 RV GATE (live full-file grep — findings)
+------------------------------------------------------------
+
+  ROOT CAUSE: the revision-history entries dv1_138 through
+  dv1_111 were mis-nested INSIDE the §13 Open Items <pre>
+  block (closing at OLD line 10460), sitting ABOVE the
+  <h2>14. Revision History</h2> header (OLD line 10461)
+  instead of below it. The legitimate §13 content ended at
+  OLD line 10128 ("--- END FIGCAPTION-ROTATION-OUT ARCHIVE
+  ---"); dv1_138 began at OLD line 10129. A second, correctly
+  positioned §14 <pre> block (dv1_95 downward) opened at OLD
+  line 10462. Net: one logical revision-history list split
+  into two by a misplaced section boundary.
+
+  CONSTRAINT identified: the dv1_136 / dv1_137 / dv1_138
+  entry narratives contain baked-in line-number forensic
+  citations (e.g. dv1_136 cites "line 10129"). Moving entry
+  TEXT would invalidate those citations. Per CI-005 + CI-006
+  (forensic-exempt verbatim preservation of historical
+  narratives and line-number citations), entry text MUST NOT
+  move.
+
+  FP/DP-DERIVABILITY TEST (DD-011 CHAT-TURN-1 GATE): OUTCOME 1
+  single-compliant-option. A = relocate the SECTION BOUNDARY
+  TAGS only, moving zero entry text (SURVIVES); B = move the
+  mis-nested entry text below the existing header (REJECTED —
+  violates CI-005/CI-006 forensic line-number citation
+  preservation); C = reconstruct the absent dv1_100..dv1_130
+  entries (REJECTED — no-guess discipline; entries never
+  authored). Sole compliant disposition = A. Executed under
+  RR-SCOPE-005 derivable-decision authority; NOT a Bill A/B
+  ratification question.
+
+------------------------------------------------------------
+§4 EDIT EXECUTED (boundary-relocation; ZERO entry-text move)
+------------------------------------------------------------
+
+  (1) Inserted </pre> + <h2>14. Revision History</h2> + <pre>
+      immediately AFTER the §13 "--- END FIGCAPTION-ROTATION-
+      OUT ARCHIVE ---" line (true end of §13 content) and
+      BEFORE the dv1_138 entry. Closes §13 at its real
+      content end; opens the §14 header ABOVE its newest
+      entries.
+
+  (2) Collapsed the now-duplicate </pre> + <h2>14. Revision
+      History</h2> + <pre> triplet that previously sat between
+      the dv1_111 entry and the dv1_95 entry, merging the two
+      revision-history <pre> blocks into ONE continuous §14
+      list (dv1_139 -> ... -> dv1_138 -> ... -> dv1_111 ->
+      dv1_95 -> ...).
+
+  (3) §14 Revision History: prepended the dv1_139 TB00458
+      entry above the dv1_138 TB00457 entry, documenting this
+      positioning fix.
+
+  (4) DC-version bump dv1_138 -> dv1_139 at three sites:
+      HTML title (line 6), DocVersion (line 135), DocPath
+      (line 137), with filename rename to ..._dv1_139_...
+
+  NO revision-history entry text changed — every dv-entry
+  preserved BYTE-IDENTICAL; only the section-boundary tags
+  relocated. Forensic line-number citations preserved as-was.
+
+  FIGURE INCREMENT: NONE. No SVG touched; all 11 figures
+  byte-identical per DEC-003 Path A (a §13/§14 prose-section
+  structural fix touches no diagram geometry, <desc>, viewBox,
+  visible <text>, figure count, or R-token).
+
+  0311001 namespace UNCHANGED (no token minted/renamed; a
+  section-boundary relocation touches no namespace token).
+  NO NEW TB00153 DECISION (documentation-housekeeping
+  structural fix; no architectural decision) — max DEC remains
+  067.
+
+------------------------------------------------------------
+§5 PRE-DELIVERY CHECK
+------------------------------------------------------------
+
+  DR-007.9 HTML well-formedness: PASS (python HTMLParser).
+    parser_exception: none
+    orphan_close_tags: 0
+    unclosed_at_EOF: 0
+    <h2>14. Revision History</h2> count: 1 (exactly one)
+    <pre>/</pre> balanced: 196 / 196
+    dv1_139 present: yes; dv1_138 present: yes; dv1_95
+    present: yes
+  Re-run confirmed clean AFTER the dv1_139 entry insertion.
+
+------------------------------------------------------------
+§6 DELIVERABLES (DR-008.6 four-operation routing)
+------------------------------------------------------------
+
+  0500000 dv1_139 .html  -> TothBot_V2-Docs/05XXXXX_System_Architecture/
+  TB00458 SL v1_0        -> TothBot_V2-SessionLogs/
+  TB00458 NSI v1_0       -> TothBot_V2-SessionLogs/
+
+  Removal list (superseded, safe to git rm — see NSI §0 box):
+    0500000_System_Architecture_Overview_dv1_138_Claude_Source.html
+        (superseded by dv1_139; renamed on local disk this
+         session — git rm the dv1_138 path from the repo if it
+         was previously committed)
+    TB00456 SL + NSI: already removed in a prior cleanup
+        (verify absent; do NOT re-add).
+
+------------------------------------------------------------
+§7 CLAUDE ERRORS THIS SESSION (RR-VIOL self-report)
+------------------------------------------------------------
+
+  Predecessor session (carried into this one) burned its full
+  budget on read/analysis and produced NO deliverable before
+  hitting conversation-length limit — an efficiency failure
+  Bill flagged forcefully. This session corrected by selecting
+  one small finishable chunk and executing it to a clean,
+  verified close. No content or scope error in the edit
+  itself.
+
+------------------------------------------------------------
+§8 LIVE STATE AT CLOSE
+------------------------------------------------------------
+
+  0500000      dv1_139  (this session's deliverable)
+  0311001      v1_34    (unchanged)
+  TB00153 DR   v1_60    (unchanged; max DEC = 067)
+  TB00000      v2_60    (unchanged)
+
+  Track A status: RA-1 (D3) DONE; RA-6 D5 DONE; RA-6 D2 DONE.
+  The 0500000 schema diagram set is exit_reason-canonical.
+  RA-3 (1011007 LG-TOB-002 + 0511006 logger 8-value enum
+  drift reconciliation to the canonical D2+D3+D5 schema) is
+  the recommended Track A next mission, now with a corrected
+  §14 and a fully-canonical schema diagram set to reconcile
+  against per DD-002.

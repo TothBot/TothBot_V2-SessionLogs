@@ -1,0 +1,626 @@
+==============================================================================
+TB00363_V042_FAIL_List_v1_0
+Version: v1_0
+Date: 2026-05-19
+Session: TB00363
+Source: 0500000_System_Architecture_Overview_dv1_93_Claude_Source.html
+Audit method: V-042 event-stream cross-diagram coherence sweep (sweep-1)
+Governance: TB00363 NSI section 2 + 0311001 v1_24 section 15.18 V-042 +
+            TB00000 v2_58 section 4.5 DD-014
+==============================================================================
+
+================================================================================
+1. AUDIT SCOPE AND METHOD
+================================================================================
+
+Source document: 0500000 System Architecture Overview dv1_93 (canonical;
+10/10 V-040 design-complete per TB00361 close).
+
+Method per TB00363 NSI section 2: parse <figure class="diagram"> containers
+of 0500000 dv1_93; resolve each figure to its canonical diagram ID via
+figcaption leading-text pattern; extract every <desc> body inside each
+figure; parse canonical/tier/consumes/produces fields; tokenize CSV with
+paren-depth-aware top-level split; classify each token Class B canonical
+evt:NAME-form vs Class A prose-fragment with embedded evt:* mention; build
+evt:* registry mapping each token to producer-site-list and consumer-site-
+list; apply FAIL-E0 / FAIL-EN / FAIL-C0 / FAIL-PO / FAIL-TC checks per
+section 2 of the NSI. Components scanned at all tiers (T1+T2+T3) consistent
+with V-041 sweep-1 scope (TB00362).
+
+Figure-to-diagram resolution (figure-walk order in HTML source):
+  Figure[0] -> Tier1   (Tier 1 System Context)
+  Figure[1] -> Image1  (Kraken API Connection Architecture)
+  Figure[2] -> Image2  (Trading Pipeline 8-Gate System)
+  Figure[3] -> Image8  (Gate 7 Risk Guard Detail)
+  Figure[4] -> Image9  (Gate 8 Position Sizer Detail)
+  Figure[5] -> Image3  (Exit Architecture)
+  Figure[6] -> Image4  (Regime Taxonomy)
+  Figure[7] -> Image5  (CIATS Architecture)
+  Figure[8] -> Image6  (Complete System)
+  Figure[9] -> Image7  (Paper-Mode Dispatch Boundary)
+
+Scope: AUDIT-ONLY. Zero modifications to dv1_93 this session. Per-FAIL
+proposed ADD-only amendments specified for execution in TB00364+ sessions
+per TB00363 NSI section 3 Path A cadence.
+
+================================================================================
+2. AUDIT TOTALS
+================================================================================
+
+Diagrams scanned:                    10 (Tier1 + D1..D9)
+Components scanned:                 117
+Distinct evt:* tokens in registry:  31
+Class A evt:* prose-fragment count: 4
+
+FAIL totals (Class B canonical evt:NAME form):
+  FAIL-E0 (no producer):            4
+  FAIL-EN (multiple producers):      9
+  FAIL-C0 (no consumer):            16
+  FAIL-PO (pipeline-order):          1
+  FAIL-TC (token-form drift):        0
+  ---------------------------------------
+  TOTAL Class B FAIL instances:     30
+
+Distinct evt:* tokens implicated in at least one Class B FAIL: 26 of 31
+(5 tokens PASS all checks: clean single-producer single-or-more-consumer
+intra-diagram or correct-tier cross-diagram).
+
+Class A entries (V-040 design-completeness regressions; prose-fragments
+containing embedded evt:* mentions in consumes/produces fields):
+  Class A entry count:               4
+  Distinct prose-fragment sites:      3 (3 components produce Class A
+                                         fragments with 4 embedded evt:*
+                                         mentions total)
+
+Class A and Class B definitions (carried forward from TB00362 V-041 FAIL
+list section 2):
+  Class B = evt:* token in canonical prefix:NAME form in clean CSV position
+            of consumes/produces field; FAIL is a clean ADD-only amendment.
+  Class A = consumes/produces field value contains prose-fragment with
+            embedded evt:* token (whitespace-split residue, parenthetical
+            narrative, mixed prose-plus-token); V-040 design-completeness
+            regression requiring token-canonicalization rewrite (not pure
+            ADD-only).
+
+================================================================================
+3. CLASS B FAIL-E0 -- CANONICAL evt:* TOKENS WITH ZERO PRODUCERS
+================================================================================
+
+Pattern: token consumed in at least one component's consumes field but
+never declared in any component's produces field across all 10 diagrams.
+
+--- PATTERN GROUP V042-PG-E0-LOG -- mod:Logger SMTP alert emission ---
+
+  Affected tokens: 4 (evt:ALERT_DELIVERED + evt:LOGGER_CRITICAL +
+                     evt:LOGGER_HIGH + evt:LOGGER_MEDIUM)
+
+  Proposed ADD-only amendment family:
+    mod:Logger SMTP dispatch path emits these 4 alert-disposition tokens
+    per LG-ALERT-005 (5-level alert classification: CRITICAL, HIGH,
+    MEDIUM, LOW, INFO; only the first 3 trigger SMTP). Logger component
+    in D5 (Image5/logger_box) AND D6 (Image6/tb_logger) already declares
+    these 4 tokens in its constraints field per V-040.7/8 amendments,
+    but the produces field does NOT list them. ADD-only amendment:
+    extend Image5/mod:Logger produces and Image6/mod:Logger produces to
+    include evt:ALERT_DELIVERED + evt:LOGGER_CRITICAL + evt:LOGGER_HIGH
+    + evt:LOGGER_MEDIUM as canonical-form tokens.
+
+  Per-token consume sites:
+    evt:ALERT_DELIVERED
+      < Tier1 :: actor:Bill_Operator (1)
+    evt:LOGGER_CRITICAL
+      < Tier1 :: arrow:Logger_Alert_Out_Of_Band (1)
+    evt:LOGGER_HIGH
+      < Tier1 :: arrow:Logger_Alert_Out_Of_Band (1)
+    evt:LOGGER_MEDIUM
+      < Tier1 :: arrow:Logger_Alert_Out_Of_Band (1)
+
+  Cross-reference: V-041 P-CC3 (evt:LOGGER_* consumed without producer)
+                   covered 3 of these 4 tokens (CRITICAL/HIGH/MEDIUM);
+                   V-042 sweep additionally identifies evt:ALERT_DELIVERED
+                   as a fourth member of the same pattern group. Recommend
+                   batched execution combining V-041 P-CC3 with V-042
+                   V042-PG-E0-LOG in a single TB00365 amendment.
+
+================================================================================
+4. CLASS B FAIL-EN -- CANONICAL evt:* TOKENS WITH MULTIPLE PRODUCERS
+================================================================================
+
+Pattern: token appears in produces field of 2+ components across the
+diagram set. The pattern decomposes into three sub-classes:
+  EN-AGG = Tier1 parent-of-children aggregator restatement legitimately
+           repeats child-diagram emissions (Tier 1 represents the parent-
+           level handoff; canonical emission is in the child diagram).
+  EN-LS  = Long_Module + Short_Module direction-symmetric parity per
+           ar:AR-072/ar:AR-073/PA-005/PA-007 legitimately emits the same
+           token from both per-direction modules.
+  EN-DUP = same diagram lists the token in produces of multiple
+           components; true canonicalization defect requiring single-
+           producer designation.
+
+Each FAIL-EN entry below identifies the producer set + provisional sub-
+class assignment + proposed amendment.
+
+--- evt:ENTRY_FILLED  [producers=7, consumers=3]
+    Producer diagrams: Image1, Image2, Image6, Image7, Tier1
+      > Tier1 :: container:TothBot_Zone (1)
+      > Tier1 :: contract:WSManager_Dispatch_Seam (1)
+      > Image1 :: container:Private_WS_v2 (2)
+      > Image1 :: container:Matching_Engine (2)
+      > Image2 :: mod:Execution_Engine (2)
+      > Image6 :: mod:Signal_Pipeline (2)
+      > Image7 :: mod:Execution_Engine (2)
+    Consumer sites:
+      < Image1 :: mod:Position_Mirror (2)
+      < Image1 :: mod:Logger (2)
+      < Image7 :: mod:Position_Mirror (2)
+    Sub-class: EN-AGG (Tier1 aggregator restatement) + EN-DUP (additional non-aggregator non-parity producers)
+    Proposed ADD-only amendment: annotate Tier1 producer with
+       provenance note 'aggregator restatement of child-diagram
+       canonical emission'; child-diagram producer is canonical.
+
+--- evt:ENTRY_SUBMITTED  [producers=11, consumers=1]
+    Producer diagrams: Image1, Image2, Image4, Image6, Image7, Tier1
+      > Tier1 :: container:TothBot_Zone (1)
+      > Tier1 :: contract:WSManager_Dispatch_Seam (1)
+      > Image1 :: mod:Signal_Pipeline (2)
+      > Image2 :: contract:WSManager_Dispatch_Seam (2)
+      > Image4 :: mod:Signal_Pipeline (2)
+      > Image6 :: mod:Signal_Pipeline (2)
+      > Image7 :: mod:Signal_Pipeline (2)
+      > Image7 :: mod:Long_Module (2)
+      > Image7 :: mod:Short_Module (2)
+      > Image7 :: mod:Execution_Engine (2)
+      > Image7 :: contract:WSManager_Dispatch_Seam (2)
+    Consumer sites:
+      < Image1 :: mod:Logger (2)
+    Sub-class: EN-AGG (Tier1 aggregator restatement) + EN-LS (Long/Short direction-symmetric parity) + EN-DUP (additional non-aggregator non-parity producers)
+    Proposed ADD-only amendment: annotate Tier1 producer with
+       provenance note 'aggregator restatement of D7 Long/Short parity
+       emission per ar:AR-072/AR-073'; annotate Long_Module and Short_
+       Module per-component constraints with ar:AR-072/AR-073 binding
+       to document direction-symmetric parity emission contract.
+
+--- evt:FULL_HALT_TRIGGERED  [producers=2, consumers=0]
+    Producer diagrams: Image7
+      > Image7 :: mod:Long_Module (2)
+      > Image7 :: mod:Short_Module (2)
+    Consumer sites:
+      (none -- also FAIL-C0; see section 5)
+    Sub-class: EN-LS (Long/Short direction-symmetric parity)
+    Proposed ADD-only amendment: annotate Long_Module + Short_Module
+       per-component constraints with ar:AR-072/AR-073 binding;
+       direction-symmetric parity is the canonical emission contract.
+
+--- evt:PAPER_DISPATCH_BLOCKED  [producers=6, consumers=1]
+    Producer diagrams: Image1, Image2, Image7, Tier1
+      > Tier1 :: container:TothBot_Zone (1)
+      > Tier1 :: contract:WSManager_Dispatch_Seam (1)
+      > Image1 :: mod:WS_Manager (2)
+      > Image2 :: contract:WSManager_Dispatch_Seam (2)
+      > Image7 :: contract:WSManager_Dispatch_Seam (2)
+      > Image7 :: mod:WS_Manager (2)
+    Consumer sites:
+      < Image1 :: mod:Logger (2)
+    Sub-class: EN-AGG (Tier1 aggregator restatement) + EN-DUP (additional non-aggregator non-parity producers)
+    Proposed ADD-only amendment: annotate Tier1 producer with
+       provenance note 'aggregator restatement of child-diagram
+       canonical emission'; child-diagram producer is canonical.
+
+--- evt:PAPER_ORDER_SIMULATED  [producers=4, consumers=0]
+    Producer diagrams: Image2, Image7
+      > Image2 :: contract:WSManager_Dispatch_Seam (2)
+      > Image7 :: mod:Long_Module (2)
+      > Image7 :: mod:Short_Module (2)
+      > Image7 :: contract:WSManager_Dispatch_Seam (2)
+    Consumer sites:
+      (none -- also FAIL-C0; see section 5)
+    Sub-class: EN-LS (Long/Short direction-symmetric parity) + EN-DUP (additional non-aggregator non-parity producers)
+    Proposed ADD-only amendment: annotate Long_Module + Short_Module
+       per-component constraints with ar:AR-072/AR-073 binding;
+       direction-symmetric parity is the canonical emission contract.
+
+--- evt:SESSION_PAUSE_TRIGGERED  [producers=2, consumers=0]
+    Producer diagrams: Image7
+      > Image7 :: mod:Long_Module (2)
+      > Image7 :: mod:Short_Module (2)
+    Consumer sites:
+      (none -- also FAIL-C0; see section 5)
+    Sub-class: EN-LS (Long/Short direction-symmetric parity)
+    Proposed ADD-only amendment: annotate Long_Module + Short_Module
+       per-component constraints with ar:AR-072/AR-073 binding;
+       direction-symmetric parity is the canonical emission contract.
+
+--- evt:TRADE_CLOSE  [producers=12, consumers=8]
+    Producer diagrams: Image1, Image3, Image4, Image7, Tier1
+      > Tier1 :: container:TothBot_Zone (1)
+      > Tier1 :: contract:CIATS_Trade_Outcome_Bus (1)
+      > Image1 :: container:Matching_Engine (2)
+      > Image1 :: mod:Exit_Controller (2)
+      > Image3 :: mod:Exit_Controller (2)
+      > Image3 :: layer:L1a_Signal_Exit (2)
+      > Image3 :: layer:L1b_TP_Fill (2)
+      > Image3 :: layer:L2_MAE_Threshold (2)
+      > Image3 :: layer:L3_Emergency_SL (2)
+      > Image4 :: mod:Logger (2)
+      > Image7 :: mod:Exit_Controller (2)
+      > Image7 :: mod:Position_Mirror (2)
+    Consumer sites:
+      < Tier1 :: container:CIATS_Zone (1)
+      < Image1 :: mod:Logger (2)
+      < Image1 :: contract:CIATS_Trade_Outcome_Bus (2)
+      < Image4 :: mod:CIATS (2)
+      < Image4 :: contract:CIATS_Trade_Outcome_Bus (2)
+      < Image5 :: contract:CIATS_Trade_Outcome_Bus (2)
+      < Image6 :: contract:CIATS_Trade_Outcome_Bus (2)
+      < Image7 :: contract:CIATS_Trade_Outcome_Bus (2)
+    Sub-class: EN-AGG (Tier1 aggregator restatement) + EN-DUP (additional non-aggregator non-parity producers)
+    Proposed ADD-only amendment: annotate Tier1 producer with
+       provenance note 'aggregator restatement of child-diagram
+       canonical emission'; child-diagram producer is canonical.
+
+--- evt:WS_RECONNECT  [producers=4, consumers=1]
+    Producer diagrams: Image1, Tier1
+      > Tier1 :: container:Kraken_Zone (1)
+      > Image1 :: container:Public_WS_v2 (2)
+      > Image1 :: container:Private_WS_v2 (2)
+      > Image1 :: mod:WS_Manager (2)
+    Consumer sites:
+      < Image1 :: mod:Logger (2)
+    Sub-class: EN-AGG (Tier1 aggregator restatement) + EN-DUP (additional non-aggregator non-parity producers)
+    Proposed ADD-only amendment: annotate Tier1 producer with
+       provenance note 'aggregator restatement of child-diagram
+       canonical emission'; child-diagram producer is canonical.
+
+--- evt:WS_SUBSCRIBE_RATE_LIMIT  [producers=3, consumers=0]
+    Producer diagrams: Image1, Tier1
+      > Tier1 :: container:Kraken_Zone (1)
+      > Image1 :: container:Public_WS_v2 (2)
+      > Image1 :: mod:WS_Manager (2)
+    Consumer sites:
+      (none -- also FAIL-C0; see section 5)
+    Sub-class: EN-AGG (Tier1 aggregator restatement) + EN-DUP (additional non-aggregator non-parity producers)
+    Proposed ADD-only amendment: annotate Tier1 producer with
+       provenance note 'aggregator restatement of child-diagram
+       canonical emission'; child-diagram producer is canonical.
+
+================================================================================
+5. CLASS B FAIL-C0 -- CANONICAL evt:* TOKENS WITH ZERO CONSUMERS
+================================================================================
+
+Pattern: token declared in produces field of at least one component but
+never declared in any component's consumes field across all 10 diagrams.
+For evt:* tokens this is a FAIL by default (internal events require
+a sink). Pattern groups below align with V-041 P-CP2..P-CP7 baseline.
+
+--- PATTERN GROUP V042-PG-C0-G7 (G7 risk-guard breach events; D8 R2 emitters) ---
+
+    evt:G7_CONCENTRATION_BREACH  [producers=1]
+      > Image8 :: check:G7_CHECK_2_Concentration (3)
+    evt:G7_DRAWDOWN_HALT  [producers=1]
+      > Image8 :: check:G7_CHECK_1_Drawdown_Halt (3)
+    evt:G7_EXPOSURE_BREACH  [producers=1]
+      > Image8 :: check:G7_CHECK_3_Exposure (3)
+    evt:G7_PER_TRADE_CEILING_BREACH  [producers=1]
+      > Image8 :: check:G7_CHECK_5_Per_Trade_Ceiling (3)
+    evt:G7_SEMAPHORE_BUSY  [producers=1]
+      > Image8 :: check:G7_CHECK_4_Semaphore (3)
+
+  Proposed ADD-only amendment family:
+    Add the 5 G7 evt: tokens to mod:Logger consumes field in D5
+    Image5/logger_box and D6 Image6/tb_logger components. Logger is
+    sole CIATS data source per CI-IF-001; per LG-ALERT-005 each G7
+    breach evt routes to tothbot.log + SMTP dispatch (HIGH for
+    evt:G7_DRAWDOWN_HALT + evt:G7_PER_TRADE_CEILING_BREACH;
+    MEDIUM/HIGH for the other 3 per per-component q5_logs field).
+    Cross-reference V-041 P-CP2; recommend batched TB00365
+    amendment combining V-041 P-CP2 + V-042 V042-PG-C0-G7.
+
+--- PATTERN GROUP V042-PG-C0-STARTUP (D7 mod:Startup_Sequence boundary events) ---
+
+    evt:INCOMPLETE_PROTECTION  [producers=1]
+      > Image7 :: mod:Startup_Sequence (2)
+    evt:INVARIANT_BREACH  [producers=1]
+      > Image7 :: mod:Startup_Sequence (2)
+    evt:PAPER_TRADING_MODE_OFF  [producers=1]
+      > Image7 :: mod:Startup_Sequence (2)
+    evt:PAPER_TRADING_MODE_ON  [producers=1]
+      > Image7 :: mod:Startup_Sequence (2)
+    evt:POSITION_CLOSED_DURING_GAP  [producers=1]
+      > Image7 :: mod:Startup_Sequence (2)
+
+  Proposed ADD-only amendment family:
+    Add the 5 D7 mod:Startup_Sequence boundary evt: tokens to
+    mod:Logger consumes field. These are paper-mode boundary +
+    invariant-protection events emitted at startup per D7 R6
+    paper-mode dispatch boundary specification. Cross-reference
+    V-041 P-CP3; recommend batched TB00365 amendment combining
+    V-041 P-CP3 + V-042 V042-PG-C0-STARTUP.
+
+--- PATTERN GROUP V042-PG-C0-HALT (D7 Long/Short halt/pause direction-symmetric events) ---
+
+    evt:FULL_HALT_TRIGGERED  [producers=2]
+      > Image7 :: mod:Long_Module (2)
+      > Image7 :: mod:Short_Module (2)
+    evt:SESSION_PAUSE_TRIGGERED  [producers=2]
+      > Image7 :: mod:Long_Module (2)
+      > Image7 :: mod:Short_Module (2)
+
+  Proposed ADD-only amendment family:
+    Add the 2 halt/pause tokens to mod:Logger consumes AND to a
+    halt-action consumer (mod:CIATS or mod:Risk_Engine session
+    pause/halt logic). Both tokens are also FAIL-EN under V042-PG-
+    EN-LS (Long_Module + Short_Module direction-symmetric
+    emission); batched amendment closes both EN and C0 in one
+    pass. Cross-reference V-041 P-CP4.
+
+--- PATTERN GROUP V042-PG-C0-PAPER (D2/D7 paper-mode simulation events) ---
+
+    evt:PAPER_ORDER_SIMULATED  [producers=4]
+      > Image2 :: contract:WSManager_Dispatch_Seam (2)
+      > Image7 :: mod:Long_Module (2)
+      > Image7 :: mod:Short_Module (2)
+      > Image7 :: contract:WSManager_Dispatch_Seam (2)
+
+  Proposed ADD-only amendment family:
+    Add evt:PAPER_ORDER_SIMULATED to mod:Logger consumes AND to
+    mod:Position_Mirror consumes (paper-mode synthetic fill
+    requires Position Mirror to ingest the simulated fill per
+    direction-symmetric parity rule HR-PM-011). Cross-reference
+    V-041 P-CP5.
+
+--- PATTERN GROUP V042-PG-C0-RECON (Tier1 reconciliation + system clock triggers) ---
+
+    evt:CANDLE_CLOSE_TRIGGER  [producers=1]
+      > Tier1 :: contract:OHLC_5m_System_Clock (1)
+    evt:RECONCILE_COMPLETE  [producers=1]
+      > Tier1 :: contract:Reconciliation_REST (1)
+
+  Proposed ADD-only amendment family:
+    Add evt:CANDLE_CLOSE_TRIGGER to mod:Signal_Pipeline consumes
+    (pipeline-entry trigger) and to mod:Logger consumes. Add
+    evt:RECONCILE_COMPLETE to mod:Logger consumes and to
+    mod:Position_Mirror consumes (Reconciliation_REST completes
+    Position Mirror state-sync). Cross-reference V-041 P-CP6.
+
+--- PATTERN GROUP V042-PG-C0-WSRATE (Kraken WS subscribe rate-limit signal) ---
+
+    evt:WS_SUBSCRIBE_RATE_LIMIT  [producers=3]
+      > Tier1 :: container:Kraken_Zone (1)
+      > Image1 :: container:Public_WS_v2 (2)
+      > Image1 :: mod:WS_Manager (2)
+
+  Proposed ADD-only amendment family:
+    Add evt:WS_SUBSCRIBE_RATE_LIMIT to mod:Logger consumes and
+    to mod:WS_Manager session-pause-logic consumes (rate-limit
+    signal triggers subscription back-off per Kraken WS v2 spec).
+    Cross-reference V-041 P-CP7.
+
+================================================================================
+6. CLASS B FAIL-PO -- PIPELINE-ORDER VIOLATION
+================================================================================
+
+Pattern: producer-diagram tier > consumer-diagram tier in the diagram-
+order topology with no explicit cross-diagram linkage annotation in the
+producer or consumer component descriptors.
+
+--- PATTERN GROUP V042-PG-PO-LEDGER -- D7 paper-ledger -> D1 Logger ---
+
+  evt:PAPER_LEDGER_UPDATED
+    Producer-tier-min (diagram order): 7
+    Consumer-tier-min (diagram order): 1
+    Producers:
+      > Image7 :: contract:Synthetic_Capital_Ledger (2)
+    Consumers:
+      < Image1 :: mod:Logger (2)
+
+  Proposed ADD-only amendment:
+    Add cross_diagram_link: annotation to BOTH the D7 producer
+    (Image7/contract:Synthetic_Capital_Ledger) and the D1 consumer
+    (Image1/mod:Logger) component descriptors. Annotation form:
+    cross_diagram_link: D7->D1 (paper-mode ledger update flows to Logger
+    aggregator via channel:logger_async_queue per HR-LG-007). The
+    apparent tier-order inversion is an artifact of figure-walk order
+    in the HTML source (D7 is the 10th figure in source order despite
+    being numbered '7'); the actual logical flow D7-producer -> D1-Logger-
+    consumer is correct per the Logger-aggregator-of-all-diagrams contract
+    documented in D5 R9 + D6 R7. Annotation makes the cross-diagram link
+    explicit and resolves the V-042 FAIL-PO check without changing the
+    diagram structure.
+
+================================================================================
+7. CLASS B FAIL-TC -- TOKEN-FORM DRIFT BETWEEN PRODUCER AND CONSUMER
+================================================================================
+
+Pattern: producer-side and consumer-side spellings of the same logical
+event diverge in case, suffix, or parenthetical form. Detection method
+scans registry keyset for case-only drift and known suffix pairs
+(_START/_COMPLETE, _START/_DONE, _REQUEST/_RESPONSE, _OPEN/_CLOSE).
+
+FAIL-TC count: 0
+
+No token-form drift detected. Every distinct evt:* registry key matches
+exactly across producer-side and consumer-side citations. V-042 FAIL-TC
+clean -- PASS.
+
+================================================================================
+8. CLASS A ENTRIES -- PROSE-FRAGMENTS WITH EMBEDDED evt:* MENTIONS
+================================================================================
+
+Pattern: consumes or produces field value contains a prose-fragment with
+embedded evt:NAME mentions that do not parse as canonical CSV tokens.
+These are V-040 design-completeness regressions requiring token-
+canonicalization rewrite (not pure ADD-only).
+
+Class A entry count: 4
+
+  [A-P] Image9 :: rule:Expected_RR_A1_Acceptance (3)
+        embedded evt:G8_A1_REJECT
+        fragment: PASS signal to downstream sizing math (on expected_RR >= 1.5); evt:G8_A1_REJECT (on expected_RR < 1.5)
+
+  [A-P] Image5 :: mod:CIATS_Parameter_Store (2)
+        embedded evt:KELLY_UPDATE
+        fragment: param:session_pause_drawdown (and all other tunable parameters except the sacred 1:1.5 R:R constraint); param:per_trade_size_usd PER-MODULE INSTANTIATED (Long_M
+
+  [A-P] Image5 :: mod:CIATS_Parameter_Store (2)
+        embedded evt:KELLY_NEGATIVE
+        fragment: param:session_pause_drawdown (and all other tunable parameters except the sacred 1:1.5 R:R constraint); param:per_trade_size_usd PER-MODULE INSTANTIATED (Long_M
+
+  [A-P] Image6 :: mod:Exit_Controller (2)
+        embedded evt:TRADE_CLOSE
+        fragment: cancel_order + batch_cancel + market sell add_order instructions to mod:WS_Manager (per 0511004 dv1_3 section 7.2); position clear instructions executed via WSManager 
+
+Proposed Class A canonicalization rewrites:
+  (i)   Image9/rule:Expected_RR_A1_Acceptance produces field:
+        rewrite prose 'PASS signal to downstream sizing math (on
+        expected_RR >= 1.5); evt:G8_A1_REJECT (on expected_RR < 1.5)'
+        as clean CSV: 'evt:G8_A1_ACCEPT, evt:G8_A1_REJECT' with
+        per-component q4_triggers field documenting the threshold
+        condition. NOTE: introduces new evt:G8_A1_ACCEPT token requiring
+        0311001 registry entry; surface for Bill ratification.
+  (ii)  Image5/mod:CIATS_Parameter_Store produces field:
+        rewrite the long parenthetical prose fragment as discrete CSV
+        tokens; the embedded evt:KELLY_UPDATE and evt:KELLY_NEGATIVE
+        are already canonical in 0311001 v1_24 section 15.12 registry
+        per D5 R9 V-040 amendment; ADD-only fix is to extract them as
+        comma-delimited entries instead of leaving them embedded in
+        narrative.
+  (iii) Image6/mod:Exit_Controller produces field:
+        rewrite long produces narrative containing 'evt:TRADE_CLOSE'
+        embedded in instruction-text as a clean CSV entry; same as
+        (ii), the embedded token is canonical -- the surrounding text
+        is the V-040 regression.
+
+Recommend batching all three Class A canonicalization rewrites with the
+V-041 Class A entries (45 total V-041 + 4 V-042 = 49 Class A rewrites)
+in TB00369 per the post-V-042 projected cadence in section 11 below.
+
+================================================================================
+9. EVENT-TOKEN PASS LIST (5 tokens; clean across all FAIL checks)
+================================================================================
+
+These evt:* tokens pass FAIL-E0 + FAIL-EN + FAIL-C0 + FAIL-PO + FAIL-TC
+and require no V-042 amendment:
+
+  evt:PAIR_DATA_PENDING  [P=1 C=1]
+  evt:PAIR_DATA_READY_RECOVERED  [P=1 C=1]
+  evt:PAPER_FILL_SIMULATED  [P=1 C=2]
+  evt:SUBSCRIBE_PACE_BATCH_COMPLETE  [P=1 C=1]
+  evt:SUBSCRIBE_PACE_WAIT  [P=1 C=1]
+
+================================================================================
+10. CROSS-REFERENCE TO V-041 SWEEP-1 FAIL LIST (TB00362)
+================================================================================
+
+Many V-042 Class B FAILs overlap with V-041 sweep-1 pattern groups,
+because the V-041 audit caught the producer-side or consumer-side gap
+at the binding-closure layer while the V-042 audit catches the same
+gap from the evt:* coherence angle. Batched amendment execution
+efficiency requires recognizing the overlap.
+
+V-042 -> V-041 pattern-group overlap matrix:
+
+  V042-PG-E0-LOG       overlaps V-041 P-CC3 (evt:LOGGER_* producer gap)
+                       Additional V-042-only token: evt:ALERT_DELIVERED
+  V042-PG-C0-G7        overlaps V-041 P-CP2 (evt:G7_* consumer gap)
+  V042-PG-C0-STARTUP   overlaps V-041 P-CP3 (paper-mode + invariant
+                       startup boundary evt:* consumer gap)
+  V042-PG-C0-HALT      overlaps V-041 P-CP4 (halt/pause evt:* consumer
+                       gap)
+  V042-PG-C0-PAPER     overlaps V-041 P-CP5 (paper-order-simulated
+                       consumer gap)
+  V042-PG-C0-RECON     overlaps V-041 P-CP6 (reconcile-complete +
+                       candle-close-trigger consumer gap)
+  V042-PG-C0-WSRATE    overlaps V-041 P-CP7 (ws-subscribe-rate-limit
+                       consumer gap)
+  V042-PG-EN-AGG       NEW (V-042 specific; Tier1 aggregator restatement
+                       multi-producer pattern not surfaced by V-041)
+  V042-PG-EN-LS        NEW (V-042 specific; Long/Short direction-
+                       symmetric parity multi-producer pattern not
+                       surfaced by V-041)
+  V042-PG-PO-LEDGER    NEW (V-042 specific; figure-walk-order vs
+                       diagram-tier-order tier-inversion check not
+                       performed by V-041)
+
+Of 26 distinct V-042 Class B FAIL tokens, 17 overlap with V-041 pattern
+groups and can be closed by the same TB00365 amendments. The remaining 9
+require V-042-specific amendments (Tier1 aggregator annotation,
+Long/Short parity binding annotation, cross-diagram link annotation).
+
+================================================================================
+11. PROPOSED AMENDMENT EXECUTION SEQUENCE
+================================================================================
+
+Per TB00363 NSI section 9 post-V-042 projected cadence + V-041 FAIL list
+section 6 baseline. Path A one-diagram-per-session cadence. Each session
+targets a coherent pattern-group cluster.
+
+  TB00364:  Execute V-041 P-CC1 + P-CC2 (indicator + param producer-side
+            binding amendments in D1 + D6 + D5). No V-042 overlap; pure
+            V-041 scope. High-impact (28+ consume sites close in single
+            amendment).
+
+  TB00365:  Execute combined V-041 P-CC3 + V042-PG-E0-LOG + V-041 P-CP2
+            + V042-PG-C0-G7 + V-041 P-CP3 + V042-PG-C0-STARTUP + V-041
+            P-CP4 + V042-PG-C0-HALT + V-041 P-CP5 + V042-PG-C0-PAPER +
+            V-041 P-CP6 + V042-PG-C0-RECON + V-041 P-CP7 + V042-PG-C0-
+            WSRATE. Single D5 + D6 Logger amendment closes 14 pattern
+            groups (most are Logger consumes-side additions; some
+            require Logger produces-side additions). EXTREMELY high-
+            impact session; ~24 distinct evt:* tokens close.
+
+  TB00366:  Execute V-041 P-CP1 + P-CC4 + P-CC5 (Kraken channel/REST
+            binding amendments in D6 + D1 + Tier1). No V-042 overlap.
+
+  TB00367:  Execute V-041 P-CP9 + P-CP11 (layer + half_kelly consumer
+            binding amendments). No V-042 overlap.
+
+  TB00368:  Bill-ratification gate for V-041 P-CC7 (ar:AR-040 consumes
+            reclassification) + V-041 P-CP10 (mod:* in produces
+            reclassification). Both are NOT pure ADD-only. Surface at
+            TB00364 chat-turn 1 as standing-flag per TB00363 NSI
+            section 9.
+
+  TB00369:  Class A token-canonicalization rewrites -- 45 V-041 entries
+            + 4 V-042 entries = 49 total. Group by diagram (D6 is the
+            largest cluster); one-diagram-per-session cadence may
+            require TB00369 + TB00369A + TB00369B if D6 cluster too
+            large.
+
+  TB00370:  Execute V-041 P-CP8 external-boundary exception documentation
+            (5 tokens; legitimate leaf sinks). LOW priority. Can defer.
+
+  TB00371:  Execute V-042 V042-PG-EN-AGG + V042-PG-EN-LS + V042-PG-PO-
+            LEDGER (Tier1 aggregator provenance annotations + Long/Short
+            parity binding annotations + D7->D1 cross-diagram-link
+            annotation). V-042-specific scope.
+
+Estimated dv1_94 through dv1_101 amendment range (8 sessions minimum,
+longer if Class A canonicalization runs through full per-diagram
+cadence in TB00369).
+
+================================================================================
+12. AUDIT-ONLY ATTESTATION
+================================================================================
+
+[ATTEST]  Zero modifications to 0500000_System_Architecture_Overview_dv1_93
+          _Claude_Source.html this session.
+[ATTEST]  Zero modifications to 0311001_Namespace_Specification_v1_24.txt
+          this session.
+[ATTEST]  Zero modifications to TB00000_TothBot_V2_Project_Instructions_
+          for_Claude_v2_58.txt this session.
+[ATTEST]  This FAIL list is the read-only V-042 sweep-1 deliverable per
+          TB00363 NSI section 7.6 success criterion. All proposed ADD-only
+          amendments are queued for execution in TB00364+ sessions per
+          Path A cadence per TB00363 NSI section 3 and section 9.
+[ATTEST]  V-042 sweep-1 EXECUTED across all 10 diagrams of 0500000 dv1_93
+          (Tier1 + D1..D9) per TB00363 NSI section 2.
+[ATTEST]  Class-A vs Class-B FAIL classification APPLIED to all candidate
+          FAILs per TB00363 NSI section 7.5 success criterion.
+[ATTEST]  Pattern-group analysis EMITTED per section 3..7 above.
+[ATTEST]  TB00364..TB00371 amendment execution sequence outlined per
+          section 11 above.
+
+================================================================================
+END TB00363_V042_FAIL_List_v1_0
+================================================================================

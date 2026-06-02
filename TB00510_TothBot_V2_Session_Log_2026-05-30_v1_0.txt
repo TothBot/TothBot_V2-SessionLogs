@@ -1,0 +1,245 @@
+DocDCN:     TB00510
+DocTitle:   TothBot_V2_Session_Log
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    GitHub.com/TothBot/TothBot_V2-SessionLogs/TB00510_TothBot_V2_Session_Log_2026-05-30_v1_0.txt
+DocDate:    05-30-2026
+DocTime:    07:45:00 UTC
+
+============================================================
+TB00510 SESSION LOG
+============================================================
+
+------------------------------------------------------------
+1. SESSION SCOPE
+------------------------------------------------------------
+
+Cold-load TB00510 NSI v1_0. Inbound primary mission
+(section 1.1, RR-SCOPE-011 one atomic mission): confirm the
+TB00509 0511003 corruption fix landed in GitHub HEAD
+byte-for-byte (DR-010), then close the defect record by
+appending the paired Decision Register + Master Defect
+Register entries. Sources pulled from GitHub HEAD via public
+tarball (DEC-097); both doc repos PUBLIC. Governing version:
+TB00000 v2_73.
+
+Mandatory reading (section 2), versions read from GitHub
+HEAD this session:
+  TB00000  v2_73  (Project Instructions; system-prompt copy
+                   == HEAD highest).
+  TB00509  Session Log 2026-05-30 v1_0 (most recent SL).
+  TB00510  NSI v1_0 (cold-load target).
+  0311001  v1_34  (Namespace_Specification; matches section
+                   8.1).
+  0311002  v1_13  (Document_Creation_Workflow; matches
+                   section 8.2).
+  0500000  dv1_140 (System_Architecture_Overview; highest
+                   HEAD version governs per section 2 READING
+                   RULE; section 2 list shows no fixed
+                   version, dv1_140 is current HEAD).
+No version discrepancy between HEAD and the section 2 listed
+versions (0311001/0311002 match; 0500000 governs at HEAD
+dv1_140).
+
+------------------------------------------------------------
+2. WHAT THIS SESSION PRODUCED
+------------------------------------------------------------
+
+(1) STEP 1 -- HEAD LANDING VERIFICATION (DR-010).
+    Pulled TothBot_V2-Docs HEAD via public tarball
+    (codeload.github.com/TothBot/TothBot_V2-Docs/tar.gz/HEAD)
+    as the first access move. Computed md5 of
+    05XXXXX_System_Architecture/0511003_Execution_Engine_
+    Specification_dv1_1.txt:
+      HEAD md5     = 46741c89d9f7e66a8da640239a2e8b4d
+      expected     = 46741c89d9f7e66a8da640239a2e8b4d
+      RESULT       = MATCH.
+    Header sanity confirmed: DocDCN 0511003, Execution_
+    Engine_Specification, dv1_1, DocDate 05-07-2026; 1266
+    lines / 4990 words; clean EOF. The clobber hash
+    (99f10022f0ca3b94252fed71c8aa57d0) is NOT present. The
+    TB00509 OPERATION 4 restore push LANDED in GitHub HEAD.
+    The Execution Engine source of truth is correct in HEAD.
+
+(2) STEP 2 -- DR/MDR APPEND (CF-TB00510-C; DR-APPEND
+    DEBT = 1 -> CLEARED).
+    On confirmed MATCH, appended the paired closure entries:
+      - Decision_Register v1_67 -> v1_68: DEC-101 NEW --
+        0511003 dv1_1 HEAD restore corpus-integrity recovery
+        (CI-011 byte-for-byte; clobber commit 26c7e69 /
+        TB00314; recovery from 08f0b36; md5 46741c89...;
+        landing verified per DR-010; Bill Option 1 direction
+        at TB00509). Descending newest-first prepend above
+        DEC-100; section 2 DECISION INDEX unchanged
+        (post-DEC-027 detail-only pattern). Max DEC = 101;
+        next = DEC-102.
+      - Master_Defect_Register v1_49 -> v1_50: DR-076 NEW --
+        CRITICAL RESTORE CLOSED (originating label
+        DEFECT-TB00509-01; HEAD 0511003 content clobber,
+        corpus-integrity class). Appended at end of section 4;
+        section 9 statistics updated (total 73 -> 74;
+        CRITICAL 7 -> 8).
+    Both increments preserve all prior register content
+    byte-identical (CI-005 / CI-006). Headers refreshed
+    (DocVersion + DocPath + DocDate + DocTime); DR DocPath
+    version-lag (v1_66 cited at v1_67) corrected to v1_68
+    per CI-012. RR-SCOPE-011 ceiling honored: primary
+    verification (no file) + 1 DR companion + 1 MDR companion.
+
+(3) DEFECT-TB00509-01 CLOSED.
+    The CRITICAL-class source-of-truth corruption opened at
+    TB00509 (HEAD 0511003 == Logger 0511006 dv1_4 content
+    from 2026-05-17 to the TB00509 restore) is closed on the
+    verified HEAD restore. Recorded as MDR DR-076 (CLOSED)
+    paired with DR DEC-101.
+
+------------------------------------------------------------
+3. CHAT-TURN-1 FP/DP-DERIVABILITY TEST (DD-011 v2_56)
+------------------------------------------------------------
+
+Option-set (extended beyond the NSI candidate per the gate):
+  A. Execute NSI section 1.1 literally: DR-010 HEAD landing
+     verification of the 0511003 dv1_1 restore, and on MATCH
+     append the paired DR/MDR closure entries.
+  B. Append DR/MDR immediately, assuming the restore landed
+     (skip the DR-010 verification).
+  C. Surface to Bill for direction before acting.
+  D. Re-investigate the clobber / re-recover and re-restore
+     0511003 from scratch.
+  E. Skip to the downstream 0511003 retirement (CF-TB00510-J).
+  F. Resume another cadence (Stream 2 diagram build per SD-1).
+
+Discriminating criterion: least errors and rework, with
+loss-prevention-first (an open CRITICAL corpus-integrity
+defect outranks cadence resumption).
+
+Data sources: TB00510 NSI section 1.1; TB00509 SL sections
+2-4; DR v1_67 (max DEC-100, DEC-097 access policy, DEC-069);
+MDR v1_49 (max DR-075); TB00000 v2_73 DR-010 / DR-008.6 /
+RR-SCOPE-011 / CD-001 / CD-003; live md5 probe of HEAD
+0511003.
+
+Elimination:
+  B eliminated -- skipping DR-010 violates the explicit
+    landing-verification gate and risks recording a CLOSED
+    defect that did not actually close (corpus-integrity
+    risk + high rework).
+  C eliminated -- NSI section 1.1 is a governance-rule-bound
+    mechanical verify-then-append; not a Bill business
+    judgment; derivable. Bill OCS already directs execution.
+    Surfacing it as a ratification question would itself be a
+    DD-011 violation.
+  D eliminated -- restore + provenance were completed and
+    dual-source verified at TB00509 (history 08f0b36 +
+    /mnt/project snapshot agree on md5 46741c89...).
+    Re-doing is duplicative; RR-SCOPE-009 / RR-SCOPE-011
+    scope expansion.
+  E eliminated -- CF-TB00510-J is explicitly a SUBSEQUENT
+    session and depends on the restore loop closing first
+    (loss-prevention-first: repair the source of truth before
+    disposition). Scope expansion.
+  F eliminated -- SD-1 names Stream 2 as the general active
+    thread, but the NSI primary + Bill OCS pin this session
+    to the restore-landing closure; the open CRITICAL defect
+    takes loss-prevention priority over cadence resumption.
+  A = sole survivor. OUTCOME 1 (fully derivable). Executed
+  under RR-SCOPE-005 derivable-decision execution authority;
+  no decision surfaced to Bill as a ratification question
+  (DD-011 v2_56 compliant). Proceeded without intermediate
+  confirmation per section 4 proceed-without-pause default.
+
+------------------------------------------------------------
+4. DEFECT FOUND THIS SESSION
+------------------------------------------------------------
+
+NONE NEW. This session closed the pre-existing
+DEFECT-TB00509-01 (recorded as MDR DR-076 CLOSED). No new
+defect opened.
+
+------------------------------------------------------------
+5. CLAUDE ERRORS THIS SESSION
+------------------------------------------------------------
+
+NONE. Session-open used tarball-first pull from GitHub HEAD
+(DEC-097). No RR-*, DD-*, DR-*, CI-*, PA-*, FM-*, QB-*, CC-*,
+or CD-* self-catch fired; no governance rule violated.
+OPERATION 4 contains only cd + git add + git commit + git
+push (CD-001 / RR-SHELL-010 compliant; no C: mutation; no
+git rm of any form this session).
+
+------------------------------------------------------------
+6. NOTE -- TB00510 NSI ROUTING ANNOTATION DISCREPANCY
+------------------------------------------------------------
+
+The TB00510 NSI section 1.1 OUTPUT line annotates the TB00153
+Decision_Register + Master_Defect_Register increments as
+"(Docs)". This is incorrect. TB00153 is TB-prefixed; per
+section 11 TB-PREFIX FILING CONVENTION and DD-013 routing
+rule (i), all TB-prefix files route to TothBot_V2-SessionLogs.
+Ground-truth confirms it: the TB00153 corpus (32 files) lives
+in TothBot_V2-SessionLogs HEAD and is absent (0 files) from
+TothBot_V2-Docs HEAD. NSI text is Claude-authored and not
+authoritative (RR-SCOPE-007 v2_30); the governance routing
+rule governs. This session routed both register increments to
+TothBot_V2-SessionLogs (correct). Flagged for Bill awareness;
+no action required beyond the corrected routing already
+applied. Carried forward as CF-TB00511-K.
+
+------------------------------------------------------------
+7. CARRY-FORWARDS
+------------------------------------------------------------
+
+CF-TB00511-A  PUBLIC-REPO ACCESS (DEC-097) -- tarball first;
+              no project folder.
+CF-TB00511-J  0511003 DOWNSTREAM DD-012 DISPOSITION
+              (S-1 done at TB00471 / DEC-069; bucket (c) =
+              NONE). PRIMARY for TB00511: confirm bucket-(b)
+              coding-unique homes + section-9.17 values, then
+              0511003 retirement (S-4) via Claude-authored
+              `git rm --cached` (section 4.9 CD-003; GitHub
+              HEAD is Claude's; C: untouched) + S-5/S-6
+              cascade per 0911002 section 6.2. Execution
+              Engine architecture already canonical in 0500000
+              D2 (Bill note, TB00509).
+CF-TB00511-D  Residual reconciliation pass: plain-`git rm`
+              mentions (section 3 RETIREMENT, DD-012 S-4,
+              RR-SCOPE-007 example), _Archive-folder practice,
+              0311002 DC-CLEANUP, 0311001/0311003 retirement
+              text (CF-TB00509-C carry-forward family).
+CF-TB00511-E  Position-model + procedure-text reconciliation.
+CF-TB00511-F  section-14 / global revision-history
+              housekeeping.
+CF-TB00511-G  D2 descriptor stale-token drift.
+CF-TB00511-H  SD-5 final mismatch sweep -- hard gate before
+              any coding.
+CF-TB00511-I  RE-PRIVATIZE-BEFORE-LIVE (DEC-097 OPEN
+              sub-item).
+CF-TB00511-K  TB00510 NSI "(Docs)" routing annotation
+              discrepancy for TB00153 -- corrected this
+              session to SessionLogs; flagged for Bill
+              awareness (section 6).
+
+DR-APPEND DEBT: 0 (cleared this session).
+
+============================================================
+8. REVISION HISTORY
+============================================================
+
+  v1_0  05-30-2026  First issue. Session TB00510. Primary
+                    mission: 0511003 dv1_1 HEAD restore
+                    landing verification (DR-010 byte-for-byte
+                    vs md5 46741c89...; RESULT MATCH) + paired
+                    DR/MDR append closing DEFECT-TB00509-01.
+                    Produced DR v1_68 (DEC-101) + MDR v1_50
+                    (DR-076 CLOSED). Chat-turn-1 FP/DP-
+                    derivability test OUTCOME 1; executed
+                    under RR-SCOPE-005. DR-append debt cleared
+                    (was 1). Flagged TB00510 NSI "(Docs)"
+                    routing annotation error for TB00153
+                    (routed correctly to SessionLogs). Runs
+                    under TB00000 v2_73; GitHub HEAD via public
+                    tarball (DEC-097) sole source of truth.
+
+============================================================
+END OF TB00510 SESSION LOG v1_0
+============================================================

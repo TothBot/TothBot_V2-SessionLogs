@@ -1,0 +1,410 @@
+DocDCN:     TB00472
+DocTitle:   S1EC_DD012_Phase1_Gap_Register_0511004
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00472_S1EC_DD012_Phase1_Gap_Register_0511004_v1_0.txt
+DocDate:    05-27-2026
+DocTime:    15:00:00 UTC
+
+============================================================
+TB00472 PHASE-1 ELEMENT AUDIT GAP REGISTER
+0511004 EXIT_CONTROLLER_SPECIFICATION dv1_8
+============================================================
+
+============================================================
+1. PURPOSE
+============================================================
+
+This register is the Phase 1 (ELEMENT AUDIT) deliverable of
+the 0500000 Consolidation Campaign (plan 0911002 dv1_4) for
+ONE MOVE source document: 0511004 Exit_Controller_
+Specification dv1_8.
+
+It is the per-document successor to the document-level Phase 0
+scoping (TB00394 v1_1, line 176, which classified 0511004 as
+MOVE -> section 4 / D3, P3/E1). It identifies every DD-012
+architectural element 0511004 carries and applies the DD-012
+three-bucket classification to each.
+
+READ-ONLY. NO migration. NO 0500000 edit. NO section 9.17
+edit. NO TB00000 edit. NO 0311001 edit. NO 0511004
+retirement. NO Track A exit_reason reconciliation (separate
+work class per 0911002 section 5A.0 / 5A.2 RA-4 -- already
+DONE at dv1_8). Those are separate downstream sessions per
+0911002 section 6.2. This document amends no other document
+and retires no other document.
+
+One source document per session per RR-SCOPE-011. This is the
+FOURTH AA=05 element audit in the E1 cadence
+(0511002 -> 0511003 -> 0511004 -> 0511005 -> 0511006), after
+0511001 WS_Manager (audited + migrated + retired,
+DEC-056/057/059/060/061/062), 0511002 Signal_Pipeline
+(element-audited DEC-063; bucket-(c) D2 gap closed DEC-064;
+bucket-(b) migration + retirement carried forward), and
+0511003 Execution_Engine (element-audited TB00471, DEC-069
+ready-to-append; zero bucket-(c)).
+
+============================================================
+2. AUDIT BASIS
+============================================================
+
+  SOURCE DOCUMENT : 0511004 Exit_Controller_Specification
+                    dv1_8 (live, /mnt/project/).
+  CANONICAL TARGET: 0500000 dv1_139 (live), the D3 Exit
+                    Architecture (Image3) encoding, the D2
+                    Trading_Pipeline contract:CIATS_Trade_
+                    Outcome_Bus schema, the D7 Paper-Mode
+                    Dispatch Boundary root governs, the D5
+                    CIATS stream2_box schema_fields_canonical,
+                    and the section 9 mirror.
+  REGISTER VERDICT: TB00394 v1_1 line 176 -- 0511004 MOVE ->
+                    section 4 / D3 (P3/E1).
+  METHOD          : every element token live-grep-verified
+                    against 0500000 dv1_139 before bucket
+                    assertion (DEC-063 evidentiary standard).
+                    The zero-bucket-(c) result is INDEPENDENTLY
+                    grep-verified per element, NOT inherited
+                    from the 0511003 precedent (RR-SCOPE-007
+                    no-propagation discipline).
+
+DD-012 THREE-BUCKET KEY (0911002 section 5 / TB00394
+section PHASE-MODEL):
+  (a) ARCHITECTURAL RESTATEMENT -- already canonical in a
+      0500000 diagram; derived restatement; drops with the
+      source document's retirement.
+  (b) CODING-UNIQUE -- no architectural meaning; pure
+      code-authoring contract; preserve to the parent AA
+      spec prose or a preserved AA=10 spec, OR reconcile a
+      parameter starting value to TB00000 section 9.17 per
+      Option A / DEC-039.
+  (c) ARCHITECTURAL CONTENT NOT YET IN DIAGRAMS -- amend the
+      owning 0500000 diagram FIRST (DD-002 prose-follows-
+      diagram, DD-003 4-step workflow) before retirement.
+
+GREP-VERIFICATION EVIDENCE (live 0500000 dv1_139):
+  ar: tokens present  : AR-001, AR-019, AR-040, AR-041,
+                        AR-052, AR-066, AR-073, AR-077,
+                        AR-078, AR-079.
+  rule: tokens present: HR-EC-001, HR-EC-005, HR-EC-013,
+                        HR-EC-014, HR-EC-016.
+  D3 step tokens      : EC-L1A-001, EC-L1A-002, EC-L1A-003,
+                        EC-L2-001, EC-L2-003, EC-TOB-002,
+                        EC-TOB-003, EC-TP-001, EC-TP-006,
+                        EC-TP-007.
+  layer / recovery    : L3_Emergency_SL, EMERGENCY_SL_FIRED.
+  contracts/channels  : CIATS_Trade_Outcome_Bus,
+                        kraken_ws_executions.
+  exit_reason 7-value : TP_FILL, MAE_THRESHOLD_BREACH,
+                        HTF_REGIME_REVERSAL,
+                        DAILY_REGIME_DOWNGRADE, TIME_EXPIRY,
+                        TP_PARTIAL_FILL_REMAINDER,
+                        PAIR_LIMIT_ONLY_EXIT (all present;
+                        occurrence counts 12-30 each, in
+                        diagram governs not solely revision
+                        history).
+  ratification        : DEC-065, DEC-066.
+  diagram structures  : conflict_resolution_callout,
+                        stream2_box, schema_fields_canonical,
+                        q5_logs.
+  params (governs)    : mae_mult, emergency_sl_mult,
+                        cancel_timeout_window, mpp_retry_count,
+                        max_hold_candles, session_pause,
+                        full_halt.
+
+============================================================
+3. ELEMENT INVENTORY + THREE-BUCKET CLASSIFICATION
+============================================================
+
+------------------------------------------------------------
+3.1 BUCKET (a) -- ALREADY CANONICAL IN 0500000 dv1_139
+------------------------------------------------------------
+
+(Each item grep-verified present in 0500000 dv1_139. Presence
+confirmed in diagram governs / figcaption, not solely revision
+history.)
+
+THREE-LAYER EXIT ARCHITECTURE (D3 Image3):
+  Layer 1a signal-based exits                          (present)
+  Layer 1b TP fill                                     (present)
+  Layer 2 MAE threshold exit                           (present)
+  Layer 3 emergency SL (= layer:L3_Emergency_SL)       (present)
+
+D3 EXIT-STEP TOKENS (Image3 labeled groups):
+  EC-L1A-001  HTF regime reversal exit                 (present)
+  EC-L1A-002  daily regime downgrade exit              (present)
+  EC-L1A-003  max-hold-time exit                       (present)
+  EC-L2-001   MAE threshold detection                  (present)
+  EC-L2-003   Layer-2-priority-over-Layer-1a           (present)
+  EC-TP-001   TP-fill close path                       (present)
+  EC-TP-006   TP-partial + Layer-2 conflict resolution (present)
+  EC-TP-007   TP-partial unified TOB record            (present)
+  EC-TOB-002  Trade Outcome Bus once-per-close         (present)
+  EC-TOB-003  partial-fill weighted-avg exit_price     (present)
+
+ARCHITECTURAL RULES (ar:) -- the EC exit architecture:
+  ar:AR-001  resting emergSL crash-protection design   (present)
+  ar:AR-019  batch_cancel Full Halt mechanism          (present)
+  ar:AR-040  pair-status adaptation for open positions (present)
+  ar:AR-041  batch_cancel rate-bypass scope            (present)
+  ar:AR-052  drawdown formula (bid-priced, baseline)   (present)
+  ar:AR-066  TP partial-fill single-record handling    (present)
+  ar:AR-073  Selection Controller win/loss state       (present)
+  ar:AR-077  cancel_timeout_window = 5.0s FP/DP deriv  (present)
+  ar:AR-078  mpp_retry_count = 3 FP/DP derivation       (present)
+  ar:AR-079  Full Halt batch_cancel scope decision      (present)
+
+HARD RULES (rule:HR-EC-*):
+  HR-EC-001  Layer 3 never fires in normal op           (present)
+  HR-EC-005  batch_cancel Full Halt scope               (present)
+  HR-EC-013  paper-live close-path parity (NEW dv1_3)    (present)
+  HR-EC-014  SC state-update authority (NEW dv1_3)       (present)
+  HR-EC-016  L2 priority + TP-partial conflict +
+             L1a pair-status precondition (NEW dv1_4)    (present)
+  HR-EC-002/003/004/006/007/008/009/010/011/012/015
+             rule-IDs ABSENT from 0500000 as tokens, but
+             their architectural CONTENT is fully canonical
+             via the ar: set and the schema above:
+               HR-EC-002 cancel-sequence-critical = AR-001;
+               HR-EC-003 cancel-timeout-on-all = AR-077 +
+                 I-6 mechanism;
+               HR-EC-004 MPP IOC retry = AR-078;
+               HR-EC-006 drawdown-every-bbo = AR-052;
+               HR-EC-007 FULL_HALT no-auto-close = full_halt
+                 governs + AR-079 scope;
+               HR-EC-008 cancel_only/maintenance HOLD = AR-040;
+               HR-EC-009 TOB once-per-close = AR-066 +
+                 EC-TOB-002;
+               HR-EC-010 hold_candle_count in WM = max_hold_
+                 candles governs + EC-L1A-003;
+               HR-EC-011 IOC limit_only-state = AR-040;
+               HR-EC-012 sacred R:R on TP only = ar:AR-011
+                 Sacred_R_R_1_to_1_5 (emergSL distance
+                 separate);
+               HR-EC-015 CIATS-owned-no-hardcode = section 9
+                 CIATS-ownership mirror + Deming section 6.8 /
+                 parameter-philosophy section 9.16.
+             Same pattern DEC-063 recorded for HR-SP-007/009
+             and DEC-069 (TB00471) recorded for
+             HR-EE-001..012 (content canonical -> (a)).
+
+PAPER-MODE SUB-RULES (EC-PAPER-001..005):
+  Sub-rule IDs ABSENT from 0500000 as tokens, but their
+  architectural CONTENT is canonical via HR-EC-013 + HR-EC-014
+  (both present) + the D7 Paper-Mode Dispatch Boundary root
+  governs + the 0500000 section 12 paper architecture
+  (PA-004 four divergence points; WSManager seam SOLE
+  gatekeeper):
+    EC-PAPER-001 byte-identical close path  = HR-EC-013;
+    EC-PAPER-002 single entry point on_paper_close
+                 (mode-opaque caller)       = HR-EC-013/014 +
+                                              D7 caller contract;
+    EC-PAPER-003 TRADE_CLOSE log parity     = section 7.5
+                 schema (canonical) + D5 schema_fields_
+                 canonical;
+    EC-PAPER-004 fees_entry_usd consumption = section 7.5
+                 fees_entry_usd field (canonical) + section 12.4
+                 synthetic-ledger single-owner architecture;
+    EC-PAPER-005 _fire_ciats_outcome retirement / EC sole
+                 emitter                    = HR-EC-014 SC
+                 state-update authority.
+  Same pattern DEC-069 (TB00471) recorded for EE-PAPER-001..005.
+
+LAYER-1b TP-FILL ELEMENTS (EC-L1B-001/002):
+  EC-L1B IDs ABSENT from 0500000 as tokens, but content
+  canonical via exit_reason TP_FILL + TP_PARTIAL_FILL_
+  REMAINDER (both present) + EC-TP-001 close path + EC-TP-006/
+  007 TP-partial + Layer-2 conflict resolution +
+  conflict_resolution_callout (present).
+
+SCHEMA / CONTRACTS / CHANNELS / RECOVERY:
+  contract:CIATS_Trade_Outcome_Bus (23-field schema)    (present)
+  section 7.5 23-field TRADE_CLOSE schema + exit_reason
+    field-15 7-value enum                               (present)
+  D5 stream2_box schema_fields_canonical                (present)
+  channel:kraken_ws_executions (live fill / L3 backfill)(present)
+  layer:L3_Emergency_SL + EMERGENCY_SL_FIRED crash-
+    recovery reason (producer-partitioned, DEC-066)     (present)
+  DEC-065 (7-value normal-op set) + DEC-066 (producer
+    partition)                                          (present)
+
+DISPOSITION (a): all of the above DROP at 0511004 retirement.
+No migration action required -- the architecture is already
+the canonical 0500000 source.
+
+------------------------------------------------------------
+3.2 BUCKET (b) -- CODING-UNIQUE (preserve / reconcile)
+------------------------------------------------------------
+
+No architectural meaning. At retirement these are preserved
+to a retained AA=05 / AA=10 home or, for parameter starting
+values, reconciled to TB00000 section 9.17 (Option A;
+DEC-039). They are NOT migrated into 0500000.
+
+  B-1  on_paper_close() async method signature (section 6A.1
+       EC-PAPER-002): exact parameter list (symbol, exit_price,
+       exit_reason, fees_exit, wm) -- code-contract signature;
+       home = 1011005 Exit_Controller_Coding_Spec.
+  B-2  _close_position() internal method name + semaphore
+       release sequence detail -- code contract; home = 1011005.
+  B-3  IOC limit retry offset "best_bid - 0.2%" numeric
+       (section 3.3 MPP handling) -- wire/code-format detail
+       (architectural fact "IOC retry not market-sell" is
+       canonical via AR-078); home = 1011005 + 0411001
+       WS-MPP-001..004.
+  B-4  req_id_registry keying {req_id, timestamp, symbol,
+       order_id} (section 6) -- code contract expressing the
+       cancel-timeout mechanism; home = 1011005.
+  B-5  net-P/L arithmetic expression (section 6A.1 EC-PAPER-004):
+       fees_total_usd = fees_entry_usd + fees_exit;
+       net_pl = (exit_price - entry_price) * qty -
+       fees_total_usd -- code expression; home = 1011005.
+  B-6  Section 10 EC log-event field-lists: L1A_TRIGGERED,
+       CANCEL_TP_SENT, CANCEL_EMGSL_SENT, CANCEL_CONFIRMED,
+       CANCEL_TIMEOUT_HOLD, MARKET_SELL_SENT,
+       MARKET_SELL_FILLED, POSITION_CLOSED, TP_FILL_DETECTED,
+       EMGSL_CANCEL_SENT, MAE_BREACH_DETECTED, MPP_REJECTION,
+       IOC_LIMIT_RETRY_SENT, IOC_LIMIT_FILLED,
+       IOC_LIMIT_EXPIRED, MAE_HOLD_AMBIGUOUS, DRAWDOWN_UPDATE,
+       SESSION_PAUSE, FULL_HALT, BATCH_CANCEL_SENT,
+       BATCH_CANCEL_RESULT, PAIR_LIMIT_ONLY_EXIT,
+       PAIR_CANCEL_ONLY_HOLD, PAIR_MAINTENANCE_HOLD +
+       their field lists -- logging field-lists; DEC-063
+       precedent classifies logging field-lists as (b).
+       NOTE: the architectural EVENT-FLOW these logs feed
+       (close -> CIATS Trade Outcome Bus once-per-close;
+       restart -> EMERGENCY_SL_FIRED recovery) IS canonical
+       (a); only the EC-local event NAMES + field lists are
+       (b). Home = 1011005 + 0511006 Logger spec.
+  B-7  Parameter STARTING VALUES (stay in TB00000 section
+       9.17 per Option A; never into 0500000):
+         mae_mult (1.5x ATR)
+         emergency_sl_mult (3.0x ATR)
+         cancel_timeout_window (5.0 seconds)
+         mpp_retry_count (3 attempts)
+         max_hold_candles (24 candles)
+         session_pause_drawdown_pct (5%)
+         full_halt_drawdown_pct (10%)
+         entry_timeout_sec (30-60s)
+       The architectural FACT (parameter exists; CIATS-owned;
+       read at use-time per HR-EC-015) is canonical; the VALUE
+       stays in section 9.17.
+
+------------------------------------------------------------
+3.3 BUCKET (c) -- ARCHITECTURAL, NOT YET IN DIAGRAMS
+------------------------------------------------------------
+
+  NONE.
+
+  Every architectural element 0511004 carries is already
+  canonical in 0500000 dv1_139 (D3 Exit Architecture, D2
+  CIATS Trade Outcome Bus contract, D5 stream2_box schema,
+  D7 Paper-Mode Dispatch Boundary, section 4 / section 9 /
+  section 12), per 3.1. No ADD-only 0500000 amendment is
+  required before 0511004 can clear the DD-012 S-1
+  retirement gate on the architectural axis.
+
+  This matches the 0511003 audit result (DEC-069; zero
+  bucket-(c)) and the 0511001 close, and contrasts with the
+  0511002 audit (DEC-063; one bucket-(c) gap). 0511004 is a
+  clean PRESERVE/ready-for-retirement result on the
+  architectural axis. The zero-(c) finding is INDEPENDENTLY
+  grep-verified per element (section 2 evidence), not
+  inherited from the 0511003 precedent.
+
+============================================================
+4. OBSERVATIONS (NOT bucket-(c) findings)
+============================================================
+
+OBS-1  G-4 EXIT_REASON RECONCILIATION ALREADY CLOSED. The
+       Track A RA-4 carry-forward (0511004 section 7.5
+       exit_reason enum reconciliation to the canonical
+       0500000 dv1_139 7-value set) was CLOSED at the
+       dv1_7 -> dv1_8 increment (TB00460 RA-4, per the
+       0511004 dv1_8 revision history). All seven exit_reason
+       values + DEC-065 + DEC-066 are grep-verified present in
+       0500000 dv1_139, and 1011007 dv1_6 (TB00459 RA-3)
+       dropped the stale SIGNAL_DECAY value, leaving the same
+       seven-value set. NO open exit_reason drift remains.
+       Recorded here as an observation per the TB00471 NSI
+       NOTE (record exit_reason drift as observation only);
+       it is NOT a bucket-(c) gap and NOT a Track A action for
+       this read-only audit.
+
+OBS-2  EC-PAPER-001..005, EC-L1B-001/002, and HR-EC-002/003/
+       004/006-012/015 carry no registered 0500000 token of
+       their own. This is expected and correct: they are
+       spec-local restatements whose content is canonical via
+       the ar: set, the HR-EC-013/014/016 D3/D7 family, and
+       the section 7.5 / D5 schema. No token registration
+       action is implied by this audit. (Mirrors the TB00471
+       OBS-2 finding for EE-PAPER / HR-EE.)
+
+OBS-3  RA-5 ADJACENCY (0811005 dv1_3 section 7.5 "Layer 1
+       signal-based" prose correction) is a SEPARATE document
+       and a SEPARATE Track A work class per 0911002 section
+       5A.2 RA-5. It is adjacent to 0511004 (shared exit-layer
+       vocabulary) but is NOT in scope for this 0511004
+       read-only element audit. Parking-lot / carry-forward
+       tracked.
+
+============================================================
+5. RETIREMENT-GATE READINESS (informational; Phase 3)
+============================================================
+
+On the ARCHITECTURAL axis, 0511004 has no un-migrated
+architecture (zero bucket-(c)); DD-012 S-1 architectural
+precondition is SATISFIED. Before a future retirement session
+(separate session per 0911002 section 6.2), the bucket-(b)
+coding-unique content (section 3.2) must have a confirmed
+retained home (1011005 / 0511006 / 0411001) and the bucket-(b)
+parameter starting values must be confirmed present in TB00000
+section 9.17. This register asserts the architectural finding
+only; the bucket-(b) home-confirmation and any retirement
+decision are downstream missions and are NOT performed here.
+
+============================================================
+6. SCOPE STATEMENT
+============================================================
+
+ONE mission (RR-SCOPE-011): the read-only element audit +
+three-bucket gap finding of 0511004 Exit_Controller_
+Specification dv1_8 against canonical 0500000 dv1_139. NO
+0500000 edit (no dv1_140). NO migration. NO retirement. NO
+section 9.17 edit. NO TB00000 amendment. NO 0311001 edit. NO
+Track A reconciliation (RA-4 already closed at dv1_8; RA-5 is
+a separate document/work-class). RR-SCOPE-001 read-only: no
+token added, removed, or relaxed anywhere. No re-opening of
+DEC-056/057/059/060/061/062 (0511001), DEC-063/064 (0511002),
+or DEC-069 (0511003). Executed under RR-SCOPE-005 derivable-
+decision authority (DD-011 v2_56 chat-turn-1 FP/DP test,
+OUTCOME 1 single compliant target = 0511004). NO paired MDR
+entry (closes no defect; the zero bucket-(c) finding is a
+clean-pass result, not a latent defect).
+
+============================================================
+7. REVISION HISTORY
+============================================================
+
+  v1_0  05-27-2026  TB00472. Initial issue. Phase 1 element
+        audit of 0511004 Exit_Controller_Specification dv1_8
+        against canonical 0500000 dv1_139. Three-bucket
+        finding: bucket (a) full three-layer exit architecture
+        (D3) + EC-L1A/L1B/L2/TP/TOB step content + EC-PAPER-
+        001..005 content + HR-EC-001..016 content + ar: set
+        (AR-001/019/040/041/052/066/073/077/078/079) +
+        section 7.5 23-field schema + 7-value exit_reason enum;
+        bucket (b) on_paper_close/_close_position signatures /
+        IOC-0.2%-offset / req_id_registry keying / net-P/L
+        arithmetic / section-10 log-field-lists / section-9.17
+        starting values; bucket (c) NONE (independently grep-
+        verified, not inherited). Three observations (G-4
+        exit_reason reconciliation already closed at dv1_8;
+        spec-local restatement IDs; RA-5 adjacency). Companion:
+        TB00153 DR DEC-070 (audit record) + deferred DEC-069
+        append (ready-to-append text in TB00472 SL section 6;
+        full register regeneration deferred per CI-006). No
+        other document amended or retired.
+
+============================================================
+END TB00472 GAP REGISTER v1_0
+============================================================
