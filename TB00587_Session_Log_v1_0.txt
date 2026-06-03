@@ -1,0 +1,209 @@
+DocDCN:     TB00587
+DocTitle:   Session_Log
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    GitHub.com/TothBot/TothBot_V2-SessionLogs/TB00587_Session_Log_v1_0.txt
+DocDate:    06-03-2026
+DocTime:    07:30:00 UTC
+
+============================================================
+TB00587 SESSION LOG
+============================================================
+Mission: CF-CONSUMER-CLASSIFY -- classify every live use of
+per_trade_pct / tradeable_pct / per_trade_ceiling_pct as
+prescriptive vs historical [READING, no-guess], strip-keep the
+non-organism prescriptive consumers, then de-register the three
+params from 0311001.
+
+============================================================
+1. COLD-LOAD + CAMPAIGN-STATE VERIFICATION
+============================================================
+READ: TB00000 v2_84 [chat]; TB00586 Session_Log v1_0 [HEAD];
+TB00587 Next_Session_Instructions v1_0 [HEAD]. Pulled both repo
+tarballs from HEAD.
+
+HEAD verified against the TB00587 NSI sec-1 state [all match]:
+  0500000 = dv1_166 [live].
+  0311001 = v1_40 [live]; the 3 target params still registered
+    [L2364 per_trade_pct, L2378 tradeable_pct, L2391
+    per_trade_ceiling_pct].
+  06XXXXX_Risk domain empty.
+  5 TB00586 retirements absent from live tree [0611001, 1011010,
+    0600000, 0610000, 0211001].
+
+============================================================
+2. CLASSIFICATION [step a -- no-guess, full live-tree grep]
+============================================================
+Full live-tree grep [archive excluded] returns 9 files carrying
+at least one of the three tokens. Each occurrence read in
+context:
+
+  0211004 Incident_Response dv1_0 [AA=02 proc, NON-ORG]
+    L405 "Existing per_trade_pct value remains unchanged"
+    -> PRESCRIPTIVE. Strip-keep target. NOT done this session.
+
+  0211005 Paper_Trading_Operations dv1_3 [AA=02 proc, NON-ORG]
+    L548 200-trade transition; L604-605 Half-Kelly activation;
+    L833-836 baseline Parameter Store capture template [the dead
+    4-token block]; + L688 live "Half-Kelly applied_pct" review
+    checklist item.
+    -> PRESCRIPTIVE. Strip-keep DONE -> dv1_4.
+
+  0921001 Business_Plan dv1_1 [AA=09 plan, NON-ORG]
+    L82-110 + L201-204 sec-3 Capital Model [tradeable_pct=0.50,
+    per_trade_pct=0.05, max_concurrent=20, the dead arithmetic]
+    -> PRESCRIPTIVE.
+    L449-580 are a CHANGELOG / revision-note block quoting the
+    prior text -> HISTORICAL [leave].
+    -> Strip-keep target [sec-3 only]. NOT done this session.
+
+  1021002 Integration_Test dv1_0 [AA=10 testing, NON-ORG]
+    L193 "applied_pct <= tradeable_pct / max_concurrent" [dead
+    HR-CI-009 normalization assertion]; L196 "per_trade_pct NOT
+    updated".
+    -> PRESCRIPTIVE. Strip-keep DONE -> dv1_1.
+
+  1021003 Paper_Trading_Test dv1_0 [AA=10 testing, NON-ORG]
+    L90 + L132 "Half-Kelly replaces fixed per_trade_pct".
+    -> PRESCRIPTIVE. Strip-keep DONE -> dv1_1.
+
+  0711003 Asset_Selection dv1_3 [AA=07 STRATEGY, *ORGANISM*]
+    L538 "Position sizing [tradeable_pct=50%, per_trade_pct=5%,
+    max_concurrent=20]" stated present-tense as an illustration
+    of what the $500k liquidity filter is NOT derived from
+    -> PRESCRIPTIVE [present-tense assertion of the dead model].
+    L588-590 a corrected-defect quote of prior dv1_1 text
+    -> HISTORICAL.
+    -> NOT a strip-keep target [organism doc; strip-keep is
+    non-organism ONLY per TB00585 sec 5]. See finding F-2.
+
+  0311001 Namespace v1_40 [AA=03 gov] -- the registry itself;
+    L2364/2378/2391 are the registration entries = the
+    de-register targets [step c].
+
+  0500000 dv1_166 [AA=05 diagram] -- all token mentions are in
+    the sec-14 Revision History prose only -> HISTORICAL [leave;
+    CF-PTCEILING-PROSE / sec-14 housekeeping]. Live governing
+    descriptors + visible text are clean [TB00586].
+
+  0521001 Revision_History dv1_0 [AA=05] -- changelog only
+    -> HISTORICAL [leave].
+
+============================================================
+3. FINDINGS
+============================================================
+F-1 [3-artifact ceiling]: there are FIVE non-organism strip-keep
+  targets [0211004, 0211005, 0921001, 1021002, 1021003]. Each
+  edit is a new controlled-doc version = one artifact. The hard
+  3-artifact ceiling forces a split. Executed the three highest
+  system-correctness-risk first [test/paper-validation specs;
+  PAPER IS MASTER]; 0211004 + 0921001 carried to TB00588.
+
+F-2 [de-register BLOCKED -- the terminal step c cannot run]:
+  0711003 Asset_Selection is an ORGANISM strategy spec [AA=07; a
+  REMAINING E2 source spec] and states the dead sizing tokens in
+  present tense at L538. Strip-keep does NOT apply to organism
+  docs [TB00585 sec 5]; an organism doc is retire-not-rewrite,
+  gated on diagram fact-comprehensiveness [DR-078 / DD-014].
+  Therefore a live prescriptive consumer of the three tokens
+  remains that this session cannot lawfully remove, and per
+  RR-SCOPE-012 / the TB00587 NSI "do NOT de-register until a
+  clean re-grep shows no prescriptive consumer remains",
+  de-registration of param:per_trade_pct + param:tradeable_pct +
+  param:per_trade_ceiling_pct from 0311001 is BLOCKED. It stays
+  blocked until 0711003 is reconciled into the diagram and
+  retired [the E2 0711001/0711002/0711003 reconciliation
+  carry-forward]. 0311001 stays v1_40 this session.
+
+============================================================
+4. EXECUTED [strip-keep; TB00585 sec 5 -- delete stale organism
+   values, KEEP the doc + its non-organism content]
+============================================================
+1021002 Integration_Test dv1_0 -> dv1_1:
+  CIATS-activation scenario step 4 dead HR-CI-009 assertion
+  [applied_pct <= tradeable_pct / max_concurrent] replaced by a
+  verification of the canonical per_trade_size_usd = K_half x
+  module_wallet_balance sizing per 0500000 D5/D6 [Kraken-min
+  floor; module-wallet sole boundary; net 1:1.5 R:R the only
+  hardcoded value]; step 7 per_trade_pct -> per_trade_size_usd.
+
+1021003 Paper_Trading_Test dv1_0 -> dv1_1:
+  PT-DUR-002 + PT-VAL-006 200-trade transition restated to the
+  canonical model [seed per_trade_size_usd at the Kraken per-pair
+  minimum -> K_half x module_wallet_balance]; stale fixed-percent
+  per_trade_pct framing removed.
+
+0211005 Paper_Trading_Operations dv1_3 -> dv1_4:
+  200-trade transition prose + Half-Kelly activation prose
+  restated to per_trade_size_usd; baseline Parameter Store
+  capture template dropped the dead block [tradeable_pct /
+  per_trade_pct / Half-Kelly applied_pct / max_concurrent] in
+  favor of per_trade_size_usd; the live "Review Half-Kelly
+  applied_pct" checklist item -> per_trade_size_usd.
+
+Post-edit live-content grep: zero dead sizing tokens remain in
+prescriptive content in any of the three files [residual mentions
+are removal-context Revision-History entries only].
+
+ARTIFACTS: 1021002 dv1_1 [1] + 1021003 dv1_1 [2] + 0211005 dv1_4
+[3]. AT the 3-artifact ceiling. Three superseded dv versions are
+removals [git rm --cached].
+
+============================================================
+5. R-STATE
+============================================================
+No 0500000 change this session [dv1_166 unchanged]. All R-state
+unchanged. CF-R-DISPLAY untouched.
+
+============================================================
+6. CARRY-FORWARD LEDGER [-> TB00588 NSI]
+============================================================
+NEW / UPDATED [TB00587]:
+  - CF-CONSUMER-CLASSIFY [OPEN, reduced]: classification COMPLETE
+    [sec 2]. Strip-keep DONE for 1021002 / 1021003 / 0211005.
+    REMAINING strip-keep: 0211004 [L405, 1 line] + 0921001 sec-3
+    Capital Model [leave the L449-580 changelog]. De-register
+    step c BLOCKED -- see F-2 / CF-DEREG-BLOCKED.
+  - CF-DEREG-BLOCKED [NEW]: param:per_trade_pct + tradeable_pct +
+    per_trade_ceiling_pct de-registration from 0311001 is gated
+    behind 0711003 reconcile-and-retire [organism; cannot
+    strip-keep]. Fold into the E2 0711003 work; do NOT
+    de-register while 0711003 carries the tokens present-tense.
+CARRIED:
+  - CF-R-DISPLAY: D5 [R15] + D1 [R12] SVG title + diagram_
+    canonical R-display + root-desc R-increment-chain rotation
+    deferred [housekeeping].
+  - CF-PTCEILING-PROSE: scrub stale per-trade-CEILING CHECK-5
+    figcaption / attestation prose from D8 [+ D9 / sec-14] in
+    dv1_166 [structure already gone TB00582; prose-only; the
+    orphaned dv1_165_5/6/7 working files are NOT a source --
+    re-derive from HEAD].
+  - CF-0500000-NEVERIN0311001: correct the false "never in
+    0311001" claim in dv1_166 sec-14 [fold into next dv bump].
+  - CF-0911002-STALE: refresh stale *_cap_* mentions in 0911002
+    dv1_4 to *_limit_* + campaign-plan status-field refresh.
+  - CF-2876-AUDIT-SCOPE [Bill ratification]: codify zero-token
+    audit scope into TB00000 / TB00153.
+  - REMAINING E2 source specs: 0711001 / 0711002 / 0711003 --
+    reconcile vs 0911002 dv1_4 + TB00394 [do not assert an
+    unverified count]. 0711003 now also gates CF-DEREG-BLOCKED.
+  - PRIOR OPEN: CF-0411003-RLPROTECT-REAUDIT; CF-E3-REFREF;
+    CF-STREAMLINE; CF-A; N-1 rounding watch; SVG id-duplication;
+    D3 / D7 R-display lags; CF-14-ABSENT.
+
+============================================================
+7. PUSH [Bill executes; see TB00588 NSI push box]
+============================================================
+Docs: git rm --cached the 3 superseded versions [1021002 dv1_0,
+  1021003 dv1_0, 0211005 dv1_3]; git add the 3 new versions
+  [1021002 dv1_1, 1021003 dv1_1, 0211005 dv1_4].
+SessionLogs: git add TB00587 SL + TB00588 NSI.
+TB00000 unchanged [stays v2_84]. 0311001 unchanged [stays v1_40
+  -- de-register BLOCKED]. Branch master both repos.
+Post-push DR-010: fresh tarball + md5 on the 3 new Docs files +
+  the 2 SessionLogs files; absence check for the 3 superseded
+  versions.
+
+============================================================
+END OF DOCUMENT
+============================================================
