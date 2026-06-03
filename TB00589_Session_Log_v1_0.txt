@@ -1,0 +1,203 @@
+DocDCN:     TB00589
+DocTitle:   Session_Log
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    GitHub.com/TothBot/TothBot_V2-SessionLogs/TB00589_Session_Log_v1_0.txt
+DocDate:    06-03-2026
+DocTime:    08:30:00 UTC
+
+============================================================
+TB00589 SESSION LOG
+============================================================
+Mission [TB00589 NSI sec-2]: E2 0711003 -- reconcile-and-retire
+the last blocking consumer of the sizing tokens, clearing the
+path for the de-register.
+
+PRIMARY MISSION COMPLETE: 0711003 reconciled into 0500000 +
+retired. 0500000 dv1_166 -> dv1_167. The 0311001 de-register is
+SPLIT to TB00590 [now unblocked; see sec-5].
+
+CRASH RECOVERY: the first TB00589 attempt crashed mid-edit while
+authoring dv1_167 [transcript pasted by Bill]. NOTHING from that
+attempt had landed -- it crashed before any push box. HEAD was
+re-verified clean at dv1_166 on a FRESH tarball pull; the
+session was reconstructed and completed from that clean state
+[no reuse of the crashed attempt's working tree].
+
+============================================================
+1. COLD-LOAD + CAMPAIGN-STATE VERIFICATION
+============================================================
+READ: TB00000 v2_84 [chat]; TB00588 Session_Log v1_0 [HEAD];
+TB00589 Next_Session_Instructions v1_0 [HEAD]. Pulled both repo
+tarballs FRESH from HEAD.
+
+HEAD verified [matches TB00589 NSI sec-1]:
+  0500000 = dv1_166 [live, clean -- crashed attempt left nothing].
+  0711003 = dv1_3 [present, the retire target].
+  0711002 = dv1_2 [present].
+  0311001 = v1_40 [3 sizing params still registered: L2364
+    per_trade_pct, L2378 tradeable_pct, L2391
+    per_trade_ceiling_pct].
+  Most-recent SL = TB00588; inbound NSI = TB00589 [no TB00589 SL
+    in HEAD -- crashed attempt produced none].
+
+============================================================
+2. RECONCILE VERDICT -- 0711003 dv1_3 vs 0500000 [DR-078 / DD-014]
+============================================================
+0711003 dv1_3 read in full [994 lines]. The canonical diagram is
+FACT-LEVEL COMPREHENSIVE for every 0711003 fact:
+  - Universe = Token-USD/USDC/USDT + online + >=$500k, no top-N
+    [sec-8 AR-070 + D-03/D-04/D-08 + D2 G2_Liquidity + sec-3].
+  - 8-state status enum + 6-state NO-ENTRY set [D1 WS-INST-008/009].
+  - 24h volume = REST Ticker ONLY, v[1]*p[1], classic-name map,
+    fail-safe LIQUIDITY_PAIR_NOT_FOUND exclusion + refresh-preserve
+    [D1 REST-TKR-001..010; DEFECT-SS-006 hard rule].
+  - liquidity_24h cache + 4h refresh + Gate-2 read.
+  - Startup population [instrument + REST both required] + 3x
+    GetOHLCData warm-up + WARM_UP->READY gating [REST-OHLC-008 +
+    AR-068 + HR-WM-017].
+  - Open-position protection / no auto-removal [HR-WM-031].
+  - CIATS adjusts at inter-trade boundaries; only min_volume tunable.
+
+ONE STALE CONFLICT, dies on retirement [NOT carried into the
+diagram]: 0711003 AS-004 Step 8b asserted ohlc[60] is NOT a WS
+subscription; the canonical D1 WS-OHLC-001 [SD-9-verified vs
+0411001 dv1_13] holds ohlc[60] IS a WS subscription. Diagram
+governs; the stale claim retires with the doc [retire-not-rewrite].
+
+CF-CAPITAL-FIX-ORG CLOSED BY RETIREMENT: the live stale "$1,000"
+at 0711003 dv1_3 L85 [flagged in TB00589 NSI sec-1] dies with the
+retirement -- not rewritten, per retire-not-rewrite.
+
+============================================================
+3. BTC/USD ARCHITECTURE CHANGE [Bill-ratified, TB00589 chat]
+============================================================
+Bill ruling: "BTC/USD trades normally by default." The universe
+is Token-USD/USDC/USDT, so BTC/USD is a normally-qualifying pair.
+
+The legacy AR-074 don't-trade rider [BTC/USD regime-only,
+not-traded, optional CIATS-owned pipeline] was identified as
+RESIDUE of the pre-D-03 USDC+USDT-only universe, in which BTC/USD
+could not be a tradeable USD pair. D-03 [AR-070 dv1_20, TB00130]
+widened the universe to include USD pairs, making BTC/USD
+normally-qualifying; the rider was carried forward in softened
+form but its original purpose no longer holds [TB00000 sec 4.1
+fence rule: purpose established, obsolete -> remove].
+
+dv1_167 AR-074 now states: BTC/USD TRADES NORMALLY by default,
+subject to the SAME entry gates as every other pair [Pre-Gate-1
+/G1 status, G2 liquidity, G3 regime, SSS signal gates, A1 net
+1:1.5 R:R floor]. Its always-on regime-anchor role [always-
+subscribed + always in Regime Engine computation; added back if
+any filter would drop it] is PRESERVED and is independent of /
+additional to its tradeable status.
+
+LOSS-PREVENTION: no loss control weakened. The regime-anchor
+subscription guarantee [loss of which would corrupt market_regime
+for ALL pairs] is preserved verbatim; BTC/USD remains gated by
+the full entry pipeline + the A1 sacred floor; BTC/USD is the
+most liquid Kraken pair [lowest slippage], the lowest-risk pair
+to admit.
+
+============================================================
+4. EXECUTED -- 0500000 dv1_166 -> dv1_167 [primary artifact]
+============================================================
+All edits are HTML <pre> prose [sec-8 AR-070/AR-074, sec-3, sec-13
+OI-002] + DC header + HTML title + the sec-14 entry. NO SVG <text>
+/ geometry / viewBox / figure-count change -> ALL 11 figures R
+HELD per the TB00453 bright line. The BTC/USD D4 market_regime
+SVG anchor text ["always in monitored universe; cannot be
+removed"] is unchanged and stays true.
+
+  (a) AR-074 sec-8: removed the don't-trade rider; added the
+      trades-normally + preserved-regime-anchor encoding.
+  (b) AR-074 sec-8 citation: flipped the 0711003 dv1_3
+      HR-AS-001/HR-AS-009 canonical-authority pointer to name
+      this AR-074 entry + the D1/D4 visuals; the CIATS-owned-
+      pipeline rider noted SUPERSEDED.
+  (c) AR-070 sec-8 citation: flipped both 0711003 pointers
+      [Assign + the 1011009 canonical-authority] to name the
+      diagram [AR-070 + AR-074 + Diagram 1 visual].
+  (d) sec-3 prose + sec-13 OI-002: pointers flipped from 0711003
+      to the diagram as canonical.
+  (e) DC header dv1_166 -> dv1_167 [DocVersion / DocPath /
+      DocTime] + HTML <title> + sec-14 entry.
+
+DR-007.9: HTML well-formedness parser pass confirmed pre-delivery
+-- exactly ONE <h2>14. Revision History</h2>; <pre> 127/127,
+<desc> 126/126, <svg> 10/10 balanced; diff vs dv1_166 = 9
+prose-only hunks, zero SVG geometry/text.
+Delivered md5: 090539fb5ac71d015ad5a8848ed673e0.
+
+BINARY TEST [DEC-096]: asset-selection + BTC tradeable/anchor
+semantics are TothBot-organism architecture -> the diagram [YES];
+no seed VALUE moved [BTC default-tradeable is an architectural
+default, not a tunable numeric; nothing added to TB00000 sec 8].
+
+============================================================
+5. 0711003 RETIREMENT + RR-SCOPE-012 CROSS-CHECK
+============================================================
+0711003 Asset_Selection_Specification dv1_3 RETIRED via
+git rm --cached [CD-003; C: copy preserved; git history retains
+all versions]. In the OP4 push box.
+
+RR-SCOPE-012 cross-check [run this session; the crashed attempt
+never reached it]: 0711003 is still CITED by live docs --
+0211005 [RETAINED ops procedure], 0711002 [later consolidation
+source], 0311001 [namespace registry]. Bill ruling [TB00589]:
+the pre-consolidation parent/child dependency scheme + cross-
+document citations are obsolete legacy strategy and do NOT gate
+retirement. The asset-selection FACTS are fully comprehensive in
+0500000 [reconcile-verified], so retirement loses NO architectural
+truth. -> Retirement proceeds; the stale pointers are cleanup,
+tracked as CF-0711003-REPOINT.
+
+DE-REGISTER SPLIT to TB00590 [now UNBLOCKED]: the TB00589 NSI
+identified the 0311001 de-register of per_trade_pct /
+tradeable_pct / per_trade_ceiling_pct as blocked SOLELY by the
+0711003 dv1_3 L538 present-tense organism consumer. That consumer
+is now retired -> the de-register is unblocked. It is a SEPARATE
+0311001 mission [its own reconcile + verification] and is
+TB00590's primary, NOT collapsed into this crash-recovery close.
+Clean re-grep this session confirmed the live 0500000 diagram
+itself carries NONE of the 3 tokens [removed corpus-wide at
+dv1_164/dv1_165]; the residual references live in 1021002 /
+1021003 / 0211004 / 0211005 / 0921001 [non-organism docs, mostly
+removal-describing] and in 0311001 internal de-register-condition
+prose -- each to be context-verified as non-active before pulling
+the registry lines [TB00590].
+
+============================================================
+6. GOVERNANCE
+============================================================
+NO new TB00153 DECISION [runs under DEC-096 + the Bill TB00589
+BTC ruling]. NO paired MDR [forward reconcile + Bill-ratified
+architecture correction]; V-038 remains 0 open through dv1_167.
+
+============================================================
+7. CARRY-FORWARD
+============================================================
+  - CF-0711003-REPOINT [NEW; cleanup, not blocker]: re-point the
+    three live docs that cited retired 0711003 to 0500000 --
+    0211005 dv1_5 [universe-compute / universe_source / paper-
+    mismatch checks -> 0500000 sec-8 AR-070/AR-074], 0711002 dv1_2
+    [AS-001 pair-list cite], 0311001 v1_40 [HR-AS-001..010 source
+    annotation + AS-token + L570 registry line; standard deferred
+    de-dup housekeeping].
+  - CF-0711002-VER [NEW]: AR-074 cites "0711002 dv1_1" while HEAD
+    is 0711002 dv1_2 -- pre-existing version staleness, preserved
+    verbatim in dv1_167, NOT this mission's scope.
+  - CF-V040-METHOD: D2-D9 fact-level verification [HIGH].
+  - sec-14 positioning defect + absent dv1_100..110/120 entries
+    [documentation housekeeping].
+
+============================================================
+8. PUSH + POST-PUSH VERIFICATION [DR-010]
+============================================================
+OP4 push box: Docs [git add dv1_167; git rm --cached dv1_166;
+git rm --cached 0711003 dv1_3; commit; push] + SessionLogs
+[git add TB00589 SL + TB00590 NSI; commit; push]. After Bill
+pushes: fresh tarball pull [never reuse prior extraction],
+md5 byte-for-byte on dv1_167 [expect 090539fb5ac71d015ad5a8848
+ed673e0], + explicit ABSENCE check for dv1_166 and 0711003 dv1_3
+in HEAD.
