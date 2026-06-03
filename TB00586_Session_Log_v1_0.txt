@@ -1,0 +1,151 @@
+DocDCN:     TB00586
+DocTitle:   Session_Log
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    GitHub.com/TothBot/TothBot_V2-SessionLogs/TB00586_Session_Log_v1_0.txt
+DocDate:    06-03-2026
+DocTime:    06:40:00 UTC
+
+============================================================
+TB00586 SESSION LOG
+============================================================
+Mission: resolve the crashed-session sizing judgment, make the
+0500000 diagram mandate-correct for trade sizing, then retire
+the consolidated CIATS-sizing / risk source specs.
+
+============================================================
+1. BILL RULING (settled; not re-asked)
+============================================================
+RULING (A): the module wallet balance is the SOLE sizing
+boundary on everything. Everything but the net 1:1.5 R:R
+MINIMUM is CIATS-owned. $5,000 per wallet start; each trade
+INITIALLY $0.50 (CIATS seed); CIATS assumes control of all
+trading parameters once it has enough paper-trade data (200-
+trade floor). This phase removes ALL legacy instructions /
+values prescribing permanent hard values and replaces them
+with CIATS ownership.
+
+============================================================
+2. KEY FINDING (refines the crashed-session framing)
+============================================================
+The 0500000 sizing defect was a DEAD-MODEL RESIDUE, not a
+clean governing cap. The diagram already stated the correct
+model (D5 mod:CIATS_Proposal_Engine produces param:per_trade_
+size_usd, CIATS-owned, $0.50 seed, wallet sole boundary; the
+ar:AR-043 gloss already recorded max_concurrent retired at
+TB00000 v2_29). Coexisting with it was the stale old model:
+rule:HR-CI-009 (applied_pct = K_half / max_concurrent),
+param:half_kelly_applied_pct, and param:max_concurrent, still
+present in D5/D6 governing descriptors + D5 visible text. Two
+contradictory sizing models => a COMPLETENESS-test failure.
+Also confirmed: the live D8 Gate 7 carries only 4 checks
+(drawdown / concentration / exposure / semaphore) -- there was
+NO max_concurrent concurrency gate to remove (the crashed
+session's D8 concern was incorrect).
+
+============================================================
+3. EXECUTED
+============================================================
+0500000 dv1_165 -> dv1_166 (PUSHED; DR-010 verified, md5
+  03cdd563c1992b454ea5b15d372489db, dv1_165 absent from HEAD):
+  the dead model (HR-CI-009 / half_kelly_applied_pct /
+  max_concurrent normalization) REMOVED from every live
+  governing descriptor + visible-text site -- D5 root governs +
+  Proposal_Engine + Parameter_Store + the visible param strip +
+  the A2 callout; D6 Proposal_Engine + Parameter_Store +
+  Signal_Pipeline + Position_Mirror + Risk_Engine; D2 snapshot
+  consumes + q1_do; D1 Risk_Engine consumes + q1_do + the
+  visible param decoration. Canonical model now: per_trade_
+  size_usd = K_half x module_wallet_balance [K_half = K_full x
+  0.5], floored at the Kraken per-pair minimum (~$0.50 seed),
+  bounded ONLY by available module wallet balance; the ar:AR-043
+  BoundedSemaphore dispatch-race primitive RETAINED. Final
+  audit: 0 live-governing dead-token bindings; viewBox + tag
+  balance preserved; HTML parses.
+
+DD-014 (semantic, from-the-diagram): all 25 loss-critical
+  behaviors encoded by the five retire-targets are present in
+  dv1_166 -- Half-Kelly + 200-floor + K_half + per_trade_size_
+  usd + $0.50 seed + wallet-sole-boundary + sacred 1:1.5 + MAE
+  1.5xATR + emergSL 3.0xATR + drawdown 5/10 + concentration +
+  exposure + min-order POSITION_TOO_SMALL + Mann-Whitney + EWMA
+  + CUSUM + Sharpe + Kelly-negative reject + PDCA + snapshot +
+  per-module independence + A1 acceptance + 6-regime taxonomy +
+  600-trade per-regime + fee 0.16/0.26. Zero missing.
+
+RETIRED (git rm --cached; C: copy + git history preserved =
+  fully recoverable): 0611001 Position_Sizing_Rules, 1011010
+  CIATS_Coding_Spec, 0600000 Risk, 0610000 Risk_Rules_Anchor,
+  0211001 CIATS_Specification. The 06XXXXX_Risk domain empties
+  cleanly (no orphaned child) -- CF-0610-ANCHOR / CF-0610-
+  CHILDCHAIN RESOLVED by domain retirement.
+
+0311001 v1_39 -> v1_40: de-registered param:max_concurrent
+  (dead). param:half_kelly_applied_pct was never registered
+  (registry-gap-note only). param:per_trade_pct / tradeable_pct
+  / per_trade_ceiling_pct NOT de-registered (CONFLICT-2
+  consumers unclassified -- see CF-CONSUMER-CLASSIFY).
+
+ARTIFACTS: dv1_166 (1) + 0311001 v1_40 (2). Within the 3-
+  artifact ceiling. Five retirements are removals.
+
+============================================================
+4. R-STATE
+============================================================
+0500000 dv1_166. D5 R14 -> R15 + D1 R11 -> R12 (actual, per the
+TB00453 visible-text-MODIFY bright line). D2 + D6 HELD (desc-
+only edits). SVG title + diagram_canonical R-display labels and
+the D5/D1 root-desc R-increment-chain rotation are DEFERRED to
+a documentation-housekeeping session per the established CI-005
+/ CI-006 display-deferral precedent; the dv1_166 sec-14 entry +
+this log are the authoritative change record. viewBox preserved
+on all 10 figures.
+
+============================================================
+5. CARRY-FORWARD LEDGER (-> TB00587 NSI)
+============================================================
+NEW (TB00586):
+  - CF-R-DISPLAY: D5 (R15) + D1 (R12) SVG title + diagram_
+    canonical R-display + root-desc R-increment-chain rotation
+    deferred (housekeeping).
+  - CF-CONSUMER-CLASSIFY: classify per_trade_pct / tradeable_pct
+    usage in 0211004 / 0211005 / 0921001 / 1021002 / 1021003
+    (+ 0711003) prescriptive vs historical; then de-register
+    param:per_trade_pct + tradeable_pct + per_trade_ceiling_pct
+    from 0311001 and strip-keep the non-organism docs (delete
+    stale organism values, keep the doc) per TB00585 sec 5.
+  - CF-PTCEILING-PROSE: the orphaned working files
+    dv1_165_5/6/7 (never pushed) carried unfinished per-trade-
+    CEILING D8 figcaption prose cleanup; live D8 still shows
+    stale CHECK-5 figcaption / attestation prose (the STRUCTURE
+    was removed at TB00582 -- no live coding risk; a coder reads
+    4 checks). Prose cleanup is housekeeping.
+CARRIED FROM TB00585:
+  - CF-0500000-NEVERIN0311001: correct the false "never in
+    0311001" claim in dv1_166 sec-14 (fold into next dv bump).
+  - CF-0911002-STALE: refresh stale *_cap_* mentions in 0911002
+    dv1_4 to *_limit_* + campaign-plan status-field refresh.
+  - CF-2876-AUDIT-SCOPE (Bill ratification): codify zero-token
+    audit scope into TB00000 / TB00153.
+  - REMAINING E2 source specs: 0711001 / 0711002 / 0711003 --
+    reconcile vs 0911002 dv1_4 + TB00394 (do not assert an
+    unverified MOVE-14 count).
+  - PRIOR OPEN: CF-0411003-RLPROTECT-REAUDIT; CF-E3-REFREF;
+    CF-STREAMLINE; CF-A; N-1 rounding watch; pre-existing
+    out-of-scope SVG id-duplication + D3/D7 R-display lags +
+    CF-14-ABSENT.
+
+============================================================
+6. PUSH (Bill executes; see TB00587 NSI push box)
+============================================================
+Docs: git rm --cached the 5 retired specs + git rm --cached
+  0311001 v1_39 + git add 0311001 v1_40.
+SessionLogs: git add TB00586 SL + TB00587 NSI.
+TB00000 unchanged this session (stays v2_84). Branch master.
+Post-push DR-010: fresh tarball + md5 on 0311001 v1_40 + the
+two SessionLogs files; absence check for the 5 retired specs +
+0311001 v1_39.
+
+============================================================
+END OF DOCUMENT
+============================================================
