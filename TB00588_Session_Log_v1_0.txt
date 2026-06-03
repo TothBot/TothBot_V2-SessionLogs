@@ -1,0 +1,182 @@
+DocDCN:     TB00588
+DocTitle:   Session_Log
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    GitHub.com/TothBot/TothBot_V2-SessionLogs/TB00588_Session_Log_v1_0.txt
+DocDate:    06-03-2026
+DocTime:    08:00:00 UTC
+
+============================================================
+TB00588 SESSION LOG
+============================================================
+Mission: CF-CONSUMER-CLASSIFY -- finish the remaining
+strip-keeps [0211004 L405; 0921001 sec-3 Capital Model].
+De-register of the three sizing-pct params from 0311001 is
+BLOCKED [CF-DEREG-BLOCKED] and was NOT attempted. Bill
+resolved CF-CAPITAL-RECONCILE in-session [see F-1]; the
+capital-basis correction added a directed third artifact.
+
+============================================================
+1. COLD-LOAD + CAMPAIGN-STATE VERIFICATION
+============================================================
+READ: TB00000 v2_84 [chat]; TB00587 Session_Log v1_0 [HEAD];
+TB00588 Next_Session_Instructions v1_0 [HEAD]. Pulled both repo
+tarballs from HEAD.
+
+HEAD verified against the TB00588 NSI sec-1 state [all match]:
+  0500000 = dv1_166 [live, unchanged].
+  0311001 = v1_40 [live]; 3 target params still registered
+    [L2364 per_trade_pct, L2378 tradeable_pct, L2391
+    per_trade_ceiling_pct].
+  TB00587 strip-keeps landed: 1021002 dv1_1, 1021003 dv1_1,
+    0211005 dv1_4 present; 3 superseded versions absent.
+  This-session targets present: 0211004 dv1_0, 0921001 dv1_1.
+
+============================================================
+2. EXECUTED [strip-keep TB00585 sec 5; + Bill-directed capital
+   correction]
+============================================================
+0211004 Incident_Response dv1_0 -> dv1_1 [AA=02 proc, NON-ORG]:
+  KELLY_NEGATIVE automated-response line L405 "Existing per_
+  trade_pct value remains unchanged" -> "Existing per_trade_
+  size_usd value remains unchanged" [canonical CIATS sizing
+  parameter = K_half x module_wallet_balance per 0500000
+  D5/D6]. Meaning unchanged. One-line strip.
+
+0921001 Business_Plan dv1_1 -> dv1_2 [AA=09 plan, NON-ORG]:
+  (i) Deleted the dead fixed-percent sizing model from sec-3
+  [tradeable_pct=0.50 / per_trade_pct=0.05 / max_concurrent=20
+  + all derived arithmetic; sec-3.0 Relationship block + NOTE;
+  sec-3.1 50/50 tradeable/reserve split; sec-3.2 5%/20-cap
+  prescription; sec-3.3 "Fixed 5% per trade" framing; sec-5.3
+  line] and restated to the canonical model [per_trade_size_
+  usd = K_half x module_wallet_balance; Kraken-min seed; module
+  wallet the sole boundary; net 1:1.5 R:R the only hardcoded
+  value; A1]. sec-3.1 retitled Portfolio Definition -> Trading
+  Wallets.
+  (ii) Bill-directed capital-basis correction [F-1]: sec-3.0
+  starting capital corrected from the stale $1,000 single-
+  portfolio figure [TB00128 D-05] to the canonical $5,000 per
+  module wallet [Long $5,000 / Short $5,000, TB00000 v2_84 §8];
+  $0.50 Kraken-minimum per_trade_size_usd seed stated for rapid
+  CIATS data acquisition; CIATS owns every parameter above the
+  1:1.5 R:R floor. sec-4.2 + sec-5.1 drawdown thresholds
+  restated to the per-module wallet basis [5% / 10% of the
+  module wallet balance, evaluated per module per 0500000 D7].
+  LEFT intact: sec-3.4 Fee Model; sec-10 changelog [HISTORICAL].
+
+0211005 Paper_Trading_Operations dv1_4 -> dv1_5 [AA=02 proc,
+  NON-ORG; DIRECTED capital correction, F-1]: every prescriptive
+  paper-starting-balance occurrence corrected from "$1,000 per
+  D-05" to "$5,000 per module wallet per TB00000 v2_84 §8"
+  [PA-004 #3 ledger summary; portfolio_baseline_USD paper-mode
+  source paragraph; spot_usd_balance start note; reference table
+  now cites TB00000 v2_84 §8 superseding D-05; Step 9b config
+  default 1000 -> 5000; HR-WM-011 ledger note]. per_trade_size_
+  usd retains its $0.50 Kraken-minimum seed. Changelog intact.
+
+Post-edit live-content grep [all three files]: zero dead sizing
+tokens and zero stale $1,000/D-05 PRESCRIPTIVE content; the only
+$1,000/D-05 mentions are deliberate supersession notes + the
+HISTORICAL changelog records.
+
+ARTIFACTS: 0211004 dv1_1 [1] + 0921001 dv1_2 [2] + 0211005 dv1_5
+[3]. AT the 3-artifact ceiling. Three superseded dv versions are
+removals [git rm --cached]: 0211004 dv1_0, 0921001 dv1_1, 0211005
+dv1_4. CF-CONSUMER-CLASSIFY strip-keep portion COMPLETE.
+
+============================================================
+3. FINDINGS
+============================================================
+F-1 [CAPITAL CONFLICT -- surfaced, then RESOLVED by Bill in-
+  session]: 0921001 sec-3.0 stated "$1,000 starting portfolio"
+  [TB00128 D-05 LOCKED] while TB00000 v2_84 sec-8 specifies
+  $5,000 long + $5,000 short per-module paper. Surfaced as a
+  capital-allocation judgment [did NOT auto-resolve]. Bill
+  RATIFIED in-session: $5,000 in EACH module wallet; each trade
+  INITIALLY $0.50 [Kraken-minimum per_trade_size_usd seed] so
+  CIATS acquires data quickly; CIATS then takes control of ALL
+  trading parameters once it has sufficient paper data; the
+  ONLY hardcoded value is the net 1:1.5 R:R minimum. TB00128
+  D-05 $1,000 is SUPERSEDED. Applied to 0921001 dv1_2 +
+  0211005 dv1_5 this session. STILL STALE [organism, deferred]:
+  0711003 Asset_Selection dv1_3 L85 "($1,000 starting)" --
+  retire-not-rewrite, corrected during E2 reconcile-and-retire
+  [CF-CAPITAL-FIX-ORG]. TB00000 v2_84 sec-8 already correct
+  [$5,000/$5,000]; no change. 0500000 dv1_166 drawdown logic
+  already per-wallet [D7, L2899]; no change.
+
+F-2 [DE-REGISTER still BLOCKED]: 0711003 Asset_Selection [AA=07
+  ORGANISM] still states the three tokens present-tense at L538;
+  retire-not-rewrite [DR-078 / DD-014]. A live prescriptive
+  consumer remains, so per RR-SCOPE-012 the de-register of param:
+  per_trade_pct + tradeable_pct + per_trade_ceiling_pct from
+  0311001 stays BLOCKED behind 0711003 reconcile-and-retire.
+  0311001 unchanged [v1_40]. De-register NOT attempted.
+
+============================================================
+4. R-STATE
+============================================================
+No 0500000 change this session [dv1_166 unchanged]. All R-state
+unchanged. CF-R-DISPLAY untouched.
+
+============================================================
+5. CARRY-FORWARD LEDGER [-> TB00589 NSI]
+============================================================
+CLOSED / RESOLVED [TB00588]:
+  - CF-CONSUMER-CLASSIFY [strip-keep portion CLOSED]: all five
+    non-organism prescriptive consumers strip-kept. Only the
+    de-register remains, held under CF-DEREG-BLOCKED.
+  - CF-CAPITAL-RECONCILE [RESOLVED by Bill in-session, F-1]:
+    $5,000 per module wallet; $0.50 per_trade_size_usd seed;
+    CIATS owns all params above the net 1:1.5 R:R floor; D-05
+    $1,000 superseded. Applied to 0921001 dv1_2 + 0211005 dv1_5.
+NEW:
+  - CF-CAPITAL-FIX-ORG [folds into E2]: 0711003 dv1_3 L85
+    "($1,000 starting)" is the last live stale $1,000 figure;
+    organism doc [retire-not-rewrite], corrected only as part of
+    the 0711003 reconcile-and-retire. Do NOT rewrite 0711003 to
+    patch the value.
+CARRIED:
+  - CF-DEREG-BLOCKED: 0311001 de-register of the three sizing-
+    pct params gated behind 0711003 reconcile-and-retire. LAST
+    step, after the E2 0711003 work.
+  - REMAINING E2 source specs: 0711001 / 0711002 / 0711003 --
+    reconcile vs 0911002 dv1_4 + TB00394 [do not assert an
+    unverified count]. 0711003 gates CF-DEREG-BLOCKED +
+    CF-CAPITAL-FIX-ORG.
+  - CF-R-DISPLAY: D5 [R15] + D1 [R12] SVG title + diagram_
+    canonical R-display + root-desc R-increment-chain rotation
+    deferred [housekeeping].
+  - CF-PTCEILING-PROSE: scrub stale per-trade-CEILING CHECK-5
+    figcaption / attestation prose from D8 [+ D9 / sec-14] in
+    dv1_166 -- structure already gone [TB00582]; prose-only; the
+    orphaned dv1_165_5/6/7 working files are NOT a source --
+    re-derive from HEAD.
+  - CF-0500000-NEVERIN0311001: correct the false "never in
+    0311001" claim in dv1_166 sec-14 [fold into next dv bump].
+  - CF-0911002-STALE: refresh stale *_cap_* mentions in 0911002
+    dv1_4 to *_limit_* + campaign-plan status-field refresh.
+  - CF-2876-AUDIT-SCOPE [Bill ratification]: codify zero-token
+    audit scope into TB00000 / TB00153.
+  - PRIOR OPEN: CF-0411003-RLPROTECT-REAUDIT; CF-E3-REFREF;
+    CF-STREAMLINE; CF-A; N-1 rounding watch; SVG id-duplication;
+    D3 / D7 R-display lags; CF-14-ABSENT.
+
+============================================================
+6. PUSH [Bill executes; see TB00589 NSI push box]
+============================================================
+Docs: git rm --cached 3 superseded [0211004 dv1_0, 0921001 dv1_1,
+  0211005 dv1_4]; git add 3 new [0211004 dv1_1, 0921001 dv1_2,
+  0211005 dv1_5].
+SessionLogs: git add TB00588 SL + TB00589 NSI.
+TB00000 unchanged [v2_84]. 0311001 unchanged [v1_40 -- de-
+  register BLOCKED]. 0500000 unchanged [dv1_166]. Branch master
+  both repos.
+Post-push DR-010: fresh tarball + md5 on the 3 new Docs files +
+  the 2 SessionLogs files; absence check for the 3 superseded
+  versions.
+
+============================================================
+END OF DOCUMENT
+============================================================
