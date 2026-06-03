@@ -1,0 +1,227 @@
+DocDCN:     TB00584
+DocTitle:   Session_Log
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    GitHub.com/TothBot/TothBot_V2-SessionLogs/TB00584_Session_Log_v1_0.txt
+DocDate:    06-03-2026
+DocTime:    03:15:00 UTC
+
+============================================================
+TB00584 SESSION LOG
+============================================================
+Mission (TB00584 NSI): FINISH 0500000 dv1_165 (Chunk 4 /
+STEP B), then companions 0311001 (de-register/register) +
+0611001 (retirement). Sequence the 0311001 bump WITH the
+0500000 push.
+
+============================================================
+1. OUTCOME SUMMARY
+============================================================
+DELIVERED + PUSH-READY (2 Docs artifacts):
+  - 0500000_System_Architecture_Overview_dv1_165_Claude_
+    Source.html  md5 89ac404d0c5872b2799d1a60555d391e
+    (10247 lines). Chunk 4 / STEP B COMPLETE.
+  - 0311001_Namespace_Specification_v1_39.txt
+    md5 d9642a377c279776071bbac7429cbb8f (8532 lines).
+    SAFE coherence edit only (cap->limit rename).
+
+HELD / SURFACED TO BILL (NOT executed -- require ruling):
+  - per_trade_ceiling_pct de-registration (CONFLICT-1).
+  - tradeable_pct / per_trade_pct de-registration
+    (CONFLICT-2).
+  - 0611001 RETIREMENT (sequencing -- held pending the
+    sizing-governance ruling; see sec 4).
+
+============================================================
+2. STEP B -- CHUNK 4 FINALIZE (COMPLETE, prior turn)
+============================================================
+  - DR-007.9 well-formedness RESOLVED: the pre-existing
+    <desc> diff-3 traced to 3 literal-text "<desc>" mentions
+    (HTML comment L5480/L5482; sec-14 <pre> prose L10063) --
+    NOT real SVG elements (real <desc> elements already
+    126/126 balanced). Escaped all 3 to &lt;desc&gt; per the
+    doc's universal escape convention (fixes a latent render-
+    swallow at L10063; comment/<pre>-prose only -> all figure
+    R HELD).
+  - ZERO-TOKEN AUDIT PASS: per_trade_ceiling_pct /
+    tradeable_pct / per_trade_pct occur ONLY inside sec-14.
+    G7_PER_TRADE_CEILING_BREACH occurs once outside sec-14 at
+    line 2876 (the documented D8 title-bar removal-describing
+    R-hold subtitle) -- left per NSI sec 2.3; NOT scrubbed
+    (scrubbing bumps D8 R3->R4).
+  - SEC-14 dv1_165 ENTRY added (truthful summary + the 3
+    VERBATIM rotated-out Appendix-A narratives: D1 R6->R7
+    TB00353; D5 R9->R10 TB00365; D6 R8->R9 TB00366).
+  - VERSION BUMP dv1_164 -> dv1_165 (title + header
+    DocVersion/DocPath/DocDate/DocTime).
+  - VERIFICATION: <desc> 126/126; all tags balanced; exactly
+    one "<h2>14. Revision History</h2>"; 942 visible <text>
+    BYTE-IDENTICAL to the _165_7_ baseline (R HELD proven);
+    lxml structural parse zero orphan/unclosed. Pre-existing
+    duplicate id= attributes across the 10 SVG figures noted
+    observed-out-of-scope (present in dv1_164 baseline).
+
+============================================================
+3. COMPANION 0311001 v1_38 -> v1_39 (DELIVERED, rename-only)
+============================================================
+EXECUTED (safe + derivable + required for push coherence):
+  - M-2 RENAME: param:concentration_cap_per_module ->
+    param:concentration_limit_per_module; param:exposure_
+    cap_pct -> param:exposure_limit_pct (D8 Gate_7_Risk_Guard
+    CHECK 2 / CHECK 3) per TB00579 D-B. Descriptors otherwise
+    BYTE-IDENTICAL (CHECK 2/3 remain CIATS-owned, value-less,
+    pending CIATS FP/DP). Diagram cascade already satisfied:
+    dv1_165 carries the *_limit_* forms as 32 live tags;
+    *_cap_* survives only in dv1_165 sec-14 history. V-036
+    PASS. Stale *_cap_* name mentions remain only in 0911002
+    dv1_4 (CLOSED-HISTORY + OPEN-FINDING) -> folds into
+    CF-0911002-STALE.
+  - evt:G7_PER_TRADE_CEILING_BREACH: confirmed ABSENT from
+    §15.12.7 (live grep-verified). Nothing to de-register.
+
+NOT EXECUTED -- HELD (RR-SCOPE-012 no-strand + RR-SCOPE-007
+discovered-ground-truth-overrides-NSI + mandate conflict):
+  The NSI directed de-registering per_trade_ceiling_pct and
+  confirming tradeable_pct / per_trade_pct handling. Live-
+  tree grep (HEAD, _Archive excluded) found these tokens are
+  LIVE-PRESCRIPTIVE in current downstream specs. De-
+  registering any of them from the namespace would point
+  live specs at unregistered tokens (V-032/V-036 break) AND
+  collides with a settled-mandate-vs-live-spec contradiction.
+  See sec 4. The two cap->limit RENAME tokens are unaffected
+  (they had no live consumer other than the diagram, which is
+  already cascaded).
+
+============================================================
+4. MAJOR FINDING -- SIZING-GOVERNANCE CONTRADICTION
+   (Bill ruling required; chat-turn-1 gate + RR-SCOPE-012)
+============================================================
+The TB00584 mandate ("NO per-trade ceiling, cap, or limit of
+any kind; trade size 100% CIATS-owned; wallet is the loss
+boundary; only the net 1:1.5 R:R minimum is hardcoded") is
+contradicted by live downstream source specs that still
+prescribe per-trade size controls. The diagram (dv1_165) and
+namespace (after this rename) reflect the mandate; the risk +
+CIATS + coding specs do not. Pre-existing (predates this
+session); surfaced here because de-registration would strand
+these live consumers.
+
+CONFLICT-1  per_trade_ceiling_pct (LIVE per-trade ceiling):
+  - 1011010 CIATS_Coding_Spec dv1_8 (CIATS-KE-003):
+      max_per_trade_usd = per_trade_ceiling_pct[module]
+                          x module_wallet_balance_usd[module]
+    and L120-122 "Half-Kelly normalization MUST use per-
+    module per_trade_ceiling_pct x module_wallet_balance".
+  - 0600000 Risk dv1_1: "per_trade_ceiling_pct: 25% of
+    module wallet starting ... Hard concentration ceiling per
+    single trade. Prevents a wrong R:R estimate at high
+    allocation from wiping the wallet in one trade."
+  - 0610000 Risk_Rules_Anchor dv1_6: same 25%-of-wallet hard
+    per-trade concentration ceiling, CIATS-owned.
+  This is a stated LOSS-PREVENTION control (single-trade
+  wallet-wipe protection). The mandate removes it. Note the
+  specs frame it as "CIATS-owned, CIATS-adjustable", so a
+  narrower reading (mandate forbids a HARDCODED ceiling but
+  permits a CIATS-owned one) is also possible. RESOLUTION IS
+  A RISK DECISION -- Bill's call:
+    (A) Confirm full removal -> author edits to 1011010 +
+        0600000 + 0610000 deleting the ceiling, THEN de-
+        register per_trade_ceiling_pct (+ register/confirm
+        the breach evt if needed). Accepts wallet as the sole
+        single-trade loss boundary.
+    (B) Retain a CIATS-owned per-trade ceiling -> the token
+        STAYS registered; revise the mandate wording; the
+        diagram may need a CIATS-owned ceiling element
+        re-expressed (separate R-bearing pass).
+
+CONFLICT-2  tradeable_pct + per_trade_pct (LIVE fixed-%):
+  - 0211001 CIATS_Specification dv1_0: CI-KE-001 "Before 200
+    closed trades: fixed per_trade_pct (5%) applies";
+    CI-KE-004 applied_pct = min(K_half, tradeable_pct /
+    max_concurrent); CI-KE-005 "existing per_trade_pct value
+    remains unchanged"; Parameter Store table lists
+    tradeable_pct=0.50 + per_trade_pct=0.05 as active values.
+    NOTE 0211001 (dv1_0, 04-05) is internally STALE vs 1011010
+    (dv1_8, 05-15), which states tradeable_pct / max_concurrent
+    are RETIRED and replaced by the per_trade_ceiling_pct x
+    wallet normalization -- so two generations of Half-Kelly
+    normalization basis are both live in the corpus.
+  - 0600000 / 0610000 reference these two tokens only as
+    RETIRED/REPLACED (historical -- safe).
+  Resolution (Bill): reconcile 0211001 to the current sizing
+  model (delete fixed-% bootstrap or ratify it), THEN de-
+  register the two tokens. Until then they STAY registered.
+
+CORRECTION (factual error in a controlled doc):
+  The 0500000 dv1_164 §14 / TB00576 revision entry (carried
+  verbatim into dv1_165 sec-14 at line 10183) claims
+  per_trade_pct + tradeable_pct were "never in 0311001". This
+  is FALSE -- both are registered at 0311001 §15.12.8 (pre-
+  v1_24) and live-used in 0211001. The error sits in a
+  historical sec-14 entry (R-held prose); NOT rewritten this
+  session (out of Chunk 4 scope; dv1_165 md5 is locked).
+  Carry-forward CF-0500000-NEVERIN0311001 for a dedicated
+  sec-14 correction pass (Bill ratification).
+
+============================================================
+5. R-STATE
+============================================================
+0500000: all figure R HELD (Chunk 4 = sec-14 + doc version
+bump = doc-/desc-level per TB00453). Finalized canonical set
+unchanged: D1 R11 / D4 R6 / D5 R14 / D6 R13 / D8 R3; D9 held
+R2. Line 2876 NOT scrubbed (would bump D8 R3->R4).
+0311001: rename is a registry text edit (no diagram R).
+
+============================================================
+6. CARRY-FORWARD LEDGER (full -> TB00585 NSI sec 4)
+============================================================
+NEW (TB00584):
+  - CONFLICT-1 per_trade_ceiling_pct mandate-vs-live-spec
+    (1011010 / 0600000 / 0610000) -- Bill ruling; de-register
+    HELD.
+  - CONFLICT-2 tradeable_pct + per_trade_pct live in 0211001
+    (+ 0211001 internally stale vs 1011010) -- Bill ruling;
+    de-register HELD; tokens KEPT REGISTERED.
+  - 0611001 RETIREMENT sequencing -- HELD pending CONFLICT-1/2
+    ruling (0611001 is the Position Sizing Rules doc; removing
+    it from HEAD mid sizing-governance flux is poor sequencing;
+    DD-014 was CLEAN at TB00577 so retirement remains valid
+    once the conflict is settled). Overridable by Bill.
+  - CF-0500000-NEVERIN0311001: correct the false "never in
+    0311001" claim in dv1_165 sec-14 (dv1_164/TB00576 entry).
+  - CF-0911002-STALE (extended): refresh the stale *_cap_*
+    name mentions (L370 CLOSED-HISTORY, L761 OPEN-FINDING) to
+    *_limit_* + general campaign-plan field refresh.
+  - CF-2876-AUDIT-SCOPE (Bill ratification): codify zero-token
+    audit scope as "outside sec-14 AND outside dated removal-
+    describing R-state subtitles" into TB00000 / TB00153.
+PRE-EXISTING OUT-OF-SCOPE (observed, untouched): duplicate id=
+  attrs across the 10 SVG figures; D3 figcaption (a) R7 + live
+  header R8 vs title/canonical R9; D7 title-bar subtitle R5 vs
+  R6; CF-14-ABSENT (sec-14 dv1_100..dv1_130 absent + posn
+  defect).
+TB00579 DECISIONS for TB00153 (Bill): D-A keep CHECK 2/3; D-B
+  rename to *_limit_* (EXECUTED in 0311001 v1_39 namespace +
+  dv1_165 diagram); D-C CIATS starting-values-not-rules.
+PRIOR OPEN: CF-0610-ANCHOR / CF-0610-CHILDCHAIN; CF-V040-
+  METHOD; CF-0411003-RLPROTECT-REAUDIT; CF-E3-REFREF;
+  CF-STREAMLINE; CF-A (DEC-082+ append backlog); N-1 rounding
+  watch. REMAINING E2 source specs after this campaign:
+  0711001 / 0711002 / 0711003 (0611001 + 0611002 retired) --
+  reconcile MOVE-14 tally vs 0911002 dv1_4 + TB00394 (do not
+  assert an unverified count).
+
+============================================================
+7. PUSH (Bill executes; see TB00585 NSI sec 5 push box)
+============================================================
+Docs: git rm --cached 0500000 dv1_164 (md5 c565d2cd1451c6aeb
+e8606cfcad419ba); git add 0500000 dv1_165 + 0311001 v1_39.
+SessionLogs: git add TB00584 SL + TB00585 NSI.
+0611001 git rm --cached HELD (sec 4 / sec 6). TB00000 NOT
+changed this session. Branch master both repos. Post-push
+DR-010: fresh tarball + md5 byte-for-byte + dv1_164 absence
+check.
+
+============================================================
+END OF DOCUMENT
+============================================================
