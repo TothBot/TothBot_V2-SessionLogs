@@ -1,10 +1,10 @@
 DocDCN:     TB00153
 DocTitle:   Decision_Register
-DocVersion: v1_77
+DocVersion: v1_78
 DocOwner:   Bill
-DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00153_Decision_Register_v1_77.txt
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00153_Decision_Register_v1_78.txt
 DocDate:    06-07-2026
-DocTime:    19:30:00 UTC
+DocTime:    08:40:00 UTC
 
 ============================================================
 TB00153 DECISION REGISTER v1_70
@@ -7211,6 +7211,87 @@ closure). No value migration; sec 9.17 unchanged; TB00000 not
 amended; no paired MDR entry. Migrates the Exit-controller
 group's three remaining tokens (D3 mod:Exit_Controller) and
 CLOSES the DEC-045 carry-forward — Exit-controller group COMPLETE.
+
+
+DEC-111  (TB00609)  LOGGER 1011007 PASS-3 DD-014 RE-AUDIT --
+         ONE RESIDUAL GAP (SMTP DELIVERY RETRY-LOOP) MIGRATED
+         DIAGRAM-FIRST; 1011007 STAYS LIVE, RETIREMENT DEFERRED
+         Decision: run the clean dedicated fact-level DD-014 re-audit
+         (PASS 3, DR-078 do-not-rush-the-spine) of the settled D5/D6
+         mod:Logger encoding against EVERY 1011007 dv1_6 fact (secs
+         1-11), from-the-diagram-alone (DD-014 strict). RESULT: NOT
+         clean -- G1..G7 all confirmed derivable, but ONE residual
+         gap found. Per DR-078 do-not-retire-on-a-gap + RR-SCOPE-008
+         no-guess: migrate the gap diagram-first ADD-only NOW, DEFER
+         the clean re-audit + 1011007 wholesale retirement to TB00610
+         (migrate-then-re-audit-then-retire, the 0411002 precedent).
+         RE-AUDIT EVIDENCE (verified vs live dv1_178 D5/D6 corpus):
+           G6 event registry -- programmatic diff CONFIRMED CLEAN:
+           83/83 operational event codes present, correct V2-ladder
+           collapse ({DEBUG,INFO}->INFO / {WARN,HIGH}->WARNING /
+           {CRITICAL}->CRITICAL), exact key fields, 0 mismatches;
+           4/4 self-observability exceptions exact (LOG_QUEUE_FULL /
+           ALERT_SMTP_FAILED / TRADE_RECORD_WRITE_FAILED = CRITICAL,
+           ALERT_SENT = INFO); evt:LOG_QUEUE_WARN [WARNING] present.
+           Secs 4/5/7/9/11 (queue / G1-G2 NDJSON+serialization / 23-
+           field TRADE_CLOSE + 7-value exit_reason enum + EMERGENCY_SL
+           producer-partition / G4 file-mgmt / G3 permanent file
+           LG-TREC-001..009) all confirmed PRESENT. Ratified-
+           superseded (NOT gaps): sec-3/sec-8 CRITICAL/HIGH SMTP
+           routing -> email bar (HR-RPT-001/002); DEBUG/WARN vocab ->
+           V2 ladder (HR-RPT-003). Non-architectural (NOT gaps):
+           coding-sequence / parent chain / getLogger instance name /
+           stdlib wiring flags / queue-size 20x10x50 derivation.
+         RESIDUAL GAP (the ONE): 1011007 sec 8 LG-ALERT-004
+         (dv1_5/OI-029) SMTP DELIVERY RETRY-LOOP -- confirmed ABSENT
+         from the entire dv1_178 corpus (grep empty for
+         ALERT_SMTP_TIMEOUT_SEC / RETRY_BACKOFF_SEC); diagram
+         rule:HR-LG-009 was only a pointer ("SMTP alert delivery
+         contract") carrying NO retry values.
+         BINARY TEST (DEC-096): the mod:Logger SMTP alert-delivery
+         path is TothBot-organism architecture (runs on the VPS; the
+         operator loss-event notification surface) -> 0500000 D5/D6,
+         NOT a CIATS seed value and NOT a new standalone spec.
+         MIGRATED diagram-first ADD-only (from 1011007 sec 8
+         LG-ALERT-004, wholesale, NOT rewritten): direct-SMTP-send
+         bypass of the Logger queue on the QueueListener background
+         thread (synchronous time.sleep, NOT asyncio.sleep -- hot
+         path unaffected per ar:AR-014 / rule:HR-LG-001); BOUNDED
+         RETRY LOOP -- per-attempt 20s timeout (ALERT_SMTP_TIMEOUT_SEC,
+         covers connect/starttls/login/sendmail), 2 attempts
+         (ALERT_SMTP_MAX_ATTEMPTS), 1s backoff
+         (ALERT_SMTP_RETRY_BACKOFF_SEC), 41s worst-case wall;
+         credentials from environment, NEVER hardcoded; evt:ALERT_SENT
+         INFO on success, a SINGLE evt:ALERT_SMTP_FAILED CRITICAL only
+         on all-attempts-fail (single-event surface + rule:LG-ALERT-005
+         anti-recursion: the alert handler skips ALERT_SMTP_FAILED so a
+         persistent outage does not self-trigger; stderr is the
+         ultimate fallback).
+         LOSS-PREVENTION RATIONALE (mission priority minimize-loss):
+         the C1 IMMEDIATE alert set (evt:EMERGENCY_SL_FIRED /
+         evt:FULL_HALT_TRIGGERED / unprotected-position /
+         evt:TRADE_RECORD_WRITE_FAILED / evt:LOG_QUEUE_FULL) MUST
+         reach the operator -- the prior single-attempt 5s-timeout
+         config permanently LOST these alerts on transient Proton SMTP
+         timeouts (OI-029); the bounded retry restores delivery
+         durability for the operator loss-event notification surface.
+         R-STATE: HELD -- D5 R14 + D6 R13 (TB00453 bright line:
+         desc + figcaption ADD only; no visible text/geometry/viewBox
+         change; proven byte-for-byte vs dv1_178 -- rect 312 / line 95
+         / path 30 / polygon 5 / text 942 / svg 10 / viewBox 35 all
+         identical; 10 figures preserved; exactly one Revision-History
+         header). COMPANION (sole primary deliverable): 0500000
+         dv1_178 -> dv1_179. NAMESPACE: 0311001 v1_44 UNCHANGED --
+         descriptive coding-fact encoding on the pre-existing
+         rule:HR-LG-009 + mod:Logger; NO token minted (TB00607/TB00608
+         precedent). No paired MDR (forward architectural-gap fill,
+         not a latent-defect closure). DR-007.9 HTML well-formedness
+         pass confirmed pre-delivery (zero new errors vs dv1_178).
+         DR-078: NOT cleared for retirement on a gap -- 1011007
+         Logger_Coding_Spec dv1_6 STAYS LIVE this session; the clean
+         DD-014 re-audit (now expected zero-gap) + the 1011007
+         wholesale retirement (git rm --cached) defer to TB00610.
+         Max DEC = 111; next = DEC-112.
 
 
 DEC-110  (TB00608)  LOGGER GAPS G6 + G7 -- EVENT-CODE REGISTRY +

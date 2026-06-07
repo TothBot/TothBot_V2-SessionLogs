@@ -1,0 +1,261 @@
+TB00609 SESSION LOG v1_0
+========================
+
+MISSION (this session): Logger 1011007 migration PASS 3 -- the
+clean dedicated fact-level DD-014 / CF-V040-METHOD re-audit of
+the now-settled D5/D6 mod:Logger encoding against EVERY 1011007
+dv1_6 fact (sec 1-11), from-the-diagram-alone (strict), under
+the DR-078 loss-prevention gate; RETIRE 1011007 wholesale if
+clean, else migrate-then-defer. Mission 1 (consolidation). One
+primary mission (RR-SCOPE-011).
+
+RESULT: re-audit NOT clean -- G1..G7 all confirmed derivable,
+but ONE residual gap found (1011007 sec 8 LG-ALERT-004 SMTP
+delivery retry-loop, absent from the entire dv1_178 corpus).
+Per DR-078 do-not-retire-on-a-gap + the gap-found branch of the
+NSI: the gap was migrated diagram-first ADD-only (R HELD), and
+the 1011007 wholesale retirement is DEFERRED to TB00610. 1011007
+dv1_6 STAYS LIVE. Deliverables: 0500000 dv1_179 + TB00153 v1_78
+(DEC-111). 0311001 v1_44 UNCHANGED (no token minted).
+
+COLD-LOAD / ENTRY VERIFICATION
+------------------------------
+Read TB00609 NSI v1_0 + TB00000 v2_84 from GitHub HEAD (fresh
+tarball, both repos). Per the NSI also read the TB00602 Logger
+DD-014 gap register + TB00608 SL (G6/G7 result + OBSERVED DEBT).
+Read the live 0500000 D5 logger_box (constraints + q1_do +
+q4_triggers + q5_logs + event_registry + queue_health_monitor +
+reporting_hierarchy) + D6 tb_logger + §8 AR rows + 1011007
+Logger_Coding_Spec dv1_6 (sec 1-11) in full from HEAD. SD-13
+five-part + DD-011 chat-turn-1 run. Entry state verified against
+live HEAD (NOT trusted from the NSI), per RR-SCOPE-008:
+  0500000 = dv1_178 LIVE, md5 dee0c8a61072ddec1baf5a798729acf1,
+    10306 lines, sole version (G6/G7 authored TB00608; D5 R14 +
+    D6 R13 -- R HELD).
+  0311001 = v1_44 LIVE, sole version.
+  TB00153 Decision Register = v1_77 LIVE (latest DEC-110;
+    next = DEC-111).
+  1011007 = dv1_6 LIVE (Logger consolidation source; G1..G7 all
+    authored into the diagram; awaiting clean DD-014 re-audit).
+  TB00000 = v2_84.
+  V-038 = 0 open. C2/C3 level taxonomy + email bar = RATIFIED
+    (single V2 ladder INFO/WARNING/CRITICAL, rule:HR-RPT-003;
+    not re-opened).
+
+SD-13 FIVE-PART STATUS CHECK
+---------------------------
+(1) Canonical source: 0500000 dv1_178 LIVE.
+(2) Live consolidation sources remaining: 1011007 Logger dv1_6
+    (this target; NOT retired this session -- one residual gap
+    found, retirement = TB00610) + the E3-pending domain/anchor
+    organism docs (0700000/0710000/0800000/0810000 + set).
+(3) V-038: 0 open. No new diagram-vs-prose conflict found.
+(4) Mission: Mission 1 -- re-audit + retire 1011007 once the
+    diagram is DD-014 fact-comprehensive. Outcome: re-audit run;
+    one residual gap migrated; retirement deferred per DR-078.
+(5) Blocker: 1011007 retirement gated on a clean (zero-gap)
+    DD-014 re-audit, now expected at TB00610 (the migrated SMTP
+    retry-loop closes the last gap).
+
+DD-011 DERIVABILITY (chat-turn-1)
+---------------------------------
+OUTCOME 1, single compliant path. The full option space at the
+gap-found branch: (a) retire on a gap -- VIOLATES DR-078, ruled
+out; (b) rewrite 1011007 -- VIOLATES retire-wholesale/never-
+rewrite, ruled out; (c) author a new standalone spec for the
+retry-loop -- VIOLATES DEC-096 binary test (the SMTP alert-
+delivery path is organism architecture, belongs in the diagram),
+ruled out; (d) migrate the gap diagram-first ADD-only + defer
+retirement -- the only compliant path (migrate-then-re-audit-
+then-retire). Executed under derivable-decision authority; NOT
+surfaced to Bill as a ratification question. The migrated retry-
+loop values are read directly from 1011007 sec 8 LG-ALERT-004,
+not invented (RR-SCOPE-008 no-guess).
+
+SESSION SIZING (Claude's call per TB00000 sec 4.1)
+--------------------------------------------------
+The re-audit + the single-gap migration authored this session;
+the clean re-audit + the irreversible DR-078-gated wholesale
+retirement held to TB00610 so the retirement runs against a
+diagram that is now settled (gap closed) with fresh-eyes
+verification, rather than retiring in the same session that
+discovered and patched the last gap. Loss-prevention-correct
+slice (the Logger is the CIATS data spine; DR-078 do-not-rush).
+
+BINARY TEST (DEC-096)
+---------------------
+1011007 sec 8 LG-ALERT-004 SMTP delivery retry-loop = the
+mod:Logger operator loss-event notification path (runs on the
+VPS) = organism architecture -> 0500000 D5/D6, migrated
+wholesale, NOT a new standalone spec and NOT a CIATS seed value.
+
+RE-AUDIT FINDINGS (DD-014 strict, vs live dv1_178 D5/D6)
+--------------------------------------------------------
+G6 EVENT REGISTRY -- programmatic diff (1011007 sec 6 vs the D5
+  event_registry desc) CONFIRMED CLEAN: 83/83 operational event
+  codes present, correct V2-ladder collapse ({DEBUG,INFO}->INFO,
+  {WARN,HIGH}->WARNING, {CRITICAL}->CRITICAL), exact key fields,
+  0 mismatches; 4/4 self-observability exceptions exact
+  (LOG_QUEUE_FULL / ALERT_SMTP_FAILED / TRADE_RECORD_WRITE_FAILED
+  = CRITICAL, ALERT_SENT = INFO); evt:LOG_QUEUE_WARN [WARNING]
+  present.
+G1/G2 (sec 5) -- NDJSON one-object-per-line + orjson Decimal-to-
+  str serialization / no-float: PRESENT.
+G3 (sec 11) -- permanent trade-record file LG-TREC-001..009
+  (annual UTC JSONL, no rotation/cap/TTL, handler-local error
+  isolation, evt:TRADE_RECORD_WRITE_FAILED): PRESENT.
+G4 (sec 4/9) -- diagnostic tothbot.log RotatingFileHandler
+  (50MB x 90 backups, utf-8, %(message)s, logrotate): PRESENT.
+G7 (sec 4.4) -- queue-health monitor (60s poll / 0.80 fill /
+  evt:LOG_QUEUE_WARN): PRESENT.
+Sec 7 -- 23-field TRADE_CLOSE schema + 7-value exit_reason enum
+  + EMERGENCY_SL_FIRED producer-partition + SIGNAL_DECAY-not-an-
+  exit_reason note: PRESENT.
+Sec 4 queue -- bounded queue / type / back-pressure: PRESENT.
+RATIFIED-SUPERSEDED (NOT gaps): sec-3/sec-8 CRITICAL/HIGH SMTP
+  routing -> email bar (rule:HR-RPT-001/002); DEBUG/WARN vocab
+  -> V2 ladder (rule:HR-RPT-003).
+NON-ARCHITECTURAL (NOT gaps): Tier-1 coding-sequence, parent
+  chain, getLogger("tothbot") instance name, stdlib wiring flags,
+  queue-size 20x10x50 derivation (rationale only).
+RESIDUAL GAP (the ONE): sec 8 LG-ALERT-004 (dv1_5/OI-029) SMTP
+  delivery RETRY-LOOP -- confirmed ABSENT from the entire dv1_178
+  corpus (grep empty for ALERT_SMTP_TIMEOUT_SEC / RETRY_BACKOFF_
+  SEC); diagram rule:HR-LG-009 was a pointer only ("SMTP alert
+  delivery contract"), carrying no retry values.
+
+RESULT (delivered this session)
+-------------------------------
+1. 0500000 dv1_178 -> dv1_179. SMTP delivery retry-loop migrated
+   diagram-first ADD-only into the canonical mod:Logger encoding,
+   DD-014 code-writable-from-the-diagram-alone:
+   - D5 logger_box q1_do: appended the LG-ALERT-004 SMTP delivery
+     contract -- direct-SMTP-send bypass of the Logger queue on
+     the QueueListener background thread (synchronous time.sleep,
+     NOT asyncio.sleep -- hot path unaffected per ar:AR-014 /
+     rule:HR-LG-001); BOUNDED RETRY LOOP: per-attempt 20s timeout
+     (ALERT_SMTP_TIMEOUT_SEC, covering connect/starttls/login/
+     sendmail), 2 attempts (ALERT_SMTP_MAX_ATTEMPTS), 1s backoff
+     (ALERT_SMTP_RETRY_BACKOFF_SEC), 41s worst-case wall;
+     credentials from environment, NEVER hardcoded; evt:ALERT_SENT
+     INFO on success, a SINGLE evt:ALERT_SMTP_FAILED CRITICAL only
+     on all-attempts-fail (single-event surface + rule:LG-ALERT-005
+     anti-recursion; stderr ultimate fallback). LOSS-PREVENTION:
+     the C1 IMMEDIATE alert set (EMERGENCY_SL_FIRED / FULL_HALT /
+     unprotected-position / TRADE_RECORD_WRITE_FAILED /
+     LOG_QUEUE_FULL) must reach the operator -- the prior single-
+     attempt 5s-timeout config permanently LOST these on transient
+     SMTP timeouts (OI-029).
+   - D6 tb_logger q1_do: mirror reference to the canonical D5
+     contract (R HELD R13).
+   - D5 + D6 figcaption TB00609 narration added (ADD-only); §14
+     dv1_178 -> dv1_179 revision entry prepended (newest-first).
+   - R HELD: D5 R14 + D6 R13 per the TB00453 bright line. PROOF
+     (dv1_178 vs dv1_179, byte-for-byte): rect (312), line (95),
+     path (30), polygon (5), circle (0), text (942), svg (10),
+     viewBox attrs (35) ALL byte-identical; all 942 visible
+     <text> blocks identical; all 442 geometry elements identical;
+     all viewBox values identical; 10 figures preserved. DR-007.9:
+     lenient lxml HTML parse OK; ZERO new well-formedness errors
+     vs the dv1_178 baseline (same 30 pre-existing DTD_ID_REDEFINED
+     in both, line-number-stripped comparison). Exactly ONE
+     <h2>14. Revision History</h2>. Gap closure re-verified:
+     the retry-loop facts present in dv1_179, absent in dv1_178.
+2. TB00153 Decision Register v1_77 -> v1_78. DEC-111 inserted
+   (newest-first, above DEC-110). Records the PASS-3 re-audit
+   (G1..G7 clean, the one LG-ALERT-004 residual gap), the binary
+   test DEC-096, the diagram-first migration, the loss-prevention
+   rationale (OI-029), the R-hold (D5 R14 / D6 R13, byte-proof),
+   the sole companion (0500000 dv1_179), the 0311001-unchanged
+   no-token-minted status, and the DR-078 do-not-retire-on-a-gap
+   outcome (1011007 STAYS LIVE; clean re-audit + retirement =
+   TB00610). No paired MDR.
+
+NAMESPACE
+---------
+0311001 v1_44 UNCHANGED. The migrated retry-loop is a descriptive
+coding-fact encoded on the pre-existing rule:HR-LG-009 +
+mod:Logger; no new token minted (TB00607/TB00608 G1/G2/G4
+precedent). No-strand/parity not applicable (no deregistration).
+
+NO-GUESS / FLAG STATUS
+----------------------
+The residual gap was FLAGGED (not assumed away) and the migrated
+values were read verbatim from 1011007 sec 8 LG-ALERT-004 (20s
+timeout / 2 attempts / 1s backoff / 41s worst-case; env creds;
+single ALERT_SMTP_FAILED on all-fail). No fact invented. The
+"clean for G1..G7" finding was established by programmatic diff
+(G6) + section-by-section read (G1-G5, G7, sec 7/11), not recall.
+
+STANDING METHOD APPLIED
+-----------------------
+FP/DP; binary test DEC-096 (SMTP delivery path = organism
+architecture -> 0500000, not a new spec; migrated wholesale,
+never rewritten); TB00453 bright line (R held, proven byte-for-
+byte); DD-011 chat-turn-1 (gap-found branch is OUTCOME 1, not a
+Bill question); RR-SCOPE-008 no-guess (entry state + all 1011007
+facts read in full from live HEAD; md5 re-derived; G6 diff
+assertion-verified in Python); DR-078 do-not-retire-on-a-gap
+(1011007 NOT retired -- retirement is the TB00610 clean re-audit
+pass). All edits assertion-verified Python, abort-on-fail.
+Artifacts delivered incrementally via present_files as completed.
+RR-SCOPE-011 one primary mission. Diagram amendment + DECISION
+authored as one atomic act.
+
+PUSH (authored; Bill executes)
+------------------------------
+DOCS repo (1 file added, 1 superseded removed via git rm
+--cached): 0500000 dv1_179 added + dv1_178 removed.
+SESSIONLOGS repo (3 files added, 1 superseded removed): TB00153
+Decision Register v1_78 added + v1_77 removed; TB00609 SL v1_0
+added; TB00610 NSI v1_0 added.
+One linear cd+git chain across both repos; literal absolute
+paths; branch=master both repos.
+
+DR-010 POST-PUSH VERIFICATION (run after Bill pushes)
+-----------------------------------------------------
+Fresh tarball into a clean dir; present + md5 byte-for-byte on
+all 4 pushed files; explicit one-version ABSENCE checks on the 2
+removed predecessors (0500000 dv1_178, TB00153 Decision Register
+v1_77). Three-part pattern: present + md5 match + absent.
+
+OBSERVED DEBT (flagged; NOT fixed -- out of scope)
+--------------------------------------------------
+1. TB00153 large pre-existing one-version-rule violation persists
+   (~70+ superseded TB00153_Decision_Register versions + MDR/DR
+   name variants in HEAD; flagged TB00605/606/607/608). This
+   session removed only the immediate predecessor (v1_77).
+   Dedicated cleanup pass recommended; deliberately NOT bundled.
+2. TB00153 internal banner still reads "DECISION REGISTER v1_70"
+   while DocVersion = v1_78 (pre-existing stale banner; not
+   touched -- out of scope).
+3. 0500000 §14 revision-history positioning + absent dv1_100..
+   onward per-version entries (pre-existing housekeeping gap)
+   -- NOT addressed this slice.
+
+CARRY-FORWARD (-> TB00610 NSI)
+------------------------------
+1. PASS 4: the clean (now expected zero-gap) fact-level DD-014
+   re-audit of the D5/D6 Logger encoding vs EVERY 1011007 fact
+   (the SMTP retry-loop now migrated -- re-confirm it + re-confirm
+   G1..G7 still derivable); if clean, RETIRE 1011007 dv1_6
+   wholesale (git rm --cached) under the DR-078 gate. Author the
+   paired TB00153 DEC-112 atomically. Do NOT retire on a gap.
+2. E3 structural collapse of domain/anchor organism docs
+   (0700000 / 0710000 / 0800000 / 0810000); CIATS-ownership strip
+   (0800000 mae_mult / emergency_sl_mult mirror).
+3. TB00153 superseded-version cleanup (OBSERVED DEBT 1) + banner
+   (OBSERVED DEBT 2).
+4. 0500000 §14 revision-history positioning + absent dv1_100..
+   entries.
+5. Stale plans (0911002 / 0911001) update/retire if they mislead.
+
+CLAUDE-ERRORS-THIS-SESSION
+--------------------------
+None affecting delivered artifacts. The session was resumed mid-
+execution after a context compaction; entry state (dv1_178 md5,
+the dv1_179 working file + edit script, the extracted tarballs)
+was re-verified against disk before resuming rather than trusted
+from the summary (RR-SCOPE-008). All verifications (R-hold byte-
+proof, DR-007.9, gap-closure re-verify) were re-run on the actual
+files. No malformed artifact written or delivered.
