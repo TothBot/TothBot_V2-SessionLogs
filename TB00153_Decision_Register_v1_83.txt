@@ -1,10 +1,10 @@
 DocDCN:     TB00153
 DocTitle:   Decision_Register
-DocVersion: v1_82
+DocVersion: v1_83
 DocOwner:   Bill
-DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00153_Decision_Register_v1_82.txt
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00153_Decision_Register_v1_83.txt
 DocDate:    06-07-2026
-DocTime:    12:55:52 UTC
+DocTime:    14:05:00 UTC
 
 ============================================================
 TB00153 DECISION REGISTER v1_70
@@ -7213,6 +7213,109 @@ group's three remaining tokens (D3 mod:Exit_Controller) and
 CLOSES the DEC-045 carry-forward — Exit-controller group COMPLETE.
 
 
+DEC-116  (TB00615)  0500000 DESIGN-COMPLETENESS GAP (b) -- CIATS
+         STATISTICAL-ENGINE FACT CONSOLIDATION (ADD-ONLY; NO
+         RETIREMENT). SLICE 2 of the TB00613 four-gap diagram-
+         completeness sequence (Slice 1 gaps (c)+(a) = DEC-115; gap
+         (d) Tier-3 cross-module layer remains for Slice 3; OPTION B
+         clean-slate build runs in a later Claude Code session AFTER
+         all four gaps close).
+         Decision (gap b): the CIATS statistical engine is named in
+         0500000 D5 but its operative facts were not diagram-complete
+         to the DD-014 strict standard (could not be rebuilt from the
+         diagram alone). Source of record is the RETIRED 0211001
+         dv1_0, recovered from git history only (git show
+         b408ac1^:02XXXXX_Operations/0211001_CIATS_Specification_
+         dv1_0.txt; recovered md5 103117731b55b71f92dd3cb3d9c9785a,
+         1001 lines; verified per RR-SCOPE-008). SIX operative facts
+         CONSOLIDATED ADD-only into the D5 CIATS figure:
+         (1) EWMA recurrence EWMA_t = lambda*x_t + (1-lambda)*
+         EWMA_(t-1) [stats_box q1_do; from CI-SE-004];
+         (2) Sharpe = mean(net_gain_usd)/std(net_gain_usd) over the
+         rolling 200-300 closed-trade window [stats_box q1_do;
+         CI-SE-005];
+         (3) Half-Kelly W/R operative definitions using REALIZED NET
+         P/L AFTER ALL FEES ONLY -- W = count(net_gain>0) /
+         count(total closed in window); R = mean(net winners) /
+         mean(abs(net losers)); K_full = W-((1-W)/R); K_half =
+         K_full*0.5 [stats_box q1_do; CI-KE-002/003] (loss-
+         prevention: gross TP/price inputs are NEVER valid Kelly
+         inputs -- at ~0.42% round-trip fees a 1.5x gross trade nets
+         ~1.4x, so a gross input inflates the bet ~7%);
+         (4) Kelly update interval = every 50 closed trades after the
+         200-trade activation floor, rolling 200-300 window [stats_box
+         q1_do + proposal_box q4_triggers; CI-KE-006];
+         (5) PDCA PLAN candidate rule = Spearman |rho|>0.3 AND p<0.05
+         (both gates), NO_PROPOSAL_GENERATED exit when none qualify,
+         one-proposal-per-cycle (strongest |rho|) [pdca_box q1_do;
+         CI-PDCA-003 + CI-PE-003];
+         (6) PDCA CHECK Sharpe = SECONDARY directional confirmation
+         only (never the decision gate), reject + hold baseline if
+         p>=0.01 [pdca_box q1_do; CI-PDCA-005].
+         The Mann-Whitney U alpha=0.01 absolute advancement gate
+         (rule:HR-CI-007) and the other already-present CIATS facts
+         were re-verified present, not re-added.
+         DELIBERATE NON-IMPORTS (diagram governs per DD-001/DD-002;
+         the retired spec is NOT re-imported as live): (i) the 0211001
+         "5% fixed per_trade_pct" pre-200 seed is SUPERSEDED by the
+         $0.50 per_trade_size_usd seed (TB00000 sec 8); (ii) CI-KE-004
+         max_concurrent normalization is SUPERSEDED (max_concurrent
+         de-registered at b408ac1 / 0311001 v1_40; per DEC-115 the
+         per-module wallet balance is the sole sizing boundary);
+         (iii) CI-PDCA-004 "run-in-paper-collect-50" DO method is
+         SUPERSEDED by the diagram's shadow-evaluate-against-
+         historical-corpus DO method.
+         OPEN DESIGN QUESTION SURFACED TO BILL (NOT silently resolved;
+         surfaced per DD-011 as a genuine business-judgment call, not
+         a derivable decision): retired 0211001 CI-SE-003 specifies
+         CUSUM monitoring the Stream-2 Trade-Outcome-Bus net_gain
+         stream for sequential detection of sustained shifts in
+         TRADING PERFORMANCE; the live diagram applies CUSUM ONLY to
+         the Stream-1 EWMA operational-health signals (rejection_rate
+         / rate_counter / latency) and has NO performance/net_gain
+         CUSUM. This is a loss-prevention-relevant capability
+         divergence = a design decision, not a derivable ADD. BILL
+         ACTION REQUIRED: ratify EITHER (A) adopt a net_gain CUSUM on
+         the Stream-2 performance stream (new diagram capability), OR
+         (B) confirm the 0211001 net_gain-CUSUM detail is deliberately
+         superseded. Until ratified, DD-014 zero-gap on the CIATS
+         engine is NOT attested (recorded honestly; no fabricated
+         zero-gap claim). Carried in TB00616 NSI.
+         BINARY TEST (DEC-096): the CIATS statistical-engine operative
+         facts are TothBot-organism architecture -> canonical in
+         0500000 D5. No parameter VALUE moved (seed values stay in
+         TB00000 sec 8; the consolidated content is indicator/
+         estimator COMPUTATION + decision logic, not parameter seed
+         values). YES -> diagram-first.
+         R-STATE (TB00453 bright line): <desc> + D5 figcaption ADD
+         only -- NO visible SVG <text> / geometry / viewBox change
+         (1500x1200); figure count unchanged; D5 R-number HELD at R14;
+         all 9 non-CIATS figures BYTE-IDENTICAL to HEAD (per-figure
+         diff verified). The sec-14 Revision History gained one
+         ADD-only dv1_180 -> dv1_181 entry (the prior TB00614
+         dv1_179 -> dv1_180 entry preserved verbatim).
+         STATUS: RATIFIED (consolidation executed under DD-011 OUTCOME
+         1 single-compliant-path derivable-decision authority; the
+         CUSUM divergence is the one genuine business-judgment item,
+         surfaced to Bill, NOT self-resolved). Companion primary
+         deliverable 0500000 dv1_180 -> dv1_181 (only the D5 CIATS
+         figure changed; final md5 326651df53711ddfb028c8d28c6c39be).
+         NAMESPACE: 0311001 v1_44 UNCHANGED -- no token minted, none
+         deregistered (all referenced rule:/contract:/mod: tokens
+         pre-existing). TB00000 NOT amended (no seed value changed).
+         The net 1:1.5 R:R minimum remains the ONLY hardcoded value (a
+         floor, never a cap). No paired MDR: forward DD-014 design-
+         completeness consolidation (pre-paper-trading; nothing
+         running), not a latent runtime-defect closure. DR-078 N/A
+         this slice (no source retirement; 0211001 already retired and
+         stays retired). V-038 = 0 open (unchanged).
+         DR-010 post-push: present + md5 + ABSENT, the absent check
+         covering the superseded 0500000_System_Architecture_Overview_
+         dv1_180_Claude_Source.html (Docs) +
+         TB00153_Decision_Register_v1_82.txt (SessionLogs).
+         Max DEC = 116; next = DEC-117.
+
+
 DEC-115  (TB00614)  0500000 DESIGN-COMPLETENESS gaps (c)+(a) --
          PAPER-LEDGER OPERATIVE CORRECTION + GATE-7 CAP SEED
          DEFINITION. SLICE 1 of the TB00614 4-gap diagram-completeness
@@ -7278,7 +7381,8 @@ DEC-115  (TB00614)  0500000 DESIGN-COMPLETENESS gaps (c)+(a) --
          covering the superseded 0500000_System_Architecture_Overview_
          dv1_179_Claude_Source.html (Docs) + TB00000_..._v2_84.txt +
          TB00153_Decision_Register_v1_81.txt (SessionLogs).
-         Max DEC = 115; next = DEC-116.
+         Max DEC = 115; next = DEC-116. (Max-DEC pointer
+         superseded by DEC-116.)
 
 
 DEC-114  (TB00612)  AA=08 TRADING_SYSTEM E3 STRUCTURAL COLLAPSE --
