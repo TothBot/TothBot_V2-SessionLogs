@@ -1,9 +1,9 @@
 DocDCN:     TB00153
 DocTitle:   Decision_Register
-DocVersion: v1_73
+DocVersion: v1_74
 DocOwner:   Bill
-DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00153_Decision_Register_v1_73.txt
-DocDate:    06-01-2026
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00153_Decision_Register_v1_74.txt
+DocDate:    06-07-2026
 DocTime:    18:25:10 UTC
 
 ============================================================
@@ -7213,6 +7213,70 @@ group's three remaining tokens (D3 mod:Exit_Controller) and
 CLOSES the DEC-045 carry-forward — Exit-controller group COMPLETE.
 
 
+DEC-107  (TB00605)  OPERATOR REPORTING HIERARCHY -- DIAGRAM-FIRST
+         AUTHORING INTO 0500000 D5/D6 (1 PUSH + 5 PULL CATEGORIES;
+         EMAIL BAR; LOG-LEVEL/ROUTING DECOUPLING; SINGLE V2 LADDER).
+         Bill-ratified at TB00604 (Q1-Q5); authored at TB00605.
+         Binary architecture test DEC-096: the operator reporting
+         surface IS organism architecture -> it lives in the
+         0500000 design diagrams, NOT in a new standalone spec
+         (DEC-096 / DEC-003 Path A). RATIFIED CONTENT:
+         contract:Operator_Reporting_Hierarchy = 1 PUSH + 5 PULL
+         categories, all VIEWS over contract:Two_Stream_Record_
+         Architecture Stream 1 + Stream 2 + CIATS computed values
+         (FP8 single-source; NO new data capture). (1) C1 IMMEDIATE
+         [PUSH email] -- emitted IFF the email bar rule:HR-RPT-001
+         is met: waiting until the next scheduled C2 daily pull
+         would cause loss / system failure / irreversible-or-
+         unprotected exposure. C1 set: unprotected position,
+         emergency SL fired, full halt (10pct), kill-switch,
+         sustained data-feed/WS failure (3 consecutive), unhandled
+         exception, evt:TRADE_RECORD_WRITE_FAILED, evt:LOG_QUEUE_
+         FULL. (2) C2 DAILY dashboard [PULL; NEW] -- operational
+         backstop that makes the do-not-email rule SAFE (caps max
+         latency of any non-emailed item at 1 day); absorbs
+         evt:SESSION_PAUSE_TRIGGERED (5pct), CUSUM breaches, fee-
+         tier drift, latency drift. (3) C3 WEEKLY, (4) C4 MONTHLY
+         [positively redefined -- evolution, not a junk drawer],
+         (5) C5 ANNUAL calendar-year [tax / IRS Form 8949 / P&L],
+         (6) C6 ROLLING-12mo trajectory. CROSS-CUTTING: log level
+         (record-filter property) is DECOUPLED from delivery
+         routing (rule:HR-RPT-002); single V2 ladder INFO/WARNING/
+         CRITICAL (rule:HR-RPT-003) supersedes the prior 5-level
+         CRITICAL/HIGH/MEDIUM/LOW/INFO vocabulary; the prior
+         rule:HR-LG-007 CRITICAL/HIGH/MEDIUM email policy is
+         SUPERSEDED-FOR-ROUTING (the contradiction in both Logger
+         nodes' live <desc> was reconciled). LOSS-PREVENTION
+         RATIONALE (FP1/FP2; pref-15 minimize-loss-first): the
+         email bar REPLACES a level-triggered fence (which both
+         under-alerts -- non-immediate noise -- and risks alert
+         fatigue burying the one alert that matters) with a rare,
+         high-signal push channel reserved for conditions where
+         operator latency itself causes loss; every loss-critical
+         C1 condition still emails, while non-immediate items move
+         to the C2 daily backstop -- strictly fewer missed-loss
+         paths, not more. ALTERNATIVE REJECTED: a standalone
+         reporting spec (fails the DEC-096 binary test -> dispersal
+         the consolidation campaign exists to remove). DEPENDENCY:
+         C5 ANNUAL has NO data source until Logger gap G3 (the
+         permanent append-only trade-record file trades_<YYYY>.
+         jsonl, fsync-per-write, annual UTC segmentation) is
+         authored diagram-first into contract:Two_Stream_Record_
+         Architecture; the live blueprint routes Stream 2 to
+         tothbot.log (self-deletes ~6 days). Combined one-pass with
+         G3 DEFERRED to TB00606 per TB00604 Q5 (TB00602 gap
+         register). CARVE-OUT: the human operator incident-RESPONSE
+         procedure stays in 0211004 Operations (process, not
+         organism code). COMPANIONS: 0500000 dv1_174 -> dv1_175
+         (D5 logger_box canonical full spec + D6 tb_logger mirror;
+         R HELD D5 R14 + D6 R13 per the TB00453 bright line -- desc
+         + figcaption ADD/MODIFY only, no visible <text>/geometry/
+         viewBox change); 0311001 v1_41 -> v1_42 (1 contract + 3
+         rule tokens registered). No prior-doc amendment beyond
+         these. No paired MDR (architecture authoring, not defect
+         closure). Max DEC after append = 107.
+
+
 DEC-106  (TB00566)  RETIREMENT-TRACKING HOME -- DD-012 LEDGER
          IS THE SOLE RECORD; TB00394 NEVER BUMPED ON RETIREMENT.
          Bill-ratified governance/methodology correction. Root
@@ -11177,6 +11241,38 @@ authored at v1_15 §3 (this version).]
 9. REVISION HISTORY
 ============================================================
 
+  v1_74 2026-06-07  TB00605 DR-APPEND -- DEC-107 NEW.
+                    Operator reporting hierarchy authored diagram-
+                    first into 0500000 D5/D6 per Bill ratification
+                    TB00604 Q1-Q5 + binary test DEC-096: 1 PUSH (C1
+                    IMMEDIATE email, gated by the rule:HR-RPT-001
+                    email bar) + 5 PULL (C2 DAILY[NEW] / C3 WEEKLY /
+                    C4 MONTHLY[redefined] / C5 ANNUAL cal-yr / C6
+                    ROLLING-12mo), all VIEWS over the two Logger
+                    streams + CIATS computed values (FP8). Reconciled
+                    the live alert-routing contradiction in both
+                    Logger nodes: email bar rule:HR-RPT-001 + log-
+                    level/routing decoupling rule:HR-RPT-002 + single
+                    V2 ladder INFO/WARNING/CRITICAL rule:HR-RPT-003
+                    (prior rule:HR-LG-007 CRITICAL/HIGH/MEDIUM email
+                    policy SUPERSEDED-FOR-ROUTING). Loss-prevention
+                    (FP1/FP2): rare high-signal push protects the one
+                    alert that matters; every C1 loss-critical event
+                    still emails, non-immediate items -> C2 daily
+                    backstop. C5 ANNUAL depends on Logger gap G3
+                    permanent trade-record file -- combined one-pass
+                    DEFERRED to TB00606 per Q5. Human incident-
+                    RESPONSE procedure stays in 0211004 (carve-out).
+                    Companions: 0500000 dv1_175 (R HELD D5 R14 + D6
+                    R13 per TB00453) + 0311001 v1_42 (1 contract + 3
+                    rule tokens). Detail-only append (post-DEC-027
+                    pattern; section 2 DECISION INDEX unchanged).
+                    End-marker set to v1_74. Full prior history
+                    preserved (CI-006). Companion: TB00605 SL v1_0 +
+                    TB00606 NSI v1_0. No paired MDR (architecture
+                    authoring). Max DEC = 107; next = DEC-108.
+                    Supersedes v1_73.
+
   v1_73 2026-06-01  TB00566 DR-APPEND -- DEC-106 NEW.
                     Retirement-tracking home ratified: the DD-012
                     ledger (SL/NSI CHECK-3) is the SOLE retirement
@@ -14489,5 +14585,5 @@ authored at v1_15 §3 (this version).]
                     §4.4 required deliverable.
 
 ============================================================
-END OF TB00153 DECISION REGISTER v1_73
+END OF TB00153 DECISION REGISTER v1_74
 ============================================================
