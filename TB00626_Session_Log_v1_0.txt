@@ -1,0 +1,206 @@
+TB00626 SESSION LOG v1_0
+========================
+Date: 06-07-2026
+
+MISSION (this session, per TB00626 NSI + Bill OCS): close D2 PHASE-1
+gap G3(b) -- author the SIGNAL_DECAY remainder-cancel WIRING into D2,
+then re-run the PHASE 1 code-completeness audit on D2.
+
+OUTCOME: COMPLETE. G3(b) wiring authored ADD-only into D2
+(0500000 dv1_185 -> dv1_186); PHASE 1 re-audit re-run on D2 = FULL
+PASS (verdict below). Single artifact delivered via present_files.
+NO new DEC, NO MDR, NO DR, NO 0311001, NO TB00000 change this session.
+
+============================================================
+SESSION-OPEN (completed; all checks PASS)
+============================================================
+Cold-loaded (public tarball, both repos): TB00626 NSI + TB00000
+v2_87 + TB00625 Session Log + 0500000 dv1_185. HEAD verified
+(RR-SCOPE-008, grep not recall):
+- 0500000 dv1_185 sole version; md5 = 9526c01b882725159bc6655764492fbc;
+  dv1_184 ABSENT                                          CONFIRMED
+- 0311001 v1_45 sole version                              CONFIRMED
+- TB00153 DR v1_88 + MDR v1_53 highest of each; max DEC = 121
+  (DEC-122 appears ONLY as the "next =" pointer inside the
+  DEC-121 block); DR v1_87 + TB00000 v2_86 ABSENT          CONFIRMED
+- TB00000 v2_87 present                                   CONFIRMED
+SD-13: consolidation COMPLETE (TB00000 v2_87); zero live sources.
+DD-011 at chat-turn 1 (G3(b)): OUTCOME 1 single compliant path
+(see below). Executed under derivable-decision authority; no
+ratification question surfaced.
+
+============================================================
+DD-011 DERIVABILITY TEST (chat-turn 1) -- G3(b)
+============================================================
+Option space:
+ A. Author the remainder-cancel wiring into gate:G5_Selection_
+    Controller (partial_fill_ownership + q4_triggers), routing the
+    single-order remainder cancel through the existing
+    contract:WSManager_Dispatch_Seam to the canonical Kraken
+    single-order CancelOrder endpoint; NO new token; desc-only
+    (R holds R9).  <-- COMPLIANT.
+ B. Mint channel:kraken_rest_CancelOrder -- REJECTED: NSI directs
+    no new token; the CancelOrder endpoint is already canonical at
+    container:Kraken_REST_API q1_do ("order cancellation
+    (CancelOrder + CancelAll)") and the cancel_order mechanism is
+    canonical throughout, so the wiring is derivable without a new
+    token.
+ C. Route through channel:kraken_rest_CancelAllOrders (the
+    structured token that DOES exist) -- REJECTED as a loss vector:
+    CancelAllOrders is the account-wide emergency kill switch (D1
+    REST-CAO-004/005); using it to cancel one working remainder
+    would cancel the TP + emergSL legs protecting OTHER live
+    positions, destroying crash protection.
+OUTCOME 1 = single compliant path (A). Executed under derivable-
+decision authority; NOT surfaced as a Bill ratification question.
+
+NSI-vs-HEAD DIVERGENCE (RR-SCOPE-008, reported not surfaced):
+the TB00626 NSI named the wiring channel as
+channel:kraken_rest_CancelOrder and asserted it was "already
+canonical". Live HEAD grep shows NO such STRUCTURED channel token
+-- only the bare CancelOrder endpoint (container:Kraken_REST_API
+q1_do) + the cancel_order mechanism are canonical. The divergence
+does NOT change disposition A (the wiring is authored against the
+existing canonical CancelOrder endpoint + cancel_order mechanism
+WITHOUT a new token, and the structured CancelAllOrders token is
+rejected as a loss vector), so it is a derivable resolution, not a
+business-judgment fork. NSIs are informational per sec 4.1 /
+RR-SCOPE-007; live HEAD governs.
+
+NO new DEC (decided at turn 1): G3(b) is a pure derivable forward
+DD-014 code-completeness gap-fill; per the TB00599/TB00600 forward-
+gap-fill precedent on this same gate it runs under DEC-096 + the
+standing DR-078/DD-014 mandate with NO new TB00153 decision. DR
+stays v1_88; MDR stays v1_53 (V-038 0 open). DR-078: no source spec
+retired (forward authoring).
+
+============================================================
+WORK COMPLETED -- 0500000 dv1_185 -> dv1_186 (Docs)
+============================================================
+ONE amendment, assertion-verified exact-match Python (abort-on-
+fail; all anchors count-verified count=1 pre-edit; residual guards
+post-edit; net growth +11529 chars, ADD-only). HTML well-formedness
+(DR-007.9): lxml parser error multiset TYPE-NORMALIZED IDENTICAL to
+dv1_185 (32 == 32; zero regression -- 30 pre-existing duplicate-SVG-
+marker-id validity notes + 2 pre-existing figcaption-prose strong
+tag-mismatch notes, all present in both versions, none introduced).
+SVG / figure / figcaption tag balance 10/10/10; exactly ONE
+"<h2>14. Revision History</h2>"; D2 viewBox 1500x1700 preserved.
+
+G3(b) -- SIGNAL_DECAY REMAINDER-CANCEL WIRING authored ADD-only at
+gate:G5_Selection_Controller:
+- partial_fill_ownership field: the prior deferral sentence
+  (cancel-DISPATCH mechanics + cancel-CONTROL logic "DEFERRED to
+  0511003 + the mod:Selection_Controller spec") is PRESERVED verbatim
+  (CI-005/CI-006) and SUPERSEDED by an appended G3(b) WIRING clause
+  stating: trigger = SELECTION_CANCEL__SSS_SIGNAL_DECAY (emitted by
+  mod:Signal_Pipeline sss_engine on signal_decay=True with
+  decay_params) on a still-working Selection-owned entry order
+  (working, or partially-filled with an open remainder); ACTION =
+  single-order cancel of the UNFILLED / remaining qty ONLY keyed by
+  cl_ord_id (filled portion untouched, Exit-owned per ar:AR-054);
+  DISPATCH = routed through contract:WSManager_Dispatch_Seam (no
+  direct ws_private -- the same sole-gatekeeper rule that closes the
+  TB00148 F30 finding), seam branches on param:paper_trading_mode
+  (TRUE -> local sim removes simulated remainder, PT_MODE_001; FALSE
+  -> ws_private.send(cancel_order) -> Kraken single-order CancelOrder
+  endpoint, PT_MODE_002); HARD RULE (loss-prevention) = SINGLE-order
+  CancelOrder, NEVER channel:kraken_rest_CancelAllOrders (the
+  emergency kill switch would cancel the TP + emergSL of OTHER live
+  positions per D1 REST-CAO-004/005); LOGGED = SELECTION_CANCEL__SSS_
+  SIGNAL_DECAY with named fields (pair, side, cl_ord_id, order_id,
+  remaining_qty_cancelled, decay_params, paper_mode_flag, pt_mode,
+  dispatch_outcome), never silent (HR-SSS-007); on ack the cancelled
+  remainder is cleared from the per-module Pending Order Registry
+  (ar:AR-053).
+- q4_triggers field: extended ADD-only with the cancel-dispatch
+  downstream (seam single-order cancel_order -> CancelOrder, never
+  CancelAllOrders; Logger entry; Pending Order Registry clearance).
+- figcaption: OPTION R EXTENSION (xvii) added ADD-only (full G3(b)
+  attestation incl the NSI-vs-HEAD divergence resolution).
+- DC header dv1_185 -> dv1_186 (HTML <title> + DocVersion + DocPath
+  + DocTime); section-14 Revision History dv1_185 -> dv1_186 entry
+  added ADD-only (newest-first).
+
+R-STATE: D2 HELD at R9 (TB00453 bright line). Diff of the D2 figure
+block shows EXACTLY 5 changed lines: partial_fill_ownership (x2),
+q4_triggers (x2), figcaption (xvii) (x1). NO visible SVG
+<text>/<rect>/<line>/<path>/<polygon>/<title>/title-bar/
+diagram_canonical byte change; diagram_canonical still reads
+Image2_T2_R9_Trading_Pipeline; no Image2_T2_R10 anywhere; no
+R-increment chain rotation; all 9 other figures byte-identical
+per DEC-003 Path A.
+
+BINARY TEST (DEC-096): remainder-cancel wiring is organism pipeline
+architecture -> D2 (YES); no seed VALUE moved (TB00000 sec 8
+unchanged; the net 1:1.5 R:R minimum remains the only hardcoded
+value). 0311001 v1_45 UNCHANGED -- no token minted (CancelOrder
+endpoint + cancel_order + contract:WSManager_Dispatch_Seam +
+SELECTION_CANCEL__SSS_SIGNAL_DECAY + ar:AR-053/ar:AR-054 +
+pt_mode:PT_MODE_001/002 all pre-existing canonical; no-strand
+confirmed).
+
+============================================================
+PHASE 1 RE-AUDIT (D2) -- verdict
+============================================================
+Re-audited against the TB00622 dispositions + the COMPLETENESS TEST
+(code writable from D2 alone, 5 questions per element, no vague
+terms, all values explicit, all conditions deterministic):
+- G1 (D2 contract:Parameter_Store_Snapshot consumes == q1_do
+  9-param set): PASS (closed TB00625, held).
+- G2 (D2 gate:Pre_Gate_1 online-only): PASS (closed TB00625, held).
+- G3a (D2 gate:G5_Selection_Controller 4-gate, no count proxy):
+  PASS (closed TB00625, re-confirmed).
+- G3b (D2 SIGNAL_DECAY remainder-cancel wiring): PASS (closed this
+  session). All 5 COMPLETENESS-TEST questions derivable from D2
+  alone (Q1 in->out single-order remainder cancel; Q2 interface
+  seam + Kraken CancelOrder endpoint; Q3 hard rules never-
+  CancelAllOrders + no-direct-ws_private + deterministic paper/live
+  branch; Q4 trigger SIGNAL_DECAY + downstream registry clearance;
+  Q5 named log fields). No vague terms.
+RESULT: D2 = FULL PASS on the PHASE 1 code-completeness audit (all
+four tracked D2 PHASE-1 gaps G1/G2/G3a/G3b closed).
+PHASE 2 STAYS GATED: D2 full-PASS does NOT open PHASE 2. G4 (D9
+Gate-8 evt:G8_A1_ACCEPT) REMAINS; a FULL D1-D9 + Tier-1 PHASE 1
+re-audit all-PASS is required before any Option B code generation.
+
+============================================================
+DELIVERABLES (this session) + md5
+============================================================
+- 0500000_..._dv1_186_Claude_Source.html  343a474a8747e58f5b7212069560463f  (Docs)
+- TB00626_Session_Log_v1_0.txt             (this)
+- TB00627_Next_Session_Instructions_v1_0.txt
+(md5 is the pre-push working-copy hash; confirm against HEAD in
+DR-010 post-push verification.)
+
+============================================================
+PUSH (two repos; see OP4 box in chat) + git rm --cached
+============================================================
+Docs: add 0500000 dv1_186; git rm --cached 0500000 dv1_185
+  (one-version rule). SessionLogs: add TB00626 SL + TB00627 NSI.
+NO TB00000 / DR / MDR / 0311001 change this session.
+Push branch = master both repos.
+
+============================================================
+DR-010 POST-PUSH VERIFICATION
+============================================================
+Fresh tarball into a clean dir (both repos); md5 byte-match the
+3 pushed files (0500000 dv1_186 + TB00626 SL + TB00627 NSI:
+present + md5); ABSENT check on the 1 superseded file 0500000
+dv1_185. Three-part: present + md5 + ABSENT.
+
+============================================================
+CARRY-FORWARD (TB00627, chat)
+============================================================
+1. NEXT SLICE: G4 -- register + emit/log evt:G8_A1_ACCEPT (0311001
+   + D9 q5_logs), symmetric with evt:G8_A1_REJECT (own slice).
+2. On a FULL D1-D9 + Tier-1 PHASE 1 re-audit all-PASS -> PHASE 2
+   (Option B clean-slate code gen, Claude Code).
+3. Deferred non-organism housekeeping (non-loss, non-blocking):
+   stale plans 0911002 / TB00394; TB00153 one-version backlog
+   (~140 stale DR/MDR versions in HEAD) + the stale DR internal
+   "v1_70" title line; anchor-doc E3 collapse; figcaption / viewBox
+   R-stamp hygiene; the pre-existing D2 root <desc> stray-duplicate
+   R-increment fields.
+
+END
