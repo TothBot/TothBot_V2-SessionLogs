@@ -1,0 +1,169 @@
+TB00601 SESSION LOG v1_0
+========================
+
+MISSION (TB00601 NSI PRIMARY): CF-D2-0711001-REAUDIT -- fresh clean DD-014 re-audit of
+D2 (0500000 dv1_174) vs 0711001 dv1_3 from-the-diagram-alone (strict); if clean, RETIRE
+0711001. Mission 1 (consolidation). One primary mission (RR-SCOPE-011).
+
+COLD-LOAD
+---------
+Read from GitHub HEAD via public tarball: TB00601_Next_Session_Instructions_v1_0.txt;
+TB00000 v2_84; TB00600_Session_Log_v1_0.txt (prior); 0500000 dv1_174 (D2 + figcaptions
+xiv/xv); 0711001 dv1_3 (full, 1421 lines); 0311001 v1_41 (doc-registry precedent).
+
+ENTRY STATE (verified vs live HEAD, not trusted from NSI)
+--------------------------------------------------------
+0500000 = dv1_174 LIVE; md5 ab115b66a1b32fec0e3438ac253e79eb; 10287 lines; sole version
+  (dv1_173 ABSENT). MATCHES the TB00600 push hash.
+0711001 = dv1_3 LIVE (07XXXXX_Strategy; 1421 lines); sole version.
+1011007 = dv1_6 LIVE (next-mission target, confirmed present).
+TB00000 = v2_84. V-038 = 0 open through dv1_174.
+
+SD-13 FIVE-PART STATUS CHECK
+---------------------------
+(1) Canonical source: 0500000 dv1_174 LIVE. (2) Live consolidation sources remaining:
+0711001 dv1_3 (this target) + 1011007 Logger dv1_6 (next). (3) V-038 = 0 open through
+dv1_174. (4) Mission: Mission 1 consolidation -- clean re-audit of D2 to clear DR-078
+and retire 0711001. (5) Blocker: DR-078 gate (D2 must be DD-014 fact-comprehensive for
+every 0711001 fact) -- CLEARED this session.
+
+DD-011 DERIVABILITY (chat-turn-1)
+---------------------------------
+OUTCOME 1 single compliant path. The re-audit is CLEAN (zero residual gap, below). The
+NSI prescribes exactly one disposition for a clean re-audit: retire 0711001 wholesale.
+Not a Bill business-judgment call. Executed under derivable-decision authority; not
+surfaced as a ratification question. One figure scope (D2 verified; no amendment).
+
+RE-AUDIT (CF-D2-0711001-REAUDIT; D2 fact-level DD-014 vs 0711001 dv1_3; strict;
+from-the-diagram-alone)
+---------------------------------------------------------------------------------
+0711001 dv1_3 re-read in full (1421 lines, HEAD). Every fact-level assertion in sec 3-10
+re-checked against the D2 mod:Signal_Pipeline (sss_engine) <desc> + the live diagram-set
+corpus. The TB00600 migration (dv1_174) CLOSED the prior residual gap.
+
+CLEAN -- ZERO RESIDUAL GAP. Confirmed answerable from D2 alone (sss_engine <desc>) or
+canonical elsewhere in the diagram set:
+
+  SEC 5-6 SEEDING + COMPUTATION (the TB00600-flagged gap, primary re-check focus) -- now
+  present in the sss_engine constraints <desc>:
+    - four SSS indicators (RSI(14), EMA9, EMA21, VolumeMA20) + ATR(14) per ar:AR-016
+      seeded per pair at startup from the SINGLE ar:AR-044 GetOHLCData(interval=5) call,
+      committed candles only response[:-1] (forming candle excluded HR-SSS-009 /
+      rule:HR-WM-013), NO additional REST (HR-SSS-010), Decimal per rule:HR-SP-008;
+    - RSI(14) SEED: avg_gain = sum(gains)/14, avg_loss = sum(losses)/14, gain =
+      max(0, close-prev_close), loss = max(0, prev_close-close); then Wilder incremental
+      avg_gain = (prev_avg_gain*13 + gain)/14, avg_loss likewise, RS = avg_gain/avg_loss,
+      RSI = 100 - (100/(1+RS)); division guard avg_loss==0 & avg_gain>0 -> 100, both 0
+      -> 50 (HR-SSS-004);
+    - EMA9 SEED sum(close[:9])/9 then incremental alpha 2/10; EMA21 SEED sum(close[:21])
+      /21 then incremental alpha 2/22 (standard EMA, NOT Wilder);
+    - VolumeMA20 SEED sum(volume[:20])/20 then running-SMA ((prev*19)+current)/20
+      (running approximation, CIATS may evaluate true rolling window after 200-trade
+      floor);
+    - min 21 committed candles to seed all five (EMA21-bound); GetOHLCData returns 700+;
+    - WARM_UP -> READY only when ALL FIVE seeded (ATR alone insufficient) per HR-SSS-005
+      / rule:HR-WM-017 / ar:AR-068; WARM_UP pair not trade-eligible;
+    - PER-SYMBOL STATE dict (ar:AR-075): rsi_14_avg_gain, rsi_14_avg_loss, ema_9, ema_21,
+      volume_ma_20 (all Decimal), updated incrementally each committed ohlc(5m) close.
+
+  SEC 3-4 (three-factor model): SSS PASS = SC-SSS-1 AND SC-SSS-2 AND SC-SSS-3 all true at
+    committed candle close; two-of-three FAIL; no partial credit (HR-SSS-001). SC-SSS-1 =
+    rsi_long_low < RSI(14) < rsi_long_high (short uses rsi_short_*). SC-SSS-2 = EMA9 >
+    EMA21 crossover STATE not event. SC-SSS-3 = current_candle_volume > VolumeMA20 *
+    volume_sss_threshold. Reject code SELECTION_REJECTED__SSS_SIGNAL_FAIL (diagram token
+    SIGNAL_REJECTED governs per DIAGRAMS-GOVERN). All present at sss_engine.
+
+  SEC 7 (output): signal_params fields (rsi_14, ema9, ema21, volume_vs_ma20, decision)
+    at q5_logs; always-logged pass-or-fail (HR-SSS-007); Trade Outcome Bus contract
+    canonical at D2.
+
+  SEC 7A (signal decay): signal_decay = RSI(14) <= rsi_long_low OR EMA9 <= EMA21 while a
+    long entry order is still working; volume excluded (HR-SSS-011); decay_params dict;
+    SELECTION_CANCEL__SSS_SIGNAL_DECAY to mod:Selection_Controller; dual-ownership
+    partial-fill paradigm + ar:AR-053/ar:AR-054 at gate:G5_Selection_Controller
+    partial_fill_ownership; NOT an exit_reason (DEC-065 Q2); short-side variant per
+    mod:Short_Module. All present.
+
+  SEC 8 (HR-SSS-001..011): each maps to an in-diagram assertion at sss_engine or a
+    diagram-canonical rule (HR-SP-008 Decimal; HR-SP-001/002 snapshot; HR-WM-013/017
+    committed-candle / WARM_UP). All present.
+
+  SEC 9 (7 SSS params): existence + CIATS-ownership canonical at sss_engine
+    ciats_ownership (TB00412). Starting values reside in TB00000 sec 9.17 per the binary
+    test (NOT a diagram gap). Historical starting-value rationale (AR-067 Path 2, 8-source
+    evidence base, direction-symmetric mirror) is git-preserved provenance, not a coding
+    fact -- not a DD-014 gap.
+
+  SEC 10 (five coding-readiness Q): restates sec 3-9, all answerable from D2 q-fields.
+
+  Stale spec numbering (0711001 "Gate 5 = SSS") is superseded by the diagram structure
+  (SSS = mod:Signal_Pipeline between G4 PASS and gate:G5_Selection_Controller); diagram
+  is authority (DIAGRAMS-GOVERN / SD-3), NOT a gap (the 0511002 SC-GATE precedent).
+
+NO-STRAND VERIFICATION (live HEAD grep, RR-SCOPE-008)
+----------------------------------------------------
+All live references to 0711001 classified: (a) 0500000 dv1_174 -- migration-provenance
+attributions ("migrated from 0711001 dv1_3"), correct and retained; (b) 0700000 / 0710000
+/ 0800000 / 0810000 -- domain/anchor pointer + parent-chain + related-docs references in
+organism docs themselves pending E3 wholesale retirement (not re-pointed); (c) 0311001 /
+0311002 / 0521001 / 0911001 / 0911002 -- NO-bucket registry / workflow / history / plan
+docs (standing method: do not re-point dangling citations). Retirement strands NO active
+source-of-truth citation. 0311001 doc-registry PRECEDENT confirmed: retired siblings
+0711002 dv1_0 (L569) / 0711003 dv1_1 (L570) / 0511002 dv1_0 (L545) / 0411003 dv1_0 (L537)
+all REMAIN listed in the v1_41 registry after retirement -- no doc-registry edit on
+retirement; the 7 SSS tokens stay canonical (D2-owned). NO 0311001 amendment required.
+
+DISPOSITION
+-----------
+BINARY TEST (DEC-096): 0711001 is pure TothBot-organism signal-model architecture (YES);
+holds no GitHub-automation / testing content -> retire WHOLESALE, strip nothing into a
+kept doc. DD-014 (D2 read; from-the-diagram-alone): all 0711001 architecture canonical in
+D2 (YES). YES + YES -> RETIRE. DR-078 loss-prevention gate CLEARED: D2 is DD-014
+fact-comprehensive for every 0711001 fact. This removes the LAST live signal-model
+consolidation source.
+
+RETIREMENT (Claude-authored; Bill executes): git rm --cached on
+07XXXXX_Strategy/0711001_SSS_Signal_Model_Specification_dv1_3.txt (GitHub index/HEAD
+only; C: working-tree copy preserved per CD-001/CD-003; git history retains all prior
+versions; no rt-prefix file, no tombstone per TB00000 sec 6). 0500000 NOT touched
+(already comprehensive at dv1_174; R held; no amendment). 0311001 NOT touched (precedent).
+
+GOVERNANCE
+----------
+NO new TB00153 DECISION (retirement runs under DEC-096 + the standing DR-078/DD-014
+reconcile mandate; the migrate-then-re-audit-then-retire precedent 0411003 / 0711002,
+TB00594-TB00596). NO paired MDR (retirement closes no latent defect; V-038 remains 0
+open through dv1_174). 0311001 namespace UNCHANGED (no token de-registered; doc-registry
+entry left per precedent). RR-SCOPE-001 (removal-only, the retirement act). RR-SCOPE-008
+no-guess (0711001 dv1_3 + D2 sss_engine <desc> both read in full from HEAD; zero recalled
+facts). RR-SCOPE-011 one primary mission. RR-SCOPE-012 no fact lost (every 0711001 fact
+verified canonical in D2 before removal).
+
+PUSH (authored; Bill executes) -- DOCS repo retirement + SESSIONLOGS session-close, one
+linear cd+git chain. One-version rule: 0711001 removed from HEAD via git rm --cached.
+
+DR-010 POST-PUSH VERIFICATION (run after Bill pushes)
+-----------------------------------------------------
+Fresh tarball pull into a clean directory. (1) SESSIONLOGS: present + md5 byte-for-byte
+on TB00601_Session_Log_v1_0.txt + TB00602_Next_Session_Instructions_v1_0.txt. (2) DOCS:
+explicit ABSENCE check that 0711001_SSS_Signal_Model_Specification_dv1_3.txt is gone from
+HEAD (and no other 0711001 version present). 0500000 dv1_174 md5 unchanged
+(ab115b66a1b32fec0e3438ac253e79eb -- untouched this session).
+
+CARRY-FORWARD (-> TB00602 NSI)
+------------------------------
+1. D5/D6 DD-014 fact-level verification vs 1011007 Logger_Coding_Spec dv1_6 [PRIMARY
+   next] -> RETIRE 1011007 (or strip-and-keep-renamed if it holds GitHub/testing-only
+   content). Under DR-078 gate; migrate-then-re-audit-then-retire if a gap is found.
+2. E3 structural collapse of the domain/anchor organism docs (0700000, 0710000, 0800000,
+   0810000 + remaining pending set) -> retire wholesale once 0500000 holds their
+   architecture. CIATS-ownership strip in the same pass (0800000 L245-246 mae_mult /
+   emergency_sl_mult stale seed mirror -> remove).
+3. Update or retire the stale plans (0911002 / 0911001) only if/when they actively
+   mislead execution.
+4. Documentation housekeeping: sec-14 positioning defect + absent dv1_100..onward
+   revision entries.
+
+CLAUDE-ERRORS-THIS-SESSION
+--------------------------
+None.
