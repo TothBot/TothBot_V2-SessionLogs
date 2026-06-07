@@ -1,10 +1,10 @@
 DocDCN:     TB00153
 DocTitle:   Decision_Register
-DocVersion: v1_78
+DocVersion: v1_79
 DocOwner:   Bill
-DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00153_Decision_Register_v1_78.txt
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00153_Decision_Register_v1_79.txt
 DocDate:    06-07-2026
-DocTime:    08:40:00 UTC
+DocTime:    14:30:00 UTC
 
 ============================================================
 TB00153 DECISION REGISTER v1_70
@@ -7213,6 +7213,110 @@ group's three remaining tokens (D3 mod:Exit_Controller) and
 CLOSES the DEC-045 carry-forward — Exit-controller group COMPLETE.
 
 
+DEC-112  (TB00610)  LOGGER 1011007 PASS-4 DD-014 RE-AUDIT CLEAN
+         (ZERO RESIDUAL GAPS) -- 1011007 dv1_6 RETIRED WHOLESALE
+         Decision: re-run the fact-level DD-014 / CF-V040-METHOD
+         verification (PASS 4) of the now-settled D5/D6 mod:Logger
+         encoding against EVERY 1011007 Logger_Coding_Spec dv1_6 fact
+         (secs 1-11), from-the-diagram-alone (DD-014 strict), against
+         live HEAD 0500000 dv1_179 (NOT trusting the TB00609 PASS-3
+         findings, RR-SCOPE-008). RESULT: CLEAN -- ZERO residual gaps.
+         The DR-078 loss-prevention gate is CLEARED. 1011007 dv1_6
+         RETIRED WHOLESALE (git rm --cached) under the binary test
+         DEC-096 retire-wholesale rule (organism coding spec; never
+         rewritten, never kept as a parallel coding spec; the organism
+         is coded directly from the diagrams per TB00000 v2_84 sec 3).
+         RE-AUDIT EVIDENCE (verified programmatically vs live dv1_179
+         D5 logger_box + D6 tb_logger corpus, not recall):
+           Sec 4 queue -- bounded 10,000-entry stdlib queue.Queue (NOT
+           asyncio.Queue per ar:AR-063 / HR-LG-002), QueueListener
+           background-thread dispatch, non-blocking enqueue, queue-full
+           saturation back-pressure (evt:LOG_QUEUE_FULL CRITICAL) +
+           stderr fallback, log_listener.stop() drains-and-joins on
+           clean shutdown: PRESENT.
+           Sec 4.4 G7 -- monitor_log_queue 60s poll / 0.80 fill ->
+           evt:LOG_QUEUE_WARN [WARNING] {qsize, fill_pct}, distinct
+           from LOG_QUEUE_FULL CRITICAL: PRESENT.
+           Sec 5 G1/G2 -- NDJSON one-valid-JSON-object-per-line (CIATS
+           reads line by line, no pretty-print); orjson Decimal-to-str
+           default, ALL numerics JSON strings NEVER float; mandatory
+           ts(ISO8601 UTC us)/event(SCREAMING_SNAKE)/level(V2 ladder)/
+           component(8-value enum): PRESENT.
+           Sec 6 G6 -- the complete ~89-code event registry, per-event
+           V2-ladder level + key fields, by component family, from-the-
+           diagram-alone; monotonic 5-to-3 level collapse + the 4 Bill-
+           ratified self-observability exceptions exact: PRESENT.
+           Sec 7 -- 23-field TRADE_CLOSE schema; fires once on each
+           complete position close, never on partial fills; the 7-value
+           exit_reason enum (TP_FILL / MAE_THRESHOLD_BREACH /
+           HTF_REGIME_REVERSAL / DAILY_REGIME_DOWNGRADE / TIME_EXPIRY /
+           TP_PARTIAL_FILL_REMAINDER / PAIR_LIMIT_ONLY_EXIT) +
+           EMERGENCY_SL_FIRED producer-partition (DEC-066) + SIGNAL_DECAY
+           cancel-trigger-not-an-exit_reason (DEC-065 Q2): PRESENT.
+           Sec 8 -- LG-ALERT-004 SMTP delivery retry-loop (20s per-
+           attempt timeout / 2 attempts / 1s backoff / 41s worst-case;
+           env creds never hardcoded; single evt:ALERT_SMTP_FAILED on
+           all-fail; rule:LG-ALERT-005 anti-recursion): PRESENT
+           (migrated TB00609).
+           Sec 9 G4 -- diagnostic tothbot.log RotatingFileHandler 50MB
+           x 90 / utf-8 / %(message)s / logrotate per 1011013, distinct
+           from the no-rotation permanent file: PRESENT.
+           Sec 11 G3 -- permanent append-only /home/tothbot/records/
+           trades_<YYYY>.jsonl, os.open O_WRONLY|O_APPEND|O_CREAT,
+           0o644 hard-pinned, os.fsync per write, annual UTC segment,
+           single os.write < PIPE_BUF, handler-local error isolation,
+           evt:TRADE_RECORD_WRITE_FAILED, 26 CFR 1.6001-1 / IRS Form
+           8949 retention: PRESENT.
+           Sec 1 -- Logger = sole CIATS data interface, never blocks
+           hot path: PRESENT.
+         RATIFIED-SUPERSEDED (NOT gaps; do not re-open per TB00604/605):
+           sec-3/sec-8 CRITICAL/HIGH/MEDIUM SMTP routing -> the
+           deterministic email bar (rule:HR-RPT-001/002); the
+           DEBUG/INFO/WARN/HIGH/CRITICAL 5-level vocab -> the single V2
+           ladder INFO/WARNING/CRITICAL (rule:HR-RPT-003).
+         NON-ARCHITECTURAL (NOT gaps; binary test): Tier-1 coding-
+           sequence, parent chain, getLogger("tothbot") instance name,
+           stdlib import-wiring flags, the queue-size 20x10x50
+           derivation (rationale; the value 10,000 is in the desc).
+         NO-STRAND ACTIVE-CONSUMER VERIFICATION (HEAD, RR-SCOPE-008):
+           every live 1011007 reference classified; ZERO genuine active
+           consumers. 0500000 dv1_179 (30) + 0521001 (22) = consolidation
+           figcaption-narration + revision-history. 0311001 v1_44 (3) =
+           1 DCN-allocation-table entry (same class as the 9 already-
+           retired sibling coding specs sitting in the identical table;
+           NO active token binding -- 1011007 is a DCN, not a registered
+           token) + 2 migration-source narration. 1010000 dv1_19 already
+           lists "1011007 RETIRED (TB00230)" (removal-describing).
+           1000000 / 0311002 = static DCN enumerations (list the already-
+           retired siblings too). 1011001 BP-LOG-005 + 1021001 sec 4.1 =
+           retained-AA=10 stale source-pointers, the SAME class as the
+           existing pointer to already-retired 1011006 in that very test
+           spec (not strand-blocking; a documentation-pointer housekeeping
+           item, not an active dependency). 0911001 / 0911002 = stale
+           plans (flagged for update/retire). SessionLogs = immutable
+           campaign history. Retiring 1011007 places it in the identical
+           state as its 9 already-retired siblings.
+         R-STATE: NO DIAGRAM EDIT THIS SESSION. 0500000 dv1_179 is
+         already DD-014 fact-comprehensive (the gate was cleared by
+         verification, not by amendment); the diagram is NOT touched and
+         is NOT a companion deliverable -- D5 R14 + D6 R13 held, byte-
+         identical to HEAD. NAMESPACE: 0311001 v1_44 UNCHANGED (no token
+         minted, none deregistered -- 1011007 is a DCN entry in the
+         allocation table, not a bound token; the table is not stripped
+         on retirement, per the 9-sibling precedent). No paired MDR
+         (retirement is a consolidation-campaign close-out, not a latent-
+         defect closure). DR-010 post-push: present + md5 + ABSENT, the
+         absent check covering 1011007_Logger_Coding_Spec_dv1_6.txt and
+         the superseded TB00153_Decision_Register_v1_78.txt.
+         CAMPAIGN STATE: the Logger consolidation source is now fully
+         retired; the live organism consolidation sources remaining are
+         the E3-pending domain/anchor docs (0700000 / 0710000 / 0800000 /
+         0810000 + set). TB00153 one-version-rule bulk-cleanup (~70+
+         superseded versions) + the stale internal banners remain a
+         separate dedicated slice (NOT bundled here).
+         Max DEC = 112; next = DEC-113.
+
+
 DEC-111  (TB00609)  LOGGER 1011007 PASS-3 DD-014 RE-AUDIT --
          ONE RESIDUAL GAP (SMTP DELIVERY RETRY-LOOP) MIGRATED
          DIAGRAM-FIRST; 1011007 STAYS LIVE, RETIREMENT DEFERRED
@@ -7291,7 +7395,8 @@ DEC-111  (TB00609)  LOGGER 1011007 PASS-3 DD-014 RE-AUDIT --
          Logger_Coding_Spec dv1_6 STAYS LIVE this session; the clean
          DD-014 re-audit (now expected zero-gap) + the 1011007
          wholesale retirement (git rm --cached) defer to TB00610.
-         Max DEC = 111; next = DEC-112.
+         (superseded by DEC-112: the clean PASS-4 re-audit + 1011007
+         wholesale retirement.)
 
 
 DEC-110  (TB00608)  LOGGER GAPS G6 + G7 -- EVENT-CODE REGISTRY +
