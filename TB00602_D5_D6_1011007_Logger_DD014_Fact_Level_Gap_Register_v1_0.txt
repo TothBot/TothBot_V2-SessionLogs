@@ -1,0 +1,228 @@
+TB00602  D5/D6 vs 1011007 LOGGER_CODING_SPEC dv1_6
+DD-014 FACT-LEVEL GAP REGISTER  v1_0
+=========================================================
+
+MISSION (TB00602 NSI PRIMARY): D5/D6 DD-014 fact-level
+verification vs 1011007 Logger_Coding_Spec dv1_6; retire
+1011007 if clean, or migrate-diagram-first if a gap is found.
+Mission 1 (consolidation). One primary mission (RR-SCOPE-011).
+
+RESULT: DD-014 FAIL. The DR-078 loss-prevention gate is NOT
+cleared. 1011007 dv1_6 does NOT retire this session. Six
+genuine consolidation gaps + three conflicts found. Migration
+is diagram-first; one item (C2/C3) is a genuine Bill business-
+judgment call that gates the taxonomy-dependent migration.
+
+SOURCES READ IN FULL FROM LIVE HEAD (RR-SCOPE-008 no-guess)
+----------------------------------------------------------
+- 1011007_Logger_Coding_Spec_dv1_6.txt (1260 lines, full).
+- 0500000 dv1_174: logger_box (D5, line ~4514) + tb_logger
+  (D6, line ~5231) component <desc> in full; ohlc_box /
+  trade_close_box / stream1_box / stream2_box <desc>; §8
+  Locked Decisions AR-014 (L5647), AR-061 (L6148), AR-063
+  (L6171), AR-064 (L6193); D5/D6 figcaption attestations.
+- Absence greps run across the entire 0500000 document.
+- 0511006 Logger_Specification: ABSENT from HEAD (already
+  retired). It cannot arbitrate the conflicts below.
+
+BINARY TEST (DEC-096)
+---------------------
+1011007 is a CIATS / module coding spec specifying HOW to
+code the TothBot Logger (sole CIATS data interface; runs on
+the VPS; processes every organism event). Per TB00000 v2_84
+sec 3 this IS organism architecture and IS a consolidation
+source. It holds NO GitHub-automation / testing-only content.
+Disposition class therefore = RETIRE WHOLESALE once DD-014
+fact-comprehensive (no strip-and-keep). DD-014 not yet met ->
+gap-found branch (migrate-then-re-audit-then-retire).
+
+DIAGRAM COVERAGE THAT IS PRESENT (no gap)
+-----------------------------------------
+- Bounded queue 10,000 entries; never blocks hot path:
+  AR-014 (L5647) + logger_box/tb_logger constraints (ar:AR-061
+  + ar:AR-063) + visible <text>. PRESENT.
+- queue.Queue (stdlib) NOT asyncio.Queue; QueueHandler +
+  QueueListener pattern; on queue.Full -> stderr + HIGH alert
+  + skip, never block; log_listener.stop() drains + joins on
+  shutdown: §8 AR-063 (L6171-6183). PRESENT (but see C1).
+- connection_id (uint64) logged on every WS connect / reconnect
+  / disconnect / gap: §8 AR-064 (L6193). PRESENT.
+- Two-stream record concept (Stream 1 EWMA 288/day + Stream 2
+  per-trade-close): contract:Two_Stream_Record_Architecture.
+  PRESENT as a NAME (but Stream 2 durable-file substance is
+  absent -> G3).
+- TRADE_CLOSE 23-field canonical schema: stream2_box
+  schema_fields_canonical (all 23 fields enumerated) + visible
+  <text>. PRESENT (matches 1011007 sec 7 field-for-field).
+- TRADE_CLOSE fires once per complete close; exit_reason
+  7-value enum + EMERGENCY_SL_FIRED producer-partition + 
+  SIGNAL_DECAY-not-an-exit_reason: trade_close_box /
+  stream2_box. PRESENT (matches 1011007 LG-TOB / sec 7).
+- Self-observability events (ALERT_SENT, ALERT_SMTP_FAILED,
+  TRADE_RECORD_WRITE_FAILED, LOG_QUEUE_FULL): logger_box /
+  tb_logger constraints + produces/triggers. PRESENT as tokens.
+- TB00593 finding CONFIRMED: the 1011007 sec 6 DRAWDOWN_UPDATE
+  / SESSION_PAUSE_TRIGGERED / FULL_HALT_TRIGGERED / GATE_7_RESULT
+  + SIZED/REJECT rows are a downstream LOGGER CONSUMER MIRROR
+  of events whose producers are diagram components (D8 Gate-7,
+  D2 gates); these are canonical at the producer + bound at
+  tb_logger.consumes (D6 L5242). NOT a gap.
+
+GENUINE CONSOLIDATION GAPS (fact in 1011007, ABSENT from the
+entire 0500000 document; grep-verified = 0 occurrences)
+------------------------------------------------------------
+G1  NDJSON LOG-RECORD FORMAT. [1011007 LG-FMT-001, HR-LG-010]
+    Every log record is one valid JSON object on a single
+    line; CIATS reads the file line by line; no pretty-print.
+    DIAGRAM: 0 occurrences of NDJSON / newline-delimited /
+    "one JSON" / "line by line" anywhere. The CIATS data-
+    interface wire format is unspecified in the diagram. A
+    coder cannot derive the log file format from the diagram.
+
+G2  SERIALIZATION + NUMERIC FIDELITY CONTRACT. [LG-FMT-003,
+    LG-FMT-004, 1011007 HR-LG-009]
+    All numeric values serialized as JSON STRING (str(Decimal)),
+    NEVER as JSON number/float; CIATS parses back to Decimal.
+    DIAGRAM: 0 occurrences of orjson / "string representation
+    of Decimal" / no-float. (AR-061 "Decimal(str()) on receipt"
+    is about capturing exec fields, not the log-record
+    serialization / no-float-storage rule.) Loss-prevention:
+    float storage corrupts price/fee/P-L precision feeding
+    CIATS inference.
+
+G3  PERMANENT TRADE RECORD FILE ARCHITECTURE. [1011007 sec 11,
+    LG-TREC-001..009]  *** HIGHEST SEVERITY ***
+    TRADE_CLOSE (Stream 2) is written to a SEPARATE durable
+    sink /home/tothbot/records/trades_<YYYY>.jsonl: append-only,
+    NO rotation, NO size cap, 0o644 hard-pinned via os.open,
+    fsync PER WRITE, annual UTC segmentation, independent of
+    tothbot.log, satisfying the CIATS 200-trade statistical
+    floor + 26 CFR 1.6001-1 / IRS Form 8949 tax/audit retention.
+    DIAGRAM: 0 occurrences of /records/, trades_, .jsonl, fsync,
+    0o644, append-only, annual segment, 8949, 26 CFR. WORSE:
+    stream2_box q5_logs + logger_box q5_logs AFFIRMATIVELY state
+    Stream 2 records are written "to tothbot.log" -- which has
+    finite retention (50 MB / 90 files; ~6 days observed live
+    per TB00107). Coding the Logger from the diagram alone would
+    write TRADE_CLOSE ONLY to tothbot.log and PERMANENTLY LOSE
+    every trade older than retention -> corrupts the CIATS
+    200-trade floor AND breaks tax/audit. This is the precise
+    DR-078 loss scenario. The entire architectural reason sec 11
+    exists is absent from and contradicted by the diagram.
+
+G4  DIAGNOSTIC LOG FILE MANAGEMENT SPECIFICS. [LG-FILE-001..004]
+    RotatingFileHandler; maxBytes = 50 MB; backupCount = 90;
+    path /home/tothbot/logs/tothbot.log; logrotate per 1011013.
+    DIAGRAM: 0 occurrences of RotatingFileHandler / 50 MB /
+    90 files / backupCount / /home/tothbot. Diagram says only
+    "rotated per logrotate config" -- rotation params + path +
+    handler class not derivable.
+
+G6  EVENT CODE REGISTRY COMPLETENESS. [1011007 sec 6]
+    The ~70-code registry with per-event LEVEL + KEY FIELDS
+    (e.g. CANDLE_CLOSE {symbol, interval_begin, open, high, low,
+    close, volume, atr_14}; PONG_RECEIVED {connection_id,
+    latency_ms, time_in, time_out}; the full WS / Signal /
+    Exec / Exit / PosMirror / Regime / CIATS event families).
+    DIAGRAM: carries SOME event tokens scattered at producer
+    components, but NOT the registry as a from-the-diagram-alone
+    reconstruction with each event's level + key-field schema.
+    A coder cannot author the event registry from the diagram
+    alone. (Severity moderate; intersects C2 -- the level column
+    cannot be authored until C2 is resolved.)
+
+G7  PROACTIVE QUEUE HEALTH MONITORING. [LG-QUEUE-006]
+    monitor_log_queue(): poll qsize every 60 s; at >= 80% fill
+    emit LOG_QUEUE_WARN + operator alert (pre-saturation early
+    warning). DIAGRAM: AR-063 covers the queue.Full path
+    (saturation, evt:LOG_QUEUE_FULL) but the 60 s / 80% proactive
+    monitor + LOG_QUEUE_WARN is absent.
+
+CONFLICTS (diagram asserts something the source contradicts)
+------------------------------------------------------------
+C1  QUEUE TYPE -- INTERNAL 0500000 CONTRADICTION (V-038 class).
+    logger_box q1_do (L4522) and tb_logger q1_do (L5239) both
+    describe the queue as "10,000-entry ASYNCIO bounded queue."
+    §8 AR-063 (L6171) states the Logger MUST use queue.Queue
+    (stdlib), NOT asyncio.Queue, with rationale (QueueListener
+    runs a non-asyncio thread incompatible with asyncio.Queue).
+    The component <desc> is the erroneous side; AR-063 is the
+    locked decision and matches 1011007 HR-LG-002. FIX (derivable,
+    DIAGRAMS-GOVERN + AR-063): MODIFY both q1_do desc fields
+    "asyncio bounded queue" -> "stdlib queue.Queue bounded queue."
+    Newly found; NSI entry-state said V-038 = 0 open -> this is a
+    new V-038 conflict to register and close.
+
+C2/C3  LEVEL TAXONOMY + ALERT ROUTING -- DIVERGENCE (Bill call).
+    DIAGRAM (D5/D6, tracing to retired 0511006 HR-LG-004/007):
+      levels = CRITICAL / HIGH / MEDIUM / LOW / INFO;
+      SMTP fires on CRITICAL + HIGH + MEDIUM.
+    1011007 dv1_6 (live coding spec; internally consistent
+    registry + routing):
+      levels = DEBUG / INFO / WARN / HIGH / CRITICAL;
+      SMTP fires on CRITICAL + HIGH only (WARN/INFO/DEBUG =
+      log-file-only, LG-ALERT-001/002/003).
+    DEBUG / WARN (spec) have NO counterpart in the diagram;
+    MEDIUM / LOW (diagram) have NO counterpart in the spec.
+    These cannot both be coded. Determining which governs the
+    organism is a correctness decision with loss-prevention
+    weight (wrong routing = missed CRITICAL/HIGH operator alerts
+    OR alert spam) and is NOT derivable -- both are internally
+    coherent and the nominal authority (0511006) is retired,
+    while 1011007 is the live code-source. TB00000 sec 4.1: do
+    not remove/alter a fence before knowing its purpose; surface
+    genuine Bill business judgment. RR-SCOPE-008 no-guess: NOT
+    resolved unilaterally. SURFACED TO BILL.
+
+NOTE on §8 AR-063 stale pointer
+-------------------------------
+AR-063 Assign field reads "0511006 dv1_2 ... parent spec is
+canonical post-1011007 retirement per TB00230 RANK 8 cascade."
+0511006 is now itself RETIRED (absent from HEAD). The TB00230
+cascade designated 0511006 as 1011007's post-retirement home,
+but 0511006 retired first. The Logger facts G1-G4/G6-G7 that
+the cascade assumed would live in 0511006 are NOT in the
+diagrams -- which is exactly why this fresh DD-014 re-audit
+was required before retiring 1011007 (DR-078 working as designed).
+
+DISPOSITION (this session)
+--------------------------
+1. 1011007 dv1_6 stays LIVE. No retirement (DR-078 gate not
+   cleared; RR-SCOPE-012 -- retirement would lose G1-G4/G6-G7).
+2. 0500000 NOT amended this session (no diagram edit). The
+   migration is diagram-first and is sized for subsequent
+   sessions; the taxonomy-dependent items (G6 level column,
+   G2/G7 level interplay) are GATED on the C2/C3 determination,
+   so migrating them now would risk encoding the wrong taxonomy.
+3. C2/C3 surfaced to Bill as the single genuine judgment call.
+4. This gap register is the gating artifact for the migration.
+
+PROPOSED MIGRATION SEQUENCE (subsequent sessions, after C2/C3)
+--------------------------------------------------------------
+S+1: Bill rules C2/C3 (level taxonomy + alert routing
+     authoritative direction).
+S+2: G3 permanent trade record file architecture -> migrate
+     diagram-first into the D5/D6 Logger contract +
+     contract:Two_Stream_Record_Architecture (HIGHEST priority;
+     loss-prevention). Correct the "Stream 2 -> tothbot.log"
+     wording to the separate durable sink.
+S+3: G1 NDJSON + G2 serialization/no-float + G4 file management
+     -> migrate diagram-first; fix C1 desc wording (bundle the
+     derivable C1 fix here or earlier as a desc MODIFY).
+S+4: G6 event registry completeness + G7 queue health monitor
+     -> migrate diagram-first using the C2/C3-ratified taxonomy.
+S+5: re-run DD-014 fact-level re-audit vs 1011007; if clean,
+     RETIRE 1011007 wholesale (git rm --cached). DR-010.
+(Claude sizes each slice; sequence is indicative, not binding.)
+
+GOVERNANCE
+----------
+RR-SCOPE-008 no-guess (all findings grep/read-verified vs live
+HEAD; 0511006 confirmed retired so cannot arbitrate). RR-SCOPE-011
+one primary mission (DD-014 verification of 1011007). DR-078 gate
+NOT cleared -> no retirement. No 0500000 edit -> R-state unchanged
+(0500000 dv1_174, md5 ab115b66a1b32fec0e3438ac253e79eb, UNTOUCHED).
+No 0311001 change. New V-038 conflict C1 logged here for closure
+in the migration. No new TB00153 DECISION (gap-found branch runs
+under DEC-096 + DR-078 + the migrate-then-re-audit-then-retire
+precedent). C2/C3 may require a TB00153 DECISION once Bill rules.

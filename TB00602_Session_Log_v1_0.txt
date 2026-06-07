@@ -1,0 +1,174 @@
+TB00602 SESSION LOG v1_0
+========================
+
+MISSION (TB00602 NSI PRIMARY): D5/D6 DD-014 fact-level
+verification vs 1011007 Logger_Coding_Spec dv1_6 -> RETIRE
+1011007 if clean (or strip-and-keep-renamed if GitHub/testing-
+only), or migrate-diagram-first if a gap is found. Mission 1
+(consolidation). One primary mission (RR-SCOPE-011).
+
+RESULT: DD-014 FAIL. DR-078 gate NOT cleared. 1011007 dv1_6
+stays LIVE. Six genuine consolidation gaps + three conflicts.
+Deliverable: TB00602 D5/D6 vs 1011007 DD-014 fact-level gap
+register. One genuine Bill judgment call (C2/C3) surfaced.
+
+COLD-LOAD
+---------
+Read from GitHub HEAD via public tarball: TB00602_Next_Session_
+Instructions_v1_0.txt; TB00000 v2_84; TB00601_Session_Log_v1_0
+.txt (prior); 1011007_Logger_Coding_Spec_dv1_6.txt (full, 1260
+lines); 0500000 dv1_174 (logger_box D5 + tb_logger D6 + ohlc/
+trade_close/stream1/stream2 descs + §8 AR-014/061/063/064 +
+D5/D6 figcaptions); whole-file absence greps. Confirmed 0511006
+ABSENT from HEAD (parent Logger_Specification already retired).
+
+ENTRY STATE (verified vs live HEAD, not trusted from NSI)
+---------------------------------------------------------
+0500000 = dv1_174 LIVE; md5 ab115b66a1b32fec0e3438ac253e79eb;
+  10287 lines; sole version. MATCHES TB00601 push hash; UNTOUCHED.
+0711001 = ABSENT from HEAD (retired at TB00601). Confirmed.
+1011007 = dv1_6 LIVE (10XXXXX_Coding_Specification; 1260 lines).
+0511006 = ABSENT from HEAD (parent Logger_Specification retired).
+TB00000 = v2_84. V-038 = 0 open through dv1_174 (entry-state;
+  this session FINDS one new V-038 conflict, C1 -- see below).
+
+SD-13 FIVE-PART STATUS CHECK
+---------------------------
+(1) Canonical source: 0500000 dv1_174 LIVE.
+(2) Live consolidation sources remaining: 1011007 Logger dv1_6
+    (this target, NOT retired this session) + the E3-pending
+    domain/anchor organism docs (0700000/0710000/0800000/0810000
+    + set). 0711001 was the last signal-model source (retired
+    TB00601).
+(3) V-038: 0 open at entry. One NEW conflict found this session
+    (C1: logger desc "asyncio bounded queue" vs §8 AR-063 stdlib)
+    -- logged in the gap register for closure in the migration.
+(4) Mission: Mission 1 -- DD-014 verify 1011007 to clear DR-078
+    and retire. Outcome: FAIL; gap-found branch engaged.
+(5) Blocker: DR-078 gate (D5/D6 must be DD-014 fact-comprehensive
+    for every 1011007 fact) -- NOT cleared. Six gaps + three
+    conflicts. Retirement deferred to a later session after
+    diagram-first migration + Bill C2/C3 determination.
+
+DD-011 DERIVABILITY (chat-turn-1)
+---------------------------------
+The mission was the verification; its outcome determines
+disposition. OUTCOME: NOT clean -> the NSI gap-found branch
+applies (migrate-diagram-first, re-audit, retire next session).
+That branch is derivable for the ADD-only gaps. EXCEPTION:
+C2/C3 (level taxonomy + alert routing) is a genuine business-
+judgment call (not derivable -- two internally-coherent schemes,
+nominal authority 0511006 retired, loss-prevention weight) ->
+surfaced to Bill, NOT auto-resolved (RR-SCOPE-008 + TB00000
+sec 4.1). Migration of taxonomy-dependent gaps (G6/G2/G7 level
+work) is GATED on the C2/C3 ruling, so no diagram edit this
+session; the gap register is the gating deliverable.
+
+BINARY TEST (DEC-096)
+---------------------
+1011007 = CIATS/module coding spec (HOW to code the Logger, the
+sole CIATS data interface on the VPS) = organism architecture =
+consolidation source (TB00000 v2_84 sec 3). No GitHub-automation
+/ testing content -> retire WHOLESALE once DD-014 met. Not met.
+
+DD-014 RE-AUDIT SUMMARY (full detail in the gap register)
+---------------------------------------------------------
+PRESENT (no gap): bounded queue 10,000 + never-block (AR-014);
+stdlib queue.Queue + QueueHandler/QueueListener + queue.Full ->
+stderr+HIGH+skip + stop()-drains (§8 AR-063); connection_id on
+every WS event (§8 AR-064); two-stream NAME; TRADE_CLOSE 23-field
+schema (field-for-field match); exit_reason 7-value enum +
+EMERGENCY_SL producer-partition; self-observability event tokens;
+TB00593 consumer-mirror rows (DRAWDOWN/HALT/G7/SIZED/REJECT)
+confirmed canonical at producers + bound at tb_logger.consumes.
+
+GAPS (in 1011007, ABSENT from entire 0500000; grep = 0):
+  G1 NDJSON log-record format [LG-FMT-001/HR-LG-010].
+  G2 orjson serialization + Decimal-as-string + NO float
+     [LG-FMT-003/004].
+  G3 *** HIGHEST *** permanent trade record file architecture
+     [sec 11 LG-TREC-001..009]: separate durable
+     /home/tothbot/records/trades_<YYYY>.jsonl, append-only,
+     no rotation, no size cap, 0o644 hard-pinned, fsync per
+     write, annual segmentation, CIATS 200-trade floor +
+     26 CFR 1.6001-1 / Form 8949. Diagram AFFIRMATIVELY says
+     Stream 2 -> tothbot.log (finite ~6-day live retention),
+     contradicting the very reason sec 11 exists; coding from
+     the diagram alone LOSES trades after retention -> corrupts
+     CIATS inference + tax/audit. Exact DR-078 loss scenario.
+  G4 diagnostic file management [LG-FILE]: RotatingFileHandler,
+     50 MB, backupCount 90, /home/tothbot/logs/tothbot.log.
+  G6 event code registry completeness [sec 6]: per-event level +
+     key fields for ~70 codes not from-the-diagram-alone
+     reconstructable (intersects C2 -- level column gated).
+  G7 proactive queue health monitor [LG-QUEUE-006]: 60 s poll /
+     80% -> LOG_QUEUE_WARN.
+
+CONFLICTS:
+  C1 logger_box/tb_logger q1_do say "asyncio bounded queue" --
+     contradicts §8 AR-063 (stdlib queue.Queue, NOT asyncio).
+     Derivable desc MODIFY fix; new V-038 conflict.
+  C2/C3 level taxonomy {CRITICAL/HIGH/MEDIUM/LOW/INFO}, SMTP on
+     CRITICAL+HIGH+MEDIUM (diagram) vs {DEBUG/INFO/WARN/HIGH/
+     CRITICAL}, SMTP on CRITICAL+HIGH only (1011007). Genuine
+     Bill judgment call. SURFACED.
+
+NOTE: §8 AR-063 Assign cites "0511006 ... canonical post-1011007
+retirement per TB00230 RANK 8 cascade" -- but 0511006 is itself
+retired. The cascade's assumed home is gone; the Logger format/
+file/registry facts were never migrated to the diagrams. DR-078
+caught this.
+
+DISPOSITION
+-----------
+1011007 dv1_6 stays LIVE (no git rm --cached this session).
+0500000 NOT amended (R-state held; dv1_174 md5 unchanged).
+0311001 NOT touched. Gap register delivered to SessionLogs.
+C2/C3 surfaced to Bill.
+
+GOVERNANCE
+----------
+DEC-096 binary test; DR-078 gate (NOT cleared); RR-SCOPE-008
+no-guess (1011007 + D5/D6 descs + §8 ARs read in full from HEAD;
+absence grep-verified; 0511006 retirement confirmed); RR-SCOPE-011
+one primary mission; RR-SCOPE-012 no fact lost (retirement
+withheld precisely because G1-G4/G6-G7 would be lost). No new
+TB00153 DECISION (gap-found branch under standing mandate; C2/C3
+may need a DECISION after Bill rules). New V-038 conflict C1
+recorded in the gap register (not yet closed -- closes in the
+migration). TB00453 bright line / DIAGRAMS-GOVERN noted for the
+upcoming migration.
+
+PUSH (authored; Bill executes) -- SESSIONLOGS only (3 new TB
+files; no DOCS change this session). One linear cd+git chain.
+
+DR-010 POST-PUSH VERIFICATION (run after Bill pushes)
+-----------------------------------------------------
+Fresh tarball into a clean dir. (1) SESSIONLOGS present + md5
+byte-for-byte on the 3 pushed files. (2) DOCS: 0500000 dv1_174
+md5 still ab115b66a1b32fec0e3438ac253e79eb (untouched); 1011007
+dv1_6 still PRESENT (NOT retired). No absence checks (no removal).
+
+CARRY-FORWARD (-> TB00603 NSI)
+------------------------------
+1. C2/C3 Bill determination (level taxonomy + alert routing
+   authoritative direction) -- GATES the Logger migration. [first]
+2. Logger migration diagram-first per the gap register sequence:
+   G3 (highest, loss-prevention) -> G1+G2+G4 + C1 desc fix ->
+   G6+G7 using the ratified taxonomy -> re-audit -> RETIRE 1011007.
+3. E3 structural collapse of domain/anchor organism docs
+   (0700000/0710000/0800000/0810000 + set); CIATS-ownership strip
+   in same pass (0800000 L245-246 mae_mult/emergency_sl_mult).
+4. Update/retire stale plans (0911002/0911001) if they mislead.
+5. Doc housekeeping: §14 positioning defect + absent dv1_100..
+   onward revision entries.
+
+CLAUDE-ERRORS-THIS-SESSION
+--------------------------
+Mid-audit I initially flagged the queue-type (C1) and QueueListener
+dispatch (G5) as missing facts before reading §8; on reading §8
+AR-063 I corrected C1 to an internal desc-vs-locked-decision
+conflict and removed the G5 "missing" claim (AR-063 carries the
+QueueListener + shutdown-drain architecture). Net effect on the
+delivered register: none -- the final register reflects the
+corrected findings. No erroneous artifact was delivered.
