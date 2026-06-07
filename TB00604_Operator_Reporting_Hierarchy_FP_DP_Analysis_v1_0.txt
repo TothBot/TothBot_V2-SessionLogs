@@ -1,0 +1,359 @@
+TB00604  OPERATOR REPORTING HIERARCHY -- FP/DP ANALYSIS  v1_0
+=============================================================
+
+PURPOSE
+-------
+First-Principles / Derivability (FP/DP) analysis of the operator
+reporting categories. Two questions, in order:
+  PART A: are the five proposed reporting categories appropriate,
+          or can they be improved? Determine the category set.
+  PART B: for the determined set, derive what goes into each.
+HARD CAVEAT (Bill, this session): do NOT email Bill unless a
+condition TRULY requires his immediate attention. Weekly /
+monthly / annual / rolling-12-month outputs are PULL artifacts
+(files / dashboards Bill retrieves), never pushed.
+
+This is an analysis + plan only. No controlled document is
+authored, no diagram is edited, no spec is retired this session.
+Lineage source recovered: 0211004 Operator_Communication_Hierarchy
+dv1.1 (pre-V2 TothBot-Docs archive, 03-20-2026) -- the proven
+ancestor of this design (CRITICAL/WARNING/REPORT + "every alert
+requires action"). Its reporting half was DAILY-only and Binance-
+era; the weekly/monthly/annual/rolling design was never committed
+to a controlled document and does not exist in V2.
+
+=============================================================
+PART 0 -- FIRST PRINCIPLES (the axioms everything derives from)
+=============================================================
+FP1  Mission: maximize profit, minimize loss, EMPHASIS on
+     minimizing loss. Loss prevention is paramount; every
+     design choice is judged against it first.
+FP2  Every PUSH must require action (0211004 §3.1/§3.2). Pushing
+     non-actionable information trains the operator to ignore
+     pushes; an ignored channel hides the one push that matters
+     -> loss. Therefore the push channel must stay rare and
+     high-signal.
+FP3  (Bill, this session) Email is the ONLY push channel and is
+     reserved for conditions that TRULY require immediate
+     attention. Everything else is PULL.
+FP4  Information has a decision horizon. The right review cadence
+     matches the horizon over which the underlying signal becomes
+     meaningful and actionable. Reviewing a 12-month trend daily
+     is noise; reviewing an unprotected position weekly is
+     catastrophic.
+FP5  CIATS statistical-validity gates: 50 candle evals
+     (monitoring only), 200 trades (inference HARD FLOOR), 600
+     trades (per-regime, 100+/bucket). A report must not imply a
+     decision before its data is statistically valid.
+FP6  External obligation: 26 CFR 1.6001-1 / IRS Form 8949 require
+     calendar-year (Jan 1 - Dec 31) realized P&L and per-trade
+     records. This is a hard, non-negotiable annual artifact.
+FP7  Data-driven: every report exists to support a specific
+     decision or obligation. A report defined only as "leftover
+     information no one needs to watch" has no decision attached
+     and is noise -- it belongs in the queryable log, not in a
+     packaged report.
+FP8  Single source of truth: reports are VIEWS over data the
+     Logger already persists (Stream 1 diagnostic NDJSON +
+     Stream 2 permanent trade record JSONL) plus CIATS computed
+     values. No report introduces new data capture.
+
+=============================================================
+PART A -- FP/DP ON THE CATEGORY SET
+=============================================================
+
+A.1 The proposed five (as stated by Bill)
+  P1 immediate action / loss / stops trading        -> EMAIL
+  P2 trends to watch, no immediate action            -> weekly
+  P3 other collected info, no attention/monitoring   -> monthly
+  P4 long-term + tax + P&L, calendar year            -> annual
+  P5 long-term trends, 12-month rolling              -> rolling
+
+A.2 Derivation of structure from first principles
+  DERIVE-1 (modes). From FP2 + FP3 there are exactly TWO delivery
+    modes: PUSH (email; immediate, action-required) and PULL
+    (everything else). P1 is the sole push category; P2-P5 are
+    all PULL, differentiated only by cadence/horizon. The set is
+    structurally sound: 1 push + N pull.
+  DERIVE-2 (how many pull horizons). From FP4 the pull buckets
+    must map to the system's distinct decision horizons. Enumerate
+    them from the system's actual tempo:
+      - operational tempo = 5-min candles, daily 00:00 UTC regime
+        refresh, daily drawdown/PnL -> a DAILY horizon EXISTS and
+        is the level at which the system actually operates.
+      - short-horizon drift watch -> weekly.
+      - medium-horizon evolution + threshold progress -> monthly.
+      - calendar-year compliance (FP6) -> annual.
+      - continuous long-term trajectory without calendar edge ->
+        rolling-12-month.
+    The proposed set jumps from "immediate (P1)" straight to
+    "weekly (P2)" -- it has NO DAILY horizon. That is the one
+    derivable GAP.
+
+A.3 FINDINGS (improvements derived, not opinions)
+
+  IMPROVEMENT 1 (GAP -- highest value, loss-prevention):
+    ADD a DAILY operational pull-dashboard between P1 and P2.
+    Rationale: the system operates at a daily tempo; the proven
+    0211004 design had a daily summary at exactly this slot; and
+    -- critically -- the SHORTEST pull cadence sets the MAXIMUM
+    latency for any non-emailed item. Without a daily view, the
+    longest an important-but-not-immediate condition can sit
+    unseen is a WEEK. With a daily view, it is a DAY. Under FP3
+    (do not email unless truly immediate), the daily view is what
+    makes the "don't email" rule SAFE -- it is the backstop that
+    catches everything the email bar deliberately excludes.
+
+  IMPROVEMENT 2 (REDEFINE P3): P3 is defined by exclusion ("other
+    info not requiring attention"). FP7: a report with no decision
+    attached is noise. If information truly requires no attention
+    and no monitoring, it does NOT become a monthly report -- it
+    stays in the queryable Logger files and is pulled raw only if
+    ever needed. REDEFINE the monthly category POSITIVELY as the
+    medium-horizon evolution report (performance accumulation +
+    CIATS/parameter evolution + progress toward the 200/600
+    thresholds). The junk-drawer interpretation is eliminated.
+
+  IMPROVEMENT 3 (CONFIRM P4 vs P5 are NOT redundant): annual
+    (P4) is DISCRETE, calendar-aligned, COMPLIANCE-driven (tax,
+    Form 8949, fixed Jan 1 - Dec 31). Rolling-12-month (P5) is
+    CONTINUOUS, TREND-driven, no calendar edge ("what is the true
+    trailing-year trajectory right now"). Different purpose ->
+    both justified. Keep both; state their purposes explicitly so
+    they never drift into duplicates.
+
+  IMPROVEMENT 4 (the email bar -- derive a crisp test): 0211004
+    had a WARNING tier ("attention within hours", emailed-batched).
+    Under FP3 that tier must NOT be emailed. Resolve by deriving
+    the email boundary as a single test:
+      EMAIL IFF waiting until the next scheduled DAILY pull would
+      cause loss, system failure, or irreversible / unprotected
+      exposure.
+    If yes -> email (immediate). If no -> it waits in the
+    appropriate pull view (daily at the latest). The old WARNING
+    cases that are "concerning but not loss-before-tomorrow" are
+    absorbed into the DAILY dashboard. This makes the boundary
+    deterministic (no "MEDIUM-ish" judgment) and honors FP3.
+
+A.4 DETERMINED CATEGORY SET (FP/DP conclusion): 1 PUSH + 5 PULL
+  C1  IMMEDIATE        PUSH  email   action required NOW
+  C2  DAILY            PULL  dashboard  operational health + today  [NEW]
+  C3  WEEKLY           PULL  file/dash  short-horizon drift watch
+  C4  MONTHLY          PULL  file/dash  medium-horizon evolution    [redefined]
+  C5  ANNUAL (cal yr)  PULL  file       compliance + tax + P&L
+  C6  ROLLING 12-MO    PULL  dashboard  continuous trajectory
+  Net change vs proposal: +1 DAILY (C2), P3->C4 redefined
+  positively, email bar made a derivable test, WARNING folded
+  into C2, P4/P5 purposes disambiguated.
+
+=============================================================
+PART B -- FP/DP ON CONTENT PER CATEGORY
+=============================================================
+Method per item: it earns a slot only if it supports THAT
+category's decision/obligation (FP7), with loss-prevention items
+ranked first (FP1), sourced from Logger Stream 1 / Stream 2 /
+CIATS (FP8). Email content (C1) is the only push and stays
+minimal + action-bearing.
+
+C1 -- IMMEDIATE (EMAIL; rare; every item passes the A.4 test)
+  Decision served: "Bill must act in minutes to prevent loss."
+  CONTENT (each = one email, with Action line, per 0211004 §6):
+    - Unprotected position: stop placement failed / exit fill
+      failed after retry / recovered open position with no stop.
+    - Emergency stop-loss fired (L3 crash brake).
+    - Full halt triggered (10% drawdown).
+    - Kill switch / trading halted by any path.
+    - Data-feed / WS connectivity sustained failure (trading
+      blind, 3 consecutive).
+    - Unhandled exception / undefined system state.
+    - TRADE_RECORD_WRITE_FAILED (permanent trade-record sink
+      failing -> every subsequent closed trade is being lost from
+      the CIATS corpus AND the tax record; immediate by FP1+FP6).
+    - LOG_QUEUE_FULL (records being dropped -> system blind).
+  Each email carries: event, component, UTC time, one-sentence
+  condition, SPECIFIC action, key values. No FYI emails ever.
+  EXPLICITLY NOT EMAILED (fails the bar -> goes to C2 daily):
+    session-pause at 5% drawdown (system already auto-protected;
+    no minutes-level action), single-interval signal/data gaps,
+    CUSUM monitoring breaches, fee-tier drift, latency drift.
+
+C2 -- DAILY operational dashboard (PULL)
+  Decision served: "Is the system healthy and behaving today?"
+  CONTENT:
+    - System state (operational / paused / halted) + uptime.
+    - WS connection health + data-feed completeness (% intervals).
+    - Open positions: count per module; each one's protection
+      status (stop present? TP present?).
+    - Trades today: count per module (long / short).
+    - Realized PnL today: $ and %, per module + combined.
+    - Drawdown: current vs baseline AND vs peak (high-water-mark).
+    - Session-pause events today (the absorbed WARNING tier).
+    - Alerts today: CRITICAL count/list + non-emailed warnings.
+    - CIATS monitoring signals (the 3 EWMA: rejection-rate,
+      rate-counter, WS latency) + any CUSUM breaches.
+    - Trade-count progress toward the 200 / 600 floors.
+
+C3 -- WEEKLY trend-watch (PULL)
+  Decision served: "Is anything drifting that I should watch?"
+  CONTENT (trend deltas, week over week):
+    - Rejection-rate-by-regime trend (finding more/fewer setups?).
+    - Regime distribution (time spent in each of 6 regimes).
+    - Realized fee drift (maker/taker actual vs assumed; fee-tier
+      divergence monitor).
+    - WS roundtrip latency trend (execution quality).
+    - Drawdown profile across the week.
+    - Long vs Short module activity comparison.
+    - Win-rate trend -- LABELED "monitoring only, not valid until
+      200 trades" per FP5 if below floor.
+    - CIATS parameter changes proposed/applied this week (if past
+      the 200 floor).
+
+C4 -- MONTHLY evolution (PULL; redefined positively)
+  Decision served: "How is the system maturing / evolving?"
+  CONTENT:
+    - Cumulative trade count + progress to 200/600 + per-regime
+      bucket fill toward 100+.
+    - Realized P&L: month + cumulative.
+    - Win rate / Sharpe / Spearman -- shown once >=200 valid; else
+      "insufficient data, N of 200" per FP5.
+    - Half-Kelly state once active: W, R, K_full, K_half,
+      applied %.
+    - Per-regime performance as buckets fill.
+    - Parameter evolution log: every CIATS change this month,
+      old -> new, with the statistic that drove it.
+    - Drawdown summary (max / current / recovery).
+    - Fee economics (total fees, as % of gross).
+
+C5 -- ANNUAL calendar-year compliance + P&L (PULL; Jan 1-Dec 31)
+  Decision served: tax filing + yearly review (FP6 obligation).
+  CONTENT (sourced from the permanent trade-record file):
+    - Realized P&L for the calendar year ($).
+    - IRS Form 8949 dataset: every closed trade -- entry/exit
+      timestamps, cost basis, proceeds, gain/loss, fees --
+      calendar-year scoped.
+    - Full-year statistics (trades, win rate, Sharpe, max
+      drawdown, best/worst).
+    - Per-regime annual performance.
+    - Parameter state year-end vs year-start (CIATS evolution
+      over the year).
+    - Year-over-year comparison once multiple years exist.
+  DEPENDENCY (loss-prevention link): C5 is impossible without the
+  permanent trade-record file (trades_<YYYY>.jsonl, append-only,
+  fsync, annual segmentation). That file is the SAME architecture
+  flagged as gap G3 in the TB00602 Logger DD-014 gap register and
+  is currently ABSENT from / contradicted by the 0500000 blueprint
+  (blueprint routes Stream 2 to tothbot.log, which self-deletes
+  in ~6 days). C5 cannot be built until G3 is migrated. These two
+  workstreams are now formally linked.
+
+C6 -- ROLLING 12-MONTH trajectory (PULL; trailing last 12 months)
+  Decision served: "Where is the system trending right now?"
+  (long-term strategy; distinct from C5 compliance).
+  CONTENT (recomputed continuously, no calendar edge):
+    - Trailing-12-month realized P&L.
+    - Trailing-12-month win rate, Sharpe, Spearman.
+    - Rolling drawdown / high-water-mark trajectory.
+    - Regime-library maturity (per-regime bucket cardinality over
+      the rolling window).
+    - Kelly trajectory over 12 months (edge stable / growing /
+      decaying?).
+    - Long-term fee economics.
+
+=============================================================
+PART C -- CROSS-CUTTING FP/DP FINDINGS
+=============================================================
+X1  SEVERITY-LADDER RECONCILIATION (resolves prior C2/C3 fork).
+    Three conflicting level vocabularies exist in V2 (0500000
+    diagram CRITICAL/HIGH/MEDIUM/LOW/INFO; 1011007 DEBUG/INFO/
+    WARN/HIGH/CRITICAL; 0211002/0211004-V2 INFO/WARNING/CRITICAL).
+    FP/DP resolution: SEPARATE two concepts that the ladders
+    conflate --
+      (a) LOG LEVEL = a property of a log record, used to FILTER
+          the log file. Internal; any consistent ladder works.
+      (b) DELIVERY ROUTING = a function of "does this require
+          immediate action?" -> the A.4 binary test (email) +
+          horizon bucketing (pull).
+    Routing is NOT a log level. Once decoupled, the level-ladder
+    disagreement stops gating delivery. Recommended single log
+    ladder for V2 (to end the 3-way conflict): adopt one ladder
+    in the controlled doc; routing is defined by this hierarchy,
+    not by the ladder. (Final ladder choice -> open question Q3.)
+X2  SINGLE SOURCE OF TRUTH (FP8). All six categories are VIEWS
+    over the Logger's two streams + CIATS values. No new capture.
+    This binds the reporting hierarchy to the Logger architecture
+    and is why C5 depends on Logger gap G3.
+X3  PLACEMENT (binary architecture test, DEC-096) -- DETERMINED.
+    The reporting hierarchy IS TothBot-organism architecture and
+    belongs in 0500000, authored DIAGRAM-FIRST. It is produced by
+    mod:Logger (already canonical in D5/D6: SMTP alert dispatch +
+    two-stream record + sole CIATS data source) and by the CIATS
+    components (Statistical Engine, Regime Library, Parameter
+    Store) that compute the report contents; it is fed entirely
+    by the two Logger data streams; it runs on the VPS, driven by
+    trading events + candle cadence (Pathway 2). It does not touch
+    document control (not Pathway 1). The 6 categories, the email
+    bar, per-category content, cadence triggers, push-vs-pull
+    routing, and which component produces each are all organism
+    architecture -> 0500000.
+    DO NOT author a new 02XXXXX (or any) standalone spec for this:
+    that would MINT a new dispersed consolidation source, the
+    exact pattern the campaign exists to eliminate (TB00000 sec 3
+    -- "if a classification lands on 'keep the spec,' stop").
+    PULL delivery = files/dashboards Bill retrieves (not emailed).
+    The cosmetic rendered output (email body templates, dashboard
+    layout/styling) is implementation, coded from the diagram --
+    not preserved as architecture (SSS construction-scheme
+    precedent).
+    CARVE-OUT (the only non-diagram piece): the HUMAN operator's
+    incident-RESPONSE procedure (what Bill does on receiving a
+    CRITICAL alert) is operator procedure, not organism code; it
+    stays in Operations (the V2 Incident Response doc). The bot's
+    emit/route/report behavior -> diagram; Bill's response actions
+    -> operations.
+
+=============================================================
+PART D -- OPEN QUESTIONS FOR BILL (ratification gates)
+=============================================================
+Q1  Confirm the determined 6-category set (1 push + 5 pull),
+    especially the NEW DAILY dashboard (C2) and the positive
+    redefinition of MONTHLY (C4).
+Q2  Confirm the email bar: "email IFF waiting until the next
+    daily pull would cause loss / system failure / irreversible
+    exposure," and that session-pause (5% drawdown) is therefore
+    NOT emailed (it appears in the daily dashboard).
+Q3  Single log-level ladder to standardize V2 on (to end the
+    3-way conflict): proposed INFO / WARNING / CRITICAL (matches
+    live operations docs 0211002 + 0211004-V2) -- accept or
+    specify.
+Q4  Placement -- DETERMINED (binary test, DEC-096): author
+    DIAGRAM-FIRST into 0500000 (D5 CIATS Architecture + D6
+    Complete System, around mod:Logger + the CIATS output side).
+    DO NOT create a new 02XXXXX spec (would mint a new
+    consolidation source). The only operations-domain piece is
+    the human incident-RESPONSE procedure (already in the V2
+    Incident Response doc). Bill confirmed this placement.
+Q5  Priority/sequencing vs the consolidation campaign: this is a
+    deliberate rabbit-trail. Recommend: author + ratify the
+    reporting-hierarchy doc, fold C5's dependency into the Logger
+    G3 migration (one combined loss-prevention pass), then resume
+    the Logger consolidation. Confirm.
+
+=============================================================
+PART E -- RECOMMENDED NEXT STEPS (post-ratification)
+=============================================================
+1. Author the reporting hierarchy DIAGRAM-FIRST into 0500000
+   (D5 CIATS Architecture + D6 Complete System, around mod:Logger
+   + the CIATS output side): the 6 categories, the email bar,
+   per-category content, pull mechanism, cadence triggers, single
+   log ladder. Base the push half on proven pre-V2 0211004 logic
+   (reference only; author fresh for V2/Kraken). NO new standalone
+   spec is created (binary test, DEC-096). TB00453 bright line:
+   R bumps only on visible-text/geometry. DIAGRAMS-GOVERN.
+2. Reconcile the 3 V2 severity ladders to the ratified ladder
+   (X1); decouple log level from delivery routing.
+3. Link C5 (annual tax/P&L) to Logger gap G3 (the permanent
+   trade-record file) so the report has a data source -- one
+   combined diagram-first loss-prevention pass.
+4. Keep ONLY the human incident-RESPONSE procedure in Operations
+   (the V2 Incident Response doc); not organism code.
+5. Resume Logger (1011007) consolidation per TB00603.
