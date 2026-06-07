@@ -1,10 +1,10 @@
 DocDCN:     TB00153
 DocTitle:   Decision_Register
-DocVersion: v1_74
+DocVersion: v1_75
 DocOwner:   Bill
-DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00153_Decision_Register_v1_74.txt
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00153_Decision_Register_v1_75.txt
 DocDate:    06-07-2026
-DocTime:    18:25:10 UTC
+DocTime:    06:30:45 UTC
 
 ============================================================
 TB00153 DECISION REGISTER v1_70
@@ -7213,6 +7213,75 @@ group's three remaining tokens (D3 mod:Exit_Controller) and
 CLOSES the DEC-045 carry-forward — Exit-controller group COMPLETE.
 
 
+DEC-108  (TB00606)  LOGGER GAP G3 -- PERMANENT TRADE-RECORD FILE
+         AUTHORED DIAGRAM-FIRST INTO 0500000 D5/D6
+         (contract:Two_Stream_Record_Architecture; rule:HR-LG-013)
+         Decision: author the permanent append-only trade-record
+         file as the durable Stream 2 sink into the canonical
+         mod:Logger encoding (D5 logger_box + D6 tb_logger),
+         diagram-first, and CORRECT the stale Stream-2-to-
+         tothbot.log mis-routing. Binary test DEC-096: the Logger
+         permanent-record architecture is TothBot-organism
+         architecture -> 0500000, NOT a new standalone spec.
+         CONTEXT (loss-prevention; compliance): TB00602 DD-014
+         gap register flagged G3 as HIGHEST severity -- the live
+         blueprint routed closed-trade records (Stream 2) only to
+         tothbot.log, which self-deletes on a ~6-day rotation;
+         coding from the diagram alone would PERMANENTLY LOSE
+         closed trades after retention, corrupting the CIATS
+         200-trade statistical floor AND breaking IRS Form 8949 /
+         26 CFR 1.6001-1 tax/audit retention. This is the exact
+         DR-078 loss scenario. DEC-107 recorded the C5 ANNUAL
+         report dependency on this file.
+         AUTHORED (rule:HR-LG-013; from 1011007 sec 11
+         LG-TREC-001..009, migrated wholesale, NOT rewritten,
+         NOT kept as a parallel coding spec per TB00000 v2_84
+         sec 3): permanent file /home/tothbot/records/
+         trades_<YYYY>.jsonl; receives event=="TRADE_CLOSE"
+         only; byte-identical NDJSON line + newline; os.open
+         O_WRONLY+O_APPEND+O_CREAT append-only (never truncate/
+         seek/rewrite); 0o644 hard-pinned via the os.open mode
+         arg independent of umask (CREATE only); os.fsync(fd)
+         after each os.write before os.close (survives power
+         loss/kernel panic); single os.write per record under
+         PIPE_BUF 4096; annual UTC segmentation (<YYYY> from
+         datetime.now(timezone.utc), rollover at first close of
+         next UTC year, no handle held across events); no
+         rotation / no size cap / no logrotate / no TTL
+         (independent of the diagnostic tothbot.log); failure
+         path catches locally and raises
+         evt:TRADE_RECORD_WRITE_FAILED CRITICAL per rule:HR-LG-010
+         -- already a C1 IMMEDIATE operator email per
+         rule:HR-RPT-001 (DEC-107) -- plus stderr fallback;
+         tothbot.log original write UNAFFECTED (operational
+         fallback). tothbot.log holds only a byte-identical
+         finite-retention copy, NOT the permanent corpus.
+         MIS-ROUTING CORRECTED at D5 trade_close_box q5_logs +
+         D5 stream2_box q5_logs + D6 stream2 q5_logs (which had
+         affirmatively claimed tothbot.log was the permanent
+         corpus). C5 ANNUAL data-source reference CLOSED (reads
+         the annual JSONL directly).
+         LOSS-PREVENTION RATIONALE (FP1/FP2; mission priority
+         minimize-loss): closing G3 prevents permanent loss of
+         the closed-trade corpus that is BOTH the sole CIATS
+         inference substrate and the legal tax/audit record --
+         a direct loss-prevention and compliance correction, not
+         cosmetic.
+         R-STATE: HELD -- D5 R14 + D6 R13 (TB00453 bright line:
+         desc/figcaption ADD/MODIFY only; no visible text/
+         geometry/viewBox change). COMPANIONS (authored
+         atomically): 0500000 dv1_175 -> dv1_176; 0311001
+         v1_42 -> v1_43 (registers rule:HR-LG-013). No paired
+         MDR (architecture authoring, not defect closure).
+         DR-078 NOT yet cleared for 1011007 retirement -- gaps
+         G1 (NDJSON format) / G2 (orjson + Decimal-as-string,
+         no float) / G4 (RotatingFileHandler 50MB/90 file
+         management) / G6 (event registry per-event level +
+         key fields) / G7 (60s/80% queue-health monitor)
+         REMAIN OPEN; 1011007 Logger_Coding_Spec dv1_6 stays
+         LIVE. Max DEC = 108; next = DEC-109.
+
+
 DEC-107  (TB00605)  OPERATOR REPORTING HIERARCHY -- DIAGRAM-FIRST
          AUTHORING INTO 0500000 D5/D6 (1 PUSH + 5 PULL CATEGORIES;
          EMAIL BAR; LOG-LEVEL/ROUTING DECOUPLING; SINGLE V2 LADDER).
@@ -11270,7 +11339,7 @@ authored at v1_15 §3 (this version).]
                     End-marker set to v1_74. Full prior history
                     preserved (CI-006). Companion: TB00605 SL v1_0 +
                     TB00606 NSI v1_0. No paired MDR (architecture
-                    authoring). Max DEC = 107; next = DEC-108.
+                    authoring). Max DEC = 108; next = DEC-109.
                     Supersedes v1_73.
 
   v1_73 2026-06-01  TB00566 DR-APPEND -- DEC-106 NEW.
