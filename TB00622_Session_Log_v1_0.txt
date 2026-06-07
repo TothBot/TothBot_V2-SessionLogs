@@ -1,0 +1,108 @@
+TB00622 SESSION LOG v1_0
+========================
+Date: 06-07-2026
+
+MISSION (this session): cold-load TB00622 NSI; run the PHASE 1 diagram
+code-completeness audit of 0500000 dv1_184; on the gate result, capture
+gaps + Bill dispositions; reframe TB00000 so it no longer conflicts with
+the NSIs (consolidation phase closed). Build-audit ran in Claude Code;
+disposition + close in chat (DIAGRAMS GOVERN -> diagram work is chat).
+
+============================================================
+SESSION-OPEN
+============================================================
+Cold-loaded (public tarball, both repos) TB00622 NSI + TB00000 v2_85 +
+TB00621 Session Log + 0500000 dv1_184. HEAD verified (RR-SCOPE-008, grep
+not recall): 0500000 dv1_184 md5 9c9c43aad57df2729fe74a2df1621c3f;
+0311001 v1_45; DR v1_87; MDR v1_53; max DEC 120.
+
+============================================================
+PHASE 1 AUDIT RESULT
+============================================================
+Full per-component audit of D1-D9 + Tier-1. GATE = NOT ALL-PASS -> STOP;
+no Option B code authored. PASS: Tier-1, D1, D3, D4, D5, D7, D8. GAP: D2
+(G1,G2,G3), D6 (G5), D9 (G4). Full report: TB00622_Diagram_Code_
+Completeness_Audit_v1_0.txt. The gate functioned as designed (loss-min;
+code analog of DR-078) -- three gaps (G2 post_only entry, G3 undefined
+gate limits, G5 halt scope) are loss-relevant and would have become wrong
+trading behavior if built blind.
+
+============================================================
+GAPS + BILL DISPOSITIONS
+============================================================
+G1 (D2 Param_Store_Snapshot consumes vs q1_do): reconcile consumes to the
+   full q1_do CIATS-owned set. Derivable; Claude authors.
+G2 (D2 per-pair status online vs post_only): BILL = ONLINE ONLY; both
+   fields state it identically. Claude authors.
+G3a (D2 SC-Gate-5 concurrent-position count / SC-Gate-6 open-order count
+   have no limit/param): BILL = CIATS-owned, NO limit; wallet ($5,000) +
+   $0.50 start is the real control; effectively unbounded. These gates
+   predate the CIATS-owned paradigm (hard-number-era loss guard). BILL
+   DIRECTED an FP/DP (First-Principles / Data-Driven) analysis NEXT
+   SESSION on whether they are still necessary and, if so, the best
+   expression. NOT resolved this session.
+G3b (SIGNAL_DECAY remainder-cancel deferred to non-existent 0511003):
+   CORRECTION verified in HEAD -- the partial-fill bisection OWNERSHIP
+   model is ALREADY in the diagram (partial_fill_ownership, DEC-065 Q2,
+   TB00451), and the dispatch SUBSTRATE is ALREADY there (Dispatch_Seam +
+   channel:kraken_rest_CancelOrder/CancelAllOrders). The 0511003 deferral
+   was over-conservative/unnecessary. BILL = author into 0500000. Fix =
+   wire Selection_Controller remainder-cancel through the existing
+   Dispatch_Seam -> CancelOrder + state cancel-control decision logic.
+   Contained; no 0511003 dependency. Claude authors.
+G4 (D9 evt:G8_A1_ACCEPT not registered/logged): BILL = register +
+   emit/log it (0311001 + D9 q5_logs) for full audit trail / loss
+   investigation; symmetric with evt:G8_A1_REJECT. Claude authors.
+G5 (D6 "full system halt" vs D8/D7 per-wallet module-wide + AR-052
+   isolation): reword D6 Risk_Engine to "module-wide halt (per-wallet;
+   sibling isolated per AR-052)". Derivable; Claude authors.
+B1 (entry_timeout_sec range): FORENSIC -- origin rule WS-ADD-002, a
+   CIATS-owned SEED (start 30s, band 30-60s), NOT paper-trading-derived
+   (nothing has run); 0811001 sec 9 once listed 45s = residue. BILL
+   agreed: pin TB00000 sec 8 to "entry_timeout_sec = 30s GTD start (CIATS
+   band 30-60s)". Claude authors.
+
+============================================================
+DELIVERABLES (this session)
+============================================================
+- TB00000_..._v2_86.txt: section 3 reframed (CONSOLIDATION IS COMPLETE;
+  current mandate = close code-completeness gaps then build OPTION B);
+  v2_86 changelog entry; binary-test phrasing updated ("being authored
+  into a diagram"); BINARY/COMPLETENESS tests + TWO PATHWAYS + AA=10-
+  organism-spec rule UNCHANGED. Supersedes v2_85.
+- TB00622_Diagram_Code_Completeness_Audit_v1_0.txt (canonical audit).
+- TB00622_Session_Log_v1_0.txt (this).
+- TB00623_Next_Session_Instructions_v1_0.txt (FP/DP analysis first).
+No 0500000 edit this session (dv1_184 UNCHANGED; gap fixes are later
+slices). No DR edit (dispositions carried in SL + NSI; each fix slice
+mints its own DEC when the amendment lands). MDR v1_53 UNCHANGED.
+
+============================================================
+PUSH -- SessionLogs only (one push)
+============================================================
+git add TB00000 v2_86 + TB00622 SL + TB00622 audit + TB00623 NSI;
+git rm --cached TB00000 v2_85; commit; push origin master.
+
+============================================================
+DR-010 POST-PUSH VERIFICATION
+============================================================
+Fresh tarball into a clean dir; md5 byte-match the 4 pushed files
+(present + md5); explicit ABSENT check on the superseded TB00000 v2_85.
+
+============================================================
+CARRY-FORWARD (TB00623, chat)
+============================================================
+1. NEXT SESSION: BILL-DIRECTED FP/DP analysis -- are SC-Gate-5/6 still
+   necessary under the CIATS-owned paradigm; if so, best expression.
+   Outcome gates the D2 G3(a) edit.
+2. Then diagram-first fix slices, each ending in a re-run PHASE 1 audit on
+   the touched diagram(s): G1/G2/G5/B1 (surgical batch); G3(b) remainder-
+   cancel wiring (D2); G4 evt:G8_A1_ACCEPT (0311001 + D9); plus the G3(a)
+   outcome. Slices sized by Claude; not crammed. Each amendment mints its
+   DEC and re-verifies HEAD.
+3. On full re-audit all-PASS -> PHASE 2 (Option B clean-slate code gen ->
+   TothBot_V2-Code), in a Claude Code session.
+4. Deferred non-organism housekeeping (non-loss): stale plans 0911002 /
+   TB00394; TB00153 one-version backlog (114 TB00153 files in HEAD vs 2
+   live); anchor-doc E3 collapse; figcaption/viewBox R-stamp hygiene
+   (Section C). Not build-blocking.

@@ -1,0 +1,179 @@
+TB00622 DIAGRAM CODE-COMPLETENESS AUDIT v1_0
+============================================
+PHASE 1 audit of 0500000 dv1_184 (D1-D9 + Tier-1) per TB00622 NSI.
+Run in a Claude Code session; gate result + dispositions recorded here.
+Date: 06-07-2026
+
+============================================================
+SESSION-OPEN VERIFICATION (RR-SCOPE-008 no-guess; grep, not recall)
+============================================================
+- 0500000 dv1_184 md5 = 9c9c43aad57df2729fe74a2df1621c3f      CONFIRMED
+- 0311001 Namespace_Specification v1_45 (latest)              CONFIRMED
+- TB00153 Decision Register (DR) v1_87                        CONFIRMED
+- TB00153 Master Defect Register (MDR) v1_53 (latest)         CONFIRMED
+- max DEC = 120 (DEC-121 is the "next =" pointer only)        CONFIRMED
+
+============================================================
+METHOD
+============================================================
+Independent per-component audit of every governs-bearing SVG node in each
+of the 10 diagrams (Tier-1 + D1-D9). Each component tested for the 5
+fields: q1_do (Q1), interface(s)/consumes/produces (Q2), rule:/MUST/
+must_not (Q3), q4_triggers (Q4), q5_logs (Q5). Diagram self-attestations
+were NOT trusted; every verdict re-derived from SVG <text> + <desc>
+canonical content. R-increment change-history narrative excluded from the
+vague-term scan. All surviving gaps re-tested against the diagram-SET +
+sec-8 build input and the binary architecture test before being recorded.
+
+============================================================
+PER-DIAGRAM VERDICT
+============================================================
+  Tier-1 System Context  ... PASS (flagged items resolve in children; C)
+  D1 Kraken API          ... PASS (Kraken-defined TTL / event-driven
+                                    cadence; stale attestation = hygiene)
+  D2 Trading Pipeline    ... GAP  (G1, G2, G3)
+  D3 Exit Architecture   ... PASS
+  D4 Regime Taxonomy     ... PASS
+  D5 CIATS Architecture  ... PASS
+  D6 Complete System     ... GAP  (G5 wording conflict; value/structure
+                                    items resolve in D7/D8/sec-8)
+  D7 Paper-Mode Dispatch ... PASS (4 divergence points exact; SS-BUILD-001
+                                    / SS-WIRE-001 deterministic)
+  D8 Gate-7 Risk Guard   ... PASS (stale "5-check" count residue = hygiene)
+  D9 Gate-8 Position Sizer.. GAP  (G4)
+
+============================================================
+GATE RESULT:  NOT ALL-PASS  ->  STOP. DO NOT WRITE CODE.
+============================================================
+Per TB00622 PHASE 1 gate (loss-min, non-negotiable; the code analog of
+DR-078): any gap halts the build. The fix is a DIAGRAM-FIRST amendment
+authored in a CHAT session, never a code workaround. PHASE 2 (Option B
+clean-slate code generation) NOT entered.
+
+============================================================
+SECTION A -- VERIFIED GENUINE GAPS  +  BILL DISPOSITIONS (TB00622 chat)
+============================================================
+G1  D2 Parameter_Store_Snapshot -- consumes vs q1_do disagree on the
+    frozen set. consumes lists 6 params; q1_do enumerates 9 and says "all
+    CIATS-owned parameters". Authoritative snapshot set is ambiguous.
+    DISPOSITION: reconcile consumes to the full q1_do set. Derivable;
+    Claude authors. (diagram-first)
+
+G2  D2 Pre_Gate_1_Per_Pair_Status -- governing desc vs visible text
+    conflict: q1_do "PASS if status=online" vs visible "online or
+    post_only proceed". DISPOSITION (BILL): ONLINE ONLY. Make both fields
+    state online-only identically. Derivable; Claude authors.
+
+G3  D2 G5_Selection_Controller -- two parts.
+    (a) SC-Gate-5 (per-module concurrent-position count) + SC-Gate-6
+        (open-order count) are pass/fail gates with NO limit value / NO
+        param token (contrast SC-Gate-1/2/3, each with a param:sc_* seed).
+        DISPOSITION (BILL): both are CIATS-OWNED with NO limit; the wallet
+        balance ($5,000 seed) + $0.50 start size is the real control until
+        CIATS takes over; values are effectively unbounded (e.g. 10,000).
+        These gates predate the CIATS-owned paradigm (hard-number-era loss
+        guard). BILL DIRECTED a First-Principles / Data-Driven (FP/DP)
+        analysis -- NEXT SESSION -- on whether SC-Gate-5/6 are still
+        necessary at all under the CIATS-owned paradigm, and if so the best
+        way to express them. Outcome decides keep-as-nonbinding-seed vs
+        retire-the-gates. NOT resolved here.
+    (b) SIGNAL_DECAY remainder-cancel dispatch was deferred to 0511003
+        Execution_Engine_Specification (NOT in HEAD).
+        CORRECTION (verified HEAD this session): the partial-fill bisection
+        OWNERSHIP model is ALREADY in the diagram (partial_fill_ownership,
+        DEC-065 Q2, TB00451) -- filled qty -> Exit_Controller, unfilled
+        remainder -> Selection_Controller, SIGNAL_DECAY cancels the
+        unfilled remainder. The dispatch SUBSTRATE is ALSO already in the
+        diagram: Dispatch_Seam (sole dispatch gatekeeper, O(1) routing, the
+        four-divergence boundary) + channel:kraken_rest_CancelOrder /
+        CancelAllOrders. The deferral to 0511003 was over-conservative and
+        unnecessary -- the substrate exists. DISPOSITION (BILL): author
+        this INTO 0500000. The fix = explicitly wire Selection_Controller's
+        remainder-cancel through the existing Dispatch_Seam -> CancelOrder
+        channel + state the cancel-control decision logic. Contained
+        in-diagram authoring; no 0511003 dependency. Claude authors.
+
+G4  D9 Gate-8 -- evt:G8_A1_ACCEPT not registered/logged. Root governs
+    declares only evt:G8_A1_REJECT (registered 0311001) + evt:G8_SIZED;
+    the A1 accept transition is an unlogged internal PASS (zero q5_logs
+    occurrence; not in 0311001). Q5 unsatisfied for the accept case.
+    DISPOSITION (BILL): register + emit/log evt:G8_A1_ACCEPT (0311001 +
+    D9 q5_logs) for a full audit trail / loss-investigation. Claude
+    authors. (symmetric with REJECT)
+
+G5  D6 Complete_System vs D8/D7 -- halt-scope wording conflict. D6
+    Risk_Engine q1_do "full_halt_drawdown trips full SYSTEM halt"; D8
+    CHECK_1 + D7 govern it as MODULE-WIDE per-wallet halt with sibling
+    isolation (ar:AR-052). "Full system halt" reads as all-siblings and
+    contradicts the governing per-module model. DISPOSITION: reword D6
+    Risk_Engine to "module-wide halt (per-wallet; sibling isolated per
+    AR-052)". Derivable; Claude authors. (diagram-first)
+
+B1  param:entry_timeout_sec given as RANGE "30-60s GTD" in D2 visible text
+    + TB00000 sec 8, not a single explicit start value.
+    FORENSIC (verified HEAD this session): origin = rule WS-ADD-002
+    (WS_Manager, "entry GTD expire_time 30-60s, START 30s") -- the Kraken
+    GTD entry-order timeout. A retired spec (0811001 sec 9) once listed 45s
+    (source of the residue). It is a CIATS-OWNED SEED (a-priori, replaced
+    by data after 200 trades), NOT computed from paper-trading results
+    (nothing has run); identical in paper and live (timeout semantics do
+    not diverge). Governing intent = START 30s; "30-60s" is the CIATS band.
+    DISPOSITION (BILL agreed): pin TB00000 sec 8 to
+    "entry_timeout_sec = 30s GTD start (CIATS band 30-60s)". Claude authors.
+
+============================================================
+SECTION B -- AUDIT-FLAGGED ITEMS REJECTED AS NON-GAPS (with reasons)
+============================================================
+- D2/D6 "value elision" (mae_mult, emergency_sl_mult, drawdown %, rsi_*,
+  volume_sss_threshold, sc_body/cooldown/consecutive, concentration/
+  exposure limits, per_trade_size, min_volume_usd_daily): the parameters'
+  EXISTENCE + CIATS-OWNERSHIP are canonical in the diagrams; their seed
+  VALUES are correctly homed in TB00000 sec 8 by the binary architecture
+  test. sec 8 is the co-equal build input (DEC-120). NOT gaps.
+- D2 "ADX_14 never computed": computed in D4 Regime_Engine (full Wilder
+  DMI recurrence), cached in D2 Pre_Computation_Cache_Read. NOT a gap.
+- D2 "Short_Module has no own desc": fully specified in D7 (+ D4 short
+  routing). NOT a gap.
+- D6 "Long/Short nodes / halt isolation / shared-WS-over-union absent":
+  govern in D7 (PASSED) + D2; D6 is the single-process overview. Only the
+  G5 wording conflict is real. NOT gaps.
+- D6/Risk_Engine "drawdown 5%/10% absent": values in sec 8 + D8. NOT a gap.
+- Tier-1 "subscribe-storm threshold / logrotate / token-expiry": in
+  children -- D1 AR-080 subscribe ceiling (150 / 10 min; RATE=10, BURST=20),
+  D6/D5 RotatingFileHandler 50MB / 90 files, D1 WS-token refresh-on-
+  reconnect. NOT gaps.
+
+============================================================
+SECTION C -- DOCUMENTATION-HYGIENE OBSERVATIONS (non-blocking)
+============================================================
+- D1 figcaption: dv1_102 "all-PASS" 5-Q attestation self-RETRACTED + R-
+  stale (R9 attestation vs R11 SVG title); later migration logs assert
+  comprehensiveness but no formal 5-Q re-attestation re-run.
+- D3 / D7 figcaption attestation headers lag SVG title R-state (R8/R7 vs
+  R9; R6 vs R8). CI-005/CI-006 preserve attestation verbatim; cosmetic.
+- D8 component descs retain stale "CHECK 2-5 / remaining 4 / 5 components"
+  residue from the R2->R3 5th-check removal; intent unambiguous; cosmetic.
+- D6 figcaption: internal viewBox text "1500x1200" vs actual viewBox
+  1500x1500; PASS table authored R12 not re-stamped for R13.
+- Tier-1: VPS git-pull cadence unscheduled in the diagram; deployment/ops
+  detail (Pathway-1-adjacent), out of organism-code scope; recorded only.
+
+============================================================
+NEXT STEP
+============================================================
+1. Build STOPPED (gate = STOP). No Option B code authored.
+2. NEXT SESSION: the BILL-DIRECTED FP/DP analysis on SC-Gate-5/6 (G3a) --
+   are they still necessary under the CIATS-owned paradigm; if so, the
+   best expression. Outcome gates the D2 G3(a) edit.
+3. Then diagram-first fix slices (each ending in a re-run PHASE 1 audit on
+   the touched diagrams): G1/G2/G5/B1 (surgical); G3(b) remainder-cancel
+   wiring; G4 evt:G8_A1_ACCEPT registration + logging; plus the G3(a)
+   outcome. Slices sized by Claude; not crammed.
+4. On a full re-audit all-PASS, enter PHASE 2 (Option B clean-slate code
+   generation into TothBot_V2-Code).
+5. UNCHANGED + present/deterministic across D3/D4/D5/D7/D8/D9: SACRED net
+   1:1.5 R:R floor + rule A1, CIATS-ownership, paper-is-master four-
+   divergence rule, parallel-module + shared-WS_Manager + per-wallet-halt-
+   isolation. The organism is close.
+
+END
