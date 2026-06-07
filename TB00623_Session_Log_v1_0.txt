@@ -1,0 +1,104 @@
+TB00623 SESSION LOG v1_0
+========================
+Date: 06-07-2026
+
+MISSION (this session): Bill-directed G3(a) FP/DP analysis -- under the
+CIATS-owned paradigm, are D2 SC-Gate-5 (concurrent-position count) /
+SC-Gate-6 (open-order count) still necessary, and if so the best
+expression. Deliverable: written analysis (TB-prefix). Outcome gates the
+D2 edit; no diagram edit this session (NSI: do not pre-empt the outcome).
+
+============================================================
+SESSION-OPEN
+============================================================
+Cold-loaded (public tarball, both repos): TB00623 NSI + TB00000 v2_86 +
+TB00622 Session Log + TB00622 audit report + 0500000 dv1_184. HEAD verified
+(RR-SCOPE-008, grep not recall): 0500000 dv1_184 md5
+9c9c43aad57df2729fe74a2df1621c3f; 0311001 v1_45; DR v1_87; MDR v1_53; max
+DEC 120; TB00000 v2_86 present, v2_85 ABSENT. SD-13: consolidation COMPLETE
+(v2_86), zero live sources. DD-011 option-space test run at turn 1.
+
+============================================================
+ANALYSIS RESULT (full report: TB00623_G3a_SC_Gate_5_6_FP_DP_Analysis_v1_0)
+============================================================
+RECOMMENDATION: RETIRE both SC-Gate-5 and SC-Gate-6. DD-011 OUTCOME 1
+(single compliant path); no residual Bill business-judgment seam.
+BILL RATIFIED (this chat): remove both gates. Data-collection dimension
+raised + resolved (analysis sec 5.1): concurrent-position count is already
+live Position_Mirror state + post-hoc reconstructable from the 23-field
+record timestamps (no field needed); open-order-count capture CONSIDERED
+and DECLINED by Bill (small upside vs. schema/state bloat). Next D2 slice
+is a PURE REMOVAL for G3(a) -- no observation field added.
+
+Basis (all grep-verified in HEAD):
+- SC-Gate-5/6 are the only two of the six G5_Selection_Controller gates
+  with NO limit value / NO param token -- they gate against nothing (the
+  G1 gap's sibling defect).
+- The concurrent-position ceiling (param:max_concurrent) was ALREADY
+  retired at TB00000 v2_29 and de-registered from 0311001 (v1_40,
+  b408ac1); count emerges from wallet_balance / per_trade_size, no ceiling.
+- The race-prevention function lives separately in the Risk_Engine
+  BoundedSemaphore (untouched).
+- The only real open-order ceiling is Kraken's 80/pair (C-2 matrix),
+  already enforced by the rate-counter budget + rl_critical 0.95 entry-
+  suppression; stale-order-book loss is governed by REST-OO-002/003/006.
+- Minimize-loss test: every loss vector a count cap proxied is already
+  owned by a structural boundary (wallet boundary, Gate-7 DEC-115 fraction
+  limits, drawdown 5%/10%, Sacred floor + A1, Kraken C-2, BoundedSemaphore).
+  No unique loss remains for a count gate to prevent.
+- OPT-2 (keep as non-binding seeds) rejected: DEC-115 precedent is wallet-
+  FRACTION (a real knob); a COUNT seed can never bind, is meaningless noise,
+  re-introduces a retired concept, and (open-order) creates a drift copy of
+  Kraken's 80/pair = a NEW loss surface. RETIRE is strictly lower loss-risk.
+- G5_Selection_Controller becomes a 4-gate controller (SC-Gate-1 body,
+  -2 cooldown, -3 consecutive-loss, -4 active-position) -- all complete.
+
+============================================================
+DELIVERABLES (this session)
+============================================================
+- TB00623_G3a_SC_Gate_5_6_FP_DP_Analysis_v1_0.txt (the analysis; gating).
+- TB00623_Session_Log_v1_0.txt (this).
+- TB00624_Next_Session_Instructions_v1_0.txt.
+No 0500000 edit (dv1_184 UNCHANGED). No 0311001 edit. No DR edit (the
+retire mints its DEC when the D2 amendment lands). MDR UNCHANGED.
+
+SCOPE DECISION (Claude session-sizing, sec 4.1): secondary surgical batch
+(G1/G2/G5/B1) NOT done this session. Reason (first-principles, lower loss
+surface): the G3(a) retire is itself a D2 G5_Selection_Controller change;
+doing G1/G2 now and the retire next session would amend D2 twice. Batching
+the FULL D2 set (G1 + G2 + G3a-retire) into ONE dv1_185 amendment touches
+and re-audits D2 once -- fewer touches, less drift. The analysis is the
+gating unit and is the clean close point.
+
+============================================================
+PUSH -- SessionLogs only (one push); see OP4 box
+============================================================
+git add the 3 TB00623/TB00624 files; commit; push origin master. No
+git rm --cached this session (no superseded version retired).
+
+============================================================
+DR-010 POST-PUSH VERIFICATION
+============================================================
+Fresh tarball into a clean dir; md5 byte-match the 3 pushed files
+(present + md5). No ABSENT check required (nothing retired this session).
+
+============================================================
+CARRY-FORWARD (TB00624, chat)
+============================================================
+1. NEXT SLICE: single D2 dv1_184 -> dv1_185 amendment = G3(a) retire
+   SC-Gate-5/6 (4-gate controller; visible "6 quality gates" -> "4") + G1
+   (Param_Store_Snapshot consumes reconcile) + G2 (per-pair ONLINE-ONLY),
+   with riders G5 (D6 Risk_Engine halt-scope reword) + B1 (TB00000 sec 8
+   entry_timeout_sec = 30s start, band 30-60s). Mint the DEC (Bill-
+   ratified). Re-run PHASE 1 audit on D2 + D6 before treating gaps closed.
+   Edit only the gate:G5_Selection_Controller six-gate composition + its
+   visible gate-count text; leave the independent direction-symmetric
+   SC-GATE-1..6 block UNCHANGED (confirm at edit time, no-guess).
+2. Then G3(b) remainder-cancel wiring (D2, via existing Dispatch_Seam ->
+   CancelOrder) and G4 evt:G8_A1_ACCEPT registration + logging (0311001 +
+   D9) -- own slices.
+3. On full re-audit all-PASS -> PHASE 2 (Option B clean-slate code gen ->
+   TothBot_V2-Code, Claude Code session).
+4. Deferred non-organism housekeeping (non-loss, not build-blocking):
+   stale plans 0911002 / TB00394; TB00153 one-version backlog; anchor-doc
+   E3 collapse; figcaption/viewBox R-stamp hygiene (TB00622 Section C).

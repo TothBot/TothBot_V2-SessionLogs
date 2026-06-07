@@ -1,0 +1,226 @@
+TB00623 G3(a) FP/DP ANALYSIS -- SC-Gate-5 / SC-Gate-6 NECESSITY v1_0
+====================================================================
+(CHAT SESSION -- written analysis; gates the D2 G5_Selection_Controller edit)
+Date: 06-07-2026
+
+SCOPE
+-----
+Bill-directed First-Principles / Data-Driven analysis (TB00622 G3a):
+under the CIATS-owned paradigm, are D2 SC-Gate-5 (per-module concurrent-
+position count) and SC-Gate-6 (open-order count) STILL NECESSARY, and if
+so what is the best expression? Outcome gates the D2 edit. No diagram edit
+this session (NSI: do not pre-empt the outcome).
+
+SESSION-OPEN VERIFICATION (RR-SCOPE-008 no-guess; grep, not recall)
+-------------------------------------------------------------------
+- 0500000 dv1_184 md5 = 9c9c43aad57df2729fe74a2df1621c3f      CONFIRMED
+- 0311001 Namespace_Specification v1_45 (latest)              CONFIRMED
+- TB00153 DR v1_87 / MDR v1_53 (latest)                       CONFIRMED
+- max DEC = 120 (DEC-121 = "next =" pointer only)             CONFIRMED
+- TB00000 v2_86 present; v2_85 ABSENT                         CONFIRMED
+SD-13 consolidation-status: COMPLETE (TB00000 v2_86); zero live
+consolidation sources. DD-011 option-space test run at turn 1 (below).
+
+============================================================
+1. THE FACTS (verified in 0500000 dv1_184 + 0311001 v1_45 HEAD)
+============================================================
+1.1 D2 gate:G5_Selection_Controller q1_do composes SIX gates:
+    SC-Gate-1 body-strength      param:sc_body_threshold      (0.3)
+    SC-Gate-2 cooldown           param:sc_cooldown_seconds    (300s)
+    SC-Gate-3 consecutive-loss   param:sc_consecutive_limit   (3)
+    SC-Gate-4 active-position    boolean membership; HR-EC-014 sole-updater
+    SC-Gate-5 concurrent-position COUNT   -- NO limit value, NO param token
+    SC-Gate-6 open-order COUNT            -- NO limit value, NO param token
+    "PASS on all six; SKIP SELECTION_REJECTED otherwise."
+    => G1/2/3 carry a seed param; Gate-4 is a deterministic boolean test.
+       Gate-5 and Gate-6 alone gate against nothing -- this is the gap.
+
+1.2 The concurrent-position ceiling already DOES NOT EXIST. param:
+    max_concurrent was RETIRED at TB00000 v2_29 and DE-REGISTERED from
+    0311001 (v1_40, commit b408ac1). The diagram (BoundedSemaphore desc)
+    states: "concurrent-position count emerges from wallet_balance /
+    per_trade_size_usd arithmetic ... no artificial ceiling." The wallet
+    balance is the sole sizing boundary (DEC-115).
+
+1.3 The race-prevention function is OWNED ELSEWHERE. The diagram states
+    the "BoundedSemaphore PRIMITIVE remains load-bearing for asyncio
+    dispatch race-condition prevention even after max_concurrent ceiling
+    retirement" -- Risk_Engine owns it (TB00203 C5). It is NOT the same
+    thing as a Selection-Controller position-count cap and is untouched by
+    this analysis.
+
+1.4 The only real open-order ceiling is KRAKEN'S, already canonical. D1/D4
+    C-2 rate-limit matrix: "80 max open orders (per pair)", shared
+    REST+WS+FIX budget, rate counter 125/pair decay 2.34/s. Already
+    enforced at the exchange-interface layer by the rate-counter budget +
+    rl_critical 0.95 entry-suppression (suppresses NEW entries to preserve
+    exit budget; TB00000 sec 8). The loss-relevant open-order concern --
+    trading against a STALE open-order book -- is governed by REST-OO-002/
+    003/006 (retry-once -> DEGRADED, no new entries), NOT by a count gate.
+
+============================================================
+2. WHY THE FENCE EXISTS (sec 4.1 -- establish purpose BEFORE removal)
+============================================================
+SC-Gate-5/6 are hard-number-era artifacts. In the pre-CIATS design,
+exposure was bounded by FIXED per-trade sizing (e.g. the 0211001 "5% fixed
+per_trade_pct" seed) plus FIXED count caps (max_concurrent; an open-order
+cap). With a fixed slice size, capping the COUNT of open positions/orders
+was the mechanism that bounded total simultaneous exposure and bounded the
+order-rate footprint against the exchange. That was their loss-prevention
+purpose: a proxy ceiling on aggregate exposure and on order-rate pressure.
+
+The paradigm that gave them meaning is gone. Sizing is CIATS-owned off the
+module wallet balance ($5,000 paper seed), starting $0.50/trade, with the
+SACRED net 1:1.5 R:R floor the only hardcoded value and the wallet balance
+the sole sizing boundary (TB00000 v2_84 sec 7; DEC-115). max_concurrent
+was already retired on exactly this reasoning (1.2).
+
+============================================================
+3. MINIMIZE-LOSS TEST -- what unique loss does a COUNT gate prevent?
+============================================================
+For each loss vector a count cap nominally guarded, identify the structural
+boundary that already owns it under CIATS-ownership:
+
+  Over-exposure beyond the wallet
+    -> PREVENTED by the wallet boundary itself. concurrent count =
+       wallet_balance / per_trade_size (1.2). Once the wallet is deployed
+       the (N+1)th position cannot be funded. The cap is emergent and self-
+       limiting; a count gate is a redundant proxy for "do not exceed the
+       wallet," now enforced by arithmetic.
+  Single-position / correlated concentration
+    -> OWNED by Gate-7 concentration_limit_per_module + exposure_limit_pct
+       (DEC-115), expressed in WALLET FRACTION -- the economically correct
+       unit. A raw count is an inferior proxy: 20 positions x $0.50 is
+       trivial exposure; 2 x $2,500 is the whole wallet. Count does not
+       track risk; wallet-fraction does.
+  Runaway drawdown
+    -> PREVENTED by session-pause 5% / full-halt 10% (per-wallet).
+  Sub-floor trades
+    -> PREVENTED by rule A1 + Sacred 1:1.5 floor.
+  Exceeding Kraken order/rate limits
+    -> PREVENTED by the C-2 budget + 80-orders/pair Kraken ceiling +
+       rl_critical 0.95 entry-suppression (1.4) -- at the correct layer.
+  asyncio dispatch race
+    -> PREVENTED by the Risk_Engine BoundedSemaphore (1.3), independent.
+
+RESULT: there is NO residual loss that a Selection-Controller COUNT gate
+uniquely prevents. Every vector is already covered by a structural boundary
+or by the layer that owns it more correctly.
+
+============================================================
+4. OPTION SPACE (DD-011, full set evaluated at turn 1)
+============================================================
+OPT-1 RETIRE both gates as redundant.
+OPT-2 KEEP both as CIATS-owned NON-BINDING seeds (e.g. 10,000) per the
+      DEC-115 precedent.
+OPT-3 KEEP one, retire the other.
+OPT-4 RE-EXPRESS as a different mechanism.
+
+OPT-2 rejected. The DEC-115 precedent does not transfer. Concentration/
+  exposure seeds are in WALLET FRACTION -- a real, ownable risk knob CIATS
+  can later bind (e.g. 40% of wallet) if data shows concentration causes
+  loss. A position-COUNT or order-COUNT seed is NOT a meaningful CIATS knob:
+  the wallet/size arithmetic already fixes the count, so a count seed can
+  never bind without contradicting wallet-is-sole-boundary, and any value
+  set is noise that exists only to always pass. It adds two CIATS-owned
+  parameters with zero decision content, re-introduces the count-ceiling
+  concept v2_29 deliberately retired, and -- for open orders -- creates a
+  SECOND, non-authoritative copy of Kraken's 80/pair limit that can DRIFT
+  from the exchange truth (a new loss surface). Fails the completeness
+  test's spirit (no meaningless values).
+
+OPT-4 rejected. Every legitimate function is ALREADY correctly expressed
+  elsewhere (sec 3): wallet boundary, Gate-7 fraction limits, BoundedSema-
+  phore, Kraken C-2 budget. Re-expression would only relocate redundancy.
+
+OPT-3 rejected. No asymmetry justifies keeping one. Both are count proxies;
+  both are fully covered. If anything open-order count is the MORE clearly
+  redundant (hard Kraken 80/pair + rate budget), and concurrent-position
+  count's ceiling was the one explicitly retired in v2_29. Neither has a
+  residual unique function.
+
+OPT-1 is the first-principles + minimize-loss-correct path. Retiring both
+  removes no loss protection (all protections live in correct authoritative
+  layers, sec 3) and is strictly LOWER loss-risk than OPT-2: it eliminates
+  the open-order-count drift surface and removes two "always-pass" gates
+  that are themselves a completeness defect (a gate that gates nothing).
+  No edge case increases exposure: the (N+1)th position is unfundable by
+  arithmetic; the 81st order is rejected at the exchange/rate layer; the
+  dispatch race stays guarded by the semaphore.
+
+============================================================
+5. RECOMMENDATION (single path; DD-011 OUTCOME 1)
+============================================================
+RETIRE SC-Gate-5 (concurrent-position count) and SC-Gate-6 (open-order
+count). The D2 gate:G5_Selection_Controller becomes a FOUR-gate controller:
+SC-Gate-1 (body), SC-Gate-2 (cooldown), SC-Gate-3 (consecutive-loss),
+SC-Gate-4 (active-position). All four are complete (each has a seed param
+or a deterministic boolean test). No new param is minted; no value is
+guessed. The exposure/order/race functions the retired gates proxied remain
+fully governed by: wallet boundary (sole sizing boundary), Gate-7 limits
+(DEC-115), drawdown halts 5%/10%, Sacred floor + A1, Kraken C-2 80/pair +
+rl_critical 0.95, and the Risk_Engine BoundedSemaphore.
+
+This is a single compliant path (DD-011 OUTCOME 1): both surviving options
+are loss-equivalent on protection, and RETIRE is strictly better on drift-
+surface, completeness, and parameter hygiene. No genuine Bill business-
+judgment seam remains. The retire is executed as the next D2 slice, which
+mints its DEC (Bill-ratified per standing process) -- ratification of the
+DEC is the existing gate, not a manufactured question.
+
+============================================================
+5.1 DATA-COLLECTION CONSIDERATION (Bill-ratified)
+============================================================
+Question raised (Bill): separate from the controller role, are SC-Gate-5/6
+counts worth COLLECTING as CIATS analysis data? Verified in HEAD:
+- Concurrent-position count already exists as live Position_Mirror state
+  param positions_held_count_per_module (consumed by Gate-7 CHECK_2
+  concentration). It is NOT created by SC-Gate-5 and is NOT lost by
+  retiring the gate. Moreover the CIATS per-close record (23-field schema,
+  D5/D6 canonical) carries entry_timestamp_utc + exit_timestamp_utc per
+  trade, so concurrent-position-count-at-entry is EXACTLY reconstructable
+  post-hoc from the durable trades_*.jsonl corpus (same-module records
+  whose [entry,exit] interval spans a given entry). No dedicated field is
+  needed; crowding analysis is already enabled at zero schema cost.
+- Open-order count is NOT a tracked state token and is NOT in the 23-field
+  record, and is NOT reconstructable from the trade-close corpus (unfilled/
+  expired orders never become close records). Capturing it would require a
+  new tracked state + a new record field; its independent signal is weak
+  (largely collinear with positions-held + in-flight entries).
+DECISION (BILL): retire both gates; do NOT add any count instrumentation.
+Small analytical upside does not justify the schema/state bloat;
+concurrent-count crowding analysis remains available via reconstruction.
+This is orthogonal to and does NOT change the retire recommendation. The
+next D2 slice is a PURE REMOVAL for G3(a) -- no observation field added.
+
+============================================================
+6. EXECUTION HANDOFF (next slice -- diagram-first)
+============================================================
+Recommended sequencing (Claude session-sizing; lower churn / lower loss
+surface): batch the FULL D2 fix set into ONE dv1_184 -> dv1_185 amendment
+so D2 is touched and re-audited ONCE, not twice:
+  - G3(a): retire SC-Gate-5/6 from gate:G5_Selection_Controller q1_do +
+    the visible "6 quality gates" SVG text -> "4 quality gates"; update any
+    six-gate count residue. (R-bump: visible SVG text changes per TB00453.)
+  - G1: reconcile Parameter_Store_Snapshot consumes to the full q1_do
+    CIATS-owned set.
+  - G2: Pre_Gate_1_Per_Pair_Status ONLINE-ONLY, both fields identical.
+Riders on the same amendment (different nodes/files):
+  - G5: D6 Risk_Engine -> "module-wide halt (per-wallet; sibling isolated
+    per AR-052)".
+  - B1: TB00000 sec 8 entry_timeout_sec = 30s GTD start (CIATS band
+    30-60s). (TB00000 edit, not a diagram edit.)
+Then re-run the PHASE 1 audit on D2 + D6 before treating the gaps closed.
+G3(b) remainder-cancel wiring (D2) and G4 evt:G8_A1_ACCEPT (0311001 + D9)
+remain their own slices. PHASE 2 (Option B code gen) only on a full
+re-audit all-PASS.
+
+NOTE on the second numbering scheme: the SSS/pre-gate block uses an
+independent "SC-GATE-1..6 (direction-symmetric)" labelling (SSS / body /
+no-pyramid / cooldown / min-size / consecutive-loss) that is NOT the
+G5_Selection_Controller six-gate composition and is NOT in this analysis's
+scope. The D2 edit must touch only the gate:G5_Selection_Controller q1_do
+composition + its visible gate-count text, leaving the direction-symmetric
+block unchanged. Confirm at edit time (no-guess).
+
+END
