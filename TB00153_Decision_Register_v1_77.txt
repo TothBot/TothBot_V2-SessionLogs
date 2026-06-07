@@ -1,10 +1,10 @@
 DocDCN:     TB00153
 DocTitle:   Decision_Register
-DocVersion: v1_76
+DocVersion: v1_77
 DocOwner:   Bill
-DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00153_Decision_Register_v1_76.txt
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00153_Decision_Register_v1_77.txt
 DocDate:    06-07-2026
-DocTime:    17:52:00 UTC
+DocTime:    19:30:00 UTC
 
 ============================================================
 TB00153 DECISION REGISTER v1_70
@@ -7212,6 +7212,79 @@ amended; no paired MDR entry. Migrates the Exit-controller
 group's three remaining tokens (D3 mod:Exit_Controller) and
 CLOSES the DEC-045 carry-forward — Exit-controller group COMPLETE.
 
+
+DEC-110  (TB00608)  LOGGER GAPS G6 + G7 -- EVENT-CODE REGISTRY +
+         PROACTIVE QUEUE-HEALTH MONITOR AUTHORED DIAGRAM-FIRST
+         INTO 0500000 D5/D6
+         Decision: author the complete Logger event-code registry
+         (G6) and the proactive queue-health monitor (G7) into the
+         canonical mod:Logger encoding (D5 logger_box event_registry
+         + queue_health_monitor; D6 tb_logger mirror), diagram-first,
+         ADD-only. Binary test DEC-096: the Logger event registry +
+         queue-health monitor IS TothBot-organism architecture (the
+         CIATS data spine) -> 0500000, NOT a new standalone spec;
+         1011007 sec 6 + sec 4.4 migrated wholesale per TB00000
+         v2_84 sec 3, NOT rewritten, NOT kept as a parallel spec.
+         CONTEXT (loss-prevention; CIATS data integrity): TB00602
+         DD-014 gap register flagged G6/G7 as the last two open
+         fact-level gaps -- a coder could not reconstruct the
+         per-event level + key-field schema for the ~89 event codes
+         from the diagram alone, nor the proactive pre-saturation
+         queue warning, risking unregistered/mis-leveled log events
+         and an un-warned queue heading to saturation (records
+         dropped, CIATS blind).
+         AUTHORED (from 1011007 sec 6 LG-EVT-001 + sec 4.4
+         LG-QUEUE-006, migrated wholesale):
+           G6 event-code registry -- all ~89 event codes with V2-
+           ladder level + key fields, grouped by component family
+           (WS_MGR / SIGNAL_PIPELINE / EXEC_ENG / EXIT_CTRL /
+           POS_MIRROR / REGIME_ENG / CIATS / LOGGER), from-the-
+           diagram-alone (DD-014 strict); LG-EVT-001 no-undocumented-
+           code rule preserved. Per-event LEVEL is DERIVED (not a
+           Bill question) by the ratified monotonic 5-to-3 collapse
+           of the 1011007 source levels onto the single V2 ladder
+           (rule:HR-RPT-003, ratified TB00604/TB00605):
+           {DEBUG,INFO}->INFO, {WARN,HIGH}->WARNING,
+           {CRITICAL}->CRITICAL. EXCEPTION (DIAGRAMS-GOVERN): the
+           self-observability events keep their Bill-ratified diagram
+           levels exactly -- LOG_QUEUE_FULL / ALERT_SMTP_FAILED /
+           TRADE_RECORD_WRITE_FAILED = CRITICAL, ALERT_SENT = INFO --
+           NOT re-derived. Level is a record-filter property only,
+           DECOUPLED from operator-email routing (rule:HR-RPT-002);
+           the C1 email bar (rule:HR-RPT-001) + reporting_hierarchy
+           govern delivery, NOT the level column (NOT re-derived).
+           G7 queue-health monitor -- monitor_log_queue polls qsize
+           every 60s; at fill_pct >= 0.80 emits evt:LOG_QUEUE_WARN
+           [WARNING] {qsize, fill_pct} + operator alert per the
+           email bar; DISTINCT from evt:LOG_QUEUE_FULL [CRITICAL]
+           (100pct saturation hard back-pressure, C1 IMMEDIATE).
+         LOSS-PREVENTION RATIONALE (FP1/FP2; mission priority
+         minimize-loss): a complete, correctly-leveled event registry
+         is the contract the CIATS statistical pipeline parses -- a
+         missing or mis-leveled event corrupts inference; the
+         proactive 80pct warning gives the operator a pre-saturation
+         window to act before LOG_QUEUE_FULL drops records and
+         blinds CIATS.
+         R-STATE: HELD -- D5 R14 + D6 R13 (TB00453 bright line:
+         desc/figcaption ADD/MODIFY only; no visible text/geometry/
+         viewBox change; proven byte-for-byte vs dv1_177 -- rect 312
+         / line 95 / path 30 / polygon 5 / text 942 / viewBox 35 all
+         identical; 10 figures preserved). COMPANION (sole primary
+         deliverable): 0500000 dv1_177 -> dv1_178. NAMESPACE: 0311001
+         v1_43 -> v1_44 registers evt:LOG_QUEUE_WARN (self-
+         observability sibling of the registered evt:LOG_QUEUE_FULL);
+         the bulk operational event codes are descriptive coding
+         facts and mint NO token (TB00607 G1/G2/G4 precedent). No
+         paired MDR (architecture authoring, not defect-register
+         closure).
+         DR-078: with G1..G7 now ALL authored, the loss-prevention
+         gate is CLEARABLE -- the fact-level DD-014 re-audit of D5/D6
+         vs EVERY 1011007 fact + the 1011007 wholesale retirement
+         (git rm --cached) is the TB00609 PASS 3, deliberately run as
+         a clean dedicated re-audit pass against the now-settled
+         diagram (DR-078 do-not-rush-the-spine). 1011007
+         Logger_Coding_Spec dv1_6 STAYS LIVE this session. Max DEC =
+         110; next = DEC-111.
 
 DEC-109  (TB00607)  LOGGER GAPS G1/G2/G4 -- DIAGNOSTIC-STREAM
          RECORD FORMAT + SERIALIZATION + ROTATION AUTHORED
