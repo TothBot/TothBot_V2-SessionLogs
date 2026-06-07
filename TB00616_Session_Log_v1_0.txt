@@ -1,0 +1,187 @@
+TB00616 SESSION LOG v1_0
+========================
+
+MISSION (this session, per TB00616 NSI): (1) FIRST ACTION = the
+gap-(b) CUSUM close-out -- carry the DEC-116 open design question
+to Bill and, on ratification, execute. (2) Slice 3 = author the
+Tier-3 cross-module integration layer, gap (d).
+
+RESULT (what was executed): the gap-(b) CUSUM close-out was
+executed in full. Bill ratified OPTION A (adopt a Stream-2
+net_gain performance CUSUM, post-200-trade-floor-gated). The
+net_gain CUSUM was authored ADD-only into the 0500000 D5 CIATS
+figure; 0500000 dv1_181 -> dv1_182; companion TB00153 v1_83 ->
+v1_84 (DEC-117). Gap (d) was NOT executed -- it was deferred to a
+dedicated session on a documented stale-premise finding (see
+SECTION 3). This was a Claude session-sizing decision (session
+sizing is Claude's responsibility; not surfaced to Bill as a
+question -- stated to Bill with reasons).
+
+============================================================
+1. CUSUM CLOSE-OUT (DEC-117 / Bill OPTION A) -- EXECUTED + LIVE
+============================================================
+DEC-116 (TB00615) carried ONE genuine business-judgment item: the
+retired 0211001 dv1_0 CI-SE-003 specified a CUSUM on the Stream-2
+Trade-Outcome-Bus net_gain (trading-performance) stream, but the
+live diagram applied CUSUM ONLY to the Stream-1 EWMA operational-
+health signals (rejection_rate / rate_counter / latency) -- a
+loss-prevention-relevant capability divergence, surfaced to Bill,
+not self-resolved. Bill ratified OPTION A: ADOPT the net_gain
+performance CUSUM, post-200-trade-floor-gated.
+
+AUTHORED ADD-only into D5 mod:CIATS_Statistical_Engine (stats_box
+q1_do), a SECOND, DISTINCT CUSUM application, SEPARATE from the
+Stream-1 operational CUSUM at mod:CIATS_EWMA_Monitor. Full DD-014
+spec (from-the-diagram-alone):
+- SERIES: Stream-2 net_gain_usd (realized net P/L after all fees;
+  contract:CIATS_Trade_Outcome_Bus).
+- PARAMS: k = 0.5*sigma, h = 4*sigma; sigma = std(net_gain_usd)
+  over the rolling 200-300 most-recent-closed-trade window
+  (CIATS-owned starting values; optimized after the floor).
+- ACTIVATION GATE: computed ONLY after the 200-trade HARD FLOOR
+  per rule:HR-CI-004 (pre-floor net_gain sigma is not inference-
+  valid; mirrors Half-Kelly activation; dormant before the floor).
+- DIRECTION: loss-prevention LOWER arm only (sustained net_gain
+  degradation); the upper arm does not initiate PDCA.
+- TRIGGER: a net_gain lower-CUSUM signal initiates an OUT-OF-CYCLE
+  mod:CIATS_PDCA_Engine PLAN REGARDLESS of the rule:HR-CI-005
+  50-trade interval (per retired 0211001 dv1_0 CI-SE-003; the spec
+  stays retired, diagram canonical per DD-001). Companion
+  pdca_box q4_triggers ADD records the out-of-cycle trigger.
+- LOGGING: emits evt:CIATS_CUSUM_SIGNAL {metric=net_gain_usd, k,
+  h, cusum_s} -- existing CUSUM event parameterized by the metric
+  field; no new token.
+- DETECTION/MONITORING ONLY: never writes
+  mod:CIATS_Parameter_Store directly; changes route PDCA -> Bill
+  approval per rule:HR-CI-011.
+
+LOSS-PREVENTION RATIONALE: a continuous net_gain CUSUM shortens
+time-to-detect on a sustained decaying edge that the interval
+Mann-Whitney point test misses between PDCA cycles.
+
+GAP (b) DD-014 ZERO-GAP ATTESTATION: now CLEAN for the CIATS
+statistical engine. The DEC-116 divergence is RESOLVED by
+capability adoption (OPTION A), not by supersession.
+
+BINARY TEST (DEC-096): a CIATS statistical-method application is
+TothBot-organism architecture -> canonical in 0500000 D5. No
+parameter VALUE moved (k/h are sigma-derived computation; TB00000
+sec 8 UNCHANGED). YES -> diagram-first.
+
+R-STATE (TB00453 bright line): <desc> + D5 figcaption ADD only --
+NO visible SVG <text> / geometry / viewBox change (1500x1200);
+figure count unchanged; D5 R-number HELD at R14; all 9 non-CIATS
+figures BYTE-IDENTICAL to HEAD (per-figure diff verified -- only
+Image5 changed).
+
+============================================================
+2. DELIVERABLES + VERIFICATION
+============================================================
+PRIMARY (Docs repo):
+  0500000_System_Architecture_Overview_dv1_182_Claude_Source.html
+  md5 = c29c16d32eba07711e1bfd07e756023d ; 10329 lines ;
+  1,731,344 bytes.
+  Verification PASS: tag-pair balance (svg 10/10, figure 10/10,
+  figcaption 10/10, desc 126/126, title 127/127, pre 127/127, div
+  10/10); zero stray << / >>; exactly ONE <h2>14. Revision
+  History</h2>; Image5 R14 present + R15 ABSENT (R held);
+  per-figure diff = ONLY Image5 (D5 CIATS) changed, 9 others
+  byte-identical to HEAD; HTMLParser feed clean; the 4 residual
+  dv1_181 strings are all legitimate (2 historical refs + 2
+  "dv1_181 -> dv1_182" arrows).
+
+COMPANION (SessionLogs repo):
+  TB00153_Decision_Register_v1_84.txt
+  md5 = 844dc5b9db3bb7039cd228da9eedde8a ; 15485 lines.
+  DEC-117 prepended newest-first (L7216); DEC-116 Max-DEC pointer
+  annotated "superseded by DEC-117"; header v1_84 / DocTime
+  17:25:00 UTC; internal banner ("v1_70") deliberately NOT touched
+  per the prevailing v1_75..v1_82 convention.
+
+UNCHANGED: 0311001 v1_44 (no token minted/deregistered;
+evt:CIATS_CUSUM_SIGNAL is the pre-existing descriptive bulk event
+code, parameterized by metric -- TB00607/TB00608 precedent).
+TB00000 (no seed value moved). The 1:1.5 R:R minimum remains the
+ONLY hardcoded value (a floor, never a cap).
+
+NO paired MDR (forward DD-014 design-completeness capability
+adoption, pre-paper-trading; not a latent runtime-defect closure).
+DR-078 N/A (no source retirement). V-038 = 0 open (unchanged).
+
+============================================================
+3. GAP (d) DEFERRED -- STALE-PREMISE FINDING (RR-SCOPE-008)
+============================================================
+The TB00616 NSI bundled gap (d) (Tier-3 cross-module integration
+layer + "unpause and CLOSE the V-041/V-042 FAIL-list backlogs")
+into this session. It was NOT executed. Reason: the NSI's gap-(d)
+entry premises are STALE against live HEAD, so authoring now would
+be authoring against unaudited ground (contra loss-min-first /
+DR-078 do-not-rush-the-spine). Findings, all live-HEAD-verified:
+
+  (a) The "V-041/V-042 PAUSED backlog awaiting unpause" framing is
+      a TB00384-era D9 figcaption (the OPTION R EXTENSION (iii)
+      text), ~30 cuts stale (dv1_112 -> dv1_181). It is NOT the
+      current state.
+  (b) DEC-037 (TB00389) already UNPAUSED V-041 (119) + V-042 (34)
+      = 153 catalogued FAILs (deferred-indefinitely -> ACTIVE).
+  (c) TB00391 closed sec-3 Class B FAIL-C 40/40; TB00392 closed
+      sec-4 Class B FAIL-P 34/34 (per the live Tier-1 Context
+      figcaption R-increment narratives).
+  (d) The V-040 IV campaign COMPLETED at TB00384 (580 cells, 100%
+      PASS); a later CF-V040-METHOD fact-level reconcile ran
+      through dv1_169 (TB00593) .. dv1_181, and source-retirement
+      is reported COMPLETE per the TB00612-era state.
+  (e) The recent sessions TB00610..TB00615 did NOT touch
+      V-041/V-042 -- their residual is frozen at the TB00391/392
+      batch state, never freshly audited since.
+  (f) OPEN NAMESPACE GAP: evt:G8_A1_REJECT and evt:G8_A1_ACCEPT
+      are BOTH ABSENT from 0311001 v1_44, despite appearing
+      throughout the diagram. The projected "0311001 v1_24 ->
+      v1_25 evt:G8_A1_ACCEPT registration" carry-forward never
+      landed.
+
+CONCLUSION: gap (d) requires, FIRST, a fresh live V-041/V-042
+residual audit (what of the 153 catalogued FAILs is genuinely
+still open vs already-closed) + a cross-module DD-014 census
+(construction/instantiation order at startup; single Kraken WS
+fan-out to both Long + Short modules; Long/Short sibling
+instantiation with shared infra + per-module wallets), and likely
+a finding for Bill. That is its own session. DEC-118 is reserved
+for it (TB00153 v1_84).
+
+NOTE: cross-module wire-up content PARTIALLY exists already (the
+DR-013 CROSS-MODULE WIRE-UP ORDER callout in D6 at ~L5505; AR-049
+startup; the Long/Short sibling <desc> fields). The gap-(d)
+session must census these against DD-014 strict before authoring,
+not assume absence.
+
+============================================================
+4. OBSERVED PRE-EXISTING DEBT (preserved, NOT in this scope)
+============================================================
+  - <strong> tag imbalance: source dv1_181 already carried open=160
+    / close=162 (two orphan </strong> in the D7 figcaption ~L8484
+    and D8 figcaption ~L3096, from TB00614). This session's D5
+    figcaption ADD was balanced (+1/+1); dv1_182 is 161/163. The
+    file parses (HTMLParser clean), but the two orphan closes are a
+    pre-existing cosmetic defect outside the D5 scope -- preserved,
+    flagged for a dedicated housekeeping session.
+  - §14 Revision History positioning defect carried forward
+    (entries above the <h2> header in the figcaption-archive /
+    §13 region; entries dv1_100..dv1_110 absent). Known multi-
+    session debt; not touched.
+  - Stale internal banners (TB00153 "v1_70"; 0500000 has no banner
+    issue this slice). Convention is to leave them per v1_75..v1_82.
+  - Stale campaign-plan docs 0911002 / TB00394 (claim phases not
+    started when execution is ~90% complete).
+  - TB00153 one-version bulk cleanup (multiple superseded versions
+    historically; the one-version rule covers the immediate
+    predecessor on push).
+
+============================================================
+5. GIT (Claude authors; Bill executes in PowerShell) -- see the
+   TB00617 NSI OP4 push copy-boxes + DR-010 post-push block.
+============================================================
+Push set this session: 0500000 dv1_182 (Docs) + TB00153 v1_84,
+TB00616 SL, TB00617 NSI (SessionLogs). git rm --cached the
+superseded 0500000 dv1_181 (Docs) + TB00153 v1_83 (SessionLogs).
+Branch = master (both repos). DR-010 = present + md5 + ABSENT.

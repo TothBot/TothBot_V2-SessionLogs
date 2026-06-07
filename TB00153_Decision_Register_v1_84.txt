@@ -1,10 +1,10 @@
 DocDCN:     TB00153
 DocTitle:   Decision_Register
-DocVersion: v1_83
+DocVersion: v1_84
 DocOwner:   Bill
-DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00153_Decision_Register_v1_83.txt
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00153_Decision_Register_v1_84.txt
 DocDate:    06-07-2026
-DocTime:    14:05:00 UTC
+DocTime:    17:25:00 UTC
 
 ============================================================
 TB00153 DECISION REGISTER v1_70
@@ -7213,6 +7213,105 @@ group's three remaining tokens (D3 mod:Exit_Controller) and
 CLOSES the DEC-045 carry-forward — Exit-controller group COMPLETE.
 
 
+DEC-117  (TB00616)  0500000 DESIGN-COMPLETENESS GAP (b) CLOSE-OUT --
+         net_gain PERFORMANCE CUSUM ADOPTED (DEC-116 OPTION A; ADD-
+         ONLY; NO RETIREMENT). Resolves the sole open design question
+         carried from DEC-116 / TB00615.
+         BILL RATIFICATION (this session, chat-turn): OPTION A --
+         ADOPT a Stream-2 net_gain (trading-performance) CUSUM, post-
+         200-trade-floor-gated. (Option B confirm-superseded NOT
+         taken.)
+         Decision: a SECOND, DISTINCT CUSUM application is authored
+         ADD-only into 0500000 D5 mod:CIATS_Statistical_Engine
+         (stats_box q1_do), SEPARATE from the existing Stream-1
+         operational-health CUSUM at mod:CIATS_EWMA_Monitor
+         (rejection_rate / rate_counter / latency). Specification
+         (DD-014, from-the-diagram-alone):
+         - MONITORED SERIES: Stream-2 net_gain_usd (realized net P/L
+           AFTER ALL FEES; contract:CIATS_Trade_Outcome_Bus).
+         - PARAMETERS: k = 0.5*sigma, h = 4*sigma, sigma =
+           std(net_gain_usd) over the rolling 200-300 most-recent-
+           closed-trade window (CIATS-owned starting values, optimized
+           after the 200-trade floor; same k/h convention as the
+           operational CUSUM, applied to the net_gain metric).
+         - ACTIVATION GATE (Bill-ratified): computed ONLY after the
+           200-trade HARD FLOOR per rule:HR-CI-004 -- pre-floor
+           net_gain sigma is not inference-valid (mirrors the Half-
+           Kelly 200-trade activation; dormant before the floor).
+         - DIRECTION: the loss-prevention-relevant LOWER arm only
+           (sustained DOWNWARD net_gain drift = performance
+           degradation); the upper arm is not a loss-control trigger
+           and does not initiate PDCA.
+         - TRIGGER: a net_gain lower-CUSUM signal initiates an OUT-OF-
+           CYCLE mod:CIATS_PDCA_Engine PLAN evaluation REGARDLESS of
+           the rule:HR-CI-005 50-trade interval (per retired 0211001
+           dv1_0 CI-SE-003; spec stays retired, diagram canonical per
+           DD-001). Companion pdca_box q4_triggers ADD records the
+           out-of-cycle trigger.
+         - LOGGING: emits evt:CIATS_CUSUM_SIGNAL {metric=net_gain_usd,
+           k, h, cusum_s} -- the existing CUSUM event parameterized by
+           the metric field; same descriptive event code as the
+           operational CUSUM (no new token).
+         - DETECTION/MONITORING ONLY: never writes
+           mod:CIATS_Parameter_Store directly; every resulting
+           parameter change still routes PDCA -> Bill approval per
+           rule:HR-CI-011.
+         LOSS-PREVENTION RATIONALE: a continuous net_gain CUSUM
+         shortens time-to-detect on a sustained decaying edge that the
+         interval Mann-Whitney point test would miss between PDCA
+         cycles -- maximize profit / minimize loss, emphasis on
+         minimizing loss.
+         BINARY TEST (DEC-096): a CIATS statistical-method application
+         is TothBot-organism architecture -> canonical in 0500000 D5.
+         No parameter VALUE moved (k/h are sigma-derived computation;
+         TB00000 sec 8 UNCHANGED). YES -> diagram-first.
+         R-STATE (TB00453 bright line): <desc> + D5 figcaption ADD
+         only -- NO visible SVG <text> / geometry / viewBox change
+         (1500x1200); figure count unchanged; D5 R-number HELD at R14;
+         all 9 non-CIATS figures BYTE-IDENTICAL to HEAD (per-figure
+         diff verified -- only Image5 changed). The sec-14 Revision
+         History gained one ADD-only dv1_181 -> dv1_182 entry (the
+         prior TB00615 dv1_180 -> dv1_181 entry preserved verbatim).
+         GAP (b) DD-014 ZERO-GAP ATTESTATION: now CLEAN for the CIATS
+         statistical engine. The capability divergence carried at
+         DEC-116 is RESOLVED by capability adoption (OPTION A), not by
+         supersession; from-the-diagram-alone a coder can now build
+         both the operational and the net_gain performance CUSUM.
+         STATUS: RATIFIED (Bill OPTION A, this session). Companion
+         primary deliverable 0500000 dv1_181 -> dv1_182 (only the D5
+         CIATS figure changed; final md5
+         c29c16d32eba07711e1bfd07e756023d).
+         NAMESPACE: 0311001 v1_44 UNCHANGED -- no token minted, none
+         deregistered (evt:CIATS_CUSUM_SIGNAL is the pre-existing
+         descriptive event code, parameterized by the metric field;
+         TB00607/TB00608 bulk-event-code precedent). TB00000 NOT
+         amended (no seed value changed). The net 1:1.5 R:R minimum
+         remains the ONLY hardcoded value (a floor, never a cap). No
+         paired MDR: forward DD-014 design-completeness capability
+         adoption (pre-paper-trading; nothing running), not a latent
+         runtime-defect closure. DR-078 N/A (no source retirement;
+         0211001 already retired and stays retired). V-038 = 0 open
+         (unchanged).
+         DR-010 post-push: present + md5 + ABSENT, the absent check
+         covering the superseded 0500000_System_Architecture_Overview_
+         dv1_181_Claude_Source.html (Docs) +
+         TB00153_Decision_Register_v1_83.txt (SessionLogs).
+         GAP (d) -- Tier-3 cross-module integration layer (Slice 3) --
+         NOT executed this session: deferred to a dedicated session.
+         Entry-state finding (RR-SCOPE-008): the NSI gap-(d) premise
+         that V-041/V-042 are a "paused backlog to unpause" is STALE
+         vs live HEAD -- DEC-037 already UNPAUSED them (TB00389), the
+         TB00391/TB00392 batches closed sec-3 FAIL-C 40/40 + sec-4
+         FAIL-P 34/34, the V-040 IV campaign completed (TB00384, 580
+         cells), and a later CF-V040-METHOD reconcile ran through
+         dv1_169..dv1_181. Gap (d) needs a fresh live V-041/V-042
+         residual audit + cross-module DD-014 census FIRST (plus the
+         open evt:G8_A1_REJECT / evt:G8_A1_ACCEPT 0311001-registration
+         gap -- both ABSENT from 0311001 v1_44). See TB00616 SL +
+         TB00617 NSI. DEC-118 reserved for the gap-(d) execution.
+         Max DEC = 117; next = DEC-118.
+
+
 DEC-116  (TB00615)  0500000 DESIGN-COMPLETENESS GAP (b) -- CIATS
          STATISTICAL-ENGINE FACT CONSOLIDATION (ADD-ONLY; NO
          RETIREMENT). SLICE 2 of the TB00613 four-gap diagram-
@@ -7313,7 +7412,8 @@ DEC-116  (TB00615)  0500000 DESIGN-COMPLETENESS GAP (b) -- CIATS
          covering the superseded 0500000_System_Architecture_Overview_
          dv1_180_Claude_Source.html (Docs) +
          TB00153_Decision_Register_v1_82.txt (SessionLogs).
-         Max DEC = 116; next = DEC-117.
+         Max DEC = 116; next = DEC-117. (Max-DEC pointer
+         superseded by DEC-117.)
 
 
 DEC-115  (TB00614)  0500000 DESIGN-COMPLETENESS gaps (c)+(a) --
