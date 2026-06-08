@@ -1,10 +1,10 @@
 DocDCN:     TB00153
 DocTitle:   Decision_Register
-DocVersion: v1_88
+DocVersion: v1_89
 DocOwner:   Bill
-DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00153_Decision_Register_v1_88.txt
-DocDate:    06-07-2026
-DocTime:    23:03:59 UTC
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00153_Decision_Register_v1_89.txt
+DocDate:    06-08-2026
+DocTime:    04:58:46 UTC
 
 ============================================================
 TB00153 DECISION REGISTER v1_70
@@ -7211,6 +7211,106 @@ closure). No value migration; sec 9.17 unchanged; TB00000 not
 amended; no paired MDR entry. Migrates the Exit-controller
 group's three remaining tokens (D3 mod:Exit_Controller) and
 CLOSES the DEC-045 carry-forward — Exit-controller group COMPLETE.
+
+
+DEC-122  (TB00630)  COUPLED ENTRY-EXECUTION / SIZING / FEE / DUST
+         ARCHITECTURE CORRECTION SET (consolidated; sub-decisions a-e =
+         DEC-A..DEC-E). STATUS: RATIFIED by Bill at the TB00630 chat-turn.
+         ORIGIN: closing the TP_PARTIAL_FILL_REMAINDER no-guess scoping
+         gaps (the TB00630 NSI primary mission) surfaced a chain of
+         coupled entry/exit/sizing/fee defects. Decisive verified Kraken
+         fact (web + live AssetPairs read, TB00630): a sub-minimum spot
+         position CANNOT be sold on Kraken (order below ordermin rejected;
+         below costmin canceled "Cost minimum not met"); the only disposal
+         route is the manual Convert Small Balances UI feature, not
+         automatable in the hot path. costmin is uniform $0.50 per USD
+         pair; the BINDING floor is ordermin*price (~$5-15 majors, tail to
+         ~$25-50). Base-tier (zero-volume) fees: alts 0.40% taker /
+         0.23-0.25% maker; majors 0.26% / 0.16%.
+
+         (a) DEC-A SIZING. per_trade_size_usd seed changes from ~$0.50 to
+             PAIR-RELATIVE max(50, 5 * max(costmin, ordermin*price)),
+             live-read per pair from the instrument channel. $50 floor so
+             the liquid universe is tradeable; 5x margin above each pair's
+             real floor so a partial fill cannot strand either side.
+             $5,000/side wallet (paper) UNCHANGED. Seed only; CIATS-owned
+             from the 200-trade floor. Rationale: capital recycles on spot,
+             so size does not buy more trades (sample count is gated by
+             signal frequency x time x concurrency); size only controls
+             fee/precision noise, dust formation, and R:R-floor validity.
+             $0.50 sat exactly on the cost floor (zero margin, dust-
+             guaranteed); the data-clean knee is ~$30-50.
+         (b) DEC-B ENTRY EXECUTION MODEL. Replace maker-only entry
+             (WS-ADD-005: post_only GTD 30-60s) with TAKER entry:
+             marketable IOC limit + Market Price Protection (MPP) slippage
+             cap. TP exit STAYS maker (post_only resting limit). Protective
+             exits (MAE/regime/emergSL) stay taker market (unchanged).
+             Rationale (FP/DP): on a trend-filtered pullback signal,
+             maker-only entry causes ADVERSE SELECTION (fills only when
+             price ticks against you; misses the winners), yields a
+             low/variable fill rate, and -- decisively -- produces a BIASED
+             CIATS sample so the 200-trade certification measures the
+             adversely-selected subset, not the strategy. Taker entry gives
+             unbiased immediate fills and ELIMINATES the entry-side
+             partial-fill dust / unprotected-stub at the source. Fee delta
+             ~0.10-0.15%/trade (~$0.05-0.08 on $50) -- trivial vs the
+             selection-bias cost.
+         (c) DEC-C FEE SEEDS. Correct FEE_TAKER_PCT / FEE_MAKER_PCT to the
+             realistic base (zero-volume) tier so R:R-floor + Half-Kelly
+             are honest: conservative seed = alt base tier (taker 0.0040,
+             maker 0.0025); live-read per pair/tier refines. Round-trip
+             basis = taker-in + maker-out (TP); taker-in + taker-out
+             (protective exits).
+         (d) DEC-D DUST REMEDIATION. The sub-minimum residual cannot be
+             sold -> ABANDON-AND-TRACK as a bounded write-off: cancel the
+             (rejected-anyway) protective order, clear the residual from
+             active position management, book the bounded loss (< costmin,
+             ~<$0.50) to CIATS, surface accumulated dust for the operator's
+             manual Convert Small Balances action. New exit_reason
+             SUB_MIN_RESIDUAL_ABANDONED (general, condition-named) REPLACES
+             TP_PARTIAL_FILL_REMAINDER (trigger-named, force-sell). This
+             corrects the original Option-A general-force-close to the only
+             physically-valid remedy.
+         (e) DEC-E DUST SCOPE NARROWED BY DEC-B. Taker IOC entry removes
+             the dangling post_only GTD that partial-fills-then-expires, so
+             the entry-side dust case + AR-054 unprotected-stub case are
+             largely obviated (IOC fills or kills the remainder
+             immediately; a sub-min filled part is abandoned per DEC-D).
+             The ONLY remaining normal-op dust source is a partial TP fill
+             (maker) leaving a sub-min held remainder -- rare at $50/5x-
+             floor sizing, bounded < costmin. The heavy entry-redesign
+             (formerly "gamma") is therefore unnecessary.
+
+         SACRED CONSTRAINT: net 1:1.5 R:R minimum UNCHANGED and remains the
+         ONLY hardcoded value. 1:1.5 is the GROSS floor (hardcoded);
+         acceptance rule A1 still rejects below 1:1.5 gross. Net lands
+         ~1.38-1.42x after taker-in fees (vs ~1.46x prior) -- not a floor
+         change; the floor is gross and unchanged.
+
+         FLAGGED (paired downstream in the TB00631 change register):
+         - DEC-065 Q2 SIGNAL_DECAY RE-EVALUATION (CR-09): DEC-B removes the
+           working post_only entry order, so the pending-entry-order cancel
+           trigger may be moot under IOC. A genuine fence review (establish
+           why the fence exists before removing); surfaced to Bill in its
+           execution slice -- NOT resolved by this DEC.
+         - DEC-065 ENUM-MEMBERSHIP CHANGE (CR-12): the 7-value exit_reason
+           enum membership changes (TP_PARTIAL_FILL_REMAINDER ->
+           SUB_MIN_RESIDUAL_ABANDONED) at every live token-identity site
+           (D5/D6/D3 surface/D2 trade-outcome bus). Atomic rename per the
+           DEC-067 precedent.
+
+         BINARY TEST (DEC-096): all of DEC-A..E are TothBot-organism
+         (Kraken/TothBot/CIATS) architecture -> they belong in the 0500000
+         diagrams (DIAGRAMS GOVERN); only the numeric seed VALUES live in
+         TB00000 sec 8. No source spec retired (no DR-078 retirement gate
+         triggered; forward correction set).
+         PAIRED MDR: yes -- DR-079 (WS-TP-003 impossible force-close latent
+         loss-prevention defect; closed by CR-11 + CR-13).
+         EXECUTION: authored diagram-first into 0500000 across the TB00631
+         change register CR-01..CR-20; this DEC + DR-079 are CR-01 + CR-02
+         (authority of record, authored FIRST).
+         ARTIFACTS (this entry): TB00153 Decision Register v1_88 -> v1_89.
+         Max DEC = 122; next = DEC-123.
 
 
 DEC-121  (TB00625)  D2 GAP-FIX G1/G2/G3a + D6 G5 RIDER + TB00000 B1

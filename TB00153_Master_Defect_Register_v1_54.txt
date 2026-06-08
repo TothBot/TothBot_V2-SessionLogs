@@ -1,13 +1,13 @@
 DocDCN:     TB00153
 DocTitle:   Master_Defect_Register
-DocVersion: v1_53
+DocVersion: v1_54
 DocOwner:   Bill
-DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00153_Master_Defect_Register_v1_53.txt
-DocDate:    06-01-2026
-DocTime:    06:35:00 UTC
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00153_Master_Defect_Register_v1_54.txt
+DocDate:    06-08-2026
+DocTime:    04:59:44 UTC
 
 ============================================================
-TB00153 MASTER DEFECT REGISTER v1_53
+TB00153 MASTER DEFECT REGISTER v1_54
 PAPER-TRADING-ERA CONSOLIDATION (TB00115 - TB00528)
 ============================================================
 
@@ -5690,6 +5690,76 @@ Disposition:       PARTIAL-CLOSED.
                    stated figure by the house +1 convention
                    only (CF-MDR-HIGHCOUNT).
 
+DR-079  CRITICAL  ALTER  OPEN
+------------------------------------------------------------
+Affected Diagram:  0500000 D1 (WS-TP-003 dust mechanic on the
+                   exchange-interface surface), D3 (Exit
+                   Controller q4_triggers + q5_logs governing
+                   surface; TP_PARTIAL_FILL_REMAINDER
+                   condition-to-emit binding), and the exit_reason
+                   enum renderings at D5 / D6 / D2 CIATS_Trade_
+                   Outcome_Bus schema field-15. No figure count
+                   change anticipated; the fix is a governing-
+                   surface mechanic correction + an atomic enum
+                   rename (R-state per TB00453: visible-SVG text
+                   change bumps R; desc-only holds R).
+Affected Prose:    The TP-partial-fill dust narrative wherever it
+                   asserts force-market-close of the sub-minimum
+                   remainder (DD-002 figcaption attestations on
+                   the affected figures).
+Affected Spec:     0500000_System_Architecture_Overview (sole
+                   canonical source; consolidation closed). The
+                   defect was inherited from the retired/absent
+                   0411001_Kraken_WS_v2_Specification dv1_13
+                   sec 6.7 (WS-TP-003), recovered from git history
+                   at TB00630; it is architecture-of-record now
+                   carried in the 0500000 surface.
+Origin Session:    TB00630 (no-guess closure of the TP_PARTIAL_
+                   FILL_REMAINDER scoping question; decisive
+                   Kraken-behavior fact web+live-confirmed).
+Description:       WS-TP-003 / exit_reason TP_PARTIAL_FILL_
+                   REMAINDER specified force-market-closing a
+                   sub-minimum held remainder ("cancel emergSL +
+                   market-sell remainder immediately"). VERIFIED
+                   Kraken fact: a sub-minimum spot position CANNOT
+                   be sold -- an order below ordermin is rejected;
+                   below costmin is canceled ("Cost minimum not
+                   met"); there is no reduce_only / market /
+                   closing-order exemption. The disposal order is
+                   itself sub-minimum and is rejected. The
+                   specified force-close is therefore PHYSICALLY
+                   IMPOSSIBLE: it silently fails, leaving a
+                   PHANTOM STATE (Position Mirror cleared while
+                   the coin is still held) -- strictly worse than
+                   no force-close, in the loss-prevention domain.
+                   A latent loss-prevention defect in the
+                   architecture-of-record. At the prior $0.50
+                   per-trade seed (sitting exactly on the $0.50
+                   costmin floor) any partial fill stranded a
+                   sub-minimum remainder, so the impossible path
+                   was reachable in normal operation, not a
+                   corner case.
+Disposition:       OPEN -> scheduled closure under DEC-122 (d/e)
+                   via the TB00631 change register:
+                   - CR-11 (D3): REWORK the TP_PARTIAL_FILL_
+                     REMAINDER binding to SUB_MIN_RESIDUAL_
+                     ABANDONED (abandon-not-sell): cancel the
+                     rejected-anyway protective order, clear the
+                     residual from active management, book the
+                     bounded loss (< costmin) to CIATS, surface
+                     for manual Convert Small Balances.
+                   - CR-13 (D9): recompute net R:R on the
+                     corrected taker-in / maker-out fee basis.
+                   - CR-12 (D5/D6/D3/D2-bus): atomic enum rename
+                     TP_PARTIAL_FILL_REMAINDER ->
+                     SUB_MIN_RESIDUAL_ABANDONED.
+                   DEC-B taker IOC entry removes the entry-side
+                   instance of this defect at the source (DEC-E);
+                   the residual maker-TP partial-fill instance is
+                   bounded < costmin and remediated by abandon-
+                   and-track. Status moves to CLOSED when CR-11 +
+                   CR-13 land in HEAD. Paired decision: DEC-122.
+
 ============================================================
 5. PORTION RECORDS
 ============================================================
@@ -6231,6 +6301,27 @@ PRESERVE-with-housekeeping; sub-campaign Sub-Domain
 ============================================================
 10. REVISION HISTORY
 ============================================================
+
+  v1_54 2026-06-08  TB00630 DR-079 NEW -- WS-TP-003 /
+                    TP_PARTIAL_FILL_REMAINDER PHYSICALLY-
+                    IMPOSSIBLE SUB-MIN FORCE-CLOSE. CRITICAL
+                    ALTER OPEN. A sub-minimum Kraken spot
+                    position cannot be sold (order rejected /
+                    canceled); the specified force-market-close
+                    silently fails and leaves a phantom state --
+                    a latent loss-prevention defect in the
+                    architecture-of-record. Paired with DEC-122;
+                    scheduled closure via CR-11 + CR-13 (rework
+                    to SUB_MIN_RESIDUAL_ABANDONED abandon-and-
+                    track). One NEW DR entry (DR-079) appended;
+                    highest DR now DR-079. No existing DR entry
+                    modified. CI-012 footer: inner title + END
+                    marker advanced v1_53 -> v1_54. Companion
+                    deliverables: TB00153 Decision Register
+                    v1_89 (DEC-122, CR-01) + this register
+                    (CR-02), authored first as authority of
+                    record for the TB00631 change set.
+                    Supersedes v1_53.
 
   v1_53 2026-06-01  TB00560 V-038 / V-040 LEDGER RE-ATTESTATION
                     dv1_141 -> dv1_153 (CF-V038-LEDGER cleared).
@@ -9379,5 +9470,5 @@ PRESERVE-with-housekeeping; sub-campaign Sub-Domain
    file path.]
 
 ============================================================
-END OF TB00153 MASTER DEFECT REGISTER v1_53
+END OF TB00153 MASTER DEFECT REGISTER v1_54
 ============================================================
