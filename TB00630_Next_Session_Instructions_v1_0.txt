@@ -1,0 +1,173 @@
+TB00630 NEXT SESSION INSTRUCTIONS v1_0
+======================================
+Date prepared: 06-07-2026 (TB00629 close)
+authored, a substantive architecture question about
+TP_PARTIAL_FILL_REMAINDER surfaced (Bill chat-turn) and is UNRESOLVED.
+PHASE 2 stays gated behind it. This v1_1 captures the true state.
+
+============================================================
+WHAT TB00629 DID
+============================================================
+The Claude Code build-agent code-readiness audit returned NO-GO: 10 of
+11 figures CODE-READY, one D3 gap (PAIR_LIMIT_ONLY_EXIT +
+TP_PARTIAL_FILL_REMAINDER had no condition-to-emit binding on the D3
+governing surface). Bill ratified the audit. The chat session authored
+the fix ADD-only into D3 mod:Exit_Controller q4_triggers + q5_logs:
+0500000 dv1_187 -> dv1_188, D3 R HELD at R9 (TB00453: a <desc>-field
+ADD holds R). dv1_188 md5 = 15d5ed42f6a4e346c4552dcf7ab47ebe.
+Deliverables produced: dv1_188 html + TB00629 Session Log + this NSI.
+
+============================================================
+PUSH STATE (verify first; do not assume)
+============================================================
+As of this NSI, it is UNCONFIRMED whether dv1_188 was pushed. The
+RECOMMENDATION at close was to HOLD the dv1_188 Docs push and push only
+the SessionLogs handoff, because the TP_PARTIAL_FILL_REMAINDER binding
+in dv1_188 is under the open question below (loss-prevention exit
+domain; avoid committing a contested binding and reworking it).
+SESSION-OPEN MUST grep live HEAD (RR-SCOPE-008):
+- If HEAD 0500000 = dv1_187 (md5 c1812a3731f34270020671d60a6de0a3):
+  dv1_188 was held; it sits in Bill's download area as a PROVISIONAL
+  fix pending the open question. D3 still carries the original gap on
+  BOTH exit_reasons in HEAD.
+- If HEAD 0500000 = dv1_188 (md5 15d5ed42f6a4e346c4552dcf7ab47ebe):
+  the provisional fix was pushed; the open question below now governs
+  whether a follow-up dv1_189 revision is needed.
+Either way, resolve the open question BEFORE any D3 re-audit / PHASE 2.
+
+============================================================
+PRIMARY MISSION (this session): RESOLVE THE OPEN
+TP_PARTIAL_FILL_REMAINDER ARCHITECTURE QUESTION (Bill decision)
+============================================================
+THE QUESTION (Bill-surfaced, unresolved). Bill's principle, stated
+this session: a partial fill is NOT a special case. It bisects at the
+fill boundary -- the FILLED portion becomes a position handled by
+mod:Exit_Controller exactly like every other position; the UNFILLED
+portion stays a working order handled by mod:Selection_Controller
+exactly like every other order; there is NO special split-order
+system. Against that principle, Bill flags TP_PARTIAL_FILL_REMAINDER
+as a CONTINUING audit finding -- i.e. the dv1_188 binding may have
+entrenched a confused concept rather than fixed it.
+
+THE TENSION TO RESOLVE:
+- TP_PARTIAL_FILL_REMAINDER is a DEC-065-ratified member of the 7-value
+  normal-operation Exit-Controller exit_reason enum (DEC-066 confirms
+  the membership and producer-partitions EMERGENCY_SL_FIRED OUT of it;
+  DEC-066 did NOT re-open the 7-value membership). So it is
+  architecture-of-record; changing/removing it touches DEC-065 and is
+  a BILL DECISION, not derivable (TB00000 sec 4.1: do not remove a
+  fence before establishing why it exists).
+- The dv1_188 binding ties TP_PARTIAL_FILL_REMAINDER to the WS-TP-003
+  dust mechanic: on a partial TP fill, the EC amends the resting
+  emergSL down to the still-held remaining position; if that remaining
+  position is below qty_min OR remaining_qty*bid below cost_min, the EC
+  cancels the emergSL and MARKET-SELLS the still-held remainder (long
+  side; short side is the AR-073 direction-symmetric mirror, close via
+  reduce_only market buy), logging TP_PARTIAL_FILL_BELOW_MIN_EXIT.
+  NOTE: this is the EXIT-side TP-order partial fill on an
+  ALREADY-OWNED position (coin is held; cancelling orders does not
+  dispose of it) -- DISTINCT from the D2/G3b ENTRY-side partial fill
+  (SIGNAL_DECAY) where the unfilled entry order is CANCELLED and there
+  is no position to sell. These were conflated in chat discussion;
+  keep them separate.
+
+THE DESIGN QUESTION FOR BILL:
+  Is the dust market-sell genuinely PARTIAL-TP-FILL-SPECIFIC (warranting
+  its own exit_reason TP_PARTIAL_FILL_REMAINDER), or is it actually a
+  GENERAL rule -- "any owned position below the exchange qty_min/cost_min
+  cannot hold a resting protective order, therefore force-market-close
+  it" -- of which a partial TP fill is merely one trigger? If GENERAL,
+  TP_PARTIAL_FILL_REMAINDER is mis-scoped/mis-named and the architecture
+  (and the dv1_188 binding) should be reworked to the general
+  sub-minimum-position forced-close rule with a correctly-scoped
+  exit_reason; if genuinely specific, the dv1_188 binding stands.
+  PAIR_LIMIT_ONLY_EXIT (limit_only -> IOC at best_bid) was NOT contested
+  this session; that half of dv1_188 stands regardless.
+
+NO-GUESS GAPS TO CLOSE BEFORE DECIDING (RR-SCOPE-008):
+  1. Read DEC-065's FULL rationale in TB00153 DR v1_88 for WHY
+     TP_PARTIAL_FILL_REMAINDER is a distinct exit_reason (this session
+     read DEC-066 but NOT DEC-065's membership rationale).
+  2. Recover and read the WS-TP-003 source spec (0411001 dv1_13 sec ~9,
+     L843-870; from git history -- it is retired/absent from HEAD) for
+     the exact intended dust mechanic and whether it is framed as
+     partial-fill-specific or general sub-minimum.
+  3. Check whether any OTHER path in the diagrams can leave an owned
+     position below qty_min/cost_min (e.g. a partial MAE Layer-2 sell,
+     a partial regime-exit sell) -- if yes, the forced-close is general,
+     not TP-specific, which answers the design question.
+  Establish all three, THEN surface the framed decision to Bill (genuine
+  business judgment; do NOT execute a removal/rework unilaterally).
+
+DISPOSITION AFTER BILL DECIDES:
+  - dv1_188 binding CONFIRMED correct -> finalize D3 (push dv1_188 if
+    held), then proceed to the Claude Code D3 re-audit -> PHASE 2.
+  - dv1_188 binding NEEDS REWORK -> author the corrected D3 amendment
+    diagram-first ADD-only / MODIFY in chat (DIAGRAMS GOVERN;
+    assertion-verified exact-match Python + DR-007.9 + TB00453 R-state
+    discipline; if it touches DEC-065 membership, pair a TB00153 DEC),
+    supersede dv1_188 accordingly, re-audit, THEN PHASE 2.
+
+============================================================
+DEFERRED UNTIL THE ABOVE RESOLVES
+============================================================
+- Claude Code D3 re-audit of the final D3 state.
+- PHASE 2 Option B clean-slate organism code generation (Pathway 2,
+  AA=05, coded directly from the diagrams; lands in TothBot_V2-Code;
+  PAPER IS MASTER 4-divergence-point rule; parallel Long/Short modules;
+  net 1:1.5 R:R the only hardcoded value). PHASE 2 STAYS GATED.
+
+============================================================
+SESSION-OPEN PROTOCOL (mandatory)
+============================================================
+1. Cold-load from GitHub HEAD via public tarball (NOT the API):
+     curl -sL https://codeload.github.com/TothBot/TothBot_V2-Docs/tar.gz/HEAD
+     curl -sL https://codeload.github.com/TothBot/TothBot_V2-SessionLogs/tar.gz/HEAD
+   Load this file (TB00630 NSI v1_0) + TB00000 from HEAD and follow it.
+2. HEAD verification (RR-SCOPE-008 -- grep live HEAD, never recall):
+   - 0500000 sole version = dv1_187 (md5 c1812a3731f34270020671d60a6de0a3)
+     OR dv1_188 (md5 15d5ed42f6a4e346c4552dcf7ab47ebe) -- determine
+     which per the PUSH STATE section; confirm only one present.
+   - 0311001 v1_45 sole version.
+   - TB00153 DR v1_88 + MDR v1_53 highest of each; max real DEC = 121.
+   - TB00000 v2_87 present.
+   - TB00629 Session Log present in HEAD.
+3. SD-13 five-part consolidation status check (expect COMPLETE).
+4. DD-011 derivability test at chat-turn 1. NOTE: the primary mission
+   is a GENUINE Bill business-judgment decision (architecture-of-record
+   touching DEC-065), NOT a derivable execution -- surface the framed
+   decision to Bill after closing the three no-guess gaps; do not
+   self-execute a removal/rework.
+
+============================================================
+STANDING RULES (unchanged)
+============================================================
+- GitHub is Claude's domain: Claude authors all git; Bill executes in
+  PowerShell; Claude never touches Bill's C: drive (CD-001).
+- Only "git rm --cached" for HEAD removals; plain "git rm" prohibited
+  (CD-001/CD-003). One-version rule on every push.
+- Push branch = master (BOTH repos; never main). Literal absolute cd
+  paths; ASCII-only commit messages; single linear cd+git chain/repo.
+- Deliver artifacts incrementally via present_files as completed.
+- DR-010 post-push: fresh tarball, clean dir, md5 byte-match all pushed
+  files, explicit ABSENT check on every superseded version.
+- No-guess (RR-SCOPE-008): verify against live HEAD; flag uncertainty;
+  never assert the unverifiable. The NSI is informational.
+- BINARY TEST (DEC-096): net 1:1.5 R:R minimum stays the only hardcoded
+  value. No TothBot system code in chat (sec 4.7).
+
+============================================================
+REMAINING (deferred housekeeping; non-loss, non-blocking)
+============================================================
+Stale plans 0911002 / TB00394; TB00153 one-version backlog (~140 stale
+DR/MDR versions) + stale DR internal "v1_70" title; anchor-doc E3
+collapse; figcaption / viewBox R-stamp hygiene; D2 root <desc> stray-
+duplicate R-increment fields; section-14 positioning + absent
+dv1_100..onward entries; D8 "5 check polygon" historical-desc residue.
+
+------------------------------------------------------------
+OCS (paste into the chat AFTER this one)
+------------------------------------------------------------
+Cold-load TB00631_Next_Session_Instructions_v1_0.txt + TB00000 from GitHub HEAD and follow it.
+
+END

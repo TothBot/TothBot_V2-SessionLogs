@@ -1,0 +1,169 @@
+TB00629 SESSION LOG v1_0
+========================
+Date: 06-07-2026
+
+MISSION (this session): the TB00629 NSI primary mission (the independent
+code-readiness audit of 0500000) is a Claude Code build-agent task, NOT
+a chat task (the NSI routes it explicitly to the build agent). This chat
+session ran the session-open + HEAD verification, confirmed the routing
+to Bill, then -- after Claude Code returned NO-GO with a D3 gap that Bill
+ratified -- authored the D3 diagram fix (DIAGRAMS GOVERN; the fix is
+authored in chat, never worked around in code).
+
+OUTCOME: D3 gap-fix AUTHORED (0500000 dv1_187 -> dv1_188), but it is
+PROVISIONAL. After authoring, a substantive architecture question about
+TP_PARTIAL_FILL_REMAINDER surfaced (Bill chat-turn) and is UNRESOLVED;
+it gates PHASE 2 and may revise the dv1_188 TP_PARTIAL_FILL_REMAINDER
+binding. PAIR_LIMIT_ONLY_EXIT (the other half of the fix) is uncontested.
+No DEC/MDR/token/TB00000 change. Nothing pushed this session (Bill close
+directive: deliver a clean closing set; dv1_188 held pending the open
+question).
+
+============================================================
+SESSION-OPEN (completed; all checks PASS)
+============================================================
+Cold-loaded (public tarball): TB00629 NSI + TB00000 v2_87 + TB00628
+Session Log + 0500000 dv1_187. HEAD verified (RR-SCOPE-008, grep live
+HEAD not recall):
+- 0500000 dv1_187 sole; md5 c1812a3731f34270020671d60a6de0a3
+  (MATCHES); dv1_186 ABSENT                                CONFIRMED
+- 0311001 v1_45 sole                                       CONFIRMED
+- TB00153 DR v1_88 + MDR v1_53 highest; max real DEC = 121 CONFIRMED
+- TB00000 v2_87 present; TB00628 SL present               CONFIRMED
+SD-13 five-part: COMPLETE -- consolidation CLOSED; zero live trading-
+architecture sources; the 0500000 diagrams are the sole canonical source.
+
+============================================================
+ROUTING + DD-011 (chat-turn 1)
+============================================================
+The TB00629 NSI primary mission (code-readiness audit) is a Claude Code
+build-agent task ("WHY CLAUDE CODE (not chat)"). Surfaced to Bill that
+this is a chat session; confirmed HEAD clean at dv1_187 so the build
+agent was clear. Bill ran the audit in Claude Code -> NO-GO: 10 of 11
+figures CODE-READY, ONE D3 gap (PAIR_LIMIT_ONLY_EXIT +
+TP_PARTIAL_FILL_REMAINDER had no condition-to-emit binding on the D3
+governing surface). Bill ratified the audit and directed "use the
+recommended fixes." The fix itself is OUTCOME 1 derivable; the only
+reserved item (TB00453 R-held vs R-bump) is a derivable bright-line
+application (a <desc>-field ADD holds R; precedent TB00627).
+
+============================================================
+FIX AUTHORED (verify-not-trust; assertion-verified exact-match)
+============================================================
+VERIFIED the ratified finding against live dv1_187 (no rubber-stamp):
+the D3 mod:Exit_Controller q4_triggers rendered ar:AR-040 ONLY for the
+cancel_only/maintenance HOLD branch (no emit) and ar:AR-066 ONLY for the
+TP-partial-plus-L2 conflict branch (-> MAE_THRESHOLD_BREACH); neither
+PAIR_LIMIT_ONLY_EXIT nor TP_PARTIAL_FILL_REMAINDER had a condition-to-
+emit binding. Pulled both authoritative mechanics from live HEAD:
+AR-040 / D1 WS-EXIT-003 (limit_only -> IOC limit at best_bid, NOT market
+sell) and D1 WS-TP-003 (partial-TP below-minimum remainder -> cancel
+emergSL + market-sell remainder, log TP_PARTIAL_FILL_BELOW_MIN_EXIT).
+
+FIVE ADD-only edits (assertion-verified exact-match Python; abort-on-any-
+fail; every anchor count-verified unique): (1) q4_triggers two condition
+-> emit binding clauses; (2) q5_logs matching emit-log notes; (3) DC
+header dv1_187 -> dv1_188; (4) section-14 newest-first entry; (5) D3
+figcaption OPTION R EXTENSION (x). POST-EDIT INVARIANTS all PASS: exactly
+ONE <h2>14; D3 SVG title 0500000_Image3_T2_R9 unchanged (R held R9);
+figure count + D3 viewBox 1500x1420 + <desc> count + <pre> balance
+unchanged; DR-007.9 html.parser clean; ADD-only +6920 bytes. dv1_188 md5
+= 15d5ed42f6a4e346c4552dcf7ab47ebe.
+
+============================================================
+OPEN ARCHITECTURE QUESTION (UNRESOLVED -- Bill decision; PHASE-2 gate)
+============================================================
+Post-authoring, Bill flagged TP_PARTIAL_FILL_REMAINDER as a CONTINUING
+audit finding. The clarified mechanic (confirmed this session): the
+take-profit open order is the Exit Controller's resting closing sell on
+an already-owned Filled Position; on a partial TP fill the Filled
+Position splits into a sold part and a still-owned smaller Filled
+Position; TP_PARTIAL_FILL_REMAINDER is the exit_reason for the DUST case
+only -- when that smaller Filled Position is below Kraken qty_min/cost_min
+so no valid resting protective order can sit on it, the Exit Controller
+force-closes it at market. (Long side; short side is the AR-073
+direction-symmetric mirror -- close via reduce_only market buy.) This is
+DISTINCT from the D2/G3b ENTRY-side partial fill, where the unfilled
+ENTRY open order is CANCELLED with no Filled Position to sell.
+
+THE UNRESOLVED DESIGN QUESTION (touches DEC-065 = architecture-of-record;
+NOT derivable; Bill's call per TB00000 sec 4.1 do-not-remove-a-fence):
+is the dust force-close genuinely PARTIAL-TP-FILL-SPECIFIC (warranting a
+distinct exit_reason TP_PARTIAL_FILL_REMAINDER), or is it actually a
+GENERAL rule -- "any owned Filled Position below qty_min/cost_min cannot
+hold a resting protective open order, therefore force-market-close it" --
+of which a partial TP fill is merely one trigger? If GENERAL, the
+exit_reason is mis-scoped/mis-named and dv1_188's TP_PARTIAL_FILL_REMAINDER
+binding should be reworked; if SPECIFIC, the dv1_188 binding stands.
+
+FINDING (DEC-066, read this session): TP_PARTIAL_FILL_REMAINDER is a
+DEC-065-ratified member of the 7-value normal-operation Exit-Controller
+exit_reason enum; DEC-066 producer-partitioned EMERGENCY_SL_FIRED OUT of
+that set and did NOT re-open the 7-value membership. So changing/removing
+TP_PARTIAL_FILL_REMAINDER touches DEC-065 and is a Bill decision.
+
+NO-GUESS GAPS to close BEFORE deciding (RR-SCOPE-008; NOT done this
+session): (1) read DEC-065's full membership rationale in TB00153 DR
+v1_88; (2) recover + read the WS-TP-003 source (0411001 dv1_13 sec ~9
+L843-870, retired -- from git history) for whether the mechanic is framed
+partial-fill-specific or general; (3) check whether any OTHER exit path
+(partial MAE Layer-2 sell, partial regime-exit sell) can also leave a
+sub-minimum Filled Position -- if yes, the rule is general, not
+TP-specific.
+
+DV1_188 STATUS: it FAITHFULLY renders current architecture-of-record
+(DEC-065/066 + WS-TP-003 + AR-040) -- it is not wrong against the live
+ratified docs. The open question is whether that architecture-of-record
+should be RECONSIDERED. dv1_188 is therefore PROVISIONAL, not final.
+
+============================================================
+BINARY TEST (DEC-096) + LOSS-MIN
+============================================================
+Exit-controller emit bindings are organism architecture -> D3 (YES). No
+seed VALUE moved (TB00000 sec 8 UNCHANGED; net 1:1.5 R:R minimum remains
+the only hardcoded value). DR-078 / loss-min: no source spec retired;
+PHASE 2 stays gated until the exit_reason semantics are settled (the
+highest-loss-exposure domain).
+
+============================================================
+DELIVERABLES (this session; closing set, nothing pushed)
+============================================================
+- 0500000_System_Architecture_Overview_dv1_188_Claude_Source.html
+  (PROVISIONAL D3 fix; md5 15d5ed42f6a4e346c4552dcf7ab47ebe)
+- TB00629_Session_Log_v1_0.txt
+- TB00630_Next_Session_Instructions_v1_0.txt
+No TB00153 / 0311001 / TB00000 change.
+
+============================================================
+PUSH RECOMMENDATION (Bill's call)
+============================================================
+HOLD the dv1_188 Docs push pending the open question (avoid committing a
+contested binding in the loss-prevention domain; PHASE 2 is gated anyway
+so no progress is lost). PUSH only the SessionLogs handoff (this SL +
+TB00630 NSI) so the next session can cold-load it. If Bill prefers, push
+dv1_188 now and carry the open question as a follow-up dv1_189 -- both
+exit_reason bindings are defensible against current ratified architecture.
+Push branch = master. One-version rule: nothing superseded in HEAD this
+session (all files new), so no git rm --cached.
+
+============================================================
+DR-010 POST-PUSH VERIFICATION (after Bill pushes)
+============================================================
+Fresh tarball, clean dir; md5 byte-match each pushed file (dv1_188 if
+pushed: 15d5ed42f6a4e346c4552dcf7ab47ebe); present + md5 match. No ABSENT
+check (nothing superseded).
+
+============================================================
+CARRY-FORWARD (TB00630)
+============================================================
+1. PRIMARY: resolve the open TP_PARTIAL_FILL_REMAINDER scoping question
+   (close the 3 no-guess gaps, then Bill decides). Then finalize D3
+   (confirm dv1_188 or author the corrected amendment), then the Claude
+   Code D3 re-audit -> PHASE 2. PHASE 2 STAYS GATED until then.
+2. Deferred housekeeping (non-loss): stale plans 0911002 / TB00394;
+   TB00153 one-version backlog + stale DR "v1_70" title; anchor-doc E3
+   collapse; figcaption/viewBox R-stamp hygiene; D2 root <desc> stray
+   R-increment fields; section-14 positioning + absent dv1_100..onward;
+   D8 "5 check polygon" historical-desc residue.
+
+END
