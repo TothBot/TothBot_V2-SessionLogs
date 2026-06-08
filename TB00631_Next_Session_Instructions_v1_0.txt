@@ -1,0 +1,191 @@
+TB00631 NEXT SESSION INSTRUCTIONS v1_0
+======================================
+Date prepared: 06-08-2026 (TB00630 close)
+
+PURPOSE: execute the coupled entry-execution / sizing / fee / dust
+architecture corrections ratified by Bill at TB00630, authored diagram-first
+into 0500000, with a trackable change register (CR-01..CR-20). Keep Bill
+updated on progress: each execution session marks the items it closes DONE in
+this register (carried forward in the next NSI) and reports them to Bill.
+
+PHASE 2 (clean-slate organism code generation) STAYS GATED until the diagrams
+pass a Claude Code code-readiness re-audit of the final state.
+
+============================================================
+RATIFIED DECISIONS (authority of record; see TB00630 SL for full rationale)
+============================================================
+DEC-A  SIZING: per_trade_size_usd = max(50, 5 * max(costmin, ordermin*price))
+       per pair, live-read; $5,000/side wallet (paper); CIATS-owned from the
+       200-trade floor.
+DEC-B  ENTRY: taker marketable IOC limit + MPP slippage cap (replaces
+       maker-only post_only GTD, WS-ADD-005). TP exit stays maker (post_only
+       resting limit). Protective exits stay taker market.
+DEC-C  FEES: correct FEE_TAKER_PCT/FEE_MAKER_PCT to realistic base tier
+       (conservative seed taker 0.0040 / maker 0.0025; live-read refines);
+       R:R-floor + Half-Kelly recomputed taker-in / maker-out.
+DEC-D  DUST: sub-minimum residual is UNSELLABLE on Kraken -> abandon-and-track
+       bounded write-off + surface for manual Convert Small Balances. New
+       exit_reason SUB_MIN_RESIDUAL_ABANDONED replaces TP_PARTIAL_FILL_REMAINDER.
+DEC-E  Taker entry obviates entry-side dust + AR-054 stub + the heavy entry
+       redesign; only the rare partial-TP-fill sub-min remainder remains.
+SACRED: net 1:1.5 R:R minimum is unchanged and remains the only hardcoded
+value. 1:1.5 is the GROSS floor; net lands ~1.38-1.42x after taker-in fees.
+
+============================================================
+CHANGE REGISTER (CR-01..CR-20) -- all PENDING at TB00631 open
+============================================================
+Status key: [ ] PENDING  [x] DONE  (mark DONE + cite the version/DCN that
+closed it; carry the updated register into the next NSI).
+
+-- TB00153 Decision/Defect Register (author FIRST; authority of record) --
+[ ] CR-01  DEC-122 (consolidated, lettered sub-decisions a-e = DEC-A..E).
+           Records the ratified set; flags the DEC-065 Q2 SIGNAL_DECAY
+           re-evaluation (CR-09) and the DEC-065 enum-membership change
+           (CR-12). next DEC after = DEC-123.
+[ ] CR-02  MDR entry: WS-TP-003 / TP_PARTIAL_FILL_REMAINDER specified a
+           physically-impossible force-market-close of a sub-minimum position
+           (Kraken rejects sub-min orders). Latent loss-prevention defect;
+           closed by CR-11 + CR-13.
+
+-- D1 (Kraken WS / Exchange Interface) --
+[ ] CR-03  Entry add_order descriptor: maker-only post_only GTD 30-60s ->
+           marketable IOC limit + MPP (DEC-B). Update WS-ADD-005 governing
+           text (maker-only rule removed) + WS-ADD-001/002 entry template.
+[ ] CR-04  Fee basis descriptors (FEE-BASE / maker-taker) -> taker-in /
+           maker-out; conservative base-tier seeds (DEC-C).
+[ ] CR-05  WS-TP-003 dust mechanic on the D1 surface: "cancel emergSL +
+           market-sell remainder" -> "cancel emergSL (rejected-anyway) +
+           ABANDON remainder as bounded dust + log SUB_MIN_RESIDUAL_ABANDONED
+           + surface for manual convert" (DEC-D).
+
+-- D2 (Trading Pipeline / Selection / Gate-7/8) --
+[ ] CR-06  Gate-8 position sizer: per_trade_size seed -> pair-relative
+           max(50, 5*max(costmin, ordermin*price)), live-read (DEC-A).
+[ ] CR-07  Gate-8 sub-min guard: a sized order must clear the pair's live
+           qty_min/cost_min (already AR-028); confirm the 5x-floor sizing
+           makes a partial fill non-stranding; no separate guard needed if
+           sizing holds.
+[ ] CR-08  Entry partial-fill bisection (G5 partial_fill_ownership): reframe
+           for IOC -- no 30-60s working order; IOC fills or kills remainder
+           immediately; filled part protected by batch_add or abandoned if
+           sub-min (DEC-D/E).
+[ ] CR-09  SIGNAL_DECAY (DEC-065 Q2) RE-EVALUATION: with no working entry
+           order, the pending-entry-order cancel trigger may be moot. RESOLVE
+           in this amendment; if removed/re-scoped, pair the DEC-065 Q2 update
+           (genuine review -- establish why the fence exists before removing).
+[ ] CR-10  AR-054 (entry partial-fill unprotected stub): the GTD-expiry case
+           is replaced by the IOC-partial case (kill remainder; protect or
+           abandon filled part). Update AR-054 accordingly.
+
+-- D3 (Exit Architecture / Exit Controller) --
+[ ] CR-11  AUDIT CA + DEC-D: author the held dv1_188 PAIR_LIMIT_ONLY_EXIT
+           condition-to-emit binding (uncontested, carry forward); REWORK the
+           TP_PARTIAL_FILL_REMAINDER binding to SUB_MIN_RESIDUAL_ABANDONED
+           (abandon-not-sell) on the D3 q4_triggers + q5_logs governing
+           surface. Closes the TB00629 audit finding.
+
+-- D5 / D6 / D2-bus (exit_reason enum canonical renderings) --
+[ ] CR-12  Document-wide ATOMIC rename TP_PARTIAL_FILL_REMAINDER ->
+           SUB_MIN_RESIDUAL_ABANDONED at every live token-identity site (D5,
+           D6, D3 surface, D2 CIATS_Trade_Outcome_Bus schema field-15, all
+           cross-references). Touches DEC-065 7-value enum membership -> pair
+           with CR-01. Atomic, like the DEC-067 precedent (rename in one fig
+           but not its cross-refs FORKS the namespace).
+
+-- D9 / D7 (CIATS Half-Kelly / Paper Ledger) --
+[ ] CR-13  D9 net-P/L fee basis (AR-065, net_gain = 1.5 * net_loss INCLUDING
+           fees): recompute net R:R on taker-in / maker-out (replaces the
+           ~0.42% worst-case / ~1.46x figures with the taker-in equivalents,
+           ~1.38-1.42x). Update worked figures + figcaption.
+[ ] CR-14  D7 paper-ledger fee math: update fee-rate references to the
+           corrected seeds (byte-identical fee handling otherwise; PAPER IS
+           MASTER 4-divergence rule intact).
+
+-- TB00000 (lean working doc; sec 7 + sec 8 registry) --
+[ ] CR-15  sec 8 per_trade_size_usd -> pair-relative formula (DEC-A).
+[ ] CR-16  sec 8 FEE_TAKER_PCT 0.0040 / FEE_MAKER_PCT 0.0025 (DEC-C).
+[ ] CR-17  sec 8 entry_timeout_sec (30s GTD maker) -> RETIRE / replace with
+           IOC + MPP retry references (mpp_retry_count); GTD entry timing is
+           moot under DEC-B.
+[ ] CR-18  sec 8 min_order_size_usd (short-side, ~$0.50) -> align with the
+           pair-relative $50 floor.
+[ ] CR-19  sec 7 EXITS/entry narrative -> taker entry + maker TP + abandon-
+           dust; add a new TB00000 version note (vX) summarizing DEC-A..E.
+
+-- Re-audit + gate --
+[ ] CR-20  Claude Code code-readiness RE-AUDIT of the final 0500000 state
+           (all touched figures). On GO -> PHASE 2 (Option B clean-slate
+           organism code, Pathway 2, AA=05, coded directly from the diagrams).
+
+============================================================
+SEQUENCING (loss-min ordering; Claude sizes the per-session slices)
+============================================================
+S1: CR-01 + CR-02 (DEC-122 + MDR) -- establish authority of record.
+S2: CR-03 + CR-04 + CR-05 (D1 entry model + fee basis + dust mechanic) --
+    biggest cascade; resolves the dust source.
+S3: CR-06..CR-10 (D2 sizing + bisection + SIGNAL_DECAY review + AR-054).
+S4: CR-11 (D3 exit bindings -- audit CA + dust rework).
+S5: CR-12 (D5/D6/D2-bus atomic exit_reason rename).
+S6: CR-13 + CR-14 (D9/D7 fee + net-R:R recompute).
+S7: CR-15..CR-19 (TB00000 sec 7/8 seed + narrative; new version note).
+S8: CR-20 (Claude Code re-audit) -> PHASE 2.
+Slices may merge/split per Claude's session sizing (do not ask Bill how much
+to take). Diagram-first ADD/MODIFY; DIAGRAMS GOVERN; TB00453 R-state
+discipline (desc-only ADD holds R; visible SVG text/geometry change bumps R);
+assertion-verified exact-match Python with abort-on-fail; DR-007.9 html.parser
+clean. Deliver each artifact incrementally via present_files.
+
+============================================================
+SESSION-OPEN PROTOCOL (mandatory)
+============================================================
+1. Cold-load from GitHub HEAD via public tarball (NOT the API):
+     curl -sL https://codeload.github.com/TothBot/TothBot_V2-Docs/tar.gz/HEAD
+     curl -sL https://codeload.github.com/TothBot/TothBot_V2-SessionLogs/tar.gz/HEAD
+   Load this file (TB00631 NSI v1_0) + TB00000 from HEAD and follow it.
+2. HEAD verification (RR-SCOPE-008 -- grep live HEAD, never recall):
+   - 0500000 sole version + md5 (dv1_187 c1812a3731f34270020671d60a6de0a3 at
+     TB00631 open, unless a prior CR session has advanced it -- confirm only
+     one present).
+   - 0311001 v1_45 sole.
+   - TB00153 DR v1_88 + MDR v1_53 highest of each (advance as CR-01/CR-02
+     land); max real DEC = 121 until DEC-122 is authored.
+   - TB00000 v2_87 present (advance as CR-19 lands).
+   - TB00630 Session Log present in HEAD.
+3. SD-13 five-part consolidation status check (expect COMPLETE).
+4. DD-011 derivability test at chat-turn 1: the DESIGN decisions (DEC-A..E)
+   are ALREADY RATIFIED -- the CR items are derivable EXECUTION, not new Bill
+   judgments, EXCEPT CR-09 (SIGNAL_DECAY re-scope touches DEC-065 Q2 -- a
+   genuine fence review; establish why it exists, surface to Bill if removal/
+   re-scope is needed).
+
+============================================================
+STANDING RULES (unchanged)
+============================================================
+- GitHub is Claude's domain: Claude authors all git; Bill executes in
+  PowerShell; Claude never touches Bill's C: drive (CD-001).
+- Only "git rm --cached" for HEAD removals; plain "git rm" prohibited
+  (CD-001/CD-003). One-version rule on every push.
+- Push branch = master (BOTH repos; never main). Literal absolute cd paths;
+  ASCII-only commit messages; single linear cd+git chain per repo.
+- Deliver artifacts incrementally via present_files as completed.
+- DR-010 post-push: fresh tarball, clean dir, md5 byte-match all pushed files,
+  explicit ABSENT check on every superseded version.
+- No-guess (RR-SCOPE-008): verify against live HEAD; the NSI is informational.
+- BINARY TEST (DEC-096): net 1:1.5 R:R minimum stays the only hardcoded value.
+  No TothBot system code in chat (sec 4.7); organism code is Claude Code only.
+
+============================================================
+REMAINING (deferred housekeeping; non-loss, non-blocking)
+============================================================
+Stale plans 0911002 / TB00394; TB00153 one-version backlog (~140 stale
+DR/MDR versions) + stale DR internal "v1_70" title; anchor-doc E3 collapse;
+figcaption / viewBox R-stamp hygiene; D2 root <desc> stray-duplicate
+R-increment fields; section-14 positioning + absent dv1_100..onward entries;
+D8 "5 check polygon" historical-desc residue.
+
+------------------------------------------------------------
+OCS (paste into the chat AFTER this one)
+------------------------------------------------------------
+Cold-load TB00631_Next_Session_Instructions_v1_0.txt + TB00000 from GitHub HEAD and follow it.
+
+END

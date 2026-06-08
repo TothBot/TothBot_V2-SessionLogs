@@ -1,0 +1,201 @@
+TB00630 SESSION LOG v1_0
+========================
+Date: 06-08-2026
+
+MISSION (this session): the TB00630 NSI primary mission was to resolve the
+open TP_PARTIAL_FILL_REMAINDER scoping question (Bill decision). Closing the
+no-guess gaps surfaced a deeper chain of architecture defects in the entry/
+exit/sizing/fee design. Bill ratified a coupled set of corrections. This was
+a DESIGN-DECISION session: no diagram or TB00000 edits were made; all edits
+are sequenced into the change plan in the TB00631 NSI. Nothing pushed except
+this closing set (SL + NSI).
+
+============================================================
+SESSION-OPEN (completed; all checks PASS)
+============================================================
+Cold-loaded (public tarball): TB00630 NSI + TB00000 v2_87 + TB00629 Session
+Log + 0500000 dv1_187. HEAD verified (RR-SCOPE-008, grep live HEAD):
+- 0500000 dv1_187 sole; md5 c1812a3731f34270020671d60a6de0a3 (MATCH).
+  dv1_188 was HELD at TB00629 close; HEAD is dv1_187 -> the provisional D3
+  gap-fix never reached HEAD.                                CONFIRMED
+- 0311001 v1_45 sole                                         CONFIRMED
+- TB00153 DR v1_88 + MDR v1_53 highest; max real DEC = 121
+  (DEC-122 is a forward pointer only)                        CONFIRMED
+- TB00000 v2_87 present; TB00629 SL present                  CONFIRMED
+SD-13 five-part: COMPLETE (consolidation closed; 0500000 sole canonical).
+
+============================================================
+THE THREE NO-GUESS GAPS (closed before deciding)
+============================================================
+GAP 1 - DEC-065 rationale (TB00153 DR v1_88): DEC-065 ratified the 7-value
+exit_reason enum MEMBERSHIP by adopting the regime-based set already rendered
+at D5/D6 + 0511004 dv1_7. It gives NO first-principles rationale that the
+dust force-close is uniquely a partial-TP phenomenon. The "fence" is
+provenance, not a designed-specific reason.
+
+GAP 2 - WS-TP-003 source (0411001 dv1_13 sec 6.7, recovered from git history;
+retired/absent from HEAD): the dust mechanic sits inside the partial-TP-fill
+sequence and logs TP_PARTIAL_FILL_BELOW_MIN_EXIT, but its operative trigger
+is a GENERAL sub-minimum test (remaining_qty < qty_min OR remaining_qty*bid <
+cost_min). No TP-specific design principle is asserted; partial TP fill is
+simply the only position-shrinking path present in the WS spec.
+
+GAP 3 - other sub-minimum paths (live dv1_187): AR-054 is an EMERGENCY-exit
+handler for an UNPROTECTED entry stub (entry order expired/canceled with
+cum_qty>0), NOT a sub-minimum rule (partition-class like EMERGENCY_SL_FIRED).
+The genuinely-general condition is "an owned position below qty_min/cost_min
+cannot carry a resting protective order." A SECOND normal-op trigger exists
+and is currently UNHANDLED: a partial entry fill whose filled qty is itself
+sub-minimum -> ON-FILL batch_add (TP+emergSL) is Kraken-rejected (AR-028) ->
+held with no protection. At the $0.50 seed this was plausible, not a corner
+case.
+
+============================================================
+DECISIVE VERIFIED FACT (Kraken behavior, web-confirmed)
+============================================================
+A sub-minimum position CANNOT be sold on Kraken Spot. An order below the
+minimum order size is rejected; an order below cost_min is canceled
+("Cost minimum not met"). No reduce_only / market / closing-order exemption.
+Sub-minimum balances are non-tradeable small balances; the only disposal
+route is the manual "Convert Small Balances" UI feature (once/24h, 3% fee),
+NOT automatable in the trading hot path.
+
+CONSEQUENCE: WS-TP-003's "market-sell the remainder immediately" -- the
+mechanic behind exit_reason TP_PARTIAL_FILL_REMAINDER -- is PHYSICALLY
+IMPOSSIBLE (the disposal order is itself sub-minimum and is rejected). The
+inherited architecture-of-record specifies an impossible action in the
+loss-prevention domain. A force-close that silently fails is WORSE than no
+force-close (phantom-state: Position Mirror cleared while the coin is still
+held). This is a genuine latent DEFECT -> paired MDR entry required.
+
+============================================================
+LIVE ASSETPAIRS DATA (api.kraken.com/0/public/AssetPairs, this session)
+============================================================
+- costmin is uniform at $0.50 for every USD crypto pair. The $0.50 seed sat
+  EXACTLY on the cost floor -- zero margin -- which is why any partial fill
+  at seed size strands dust on both sides.
+- The BINDING floor is ordermin*price, which varies by asset: ~$5-15 for
+  liquid majors (BTC ~$10, AAVE ~$12, ADA ~$14, AVAX ~$15), with a tail to
+  ~$25-50 (APT, ATOM at higher prices). A flat seed below a pair's
+  ordermin*price is Kraken-rejected on that pair.
+- Base-tier (zero 30-day volume) fees: alts 0.40% taker / 0.23-0.25% maker;
+  majors 0.26% taker / 0.16% maker. The registry seeds (0.26/0.16) are the
+  MAJOR tier only -> too optimistic for the alt universe at paper start.
+
+============================================================
+DECISIONS RATIFIED BY BILL (this session)
+============================================================
+DEC-A  SIZING. Wallet stays $5,000/side (paper). Trade-size seed changes
+       from ~$0.50 to PAIR-RELATIVE:
+         per_trade_size_usd = max(50, 5 * max(costmin, ordermin*price))
+       read live per pair from the instrument channel. $50 floor so the
+       entire liquid universe is tradeable; 5x margin above each pair's real
+       floor so a partial fill cannot strand either side. Starting/seed only;
+       CIATS-owned from the 200-trade floor. Rationale: capital recycles on
+       spot, so trade size does NOT buy more trades (sample count is gated by
+       signal frequency x time x concurrency, not size); size only controls
+       fee/precision noise, dust formation, and R:R-floor validity. $0.50 was
+       noise-dominated and dust-guaranteed; the data-clean knee is ~$30-50.
+
+DEC-B  ENTRY EXECUTION MODEL. Replace the maker-only entry strategy
+       (WS-ADD-005: post_only GTD 30-60s) with a TAKER entry: marketable IOC
+       limit + Market Price Protection (MPP) slippage cap. TP exit STAYS
+       maker (post_only resting limit). Protective exits (MAE/regime/emergSL)
+       stay taker market (unchanged). Rationale (FP/DP): on a trend-filtered
+       pullback signal, maker-only entry causes ADVERSE SELECTION (fills only
+       when price ticks against you; misses the winners price runs to),
+       yields a low/variable fill rate, and -- decisively -- produces a
+       BIASED CIATS sample so the 200-trade certification measures the
+       adversely-selected subset, not the strategy. Taker entry gives
+       unbiased immediate fills, captures the moves, and ELIMINATES the
+       entry-side partial-fill dust/unprotected-stub at the source. The fee
+       delta is ~0.10-0.15%/trade (~$0.05-0.08 on $50) -- trivial vs the
+       selection-bias cost. Does NOT violate the sacred constraint: 1:1.5 is
+       the GROSS floor (hardcoded); net just lands slightly lower (~1.38-1.42x
+       vs ~1.46x) and acceptance rule A1 still rejects below 1:1.5 gross.
+
+DEC-C  FEE SEEDS. Correct FEE_TAKER_PCT / FEE_MAKER_PCT to the realistic
+       starting (base, zero-volume) tier so the R:R-floor and Half-Kelly math
+       are honest: conservative seed = alt base tier (taker 0.0040, maker
+       0.0025); live-read per pair/tier refines. Round-trip basis becomes
+       taker-in + maker-out (TP), with taker-in + taker-out for protective
+       exits.
+
+DEC-D  DUST REMEDIATION (corrects the original Option-A "general force-close"
+       to the only physically-valid remedy). The sub-minimum residual cannot
+       be sold -> ABANDON-AND-TRACK as a bounded write-off: cancel the
+       (rejected-anyway) protective order, clear the residual from active
+       position management, book the bounded loss (< cost_min, ~<$0.50) to
+       CIATS, and surface accumulated dust for the operator's manual Convert
+       Small Balances action. New exit_reason SUB_MIN_RESIDUAL_ABANDONED
+       (general, condition-named) REPLACES TP_PARTIAL_FILL_REMAINDER
+       (trigger-named, force-sell). Touches the DEC-065 7-value enum ->
+       paired DEC + MDR (the invalid force-close defect).
+
+DEC-E  DUST SCOPE NARROWED BY DEC-B. Taker IOC entry removes the 30-60s
+       dangling post_only GTD that partial-fills-then-expires, so the
+       entry-side dust case and AR-054's unprotected-stub case are largely
+       obviated (IOC fills or kills the remainder immediately; a sub-min
+       filled part is abandoned per DEC-D). The ONLY remaining normal-op dust
+       source is a partial TP fill (maker) leaving a sub-min held remainder
+       -- rare at $50/5x-floor sizing, bounded < cost_min. The heavy
+       entry-redesign (formerly "gamma") is therefore unnecessary.
+
+NOTE on SIGNAL_DECAY / AR-054: DEC-B removes the working post_only entry
+order, so SIGNAL_DECAY (DEC-065 Q2, the pending-entry-order cancel trigger)
+and AR-054 (GTD-expiry unprotected stub) must be RE-EVALUATED for the IOC
+model in the D2 amendment -- this may touch DEC-065 Q2 and is flagged in the
+change plan, not yet resolved.
+
+============================================================
+AUDIT CORRECTIVE ACTIONS CARRIED (from TB00629 / dv1_188, HELD)
+============================================================
+The Claude Code D3 code-readiness audit found PAIR_LIMIT_ONLY_EXIT +
+TP_PARTIAL_FILL_REMAINDER had no condition-to-emit binding on the D3 governing
+surface. dv1_188 added both but was HELD (HEAD = dv1_187). Disposition:
+ - PAIR_LIMIT_ONLY_EXIT binding: UNCONTESTED -> author into the new D3
+   amendment (carry forward).
+ - TP_PARTIAL_FILL_REMAINDER binding: REWORK per DEC-D ->
+   SUB_MIN_RESIDUAL_ABANDONED (abandon-not-sell).
+The provisional dv1_188 html in Bill's download area is WITHDRAWN/superseded
+(never entered HEAD); the corrected work re-uses the next free diagram
+version in its execution session.
+
+============================================================
+BINARY TEST (DEC-096) + LOSS-MIN
+============================================================
+All of DEC-A..E are TothBot-organism (Kraken/TothBot/CIATS) architecture ->
+they belong in the 0500000 diagrams (DIAGRAMS GOVERN); only the numeric seed
+VALUES live in TB00000 sec 8. The net 1:1.5 R:R minimum remains the only
+hardcoded value (unchanged). No source spec retired this session.
+
+============================================================
+DELIVERABLES (this session; closing set)
+============================================================
+- TB00630_Session_Log_v1_0.txt
+- TB00631_Next_Session_Instructions_v1_0.txt (full 0500000 change plan +
+  trackable change register CR-01..CR-20 + sequencing).
+No 0500000 / TB00000 / TB00153 / 0311001 edit this session (design-decision
+session; edits sequenced into the change plan).
+
+============================================================
+PUSH (Bill executes; SessionLogs only)
+============================================================
+Push branch = master. Two new files; nothing superseded in HEAD -> no
+git rm --cached. OP4 box in the NSI handoff message.
+
+============================================================
+DR-010 POST-PUSH VERIFICATION (after Bill pushes)
+============================================================
+Fresh tarball, clean dir; md5 byte-match the two pushed files; present + md5
+match. No ABSENT check (nothing superseded).
+
+============================================================
+CARRY-FORWARD (TB00631)
+============================================================
+Execute the 0500000 change plan (CR-01..CR-20) per the TB00631 NSI:
+author DEC-122 + MDR, then the diagram amendments diagram-first ADD/MODIFY,
+then TB00000 sec 7/8 seed updates, then Claude Code re-audit -> PHASE 2.
+PHASE 2 stays gated until the diagrams pass code-readiness re-audit.
+
+END
