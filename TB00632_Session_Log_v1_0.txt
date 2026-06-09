@@ -1,0 +1,107 @@
+DocDCN:     TB00632
+DocTitle:   Session_Log
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00632_Session_Log_v1_0.txt
+DocDate:    06-09-2026
+DocTime:    00:14:40 UTC
+
+============================================================
+TB00632 SESSION LOG -- DEC-122 SLICE S2 (D1) REDO + dv1_188 COLLISION RESOLUTION
+============================================================
+
+CONTEXT / WHY THIS SESSION EXISTS
+  The prior TB00632 attempt (consuming the TB00632 NSI) executed slice S2 on
+  the dv1_187 base and CRASHED before pushing anything -- none of its outputs
+  (its dv1_188 md5 1609028b, its SL, its TB00633 NSI) reached HEAD. Separately,
+  session TB00629/TB00630 had authored a DIFFERENT dv1_188 (a D3 exit-binding
+  gap-fix) that was never pushed and sat on Bill's C: drive. Two files named
+  dv1_188, different content -> a version collision.
+  Bill's resolution (this session): push the TB00629 dv1_188 (the one Bill
+  verified), discard the crashed-TB00632 dv1_188, then REDO slice S2 on the
+  now-canonical dv1_188 base -> dv1_189.
+
+READ AT OPEN (live HEAD, public tarball)
+  - TB00000 v2_87, TB00632 NSI v1_0, TB00631 SL.
+  - Verified Docs HEAD: 0500000 dv1_187 sole, md5 c1812a3731f34270020671d60a6de0a3.
+  - Verified SessionLogs HEAD: highest SL = TB00631; highest NSI = TB00632;
+    NO TB00632 SL, NO TB00633 NSI present (confirms crashed-TB00632 pushed nothing).
+
+WORK EXECUTED
+  STEP 1 -- COLLISION RESOLUTION (Bill-directed):
+    Pushed the TB00629 dv1_188 (D3 exit-binding gap-fix) from Bill's C: drive
+    to Docs HEAD (commit 57ff7fa; git rm --cached dv1_187 + git add dv1_188).
+    DR-010 post-push verify PASS: dv1_188 sole in HEAD, md5
+    15d5ed42f6a4e346c4552dcf7ab47ebe; dv1_187 ABSENT.
+    FINDING surfaced to Bill: the TB00629 dv1_188 D3 q4_triggers + q5_logs
+    bindings encode the OLD physically-impossible dust market-sell (the DR-079
+    defect), authored provisionally before DEC-122 resolved the dust question.
+    This is the known forward-correction the register already schedules at
+    CR-11 (D3 rework to SUB_MIN_RESIDUAL_ABANDONED) + CR-12 (enum rename) +
+    CR-13; CR-11/CR-12 scope must now also rewrite these new bindings.
+
+  STEP 2 -- SLICE S2 REDO ON dv1_188 (CR-03 + CR-04 + CR-05, D1; dv1_188 -> dv1_189):
+    D1 was byte-identical between dv1_187 and dv1_188, so the S2 D1 scope
+    re-applied cleanly on the new base.
+    CR-03 (entry model): maker-only post_only GTD 30-60s -> MARKETABLE IOC
+      LIMIT + MPP slippage cap (taker entry), at the visible add_order
+      decoration <text>, the WS-ADD-002 WS_Manager constraints clause, and the
+      A-29 prose. Unfilled IOC remainder expires immediately -> no resting
+      entry order, no entry-side dust. Entry partial-fill bisection DEFERRED to
+      CR-08 (D2), not authored here.
+    CR-04 (fee basis): FEE-CALC fee_entry FEE_MAKER_PCT -> FEE_TAKER_PCT;
+      FEE-BASE-003/004 entry maker -> taker; round-trip reframed TAKER-IN /
+      MAKER-OUT; the stale maker-entry worked figures (0.32%/0.42%, ~1.46x/
+      ~1.42x) de-duplicated to D9 g8d for CR-13's taker-in recompute.
+    CR-05 (dust): WS-TP-003 sub-minimum-remainder mechanic (Exit_Controller
+      constraints desc + A-29 prose) changed from the physically-impossible
+      market-sell (DR-079) to cancel-emergSL + ABANDON-AND-SURFACE bounded-dust
+      write-off + surface for manual Convert Small Balances. The exit_reason
+      token TP_PARTIAL_FILL_REMAINDER is LEFT UNCHANGED (rename is CR-12). The
+      figcaption (d) historical attestation naming the old mechanic preserved
+      verbatim per CI-005/CI-006.
+
+  R-STATE (TB00453 bright line): the CR-03 visible <text> MODIFY bumps D1;
+    actual count R12 -> R13. The TB00586 dv1_166 sec-14 entry is authoritative
+    that D1 was actual R12 with the SVG display labels DEFERRED at stale R11.
+    This amendment catches up SVG title + diagram_canonical + title-bar +
+    figcaption (a) from stale R11 -> R13 in lockstep + the root <desc>
+    R-increment chain head (R12 -> R13; R7->R8 TB00365 rotated OUT to sec-14).
+    CR-04 + CR-05 are desc/prose-only (no R bump). viewBox 1500x1600 preserved;
+    no geometry byte change; figure count 10; all 9 other figures byte-identical
+    per DEC-003 Path A.
+
+  VALIDATION (pre-delivery): html.parser OK; exactly ONE <h2>14. Revision
+    History</h2>; D1 display R13 x4 / R11 x0; fee_entry FEE_TAKER_PCT (maker 0);
+    live "market-sells the remainder immediately" = 0 (2 historical occurrences
+    preserved: figcaption (d) + the dv1_147 sec-14 entry); TP_PARTIAL_FILL_
+    REMAINDER retained; changes confined to DC-header + HTML title + D1 figure +
+    sec-14; D2-D9 byte-identical.
+
+ARTIFACTS THIS SESSION
+  - 0500000_System_Architecture_Overview_dv1_189_Claude_Source.html
+      (md5 96b87ba15f59f42b752d2ce22c596d35) -- DELIVERED.
+  - TB00632_Session_Log_v1_0.txt (this file).
+  - TB00633_Next_Session_Instructions_v1_0.txt.
+  Already pushed earlier this session: 0500000 dv1_188 (TB00629 D3 gap-fix,
+  commit 57ff7fa).
+
+CHANGE REGISTER STATUS (DEC-122 CR-01..CR-20)
+  DONE: CR-01, CR-02 (S1, TB00631) ; CR-03, CR-04, CR-05 (S2, this session).
+  PENDING: CR-06..CR-20.
+  Next slice = S3 (D2): CR-06 + CR-07 + CR-08 + CR-09 + CR-10. CR-09
+  (SIGNAL_DECAY / DEC-065 Q2 fence review) is a genuine Bill judgment -- surface
+  it when S3 is reached. PHASE 2 stays gated until the CR-20 Claude Code
+  code-readiness re-audit of the final state.
+
+CARRY-FORWARD
+  - CR-11/CR-12 scope must now also rewrite the TB00629-authored D3 q4_triggers
+    + q5_logs market-sell bindings (they re-introduced the DR-079 mechanic on
+    the D3 governing surface).
+  - DR-079 closes on CR-11 + CR-13.
+  - Deferred housekeeping (unchanged): TB00153 one-version backlog; stale plans
+    0911002 / TB00394; sec-14 positioning + absent dv1_100.. entries.
+
+============================================================
+END TB00632 SESSION LOG
+============================================================
