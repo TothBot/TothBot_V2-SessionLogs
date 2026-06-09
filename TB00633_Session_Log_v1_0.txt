@@ -1,0 +1,154 @@
+DocDCN:     TB00633
+DocTitle:   Session_Log
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00633_Session_Log_v1_0.txt
+DocDate:    06-09-2026
+DocTime:    02:05:32 UTC
+
+============================================================
+TB00633 SESSION LOG -- DEC-122 SLICE S3 (D2) MARKETABLE-IOC
+ENTRY-MODEL D2-SIDE COMPLETION + PAIR-RELATIVE SIZING +
+SIGNAL_DECAY RETIREMENT [CR-06 + CR-07 + CR-08 + CR-09 + CR-10]
+============================================================
+
+CONTEXT / WHY THIS SESSION EXISTS
+  Consumes the TB00633 NSI. Slice S3 of the DEC-122 register: the D2
+  Trading_Pipeline side of the CR-03 marketable-IOC entry-model correction
+  begun on D1 at S2. A first attempt this session CRASHED while emitting the
+  edit script (no push occurred); this session resumed from the verified
+  baseline and completed. CR-09 (SIGNAL_DECAY fence review) was surfaced to
+  Bill as the register's sole non-derivable item and ruled before authoring.
+
+READ AT OPEN (live HEAD, public tarball)
+  - TB00000 v2_87, TB00633 NSI v1_0 (inbound), TB00632 SL (most recent).
+  - Verified Docs HEAD (RR-SCOPE-008): 0500000 dv1_189 sole, md5
+    96b87ba15f59f42b752d2ce22c596d35 MATCH; dv1_188 ABSENT, dv1_190 ABSENT.
+  - Verified SessionLogs HEAD: TB00632 SL + TB00633 NSI present; NO TB00633 SL,
+    NO TB00634 NSI (confirms the crashed attempt pushed nothing).
+
+CR-09 RULING (surfaced; Bill judgment required, the register's sole non-derivable item)
+  FP/DP analysis performed (signal-detection framing + asymmetric Bayes risk +
+  Boolean detector-vs-gate proof; empirical estimators N/A at N=0 pre-PHASE-2).
+  Determination: under the marketable-IOC entry model the SIGNAL_DECAY
+  pending-entry-order cancel detector acts on an empty event population (N=0) --
+  an IOC fills-or-kills atomically at submission and never rests as a working
+  unfilled order. SSS-PASS logically excludes the decay condition at the same
+  candle close, so a repurposed pre-submission decay gate is provably unfireable
+  (DP=0) and strictly dominated. Post-fill decay is owned by mod:Exit_Controller
+  (L1a/L2/L3). Option 1 RETIRE minimizes loss at zero loss-prevention cost.
+  BILL RATIFIED: CR-09 = Option 1 RETIRE.
+
+WORK EXECUTED -- SLICE S3 (D2 Trading_Pipeline; dv1_189 -> dv1_190)
+  Single assertion-verified, count-asserted, abort-on-fail Python edit script;
+  every old span located by unique anchor read from file (no governance-text
+  regex). Five register items authored into figure D2:
+
+  CR-06 (gate:G8_Position_Sizer q1_do): base trade size reframed from flat seed
+    -> PAIR-RELATIVE live-read formula
+    per_trade_size_usd = max(50, 5 * max(costmin, ordermin * entry_limit_price)),
+    live-read per pair each candle ($50 floor / 5x margin), then scaled by the
+    gate:G6_Regime_Sizer regime_multiplier. Per-module wallet balance is the SOLE
+    sizing boundary (no per-trade ceiling). param:per_trade_size_usd is a
+    CIATS-owned starting formula; the seed VALUE stays in TB00000 sec 8 per the
+    binary test (moved at CR-15..19 / S7). rule:Sacred_R_R_1_to_1_5 remains the
+    only hardcoded value.
+
+  CR-07 (gate:G8_Position_Sizer q1_do): min-size validation reframed as an
+    explicit pre-dispatch SUB-MINIMUM GUARD against the pair's LIVE minimums --
+    dispatch only if entry_qty_quantized >= qty_min AND
+    entry_qty_quantized * entry_limit_price >= cost_min; else SKIP
+    (POSITION_TOO_SMALL), no order reaches contract:WSManager_Dispatch_Seam.
+
+  CR-08 (gate:G5_Selection_Controller partial_fill_ownership + mod:Execution_Engine
+    ON FILL q1_do): the former GTD dual-ownership partial-fill bisection is
+    reframed to the marketable-IOC fill disposition. IOC fills-or-kills
+    atomically; a PARTIAL fill protects the FILLED qty at the ON FILL batch_add
+    (TP resting limit + emergency-SL, mod:Exit_Controller-owned) exactly as a
+    full fill, and the unfilled remainder is killed immediately (NO working
+    mod:Selection_Controller remainder to own or cancel). A sub-minimum filled
+    portion is handled by the CR-05 / DR-079 abandon-and-surface bounded-dust
+    write-off, NOT a market-sell.
+
+  CR-09 (Bill-ratified RETIRE): the SIGNAL_DECAY pending-entry-order cancel
+    trigger (sss_engine constraints SIGNAL_DECAY DETECTION block -> RETIRED
+    note), the mod:Selection_Controller remainder-cancel control logic, and the
+    G3(b) contract:WSManager_Dispatch_Seam remainder-cancel dispatch wiring
+    (authored at TB00451 / TB00626) are RETIRED across the G5 q4_triggers, G5
+    partial_fill_ownership, and sss_engine constraints fields. IOC produces no
+    still-working unfilled remainder (N=0); the fence purpose is absorbed by IOC
+    fill-or-kill at the SSS-PASS instant; post-fill decay owned by the
+    mod:Exit_Controller layers.
+
+  CR-10 (root governs ar:AR-054 gloss): the legacy exec_type=expired /
+    canceled-with-cum_qty>0 unprotected-stub scenario is structurally OBVIATED
+    under IOC (no resting GTD order to partial-fill-then-expire). A partial IOC
+    fill's filled portion is protected at ON FILL or, if sub-minimum, abandoned
+    per CR-05 / DR-079.
+
+  R-STATE (TB00453 bright line): HELD at R9. Every edit is a <desc>
+    q1_do / partial_fill_ownership / q4_triggers / constraints / governs-gloss
+    field MODIFY + a figcaption EXTENSION (xviii) ADD. NO visible SVG <text> or
+    geometry change; no SVG <title> / diagram_canonical / title-bar / subtitle /
+    viewBox (1500x1700) / figure-count change; no R-increment chain rotation.
+    Figure count 10; all 9 other figures byte-identical per DEC-003 Path A.
+
+  FORENSIC PRESERVATION: the prior figcaption EXTENSIONS (incl. (xii) bisection
+    consolidation, (xiv) DD-014 verification, (xvii) the G3(b) SIGNAL_DECAY
+    remainder-cancel wiring now retired) and all sec-14 history entries are
+    preserved verbatim per CI-005 / CI-006 (forensic record, not live governing
+    surfaces). New EXTENSION (xviii) ADDED documenting this amendment.
+
+  VALIDATION (pre-delivery):
+    - DR-007.9: lxml recover-parse of dv1_190 yields the SAME error profile as
+      the dv1_189 baseline (1 pre-existing duplicate id="arrow" + 2 pre-existing
+      <strong> tag-mismatch warnings, offset +1 line by inserted content) and
+      ZERO new structural errors or id collisions. Forward edit introduces no
+      new errors.
+    - Exactly ONE <h2>14. Revision History</h2>.
+    - dv1_189 residual = forensic only (figcaption (xviii) + the two sec-14
+      entries); no header/title/governing-field reference remains.
+    - All 4 old live blocks REMOVED (count 0): G5 "partial_fill_ownership:
+      DUAL-OWNERSHIP PARTIAL-FILL BISECTION", ExecEngine "PARTIAL-FILL OWNERSHIP
+      BISECTION (DEC-065 Q2; consolidated TB00451)", sss_engine "SIGNAL_DECAY
+      DETECTION [migrated from 0711001 ...]", and the old AR-054 stub gloss.
+    - All 6 reframe markers present (count 1 each): CR-06 base-size, CR-07
+      sub-min guard, CR-08 G5 disposition, CR-08 ExecEngine disposition, CR-09
+      sss RETIRED note, figcaption (xviii).
+    - SELECTION_CANCEL__SSS_SIGNAL_DECAY survives only in the RETIRED note +
+      forensic figcaption/sec-14 -- no live D2 governing wiring.
+
+ARTIFACTS THIS SESSION
+  - 0500000_System_Architecture_Overview_dv1_190_Claude_Source.html
+      (md5 80509e91f3e13f86b07eb96176cbd7b2) -- DELIVERED.
+  - TB00633_Session_Log_v1_0.txt (this file).
+  - TB00634_Next_Session_Instructions_v1_0.txt.
+
+CHANGE REGISTER STATUS (DEC-122 CR-01..CR-20)
+  DONE: CR-01, CR-02 (S1, TB00631); CR-03, CR-04, CR-05 (S2, TB00632);
+        CR-06, CR-07, CR-08, CR-09, CR-10 (S3, this session).
+  PENDING: CR-11..CR-20.
+  Next slice = S4 (D3): CR-11. PHASE 2 stays gated until the CR-20 Claude Code
+  code-readiness re-audit of the final state.
+
+CARRY-FORWARD
+  - S4 CR-11 (D3): rebind D3 q4_triggers + q5_logs market-sell -> abandon-and-
+    surface; this scope MUST also rewrite the TB00629-authored dv1_188 D3
+    bindings that re-introduced the DR-079 market-sell mechanic on the D3
+    governing surface. Also sweep the D3 layer_l1a signal-decay-exit-path
+    residual under the CR-09 retirement.
+  - S5 CR-12: exit_reason enum rename TP_PARTIAL_FILL_REMAINDER ->
+    SUB_MIN_RESIDUAL_ABANDONED across D5/D6/D2-bus; sweep any D5/D6 SIGNAL_DECAY
+    mirror under the CR-09 retirement.
+  - S6 CR-13 + CR-14 (D9/D7): fee taker-in basis + net-R:R recompute (incl. the
+    D9 g8d stale maker-entry worked figures de-duplicated at S2).
+  - S7 CR-15..CR-19 (TB00000 sec 7/8): seed-value updates incl. the
+    per_trade_size_usd formula seed + the taker/maker fee seeds.
+  - S8 CR-20: Claude Code clean-slate re-audit -> PHASE 2 (OPTION B).
+  - DR-079 closes on CR-11 + CR-13.
+  - Deferred housekeeping (unchanged): TB00153 one-version backlog; stale plans
+    0911002 / TB00394; sec-14 positioning + absent dv1_100.. entries.
+
+============================================================
+END TB00633 SESSION LOG
+============================================================
