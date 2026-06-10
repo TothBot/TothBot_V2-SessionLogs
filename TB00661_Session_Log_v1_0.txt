@@ -1,0 +1,250 @@
+DocDCN:     TB00661
+DocTitle:   Session_Log_TB00661
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00661_Session_Log_v1_0.txt
+DocDate:    06-10-2026
+DocTime:    05:53:58 UTC
+
+============================================================
+SESSION LOG TB00661
+============================================================
+
+MISSION (one per session, as inbound): DEC-124 RUN-TO-REVERSAL
+RESTORATION -- Slice 6: D6 (Image6 Complete System) DEC-124
+RESIDUAL re-pass. OUTCOME: the inbound mission premise is VOID
+against live HEAD (D6 figure already DEC-124-clean; the three
+cited clusters are document PROSE, not the D6 figure). No diagram
+edit this session. Per Bill chat directive, performed an FP/DP
+least-rework analysis of the two forward options, determined
+Option A, documented the forward work, and closed. Inbound NSI
+consumed: TB00660_Next_Session_Instructions_v1_0.
+
+------------------------------------------------------------
+1. SESSION-OPEN VERIFICATION (RR-SCOPE-008) -- ALL PASS
+------------------------------------------------------------
+Cold-loaded BOTH repos via public tarball (codeload HEAD; not the
+API). Read: TB00000 v2_88, TB00659 (most recent log), TB00660
+(inbound NSI). Live HEAD baselines, each verified SOLE (one-
+version rule held):
+  0500000 dv1_211   md5 eb559ff71ec5b9740f3a20d591b7a524
+  0521001 dv1_21    md5 d0fa4dffd3f01c2680e224cc35883c4b
+  0311001 v1_46     md5 e22898b2eda879f135421454587ef0b3
+  0311003 v1_3      md5 dd5fbc7a7c071a85e2d2b8ee9fd10fa3
+  TB00000 v2_88     md5 cff8df6d8310d38cec2ac774ae87868d
+  TB00153 Decision_Register v1_90  present
+ABSENT confirmed (no stale in HEAD): 0500000 dv1_210 + dv1_209;
+0521001 dv1_20 + dv1_19.
+SD-13: consolidation CLOSED (TB00000 v2_86); diagrams sole
+source; DR-078 N/A this slice (no source spec retired; no edit).
+
+------------------------------------------------------------
+2. DD-011 AT CHAT-TURN 1 -- SURFACED (NOT OUTCOME 1)
+------------------------------------------------------------
+The DD-011 derivability test did NOT resolve to a single
+compliant path. The inbound mission ("correct three DEC-124-stale
+clusters on the D6 figure surface; bump D6 R14 -> R15") has no
+valid work product against live HEAD (sec 3). The CONTENT
+corrections are derivable (DEC-124 canon), but WHERE/WHEN they
+are applied is a genuine phase-sequencing question reserved to
+Bill (TB00000 sec 4.1). Surfaced to Bill; Bill directed an FP/DP
+least-rework analysis to determine the sequence, then document +
+close (sec 4-5). This mirrors the TB00659 SUB_MIN_RESIDUAL_
+ABANDONED reconciliation: an inbound-NSI premise superseded by
+live HEAD (NSIs are Claude-authored / informational per sec 4.1;
+RR-SCOPE-008 no-guess).
+
+------------------------------------------------------------
+3. FINDING -- INBOUND NSI "D6 FIGURE RESIDUAL" PREMISE IS VOID
+------------------------------------------------------------
+Verified against live HEAD (0500000 dv1_211), three facts:
+
+(3.1) THE D6 FIGURE IS ALREADY DEC-124-CLEAN. Image6 Complete
+System is file figure index 9, lines 4491..5107 (the figure
+CLOSES at 5107 -- NOT 7506 as the inbound NSI sec 2 states). It
+is 0500000_Image6_T2_R14_Complete_System (CURRENT R: R14). The
+only TP_FILL / TIME_EXPIRY strings inside the figure are at line
+4878 -- the FIELD-15 schema_fields <desc> that TB00659 already
+reconciled to the four-value live set (legitimate "retired"
+mentions inside the retirement-statement). No max_hold, no
+tp_price, no live stale enum, no PAPER_TP anywhere in 4491..5107.
+THERE IS NO FIGURE CONTENT TO FIX AND NO R14 -> R15 BUMP.
+
+(3.2) ALL THREE CITED CLUSTERS ARE DOCUMENT PROSE, NOT THE D6
+FIGURE. Verified ZERO <svg>/<text> elements exist between line
+5107 (D6 figure close) and line 7507 (the next figure open); the
+entire region is <h2> + <pre> prose:
+  (a) "exit_reason = TIME_EXPIRY." -- line 5930, sec 8 "Locked
+      Architectural Decisions", AR-071 architectural-reasoning
+      prose (the max_hold_candles FP/DP-derivation narrative).
+  (b) loss-set "(MAE_THRESHOLD_BREACH, TIME_EXPIRY, ...)" + win
+      branch "If TP_FILL (win on originating module)" -- lines
+      6027 / 6030, sec 8 selection-controller prose.
+  (c) "PAPER_TP_FILL_DETECTED  Synthetic TP fill (ask >=
+      tp_price)." -- line 7473, sec 12 "Paper-Mode Dispatch
+      Boundary Architecture" intro prose (the paper-sim event
+      registry table), BEFORE the D7 figure opens at 7507.
+The inbound NSI's claim that (b) is "VISIBLE <text>" that "WILL
+BUMP D6 R (R14 -> R15)" is factually wrong: (b) is <pre> prose; a
+prose edit does not touch the D6 figure R.
+
+(3.3) THE THREE CLUSTERS BELONG TO THE INBOUND NSI'S OWN DEFERRED
+PROSE SLICE. NSI sec 3 PROSE slice = "0500000 sec 8 / 11 / 12 +
+sec 9 seeds -- REMOVE max_hold_candles=24 ...". (a)(b) are sec 8;
+(c) is sec 12. The sec 9 value-mirror still carries
+"max_hold_candles = 24 candles ... starting; EC-L1A-003" at line
+6842 -- the same retired item. A surgical 3-line fix would leave
+the prose internally self-contradictory (TIME_EXPIRY removed from
+AR-071 while sec 9 still seeds max_hold_candles=24; AR-071 /
+AR-077 / AR-078 reasoning intact) -- a worse intermediate than
+either doing the whole PROSE slice or deferring it whole.
+
+CONCLUSION: D6 (Image6 Complete System) is DEC-124-COMPLETE as a
+figure (surface slice TB00655 + FIELD-15 mirror TB00659). The
+"D6 residual re-pass" dissolves; the residual is prose, to be
+absorbed by the D7 slice (cluster (c), sec 12) and the residual
+PROSE slice (clusters (a)(b), sec 8 + the sec 9 mirror).
+
+------------------------------------------------------------
+4. FP/DP LEAST-REWORK ANALYSIS (Bill-directed)
+------------------------------------------------------------
+DECISION: between Option A (correct the remaining FIGURES D7 then
+D1 next, PROSE slice after -- the existing campaign order) and
+Option B (pull the full PROSE slice forward now / next, FIGURES
+after), which requires the least rework.
+
+FIRST-PRINCIPLES FRAME. The total edit set is identical for A and
+B (same figures D7 + D1, same prose sec 8/9/11/12 + sec 3/4
+D9-surface, same governance). ORDER is the only variable.
+Therefore rework = redundant section re-opens + duplicated
+DEC-124 re-derivation + correction of inconsistent intermediate
+states.
+
+DATA -- coupling map of the remaining DEC-124 work:
+  sec 8   : no remaining figure ; prose (a)(b)        -> 1x either way
+  sec 9   : no remaining figure ; prose max_hold + new -> 1x either way
+  sec 11  : no remaining figure ; prose                -> 1x either way
+  sec 3/4 : no remaining figure (D9 done TB00654)      -> 1x either way
+  sec 12  : D7 FIGURE (R8) + prose (c)  -> THE ONLY COUPLED SECTION
+  sec 2   : D1 figure (R13) ; no flagged prose         -> 1x either way
+Every prose section EXCEPT sec 12 is touched exactly once in
+either ordering. The decision reduces ENTIRELY to sec 12
+sequencing.
+
+  Option A (figures first): when D7 is corrected, cluster (c) is
+    swept in the SAME pass (same section, same DEC-124
+    reconciliation) -> sec 12 opened ONCE; the residual PROSE
+    slice excludes sec 12. Prose is authored AFTER the figures are
+    final -> no prose re-reconciliation. Honors TB00000 sec 4.2
+    diagram-first (author/correct the diagram, THEN the prose).
+  Option B (prose first): the PROSE slice corrects sec 12 (c)
+    BEFORE the D7 figure is corrected -> the D7 slice must RE-OPEN
+    sec 12 for the figure -> sec 12 opened TWICE. Prose is written
+    while D7 + D1 figures are still stale, inverting sec 4.2 (the
+    "diagram wins" rule would point at the STALE figure) ->
+    correction-rework risk. Larger single-session blast radius (a
+    5-section prose edit) -> higher crash / context-compaction
+    risk (TB00659 took an in-session compaction on a SINGLE-figure
+    slice) -> higher abort-and-redo probability.
+
+QUANTIFIED (re-opens of the only coupled section, sec 12):
+  Option A = 1 ; Option B = 2.
+Plus A avoids the diagram-first inversion and keeps per-session
+blast radius small (loss-min / crash-min).
+
+DETERMINATION: OPTION A -- least rework. REFINEMENT baked into the
+campaign: the D7 figure slice ALSO corrects sec 12 paper-mode
+prose cluster (c) in the same pass; the residual PROSE slice is
+re-scoped to sec 8 + sec 9 + sec 11 + sec 3/4 D9-surface prose
+(NO sec 12). Edge case: if Bill later prefers strict figure-only
+slices, (c) reverts to the PROSE slice and A degrades to B's 2
+sec-12 opens -- still no worse than B, and A still keeps diagram-
+first. A dominates B in all sub-cases.
+
+------------------------------------------------------------
+5. WORK EXECUTED
+------------------------------------------------------------
+NONE on the diagrams. 0500000 and 0521001 are UNCHANGED this
+session (no figure edit, no prose edit, no R change, therefore no
+DEC-123 provenance append to 0521001). This session produced the
+finding (sec 3), the FP/DP determination (sec 4), and the
+forward documentation (the NSI). Verification baselines in sec 1
+are the unchanged HEAD state.
+
+------------------------------------------------------------
+6. NAMESPACE / GOVERNANCE
+------------------------------------------------------------
+0311001 v1_46 UNCHANGED. TB00153 UNCHANGED -- no new DECISION
+(this is a phase-sequencing determination, not architecture or a
+defect closure; recorded here in the SL + carried into the NSI).
+No MDR (no defect; V-038 remains 0 open). The formal TB00153
+DEC-124 register entry remains the deferred GOVERNANCE slice.
+
+------------------------------------------------------------
+7. ARTIFACTS PRODUCED
+------------------------------------------------------------
+  1. TB00661_Session_Log_v1_0.txt            (this file)
+  2. TB00662_Next_Session_Instructions_v1_0.txt
+No 0500000 / 0521001 artifacts (no diagram change). Delivered
+incrementally via present_files (crash-prevention).
+
+------------------------------------------------------------
+8. CARRY-FORWARD (updated by this session's determination)
+------------------------------------------------------------
+D6 (Image6 Complete System, R14): DEC-124-COMPLETE as a figure.
+  CLOSED. No further figure work.
+NEXT (Option A): D7 figure slice -- 0500000_Image7 (sec 12,
+  figure block lines 7507..8038, CURRENT R8). Correct the
+  pre-DEC-124 4-layer / L1b / TP figure content to the run-to-
+  reversal model + 4-layer->3-layer per D3 canon; BUMP D7 R8 ->
+  R9 (visible <text>/geometry per TB00453); propagate to SVG
+  <title> + diagram_canonical + title-bar + figcaption. IN THE
+  SAME PASS, sweep sec 12 PROSE cluster (c) line 7473
+  (PAPER_TP_FILL_DETECTED "ask >= tp_price") to the live paper-
+  sim model (synthetic regime-reversal close; emergSL trigger
+  stays). Append the D7 amendment narrative to 0521001 (DEC-123).
+THEN: D1 figure slice -- 0500000_Image1 (sec 2, lines 1476..2076,
+  CURRENT R13). Pre-DEC-124 TP content at ~1719 (fee-calc
+  tp_price / fee_tp maker) + ~1815 (partial-TP emergSL
+  amendment); BUMP D1 R13 -> R14.
+THEN residual PROSE slice (re-scoped -- NO sec 12): sec 8 clusters
+  (a) AR-071 "exit_reason = TIME_EXPIRY" + the AR-071 max_hold
+  reasoning, (b) the selection-controller loss/win attribution
+  (loss set drop TIME_EXPIRY; "win" = profitable run-to-reversal
+  close, not TP_FILL); sec 9 -- REMOVE max_hold_candles=24 +
+  EC-L1A-003 mirror, ADD the run-to-reversal estimator seed
+  value, reconcile per_trade_size + fee seeds (entry-taker /
+  exit-taker); sec 11; the D9-surface stale prose (sec 3.2 / 4.1
+  / 4.2) flagged at TB00654.
+THEN GOVERNANCE slice: TB00153 enter DEC-124 (v1_90 -> v1_91) +
+  retire DR-079 + retire ar:AR-066 framing; 0311001 retire token
+  ar:AR-066; TB00000 v2_88 -> v2_89 (sec 7 EXITS + sec 8).
+DISPATCH-SEAM DEC-122 DRIFT (D2; AWAITING BILL, raised TB00657):
+  contract:WSManager_Dispatch_Seam still renders the pre-CR-03
+  limit / post_only / GTD entry model -- DEC-122 drift, NOT
+  DEC-124; hold for Bill sequencing.
+THEN DEC-124 final re-audit -> ungate PHASE 2 OPTION B clean-slate
+  organism code-gen (Pathway 2 AA=05).
+Deferred housekeeping: TB00153 ~140-version backlog; stale plans
+  0911002 / TB00394.
+
+------------------------------------------------------------
+9. CLAUDE / NSI DIVERGENCES THIS SESSION
+------------------------------------------------------------
+- INBOUND NSI MIS-SCOPE (the central finding, sec 3): TB00660
+  framed slice 6 as a D6 FIGURE residual re-pass with an R14 ->
+  R15 bump, citing figure block 4491..7506 and "VISIBLE <text>".
+  Live HEAD: the D6 figure is 4491..5107 and already clean; the
+  three clusters are sec 8 / sec 12 PROSE belonging to the NSI's
+  own deferred PROSE slice. Surfaced, not executed blindly.
+- INBOUND NSI SESSION-NUMBER OFF-BY-ONE: TB00660 sec 5 instructed
+  "Session Log (TB00660) + this-NSI-successor (TB00661)". The
+  established interleaving pattern is SL = inbound-NSI-number + 1
+  (session consuming NSI 658 produced SL 659 + NSI 660). This
+  session consumes NSI 660 -> CORRECT numbering is SL TB00661 +
+  NSI TB00662 (both confirmed free in HEAD). Used the correct
+  numbering.
+
+============================================================
+END SESSION LOG TB00661
+============================================================
