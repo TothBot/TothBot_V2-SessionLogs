@@ -1,0 +1,199 @@
+DocDCN:     TB00655
+DocTitle:   Session_Log_TB00655
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00655_Session_Log_v1_0.txt
+DocDate:    06-09-2026
+DocTime:    03:48:00 UTC
+
+============================================================
+SESSION LOG TB00655
+============================================================
+
+MISSION (one per session): DEC-124 RUN-TO-REVERSAL RESTORATION
+-- Slice 3: correct Diagram 6 (Image6 Complete System) on the
+0500000 design diagram. DEC-003 Path A (one diagram surface per
+session). Inbound NSI consumed: TB00655_Next_Session_Instructions_v1_0.
+
+------------------------------------------------------------
+1. SESSION-OPEN VERIFICATION (RR-SCOPE-008) -- ALL PASS
+------------------------------------------------------------
+Cold-loaded both repos via public tarball (codeload HEAD).
+Read: TB00000 v2_88, TB00654 (most recent log), TB00655 (NSI).
+Live HEAD baselines, each verified SOLE (one-version rule held):
+  0500000 dv1_208   md5 4e09f9f059a826d17879a052c394f2d2
+  0521001 dv1_18    md5 a4bba42f133bd5ccdff841443e790d6a
+  0311001 v1_46     md5 e22898b2eda879f135421454587ef0b3
+  0311003 v1_3      md5 dd5fbc7a7c071a85e2d2b8ee9fd10fa3
+  TB00000 v2_88     md5 cff8df6d8310d38cec2ac774ae87868d
+  TB00153 Decision_Register v1_90  present
+ABSENT confirmed (no stale versions in HEAD): 0500000 dv1_207;
+0521001 dv1_17.
+SD-13: consolidation CLOSED (TB00000 v2_86); diagrams sole
+source; DR-078 N/A.
+NOTE: dv1_208 shipped with its internal DC-header CORRECT at
+dv1_208 (the TB00654 lag fix held); this session advances it
+normally to dv1_209.
+
+------------------------------------------------------------
+2. DECISIONS
+------------------------------------------------------------
+DD-011 derivability test run at chat-turn 1: OUTCOME 1 (single
+compliant path). All DEC-124 modelling choices were settled in
+sec 0 of the NSI and canonically demonstrated on D3 (TB00652) +
+D9 (TB00654); no item in the D6 slice was non-derivable.
+Executed under derivable-decision authority; NO business-
+judgment item surfaced to Bill this session.
+
+------------------------------------------------------------
+3. WORK EXECUTED -- D6 (Image6 Complete System)
+------------------------------------------------------------
+0500000 dv1_208 -> dv1_209. Diagram 6 R13 -> R14
+(TB00453: visible <text> CONTENT changed -> figure R BUMP; NO
+geometry/viewBox/node-count change). All 9 other figures byte-
+identical (DEC-003 Path A); change-localization VERIFIED (only
+the D6 figure block, file figure index 6, lines 4491..5107, plus
+the 4 DC-header lines 6/135/137/139 differ between dv1_208 and
+dv1_209; line counts equal at 9738, no line shift). Figure count
+10; <svg> 10/10; </svg> 10/10; figcaption 10/10. DR-007.9
+html.parser pass, 0 exceptions. (Pre-existing strict-XML '<' in
+a statistical CIATS desc field is byte-identical in dv1_208 and
+untouched -- NOT a regression; html.parser is the governing
+DR-007.9 standard and passes.)
+
+D6 CHANGES (per NSI steps a-d):
+  (a) 4-LAYER -> 3-LAYER. mod:Exit_Controller q1_do "4-layer
+      (L1a+L1b+L2+L3)" -> "3-layer (L1a+L2+L3) per DEC-124";
+      EC-L1A-003 max-hold time-expiry backstop REMOVED; L1a
+      redefined as the regime-reversal run-to-reversal take-
+      profit; q4/q5/consumes/drill_targets dropped layer:L1b_
+      TP_Fill; mod:Risk_Engine consumes dropped layer:L1b_TP_
+      Fill; mod:Position_Mirror q4 + visible field-list dropped
+      "TP fill"/"TP id"; mod:Signal_Pipeline AddOrder leg
+      dropped TP. Visible Exit_Controller text "L1a Signal-based
+      * L1b TP fill * L2 MAE" -> "L1a Regime-reversal (run-to-
+      reversal TP) * L2 MAE"; wireup_callout "(Layer 1a signal-
+      based exits)" -> "(Layer 1a regime-reversal exits)".
+  (b) MATCHING ENGINE resting-TP removed. container:Matching_
+      Engine q1_do/q4/q5/produces/drill_targets dropped the
+      resting TP limit for layer:L1b_TP_Fill; only TothBot-placed
+      resting order is now the L3 emergSL stop-market; the take-
+      profit is regime reversal (a TothBot market sell, not a
+      resting order). container:Kraken_REST_API AddOrder "entry
+      limit + emergSL + TP" -> "entry limit + emergSL". Visible
+      Matching text "Resting TP limit + off-book emergSL (Layer
+      3)" -> "Off-book emergSL only (Layer 3) -- no resting TP
+      (run-to-reversal)".
+  (c) SACRED R:R node -> ENTRY-ACCEPTANCE FLOOR. rule:Sacred_R_R_
+      1_to_1_5 q1_do/q4/q5/produces rewritten from the gross_
+      target construction (net_gain=net_loss x 1.5; gross_target
+      = net_gain + 0.16% maker fee) to: admit iff expected_reward
+      / net_loss >= 1.5, net_loss = mae_pct + entry taker fee +
+      MAE taker fee (both legs FEE_TAKER_PCT), expected_reward =
+      CIATS run-to-reversal estimate; never an exit price, never
+      closes a position; below-floor -> evt:G8_A1_REJECT. mod:
+      Risk_Engine G8 q1_do reworded to apply the floor as the
+      entry-acceptance test. Visible Sacred-node formula line
+      replaced with the entry-acceptance-floor line.
+  (d) EXIT_REASON ENUM -- FLAGGED, NOT FIXED (NSI step d). The D6
+      contract:CIATS_Trade_Outcome_Bus FIELD-15 enum (TP_FILL |
+      MAE_THRESHOLD_BREACH | HTF_REGIME_REVERSAL | DAILY_REGIME_
+      DOWNGRADE | TIME_EXPIRY | SUB_MIN_RESIDUAL_ABANDONED |
+      PAIR_LIMIT_ONLY_EXIT) is the D5-canonical schema held in
+      V-038 verbatim parity with D6. TP_FILL + TIME_EXPIRY are
+      obsolete under DEC-124 and SUB_MIN_RESIDUAL_ABANDONED is the
+      DR-079 dust value, but editing the enum on D6 alone would
+      break D5<->D6 parity. PRESERVED INTACT (byte-identical, live
+      line ~4878); the D5 slice must update D5 canonical + the D6
+      FIELD-15 mirror IN LOCKSTEP.
+
+R-STATE: five visible <text> content nodes changed -> R13 -> R14
+per TB00453 (visible-text change). Geometry byte-identical (rect
+27 / line 4 / path 1 / text 104 counts unchanged; every text x/y
+position byte-identical; viewBox 1500x1500 preserved). R14
+propagated to SVG <title> + diagram_canonical + title-bar
+identifier + root <desc> provenance CURRENT-R + figcaption (a).
+
+DC-HEADER: HTML <title> line 6 + DocVersion line 135 + DocPath
+line 137 advanced dv1_208 -> dv1_209; DocTime line 139 refreshed.
+Filename advances dv1_208 -> dv1_209.
+
+VERIFICATION SUMMARY (all PASS): html.parser 0 exceptions;
+structural counts 10/10/10/10; change-localization (D6 block +
+DC-header lines only, 9 other figures byte-identical); D6 content
+checks -- no L1b_TP_Fill; no gross_target formula; 3-layer model
+present; no EC-L1A-003 max-hold; matching engine no resting TP;
+sacred node = entry-acceptance floor; admit iff expected_reward /
+net_loss >= 1.5 visible; net_loss = taker + taker; D5-owned enum
+PRESERVED; no exit-time net_gain=1.5x enforcement; all D6 reads
+R14, no residual R13.
+
+0500000 dv1_208 (1007743 bytes) -> dv1_209 (1008720 bytes; +977).
+Authored md5: 6c25cee0c98a445be07f2feaec678b1c.
+
+------------------------------------------------------------
+4. PROVENANCE (0521001) -- DEC-123 APPEND
+------------------------------------------------------------
+0521001 dv1_18 -> dv1_19. Appended the D6 R13 -> R14 DEC-124
+amendment narrative to section 5.2 (D6), append-only (DEC-123);
+header bumped (DocVersion + DocPath + DocTime). No provenance
+relocation this session (D6 already externalized at TB00637).
+REVERSE-RECONSTRUCTION VERIFIED: stripping the appended block +
+reverting the header yields byte-identical dv1_18 (md5
+a4bba42f133bd5ccdff841443e790d6a). Authored md5:
+b5417710f25a0e76627f4ccc06908719.
+
+------------------------------------------------------------
+5. NAMESPACE / GOVERNANCE
+------------------------------------------------------------
+0311001 v1_46 UNCHANGED (no new token minted; ar:AR-066
+retirement is the deferred governance slice). TB00153 UNCHANGED
+(DEC-124 register entry is the deferred governance slice). No
+source spec retired (DR-078 N/A; consolidation CLOSED).
+
+------------------------------------------------------------
+6. ARTIFACTS PRODUCED
+------------------------------------------------------------
+  0500000_System_Architecture_Overview_dv1_209_Claude_Source.html
+    md5 6c25cee0c98a445be07f2feaec678b1c
+  0521001_System_Architecture_Overview_Revision_History_dv1_19.txt
+    md5 b5417710f25a0e76627f4ccc06908719
+  TB00655_Session_Log_v1_0.txt (this log)
+  TB00656_Next_Session_Instructions_v1_0.txt
+Superseded (git rm --cached on push): 0500000 dv1_208;
+0521001 dv1_18.
+
+------------------------------------------------------------
+7. CARRY-FORWARD
+------------------------------------------------------------
+- D5 SLICE LOCKSTEP (MUST): remove obsolete exit_reason enum
+  values TP_FILL + TIME_EXPIRY + reconcile SUB_MIN_RESIDUAL_
+  ABANDONED from the D5 canonical contract:CIATS_Trade_Outcome_
+  Bus schema AND update the D6 FIELD-15 mirror (live line ~4878)
+  in the SAME session to hold V-038 parity; plus the D5 Logger
+  registry drop LAYER1B_TP_FILL.
+- Remaining DEC-124 figure slices (one per session): D2 (R9),
+  D5 (R15), D7 (R8), D1 (R13).
+- PROSE slice (deferred): 0500000 sec 8/11/12 + sec 9 seeds
+  (REMOVE max_hold_candles=24; ADD run-to-reversal estimator seed
+  value; reconcile per_trade_size + fee seeds entry-taker/exit-
+  taker) + D9-surface stale prose (sec 3.2 / 4.1 / 4.2).
+- GOVERNANCE slice (deferred): TB00153 enter DEC-124 (v1_90 ->
+  v1_91) + retire DR-079 + retire ar:AR-066 framing; 0311001
+  retire token ar:AR-066; TB00000 v2_88 -> v2_89 (sec 7 + sec 8).
+- Then DEC-124 final re-audit -> ungate PHASE 2 OPTION B clean-
+  slate organism code-gen (Pathway 2 AA=05).
+- Deferred housekeeping: TB00153 one-version backlog (~140 stale
+  versions); stale plans 0911002 / TB00394.
+
+------------------------------------------------------------
+8. CLAUDE ERRORS THIS SESSION
+------------------------------------------------------------
+None material. (The D6 edit + verification were carried over
+from an in-session context compaction; on resume the edited file
+was independently re-verified against a fresh live-HEAD cold-load
+-- baselines reconciled byte-exact -- before packaging, per
+RR-SCOPE-008 no-guess.)
+============================================================
+END
+============================================================

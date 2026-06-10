@@ -1,0 +1,158 @@
+DocDCN:     TB00656
+DocTitle:   Next_Session_Instructions_TB00656
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00656_Next_Session_Instructions_v1_0.txt
+DocDate:    06-09-2026
+DocTime:    03:48:00 UTC
+
+============================================================
+NEXT SESSION INSTRUCTIONS TB00656
+============================================================
+
+MISSION (one per session): DEC-124 RUN-TO-REVERSAL RESTORATION
+-- Slice 4: correct Diagram 2 (Image2 Trading Pipeline, 8 Gates)
+on the 0500000 design diagram. DEC-003 Path A (one diagram
+surface per session). Produced by TB00655 (which executed slice
+3, D6).
+
+------------------------------------------------------------
+0. DEC-124 FRAME (settled -- DO NOT RE-LITIGATE)
+------------------------------------------------------------
+DEC-124 (Bill ruling, ratified TB00650): the sacred net 1:1.5
+R:R is an ENTRY-ACCEPTANCE FLOOR only -- admit a candidate iff
+expected_reward / net_loss >= 1.5. It is NEVER an exit price and
+NEVER closes a position. It remains the ONLY hardcoded value.
+Run-to-reversal is the whole-position take-profit (HTF_REGIME_
+REVERSAL / DAILY_REGIME_DOWNGRADE); there is NO fixed gross_
+target TP and NO max-hold. Three exit layers only: L1a regime-
+reversal, L2 MAE, L3 emergency-SL. The expected_reward estimator
+is CIATS-owned, SEEDED from a historical OHLC backtest of the
+regime-reversal exit and TUNED from paper after the 200-trade
+floor (Bill ruling TB00654; seed VALUE -> TB00000 sec 9, not the
+diagram). Already executed: D3 (TB00652), D9 (TB00654), D6
+(TB00655).
+
+------------------------------------------------------------
+1. SESSION OPEN (do first, before any edit)
+------------------------------------------------------------
+Cold-load both repos via public tarball (codeload HEAD), never
+the API. Read TB00000 (master protocol), this NSI, and TB00655
+(most recent log). Run the SD-13 five-part consolidation status
+check.
+RR-SCOPE-008 -- verify live HEAD against these baselines (each
+must be SOLE in HEAD; no stale versions):
+  0500000 dv1_209   md5 6c25cee0c98a445be07f2feaec678b1c
+  0521001 dv1_19    md5 b5417710f25a0e76627f4ccc06908719
+  0311001 v1_46     md5 e22898b2eda879f135421454587ef0b3
+  0311003 v1_3      md5 dd5fbc7a7c071a85e2d2b8ee9fd10fa3
+  TB00000 v2_88     md5 cff8df6d8310d38cec2ac774ae87868d
+  TB00153 Decision_Register v1_90  present
+ABSENT (must NOT be in HEAD): 0500000 dv1_208; 0521001 dv1_18.
+No-guess (RR-SCOPE-008): verify against the live fresh tarball;
+never trust recalled state. SD-13: consolidation CLOSED; DR-078
+N/A.
+
+------------------------------------------------------------
+2. THIS SLICE -- D2 Image2 Trading Pipeline (8 Gates) (R9)
+------------------------------------------------------------
+Target figure: D2 (Image2 Trading Pipeline, 8 Gates), currently
+R9. Apply DEC-124 to the D2 surface ONLY (DEC-003 Path A; all 9
+other figures byte-identical). At chat-turn 1, audit the live D2
+block against the canonical DEC-124 model already applied to D3
+(TB00652) / D9 (TB00654) / D6 (TB00655), then execute the
+corrections D2 actually carries:
+  (a) Any FOUR-LAYER / L1b TP-fill exit depiction on the pipeline
+      (e.g. exit-arming, G8 -> exit handoff, or any L1b TP-fill
+      reference) -> THREE-LAYER (L1a regime-reversal + L2 MAE +
+      L3 emergency-SL); remove L1b TP-fill and any max-hold
+      (EC-L1A-003) reference.
+  (b) G8 Position_Sizer + any order-placement depiction: remove
+      the resting take-profit / gross_target / maker-TP leg
+      (entry order carries entry limit + emergSL only; the take-
+      profit is regime reversal, a TothBot market sell). Reconcile
+      the fee basis to entry taker + MAE taker if the pipeline
+      renders it.
+  (c) Sacred R:R wherever D2 renders it (notably at G8): reword
+      from gross_target / exit-price / "net_gain = 1.5 x net_loss"
+      enforcement to the ENTRY-ACCEPTANCE FLOOR (admit iff
+      expected_reward / net_loss >= 1.5; never an exit, never
+      closes a position). expected_reward = the CIATS run-to-
+      reversal estimate (architecture only; seed VALUE stays in
+      TB00000 sec 9 per DEC-096).
+  (d) Verify any D2 exit_reason / take-profit token references are
+      consistent with the 3-layer model; FLAG (do NOT fix here)
+      any exit_reason enum value that belongs to the D5 slice
+      (see sec 3 carry-forward).
+R-STATE: any visible <text> or geometry change bumps D2 R9 -> R10
+(TB00453). A <desc>/figcaption ADD-only edit holds R. Decide per
+the actual edits made; propagate the resulting R to SVG <title> +
+diagram_canonical + title-bar + figcaption.
+PROVENANCE: append the D2 amendment narrative to 0521001 section
+5.10 (D2), append-only (DEC-123). Verify reverse-reconstruction
+== prior version (dv1_19).
+COMPLETENESS: every node touched must pass the completeness test
+(code-derivable from q1_do/constraints/consumes/produces/q4/q5).
+
+------------------------------------------------------------
+3. CARRY-FORWARD FLAGS (MUST honour when reached)
+------------------------------------------------------------
+- D5 SLICE LOCKSTEP (raised at D6/TB00655): the D6
+  contract:CIATS_Trade_Outcome_Bus FIELD-15 exit_reason enum was
+  PRESERVED INTACT (TP_FILL | MAE_THRESHOLD_BREACH |
+  HTF_REGIME_REVERSAL | DAILY_REGIME_DOWNGRADE | TIME_EXPIRY |
+  SUB_MIN_RESIDUAL_ABANDONED | PAIR_LIMIT_ONLY_EXIT) because it is
+  D5-canonical and held in V-038 verbatim parity. When the D5
+  slice runs, it MUST remove the obsolete values (TP_FILL +
+  TIME_EXPIRY), reconcile SUB_MIN_RESIDUAL_ABANDONED (DR-079 dust),
+  drop the D5 Logger registry LAYER1B_TP_FILL, AND update the D6
+  FIELD-15 mirror (live diagram line ~4878) IN THE SAME SESSION to
+  hold V-038 parity. If D2 carries the same FIELD-15 enum, FLAG it
+  the same way -- do NOT edit it on D2 alone.
+
+------------------------------------------------------------
+4. DECISIONS
+------------------------------------------------------------
+All DEC-124 modelling choices are settled (sec 0). No item in
+the D2 slice is expected to be non-derivable. Run the DD-011
+derivability test at chat-turn 1; if a single compliant path
+exists (OUTCOME 1) execute under derivable-decision authority --
+do NOT surface a derivable decision as a question. Surface to
+Bill ONLY a genuine business-judgment choice if one arises.
+
+------------------------------------------------------------
+5. DISCIPLINE REMINDERS
+------------------------------------------------------------
+DIAGRAMS GOVERN -- no code workarounds; the diagram is the sole
+organism truth. Binary test DEC-096 -- architecture in the
+diagram; transient seed values in TB00000 sec 9. One diagram
+surface per session (DEC-003 Path A); all other figures byte-
+identical, change-localization verified. One-version rule:
+git rm --cached the superseded version on every push; one
+version per document in HEAD. git add explicit filenames only;
+cd LITERAL absolute paths (never $env:); both repos branch =
+master (NEVER main): git push origin master. Deliver each
+artifact incrementally via present_files as completed. Session
+close produces: Session Log + this-NSI-successor + OCS copy box
++ GitHub push box + DR-010 post-push verification.
+
+------------------------------------------------------------
+6. CAMPAIGN REMAINDER (after D2)
+------------------------------------------------------------
+Figure slices remaining (one per session): D5 (R15 -- includes
+the D5/D6 exit_reason enum lockstep + Logger LAYER1B_TP_FILL
+drop), D7 (R8), D1 (R13). Then the PROSE slice (0500000 sec
+8/11/12 + sec 9 seeds: remove max_hold_candles=24; add run-to-
+reversal estimator seed value; reconcile per_trade_size + fee
+seeds entry-taker/exit-taker; plus the D9-surface stale prose:
+sec 3.2 intro, sec 4.1 Layer 1b, sec 4.2 R:R Formula). Then the
+GOVERNANCE slice (TB00153 enter DEC-124 v1_90 -> v1_91 + retire
+DR-079 + retire ar:AR-066 framing; 0311001 retire token
+ar:AR-066; TB00000 v2_88 -> v2_89 sec 7 + sec 8). Then DEC-124
+final re-audit -> ungate PHASE 2 OPTION B clean-slate organism
+code generation (Pathway 2 AA=05). Deferred housekeeping:
+TB00153 one-version backlog (~140 stale versions); stale plans
+0911002 / TB00394.
+============================================================
+END
+============================================================
