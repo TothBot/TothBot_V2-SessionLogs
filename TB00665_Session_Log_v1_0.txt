@@ -1,0 +1,173 @@
+============================================================
+TB00665 SESSION LOG v1_0
+DEC-124 RUN-TO-REVERSAL RESTORATION -- GOVERNANCE SLICE
+TB00153 v1_90 -> v1_91 / TB00000 v2_88 -> v2_89
+0500000 + 0521001 UNTOUCHED
+Date: 06-10-2026
+============================================================
+
+1. SESSION OPEN VERIFICATION (RR-SCOPE-008) -- ALL PASS
+------------------------------------------------------------
+Cold-loaded both repos via public tarball
+(codeload.github.com/TothBot/<repo>/tar.gz/HEAD). md5 vs
+inbound NSI TB00665 baselines, each file SOLE version at
+HEAD:
+  0500000 dv1_213  8478bd536edc4279ccc933b71f6e1565
+  0521001 dv1_23   e56008207b2543057ec1f82b08894f22
+  TB00000 v2_88    cff8df6d8310d38cec2ac774ae87868d
+  TB00153 v1_90    3e7d1b345009294b123de4ff6e2ea163
+                   (NSI gave no expected md5; recorded as
+                   the verified HEAD baseline)
+  0311001 v1_46    e22898b2eda879f135421454587ef0b3
+  0311003 v1_3     dd5fbc7a7c071a85e2d2b8ee9fd10fa3
+ABSENT confirmed: 0500000 dv1_212 and earlier; 0521001
+dv1_22 and earlier. TB00664 SL read.
+
+DD-011 chat-turn-1: governance slice = OUTCOME 1 (single
+compliant path: record the ratified DEC-124 closures into
+the Decision Register; align the TB00000 registry and live
+trading prose to DEC-124 canon). Executed under
+derivable-decision authority.
+
+2. NSI-DIVERGENCE RECORD (RR-SCOPE-008 no-guess)
+------------------------------------------------------------
+(a) NSI 2(a) said "Update the DEC-124 register entry" -- NO
+    DEC-124 entry existed in TB00153 v1_90 (newest entry =
+    DEC-123; closer line "Max DEC = 123; next = DEC-124").
+    The entry was AUTHORED new, not updated.
+(b) NSI 2(b) cited TB00000 "section 9.17" -- TB00000 v2_88
+    at HEAD has the parameter registry as SECTION 8; no
+    section 9.17 exists in v2_88 (the 9.17 pointer survives
+    only inside 0500000 prose written against an older
+    TB00000 layout). Edits were applied to the actual
+    section-8 registry.
+(c) TB00153 v1_90 body banner read "TB00153 DECISION
+    REGISTER v1_70" -- stale since v1_70 across 20 header
+    bumps. Aligned to v1_91 in this edit.
+(d) FLAGGED, NOT FIXED (out of NSI scope): the DEC-123
+    register entry STATUS still reads "OPEN -- awaiting
+    Bill ratification of the Phase G set" although Phase G
+    was ratified and executed (TB00000 v2_88 changelog;
+    0521001 dv1_1..dv1_23 lineage). Status closure belongs
+    to a future register-maintenance touch.
+(e) FLAGGED, NOT FIXED: a legacy multi-version stack of
+    TB00153 Decision Register / Master Defect Register
+    files (v1_0 .. v1_72, partial) remains at HEAD,
+    predating the one-version rule. This session applied
+    the rule to its own supersession only (v1_90 rm
+    --cached on push).
+
+3. WORK EXECUTED
+------------------------------------------------------------
+(a) TB00153 Decision Register v1_90 -> v1_91
+    (edit_tb00153_v1_91.py; every anchor count-asserted
+    ==1; abort-on-fail; no silent partials):
+      - DEC-124 entry AUTHORED at the newest-first position
+        (above DEC-123). Records: ratification (TB00650);
+        the decision substance (1:1.5 = entry-acceptance
+        floor ONLY, never a cap, never an exit price; fixed
+        gross_target TP + max-hold cap REMOVED; L1b
+        eliminated; exactly three exit layers -- L1a
+        regime-reversal THE take-profit, L2 MAE, L3
+        emergency-SL; live four-value exit_reason set; new
+        CIATS run-to-reversal estimator, seed recipe per
+        Bill ruling TB00654); retirements (AR-066 split
+        mechanic, DR-079 abandon-and-surface,
+        SUB_MIN_RESIDUAL_ABANDONED, TP_FILL, TIME_EXPIRY);
+        execution record (figure slices D3 TB00652, D9
+        TB00654, D6 TB00655, D2 TB00657, D5 TB00658, D7
+        TB00662; D1 DEFERRED to DEC-122 per Bill Option A
+        TB00663, holds R13; prose slice CLOSED TB00664
+        dv1_213); remaining open items ((1) 0311001 token
+        retirements layer:L1b_TP_Fill + ar:AR-066 GATED on
+        DEC-122 disposition; (2) final DEC-124 re-audit ->
+        PHASE 2 OPTION B gate); closer "Max DEC = 124;
+        next = DEC-125."
+      - Header bumped (v1_91, path, 06-10-2026,
+        21:51:07 UTC); stale body banner aligned to v1_91.
+(b) TB00000 v2_88 -> v2_89 (edit_tb00000_v2_89.py; same
+    discipline):
+      - Section 7 EXITS: "Layer 1 - signal-based and
+        take-profit exits." -> "Layer 1a - regime-reversal
+        exit: THE take-profit (run to reversal; no fixed TP
+        price, no resting TP order, no max-hold time cap).
+        DEC-124." Layers 2/3 unchanged.
+      - Section 7 SACRED paragraph: added "It is an
+        entry-acceptance floor ONLY - never a cap, never an
+        exit price (DEC-124)."
+      - Section 8: max_hold_candles = 24 line RETIRED
+        (removed; live Exit Controller group = mae_mult,
+        emergency_sl_mult, cancel_timeout_window,
+        mpp_retry_count; 24-candle value in git history).
+      - Section 8: NEW group "CIATS - run-to-reversal
+        expected-reward estimator (DEC-124)" with
+        expected_reward_estimator_seed -- canonical
+        value/recipe home: historical-OHLC backtest replay
+        of the EC-L1A-001/EC-L1A-002 exit condition per
+        pair/regime (Bill ruling TB00654); seed =
+        central-tendency realized favorable excursion as a
+        fraction of entry_fill_price; feeds the A1
+        acceptance floor ONLY, never an exit price;
+        per-module; tuned from paper data from the
+        200-trade floor; mechanism canonical at D9 + D3.
+      - v2_89 changelog paragraph added; v2_88 closer
+        "supersedes" line retired in its favor; header
+        bumped.
+      - GREP-VERIFIED (not memory): no live DR-079 /
+        TP_FILL / TIME_EXPIRY / SUB_MIN_RESIDUAL / AR-066 /
+        abandon-and-surface / gross_target framing existed
+        anywhere in v2_88 -- the two anchors above were the
+        only DEC-124-affected live lines.
+      - UNTOUCHED per NSI caution (DEC-122-coupled):
+        entry_timeout_sec seed line and all entry-order
+        shape prose.
+
+4. VERIFICATION RESULTS
+------------------------------------------------------------
+TB00153_Decision_Register_v1_91.txt
+  md5 8319d6774b86577cd7cc2c4c249603c0  (16078 lines)
+  Full diff vs v1_90: only the header/banner bumps + the
+  inserted DEC-124 entry. No other content changed.
+TB00000_TothBot_V2_Project_Instructions_for_Claude_v2_89.txt
+  md5 ad900e21f45473c71e97c16284001892  (590 lines)
+  Full diff vs v2_88: only the header bump, the v2_89
+  changelog paragraph, the section-7 exit/SACRED
+  amendments, and the section-8 retirement + new estimator
+  group. entry_timeout_sec line byte-identical.
+0500000 dv1_213 / 0521001 dv1_23: NOT EDITED this session;
+  HEAD md5 must still read 8478bd536edc4279ccc933b71f6e1565
+  / e56008207b2543057ec1f82b08894f22 at DR-010 close
+  (DEC-003 Path A analog held).
+
+5. CAMPAIGN STATE AFTER TB00665
+------------------------------------------------------------
+DEC-124 register entry: AUTHORED + closures RECORDED.
+DEC-124 remaining open:
+  (1) DEC-122 dispatch-seam disposition session
+      (D2 + D7 + D1 + sec-12 coupled, ONE session) --
+      AWAITING BILL ruling to open. Carries the 0311001
+      token retirements (layer:L1b_TP_Fill, ar:AR-066), D1
+      R13 DEC-124 content, sec-12 GATED METHODS,
+      AR-006/047(2)/054/069, sec-9 entry_timeout_sec,
+      sec-10/11/13 entry-shape lines, D2
+      WSManager_Dispatch_Seam pre-CR-03 node, D1 A-36
+      narrative.
+  (2) Final DEC-124 re-audit (full-document grep sweep vs
+      canon; DR-078 / DD-014 from-diagram-alone check).
+  (3) PHASE 2 OPTION B gate (Claude Code only).
+Known drift carried (unchanged from TB00664): D3 visible
+fee-line (figure slice, bumps R); GROUP-2 DEC-122-coupled
+prose inventory (TB00664 SL section 4).
+
+6. ARTIFACTS DELIVERED THIS SESSION
+------------------------------------------------------------
+  TB00153_Decision_Register_v1_91.txt
+    md5 8319d6774b86577cd7cc2c4c249603c0
+  TB00000_TothBot_V2_Project_Instructions_for_Claude_v2_89.txt
+    md5 ad900e21f45473c71e97c16284001892
+  TB00665_Session_Log_v1_0.txt (this file)
+  TB00666_Next_Session_Instructions_v1_0.txt
+
+============================================================
+END OF SESSION LOG TB00665
+============================================================

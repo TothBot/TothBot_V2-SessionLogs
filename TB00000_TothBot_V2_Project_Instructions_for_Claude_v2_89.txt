@@ -1,10 +1,10 @@
 DocDCN:     TB00000
 DocTitle:   TothBot_V2_Project_Instructions_for_Claude
-DocVersion: v2_88
+DocVersion: v2_89
 DocOwner:   Bill
-DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00000_TothBot_V2_Project_Instructions_for_Claude_v2_88.txt
-DocDate:    06-09-2026
-DocTime:    06:50:31 UTC
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00000_TothBot_V2_Project_Instructions_for_Claude_v2_89.txt
+DocDate:    06-10-2026
+DocTime:    21:51:07 UTC
 
 ============================================================
 TOTHBOT V2 - WORKING INSTRUCTIONS FOR CLAUDE
@@ -14,6 +14,23 @@ This is Bill and Claude's working document. It is NOT a
 controlled document: no DCN, no lifecycle state, no namespace
 governance. It exists to keep us on track and moving forward.
 Keep it lean. Change history lives in git, not in here.
+
+v2_89: DEC-124 governance slice (TB00665). Section 7 exits
+amended to DEC-124 canon: Layer 1a regime-reversal exit IS the
+take-profit (run to reversal - no fixed TP price, no max-hold
+cap); the sacred net 1:1.5 R:R clarified as an entry-acceptance
+floor ONLY - never a cap, never an exit price. Section 8:
+max_hold_candles RETIRED per DEC-124 (live Exit Controller
+group = mae_mult, emergency_sl_mult, cancel_timeout_window,
+mpp_retry_count; the 24-candle value lives in git history);
+NEW expected_reward_estimator_seed (canonical value/recipe
+home; historical-OHLC backtest replay per Bill ruling TB00654;
+CIATS-owned per-module; feeds the A1 acceptance floor only,
+never an exit price). Grep-verified: no live DR-079 / TP_FILL /
+TIME_EXPIRY / abandon-and-surface framing remained in v2_88.
+entry_timeout_sec and entry-order shape UNTOUCHED
+(DEC-122-coupled; resolve in the DEC-122 disposition session).
+v2_89 supersedes all prior versions.
 
 v2_88: DEC-123 Phase G -- 0500000 provenance externalization.
 Figure provenance (figcaption provenance/extension stacks, root
@@ -29,8 +46,7 @@ new R + pointer -- never stacks provenance into the diagram.
 Section 4.6 amended with this two-document delivery discipline.
 Binary test DEC-096: provenance is document-control, not
 trading-organism architecture. Companion: 0311003 v1_3 (VP-008),
-0311001 v1_46 (15.16.3 + 15.16.2(e)), 0521001 dv1_1. v2_88
-supersedes all prior versions.
+0311001 v1_46 (15.16.3 + 15.16.2(e)), 0521001 dv1_1.
 
 v2_87: section 8 B1 rider to the TB00625 D2 gap-fix amendment
 (0500000 dv1_184 -> dv1_185, DEC-121). Pinned the entry-timing
@@ -404,14 +420,18 @@ does not own the balance. Paper starting balances are synthetic
 decision.
 
 EXITS (Exit Controller owns all normal exits):
-  Layer 1 - signal-based and take-profit exits.
+  Layer 1a - regime-reversal exit: THE take-profit (run to
+             reversal; no fixed TP price, no resting TP
+             order, no max-hold time cap). DEC-124.
   Layer 2 - MAE threshold breach (1.5x ATR).
   Layer 3 - Kraken resting stop-loss: emergency brake only;
             fires ONLY on VPS/TothBot/internet failure; must
             never fire in normal operation.
 
 SACRED CONSTRAINT - net 1:1.5 R:R minimum. The minimum expected
-reward-to-risk on every trade and the only hardcoded value.
+reward-to-risk on every trade and the only hardcoded value. It
+is an entry-acceptance floor ONLY - never a cap, never an exit
+price (DEC-124).
 CIATS may never propose, size, or accept below it. CIATS owns
 the sizing curve ABOVE the floor (higher expected R:R may get
 larger allocation). The module wallet balance is the sole
@@ -464,7 +484,22 @@ CIATS - exit controller
   emergency_sl_mult     = 3.0x ATR(14)
   cancel_timeout_window = 5.0 s
   mpp_retry_count       = 3
-  max_hold_candles      = 24 (2h at 5-min)
+
+CIATS - run-to-reversal expected-reward estimator (DEC-124)
+  expected_reward_estimator_seed = historical-OHLC backtest
+                           seed (Bill ruling TB00654): replay
+                           the EC-L1A-001/EC-L1A-002 regime-
+                           reversal exit condition over
+                           historical OHLC per pair/regime;
+                           seed = central-tendency realized
+                           favorable excursion as a fraction
+                           of entry_fill_price. Feeds the A1
+                           acceptance floor ONLY; never an
+                           exit price. Per-module; tuned from
+                           paper data from the 200-trade
+                           floor. Mechanism canonical at D9
+                           compute:expected_reward_run_to_
+                           reversal + D3.
 
 CIATS - entry timing
   entry_timeout_sec = 30s GTD start (CIATS band 30-60s)
