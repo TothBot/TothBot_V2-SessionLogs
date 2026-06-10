@@ -1,0 +1,163 @@
+DocDCN:     TB00650
+DocTitle:   Session_Log
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00650_Session_Log_v1_0.txt
+DocDate:    06-09-2026
+DocTime:    21:50:00 UTC
+
+============================================================
+TB00650 SESSION LOG -- DEC-124 RATIFIED: RESTORE RUN-TO-
+REVERSAL EXIT; REMOVE FIXED-TP CAP + MAX-HOLD CAP; SACRED
+1:1.5 R:R REDEFINED AS ENTRY-ACCEPTANCE FLOOR (NOT EXIT CAP).
+DEC-122 CR-13/CR-14 DEAD. NO DIAGRAM EDITS THIS SESSION.
+============================================================
+
+CONTEXT / WHY THIS SESSION EXISTS
+  Opened on TB00649 NSI: DEC-122 remainder CR-13 + CR-14
+  (entry-fill fee taker-in correction + net-R:R recompute on
+  the fee/R:R arithmetic surfaces; DR-079 closure on CR-13).
+  The session was diverted by a Bill-identified architectural
+  defect surfaced during the CR-13/CR-14 chat-turn-1 census,
+  and closed on a ratified reversal (DEC-124) that supersedes
+  the CR-13/CR-14 work.
+
+SESSION-OPEN VERIFICATION (RR-SCOPE-008 -- PASSED)
+  Cold-loaded both repos via public tarball. Live HEAD matched
+  every TB00649 baseline, each SOLE:
+    Docs:  0500000 dv1_206 = a6a1b647362aee0db330b3d05cdc2e81 (SOLE)
+           0521001 dv1_16  = 61f1668aabf441978c5b23c1bf8a4713 (SOLE)
+           0311001 v1_46   = e22898b2eda879f135421454587ef0b3
+           0311003 v1_3    = dd5fbc7a7c071a85e2d2b8ee9fd10fa3
+           ABSENT confirmed: 0500000 dv1_204/dv1_205 ; 0521001 dv1_14/dv1_15
+    Logs:  TB00000 v2_88   = cff8df6d8310d38cec2ac774ae87868d
+           TB00153 Decision_Register v1_90 = 3e7d1b345009294b123de4ff6e2ea163
+           TB00648 SL + TB00649 NSI present.
+  SD-13 five-part check: consolidation CLOSED (TB00000 v2_86);
+  PHASE M + PHASE S complete; DR-078 N/A; diagrams sole
+  canonical source.
+
+CHAT-TURN-1 CENSUS (CR-13/CR-14) -- COMPLETED, THEN OVERTAKEN
+  Enumerated every live dv1_206 surface encoding a fee basis or
+  net-R:R figure (RR-SCOPE-008, seed list D9/D7 NOT trusted):
+    R-BUMP figures: D9 Image9 Gate-8 Position Sizer (R3) net_loss
+      box + subtext; D3 Image3 Exit Architecture (R9) R:R-formula
+      net_loss text.
+    desc-only (R held): D5 Image5 schema fields (12) fees_entry_usd
+      "(maker fee on entry)" + (13) fees_exit_usd "(taker fee on
+      exit/TP)" -- both reversed under taker-in/maker-out.
+    diagram-tied prose: section 4.2 R:R Formula; section 8
+      estimated_cost (long + short, "(1 + maker_fee)"); section 12
+      paper ledger "fees_entry = entry_proceeds * FEE_MAKER_PCT".
+    D7 Image7 (R8): NO figure change (visible text only names both
+      fee params); stale content is the section-12 prose.
+    Worked round-trip figures in AR-065 / DEC-117 Kelly narrative:
+      D5 CIATS_Statistical_Engine desc + section 8 AR-065 prose
+      ("0.42% round-trip"). These were the only NUMERIC recompute
+      and were surfaced to Bill as the one non-mechanical item.
+  This census is preserved here for the DEC-124 successor work;
+  the CR-13/CR-14 corrections themselves were NOT executed (see
+  below).
+
+THE DEFECT BILL IDENTIFIED
+  While reviewing the fee/R:R surfaces, Bill flagged that the
+  live V2 take-profit model CAPS winning positions: a fixed
+  resting post_only TP limit is placed at entry at gross_target
+  = net_gain (= net_loss x 1.5), so a winner auto-sells at
+  exactly 1.5x risk; plus max_hold_candles = 24 forces a 2-hour
+  TIME_EXPIRY exit. Bill stated this contradicts the original
+  TothBot design (run-to-reversal, no fixed target, no max
+  hold), that he did not authorize the change, and directed that
+  the "when did it change" question not be pursued.
+
+ARCHIVE TRACE (public github.com/TothBot/TothBot-Docs, HEAD)
+  0741001_Exit_Controller_Module_Spec_dv1_3 -- the original
+  design EXPLICITLY analyzed and rejected BOTH caps V2 later
+  reintroduced:
+    section 3.3 "Why No Separate Take Profit Rule": a fixed TP
+      "caps the upside of winning positions at an arbitrary
+      price level"; a position at target may still hold edge
+      (target is not evidence, the reversal signal is); a
+      10,000-trial FP/DP simulation (2026-03-17) of run-to-
+      reversal (Method A) vs fixed TP (Method C) gave higher
+      average win + profit factor for run-to-reversal, loss
+      metrics within noise, and LOWER max portfolio drawdown
+      (1.64% vs 1.97%); the reversal signal IS the take-profit
+      mechanism (one exit rule governs all).
+    section 3.4 "Why No Maximum Hold Time": a time limit
+      "would systematically cut winning positions that have
+      sustained edge ... directly conflicts with the profit
+      maximization mission"; CIATS monitors hold-time
+      distributions instead of a hard limit.
+  The original used the reversal detector (DPS reversal) as the
+  sole take-profit / time governor. min R:R existed (PARAM-006,
+  0731002) as a TUNABLE entry-acceptance parameter, NOT a fixed
+  exit target. No authorization record for the V2 reintroduction
+  of the caps was sought (per Bill direction).
+
+BILL RULING -- DEC-124 (RATIFIED IN CHAT; AUTHORITATIVE per
+TB00000 section 4.1 chat-turn directive)
+  1. The sacred net 1:1.5 R:R minimum STAYS sacred and hardcoded
+     but is the ENTRY-ACCEPTANCE FLOOR ONLY -- a minimum-expected-
+     value admission test on expected R:R at entry. It NEVER
+     closes a position. It is NOT an exit cap.
+  2. RUN-TO-REVERSAL is the exit point for the WHOLE position.
+     No fixed gross_target TP limit; no max-hold time cap. V2's
+     regime-reversal detectors (HTF_REGIME_REVERSAL /
+     DAILY_REGIME_DOWNGRADE) carry the original DPS-reversal
+     role; protective exits (MAE Layer 2, emergency stop Layer 3)
+     are retained for the loss side.
+  3. The expected-reward input to the 1.5 entry floor is a CIATS-
+     owned estimate of run-to-reversal size, seeded pre-200-
+     trades and refined from paper-trading data after the floor.
+     Data-driven, never guessed -- the explicit purpose of the
+     original analysis.
+  4. EV FRAME (Bill, governing rationale): the decision is an
+     expected-value computation over the outcome DISTRIBUTION,
+     not per-trade. Some individual trades give back more, but
+     the original 10,000-trial sim showed the net delta is
+     positive (higher average win + profit factor) AND lower max
+     drawdown -- +EV on both the profit tail and the loss tail.
+     The 1.5 floor is the minimum-EV entry admission test (the
+     "fold" on sub-1.5 setups); run-to-reversal is the +EV
+     harvest (no right-tail truncation); CIATS is the EV
+     estimator that sharpens with data.
+
+CONSEQUENCE
+  DEC-122 CR-13 + CR-14 (entry-fill fee taker-in correction +
+  net-R:R recompute) are DEAD. They corrected the fee basis ON
+  the fixed-TP gross_target arithmetic, which DEC-124 removes;
+  with no resting maker TP limit the maker-out exit fee basis no
+  longer applies. The CR-13/CR-14 census above is retained only
+  as input to the DEC-124 surface map.
+
+WHAT WAS DONE / NOT DONE
+  NO diagram edits. NO version bump. Live HEAD UNCHANGED:
+  0500000 dv1_206 / 0521001 dv1_16 remain SOLE and byte-
+  identical to session open. TB00000 (v2_88), TB00153 (v1_90),
+  0311001 (v1_46), 0311003 (v1_3) UNCHANGED. The DEC-124
+  decision is recorded here and carried forward in TB00651; its
+  formal TB00153 Decision Register entry + the full restoration
+  change register + any TB00000 amendment are the next session's
+  work (see TB00651).
+
+STALE-PENDING-DEC-124 (flagged, not yet edited)
+  - TB00000 section 7 EXITS ("Layer 1 - signal-based and take-
+    profit exits") and section 8 (max_hold_candles = 24; the
+    fixed-TP TP-maker fee seed framing) now MISDESCRIBE the
+    ratified model. Amend as part of DEC-124.
+  - DEC-122 remainder CR-15..CR-20: CR-13/CR-14 dead; CR-15..CR-19
+    (section 7/8 seed updates incl. per_trade_size_usd formula +
+    fee seeds) and CR-20 (clean-slate re-audit -> PHASE 2 OPTION B
+    code-gen) must be RECONCILED against DEC-124 before resuming
+    (some seeds survive, the TP/max-hold-dependent ones do not;
+    CR-20 re-audit must reflect run-to-reversal).
+
+CARRY-FORWARD (deferred housekeeping, unchanged)
+  TB00153 one-version backlog; stale plans 0911002 / TB00394;
+  Tier-1 Context display-label R2 -> actual-count catch-up;
+  CI-005/CI-006 dangling-citation reconciliation.
+
+============================================================
+END TB00650 SESSION LOG
+============================================================
