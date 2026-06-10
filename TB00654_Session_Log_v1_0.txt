@@ -1,0 +1,171 @@
+DocDCN:     TB00654
+DocTitle:   Session_Log_TB00654
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00654_Session_Log_v1_0.txt
+DocDate:    06-09-2026
+DocTime:    22:15:00 UTC
+
+============================================================
+SESSION LOG TB00654
+============================================================
+
+MISSION (one per session): DEC-124 RUN-TO-REVERSAL RESTORATION
+-- Slice 2: correct Diagram 9 (Image9 Gate-8 Position Sizer) on
+the 0500000 design diagram and AUTHOR the new CIATS run-to-
+reversal expected-reward estimator into it. DEC-003 Path A
+(one diagram surface per session). Inbound NSI consumed:
+TB00653_Next_Session_Instructions_v1_0.
+
+------------------------------------------------------------
+1. SESSION-OPEN VERIFICATION (RR-SCOPE-008) -- ALL PASS
+------------------------------------------------------------
+Cold-loaded both repos via public tarball (codeload HEAD).
+Read: TB00000 v2_88, TB00652 (most recent log), TB00653 (NSI).
+Live HEAD baselines, each verified SOLE (one-version rule held):
+  0500000 dv1_207   md5 f9a0be52c484f24ae20e800368b310d2
+  0521001 dv1_17    md5 8ebd1ebac8c0883cc89f7805a4204d75
+  0311001 v1_46     md5 e22898b2eda879f135421454587ef0b3
+  0311003 v1_3      md5 dd5fbc7a7c071a85e2d2b8ee9fd10fa3
+  TB00000 v2_88     md5 cff8df6d8310d38cec2ac774ae87868d
+  TB00153 Decision_Register v1_90  present
+ABSENT confirmed (no stale versions in HEAD): 0500000 dv1_206;
+0521001 dv1_16.
+SD-13: consolidation CLOSED (TB00000 v2_86); diagrams sole
+source; DR-078 N/A.
+NOTE: dv1_207 shipped with its internal DC-header lagging at
+dv1_206 (HTML title + DocVersion + DocPath) -- a pre-existing
+TB00652 close lag; corrected to dv1_208 this session (see sec 3).
+
+------------------------------------------------------------
+2. DECISION SURFACED + BILL RULING THIS SESSION
+------------------------------------------------------------
+The TB00653 NSI step 3(c) requires authoring the NEW CIATS run-
+to-reversal expected-reward estimator into D9 to completeness
+standard. Its SEEDED FORM pre-200-trades was the one non-
+derivable modelling choice (DEC-124 point 3: "data-driven,
+never guessed"); the NSI NOTE directed surfacing rather than
+guessing. Surfaced to Bill chat-turn 1 with three candidate
+forms (flat ATR multiple / regime-scaled ATR / continuous ADX-
+scaled).
+
+BILL RULING (TB00654, chat-turn, AUTHORITATIVE per TB00000 sec
+4.1): the estimator seed is DERIVED FROM HISTORICAL DATA --
+"use historic data, which is readily available, and move
+forward from there in paper trading; actual historic data is
+absolutely fine to kick-start paper trading." (This was settled
+in TothBot V1 design.) ESTIMATOR FORM as authored: expected_
+reward = the CIATS expected favorable run-to-reversal excursion
+for the candidate pair/regime, expressed as a fraction of
+entry_fill_price; SEEDED pre-floor from a HISTORICAL OHLC
+BACKTEST of the regime-reversal exit (HTF_REGIME_REVERSAL /
+DAILY_REGIME_DOWNGRADE), TUNED from realized paper outcomes
+after the 200-trade floor; read per candidate from the tick-
+start snapshot (no hot-path backtest). The numeric SEED VALUE
+is NOT in 0500000 (binary test DEC-096) -- home is TB00000 sec
+9, in the prose/seed slice.
+
+------------------------------------------------------------
+3. WORK EXECUTED -- D9 (Image9 Gate-8 Position Sizer)
+------------------------------------------------------------
+0500000 dv1_207 -> dv1_208. Diagram 9 R3 -> R4
+(TB00453: visible <text> + SVG geometry changed -> figure R
+BUMP). All 9 other figures byte-identical (DEC-003 Path A);
+change-localization VERIFIED (only the D9 figure block, file
+figure index 4, plus the 4 DC-header lines 6/135/137/139 differ
+between dv1_207 and dv1_208). D9 <svg> parses as well-formed
+XML; figure count 10; <svg> 10/10; figcaption 10/10; <title>
+126 -> 125 (net node delta -2 deleted + 1 added). DR-007.9
+html.parser pass, 0 exceptions.
+
+Changes on D9 (R3 -> R4):
+  - DELETED g8d_gross_target (visible + desc): no exit-price
+    target under run-to-reversal (NSI step a).
+  - DELETED g8d_net_gain_sacred (visible + desc): derivable
+    consequence -- net_gain = net_loss x 1.5 was purely the
+    constructive bridge to gross_target; with gross_target gone
+    it has zero consumers and fails completeness. The sacred
+    x1.5 now lives entirely in the A1 admission test.
+  - REDEFINED g8d_a1_acceptance (rule:Expected_RR_A1_
+    Acceptance) to the DEC-124 entry-acceptance test: ACCEPT
+    iff expected_reward / net_loss >= 1.5; reject below floor
+    (evt:G8_A1_REJECT) (NSI step b). Consumes expected_reward +
+    net_loss; gates all downstream sizing. G4/TB00627 Option-B
+    accept-side observable (no accept event; recorded by
+    evt:G8_SIZED) PRESERVED.
+  - REDEFINED g8d_net_loss to the DEC-124 fee basis: net_loss =
+    mae_pct + entry taker fee + MAE taker fee (BOTH legs
+    FEE_TAKER_PCT) -- marketable-IOC taker entry (DEC-122) +
+    taker MAE market-sell; no maker leg (NSI step b). Supersedes
+    the prior maker-in 0.16% + taker 0.26% rendering. Fee seed
+    VALUE reconciliation stays a sec-9/sec-8 item.
+  - AUTHORED g8d_expected_reward (compute:expected_reward_run_
+    to_reversal) to completeness standard -- q1_do / constraints
+    / consumes / produces / q4_triggers / q5_logs all explicit
+    and code-derivable (NSI step c). Produces expected_reward
+    consumed by A1.
+  - SIZED bundle (g8d_sized_output + evt:G8_SIZED payload)
+    changed from { entry_fill_price, net_loss, net_gain, gross_
+    target, emergSL_dist } to { entry_fill_price, net_loss,
+    expected_reward, emergSL_dist }.
+  - Geometry reflowed to a parallel-inputs-then-gate layout
+    (estimator + mae/net_loss in parallel feed the A1 diamond;
+    PASS -> emergSL -> SIZED; BELOW FLOOR -> REJECT). New input-
+    band + pass-band headers; footer notes + inputs legend
+    rewritten to the DEC-124 model. viewBox 1500x980 preserved.
+  - R4 propagated to SVG <title> + diagram_canonical + title-bar
+    main title + subtitle identifier + root <desc> CURRENT-R +
+    figcaption (a). DEC-123 pointer to 0521001 5.8 updated.
+  - DC-HEADER lag corrected: HTML title + DocVersion + DocPath
+    dv1_206 -> dv1_208; DocTime refreshed.
+
+0521001 dv1_17 -> dv1_18: appended the D9 R3 -> R4 amendment
+narrative under section 5.8 (DEC-123 append-only forensic
+record). Verified strictly append-only (reverse-reconstruction
+== dv1_17 exactly). Header bumped.
+
+------------------------------------------------------------
+4. DELIVERABLES (authored md5)
+------------------------------------------------------------
+  0500000_System_Architecture_Overview_dv1_208_Claude_Source.html
+      md5 4e09f9f059a826d17879a052c394f2d2
+  0521001_System_Architecture_Overview_Revision_History_dv1_18.txt
+      md5 a4bba42f133bd5ccdff841443e790d6a
+Superseded in HEAD by this push (git rm --cached):
+  0500000 dv1_207 ; 0521001 dv1_17.
+
+------------------------------------------------------------
+5. CARRY-FORWARD -- DEC-124 CAMPAIGN REMAINDER
+------------------------------------------------------------
+Figure slices (one per session, DEC-003 Path A), in order:
+  D6 Image6 Complete System (R13) -- 4-layer -> 3-layer;
+     Matching_Engine no resting TP; Sacred R:R node -> entry-
+     floor wording.
+  D2 Image2 Trading Pipeline (R9) -- G8 TP-formula removal; drop
+     layer:L1b_TP_Fill drill; ON-FILL split removal.
+  D5 Image5 CIATS Architecture (R15) -- exit_reason enum remove
+     TP_FILL + TIME_EXPIRY + SUB_MIN_RESIDUAL_ABANDONED; Logger
+     registry drop LAYER1B_TP_FILL.
+  D7 Image7 Paper-Mode Dispatch (R8) -- paper exit = taker
+     market sell; remove PAPER_TP_FILL_DETECTED.
+  D1 Image1 Kraken Connection (R13) -- emergSL-only; remove
+     TP-leg; WS-TP-003 dust branch removal.
+Prose (own slice): 0500000 sec 8 / sec 11 / sec 12 + sec 9 seeds
+  (REMOVE max_hold_candles=24; ADD run-to-reversal estimator
+  seed value; reconcile per_trade_size + fee seeds entry-taker /
+  exit-taker). Also the D9-surface stale prose left this session:
+  sec 3.2 intro <p> + sec 4.1 Layer 1b + sec 4.2 R:R Formula.
+Governance (own slice): TB00153 enter DEC-124 (v1_90 -> v1_91) +
+  retire DR-079 + retire ar:AR-066 framing; 0311001 retire token
+  ar:AR-066; TB00000 v2_88 -> v2_89 (sec 7 EXITS + sec 8).
+Then DEC-124 final re-audit -> ungate PHASE 2 OPTION B code-gen.
+Deferred housekeeping (unchanged): TB00153 one-version backlog;
+  stale plans 0911002 / TB00394.
+
+------------------------------------------------------------
+6. NEXT SESSION
+------------------------------------------------------------
+Follow TB00655_Next_Session_Instructions_v1_0. Next slice: D6.
+============================================================
+END
+============================================================
