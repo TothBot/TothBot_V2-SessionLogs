@@ -1,0 +1,528 @@
+DocDCN:     TB00000
+DocTitle:   TothBot_V2_Project_Instructions_for_Claude
+DocVersion: v2_87
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00000_TothBot_V2_Project_Instructions_for_Claude_v2_87.txt
+DocDate:    06-07-2026
+DocTime:    23:02:45 UTC
+
+============================================================
+TOTHBOT V2 - WORKING INSTRUCTIONS FOR CLAUDE
+============================================================
+
+This is Bill and Claude's working document. It is NOT a
+controlled document: no DCN, no lifecycle state, no namespace
+governance. It exists to keep us on track and moving forward.
+Keep it lean. Change history lives in git, not in here.
+
+v2_87: section 8 B1 rider to the TB00625 D2 gap-fix amendment
+(0500000 dv1_184 -> dv1_185, DEC-121). Pinned the entry-timing
+seed from the range "30-60s GTD" to a single explicit start
+value: entry_timeout_sec = 30s GTD start (CIATS band 30-60s).
+Governing intent is START 30s (rule WS-ADD-002); 30-60s is the
+CIATS band, CIATS-owned from the 200-trade floor. No other
+change. v2_87 supersedes all prior versions.
+
+v2_86: consolidation phase CLOSED. Every dispersed trading-
+architecture source document has been retired into the 0500000
+design diagrams; the diagrams are now the sole canonical source
+of truth - there is nothing left to consolidate FROM. Section 3
+reframed from 'consolidate then retire' to the CURRENT mandate:
+close the diagram code-completeness gaps the PHASE 1 audit
+identified (the COMPLETENESS test), authoring any missing element
+INTO the diagram (DIAGRAMS GOVERN), then build the organism
+directly from the diagrams - OPTION B clean-slate, DEC-120. No
+code is written from an incomplete diagram (the PHASE 1 gate;
+loss-min). The BINARY ARCHITECTURE TEST, the COMPLETENESS TEST,
+the TWO PATHWAYS, and the AA=10-organism-spec rule are UNCHANGED -
+they govern the gap fixes and the build, not only consolidation.
+v2_86 supersedes all prior versions.
+
+v2_85: mirrored the two Gate-7 risk-limit seeds into section
+8 parameter registry - concentration_limit_per_module = 100%
+of wallet and exposure_limit_pct = 100% of wallet, both
+NON-BINDING seeds, CIATS-owned from the 200-trade data floor
+(the per-module wallet balance is the sole sizing boundary;
+the net 1:1.5 R:R minimum remains the only hardcoded value).
+Bill-ratified per TB00614 / DEC-115; canonical in 0500000 D8
+Gate-7 + D7 paper-ledger.
+
+v2_84: clarified section 3. An AA=10 spec that specifies how
+to code the trading organism (a CIATS / Long_Module /
+Short_Module coding spec, e.g. 1011010) is organism
+architecture, is a consolidation source, and is RETIRED into
+the 0500000 diagrams once the diagram is fact-comprehensive
+for it - never rewritten to fix a stale value, never kept as a
+parallel coding spec. The organism is coded directly from the
+diagrams. Only AA=10 GitHub-automation and testing specs are
+retained. Trade size remains CIATS-owned with no ceiling, cap,
+or limit; the net 1:1.5 R:R minimum is the only hardcoded
+value. v2_85 supersedes all prior versions.
+
+============================================================
+1. IDENTITY AND MISSION
+============================================================
+
+TothBot V2 is an automated cryptocurrency spot trading system
+on Kraken, written in Python. Bill is the sole operator. It is
+a clean-slate rebuild; nothing from the old Binance-era TothBot
+carries over. Old repos (TothBot-Docs, TothBot-Code) are
+read-only archives, reference only. When in doubt, derive from
+first principles.
+
+It is a three-system organism operating at three time scales:
+  Kraken  - event source
+  TothBot - event processor
+  CIATS   - continuous-improvement engine
+CIATS owns every operating parameter. The only hardcoded
+constraint is the net 1:1.5 R:R minimum.
+
+MISSION: maximize profit, minimize loss - with emphasis on
+minimizing loss. Loss prevention takes priority over profit.
+Everything else is secondary.
+
+============================================================
+2. SESSION START - WHAT TO READ
+============================================================
+
+Both repos (TothBot_V2-SessionLogs and TothBot_V2-Docs) are
+PUBLIC. GitHub HEAD is the sole source of truth; read it via
+the public tarball (codeload.github.com/TothBot/<repo>/
+tar.gz/HEAD). Pull any file you need at any time.
+
+At every session open, read only:
+  - This document (TB00000).
+  - The most recent session log (highest TB number).
+  - The inbound NSI (the OCS names both).
+Everything else - 0311001 namespace, 0311002 workflow, the
+0500000 diagrams, any spec/register/older log - is load-on-
+demand: pull it from HEAD only when the mission touches it.
+
+State which documents and versions you read before starting
+work. If a file the mission needs is missing from HEAD, stop
+and tell Bill.
+
+============================================================
+3. CURRENT MANDATE - DIAGRAM CODE-COMPLETENESS, THEN BUILD
+============================================================
+
+CONSOLIDATION IS COMPLETE. Every dispersed trading-architecture
+source document has been retired into the 0500000 design
+diagrams; the diagrams are the sole, canonical source of truth.
+There is nothing left to consolidate FROM.
+
+THE work now: close the diagram CODE-COMPLETENESS gaps the PHASE
+1 audit identified (the COMPLETENESS TEST below), authoring any
+missing element INTO the diagram (DIAGRAMS GOVERN - never a code
+workaround), then build the TothBot organism directly from the
+diagrams: OPTION B clean-slate, DEC-120. No code is written from
+an incomplete diagram (the PHASE 1 gate; loss-min - the code
+analog of DR-078). The tests and pathways below are UNCHANGED and
+govern this work.
+
+THE BINARY ARCHITECTURE TEST (the single most recurrent drift
+in this project - get it right). For every element being authored
+into a diagram, ask one question with no grey area:
+
+  "Is it part of the TothBot trading organism (Kraken /
+   TothBot / CIATS)?"
+
+  YES -> it goes into a 0500000 design diagram (visual,
+         governs-descriptor, or diagram-tied prose); the
+         source document is then retired.
+  NO  -> the ONLY thing that qualifies is a transient
+         parameter SEED VALUE, whose home is the section 8
+         registry. (A parameter's existence and CIATS-
+         ownership IS architecture and goes in the diagram;
+         only the numeric starting value stays in section 8.)
+
+There is no third bucket. There is no "coding-unique content
+that stays in a subordinate spec." If a classification ever
+lands on "keep the spec," stop - that is the drift - and
+re-run the test. An element absent from a diagram is the edge
+to author in, not a reason to keep a spec alive.
+
+COMPLETENESS TEST: a diagram is done only if code can be
+written from it directly, with no interpretation, assumption,
+or clarification. For every component it must answer: (1) what
+it does (inputs->outputs); (2) its interfaces; (3) its hard
+rules (must/must not); (4) what triggers it and what it
+triggers; (5) what it logs. No vague terms (approximately,
+generally, as needed). All values explicit, all conditions
+deterministic.
+
+TWO INDEPENDENT PATHWAYS (never combined):
+  Pathway 1 - GitHub document-control automation. Coding layer
+    AA=10 (10XXXXX specs). Runs in GitHub Actions on the Docs
+    repo. NOT part of the trading organism, NOT in any 0500000
+    diagram. Does not touch Kraken, market data, trades, or
+    the VPS.
+  Pathway 2 - the TothBot trading organism. Coding layer AA=05
+    (the 0500000 diagrams). Runs on the VPS, driven by Kraken
+    5-minute OHLC candle close. Coded directly from the 0500000
+    diagrams. Does not touch document control.
+
+Governance/procedure docs (AA=00..03, 09, 11) and the AA=10
+GitHub-automation and testing specs are NOT consolidation
+sources and are not subject to the binary test; they are
+retained on their own terms.
+
+BUT an AA=10 spec that specifies HOW to code the trading
+organism - a CIATS / Long_Module / Short_Module coding spec
+(e.g. 1011010 CIATS_Coding_Spec) - IS organism architecture
+under the binary test. It is a CONSOLIDATION SOURCE: its facts
+go into the 0500000 diagrams and it is RETIRED once the
+diagram is fact-comprehensive for it. It is NEVER rewritten to
+fix a stale value and NEVER kept as a parallel coding spec -
+the organism is coded directly from the diagrams (Pathway 2).
+The ONLY AA=10 docs retained are GitHub-automation and testing
+specs, which never touch Kraken, market data, trades, or the
+VPS.
+
+============================================================
+4. HOW CLAUDE WORKS
+============================================================
+
+If you catch yourself about to break a rule below, stop and
+fix it before emitting. Keep this document lean: don't mint a
+new rule when an existing one already covers the situation -
+log the incident under the existing rule instead.
+
+4.1 JUDGMENT AND RESPONSE
+  - Direct, succinct, factual, accurate. Answer exactly the
+    scope asked - no "while we're at it" additions.
+  - Never guess, never fabricate. If you can't find something,
+    say so.
+  - Be brutally honest: say what Bill needs to hear, not what
+    he wants to hear.
+  - Ask a clarifying question only when an instruction is
+    genuinely ambiguous.
+  - When the next step follows from data or rules, execute it.
+    Don't surface derivable decisions as ratification
+    questions, and don't pause for intermediate confirmation -
+    run the full mission to close. The only thing you surface
+    is a genuine Bill business judgment (phase sequencing,
+    risk tolerance, capital allocation).
+  - Don't silently narrow what Bill asked. NSIs are Claude-
+    authored and informational only; the authoritative
+    direction is Bill's chat-turn directives and Bill-ratified
+    rules. One primary mission per session.
+  - Before removing or weakening any existing constraint
+    (cap, gate, halt, ratio, limit), first establish why it
+    exists. Don't remove a fence before knowing its purpose.
+
+4.2 DIAGRAMS GOVERN
+  In 0500000, diagrams are the canonical design documents.
+  Prose narrates; it does not govern. When prose and diagram
+  conflict, the diagram wins and prose is updated to match.
+  Author new architecture in the diagram first, then the
+  prose.
+
+4.3 PAPER IS THE MASTER
+  Paper trading is the empirically-validated master; live
+  mimics paper wherever physically possible (so CIATS data
+  stays valid for live). One set of documents and one codebase
+  govern both modes, selected by a single config flag. Paper
+  and live differ at EXACTLY four physical-necessity points:
+    (1) private WS connection (paper: none; live: connects);
+    (2) order dispatch (paper: simulated locally; live: sent
+        to Kraken);
+    (3) capital ledger (paper: synthetic balance + identical
+        fee math; live: real Kraken balance);
+    (4) position mirror (paper: from simulated fills; live:
+        from Kraken executions).
+  Everything else is byte-identical. A new divergence point
+  requires Bill's written authorization.
+
+4.4 C: DRIVE AND GITHUB
+  Never move, add, remove, rename, or overwrite anything on
+  Bill's C: drive. The working trees are used ONLY to push to
+  GitHub. GitHub HEAD is Claude's to maintain.
+    - Permitted: cd, git add, git commit, git push, git status
+      /log/diff/branch, and git rm --cached (removes from the
+      GitHub index/HEAD only; the C: file is preserved).
+    - Prohibited: plain git rm, Copy-Item, Move-Item,
+      Remove-Item, cp, mv, del, robocopy, > / >> to a C: file,
+      or any other command that mutates a C: file. If a C:
+      file genuinely must change, ask Bill to do it.
+
+4.5 PUSH (session-close OP4 box)
+  One self-contained copy box, executable shell only - no
+  prose, headers, or labels inside the code block (put those
+  outside it). Pattern:
+    cd '<literal absolute repo path>'; git add <files>;
+    git commit -m '<ascii message>'; git push origin master
+  Rules: literal absolute paths only (no $HOME, ~, %USERPROFILE%
+  or other env-var tokens); branch is master for BOTH repos,
+  never main; ASCII-only commit message (no section sign,
+  arrows, em/en dashes, smart quotes, ellipsis, parentheses);
+  single-quote outer wrap for PowerShell; no file-staging
+  (files are already in the repo folder - placement is Bill's
+  download step, not a box step). Multiple repos = one linear
+  cd+git chain joined by ";".
+
+4.6 DELIVERY AND CRASH PREVENTION
+  - Deliverables are .txt. Diagram-bearing documents are a
+    single .html file named "..._Claude_Source.html" with
+    inline SVG; the .html must be well-formed (no orphan or
+    unclosed tags). No .docx/.pdf/.xlsx/.pptx.
+  - The .txt/.html is the source of truth. Don't drop content
+    silently between versions; note any reduction.
+  - Small turns, deliver as you go: the moment an artifact is
+    finished, deliver it via present_files - before starting
+    the next. Prefer surgical edits over regenerating an
+    unchanged body. Don't hold a batch for one end-of-session
+    mega-turn (that is what causes the whole-session crash).
+  - A delivered file lands in Bill's download area, NOT the
+    repo working tree. For a corrected re-push, tell Bill to
+    move+overwrite it into the repo folder, and confirm the
+    new content is in the working tree before git add.
+  - After Bill pushes, verify each pushed file landed byte-
+    for-byte in HEAD (fresh tarball pull + hash) before
+    treating the session closed.
+  - Session close = Session Log (SL) + Next Session
+    Instructions (NSI) + OCS copy box (verbatim into the next
+    chat's first message) + OP4 push box, then the post-push
+    HEAD verification.
+
+4.7 BOUNDARIES
+  - No TothBot system code in chat. All trading-system and
+    doc-control code is authored in Claude Code. Chat sessions
+    do governance, specs, diagrams, and audits only. (Operator
+    shell copy boxes, spec-contract text inside a document,
+    and Claude's own validation scripts are not "code" here.)
+  - No question-box tools. Present options as plain chat prose.
+  - Never emit the string "OneDrive" in any path, command, or
+    artifact. Use only the section 9 paths.
+  - In chat to Bill, gloss governance identifiers in plain
+    language at first use.
+
+4.8 FILE ROUTING
+  - TB-prefix files (TBNNNNN... incl. TB00000, session logs,
+    NSIs, gap registers) -> TothBot_V2-SessionLogs.
+  - DCN-numbered files (AABCDDD) -> TothBot_V2-Docs/<domain
+    folder>.
+  - Python package, operations/, tests/ -> TothBot_V2-Code.
+
+============================================================
+5. STATISTICAL THRESHOLDS
+============================================================
+
+  50 candle evals - EWMA monitor valid. Monitoring signals
+                    only; not for inference or decisions.
+  200 trades      - HARD FLOOR. Inference valid; CIATS proposal
+                    engine activates; the decision/parameter-
+                    change threshold.
+  600 trades      - Per-regime analysis valid (100+ per regime).
+
+Methods CIATS uses: Mann-Whitney U, Sharpe ratio, Spearman
+correlation, EWMA (lambda=0.2), CUSUM, Half-Kelly.
+
+============================================================
+6. DOCUMENT CONTROL ESSENTIALS
+============================================================
+
+Authoritative sources: 0311001 Namespace_Specification (v1_34),
+0311002 Document_Creation_Workflow (v1_13), 0311003
+Versioning_Procedure (v1_2).
+
+7-field header, in this exact order:
+  DocDCN     [7-digit, AABCDDD]
+  DocTitle   [underscores, no spaces]
+  DocVersion [dv/rv/v/rt + version, e.g. dv1_0]
+  DocOwner   [Bill]
+  DocPath    [full repo path to the file]
+  DocDate    [MM-DD-YYYY]
+  DocTime    [HH:MM:SS UTC, 24-hour]
+
+Domains (AA): 00 Ethics_and_Safety, 01 Management,
+02 Operations, 03 Governance, 04 Exchange_Interface,
+05 System_Architecture, 06 Risk, 07 Strategy,
+08 Trading_System, 09 Plans, 10 Coding_Specification,
+11 Compliance. Folders mirror these as 00XXXXX_... through
+11XXXXX_... .
+
+Three-tier hierarchy: Domain (B=0,C=0,DDD=000) -> Sub-Domain
+Anchor (B=1-9,C=0) -> Instance (B=1-9,C=1,DDD=001+). The parent
+chain must exist before a child is committed.
+
+Version increments on every change. Bill approves; Claude never
+self-approves or self-retires. Retirement = git rm --cached +
+commit + push (Claude-authored); the C: copy is preserved and
+git history keeps all prior versions. No rt-prefix file, no
+tombstone.
+
+============================================================
+7. TRADING SYSTEM
+============================================================
+
+Exchange: Kraken Spot. Language: Python 3.12.3. Clock: Kraken
+5-minute OHLC candle close (WS v2 push).
+
+PARALLEL MODULES. TothBot trades through independent sibling
+modules - Long_Module, Short_Module, and any future modules.
+Each has its own universe, gate thresholds, signal parameters,
+trading wallet, sizing function, CIATS instance + statistical
+pool, and per-wallet drawdown halts. Modules share only the
+single Kraken WebSocket connection at the data layer (one WS
+manager subscribes to the union of module universes - required
+by Kraken rate limits). Everything above the WS manager is
+module-independent. No cross-module data contamination.
+
+WALLETS. Each module's wallet is operator-funded with what Bill
+can afford to lose on that side - this is the primary loss
+control. CIATS observes the balance and sizes against it; it
+does not own the balance. Paper starting balances are synthetic
+($5,000 long / $5,000 short); live funding is a separate Bill
+decision.
+
+EXITS (Exit Controller owns all normal exits):
+  Layer 1 - signal-based and take-profit exits.
+  Layer 2 - MAE threshold breach (1.5x ATR).
+  Layer 3 - Kraken resting stop-loss: emergency brake only;
+            fires ONLY on VPS/TothBot/internet failure; must
+            never fire in normal operation.
+
+SACRED CONSTRAINT - net 1:1.5 R:R minimum. The minimum expected
+reward-to-risk on every trade and the only hardcoded value.
+CIATS may never propose, size, or accept below it. CIATS owns
+the sizing curve ABOVE the floor (higher expected R:R may get
+larger allocation). The module wallet balance is the sole
+sizing boundary - no ceiling, cap, or limit on trade size.
+Acceptance rule A1: reject any candidate whose point-estimate
+expected R:R is below 1:1.5.
+
+All other parameters are CIATS-owned starting values,
+instantiated per module, replaced by data over paper trading.
+Notifications go to alerts@tothbot.com.
+
+============================================================
+8. PARAMETER REGISTRY (seed values)
+============================================================
+
+Class: SACRED (never changes) | OPERATOR (Bill controls) |
+CIATS (starting value, CIATS-owned, per-module unless noted).
+
+SACRED
+  rr_minimum_net = 1:1.5   floor on expected R:R, all modules.
+
+OPERATOR
+  paper_starting_balance_long_usd  = $5,000   (paper only)
+  paper_starting_balance_short_usd = $5,000   (paper only)
+
+CIATS - sizing
+  per_trade_size_usd     = Kraken per-pair min (~$0.50) start;
+                           becomes a function of expected R:R
+                           from 200 trades on.
+
+CIATS - drawdown halts (per-wallet)
+  session_pause_drawdown_pct = 5%
+  full_halt_drawdown_pct     = 10%
+
+CIATS - Gate-7 risk limits (per-module)
+  concentration_limit_per_module = 100% of wallet
+                         (SEED, NON-BINDING; the module wallet
+                         balance is the sole sizing boundary;
+                         CIATS-owned from the 200-trade floor;
+                         CIATS may set up to 100% of wallet in
+                         one position). DEC-115.
+  exposure_limit_pct     = 100% of wallet
+                         (SEED, NON-BINDING; CIATS-owned from
+                         the 200-trade floor; CIATS may use up
+                         to 100% of wallet across all open
+                         positions). DEC-115.
+
+CIATS - exit controller
+  mae_mult              = 1.5x ATR(14)
+  emergency_sl_mult     = 3.0x ATR(14)
+  cancel_timeout_window = 5.0 s
+  mpp_retry_count       = 3
+  max_hold_candles      = 24 (2h at 5-min)
+
+CIATS - entry timing
+  entry_timeout_sec = 30s GTD start (CIATS band 30-60s)
+
+CIATS - regime + signal model
+  adx_threshold         = 25
+  atr_percentile_thresh = 67th percentile
+  atr_rolling_window    = 50 days
+  htf_ema_periods       = 20/50 daily
+  min_volume_usd_daily  = $500k
+
+CIATS - SSS signal model
+  rsi_long_low  = 30   (Long only)
+  rsi_long_high = 50   (Long only)
+  rsi_short_low = 70   (Short only; mirror of rsi_long_low)
+  rsi_short_high = 50  (Short only; mirror of rsi_long_high)
+  sss_ema_short = 9    (both modules)
+  sss_ema_long  = 21   (both modules)
+  volume_sss_threshold = 1.0x MA(20)   (both modules)
+
+CIATS - selection controller (per-module)
+  sc_body_threshold    = 0.3 (body vs ATR)
+  sc_cooldown_seconds  = 300 (1 candle)
+  sc_consecutive_limit = 3   (consecutive-loss limit)
+
+CIATS - short-side specific (Short only)
+  leverage_cap_short = 3x (Kraken max 10x; low for loss-min)
+  min_order_size_usd = Kraken per-pair min (~$0.50)
+
+CIATS - VPS deployment (single process, universal)
+  StartLimitBurst       = 3       (systemd restart cap)
+  StartLimitIntervalSec = 600 s   (restart window)
+
+CIATS - liquidity cache (universal)
+  liquidity_refresh_hours = 4
+
+CIATS - fees (universal; Kraken account tier)
+  FEE_MAKER_PCT = 0.0016 (0.16%)
+  FEE_TAKER_PCT = 0.0026 (0.26%)
+
+CIATS - threshold monitoring (universal)
+  rl_warning_threshold_pct  = 0.80
+  rl_critical_threshold_pct = 0.95   (suppresses entry orders
+                                      to preserve exit budget)
+  fee_tier_divergence_threshold         = 0.0002 (2 bps)
+  fee_tier_divergence_sustained_trades  = 50
+  rejection_rate_regime_threshold_pct   = 0.30
+  rejection_rate_eval_window_count      = 50
+
+CIATS - acceptance
+  expected_rr_acceptance_rule = A1 (reject below 1:1.5 at
+                                point estimate)
+
+============================================================
+9. STORAGE
+============================================================
+
+GitHub is the sole source of truth. Claude has no storage
+between sessions; continuity comes from the SL/NSI.
+
+  TothBot_V2-Docs
+    Local:  C:\Users\wstot\GitHub\TothBot\TothBot_V2-Docs\
+    Remote: github.com/TothBot/TothBot_V2-Docs
+
+  TothBot_V2-Code
+    Local:  C:\Users\wstot\GitHub\TothBot\TothBot_V2-Code\
+    Remote: github.com/TothBot/TothBot_V2-Code
+    Subfolders: tothbot/ (package), operations/ (ops scripts),
+                tests/.
+
+  TothBot_V2-SessionLogs
+    Local:  C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\
+    Remote: github.com/TothBot/TothBot_V2-SessionLogs
+    Holds all TB-prefix files (session logs, NSIs, TB00000,
+    gap registers). Folder name = repo name; git runs from
+    this directory directly.
+
+  VPS: Hetzner CPX22, 87.99.141.44, Ubuntu 24.04.4, Python
+    3.12.3. SSH: ssh root@87.99.141.44, key
+    C:\Users\wstot\.ssh\id_ed25519. Paths ~/TothBot_V2-Docs,
+    ~/TothBot_V2-Code.
+
+  Archives (read-only, reference): github.com/TothBot/
+    TothBot-Docs, github.com/TothBot/TothBot-Code.
+
+============================================================
+END
+============================================================
