@@ -1,0 +1,177 @@
+DocDCN:     TB00660
+DocTitle:   Next_Session_Instructions_TB00660
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00660_Next_Session_Instructions_v1_0.txt
+DocDate:    06-10-2026
+DocTime:    05:04:30 UTC
+
+============================================================
+NEXT SESSION INSTRUCTIONS TB00660
+============================================================
+
+MISSION (one per session): DEC-124 RUN-TO-REVERSAL RESTORATION
+-- Slice 6: D6 (Image6 Complete System) DEC-124 RESIDUAL re-pass
+on the 0500000 design diagram -- correct the three pre-existing
+DEC-124-stale clusters discovered at TB00659 that survive on the
+D6 surface BEYOND the already-reconciled FIELD-15 enum mirror.
+DEC-003 Path A (one diagram surface per session). Produced by
+TB00659 (which executed slice 5: D5 + the D6 FIELD-15 mirror).
+
+NOTE TO BILL: D6 was previously treated as DEC-124-complete after
+its surface slice (TB00655) + the FIELD-15 mirror (TB00659). The
+TB00659 D5 audit found D6 still carries three stale clusters (sec
+2). This slice closes them. If you would rather sequence D7 or D1
+first, override here -- otherwise proceed with D6.
+
+------------------------------------------------------------
+0. DEC-124 FRAME (settled -- DO NOT RE-LITIGATE)
+------------------------------------------------------------
+DEC-124 (Bill ruling, ratified TB00650): the sacred net 1:1.5
+R:R is an ENTRY-ACCEPTANCE FLOOR only -- admit a candidate iff
+expected_reward / net_loss >= 1.5. It is NEVER an exit price and
+NEVER closes a position. It remains the ONLY hardcoded value.
+Run-to-reversal is the whole-position take-profit (HTF_REGIME_
+REVERSAL / DAILY_REGIME_DOWNGRADE); there is NO fixed gross_
+target TP and NO max-hold. Three exit layers only: L1a regime-
+reversal, L2 MAE, L3 emergency-SL. The live exit_reason set is
+the FOUR-value set {MAE_THRESHOLD_BREACH, HTF_REGIME_REVERSAL,
+DAILY_REGIME_DOWNGRADE, PAIR_LIMIT_ONLY_EXIT} -- TP_FILL,
+TIME_EXPIRY, AND SUB_MIN_RESIDUAL_ABANDONED are all retired (the
+DR-079 abandon-and-surface dust write-off is a position-clear
+mechanic, not a TRADE_CLOSE exit_reason). This 4-value set is
+Bill-ratified D3 canon (TB00652); it SUPERSEDES the earlier
+NSI-predicted 5-value (see the TB00659 DD-011 reconciliation).
+Already executed: D3 (TB00652), D9 (TB00654), D6 surface
+(TB00655), D2 (TB00657), D5 + D6 FIELD-15 mirror (TB00659).
+
+------------------------------------------------------------
+1. SESSION OPEN (do first, before any edit)
+------------------------------------------------------------
+Cold-load BOTH repos via public tarball only (codeload HEAD;
+never the API):
+  curl -sL https://codeload.github.com/TothBot/TothBot_V2-Docs/tar.gz/HEAD
+  curl -sL https://codeload.github.com/TothBot/TothBot_V2-SessionLogs/tar.gz/HEAD
+Read: TB00000 v2_88, TB00659 (most recent log), this NSI.
+Verify live HEAD against these baselines (RR-SCOPE-008; each must
+be the SOLE version -- one-version rule):
+  0500000 dv1_211   md5 eb559ff71ec5b9740f3a20d591b7a524
+  0521001 dv1_21    md5 d0fa4dffd3f01c2680e224cc35883c4b
+  0311001 v1_46     md5 e22898b2eda879f135421454587ef0b3
+  0311003 v1_3      md5 dd5fbc7a7c071a85e2d2b8ee9fd10fa3
+  TB00000 v2_88     md5 cff8df6d8310d38cec2ac774ae87868d
+  TB00153 Decision_Register v1_90  present
+Confirm ABSENT (no stale in HEAD): 0500000 dv1_210 + dv1_209;
+0521001 dv1_20 + dv1_19.
+SD-13 five-part consolidation check: consolidation CLOSED;
+diagrams sole source; DR-078 N/A (no source spec retired this
+slice). Run the DD-011 derivability test at chat-turn 1.
+
+------------------------------------------------------------
+2. THIS SLICE -- D6 (Image6 Complete System) DEC-124 RESIDUAL
+------------------------------------------------------------
+D6 is file figure index 9 (figure block live lines 4491..7506 in
+dv1_211). Three stale clusters to correct (all confirmed byte-
+identical to the dv1_210 baseline at TB00659 -- pre-existing, not
+introduced):
+
+  (a) EC-L1A-003 max_hold backstop mirror -- file ~line 5930,
+      ending "exit_reason = TIME_EXPIRY." This is a D6 mirror of
+      the pre-DEC-124 D3 EC-L1A-003 max_hold_candles backstop.
+      Under DEC-124 there is NO max-hold and NO TIME_EXPIRY.
+      Reconcile to D3 canon (the canonical EC-L1A content was
+      corrected on D3 at TB00652): remove the max_hold backstop /
+      TIME_EXPIRY limb; L1a is the regime-reversal run-to-
+      reversal exit only. AUDIT D3 (figure index 6, the canonical
+      mod:Exit_Controller) FIRST and mirror it verbatim.
+
+  (b) consecutive-loss / win attribution flow -- file ~lines
+      6024-6030. Currently: loss set names "MAE_THRESHOLD_BREACH,
+      TIME_EXPIRY, HTF_REGIME_REVERSAL, DAILY_REGIME_DOWNGRADE"
+      and the win branch is "If TP_FILL (win on originating
+      module)". Under DEC-124: TIME_EXPIRY is retired; the "win"
+      is a profitable RUN-TO-REVERSAL close, NOT a TP_FILL. Re-
+      derive the loss/win partition against the 4-value live set
+      + the run-to-reversal model. NOTE: this is VISIBLE <text>
+      -- its correction WILL BUMP D6 R (R14 -> R15) per the
+      TB00453 bright line; propagate R15 to SVG <title> +
+      diagram_canonical + title-bar + figcaption.
+
+  (c) PAPER_TP_FILL_DETECTED -- file ~line 7473, in the paper-
+      mode synthetic-event registry ("Synthetic TP fill (ask >=
+      tp_price)"). Under DEC-124 there is no resting TP to fill.
+      Reconcile the paper-sim exit-detection events to the live
+      model: the paper take-profit is a synthetic regime-reversal
+      close, and the emergSL trigger stays. Confirm against the
+      D7 (Image7 Paper-Mode Dispatch Boundary) paper-sim content
+      for consistency -- but DO NOT edit D7 this slice (it is its
+      own DEC-124 slice; flag any D7 mirror as carry-forward).
+
+DISCIPLINE: assertion-verified exact-match Python edit script,
+abort-on-fail, count-assert every anchor; never regex on
+governance text. Binary test DEC-096 (organism architecture ->
+diagram; seed VALUES -> TB00000 sec 8). All 9 other figures must
+stay byte-identical (DEC-003 Path A); verify change-localization.
+If any item proves non-derivable from D3 canon + the settled
+DEC-124 frame, surface it to Bill rather than guessing.
+
+------------------------------------------------------------
+3. CARRY-FORWARD FLAGS (MUST honour when reached)
+------------------------------------------------------------
+- Remaining DEC-124 figure slices after D6: D7 (R8) + D1 (R13)
+  -- one per session. D1 ~lines 1719 (fee-calc tp_price /
+  fee_tp maker) + 1815 (partial-TP emergSL amendment) still
+  carry pre-DEC-124 TP content.
+- PROSE slice (deferred): 0500000 sec 8 / 11 / 12 + sec 9 seeds
+  -- REMOVE max_hold_candles=24; ADD the run-to-reversal estimator
+  seed value; reconcile per_trade_size + fee seeds (entry-taker /
+  exit-taker); plus D9-surface stale prose (sec 3.2 / 4.1 / 4.2)
+  flagged at TB00654.
+- GOVERNANCE slice (deferred): TB00153 enter DEC-124 (v1_90 ->
+  v1_91) + retire DR-079 + retire ar:AR-066 framing; 0311001
+  retire token ar:AR-066; TB00000 v2_88 -> v2_89 (sec 7 + sec 8).
+- DISPATCH-SEAM DEC-122 DRIFT (D2; AWAITING BILL): contract:
+  WSManager_Dispatch_Seam still renders the pre-CR-03 limit /
+  post_only / GTD entry model -- DEC-122 drift, NOT DEC-124; hold
+  for Bill sequencing.
+- Deferred housekeeping: TB00153 ~140-version backlog; stale
+  plans 0911002 / TB00394.
+
+------------------------------------------------------------
+4. DECISIONS
+------------------------------------------------------------
+DD-011 at chat-turn 1; if a single compliant path exists
+(OUTCOME 1) execute under derivable-decision authority without
+surfacing as a ratification question. The D6 residual corrections
+are derivable from D3 canon + the settled DEC-124 frame -- treat
+as OUTCOME 1 unless an item genuinely diverges (e.g. a paper-sim
+event with no D3/D7 precedent), which is surfaced to Bill.
+
+------------------------------------------------------------
+5. DISCIPLINE REMINDERS
+------------------------------------------------------------
+DIAGRAMS GOVERN (no code workarounds). Binary test DEC-096.
+DR-078 gate (no retirement until target is DD-014 fact-
+comprehensive). TB00453 bright line (visible <text>/geometry
+change bumps R; desc/figcaption ADD-only holds R). DEC-003 Path A
+(one diagram per session; no sanctioned lockstep this slice unless
+the audit finds a D6-internal mirror). RR-SCOPE-008 no-guess
+(verify live HEAD via fresh tarball; never trust recalled state).
+One-version rule (git rm --cached the superseded version on push).
+Repos branch = master (NEVER main). cd LITERAL absolute paths
+(never $env:). git add explicit filenames only. Session close
+produces: Session Log (TB00660) + this-NSI-successor (TB00661) +
+OCS copy box + GitHub push box + DR-010 post-push verification.
+Deliver each artifact incrementally via present_files.
+
+------------------------------------------------------------
+6. CAMPAIGN REMAINDER (after D6)
+------------------------------------------------------------
+D7 -> D1 figure slices -> PROSE slice -> GOVERNANCE slice -> the
+DISPATCH-SEAM DEC-122 drift disposition (Bill) -> DEC-124 final
+re-audit -> ungate PHASE 2 OPTION B clean-slate organism code-gen
+(Pathway 2 AA=05).
+
+============================================================
+END NEXT SESSION INSTRUCTIONS TB00660
+============================================================
