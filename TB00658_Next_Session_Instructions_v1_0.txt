@@ -1,0 +1,170 @@
+DocDCN:     TB00658
+DocTitle:   Next_Session_Instructions_TB00658
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00658_Next_Session_Instructions_v1_0.txt
+DocDate:    06-10-2026
+DocTime:    04:25:13 UTC
+
+============================================================
+NEXT SESSION INSTRUCTIONS TB00658
+============================================================
+
+MISSION (one per session): DEC-124 RUN-TO-REVERSAL RESTORATION
+-- Slice 5: correct Diagram 5 (Image5) on the 0500000 design
+diagram, AND -- in the SAME session -- update the D6 FIELD-15
+exit_reason mirror in lockstep (V-038 parity). DEC-003 Path A
+(one diagram surface per session; the D6 mirror edit is the
+sanctioned lockstep exception, not a second free-standing
+slice). Produced by TB00657 (which executed slice 4, D2).
+
+------------------------------------------------------------
+0. DEC-124 FRAME (settled -- DO NOT RE-LITIGATE)
+------------------------------------------------------------
+DEC-124 (Bill ruling, ratified TB00650): the sacred net 1:1.5
+R:R is an ENTRY-ACCEPTANCE FLOOR only -- admit a candidate iff
+expected_reward / net_loss >= 1.5. It is NEVER an exit price and
+NEVER closes a position. It remains the ONLY hardcoded value.
+Run-to-reversal is the whole-position take-profit (HTF_REGIME_
+REVERSAL / DAILY_REGIME_DOWNGRADE); there is NO fixed gross_
+target TP and NO max-hold. Three exit layers only: L1a regime-
+reversal, L2 MAE, L3 emergency-SL. The expected_reward estimator
+is CIATS-owned, SEEDED from a historical OHLC backtest of the
+regime-reversal exit and TUNED from paper after the 200-trade
+floor (Bill ruling TB00654; seed VALUE -> TB00000 sec 9, not the
+diagram). Already executed: D3 (TB00652), D9 (TB00654), D6
+(TB00655), D2 (TB00657).
+
+------------------------------------------------------------
+1. SESSION OPEN (do first, before any edit)
+------------------------------------------------------------
+Cold-load both repos via public tarball (codeload HEAD), never
+the API. Read TB00000 (master protocol), this NSI, and TB00657
+(most recent log). Run the SD-13 five-part consolidation status
+check.
+RR-SCOPE-008 -- verify live HEAD against these baselines (each
+must be SOLE in HEAD; no stale versions):
+  0500000 dv1_210   md5 6aafd6e26fb9f9ceeee21f662947d9a0
+  0521001 dv1_20    md5 8c4db9eb9c248a8407d20ec68ff7b042
+  0311001 v1_46     md5 e22898b2eda879f135421454587ef0b3
+  0311003 v1_3      md5 dd5fbc7a7c071a85e2d2b8ee9fd10fa3
+  TB00000 v2_88     md5 cff8df6d8310d38cec2ac774ae87868d
+  TB00153 Decision_Register v1_90  present
+ABSENT (must NOT be in HEAD): 0500000 dv1_209; 0521001 dv1_19.
+No-guess (RR-SCOPE-008): verify against the live fresh tarball;
+never trust recalled state. SD-13: consolidation CLOSED; DR-078
+N/A.
+
+------------------------------------------------------------
+2. THIS SLICE -- D5 (Image5) (R15) + D6 FIELD-15 LOCKSTEP
+------------------------------------------------------------
+Target figure: D5 (Image5), currently R15. Apply DEC-124 to the
+D5 surface (DEC-003 Path A). At chat-turn 1, audit the live D5
+block against the canonical DEC-124 model already applied to D3
+(TB00652) / D9 (TB00654) / D6 (TB00655) / D2 (TB00657), then
+execute the corrections D5 actually carries:
+  (a) Any FOUR-LAYER / L1b TP-fill exit depiction -> THREE-LAYER
+      (L1a regime-reversal + L2 MAE + L3 emergency-SL); remove
+      L1b TP-fill and any max-hold (EC-L1A-003) reference.
+  (b) Remove any resting take-profit / gross_target / maker-TP
+      leg (the take-profit is regime reversal, a TothBot market
+      sell). Reconcile the fee basis to entry taker + MAE taker
+      where D5 renders it.
+  (c) Sacred R:R wherever D5 renders it: reword to the ENTRY-
+      ACCEPTANCE FLOOR (admit iff expected_reward / net_loss >=
+      1.5; never an exit, never closes a position). expected_
+      reward = the CIATS run-to-reversal estimate (architecture
+      only; seed VALUE stays in TB00000 sec 9 per DEC-096).
+  (d) EXIT_REASON ENUM (D5-CANONICAL -- THIS IS THE LOCKSTEP
+      SLICE). D5 owns the canonical contract:CIATS_Trade_Outcome_
+      Bus FIELD-15 exit_reason enum. This session MUST:
+        - REMOVE obsolete values TP_FILL and TIME_EXPIRY;
+        - reconcile SUB_MIN_RESIDUAL_ABANDONED (DR-079 dust value:
+          confirm it remains valid as the dust write-off reason
+          under abandon-and-surface; keep unless Bill rules
+          otherwise -- surface if genuinely ambiguous);
+        - keep MAE_THRESHOLD_BREACH | HTF_REGIME_REVERSAL |
+          DAILY_REGIME_DOWNGRADE | PAIR_LIMIT_ONLY_EXIT;
+        - DROP the D5 Logger registry entry LAYER1B_TP_FILL;
+        - in the SAME session, UPDATE the D6 FIELD-15 mirror (live
+          diagram line ~4878) to the identical post-edit enum so
+          D5<->D6 hold V-038 verbatim parity. This D6 mirror edit
+          is the sanctioned lockstep exception to one-figure-per-
+          session; record it explicitly in the log.
+  Verify all D5 exit_reason / take-profit token references are
+  consistent with the 3-layer model after the edit.
+R-STATE: any visible <text> or geometry change bumps D5 R15 ->
+R16 (TB00453). A <desc>/figcaption ADD-only edit holds R. If the
+D6 mirror edit changes a visible <text> node on D6, bump D6 too
+(D6 is currently R14 -> R15); if the D6 enum is desc-only, hold.
+Decide per the actual edits made; propagate each resulting R to
+that figure's SVG <title> + diagram_canonical + title-bar +
+figcaption.
+PROVENANCE: append the D5 amendment narrative to 0521001 section
+5.1 (D5), AND append the D6 mirror-update narrative to section
+5.2 (D6), append-only (DEC-123). Verify reverse-reconstruction
+== prior version (dv1_20).
+COMPLETENESS: every node touched must pass the completeness test
+(code-derivable from q1_do/constraints/consumes/produces/q4/q5).
+
+------------------------------------------------------------
+3. CARRY-FORWARD FLAGS (MUST honour when reached)
+------------------------------------------------------------
+- DISPATCH-SEAM DEC-122 DRIFT (raised at D2/TB00657, AWAITING
+  BILL): the D2 node contract:WSManager_Dispatch_Seam still
+  renders the pre-CR-03 entry model ("limit / post_only / GTD
+  30-60s"; "entry_timeout_sec governs GTD timeout"), contradicting
+  the CR-03 marketable-IOC + MPP model the rest of D2 states.
+  This is DEC-122 drift, NOT DEC-124. Do NOT fix inside the
+  DEC-124 campaign. Hold for Bill's sequencing ruling (fold into
+  a DEC-122 D2 touch-up or open a dedicated CR).
+- The D5/D6 exit_reason lockstep is DISCHARGED by this slice
+  (sec 2d). After it, no enum-parity flag carries forward.
+
+------------------------------------------------------------
+4. DECISIONS
+------------------------------------------------------------
+All DEC-124 modelling choices are settled (sec 0). The only item
+that may need Bill is whether SUB_MIN_RESIDUAL_ABANDONED survives
+the enum reconciliation (sec 2d) -- run the DD-011 derivability
+test at chat-turn 1: DR-079 keeps the dust write-off mechanic, so
+the value is expected to REMAIN (OUTCOME 1, derivable). Surface
+to Bill ONLY if the audit shows a genuine ambiguity. Do NOT
+surface a derivable decision as a question.
+
+------------------------------------------------------------
+5. DISCIPLINE REMINDERS
+------------------------------------------------------------
+DIAGRAMS GOVERN -- no code workarounds; the diagram is the sole
+organism truth. Binary test DEC-096 -- architecture in the
+diagram; transient seed values in TB00000 sec 9. One diagram
+surface per session (DEC-003 Path A); the D6 FIELD-15 mirror is
+the sole sanctioned lockstep exception; all other figures byte-
+identical, change-localization verified. One-version rule:
+git rm --cached the superseded version on every push; one
+version per document in HEAD. git add explicit filenames only;
+cd LITERAL absolute paths (never $env:); both repos branch =
+master (NEVER main): git push origin master. Deliver each
+artifact incrementally via present_files as completed. Session
+close produces: Session Log + this-NSI-successor + OCS copy box
++ GitHub push box + DR-010 post-push verification.
+
+------------------------------------------------------------
+6. CAMPAIGN REMAINDER (after D5)
+------------------------------------------------------------
+Figure slices remaining (one per session): D7 (R8), D1 (R13).
+Then the PROSE slice (0500000 sec 8/11/12 + sec 9 seeds: remove
+max_hold_candles=24; add run-to-reversal estimator seed value;
+reconcile per_trade_size + fee seeds entry-taker/exit-taker; plus
+the D9-surface stale prose: sec 3.2 intro, sec 4.1 Layer 1b, sec
+4.2 R:R Formula). Then the GOVERNANCE slice (TB00153 enter
+DEC-124 v1_90 -> v1_91 + retire DR-079 + retire ar:AR-066
+framing; 0311001 retire token ar:AR-066; TB00000 v2_88 -> v2_89
+sec 7 + sec 8). Then DEC-124 final re-audit -> ungate PHASE 2
+OPTION B clean-slate organism code generation (Pathway 2 AA=05).
+Plus the held DEC-122 dispatch-seam ruling (sec 3) once Bill
+sequences it. Deferred housekeeping: TB00153 one-version backlog
+(~140 stale versions); stale plans 0911002 / TB00394.
+============================================================
+END
+============================================================

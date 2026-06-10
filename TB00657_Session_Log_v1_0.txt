@@ -1,0 +1,211 @@
+DocDCN:     TB00657
+DocTitle:   Session_Log_TB00657
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00657_Session_Log_v1_0.txt
+DocDate:    06-10-2026
+DocTime:    04:25:13 UTC
+
+============================================================
+SESSION LOG TB00657
+============================================================
+
+MISSION (one per session): DEC-124 RUN-TO-REVERSAL RESTORATION
+-- Slice 4: correct Diagram 2 (Image2 Trading Pipeline, 8 Gates)
+on the 0500000 design diagram. DEC-003 Path A (one diagram
+surface per session). Inbound NSI consumed: TB00656_Next_Session_
+Instructions_v1_0.
+
+------------------------------------------------------------
+1. SESSION-OPEN VERIFICATION (RR-SCOPE-008) -- ALL PASS
+------------------------------------------------------------
+Cold-loaded both repos via public tarball (codeload HEAD).
+Read: TB00000 v2_88, TB00655 (most recent log), TB00656 (NSI).
+Live HEAD baselines, each verified SOLE (one-version rule held):
+  0500000 dv1_209   md5 6c25cee0c98a445be07f2feaec678b1c
+  0521001 dv1_19    md5 b5417710f25a0e76627f4ccc06908719
+  0311001 v1_46     md5 e22898b2eda879f135421454587ef0b3
+  0311003 v1_3      md5 dd5fbc7a7c071a85e2d2b8ee9fd10fa3
+  TB00000 v2_88     md5 cff8df6d8310d38cec2ac774ae87868d
+  TB00153 Decision_Register v1_90  present
+ABSENT confirmed (no stale versions in HEAD): 0500000 dv1_208;
+0521001 dv1_18.
+SD-13: consolidation CLOSED (TB00000 v2_86); diagrams sole
+source; DR-078 N/A.
+NOTE: the D2 edit + verification + provenance append were carried
+over an in-session context compaction; on resume every work
+product was independently re-verified byte-exact against its
+authored md5 (no-guess, RR-SCOPE-008) before packaging.
+
+------------------------------------------------------------
+2. DECISIONS
+------------------------------------------------------------
+DD-011 derivability test run at chat-turn 1: OUTCOME 1 (single
+compliant path). All DEC-124 modelling choices were settled in
+sec 0 of the NSI and canonically demonstrated on D3 (TB00652) +
+D9 (TB00654) + D6 (TB00655); no item in the D2 slice was non-
+derivable. Executed under derivable-decision authority; NO
+business-judgment item surfaced to Bill this session except the
+out-of-scope dispatch-seam DEC-122 drift flagged in sec 7.
+
+------------------------------------------------------------
+3. WORK EXECUTED -- D2 (Image2 Trading Pipeline, 8 Gates)
+------------------------------------------------------------
+0500000 dv1_209 -> dv1_210. Diagram 2 R9 -> R10
+(TB00453: visible <text> CONTENT changed -> figure R BUMP; NO
+geometry/viewBox/node-count change). D2 is file figure index 3
+(figure block live lines 2159..2696). All 9 other figures byte-
+identical (DEC-003 Path A); change-localization VERIFIED (only
+the D2 figure block + 5 DC-header lines 6/135/137/138/139 differ
+between dv1_209 and dv1_210; 18 changed lines in-block + 5 DC-
+header = 23 total; line counts equal at 9738, no line shift).
+Figure count 10; <svg> 10/10; </svg> 10/10; figcaption 10/10.
+DR-007.9 html.parser pass, 0 exceptions. Edit driven by an
+assertion-verified exact-match substitution script (edit_d2.py),
+every anchor count-asserted, abort-on-fail; no regex on
+governance text.
+
+D2 CHANGES (per NSI steps a-d):
+  (a) FOUR-LAYER / L1b TP-fill -> THREE-LAYER. layer:L1b_TP_Fill
+      REMOVED from gate:G8_Position_Sizer drill_targets, from
+      mod:Execution_Engine drill_targets, and from the ON FILL
+      handler list (leaving L3_Emergency_SL + Position_Mirror).
+      Two L1a exit-layer lists naming a max-hold backstop were
+      corrected to "L1a regime/downgrade run-to-reversal" with no
+      max-hold (EC-L1A-003 obsolete under DEC-124): the
+      mod:Signal_Pipeline (sss_engine) decay-after-fill note and
+      the gate:G5_Selection_Controller partial_fill_ownership
+      note.
+  (b) RESTING-TP LEG REMOVED. mod:Execution_Engine ON FILL q1_do
+      + its visible <text> reframed from batch_add (TP resting
+      limit + emergSL stop-market) to batch_add (emergSL stop-
+      market only); the take-profit is now the run-to-reversal
+      whole-position market sell (not a batched resting order).
+      The direction-symmetric leg was reworded to match; the
+      root <desc> AR-054 note + the G5 FILL-DISPOSITION note were
+      reconciled (TP + emergSL) -> (emergSL); tp_cl_ord_id dropped
+      from the ON FILL q5_logs; the G8 gross_target TP formula
+      removed; G8 visible "TP = R:R formula" -> "TP = run-to-
+      reversal regime exit (no fixed target)". (D2 renders no
+      maker-TP fee leg, so no maker-fee reframe was required.)
+  (c) SACRED R:R -> ENTRY-ACCEPTANCE FLOOR at G8. gate:G8_
+      Position_Sizer q1_do now states admit iff expected_reward /
+      net_loss >= 1.5, net_loss = mae_pct + entry taker fee + MAE
+      taker fee (both legs FEE_TAKER_PCT), expected_reward = the
+      CIATS run-to-reversal estimate (seed VALUE -> TB00000 sec 9
+      per DEC-096). The G8 visible SACRED line was reworded to the
+      entry-acceptance-floor framing; tp_target dropped from the
+      G8 q5_logs. Never an exit price; never closes a position;
+      remains the only hardcoded value.
+  (d) EXIT_REASON ENUM -- NOT APPLICABLE ON D2. D2 carries NO
+      FIELD-15 exit_reason enum node (that schema is D5-canonical,
+      mirrored on D6). Nothing on D2 to flag for the D5/D6
+      lockstep.
+
+R-STATE: visible <text> content nodes changed -> R9 -> R10 per
+TB00453 (visible-text change). Geometry byte-identical (D2 block
+counts unchanged: rect 31 / line 25 / path 4 / text 75; viewBox
+"0 0 1500 1700" preserved; no changed line is a geometry-element
+open). R10 propagated to SVG <title> + diagram_canonical + title-
+bar identifier/subline + root CURRENT-R + figcaption.
+
+DC-HEADER: HTML <title> line 6 + DocVersion line 135 + DocPath
+line 137 advanced dv1_209 -> dv1_210; DocDate line 138 -> 06-10-
+2026; DocTime line 139 refreshed. Filename advances dv1_209 ->
+dv1_210.
+
+VERIFICATION SUMMARY (all PASS): html.parser 0 exceptions;
+structural counts 10/10/10/10; change-localization (D2 block +
+DC-header lines only; 9 other figures byte-identical; no line
+shift); D2 content checks (D2-block-scoped residuals all 0) --
+no layer:L1b_TP_Fill; no tp_target; no tp_cl_ord_id; no "TP
+resting limit"; no max-hold; no gross_target; no "TP = R:R
+formula"; no residual "Image2_T2_R9"; no "R:R hardcoded"; no
+"BUY TP"; 3-layer model present; sacred node = entry-acceptance
+floor with admit iff expected_reward / net_loss >= 1.5 visible;
+net_loss = taker + taker; all D2 reads R10, no residual R9.
+
+0500000 dv1_209 (1008720 bytes) -> dv1_210 (1010079 bytes; +1359).
+Authored md5: 6aafd6e26fb9f9ceeee21f662947d9a0.
+
+------------------------------------------------------------
+4. PROVENANCE (0521001) -- DEC-123 APPEND
+------------------------------------------------------------
+0521001 dv1_19 -> dv1_20. Appended the D2 R9 -> R10 DEC-124
+amendment narrative to section 5.10 (D2), append-only (DEC-123),
+after the section 5.10 BLOCK C </pre> boundary; header bumped
+(DocVersion + DocPath + DocDate + DocTime). No provenance
+relocation this session (D2 already externalized at TB00645).
+REVERSE-RECONSTRUCTION VERIFIED: stripping the appended 105-line
+block + reverting the 4 header lines yields byte-identical dv1_19
+(md5 b5417710f25a0e76627f4ccc06908719). Authored md5:
+8c4db9eb9c248a8407d20ec68ff7b042. (dv1_19 2050540 bytes / 19460
+lines -> dv1_20 2059415 bytes / 19565 lines.)
+
+------------------------------------------------------------
+5. NAMESPACE / GOVERNANCE
+------------------------------------------------------------
+0311001 v1_46 UNCHANGED (no new token minted; ar:AR-066
+retirement is the deferred governance slice). TB00153 UNCHANGED
+(DEC-124 register entry is the deferred governance slice). No
+source spec retired (DR-078 N/A; consolidation CLOSED).
+
+------------------------------------------------------------
+6. ARTIFACTS PRODUCED
+------------------------------------------------------------
+  0500000_System_Architecture_Overview_dv1_210_Claude_Source.html
+    md5 6aafd6e26fb9f9ceeee21f662947d9a0
+  0521001_System_Architecture_Overview_Revision_History_dv1_20.txt
+    md5 8c4db9eb9c248a8407d20ec68ff7b042
+  TB00657_Session_Log_v1_0.txt (this log)
+  TB00658_Next_Session_Instructions_v1_0.txt
+Superseded (git rm --cached on push): 0500000 dv1_209;
+0521001 dv1_19.
+
+------------------------------------------------------------
+7. CARRY-FORWARD
+------------------------------------------------------------
+- DISPATCH-SEAM DEC-122 DRIFT (NEW FLAG -- NOT DEC-124, NOT
+  fixed this session): the D2 node contract:WSManager_Dispatch_
+  Seam still renders the PRE-CR-03 entry model -- visible text
+  "limit / post_only / GTD 30-60s" plus q1_do/ciats_ownership
+  "entry_timeout_sec governs GTD timeout" -- which contradicts the
+  CR-03 marketable-IOC + MPP slippage-cap entry model that every
+  other D2 desc field already states. This is DEC-122 change-
+  register drift, NOT DEC-124, so it was left intact under one-
+  campaign-per-slice discipline and is surfaced to Bill for a
+  sequencing decision (fold into a DEC-122 D2 touch-up, or open a
+  dedicated CR). NO edit made.
+- D5 SLICE LOCKSTEP (MUST, unchanged): remove obsolete exit_
+  reason enum values TP_FILL + TIME_EXPIRY + reconcile SUB_MIN_
+  RESIDUAL_ABANDONED from the D5 canonical contract:CIATS_Trade_
+  Outcome_Bus schema AND update the D6 FIELD-15 mirror (live line
+  ~4878) in the SAME session to hold V-038 parity; plus the D5
+  Logger registry drop LAYER1B_TP_FILL. (D2 carries no FIELD-15
+  enum; nothing added to this flag from the D2 slice.)
+- Remaining DEC-124 figure slices (one per session): D5 (R15),
+  D7 (R8), D1 (R13).
+- PROSE slice (deferred): 0500000 sec 8/11/12 + sec 9 seeds
+  (REMOVE max_hold_candles=24; ADD run-to-reversal estimator seed
+  value; reconcile per_trade_size + fee seeds entry-taker/exit-
+  taker) + D9-surface stale prose (sec 3.2 / 4.1 / 4.2).
+- GOVERNANCE slice (deferred): TB00153 enter DEC-124 (v1_90 ->
+  v1_91) + retire DR-079 + retire ar:AR-066 framing; 0311001
+  retire token ar:AR-066; TB00000 v2_88 -> v2_89 (sec 7 + sec 8).
+- Then DEC-124 final re-audit -> ungate PHASE 2 OPTION B clean-
+  slate organism code-gen (Pathway 2 AA=05).
+- Deferred housekeeping: TB00153 one-version backlog (~140 stale
+  versions); stale plans 0911002 / TB00394.
+
+------------------------------------------------------------
+8. CLAUDE ERRORS THIS SESSION
+------------------------------------------------------------
+None material. The D2 edit, full verification, and provenance
+append were carried over an in-session context compaction; on
+resume every work product (dv1_210, dv1_20) was independently re-
+verified byte-exact against its authored md5 and the dv1_20
+reverse-reconstruction was re-run to byte-identity with dv1_19
+before packaging, per RR-SCOPE-008 no-guess.
+============================================================
+END
+============================================================
