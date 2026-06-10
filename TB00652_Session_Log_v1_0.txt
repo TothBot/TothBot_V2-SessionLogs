@@ -1,0 +1,170 @@
+DocDCN:     TB00652
+DocTitle:   Session_Log_TB00652
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00652_Session_Log_v1_0.txt
+DocDate:    06-09-2026
+DocTime:    21:30:00 UTC
+
+============================================================
+SESSION LOG TB00652
+============================================================
+
+MISSION (one per session): DEC-124 RUN-TO-REVERSAL RESTORATION
+-- Slice 1 of the campaign: correct Diagram 3 (Image3 Exit
+Architecture) on the 0500000 design diagram. DEC-003 Path A
+(one diagram surface per session). Inbound NSI consumed:
+TB00651_Next_Session_Instructions_v1_0.
+
+------------------------------------------------------------
+1. SESSION-OPEN VERIFICATION (RR-SCOPE-008) -- ALL PASS
+------------------------------------------------------------
+Cold-loaded both repos via public tarball (codeload HEAD).
+Live HEAD baselines, each SOLE (one-version rule held):
+  0500000 dv1_206   md5 a6a1b647362aee0db330b3d05cdc2e81
+  0521001 dv1_16    md5 61f1668aabf441978c5b23c1bf8a4713
+  0311001 v1_46     md5 e22898b2eda879f135421454587ef0b3
+  0311003 v1_3      md5 dd5fbc7a7c071a85e2d2b8ee9fd10fa3
+  TB00000 v2_88     md5 cff8df6d8310d38cec2ac774ae87868d
+  TB00153 Decision_Register v1_90  md5 3e7d1b345009294b123de4ff6e2ea163
+ABSENT confirmed (no stale versions in HEAD): 0500000 dv1_204 /
+dv1_205; 0521001 dv1_14 / dv1_15.
+Most recent prior session log: TB00650. Inbound NSI: TB00651.
+SD-13: consolidation CLOSED (TB00000 v2_86); diagrams sole
+source; DR-078 N/A.
+
+------------------------------------------------------------
+2. DECISIONS THIS SESSION
+------------------------------------------------------------
+DEC-124 (ratified TB00650) reaffirmed by Bill and executed:
+  (1) The sacred net 1:1.5 R:R becomes an ENTRY-ACCEPTANCE
+      FLOOR -- a minimum-expected-value admission test on
+      expected R:R at entry, where expected reward = a CIATS-
+      owned run-to-reversal estimate (seeded pre-200-trades,
+      tuned from paper after the 200-trade floor). Still
+      sacred, still hardcoded, still the only hardcoded value.
+      It NEVER constructs an exit price and NEVER closes a
+      position.
+  (2) RUN-TO-REVERSAL is the whole-position exit: the fixed
+      gross_target TP limit and the max-hold time cap are
+      removed; HTF_REGIME_REVERSAL / DAILY_REGIME_DOWNGRADE
+      carry the take-profit role. MAE Layer 2 + emergency-stop
+      Layer 3 retained for the loss side.
+  (3) DEC-122 CR-13 / CR-14 are DEAD.
+
+BILL RULING (TB00652) -- DUST / PARTIAL-FILL: "There is no
+split and no dust." With no resting TP and no order-split
+mechanic, no sub-minimum remainder can arise. The TP-partial-
+fill split mechanic and the DR-079 abandon-and-surface dust
+write-off are OBSOLETE and retired. Token ar:AR-066 ("TP
+partial fill") and exit_reason SUB_MIN_RESIDUAL_ABANDONED are
+retired across the diagrams (D3 done; D1/D2/D5 + 0311001 +
+TB00153 in their own slices).
+
+------------------------------------------------------------
+3. WORK EXECUTED -- D3 (Image3 Exit Architecture)
+------------------------------------------------------------
+0500000 dv1_206 -> dv1_207. Diagram 3 R9 -> R10 (TB00453:
+visible <text> + SVG geometry changed -> figure R BUMP). All
+9 other figures byte-identical (DEC-003 Path A). Change span
+confined to the Image3 <figure> slice (verified). Tag balance
+intact (g 217/217, text 972/972, desc 126/126, figure 10/10,
+svg 10/10).
+
+Changes on D3:
+  - layer:L1b_TP_Fill RETIRED as a canonical layer; the middle
+    column ("LAYER 1b -- TP Fill") repurposed to a decoration
+    explainer "RUN-TO-REVERSAL -- No Fixed TP" (take-profit =
+    regime reversal; no fixed gross_target; no max-hold cap;
+    1:1.5 R:R = entry-acceptance floor at Gate-8, never an exit
+    cap; original-design rationale + 2026-03-17 10,000-trial
+    sim: run-to-reversal > fixed-TP on avg win + profit factor
+    AND lower max drawdown 1.64% vs 1.97%).
+  - layer:L1a relabelled "LAYER 1 -- Regime-Reversal Exit
+    (Take-Profit)". Max-Hold (EC-L1A-003 / TIME_EXPIRY) trigger
+    REMOVED. ACTION cancel target cancel_order(TP) ->
+    cancel_order(emergSL). L1a exit_reason set ->
+    {HTF_REGIME_REVERSAL, DAILY_REGIME_DOWNGRADE}.
+  - rule:Sacred_R_R_1_to_1_5 node redefined from gross_target
+    derivation to the entry-acceptance test: ACCEPT iff
+    expected_reward / net_loss >= 1.5; expected_reward = CIATS
+    run-to-reversal estimate; no gross_target persisted;
+    drill_targets -> none.
+  - layer:L2_MAE_Threshold sequence reduced from two cancels
+    (TP + emergSL) to one (emergSL only) -> market sell;
+    "BOTH CANCELS" -> "emergSL CANCEL".
+  - rule:HR-EC-016: TP-partial-fill-vs-MAE conflict branch
+    (former rule (c)) RETIRED; rule (a) "resting TP + emergSL"
+    -> "resting emergSL"; rule (b) unchanged. ar:AR-066 dropped
+    from HR-EC-016 constraints/consumes/produces.
+  - Exit_Controller ownership narrative: param:max_hold_candles
+    (AR-071) annotated RETIRED (live exit-controller param
+    group now FOUR tokens: mae_mult, emergency_sl_mult,
+    cancel_timeout_window, mpp_retry_count).
+  - DUST RETIREMENT (Bill ruling): ar:AR-066 removed from root
+    governs; WS-TP-003 dust branch removed from q4;
+    SUB_MIN_RESIDUAL_ABANDONED removed from exit_reason set.
+    Live Exit-Controller exit_reason set now FOUR:
+    MAE_THRESHOLD_BREACH, HTF_REGIME_REVERSAL,
+    DAILY_REGIME_DOWNGRADE, PAIR_LIMIT_ONLY_EXIT.
+  - Identity/figcaption R9 -> R10; provenance pointer updated
+    (DEC-123 standing discipline).
+
+0521001 dv1_16 -> dv1_17: appended the D3 R9 -> R10 amendment
+narrative under section 5.3 (DEC-123 append-only forensic
+record). Header bumped.
+
+FEE BASIS UNCHANGED this slice (no fee recompute).
+
+------------------------------------------------------------
+4. DELIVERABLES (authored md5)
+------------------------------------------------------------
+  0500000_System_Architecture_Overview_dv1_207_Claude_Source.html
+      md5 f9a0be52c484f24ae20e800368b310d2
+  0521001_System_Architecture_Overview_Revision_History_dv1_17.txt
+      md5 8ebd1ebac8c0883cc89f7805a4204d75
+Superseded in HEAD by this push (git rm --cached):
+  0500000 dv1_206 ; 0521001 dv1_16.
+
+------------------------------------------------------------
+5. CARRY-FORWARD -- DEC-124 CAMPAIGN REMAINDER
+------------------------------------------------------------
+Figure slices (one per session, DEC-003 Path A), in order:
+  D9 Image9 Gate-8 Position Sizer (R3) -- delete g8d_gross_target
+     node + visible text; convert A1 to the expected-R:R entry-
+     acceptance gate; AUTHOR the NEW CIATS run-to-reversal
+     expected-reward ESTIMATOR mechanism into the diagram
+     (feeds the expected-R:R gate). Seed value -> TB00000 sec 9.
+  D6 Image6 Complete System (R13) -- 4-layer -> 3-layer;
+     Matching_Engine no resting TP; Sacred R:R node reword to
+     entry-floor.
+  D2 Image2 Trading Pipeline (R9) -- G8 q1_do TP-formula removal;
+     drop layer:L1b_TP_Fill drill-target; ON-FILL split removal
+     (dust cascade).
+  D5 Image5 CIATS Architecture (R15) -- TRADE_CLOSE exit_reason
+     enum remove TP_FILL + TIME_EXPIRY + SUB_MIN_RESIDUAL_
+     ABANDONED; Logger registry drop LAYER1B_TP_FILL (dust
+     cascade for the enum).
+  D7 Image7 Paper-Mode Dispatch (R8) -- paper exit-fill = taker
+     market sell; remove PAPER_TP_FILL_DETECTED.
+  D1 Image1 Kraken Connection (R13) -- emergSL-only; remove TP-leg;
+     WS-TP-003 dust branch removal (dust cascade).
+Prose: 0500000 sec 8 Locked Decisions / sec 11 lifecycle / sec 12
+  paper ledger; sec 9 seeds (REMOVE max_hold_candles=24; ADD run-
+  to-reversal estimator seed; reconcile per_trade_size + fee seeds
+  entry-taker/exit-taker).
+Governance: TB00153 -- enter DEC-124 (v1_90 -> v1_91); RETIRE
+  DR-079 (dust) + retire ar:AR-066 reference framing in the
+  defect/AR context. 0311001 -- retire token ar:AR-066 (registry).
+  TB00000 v2_88 -> v2_89 (sec 7 EXITS + sec 8 max_hold/fixed-TP
+  framing).
+PHASE 2 OPTION B code-gen remains GATED until the DEC-124
+register closes (final re-audit).
+
+------------------------------------------------------------
+6. NEXT SESSION
+------------------------------------------------------------
+Follow TB00653_Next_Session_Instructions_v1_0. Next slice: D9.
+============================================================
+END
+============================================================
