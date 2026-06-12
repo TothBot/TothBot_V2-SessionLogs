@@ -1,0 +1,316 @@
+DocDCN:     TB00684
+DocTitle:   Code_Readiness_Audit
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00684_Code_Readiness_Audit_v1_0.txt
+DocDate:    06-12-2026
+DocTime:    04:50:00 UTC
+
+============================================================
+TB00684 CODE READINESS AUDIT
+PRE-CODE READINESS AUDIT OF 0500000 dv1_228 AGAINST THE
+TB00000 v2_90 SEC 3 COMPLETENESS TEST
+============================================================
+
+SCOPE. Pre-code readiness audit ONLY (Bill directive supersedes
+the TB00684 NSI chat-governance mission per TB00000 sec 4.1). NO
+organism code, NO diagram edits, NO scaffolding authored this
+session. From the coder's seat, the single question per
+component: can code be written from the dv1_228 diagram surfaces
+ALONE -- no interpretation, assumption, or clarification? Each
+component is tested against all five completeness criteria:
+(1) inputs->outputs explicit; (2) interfaces explicit; (3) hard
+rules (must/must-not) explicit; (4) triggers explicit; (5)
+logging explicit -- all values explicit, all conditions
+deterministic, no vague terms.
+
+============================================================
+1. SESSION OPEN / GATE RESULTS
+============================================================
+COLD-LOAD: all THREE repos (Code, Docs, SessionLogs) pulled
+fresh from public HEAD tarballs into a clean temp working area;
+local C: trees NOT treated as source of truth.
+
+RR-SCOPE-008 md5 verification -- ALL FOUR MATCH (PASS):
+  0500000 dv1_228  52f13e683f96f60b81a160178c65ff03
+  0521001 dv1_38   386506e3ebb9e4aea66cece6fcb62410
+  TB00000 v2_90    0a956abae795f0a973d788978b374773
+  0311001 v1_47    aa0b41bcf87ffc5fc674a98dd58413e7
+
+ABSENCE (Code repo stale purge held) -- PASS:
+  TothBot_V2-Code HEAD contains ONLY README.md, .gitignore, and
+  three .gitkeep placeholders (config/.gitkeep, deploy/.gitkeep,
+  scripts/.gitkeep). No tothbot/*.py, tests/test_*.py,
+  conftest.py, pytest.ini, requirements.txt, tothbot_service.txt,
+  operations/kraken_ws_probe.py, operations/tothbot_sweep.sh at
+  HEAD. The pre-Option-B codebase is gone; clean slate confirmed.
+
+DOCUMENTS READ (versions): TB00000 v2_90; TB00683 Session Log
+v1_0; TB00683 Claude Code Kickoff Brief v1_0; TB00684 NSI v1_0;
+TB00668 DEC-125 Cleanup Register v1_0 (P-1..P-20 register);
+0500000 dv1_228 (audit subject); 0521001 dv1_38; 0311001 v1_47;
+TB00000 sec 3 (completeness test), sec 6 (7-field header), sec 7
+(trading system), sec 8 (parameter seed registry) read in full.
+
+============================================================
+2. PER-COMPONENT VERDICTS (TB00683 kickoff build order)
+============================================================
+Legend: figure ids per dv1_228 -- D1=Image1 Kraken API (R17);
+D2=Image2 Trading Pipeline (R13); D3=Image3 Exit Architecture
+(R12); D4=Image4 Regime Taxonomy (R8); D5=Image5 CIATS (R17);
+D6=Image6 Complete System (R16); D7=Image7 Paper-Mode Dispatch
+Boundary (R11); D8=Image8 Gate-7 Detail (R5); D9=Image9 Gate-8
+Detail (R5). Line numbers are dv1_228 (md5 above).
+
+------------------------------------------------------------
+PHASE A -- SHARED INFRASTRUCTURE
+------------------------------------------------------------
+A1  startup_sequence / configuration layer ........... GAP
+A2  WS_Manager (incl. dispatch seam + paper fill
+    simulator paths) ................................. READY
+A3  Position_Mirror .................................. READY
+A4  Logger (23-field TRADE_CLOSE schema) ............. READY
+A5  pair_cache ...................................... READY
+
+------------------------------------------------------------
+PHASE B -- SIBLING MODULES (verdicts apply to BOTH
+mod:Long_Module and mod:Short_Module; per-side state is
+isolated and symmetric per AR-072/AR-073)
+------------------------------------------------------------
+B1  Regime_Engine (incl. SS-WIRE-001 guard) .......... READY
+B2  Signal_Pipeline ................................. READY
+B3  Selection_Controller (G5) ....................... READY
+B4  Risk_Engine / gates G1-G8 (incl. G7 + G8 detail).. READY
+B5  Execution_Engine ................................ READY
+B6  Exit_Controller (L1a / L2 / L3) ................. READY
+B7  CIATS ........................................... READY
+
+------------------------------------------------------------
+PHASE C -- HALT-ISOLATION WIRING
+------------------------------------------------------------
+C1  halt-isolation wiring ........................... READY
+
+============================================================
+3. GAP DETAIL (the only code-blocking finding)
+============================================================
+GAP A1 -- startup_sequence / configuration layer
+  FIGURE/ELEMENT: D7 mod:Startup_Sequence (line 7050-7063);
+    AR registry entry ar:AR-049 (lines 5188-5202).
+  EXACT MISSING FACT:
+    (a) The mod:Startup_Sequence constraints field (line 7056)
+        cites ~20 sub-rules as BINDING on the component --
+        rule:SS-PRE-001..005, SS-STARTUP-007_NOTE / -009 / -024 /
+        -025, SS-WARMUP-003_NOTE / -HTF_alpha, SS-PAPER-005 /
+        -006, SS-RECON-004 / -008 / -012 / -015 / -016, and
+        HR-SS-001..010. The CONTENT of these rules is spelled
+        NOWHERE in dv1_228; only the bare tokens appear (line
+        7056). A from-diagram-alone coder cannot enumerate or
+        implement these binding startup constraints.
+    (b) ar:AR-049 (line 5191) states "Complete specification in
+        1011014 Startup_Sequence_Coding_Spec" and (line 5202)
+        "Assign: 1011002 WM-STARTUP-001 through -012, 1011014
+        (full spec)." 1011014 is RETIRED/ABSENT from Docs HEAD
+        (verified: 10XXXXX_Coding_Specification/ contains no
+        1011014; the consolidation correctly retired it per
+        TB00000 sec 3 binary test). The surface therefore points
+        the coder to a non-existent authoritative spec for the
+        "complete"/"full" startup specification.
+  WHY IT BLOCKS CODE:
+    The diagram enumerates the AR-049 10-step cold-start skeleton
+    (Status-API check; GetWebSocketsToken; public WS connect +
+    subscribe; instrument snapshot; private WS connect; snap_orders
+    reconciliation; ticker restore; REST warm-up; first-READY ->
+    OPERATIONAL; continuous) AND the SS-WIRE-001 universe guard
+    and SS-BUILD-001 construction order are fully spelled inline
+    (line 7059) -- so the orchestrator is SUBSTANTIVELY close.
+    But because (i) the cited SS-/HR-SS sub-rules have no
+    in-diagram content and (ii) the surface defers the "complete
+    specification" to a retired/absent doc, a compliant coder
+    must ASSUME the 10-step skeleton is exhaustive of every
+    binding startup constraint -- the exact assumption the
+    completeness test forbids and the Kickoff-Brief PHASE 1 gate
+    (DR-078 analog) requires them to STOP on. Startup_Sequence is
+    not codable from the diagram alone with no assumption.
+  FIX (chat-session diagram amendment, DEC-003 Path A; never a
+    code workaround): on the D7 Startup_Sequence surface and the
+    sec-8 AR-049 entry, EITHER (x) author the SS-PRE / SS-STARTUP
+    / SS-WARMUP / SS-PAPER / SS-RECON / HR-SS rule content INTO
+    the diagram, OR (y) confirm the AR-049 10-step enumeration +
+    the already-spelled supporting surfaces (REST wire contracts
+    at D1 line 1535; AR-044/AR-068 warm-up; AR-050 wallet
+    sourcing; AR-052; AR-056 11-step reconnect at lines 5378+;
+    SS-WIRE-001; SS-BUILD-001) AS the complete canonical startup
+    spec and remove the bare SS-/HR-SS token citations and the
+    retired-1011014 "complete specification"/"full spec" pointer
+    (a DW-5-class retired-document citation residue that survived
+    the DEC-125 SLICE-16 re-audit). One diagram surface per
+    session.
+
+============================================================
+4. CROSS-CUTTING VERIFICATIONS
+============================================================
+4.1 PARAMETER SEED HOMES (TB00000 sec 8) -- PASS, 1 finding.
+  Every CIATS-owned / operator parameter the diagram references
+  for the trading pipeline resolves to a sec-8 seed home:
+  per_trade_size_usd, mae_mult (1.5x), emergency_sl_mult (3.0x),
+  cancel_timeout_window (5.0s), mpp_retry_count (3),
+  session_pause_drawdown_pct (5%), full_halt_drawdown_pct (10%),
+  concentration_limit_per_module (100%, NON-BINDING),
+  exposure_limit_pct (100%, NON-BINDING), adx_threshold (25),
+  atr_percentile_thresh (67th), atr_rolling_window (50d),
+  htf_ema_periods (20/50), min_volume_usd_daily ($500k),
+  rsi_long_low/high (30/50), rsi_short_low/high (70/50),
+  sss_ema_short/long (9/21), volume_sss_threshold (1.0x),
+  sc_body_threshold (0.3), sc_cooldown_seconds (300),
+  sc_consecutive_limit (3), leverage_cap_short (3x),
+  min_order_size_usd, StartLimitBurst (3), StartLimitIntervalSec
+  (600), liquidity_refresh_hours (4), FEE_MAKER_PCT (0.0016),
+  FEE_TAKER_PCT (0.0026), rl_warning/critical_threshold_pct
+  (0.80/0.95), fee_tier_divergence thresholds, rejection_rate
+  thresholds, expected_reward_estimator_seed, and the SACRED
+  rr_minimum_net (1:1.5) -- all present in sec 8.
+  FINDING (non-blocking, governance): contract:WM-SHARD-001
+  SYMBOLS_PER_CONN_SAFE is labeled "CIATS-owned starting value"
+  (line 1476) with its value (500) homed INLINE in the diagram
+  contract rather than in TB00000 sec 8 as the binary test
+  mandates for a CIATS-owned starting value. The value is
+  explicit and codable, so this does NOT block code; it is a
+  seed-home placement inconsistency. RECOMMENDATION: either home
+  500 in sec 8 as a CIATS seed, or relabel it a fixed
+  architectural/protocol constant on its contract surface.
+  (SUBSCRIBE_RATE_PER_SEC=10, SUBSCRIBE_BURST_CAPACITY=20,
+  T_silent=60s are Kraken-protocol pacing constants defined at
+  their contract surfaces and are defensibly NOT sec-8 seeds.)
+
+4.2 P-1..P-20 PROHIBITION FENCES (register TB00668) -- PASS.
+  Every fence is PRESENT, clean, and codable at its owning
+  dv1_228 surface (a clear must-not a code reviewer can enforce):
+  P-1  cancel_all_orders_after DMS PROHIBITED -- D1 visible L853,
+       governs L1387 (ar:AR-055), Private-WS desc L1493 (HR-WM-010).
+  P-2  REST CancelAllOrders EMERGENCY-ONLY + KILL_SWITCH/HALT --
+       D1 Kraken-REST desc L1535 (REST-CAO-004/005/006).
+  P-3  edit_order PROHIBITED, amend_order sole -- D1 L1387/L1520
+       (ar:AR-018).
+  P-4  OTO REJECTED -- Private-WS desc L1496 (ar:AR-008); D3
+       L3039 / R:R-basis rationale.
+  P-5  float arithmetic PROHIBITED / Decimal(str()) -- D4 regime
+       compute (HR-REGIME-006); D2 SSS (HR-SP-008); pervasive.
+  P-6  synchronous requests PROHIBITED / aiohttp only -- D1 L1535
+       (REST-HTTP-001/005).
+  P-7  legacy websockets.connect() PROHIBITED / from
+       websockets.asyncio.client import connect -- L1617, L5421,
+       L5432.
+  P-8  deprecated wire fields not parsed (reason vs cancel_reason;
+       interval_begin vs OHLC timestamp; price_increment vs
+       tick_size) -- D1 L1438/L1493 (HR-WM-007), L1535.
+  P-9  DATA key query-only / keys never hardcoded / WS token never
+       cached -- D1 L1535 (REST-KEY-003/004, REST-WST-004).
+  P-10 never hardcode 125; use maxratecount from ACK -- D1
+       L1127/A-19, governs L1387.
+  P-11 no pipeline eval during reconnect; candle events queued --
+       D1 L1387 (AR-056), L1621 (HR-SP-010); D7 SS-WIRE region.
+  P-12 Execution-Engine seam rules / one-WS-per-module PROHIBITED
+       -- D7 mod:Execution_Engine L7155-7161 (HR-EE-013/014/015);
+       SS-BUILD-001 L7059 + HR-WM-024.
+  P-13 no new divergence points without Bill written authorization
+       -- sec-12 boundary L6624-6625 + D7 L7421 (ar:PA-006).
+  P-14 FIX cancel-on-disconnect REJECTED -- D1 L1928; D6
+       REJECTED panel L4874/L4938.
+  P-15 monotonic clock only for cooldown/interval -- D2 G5
+       L2330 (HR-SC-006).
+  P-16 daily regime REST GetOHLCData interval=1440 only; WS ohlc
+       channel not used; response[-1] excluded -- D4 L3496
+       (HR-REGIME-003), L5417 (AR-017).
+  P-17 RSI Wilder SMMA alpha 1/14 (not EMA 2/15) -- D2 SSS L2308
+       (AR-076).
+  P-18 never market sell with ambiguous order state (retry-once /
+       second-timeout HOLD + operator alert) -- D3 L2/L3255/L3278.
+  P-19 heartbeat/pong/ACK MUST NOT reset zombie timer -- D1
+       L1617 (HR-WM-003/004, AR-042), L5079.
+  P-20 portfolio_baseline_USD set once at startup, never reset --
+       D1 L1387, AR-052 L5274, L4169 lifecycle.
+
+4.3 FOUR PA PAPER/LIVE DIVERGENCE POINTS -- PASS (each pinned to
+    an exact seam location, paper-vs-live behavior fully spec'd):
+  #1 private WS connection -- container:Private_WS_v2, D1
+     L1496-1505 (PA-004 div #1; SKIPPED in paper per PT_MODE_004).
+  #2 order dispatch -- contract:WSManager_Dispatch_Seam, D2
+     L2449-2468 (the SOLE permitted divergence per PA-004(2);
+     PT_MODE_001 simulated paper / PT_MODE_002 dispatched live);
+     mirror at D7 L7227.
+  #3 capital ledger -- contract:Synthetic_Capital_Ledger, D7
+     L7301-7319 (PA-004(3); synthetic paper / real Kraken live).
+  #4 position mirror -- mod:Position_Mirror, D1 L1690/L1703 +
+     D7 L7375/L7390 (PA-004(4); schema-identical, sourcing
+     differs only here: sim path paper / executions stream live).
+
+4.4 COMPLETENESS SPOT-CHECKS OF NOTE:
+  - Logger 23-field TRADE_CLOSE schema: EXACTLY 23 fields,
+    each named with explicit type/derivation, canonical at D5
+    (~L4131) and D6 (~L4708) in V-038 lockstep parity. READY.
+  - G8 sacred A1 floor: rule:Expected_RR_A1_Acceptance (D9 L2939)
+    = expected_reward / net_loss >= 1.5, HARDCODED, never
+    CIATS-owned, never an exit price, never closes a position;
+    emergSL_dist never in the ratio. Deterministic. READY.
+  - SS-WIRE-001 universe guard (the DEFECT-SS-009 collapse
+    guard): D7 L7059 is explicit and deterministic -- the daily
+    00:00-UTC regime computation reads the CURRENT WS_Manager
+    monitored_universe at call time, falling back to the
+    BTC/USD construction default ONLY if not yet populated, and
+    MUST NEVER use the construction-time universe. "Populated"
+    is a non-empty-collection check (implementation detail, not
+    architectural ambiguity). READY. (The D4 Regime_Engine
+    "per monitored pair" wording is governed by this SS-WIRE-001
+    surface per DD-002; not an independent gap.)
+  - Halt-isolation (Phase C): SS-BUILD-001 step (4) L7059 +
+    mod:Long_Module L7117/L7118 + mod:Short_Module L7140/L7141 +
+    ar:AR-052 -- per-wallet halt machines are INDEPENDENT (one
+    wallet halt MUST NOT halt the sibling; shared infra keeps
+    running for the un-halted sibling). Explicit. READY.
+
+============================================================
+5. STANDING OPEN ITEM (NOT a gap)
+============================================================
+MPP SLIPPAGE-CAP STARTING VALUE -- UNRULED by Bill. The
+marketable-IOC MPP slippage cap is canonical as a CIATS-owned
+per-module bound at the dispatch-seam / Execution-Engine surface
+(D2 L2459; not a sec-8 seed by ratified canon, zero new tokens).
+Its STARTING VALUE is intentionally not yet ruled; it is to be
+stubbed as a named CIATS-owned parameter (e.g. mpp_slippage_cap_
+pct) raising a clear NOT_CONFIGURED error if read before Bill's
+ruling. Required before the FIRST PAPER-TRADING BOOT, not before
+coding. Recorded here as the standing open item; surface at every
+session close until ruled.
+
+============================================================
+6. OVERALL VERDICT
+============================================================
+  NO-GO.
+
+  One code-blocking GAP: A1 startup_sequence / configuration
+  layer (section 3 above). dv1_228 is otherwise code-complete for
+  the entire kickoff build order -- WS_Manager (with dispatch
+  seam + paper fill simulator), Position_Mirror, Logger (23-field
+  schema), pair_cache, Regime_Engine (SS-WIRE-001 guard),
+  Signal_Pipeline, Selection_Controller, Risk_Engine / G1-G8
+  (with G7 + G8 detail), Execution_Engine, Exit_Controller
+  (L1a/L2/L3), CIATS, and Phase-C halt-isolation all pass the
+  five-criteria test; all P-1..P-20 fences are codable at their
+  owning surfaces; the four PA divergence points are each pinned
+  to an exact seam; every pipeline parameter has a sec-8 seed
+  home (one non-blocking seed-home placement note,
+  SYMBOLS_PER_CONN_SAFE, section 4.1).
+
+  Phase 2 Option B Session 1 coding does NOT proceed until GAP A1
+  is closed by a CHAT-session diagram amendment (DEC-003 Path A,
+  one surface per session; TB00453 R-bump if visible text is
+  touched; 0521001 append per DEC-123) -- NEVER a code workaround
+  (Kickoff-Brief PHASE 1 gate; TB00000 sec 3 "no code from an
+  incomplete diagram"). Re-audit A1 (and confirm the
+  SYMBOLS_PER_CONN_SAFE seed-home disposition) at the amendment's
+  session close; on a clean A1 the verdict flips to GO and the
+  Claude Code session launches from TB00683.
+
+============================================================
+END TB00684 CODE READINESS AUDIT v1_0
+============================================================
