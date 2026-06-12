@@ -1,0 +1,212 @@
+DocDCN:     TB00683
+DocTitle:   Claude_Code_Kickoff_Brief
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00683_Claude_Code_Kickoff_Brief_v1_0.txt
+DocDate:    06-12-2026
+DocTime:    03:45:00 UTC
+
+============================================================
+TB00683 CLAUDE CODE KICKOFF BRIEF
+PHASE 2 OPTION B SESSION 1 -- CLEAN-SLATE ORGANISM BUILD
+============================================================
+
+PURPOSE. This brief is the launch package for the first
+Claude Code session of Phase 2 Option B. Paste it (or point
+Claude Code at it in the SessionLogs repo) at session open.
+It is authored in chat per TB00000 sec 4.7 (chat does
+governance/specs; ALL organism code is authored in Claude
+Code). DEC-125 is CLOSED; the gate is OPEN (TB00682).
+
+------------------------------------------------------------
+1. MISSION AND SOLE CODING SOURCE
+------------------------------------------------------------
+Build the TothBot trading organism clean-slate (OPTION B,
+DEC-120) directly and ONLY from:
+
+  0500000_System_Architecture_Overview_dv1_228_Claude_Source.html
+  md5 52f13e683f96f60b81a160178c65ff03
+  (TothBot_V2-Docs HEAD, 05XXXXX_System_Architecture/)
+
+DIAGRAMS GOVERN. The labeled-group <desc> fields are the
+governing surfaces (DD-002); decoration callouts are
+human-readable renderings of the same authority. Do NOT
+derive ANY architecture from prior code, the stale Code-repo
+README, old repos, or memory. Seed values come from TB00000
+v2_90 sec 8 only.
+
+PHASE 1 GATE (DR-078 code analog): if any diagram surface is
+not codable without interpretation, assumption, or
+clarification -- STOP, log the gap precisely (figure, element
+id, missing fact), and surface it at session close. NO code
+from an incomplete diagram. NO code workarounds for diagram
+gaps.
+
+------------------------------------------------------------
+2. PRECONDITION -- STALE HEAD PURGED
+------------------------------------------------------------
+Bill runs the TB00683 OP4 purge box BEFORE this session
+launches. Verify at session open: TothBot_V2-Code HEAD must
+NOT contain tothbot/*.py, tests/test_*.py, conftest.py,
+pytest.ini, requirements.txt, tothbot_service.txt,
+operations/kraken_ws_probe.py, operations/tothbot_sweep.sh.
+If any remain, stop and tell Bill to run the purge box first.
+README.md may remain at HEAD but is STALE (pre-parallel-
+modules, "Long-only momentum"); rewrite it as part of
+scaffolding (item 3) and derive nothing from it.
+
+------------------------------------------------------------
+3. SESSION 1 SCOPE (per TB00683 NSI, at executing sizing)
+------------------------------------------------------------
+(a) REPO SCAFFOLDING (TothBot_V2-Code, Python 3.12.3):
+    tothbot/        the organism package
+    operations/     ops scripts
+    tests/          test suite (unit/, integration/,
+                    paper_trading/)
+    Plus: rewritten README.md (parallel-modules canon, sacred
+    1:1.5 floor language per DEC-124: entry-acceptance floor
+    ONLY, never a cap, never an exit price), requirements.txt
+    (aiohttp mandatory for REST per the dv1_228 REST-HTTP
+    rules; NEVER the synchronous requests lib), pytest.ini,
+    .gitignore. File routing per TB00000 sec 4.8/sec 9.
+
+(b) BUILD ORDER (binding; derived from D7 rule:SS-BUILD-001 +
+    rule:SS-WIRE-001 and the D6 DR-013 wire-up callout in
+    dv1_228 -- the diagram surfaces govern over this summary):
+
+    PHASE A -- SHARED INFRASTRUCTURE, SINGLE INSTANCE,
+    CONSTRUCTED EXACTLY ONCE:
+      A1. Configuration layer + startup_sequence orchestrator:
+          reads param:paper_trading_mode +
+          param:portfolio_baseline_USD; instantiates
+          WSManager.__init__(paper_mode=...) per HR-WM-021
+          (paper_mode set once at __init__, immutable for
+          process lifetime); runs the SS-PRE / SS-STARTUP /
+          SS-WARMUP / SS-PAPER / SS-RECON / SS-WIRE cascade
+          (AR-049 + AR-056 + AR-068).
+      A2. mod:WS_Manager -- ONE Kraken WebSocket subscribing
+          to the UNION of module universes (HR-WM-024); one
+          WS_Manager per module is PROHIBITED. Sole dispatch
+          gatekeeper (PA-001): O(1) dispatch table routing
+          all WS push events + all outbound REST
+          (contract:WSManager_Dispatch_Seam; paper/live
+          byte-identical hot path per PA-005; paper seam
+          intercepts ALL Kraken REST + Private WS paths per
+          PA-004 div #1 to the local fill simulator). Sole
+          writer to mod:Position_Mirror (HR-PM-009). Owns
+          pair_cache.
+      A3. mod:Position_Mirror -- single instance; written
+          ONLY by WS_Manager; all other modules read via
+          WSManager helper methods, never direct dict access
+          (HR-PM-009 + HR-PM-011, BOTH paper and live).
+      A4. mod:Logger -- single instance; sole CIATS
+          read-source; TRADE_CLOSE 23-field schema per the
+          D6 contract:CIATS_Trade_Outcome_Bus row.
+      A5. pair_cache -- single authoritative pair-spec source
+          for ALL modules (DR-013); free-form attribute of
+          WS_Manager.
+
+    PHASE B -- SIBLING MODULES, IN ORDER [mod:Long_Module
+    FIRST, then mod:Short_Module]; for EACH:
+      B1. Inject the SAME four Phase-A instances (WS_Manager,
+          Position_Mirror, Logger, pair_cache) BY REFERENCE;
+          never re-instantiate per module.
+      B2. Construct the module's OWN isolated state:
+          - own CIATS instance + statistical pool (no
+            cross-module contamination; Sizing_Curve_Per_
+            Module evolves independently);
+          - own trading wallet (paper: $5,000 Long from
+            spot/main; $5,000 Short from margin/main per
+            AR-050 + AR-009; live funding is Bill's separate
+            decision);
+          - own per-wallet drawdown halt state machine
+            [NORMAL / SESSION_PAUSE / FULL_HALT] per AR-052
+            (session_pause 5% / full_halt 10%);
+          - own per-side Selection-Controller state (AR-073).
+
+    PHASE C -- HALT-ISOLATION WIRING: sibling halt machines
+    are INDEPENDENT (a halt on one wallet MUST NOT halt the
+    sibling; shared infra keeps running for the un-halted
+    sibling) per AR-052.
+
+    SS-WIRE-001 CONSTRUCTION-TIMING GUARD: Regime_Engine is
+    constructed with the default single-pair universe
+    (BTC/USD); the daily 00:00-UTC regime computation MUST
+    read the CURRENT WS_Manager-built monitored_universe at
+    call time (fall back to the construction default only if
+    not yet populated) and MUST NEVER be driven with the
+    construction-time universe (DEFECT-SS-009 collapse).
+
+    DR-013 WIRE-UP CHAIN (D6 callout): WS_Manager = sole PM
+    writer + pair_cache owner + dispatch gatekeeper; PM
+    read-only via WSM helpers by Exit_Controller,
+    Signal_Pipeline, Risk_Engine, Logger; Exit_Controller
+    instructs WSM (cancel / batch_cancel / market_sell),
+    clears PM via WSM, emits evt:TRADE_CLOSE to Logger, and
+    is the SOLE updater of Selection-Controller state via the
+    WSM AR-073 win/loss path (HR-EC-014); modules signal
+    exits to Exit_Controller.
+
+(c) FIRST MODULE SLICE: mod:WS_Manager (the seam), coded
+    directly from its dv1_228 surfaces (D7 startup/seam
+    blocks + the WS_Manager labeled-group constraints/q1_do).
+    Modules above the seam come after. Enforce the P-1..P-20
+    prohibition battery as code-review fences on every file:
+    the register is TB00668_DEC125_Cleanup_Register_v1_0.txt
+    (SessionLogs HEAD); the canonical fence wording lives at
+    each prohibition's owning diagram surface in dv1_228
+    (verified PRESENT, clean, codable at TB00682). Examples
+    binding this slice: P-1 no Dead Man Switch; P-3
+    edit_order PROHIBITED; P-10 never hardcode 125 as the
+    rate ceiling; P-18 NEVER market sell with ambiguous order
+    state (retry-once / second-timeout-HOLD).
+
+------------------------------------------------------------
+4. HARD CONSTRAINTS (apply to every line of code)
+------------------------------------------------------------
+- SACRED: rr_minimum_net = 1:1.5 is the ONLY hardcoded value
+  -- an entry-acceptance floor (rule A1: reject below 1:1.5
+  at point estimate), never a cap, never an exit price
+  (DEC-124).
+- Every other parameter is a CIATS-owned seed read from
+  TB00000 v2_90 sec 8 (config-sourced, per-module unless
+  noted), replaced by data from the 200-trade floor.
+- PAPER IS THE MASTER (PA-001..PA-010): exactly FOUR
+  divergence points (private WS; order dispatch; capital
+  ledger; position mirror). Any new divergence requires
+  Bill's WRITTEN authorization. One codebase, one config
+  flag.
+- EXITS: L1a regime-reversal IS the take-profit (run to
+  reversal; no fixed TP price, no resting TP order, no
+  max-hold cap); L2 MAE (mae_mult 1.5x ATR(14)); L3 Kraken
+  resting emergency SL (emergency_sl_mult 3.0x ATR(14)) --
+  fires ONLY on VPS/TothBot/internet failure.
+- Entry: marketable IOC limit + MPP cap + cl_ord_id +
+  stp_type cancel_newest + deadline now+5s (AR-006; WS v2
+  underscore vs REST hyphen -- never confuse).
+- MPP SLIPPAGE-CAP STARTING VALUE: NOT YET RULED BY BILL.
+  Stub it in the Execution-Engine / dispatch-seam slice as a
+  named CIATS-owned parameter (e.g. mpp_slippage_cap_pct)
+  raising a clear NOT_CONFIGURED error if read before Bill's
+  ruling. Required before FIRST PAPER-TRADING BOOT, not
+  before coding. Surface as an open item at EVERY session
+  close until ruled.
+- No cross-module data contamination above the WS seam.
+
+------------------------------------------------------------
+5. SESSION DISCIPLINE (Claude Code session)
+------------------------------------------------------------
+- Cold-load all three repos from HEAD tarballs; verify
+  dv1_228 md5 52f13e683f96f60b81a160178c65ff03 before any
+  work; verify the stale-code ABSENCE check (item 2).
+- One primary mission; deliver-as-you-go; commit code to
+  TothBot_V2-Code on branch master only.
+- Session close: Session Log TB00684+ (next free number at
+  close time) + NSI + OCS box + push box (literal paths,
+  master, ASCII commit messages) + DR-010 fresh-tarball
+  verification. TB-prefix files -> SessionLogs repo.
+- If a diagram gap is hit: STOP per item 1 and surface.
+
+============================================================
+END
+============================================================
