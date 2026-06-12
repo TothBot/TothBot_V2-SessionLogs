@@ -1,0 +1,153 @@
+DocDCN:     TB00685
+DocTitle:   Session_Log
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00685_Session_Log_v1_0.txt
+DocDate:    06-12-2026
+DocTime:    05:35:00 UTC
+
+============================================================
+TB00685 SESSION LOG -- GAP A1 CLOSURE (DIAGRAM AMENDMENT)
+dv1_228 -> dv1_229  +  0521001 dv1_38 -> dv1_39
+============================================================
+
+1. MISSION / SCOPE
+------------------------------------------------------------
+Bill chat-turn directive (supersedes prior no-edit constraint
+per TB00000 sec 4.1): before choosing a fix option, pull retired
+1011014 Startup_Sequence_Coding_Spec from Docs git history and
+diff every binding startup fact against dv1_228; any MISSING
+binding fact gets authored INTO the diagram (DR-078). Amendment
+creates NEW version files only; never modify/delete existing
+dv1_228/dv1_38/v2_90 on C:; superseded versions leave HEAD via
+git rm --cached only. This closes TB00684 audit GAP A1.
+
+2. DR-078 DIFF (1011014 dv1_8 vs dv1_228) -- DECISIVE RESULT
+------------------------------------------------------------
+Cloned TothBot_V2-Docs with full history; located the 1011014
+retirement commit 51b96bd (dv1_8 retired per TB00272 DD-012);
+extracted 1011014 dv1_8 (1,788 lines) from 51b96bd^. Diffed
+every binding startup fact against dv1_228 surfaces.
+
+RESULT: ZERO binding startup facts missing from the diagram.
+All present on dv1_228 surfaces:
+  - 10-step cold-start cascade .............. AR-049
+  - aiohttp ClientSession config ............ REST-HTTP-002
+  - systemd WatchdogSec=120 / Type=notify /
+    sd_notify WATCHDOG=1 / READY=1 .......... D1 + AR prose
+  - WS connect max_size=10MB / open_timeout=10
+    / max_queue=None / ping_interval=None /
+    websockets.asyncio ...................... AR-029/058/059/060
+  - ohlc(60) WS-subscribe PROHIBITED ........ OI-NEW-001
+  - instrument-cache Decimal parse .......... AR-020 / AR-028
+  - HTF EMA seed alpha 2/21 + 2/51; Wilder ATR  AR-044 prose
+  - interval_begin candle-close init ........ AR-045
+  - portfolio_baseline set-once/never-reset .. AR-052 + P-20
+  - warm-up GetOHLCData A/B + 1.1s stagger ... AR-044/035/036
+  - 11-step reconnect R1-R11 + invariants +
+    20-attempt ~481s fatal path ............. AR-056
+  - four PA-004 divergence pts + PA-005 ...... pinned surfaces
+  - SS-WIRE-001 universe-timing guard ....... mod:Startup_Sequence
+
+The ONLY 1011014 item absent from the diagram is the uvloop
+event-loop factory -- an implementation/engineering choice
+(1011001 territory), correctly OUTSIDE trading-organism
+architecture per the TB00000 sec 3 binary test. NO new binding
+fact required authoring.
+
+CONCLUSION: GAP A1 was a STALE-REFERENCE RESIDUE, not a missing-
+content gap. ar:AR-049 + ar:AR-056 deferred the "complete
+specification" / "full spec" to 1011014 (retired/absent), forcing
+a from-diagram-alone coder to assume the in-diagram skeleton was
+exhaustive (PHASE 1 STOP). The diagram is fact-comprehensive; the
+fix is to strip the deferral and affirm in-diagram completeness.
+
+3. AMENDMENT (dv1_228 -> dv1_229) -- THREE DESC/PROSE EDITS
+------------------------------------------------------------
+No SVG <text> touched; all figure R-numbers HOLD (TB00453).
+  (1) sec-8 ar:AR-049 -- removed completeness-deferral "Complete
+      specification in 1011014 Startup_Sequence_Coding_Spec." +
+      neutralized the "1011014 (full spec)" Assign tail; replaced
+      with an in-diagram canonical-complete affirmation mapping
+      every owning surface.
+  (2) sec-8 ar:AR-056 -- removed completeness-deferral "Complete
+      specification in 1011014 Section 2." + neutralized its
+      Assign tail; affirmed the 11-step reconnect canonical-
+      complete in-diagram.
+  (3) mod:Startup_Sequence q1_do -- appended one sentence
+      affirming the cited SS-/HR-SS rule families are canonical
+      and complete on the diagram's own surfaces (with the
+      surface map), so startup is codable from the diagram ALONE.
+Header bumped dv1_228 -> dv1_229 (title + DocVersion + DocPath +
+DocTime). Verified: 0 residual "dv1_228" strings; 0 completeness-
+deferral phrases; tag balance intact (desc 125/125, g 215/215,
+svg 10/10, figure 10/10); diff vs dv1_228 == exactly the intended
+edits, nothing else. dv1_229 md5 4dd519771910f2f7d24a521d9f785d1d.
+
+Provenance (DEC-123): appended the verbatim OP RECORD to 0521001
+-> dv1_39 (md5 0ff72a5e6330af634e75f1fa31fcd2a8): DR-078 diff
+result, the removed fragments, the residue flagged-not-fixed, and
+the carried seed-home note. Header bumped dv1_38 -> dv1_39.
+
+4. RE-AUDIT OF A1 (dv1_229) -- NOW READY
+------------------------------------------------------------
+A1 startup_sequence retested against the five completeness
+criteria on dv1_229: (1) inputs->outputs explicit (config ->
+WSManager immutable init; 10-step I/O); (2) interfaces explicit
+(WSManager / Position_Mirror / Logger / pair_cache / REST+WS);
+(3) hard rules explicit (paper_mode immutable; baseline set-once/
+never-reset; DMS prohibited; etc.); (4) triggers explicit (systemd
+start; mid-session reconnect); (5) logging explicit (named startup
++ reconnect events). No out-of-diagram pointer remains; no
+assumption required. A1 = READY.
+
+OVERALL VERDICT NOW: GO. All build-order components READY. Phase 2
+Option B Session 1 coding may launch from TB00683 against
+dv1_229.
+
+5. SECONDARY / CARRIED ITEMS (non-blocking)
+------------------------------------------------------------
+- RESIDUE FLAGGED, NOT FIXED (out of A1 scope): remaining
+  provenance "Assign: 1011014 SS-X" / "1011002 ..." attribution
+  tails (sec-8 AR-044 / AR-057-adjacent; D7 related-docs ref)
+  cite retired source specs. Attribution only; content is in-
+  diagram; does NOT block code. Future dedicated retired-citation-
+  tail slice (DEC-125-style).
+- SYMBOLS_PER_CONN_SAFE=500 seed-home (TB00684 audit sec 4.1):
+  CIATS-owned starting value homed inline in contract:WM-SHARD-001
+  rather than TB00000 sec 8. Non-blocking; unrelated to startup;
+  deferred to its own single-concern slice (TB00000 sec 8 not
+  edited this session -> no v2_91).
+
+6. STANDING OPEN ITEM FOR BILL (carried; NOT a gap)
+------------------------------------------------------------
+- MPP slippage-cap starting value: UNRULED. Required before FIRST
+  PAPER-TRADING BOOT, not before coding. Surface at every session
+  close until ruled.
+
+7. C: / WRITE DISCIPLINE
+------------------------------------------------------------
+New version files created only (dv1_229 + 0521001 dv1_39 in Docs;
+TB00685 SL + TB00686 NSI in SessionLogs). Existing dv1_228 / dv1_38
+/ v2_90 on C: NOT modified, moved, or deleted. dv1_229 + dv1_39
+built in a temp area from the HEAD-verified dv1_228/dv1_38 and
+placed as NEW files. Superseded dv1_228 + dv1_38 leave HEAD via
+git rm --cached only (C: copies preserved). Explicit file adds,
+never git add -A.
+
+8. DELIVERABLES PUSHED
+------------------------------------------------------------
+Docs (master): + dv1_229, + 0521001 dv1_39; git rm --cached
+dv1_228 + 0521001 dv1_38. SessionLogs (master): + TB00685 SL,
++ TB00686 NSI. DR-010 fresh-tarball md5 verification at close.
+
+9. NEXT SESSION
+------------------------------------------------------------
+TB00686 NSI: GO -- launch Phase 2 Option B Session 1 in CLAUDE
+CODE from TB00683 against dv1_229 (sole coding source). Governance
+follow-ups: the retired-citation-tail residue slice and the
+SYMBOLS_PER_CONN_SAFE seed-home slice (both non-blocking).
+
+============================================================
+END TB00685 SESSION LOG v1_0
+============================================================
