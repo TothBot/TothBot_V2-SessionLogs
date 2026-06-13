@@ -1,13 +1,13 @@
 DocDCN:     TB00153
 DocTitle:   Decision_Register
-DocVersion: v1_94
+DocVersion: v1_95
 DocOwner:   Bill
-DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00153_Decision_Register_v1_94.txt
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00153_Decision_Register_v1_95.txt
 DocDate:    06-13-2026
-DocTime:    00:59:56 UTC
+DocTime:    03:50:00 UTC
 
 ============================================================
-TB00153 DECISION REGISTER v1_94
+TB00153 DECISION REGISTER v1_95
 OPEN DECISIONS REQUIRING BILL RATIFICATION
 ============================================================
 
@@ -7211,6 +7211,91 @@ closure). No value migration; sec 9.17 unchanged; TB00000 not
 amended; no paired MDR entry. Migrates the Exit-controller
 group's three remaining tokens (D3 mod:Exit_Controller) and
 CLOSES the DEC-045 carry-forward — Exit-controller group COMPLETE.
+
+
+DEC-128  (TB00689)  MPP SLIPPAGE-CAP STARTING VALUE -- HISTORICAL-OHLC
+         Q95 ADVERSE-GAP SEED + RR-HEADROOM FLOOR-PRESERVATION,
+         CIATS-OWNED FROM THE START.
+         STATUS: RATIFIED by Bill in-chat at TB00689 (explicit
+         ratification of the TB00689_MPP_Slippage_Cap_Derivation_
+         Analysis recommendation: boot recipe min(Q95, rr_headroom)
+         APPROVED; EV explicitly NOT added at the cap; two refinements
+         folded into the analysis v1_2 -- CIATS-owned-from-the-start
+         wording + the EV-for-sizing flag).
+         (1) SEED VALUE/RECIPE. The MPP slippage cap on the CR-03
+             marketable-IOC entry (WS-ADD-002 bound) boots from a
+             per-pair/per-side statistical seed and a floor-preserving
+             term, combined by min():
+               mpp_abs_cap_pct(pair,side) [SEED] = empirical 95th-
+                 percentile (Q95) of the ADVERSE close-to-next-open
+                 displacement over the historical OHLC backtest
+                 dataset (the SAME dataset DEC-124 expected_reward_
+                 estimator_seed replays). Nonparametric quantile --
+                 the gap distribution is heavy-tailed; a Gaussian
+                 (mean+k*sigma) fit understates the tail and is
+                 inadmissible.
+               rr_headroom = expected_reward - 1.5 * net_loss -- the
+                 sacred 1.5 floor expressed at the execution boundary;
+                 NOT a parameter, never tunable; inputs already at D9
+                 g8d (evt:G8_SIZED).
+               mpp_cap_pct = min(mpp_abs_cap_pct, rr_headroom),
+                 applied at AR-069 limit-price construction, all-
+                 Decimal, quantized in the cap-tightening direction
+                 (Long: ref*(1+cap) ROUND_DOWN; Short: ref*(1-cap)
+                 ROUND_UP). cap<=0 -> limit = quantized reference
+                 (zero-fill -> candidate dropped per D2 G5 entry_
+                 fill_disposition).
+         (2) CLASSIFICATION (sec 3 binary test). The marketable-IOC-
+             with-MPP-cap contract and the min(Q95, rr_headroom)
+             STRUCTURE are trading-organism architecture -> 0500000
+             (WS-ADD-002 / dispatch-seam / AR-069 surfaces). The seed
+             VALUE/RECIPE is a transient CIATS seed -> TB00000 sec 8
+             (CIATS class), the same home and form as expected_reward_
+             estimator_seed.
+         (3) OWNERSHIP (Bill ruling). CIATS-OWNED FROM THE START: the
+             historical-OHLC Q95 derivation IS CIATS setting the seed
+             from data (a large per-pair sample, statistically valid
+             day one); nothing waits to OWN it. The 200-trade floor
+             gates LIVE-DATA TUNING ONLY (EWMA lambda=0.2 on realized
+             slippage + zero-fill rate; CUSUM shift-detect; Mann-
+             Whitney U paper-vs-seed) -- never ownership. Mirrors
+             DEC-124 exactly. rr_headroom is NEVER CIATS-tunable (a
+             direct corollary of the A1 sacred constraint).
+         (4) EV DISPOSITION (Bill question, ruled). A poker-style EV
+             calc (p_win*reward - p_loss*loss) is NOT added at the
+             cap: REDUNDANT (the net 1:1.5 floor IS the conservative
+             EV proxy; rr_headroom already enforces it), UPSTREAM (the
+             take/don't-take EV call is settled at A1), and at the cap
+             a pure EV-max would LOOSEN against loss-min. EV is
+             FLAGGED for the CIATS sizing curve ABOVE the floor
+             (per_trade_size_usd as p(win)-weighted edge; Half-Kelly
+             as the consuming method) -- a SEPARATE, data-gated, later
+             element; no action this session beyond the flag.
+         (5) RATIONALE OF RECORD (FP/DP, loss-min). Cap-too-tight = an
+             unfilled IOC = missed entry, ZERO capital cost; cap-too-
+             loose = a degraded fill silently breaching the admitted
+             1.5 floor = real loss. Q95 fills ~95% of normal-condition
+             entries and refuses the abnormal-displacement tail (the
+             AR-078 elevated/extreme bands -- the hazardous fills,
+             refusal cost = opportunity only). rr_headroom makes a
+             floor-breaching fill mathematically impossible (slippage
+             s breaches iff s > E - 1.5N). Each term alone fails loss-
+             min in one direction; min() closes both. Bases fee-
+             relative / spread-relative / ATR-relative analyzed and
+             rejected in the analysis doc (no live spread for non-
+             position pairs; fee/ATR-relative each fail loss-min in
+             one direction).
+         COMPANION (same session): TB00000 v2_91 -> v2_92 (sec 8
+         mpp_abs_cap_pct CIATS entry); 0500000 dv1_230 -> dv1_231
+         (annotate WS-ADD-002 D1 / dispatch-seam ciats_ownership D2 /
+         AR-069; the dv1_230 "no registry seed exists" clause is
+         SUPERSEDED for this boot recipe and amended in the same
+         pass -- DIAGRAMS GOVERN); 0521001 dv1_40 -> dv1_41 (verbatim
+         provenance append per DEC-123). Analysis deliverable:
+         TB00689_MPP_Slippage_Cap_Derivation_Analysis_v1_2
+         (SessionLogs).
+         ARTIFACTS (this entry): TB00153 Decision Register
+         v1_94 -> v1_95.
 
 
 DEC-127  (TB00688)  FIXED-ENGINEERING-CONSTANT RECLASSIFICATION --

@@ -1,0 +1,373 @@
+DocDCN:     TB00689
+DocTitle:   MPP_Slippage_Cap_Derivation_Analysis
+DocVersion: v1_2
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00689_MPP_Slippage_Cap_Derivation_Analysis_v1_2.txt
+DocDate:    06-13-2026
+DocTime:    03:45:00 UTC
+
+v1_2: Bill RATIFIED (this chat). Recipe min(Q95, rr_headroom)
+APPROVED as the boot recipe; EV explicitly NOT added at the
+cap. Two refinements folded in: (1) CIATS-ownership wording
+corrected -- CIATS owns the value FROM THE START (the
+historical-OHLC seed IS CIATS setting it from data, valid
+immediately on a large sample); the 200-trade floor gates
+LIVE-DATA tuning only, not ownership (the DEC-124 pattern,
+stated exactly). (2) New section 4a records the EV
+consideration: rejected as redundant at the cap (rr_headroom
+already encodes the conservative 1.5 EV-proxy floor; the
+take/don't-take EV call is upstream at A1; at the cap a pure
+EV-max would loosen against loss-min), and FLAGGED for the
+CIATS sizing curve above the floor (Half-Kelly consuming
+method; p(win)-weighted EV) as a separate, data-gated, later
+element -- NOT this session. Recipe math, section 3 derivation,
+and floor-preservation term unchanged. v1_2 supersedes v1_1.
+
+v1_1: Bill in-chat ruling (TB00689): the seed value must be
+MATHEMATICALLY DERIVED from historical data (not asserted),
+CIATS-owned and controlled, using the historical-data seed
+pattern already ratified for paper trading (DEC-124 /
+TB00654). The v1_0 fixed 0.5*FEE_TAKER_PCT seed is REPLACED
+by a per-pair statistical derivation from historical OHLC.
+The floor-preservation (rr_headroom) term is unchanged.
+
+============================================================
+TB00689 -- MPP SLIPPAGE-CAP STARTING VALUE
+FP/DP DERIVATION ANALYSIS (CR-03 MARKETABLE-IOC ENTRY)
+============================================================
+
+PURPOSE. Derive the STARTING VALUE + RECIPE for the maximum-
+permissible-price (MPP) slippage cap on the CR-03 marketable-
+IOC entry. The cap is ratified architecture (WS-ADD-002: the
+CIATS-owned bound on the worst acceptable entry fill); only
+the boot value was unruled. Per Bill ruling (this session):
+the seed is mathematically derived from historical data, best
+meeting the net 1:1.5-or-better entry estimation, CIATS-owned.
+All cited elements grep-verified at 0500000 dv1_230
+(md5 7d6c0d56b028fb6df0122aaafecb5624).
+
+------------------------------------------------------------
+1. CANON GROUNDING (dv1_230, verified at HEAD)
+------------------------------------------------------------
+(a) WS-ADD-002 (D1, L1581): entry add_order = marketable IOC
+    limit bounded by the MPP slippage cap on the worst
+    acceptable fill; unfilled remainder expires at submission;
+    the cap is the CIATS-owned bound.
+(b) AR-069 (L5520): entry_ref_price = last_complete_candle
+    [symbol].close. Long: entry_limit_price = MPP-capped bound
+    ABOVE the reference, quantize(price_increment, ROUND_DOWN);
+    Short: BELOW, ROUND_UP (AR-047: quantization tightens the
+    cap). Per-module CIATS tracks rejection_rate_by_regime
+    (Kraken rejects + IOC zero-fills).
+(c) D9 g8d (L2831-2960): expected_reward (fraction of entry
+    price, CIATS run-to-reversal estimate); net_loss = mae_pct
+    + 2 * FEE_TAKER_PCT; A1 ACCEPT iff expected_reward /
+    net_loss >= 1.5 (the sacred floor, the only hardcoded
+    value).
+(d) G5 entry_fill_disposition (D2, L2298): ZERO fill -> order
+    killed, candidate logged and dropped. A zero-fill costs
+    only the opportunity.
+(e) AR-078 spread analysis (L5793, in-canon): monitored
+    universe ($500k+ daily volume) -- normal spread
+    0.01-0.05%; elevated 0.2-1.0%; extreme >2%.
+(f) WS-EXE-012 (D1): last_price / avg_price per fill feed
+    slippage analytics -- the realized-slippage observable
+    exists in canon.
+(g) DEC-124 / TB00654 seed pattern (TB00000 sec 8,
+    expected_reward_estimator_seed): replay over historical
+    OHLC per pair/regime; central-tendency statistic; seed
+    feeds the boot state; CIATS-owned per module; tuned from
+    paper data from the 200-trade floor. THE SAME PATTERN IS
+    APPLIED HERE, on the SAME historical OHLC dataset.
+
+DISAMBIGUATION. "MPP" appears in canon in two senses: (1) the
+TothBot entry-side slippage cap (this analysis); (2) Kraken's
+Market Price Protection on exit market sells (AR-035/AR-078).
+Unrelated mechanisms; only (1) is in scope.
+
+------------------------------------------------------------
+2. FIRST-PRINCIPLES CONSTRAINTS
+------------------------------------------------------------
+(a) LOSS-MIN ASYMMETRY (governing). Cap too TIGHT: IOC
+    zero-fills, candidate dropped -- missed entry, zero
+    capital loss. Cap too LOOSE: a degraded fill silently
+    pushes the realized expected R:R below the sacred 1.5
+    floor the candidate was admitted on. Bias TIGHT.
+(b) FLOOR-PRESERVATION MATH (the 1:1.5-or-better estimation
+    requirement, exact). Let E = expected_reward, N =
+    net_loss, both fractions of the reference price, with
+    E/N >= 1.5 at A1. A fill worse than reference by slippage
+    fraction s gives, to first order:
+      realized reward E' = E - s   (the run-to-reversal exit
+        price is independent of entry; the favorable excursion
+        shrinks by exactly the slippage)
+      realized risk   N' ~= N     (mae_pct = ATR*mult/fill --
+        a worse fill RAISES the denominator, shrinking mae_pct
+        slightly; the approximation errs conservative; fee
+        fractions unchanged)
+    The realized ratio clears the floor iff
+      (E - s) / N >= 1.5   <=>   s <= E - 1.5 * N.
+    DEFINE  rr_headroom = expected_reward - 1.5 * net_loss.
+    rr_headroom is the mathematically exact maximum slippage
+    that preserves the 1:1.5-or-better estimate. It is derived
+    directly from the hardcoded floor; it is NOT a parameter
+    and is never tunable. Both inputs are already produced per
+    candidate at D9 g8d (evt:G8_SIZED payload) -- zero new
+    computation or data dependency.
+(c) FILLABILITY. A marketable IOC must cross the spread plus
+    any instantaneous price displacement between the candle
+    close that triggered the pipeline and order arrival. The
+    cap must cover the NORMAL magnitude of that displacement
+    (or entries never fill) and exclude the abnormal tail
+    (elevated/extreme spread -- the hazardous fills).
+(d) NO LIVE SPREAD AT ENTRY. Pairs without open positions run
+    ticker event_trigger=trades, not bbo (WS-TKR-002); no
+    order-book channel is subscribed. Live-spread-based caps
+    require new subscriptions -- architecture change, out of
+    scope. Historical OHLC is the admissible data source
+    (same ruling basis as TB00654).
+(e) DETERMINISM + DECIMAL. Recipe deterministic per candidate,
+    all-Decimal (AR-047 / HR-SP-008), quantization in the
+    cap-tightening direction (canon, unchanged).
+
+------------------------------------------------------------
+3. STATISTICAL DERIVATION OF THE SEED (historical OHLC)
+------------------------------------------------------------
+THE MEASURABLE QUANTITY. Entry triggers on a committed 5m
+candle close; the order arrives moments into the next candle.
+The OHLC-derivable proxy for the instantaneous adverse price
+displacement the order must absorb is the CLOSE-TO-NEXT-OPEN
+gap (crypto trades 24/7, so open(t+1) ~= first traded price
+after close(t)):
+
+  per committed candle t, per pair, per side:
+    long side:   d_t = max(0, (open(t+1) - close(t)) / close(t))
+    short side:  d_t = max(0, (close(t) - open(t+1)) / close(t))
+  (only the ADVERSE direction is a cost; favorable gaps are
+  clipped to zero, not netted -- conservative.)
+
+THE STATISTIC. The empirical distribution of d_t is heavy-
+tailed (gap distributions are leptokurtic; news/liquidity
+spikes dominate the tail). A Gaussian fit (mean + k*sigma)
+UNDERSTATES the tail and is statistically inadmissible here;
+the NONPARAMETRIC EMPIRICAL QUANTILE is the appropriate
+estimator -- no distributional assumption, robust to outliers
+by construction.
+
+  mpp_abs_cap_pct(pair, side) = Q95[ d_t ]
+    = the empirical 95th-percentile adverse close-to-open
+      displacement over the historical OHLC window.
+
+WHY THE 95TH PERCENTILE (loss-min derivation, not taste):
+  - By construction ~95% of normal-condition entries on that
+    pair fill through the cap: the fill rate is a DERIVED,
+    quantified property of the seed, not a hope.
+  - The excluded ~5% tail is, by definition, the candles with
+    abnormal instantaneous displacement -- news events, thin
+    books, spread blowouts (the AR-078 elevated/extreme bands).
+    Those are precisely the entries loss-min wants REFUSED;
+    their refusal cost is opportunity only (constraint 2(a)).
+  - A higher quantile (P99) admits tail fills (anti-loss-min);
+    a lower quantile (P75/P50) rejects routine entries for no
+    risk benefit. P95 is the knee implied by the asymmetry:
+    pay nothing in capital to refuse the hazardous 5%.
+  - SANITY ANCHOR against in-canon data: on $500k+ pairs the
+    normal displacement scale is the normal-spread band
+    (0.01-0.05%, canon 1(e)); Q95 per pair is expected to land
+    near or just above that band and BELOW the elevated band
+    (0.2-1.0%) -- the same separation the v1_0 fixed value
+    targeted, now measured per pair instead of asserted.
+
+DATASET + EXECUTION (mirrors TB00654 exactly): computed OFF
+the hot path over the SAME historical OHLC dataset the
+expected_reward_estimator_seed backtest replays, per pair in
+the monitored universe (decision:D-04 floor), per side.
+Per-regime refinement follows the 600-trade per-regime canon:
+CIATS may split the statistic per regime once per-regime data
+suffices; the seed is per pair/side. Insufficient-history
+pairs (newly listed): fall back to the universe median Q95
+until the pair accrues its own window -- never guessed.
+
+------------------------------------------------------------
+4. RECOMMENDED RECIPE (boot state) -- RATIFIED
+------------------------------------------------------------
+Per candidate, at AR-069 limit-price construction, all
+Decimal:
+
+  rr_headroom  = expected_reward - (3/2) * net_loss
+  mpp_cap_pct  = min( mpp_abs_cap_pct(pair, side) ,
+                      rr_headroom )
+
+  mpp_abs_cap_pct(pair, side)  [SEED] = empirical Q95 of the
+      adverse close-to-next-open displacement from the
+      historical OHLC backtest dataset (section 3).
+
+  Long:  entry_limit_price = entry_ref_price * (1 + mpp_cap_pct)
+         .quantize(price_increment, ROUND_DOWN)
+  Short: entry_limit_price = entry_ref_price * (1 - mpp_cap_pct)
+         .quantize(price_increment, ROUND_UP)
+
+  mpp_cap_pct <= 0 -> limit = quantized reference (fills only
+  if the book touches the reference; otherwise zero-fill ->
+  candidate dropped per G5 disposition). No special-case path.
+
+WHY THE min(): the two terms close each other's failure mode.
+  - rr_headroom (exact math, section 2(b)) makes a floor-
+    breaching fill IMPOSSIBLE: no admitted fill can have a
+    first-order realized expectation below 1:1.5. This is the
+    "best meet the 1:1.5 R:R or better entry point estimation"
+    requirement, satisfied exactly, by derivation from the
+    hardcoded floor itself.
+  - Q95 (measured statistics, section 3) stops high-headroom
+    candidates from paying tail prices into elevated-spread
+    books: floor-preserving but value-destroying fills are
+    refused.
+  Each term alone fails loss-min in one direction; together
+  neither failure mode exists.
+
+WORKED EXAMPLE (typical liquid pair; illustrative Q95 = 0.06%;
+5m ATR = 0.2% of price):
+  mae_pct  = 1.5 * 0.20% = 0.30%
+  net_loss = 0.30% + 0.26% + 0.26% = 0.82%
+  Floor requires expected_reward >= 1.23%.
+  Candidate A: E = 1.60% -> headroom = 0.37%
+    -> cap = min(0.06%, 0.37%) = 0.06% (Q95 binds; fills
+    through any normal-condition displacement on this pair).
+  Candidate B: E = 1.30% -> headroom = 0.07%
+    -> cap = 0.06% (Q95 still binds; fills normally).
+  Candidate C: E = 1.26% -> headroom = 0.03%
+    -> cap = 0.03% (headroom binds; fills only on a tight
+    book -- a marginal candidate cannot afford a degraded
+    fill; zero-fills otherwise. Correct by 2(b)).
+  Candidate D: E = 1.23% (at floor) -> cap ~ 0 -> limit =
+    reference -> effectively zero-fills. Correct by 2(b).
+
+KNOWN PROXY LIMITATION (stated, not hidden): the close-to-open
+gap embeds trade-price bounce but not the standing half-spread
+itself; the proxy can understate true crossing cost by up to
+~half the spread (0.005-0.025% on the monitored universe).
+This is a SEED-quality limitation only: from the first fills,
+CIATS observes ACTUAL realized slippage (WS-EXE-012 last_price
+/ avg_price vs entry_ref_price) and corrects -- the same
+seed-then-correct structure DEC-124 ratified for the
+expected-reward estimate.
+
+CIATS OWNERSHIP AND CONTROL (per Bill ruling, v1_2): mpp_abs_
+cap_pct is CIATS-OWNED FROM THE START. The historical-OHLC Q95
+derivation IS CIATS setting the seed from data -- a large
+per-pair sample (thousands of candles), statistically valid on
+day one; there is nothing to wait for to OWN the value. The
+200-trade floor gates LIVE-DATA TUNING ONLY -- the point below
+which the live paper sample is too small to adjust against
+without chasing noise -- never ownership. This mirrors the
+DEC-124 expected_reward_estimator_seed exactly: CIATS-owned,
+historical seed, tuned from paper data from the 200-trade
+floor. So:
+  - from trade 1: CIATS OWNS the value, set from historical
+    data (the Q95 derivation, section 3);
+  - from the 200-trade floor: CIATS REFINES it against live
+    realized slippage and zero-fill rate.
+CIATS tunes it on two existing observables:
+  - rejection_rate_by_regime (AR-069 IOC zero-fill tracking):
+    elevated zero-fill rate -> cap costing entries -> propose
+    quantile/value increase;
+  - realized fill slippage (WS-EXE-012 analytics): realized
+    slippage distribution hugging the cap -> cap binding and
+    being paid -> propose decrease.
+  Statistical machinery: the canon CIATS methods apply
+  directly -- EWMA (lambda=0.2) on realized slippage and
+  zero-fill rate; CUSUM for distribution-shift detection
+  (a structural spread change on a pair); Mann-Whitney U for
+  paper-vs-seed distribution comparison at the 200-trade
+  floor. Changes flow through normal CIATS PDCA proposals.
+The rr_headroom TERM is NOT a parameter and is never CIATS-
+tunable: it is the sacred 1.5 floor expressed at the execution
+boundary. CIATS may never propose a cap construction admitting
+a fill whose first-order realized expectation is below the
+floor (direct corollary of the A1 sacred constraint).
+
+------------------------------------------------------------
+4a. EXPECTED-VALUE (EV) CONSIDERATION -- REJECTED AT THE CAP
+------------------------------------------------------------
+Bill asked whether a poker-style EV calculation
+(p_win * reward - p_loss * loss) should enter the cap recipe.
+RULING (this session): NO -- redundant at the cap, and at the
+cap a pure EV-max would push AGAINST loss-min. Three grounds:
+
+  (1) The EV protection is already present. The sacred net
+      1:1.5 R:R floor is the project's deliberately-
+      conservative EV proxy (a margin above breakeven). The
+      rr_headroom term (section 2(b)) already guarantees that
+      no fill drags a trade below that floor. A separate EV
+      calc re-derives the same guarantee through a noisier
+      path -- it would require a win-probability estimate the
+      cap decision does not otherwise need.
+  (2) The EV take/don't-take call is UPSTREAM. By the time the
+      cap is constructed, A1 (D9 g8d) has already decided the
+      trade is worth taking. The cap is not take/don't-take;
+      it is "the worst fill that keeps an already-approved
+      trade approved." EV belongs to the admission decision,
+      which is settled at A1.
+  (3) At the cap, EV-max FIGHTS loss-min. A pure EV-max values
+      the skipped trade and would LOOSEN the cap to recover
+      missed-fill opportunity. The governing asymmetry
+      (2(a)) is the opposite: a missed fill costs zero, a bad
+      fill costs real money -- bias TIGHT. EV here either
+      reproduces the tight answer (redundant) or pushes looser
+      (wrong by priority).
+
+WHERE EV EARNS ITS KEEP (flagged, NOT this session): the CIATS
+SIZING CURVE ABOVE THE FLOOR (per_trade_size_usd as a function
+of edge from the 200-trade floor, TB00000 sec 8). The 1.5
+floor is a RATIO and carries no win probability; two floor-
+passing candidates can have very different true EV. A p(win)-
+weighted EV is the correct quantity to size against, and it is
+the missing input that makes the already-listed Half-Kelly
+method (sec 5) operable (Kelly fraction = edge/odds; Half-Kelly
+under-sizes for drawdown control -- consistent with loss-min).
+Building it requires a per-candidate win-probability estimate
+(data-gated: 200-trade floor for inference, 600 per regime;
+the DEC-124 historical-OHLC backtest can seed p(win) the same
+way it seeds expected reward) plus a sizing-curve diagram
+element. This is a SEPARATE element, a SEPARATE session. No
+action here beyond this flag: the sizing work makes allocation
+a function of p(win)-weighted EV, not the R:R ratio, with
+Half-Kelly as the consuming method.
+
+------------------------------------------------------------
+5. CLASSIFICATION (binary architecture test)
+------------------------------------------------------------
+The marketable-IOC-with-MPP-cap contract and the
+min(Q95, rr_headroom) STRUCTURE are trading-organism
+architecture -> 0500000 (WS-ADD-002 / dispatch-seam / AR-069
+surfaces annotate the recipe).
+The seed VALUE/RECIPE (Q95 of adverse close-to-open
+displacement, historical-OHLC backtest) is the sec-8 registry
+entry -- the same home and form as expected_reward_estimator_
+seed. NOTE: the dv1_230 dispatch-seam clause currently reads
+"no registry seed exists by ratified canon, zero new tokens";
+ratification supersedes that clause for the boot recipe and it
+is amended in the same dv1_231 pass (DIAGRAMS GOVERN; prose
+follows).
+
+------------------------------------------------------------
+6. ON-RATIFICATION EXECUTION SET (RATIFIED -- EXECUTING)
+------------------------------------------------------------
+  (1) Mint DEC-128 (TB00153 v1_94 -> v1_95; DEC-128 verified
+      free at HEAD, max = DEC-127).
+  (2) TB00000 v2_91 -> v2_92: sec 8 CIATS entry
+      mpp_abs_cap_pct = per-pair/side empirical Q95 adverse
+      close-to-next-open displacement, historical-OHLC
+      backtest seed + min(Q95, rr_headroom) recipe; CIATS-
+      owned from the start, live-tuning gated at the 200-trade
+      floor.
+  (3) 0500000 dv1_230 -> dv1_231: annotate WS-ADD-002 (D1),
+      dispatch-seam ciats_ownership clause (D2), AR-069 with
+      the ratified recipe structure; amend the "no registry
+      seed" clause.
+  (4) 0521001 dv1_40 -> dv1_41: append provenance per DEC-123.
+  (5) SL + NSI + OCS + OP4 push box + DR-010.
+
+============================================================
+END
+============================================================
