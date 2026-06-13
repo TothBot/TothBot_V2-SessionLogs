@@ -1,10 +1,10 @@
 DocDCN:     TB00000
 DocTitle:   TothBot_V2_Project_Instructions_for_Claude
-DocVersion: v2_92
+DocVersion: v2_93
 DocOwner:   Bill
-DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00000_TothBot_V2_Project_Instructions_for_Claude_v2_92.txt
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00000_TothBot_V2_Project_Instructions_for_Claude_v2_93.txt
 DocDate:    06-13-2026
-DocTime:    03:55:00 UTC
+DocTime:    06:58:00 UTC
 
 ============================================================
 TOTHBOT V2 - WORKING INSTRUCTIONS FOR CLAUDE
@@ -14,6 +14,21 @@ This is Bill and Claude's working document. It is NOT a
 controlled document: no DCN, no lifecycle state, no namespace
 governance. It exists to keep us on track and moving forward.
 Keep it lean. Change history lives in git, not in here.
+
+v2_93: TB00694 audit-finding corrections (TB00693 NSI sec 2).
+Sec 8 mpp_abs_cap_pct recipe pinned to the 5 m OHLC series
+(O1 clarification, no design change). Sec 4.4 C:-drive rule
+rewritten per Bill ruling (TB00692 sec 3a): read/use C: files
+freely; never add/remove/move/rename/overwrite a C: file
+without Bill's knowledge and permission; git ops incl
+git rm --cached permitted. Removed the stale legacy order-
+minimum seed from sec 8 (min_order_size_usd, a sub-dollar per-
+pair value) -- superseded by the CR-06 $50 floor
+(per_trade_size_usd = max(50, 5 * max(costmin, ordermin *
+entry_limit_price))) plus CR-07 live-read per-pair cost_min/
+qty_min; no separate short-side minimum. The legacy sub-dollar
+seed now appears nowhere in TB00000 or 0500000. Companion:
+0500000 dv1_232, 0521001 dv1_42, 0311001 v1_48.
 
 v2_92: DEC-128 MPP slippage-cap starting value ratified
 (TB00689). Section 8: NEW CIATS group entry-slippage-cap.
@@ -60,7 +75,7 @@ values live in git history; token retired 0311001 v1_47);
 per_trade_size_usd aligned to the ratified DEC-122 CR-06
 pair-relative formula max(50, 5 * max(costmin, ordermin *
 entry_limit_price)) live-read per pair ($50 floor, 5x margin;
-the former ~$0.50 seed lives in git history; the D2 Gate-8
+the D2 Gate-8
 q1_do is the governing diagram element -- DIAGRAMS GOVERN).
 Companion: 0500000 dv1_214 (D1 R14 / D2 R11 / D7 R10),
 0521001 dv1_24, 0311001 v1_47 (four tokens retired -- closes
@@ -319,16 +334,18 @@ log the incident under the existing rule instead.
   requires Bill's written authorization.
 
 4.4 C: DRIVE AND GITHUB
-  Never move, add, remove, rename, or overwrite anything on
-  Bill's C: drive. The working trees are used ONLY to push to
-  GitHub. GitHub HEAD is Claude's to maintain.
-    - Permitted: cd, git add, git commit, git push, git status
-      /log/diff/branch, and git rm --cached (removes from the
-      GitHub index/HEAD only; the C: file is preserved).
-    - Prohibited: plain git rm, Copy-Item, Move-Item,
-      Remove-Item, cp, mv, del, robocopy, > / >> to a C: file,
-      or any other command that mutates a C: file. If a C:
-      file genuinely must change, ask Bill to do it.
+  Claude may read and use any file on Bill's C: drive. Claude
+  must NEVER add, remove, move, rename, or overwrite any file
+  on the C: drive without Bill's knowledge and permission;
+  file placement on C: is Bill's step.
+    - Permitted git operations (they do not add or remove C:
+      files): cd, git add, git commit, git push origin master,
+      git status/log/diff/branch, git rm --cached (removes from
+      the GitHub index/HEAD only; the C: file is preserved).
+    - A C:-file mutation without Bill's knowledge and
+      permission is prohibited -- e.g. plain git rm, Copy-Item,
+      Move-Item, Remove-Item, cp, mv, del, robocopy, or > / >>
+      to a C: file. If a C: file must change, ask Bill.
 
 4.5 PUSH (session-close OP4 box)
   One self-contained copy box, executable shell only - no
@@ -568,7 +585,8 @@ CIATS - entry timing
 CIATS - entry slippage cap (DEC-128)
   mpp_abs_cap_pct = per-pair/side empirical Q95 of the
                     adverse close-to-next-open displacement
-                    over the historical-OHLC backtest dataset
+                    on the 5 m OHLC series, over the
+                    historical-OHLC backtest dataset
                     (the same dataset as expected_reward_
                     estimator_seed); nonparametric quantile
                     (heavy-tailed gap distribution). Combined
@@ -612,7 +630,6 @@ CIATS - selection controller (per-module)
 
 CIATS - short-side specific (Short only)
   leverage_cap_short = 3x (Kraken max 10x; low for loss-min)
-  min_order_size_usd = Kraken per-pair min (~$0.50)
 
 CIATS - VPS deployment (single process, universal)
   StartLimitBurst       = 3       (systemd restart cap)
