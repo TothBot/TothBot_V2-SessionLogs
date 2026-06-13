@@ -1,0 +1,192 @@
+DocDCN:     TB00688
+DocTitle:   SYMBOLS_PER_CONN_SAFE_Disposition_Analysis
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00688_SYMBOLS_PER_CONN_SAFE_Disposition_Analysis_v1_0.txt
+DocDate:    06-12-2026
+DocTime:    00:42:38 UTC
+
+============================================================
+TB00688 -- SYMBOLS_PER_CONN_SAFE DISPOSITION ANALYSIS
+First-Principles / Decision-Point analysis
+============================================================
+
+QUESTION (Bill, this session): is SYMBOLS_PER_CONN_SAFE=500
+properly CIATS-owned, a fixed engineering constant, or
+something else -- judged against TothBot trading philosophy
+(maximize profit, minimize loss, emphasis on minimizing loss)?
+
+CANONICAL STATE AT dv1_229 HEAD (grep-verified):
+  - contract:WM-SHARD-001: N_conns = ceil(universe_size /
+    SYMBOLS_PER_CONN_SAFE), SYMBOLS_PER_CONN_SAFE = 500.
+  - Visible SVG text, figure T2 R17 Kraken_API_Connection_
+    Architecture (line 1476): "SYMBOLS_PER_CONN_SAFE = 500
+    (CIATS-owned starting value)".
+  - param:SYMBOLS_PER_CONN_SAFE listed in CIATS produces:
+    lists (D3 CIATS detail, Parameter Store; lines 4299,
+    4818) and in WS_Manager consumes: (line 1618).
+  - NOT present in TB00000 section 8 (the canonical home for
+    every CIATS-owned starting value). This inconsistency is
+    the trigger for this analysis (NSI TB00688 item 2(b)).
+
+============================================================
+1. FIRST PRINCIPLES -- WHAT THE PARAMETER PHYSICALLY DOES
+============================================================
+
+It is the sharding divisor: how many pair subscriptions ride
+one public WS connection. Changing it moves exactly five
+physical quantities:
+
+  (1) N_conns (connection count for the union universe).
+  (2) Per-connection message throughput and processing load.
+  (3) Blast radius of a single connection drop (how many
+      pairs go blind when one shard dies).
+  (4) Proximity to Kraken's real per-connection subscription
+      capacity. Overflow failure mode: subscriptions
+      silently rejected -> blind pairs -> Signal_Pipeline
+      and Exit Controller starved of candle data for those
+      pairs -> missed Layer 1a / Layer 2 exits.
+  (5) Proximity to the AR-080 Cloudflare reconnect ceiling
+      (150 connection-establishment requests per rolling
+      10-minute window per source IP). More shards = more
+      establishment requests in a reconnect storm. Breach
+      locks out reconnection up to 10 minutes, leaving
+      Layer 3 emergSL as the ONLY position protection
+      (AR-001 + AR-055 invariant chain).
+
+It does NOT touch entry selection, sizing, exits, or any
+per-trade economic quantity. It is exchange-interface
+plumbing.
+
+============================================================
+2. DATA-DRIVEN TEST -- CAN CIATS EVER TUNE IT VALIDLY?
+============================================================
+
+CIATS's inference machinery operates on TRADE OUTCOMES:
+proposal engine activates at the 200-trade hard floor;
+methods are Mann-Whitney U, Sharpe, Spearman, EWMA, CUSUM,
+Half-Kelly -- all keyed to per-trade statistics.
+
+SYMBOLS_PER_CONN_SAFE has no per-trade attribution. No
+sample of 200 (or 2,000) trade outcomes carries information
+about the optimal shard size. The relevant evidence is
+infrastructure telemetry (message latency, queue depth,
+reconnect counts, subscription-reject events) -- a data
+stream CIATS does not model and has no statistical
+apparatus for.
+
+CONCLUSION: "CIATS-owned" is unactionable. CIATS could
+never assemble valid evidence to propose a change. The
+label grants a knob that can only ever be turned blind.
+
+============================================================
+3. LOSS-MIN TEST -- WHAT DOES THE KNOB RISK?
+============================================================
+
+Both tuning directions are pure tail risk with no profit
+pathway:
+
+  RAISE it -> fewer shards, but closer to Kraken's real
+  per-connection capacity. The ceiling is not published via
+  API; it is discovered by breaching it. Breach = silently
+  blind pairs = missed exits = direct loss.
+
+  LOWER it -> more shards -> more establishment requests
+  during reconnect storms -> AR-080 breach risk -> up to
+  10-minute reconnect lockout with Layer 3 emergSL as sole
+  protection.
+
+Expected-return upside from tuning: none identified. The
+asymmetry (zero upside, two distinct exit-protection failure
+modes as downside) fails the loss-min priority decisively.
+This is precisely the class of fence section 4.1 says not to
+hand to an optimizer.
+
+============================================================
+4. OPTIONS
+============================================================
+
+OPT-1  CIATS-owned starting value (status quo label).
+       Action: add seed to TB00000 section 8 (v2_92).
+       REJECTED: category error per section 2 (no valid
+       statistical pathway) and loss-min failure per
+       section 3.
+
+OPT-2  FIXED ENGINEERING CONSTANT on contract:WM-SHARD-001.
+       Value 500, hardwired in the WS_Manager sharding
+       contract; changeable ONLY by Bill-ratified 0500000
+       amendment (and, post-stabilization, a DEC-126 Class A
+       promotion). Binary-test compliant: a fixed value is
+       architecture and lives in the diagram; no transient
+       seed exists, so nothing belongs in section 8.
+
+OPT-3  OPERATOR-class parameter in section 8.
+       REJECTED: Bill has no independent tuning basis either
+       (the value derives from Kraken platform behavior, not
+       business judgment); a fixed value is not a "transient
+       parameter seed value," so section 8 is the wrong home
+       under the binary test; and OPT-2 already routes every
+       change through Bill via diagram amendment -- OPT-3
+       adds a second home with zero added control.
+
+OPT-4  Runtime-derived from exchange data.
+       REJECTED: Kraken does not publish a per-connection
+       subscription limit via API; the value cannot be
+       computed live. It is a conservative engineering
+       margin by nature.
+
+============================================================
+5. RECOMMENDATION
+============================================================
+
+OPT-2. SYMBOLS_PER_CONN_SAFE = 500 is a FIXED ENGINEERING
+CONSTANT of contract:WM-SHARD-001. Not CIATS-owned, not an
+operator-tunable seed, no section 8 entry. Changeable only
+by Bill-ratified diagram amendment.
+
+Diagram edit impact if ratified (folds into the same
+dv1_229 -> dv1_230 pass as the Assign-tail strip):
+  (a) Line 1476 visible SVG text: "(CIATS-owned starting
+      value)" -> "(fixed engineering constant,
+      WM-SHARD-001)". VISIBLE TEXT change -> figure T2
+      R17 -> R18 per TB00453.
+  (b) Remove param:SYMBOLS_PER_CONN_SAFE from the CIATS
+      produces: lists (lines 4299, 4818) and re-key the
+      WS_Manager consumes: reference (line 1618) to
+      contract:WM-SHARD-001. Desc-level -> holds R on
+      those figures.
+  (c) 0521001 provenance append per DEC-123.
+
+============================================================
+6. CONSEQUENTIAL FINDING -- SIBLING CONSTANTS (Bill ruling)
+============================================================
+
+Three sibling values have the IDENTICAL character (Kraken-
+platform infrastructure bounds with no per-trade
+attribution) and the identical inconsistency (labeled/listed
+as CIATS params, absent from section 8):
+
+  SUBSCRIBE_RATE_PER_SEC    = 10   (contract:WM-PACE-002)
+  SUBSCRIBE_BURST_CAPACITY  = 20   (contract:WM-PACE-002)
+  T_silent                  = 60s  (contract:WM-SHARD-010)
+
+The section 2-3 logic applies to all three without
+modification. Scope question for Bill:
+
+  SCOPE-A: rule SYMBOLS_PER_CONN_SAFE only this session;
+           defer siblings.
+  SCOPE-B: extend OPT-2 to all four constants in the same
+           dv1_230 edit pass (one amendment, one provenance
+           append, one push).
+
+Claude's recommendation: SCOPE-B -- same logic, same edit
+session, avoids three future single-constant sessions.
+(Other section 8 infra-labeled values -- StartLimitBurst,
+StartLimitIntervalSec, liquidity_refresh_hours, fee
+constants -- are NOT in scope: they already have a section 8
+home and a ratified classification; reclassifying them is a
+separate question not raised by the 2(b) trigger.)
+
+============================================================
+END
+============================================================
