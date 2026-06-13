@@ -1,13 +1,13 @@
 DocDCN:     TB00153
 DocTitle:   Decision_Register
-DocVersion: v1_92
+DocVersion: v1_93
 DocOwner:   Bill
-DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00153_Decision_Register_v1_92.txt
-DocDate:    06-11-2026
-DocTime:    02:30:00 UTC
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00153_Decision_Register_v1_93.txt
+DocDate:    06-12-2026
+DocTime:    23:40:00 UTC
 
 ============================================================
-TB00153 DECISION REGISTER v1_92
+TB00153 DECISION REGISTER v1_93
 OPEN DECISIONS REQUIRING BILL RATIFICATION
 ============================================================
 
@@ -7211,6 +7211,84 @@ closure). No value migration; sec 9.17 unchanged; TB00000 not
 amended; no paired MDR entry. Migrates the Exit-controller
 group's three remaining tokens (D3 mod:Exit_Controller) and
 CLOSES the DEC-045 carry-forward — Exit-controller group COMPLETE.
+
+
+DEC-126  (TB00687)  PAPER-TRADING / MODIFICATION-TESTING SEPARATION --
+         TESTING TWIN REPOS, PROMOTION GATE, PHASED TEST RUNTIME.
+         STATUS: RATIFIED by Bill in-chat at TB00687 (three explicit
+         rulings on the TB00687_Paper_Test_Separation_Analysis_v1_0
+         recommendations).
+         (1) REPOS (Bill naming governs): two new public twin repos,
+             TothBot_V2_Testing-Docs + TothBot_V2_Testing-Code, twins
+             of the active TothBot_V2-Docs + TothBot_V2-Code pair;
+             branch master; seeded byte-identical to active HEAD with
+             full-tree md5 verification at creation. CREATED AFTER
+             PAPER TRADING HAS STABILIZED (Bill ruling: the first
+             paper-trading period involves heavy fine-tuning performed
+             directly on the active pair; the Testing twins exist for
+             post-stabilization modification work). SessionLogs remains
+             the SINGLE TB-prefix repo, name unchanged
+             (TothBot_V2-SessionLogs); both tracks log to it. Existing
+             governance pins untouched; the VPS pulls ONLY from the
+             active pair and never sees the Testing repos.
+         (2) PROMOTION GATE (one direction: Testing -> active). Full
+             test suite PASS (unit + integration + paper_trading; zero
+             skips on touched modules) + class gate + Bill explicit
+             sign-off per promotion (sign-off also ratifies the class):
+               CLASS A (non-behavioral: docs-only, logging/alert text,
+                 verified-identical decision path): suite + 50-candle
+                 zero-anomaly soak on the test instance.
+               CLASS B (behavioral: pipeline, gates, exits, sizing,
+                 CIATS logic, WS handling, any sec-8 seed): suite +
+                 N = 200 paper trades on the test instance evaluated
+                 against the active baseline. N=200 CONFIRMED by Bill
+                 (a population of 100 is generally accepted as
+                 statistically sufficient; 200 is deliberately
+                 conservative and STAYS; section-5 inference floor).
+             ONE DEC/CR-scoped change set per promotion; verified
+             file-level diff (any unattributable diff = ABORT);
+             DR-010-style post-promotion verification incl. VPS
+             working-copy hash; rollback = git revert on active master
+             (never force-push); NO bypass lane.
+         (3) TEST RUNTIME -- PHASED (Bill ruling): START with the
+             single active paper system alone and run it UNTIL STABLE.
+             THEN add the second testing instance ALWAYS-ON on the same
+             CPX22 VPS and observe/fine-tune. IF ACTUAL PROBLEMS arise
+             from cohabitation, move the testing instance to a SECOND
+             SERVER (OPT-1b). ON-DEMAND (OPT-3) is REJECTED for the
+             live phase -- Bill ruling: any problem that can occur
+             always-on can equally occur during an on-demand run while
+             it is running; that chance is not taken in live trading.
+             Escalation path is therefore always-on -> second server,
+             never on-demand. OPT-2 (suite-only) rejected standalone
+             (cannot satisfy the N-trade gate).
+         (4) ISOLATION (mandatory, binding under any runtime):
+             TB00687 analysis C.4 mechanisms (1)-(8) -- separate
+             systemd units with MemoryMax/CPUQuota + boot stagger on
+             the test unit; separate install/state/ledger/log roots
+             with NO shared writable path + cross-root boot refusal
+             assertion; per-instance configs with instance_id;
+             per-instance synthetic wallets; per-instance CIATS
+             instances and statistical pools (pools NEVER shared --
+             contamination = invalid inference; loss-min); separate
+             alert namespaces ([TOTHBOT] vs [TOTHBOT-TEST] minimum);
+             the testing environment NEVER holds private/live Kraken
+             keys; per-instance logrotate.
+         (5) CLASSIFICATION: operations / document-control
+             architecture, NOT trading-organism architecture (binary
+             test) -- does NOT enter the 0500000 diagrams. Canonical
+             home: this DEC + TB00000. A second paper instance is NOT
+             a fifth paper/live divergence point (same codebase, same
+             config flag).
+         OPEN inside this DEC: (a) repo creation steps (Claude-authored
+         at creation time; Bill executes on GitHub) -- deferred to
+         paper-trading stabilization; (b) the CPX22 two-process
+         capacity verdict -- measured during the first paper-trading
+         weeks (single-instance footprint first).
+         ARTIFACTS (this entry): TB00687_Paper_Test_Separation_
+         Analysis_v1_0 (SessionLogs); TB00153 v1_92 -> v1_93; TB00000
+         v2_90 -> v2_91 (section 9 planned-repo entries + separation
+         discipline note).
 
 
 DEC-125  (TB00667)  0500000 LIVE-SURFACE PURIFICATION -- DELETE RETIREMENT

@@ -1,0 +1,441 @@
+DocDCN:     TB00687
+DocTitle:   Paper_Test_Separation_Analysis
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00687_Paper_Test_Separation_Analysis_v1_0.txt
+DocDate:    06-12-2026
+DocTime:    23:15:00 UTC
+
+============================================================
+TB00687 PAPER-TRADING / MODIFICATION-TESTING SEPARATION
+FIRST-PRINCIPLES + DATA-DRIVEN ANALYSIS (MISSIONS A / B / C)
+============================================================
+
+PURPOSE. Per TB00687 NSI section 1: analyze the Paper/Test
+separation plan (TB00686 SL section 4) and present
+recommendations for a single Bill ratification (DEC-126, next
+free number per TB00153 v1_92). Loss-minimization is the
+governing weight throughout.
+
+SCOPE CLASSIFICATION (binary architecture test): the
+separation is document-control / operations architecture, NOT
+trading-organism architecture. It does NOT enter the 0500000
+diagrams. Its home is TB00000 (section 9 + a new operations
+section as needed) + the DEC-126 record. A second paper
+INSTANCE is not a fifth paper/live divergence point (same
+codebase, same config flag); its isolation rules are made
+explicit in the DEC (NSI section 5).
+
+CANONICAL INPUTS USED (grep-verified at dv1_229 / HEAD):
+  - AR-080: Cloudflare limit, 150 connection-establishment
+    requests per rolling 10-minute window PER SOURCE IP on
+    the Kraken WS v2 edge endpoint; breach locks out
+    reconnection up to 10 minutes.
+  - WM-PACE-001/002: process-singleton subscribe token bucket
+    (SUBSCRIBE_RATE_PER_SEC=10, burst=20) -- PER PROCESS.
+  - WM-SHARD-001: N_conns = ceil(universe /
+    SYMBOLS_PER_CONN_SAFE), SYMBOLS_PER_CONN_SAFE=500.
+  - Public REST OHLC: rate-limited by IP address + currency
+    pair at 1/second.
+  - PT_MODE_004: private WS skipped in paper (paper uses
+    PUBLIC endpoints only -- no account-tier budget consumed).
+  - HR-WM-024 / one-WS-manager-per-process-universe: holds
+    PER PROCESS (NSI mandate).
+  - VPS: Hetzner CPX22 (2 vCPU, 4GB RAM, 40GB disk),
+    87.99.141.44, Ubuntu 24.04.4, Python 3.12.3.
+  - Section 5 statistical thresholds: 50 candle evals = EWMA
+    monitoring only (signals, NOT decisions); 200 trades =
+    HARD FLOOR for inference and decisions.
+
+============================================================
+A. REPO STRUCTURE -- ANALYSIS + RECOMMENDATION
+============================================================
+
+A.1 FIRST PRINCIPLES. The requirement is two independent
+document/code STATES: an active state the VPS deploys from,
+and a mutable state where changes are authored and proven.
+Git branches could in principle hold two states in one repo,
+but the project's entire verification protocol (public
+tarball cold-load of HEAD, single master branch, one-version
+rule, md5 pins against HEAD) is built on ONE repo = ONE
+state. Branch-based separation would break the tarball
+protocol (tar.gz/HEAD pulls one tree), violate the
+single-master rule, and put two truths in one namespace.
+Separate repos preserve every existing discipline unchanged.
+
+A.2 REPO COUNT AND NAMING -- CONFIRMED AS RULED.
+  TothBot_V2-Docs-Test  (twin of TothBot_V2-Docs)
+  TothBot_V2-Code-Test  (twin of TothBot_V2-Code)
+Two new repos, exactly. Bill preliminary ruling (1) CONFIRMED.
+  - Tarball protocol works identically:
+    codeload.github.com/TothBot/TothBot_V2-Docs-Test/tar.gz/HEAD
+    codeload.github.com/TothBot/TothBot_V2-Code-Test/tar.gz/HEAD
+  - Branch = master on both, same as all V2 repos.
+  - Both PUBLIC (required for the tarball cold-load protocol;
+    no secrets ever live in either -- same rule as active).
+
+A.3 SESSIONLOGS: NO -TEST TWIN. Sessions on either track log
+to the single TothBot_V2-SessionLogs repo. Rationale:
+  (1) SessionLogs is the project's continuity ledger (SL/NSI
+      chain + TB00000). Splitting it splits continuity: the
+      OCS cold-load would need two inbound NSIs and the
+      "highest TB number" rule would be ambiguous.
+  (2) TB-numbered files are append-only and globally
+      sequenced -- there is no version-collision or
+      two-states problem to solve. The one-repo-one-state
+      discipline protects document/code STATE; a log ledger
+      has only one state by construction.
+  (3) Every existing pin, OCS pattern, and session protocol
+      stays byte-valid.
+Track attribution is carried IN the log content (the SL
+states which track the session worked), not in the repo
+structure.
+
+A.4 BLAST RADIUS ON EXISTING PINS: ZERO. All existing md5/URL
+pins reference the active repos; -Test repos are new
+namespaces. No existing governance document changes meaning.
+
+A.5 SEEDING DISCIPLINE. At creation, each -Test repo is
+initialized as a byte-identical copy of its active twin's
+HEAD, verified by full-tree md5 comparison (DR-010-style),
+then diverges only via authored change sets. A -Test repo
+whose baseline is not provably identical to active HEAD
+invalidates every later promotion diff (loss-min).
+
+A.6 CREATION SCHEDULING -- RECOMMENDATION: AFTER Phase 2
+coding completes (i.e., after TothBot_V2-Code active HEAD
+holds the built organism). Creating the twins now would
+freeze a near-empty Code-Test that must be destructively
+re-synced after every coding session -- a standing re-sync
+burden with zero benefit, and a second stale state to keep
+coherent during the build (loss-min: fewer live states).
+Nothing can be modification-tested before the code exists.
+Creation steps are Claude-authored at that time; execution on
+GitHub is Bill's action (Claude never self-creates repos).
+
+============================================================
+B. PROMOTION PROTOCOL -- ANALYSIS + RECOMMENDATION
+============================================================
+
+B.1 GATE STRUCTURE (Bill ruling (2), YES in principle --
+parameters finalized here):
+
+  GATE = (i) full test suite PASS on -Test
+       + (ii) N paper trades on the test instance, evaluated
+       + (iii) Bill explicit sign-off, per promotion.
+
+B.2 THE VALUE OF N -- DATA-DRIVEN DERIVATION FROM SECTION 5.
+Section 5 is unambiguous: 50 candle evals validates the EWMA
+MONITOR for signals only -- explicitly "not for inference or
+decisions." A promotion IS a decision. The only
+decision-grade anchor in canon is the 200-trade HARD FLOOR.
+Loss-min weighting points the same direction: under-evidenced
+promotion into the active (eventually live) system is the
+exact failure mode this whole separation exists to prevent.
+
+However, applying N=200 to every change class is
+over-constraint: a docs-only or logging-only change has no
+behavioral surface for paper trades to evidence. Recommended
+two-class scheme:
+
+  CLASS A -- NON-BEHAVIORAL change set (docs-only; logging/
+    alert text; comments; refactor with verified-identical
+    decision path). Gate: full suite PASS + minimum 50-candle
+    soak on the test instance with zero anomalies (EWMA
+    monitoring-grade evidence that nothing unexpected moves
+    -- consistent with section 5's "monitoring signals only"
+    use) + Bill sign-off. N(trades) = 0 required.
+
+  CLASS B -- BEHAVIORAL change set (anything touching the
+    pipeline, gates, exits, sizing, CIATS logic, WS handling,
+    or any section-8 seed). Gate: full suite PASS + N = 200
+    trades on the test instance + comparison against the
+    active instance's baseline statistics over the same
+    window + Bill sign-off. N=200 is the canonical inference
+    floor; using a smaller N would make a decision on data
+    canon defines as decision-invalid.
+
+  Classification is Bill-confirmed at promotion request: the
+  promotion request names the class and Bill's sign-off
+  ratifies the classification (prevents Class-B work being
+  smuggled through the Class-A gate).
+
+  SURFACED FOR RULING: whether Bill accepts an intermediate N
+  (e.g., 50 trades) for a defined low-risk Class-B subset.
+  Analysis position: NOT recommended -- it creates a third
+  class whose boundary is judgment-dependent, and section 5
+  gives no statistical standing between 50 candles and 200
+  trades. Two classes, hard boundary.
+
+B.3 TEST-SUITE SCOPE. Full suite = unit + integration +
+paper_trading suites, ALL PASS, ZERO skipped tests in any
+module touched by the change set. The suite lives in
+Code-Test tests/ and is itself promoted with the code it
+tests (the active repo always holds the suite that validated
+its own HEAD).
+
+B.4 PROMOTION MECHANICS (one direction: -Test -> active;
+the VPS never sees -Test):
+  (1) FREEZE: -Test HEAD pinned at the candidate commit;
+      candidate file set enumerated with md5s.
+  (2) VERIFIED DIFF: full file-level diff, active HEAD vs
+      -Test candidate. Every differing file must be
+      enumerated and attributable to the named change set.
+      Any unattributable diff = ABORT (baseline drift).
+  (3) GATE EVIDENCE: suite results + (Class B) the 200-trade
+      evaluation summary, presented to Bill.
+  (4) BILL SIGN-OFF: explicit, per promotion, in chat.
+  (5) PUSH TO ACTIVE: Claude authors the OP4-pattern box
+      (literal paths, master, ASCII, git rm --cached for any
+      superseded versions); Bill executes.
+  (6) VPS PULL + service restart of the active instance.
+  (7) POST-PROMOTION VERIFICATION (DR-010-style): fresh
+      tarball of active HEAD, byte-for-byte md5 on every
+      promoted file, absence check on superseded versions,
+      PLUS verification that the VPS working copy matches
+      active HEAD (hash on the VPS side).
+  (8) ROLLBACK PATH: git revert of the promotion commit(s)
+      on active master (never force-push; history is the
+      rollback store), push, VPS pull, restart, DR-010
+      verification. Rollback is always available because
+      promotion only ever appends commits to active history.
+
+B.5 PROMOTION-ELIGIBLE CHANGE SET. Exactly ONE DEC- or
+CR-scoped change per promotion. No bundling of unrelated
+changes (the one-version-rule analog: minimal diff surface,
+attributable rollback, loss-min). Emergency fixes to the
+active system follow the same mechanics with the same gate
+class rules -- there is no bypass lane; an emergency Class-A
+fix is fast by construction (suite + soak + sign-off).
+
+============================================================
+C. TEST RUNTIME -- OPTIONS ANALYSIS (BILL RULES)
+============================================================
+
+C.1 OPTION DEFINITIONS (per NSI):
+  OPT-1: second fully independent process on the existing
+         CPX22, continuously running.
+  OPT-2: offline test suites only; no live-market test
+         instance.
+  OPT-3: hybrid -- OPT-2 as the default state; the OPT-1
+         instance started ON DEMAND for promotion-qualifying
+         (Class B) runs, stopped after.
+
+C.2 OPT-2 STANDALONE: REJECTED. It cannot satisfy gate
+component (ii) -- N paper trades on a test instance is
+impossible with no instance. It would silently weaken the
+Bill-ratified-in-principle gate to suite-only, which is
+exactly the under-evidenced-promotion failure mode (loss-min
+violation). OPT-2 survives only as the default state INSIDE
+OPT-3.
+
+C.3 SHARED-RESOURCE ANALYSIS (OPT-1/OPT-3, two processes,
+one host, one IP):
+
+  (a) CIATS STATISTICAL POOLS: separate by construction --
+      each process has its own CIATS instances and pools
+      (parallel-modules architecture already mandates
+      per-module pools; per-process separation adds the
+      instance boundary). MANDATORY: no shared state files,
+      no shared ledger paths, no cross-read. Contamination =
+      invalid inference (loss-min). Enforced by isolation
+      mechanisms in C.4.
+
+  (b) KRAKEN PUBLIC WS BUDGET. Paper mode uses PUBLIC
+      endpoints only (PT_MODE_004: private WS skipped), so
+      no account-tier budget is consumed by either paper
+      instance. The binding constraints are IP-scoped:
+        - AR-080 Cloudflare: 150 connection-establishment
+          requests / rolling 10 min / source IP, SHARED by
+          both processes. Per WM-SHARD-001 each process
+          opens ceil(universe/500) connections -- single-digit
+          shard counts per process. Steady state: trivially
+          inside budget. RISK CASE: a test-instance
+          reconnect/crash loop consuming the shared 150
+          budget can lock out the ACTIVE instance's
+          reconnection for up to 10 minutes. While active is
+          PAPER, the cost is data loss only. When active is
+          LIVE, a reconnect lockout leaves Layer 3 emergSL
+          as the only position protection (AR-080 + AR-001 +
+          AR-055 invariant chain) -- this is the single
+          material loss-min exposure in OPT-1.
+        - WM-PACE-001/002 subscribe pacing is
+          process-singleton: two processes = up to 2x10/sec
+          combined subscribe rate from one IP at simultaneous
+          startup. Mitigation: never boot both simultaneously
+          (stagger starts; the test unit gets a start delay).
+        - Public REST OHLC (startup indicator seeding,
+          AR-068): 1/sec per IP+pair. Two processes seeding
+          the same pairs concurrently collide. Mitigation:
+          staggered startup (same as above) fully clears it.
+
+  (c) VPS CAPACITY (CPX22: 2 vCPU, 4GB RAM, 40GB disk). The
+      organism is event-driven Python clocked on 5-minute
+      candle closes; CPX22 is canon-validated as sufficient
+      for ONE instance. Two concurrent instances double
+      memory footprint and log volume on a 2-vCPU/4GB/40GB
+      box. No measured single-instance footprint exists yet
+      (the code is not built), so a hard capacity verdict is
+      NOT derivable today -- it is measurable in the first
+      paper-trading week. Data-driven posture: measure the
+      single-instance RSS/CPU/disk first; if a second
+      instance fits with comfortable headroom (rule of
+      thumb: combined steady-state RSS under ~60% of 4GB and
+      disk growth bounded by logrotate), OPT-1 fits; if not,
+      the second instance needs its own small VPS (a
+      variant: OPT-1b, second process on a second cheap VPS
+      -- also eliminates the shared-IP exposure in (b)
+      entirely, at the cost of a second server bill).
+
+  (d) FAILURE COUPLING: one host = both instances die
+      together on host failure. For two PAPER instances this
+      costs only data. Once active is LIVE, host-level
+      coupling adds no NEW live risk beyond what a single
+      live instance already carries -- but the test
+      instance's ability to destabilize the host (memory
+      exhaustion, disk-full from runaway logging of code
+      under test) becomes a live-instance threat. Code under
+      test is by definition less trusted; it shares a kernel
+      with the live process. Mitigations: systemd resource
+      limits on the test unit (MemoryMax, CPUQuota), separate
+      log partition quota or aggressive logrotate, and
+      disk-usage alerting.
+
+C.4 ISOLATION MECHANISMS (mandatory under any option that
+runs a test instance; enumerated per NSI):
+  (1) systemd: separate units -- tothbot.service (active) /
+      tothbot-test.service (test); test unit carries
+      MemoryMax + CPUQuota caps and a boot-stagger delay;
+      both keep VD-SYS-008 restart caps (StartLimitBurst=3 /
+      600s) which ALSO bounds the test instance's Cloudflare
+      reconnect consumption at the unit level.
+  (2) Paths: separate install roots ~/TothBot_V2-Code
+      (active) / ~/TothBot_V2-Code-Test (test); separate
+      state, ledger, and log directories; NO shared writable
+      path of any kind.
+  (3) Config: per-instance config file with an explicit
+      instance_id; the test config can NEVER reference an
+      active path (startup assertion: refuse to boot if any
+      configured path resolves inside the active root, and
+      vice versa).
+  (4) Wallets/ledgers: per-instance synthetic wallets and
+      ledgers (test gets its own $5,000/$5,000 synthetic
+      pair); no file-level overlap.
+  (5) CIATS: per-instance CIATS instances and statistical
+      pools; pool files live under the instance root only.
+  (6) Alerts: separate namespace -- distinct subject prefix
+      ([TOTHBOT] vs [TOTHBOT-TEST]) at minimum; separate
+      address optional. No test alert may be mistakable for
+      an active alert (loss-min: alert confusion delays real
+      response).
+  (7) Keys: the test environment NEVER holds private/live
+      Kraken keys -- not scoped-down keys, NONE. Paper needs
+      none (PT_MODE_004); when active goes live, live keys
+      exist only in the active instance's environment, never
+      on a path the test instance can read (file permissions
+      + separate env files).
+  (8) Logging: per-instance log namespaces under per-instance
+      directories; logrotate configured per instance.
+
+C.5 COMPARISON SUMMARY (loss-min weighted):
+
+  OPT-1 (always-on second process)
+    + Closest to real conditions; test instance always warm;
+      Class-B 200-trade evidence accumulates continuously.
+    + Matches Bill's initial position; simplest mental model.
+    - Standing shared-IP exposure (C.3(b)) and standing host
+      cohabitation by less-trusted code (C.3(d)) for 100% of
+      calendar time, including all the time when NO promotion
+      is being evidenced.
+    - Capacity verdict deferred to first measurements.
+
+  OPT-2 (suite-only)              REJECTED standalone (C.2).
+
+  OPT-3 (on-demand test instance)
+    + Identical evidence quality to OPT-1 DURING a promotion
+      run (same process, same isolation, same market data).
+    + Shared-IP and host exposure exist ONLY during
+      promotion-qualifying runs -- the loss-min exposure
+      window shrinks from "always" to "only while evidencing
+      a Class-B promotion."
+    + Class-A promotions (suite + 50-candle soak) need only a
+      short on-demand soak window.
+    - Each Class-B run pays startup seeding + warm-up, and
+      the elapsed time to 200 trades only starts when the
+      instance starts (no pre-accumulated evidence). If
+      change cadence is high, the instance ends up running
+      near-continuously anyway, converging on OPT-1.
+    - Marginally more operational steps (start/stop per run).
+
+C.6 RECOMMENDATION (Bill rules):
+  PHASED. While the ACTIVE system is PAPER: run OPT-1
+  (always-on second instance). Both instances are paper; the
+  worst interference outcome is data loss; an always-warm
+  test instance maximizes early evidence accumulation and
+  also stress-proves the two-process cohabitation itself
+  with real measurements (capacity verdict in C.3(c))
+  while the stakes are lowest.
+  When the ACTIVE system goes LIVE: tighten to OPT-3
+  discipline (test instance runs only for promotion-
+  qualifying windows, under the C.4 resource caps), OR move
+  the test instance to a separate small VPS (OPT-1b) if Bill
+  prefers always-on -- either removes/limits the only
+  material loss-min exposure (the shared Cloudflare reconnect
+  budget + host cohabitation against a LIVE instance).
+  This phase boundary is explicit in DEC-126 so no later
+  judgment call is needed.
+
+============================================================
+D. RATIFICATION PACKAGE -- DEC-126 (PROPOSED TEXT)
+============================================================
+
+DEC-126  PAPER-TRADING / MODIFICATION-TESTING SEPARATION.
+  (1) REPOS: two new public repos, TothBot_V2-Docs-Test +
+      TothBot_V2-Code-Test, twins of the active pair; branch
+      master; created AFTER Phase 2 coding completes, seeded
+      byte-identical to active HEAD with full-tree md5
+      verification. SessionLogs remains single (no -Test
+      twin); both tracks log to it. Existing pins untouched.
+      VPS pulls ONLY from the active pair; the VPS never
+      sees -Test.
+  (2) PROMOTION: one-direction -Test -> active. Gate: full
+      suite PASS (unit + integration + paper_trading, zero
+      skips on touched modules) + Class A (non-behavioral:
+      suite + 50-candle zero-anomaly soak) or Class B
+      (behavioral: suite + 200 trades on the test instance,
+      the section-5 inference floor) + Bill explicit
+      sign-off per promotion, which also ratifies the class.
+      One DEC/CR-scoped change set per promotion. Mechanics
+      and rollback per analysis B.4. No bypass lane.
+  (3) TEST RUNTIME: [BILL RULES -- recommendation: OPT-1
+      while active is paper; OPT-3 or OPT-1b once active is
+      live]. Isolation mechanisms C.4(1)-(8) are mandatory
+      and binding under any option. CIATS statistical pools
+      never shared across instances.
+  (4) CLASSIFICATION: operations/document-control
+      architecture; not in 0500000 (binary test); canonical
+      home = TB00000 + this DEC; a second paper instance is
+      not a fifth paper/live divergence point.
+
+ON RATIFICATION: TB00153 register appends DEC-126; TB00000
+v2_90 -> v2_91 (section 9 storage entries for the -Test pair
++ a new operations subsection recording the promotion gate
+and runtime ruling), one-version rule applied.
+
+============================================================
+E. OPEN POINTS SURFACED TO BILL (genuine judgments)
+============================================================
+  (1) Mission C runtime ruling: OPT-1 / OPT-3 / OPT-1b, or
+      the phased recommendation in C.6 as written.
+  (2) Class-B N: confirm N=200 (recommended), or rule an
+      intermediate N for a defined low-risk subset
+      (analysis recommends AGAINST).
+  (3) Creation scheduling: confirm "after coding completes"
+      (recommended), or create now.
+  (4) Standing item (every close until ruled): MPP
+      slippage-cap starting value -- required before FIRST
+      PAPER-TRADING BOOT.
+
+============================================================
+END
+============================================================
