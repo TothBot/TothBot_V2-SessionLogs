@@ -1,0 +1,164 @@
+DocDCN:     TB00704
+DocTitle:   TB00704_Session_Log
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00704_Session_Log_v1_0.txt
+DocDate:    06-14-2026
+DocTime:    04:56:26 UTC
+
+============================================================
+TB00704 SESSION LOG
+PHASE 2 OPTION B - DATA LAYER S2b
+mod:WS_Manager GATEKEEPER SHELL + O(1) DISPATCH SEAM
+============================================================
+
+1. MISSION
+   Second build session of Phase 2 Option B (DEC-120 clean-slate):
+   code mod:WS_Manager's connection lifecycle shell + the O(1)
+   dispatch seam directly from the 0500000 dv1_240 design diagrams
+   into TothBot_V2-Code, per TB00000 v2_97 + TB00703 NSI v1_0.
+   Executor: Claude Code (direct C: access; edit -> verify -> push
+   in place). Continues the TB00702 rhythm: read the governing
+   figure(s) -> build a scoped slice -> test on Python 3.12 ->
+   push -> verify HEAD.
+
+2. ENTRY / COLD-LOAD + VERIFY (from GitHub HEAD)
+   Read: TB00000 v2_97, TB00703 NSI v1_0, TB00702 SL v1_0.
+   Confirmed per TB00703 sec 1:
+     0500000 dv1_240 md5 64f3b870d0d649e12b4dd5b572589a5f (the
+       clean, verified, sole build source) - MATCH.
+     TothBot_V2-Code HEAD = 67a9d3b (S2a), local == origin,
+       working tree clean; tothbot/ package with config/ +
+       exchange/ + 8 sub-package anchors; 29 tests green on the
+       3.12.10 interpreter - ALL CONFIRMED.
+
+   Grounding read (0500000 dv1_240, DIAGRAMS GOVERN): sec 2 Image1
+   Kraken API Connection Architecture (the full D1 container +
+   mod:WS_Manager desc, the A-/WS-/REST- wire facts); sec 7 Image6
+   mod:WS_Manager desc (PA-001 sole dispatch gatekeeper; HR-PM-009
+   sole writer to Position Mirror; pair_cache; contract:WSManager_
+   Dispatch_Seam; contract:Reconciliation_REST); sec 12 Image7
+   Paper-Mode Dispatch Boundary (PA-004 four divergence points;
+   PA-005 byte-identical hot path) plus the D2 dispatch-seam coder
+   detail and the Tier-1 contract definitions.
+
+   COMPLETENESS CHECK (no gap, no STOP): all four Kraken endpoints
+   needed to code the connection shell are stated verbatim in the
+   diagram -- public WS wss://ws.kraken.com/v2, private WS
+   wss://ws-auth.kraken.com/v2, REST https://api.kraken.com, Status
+   API https://status.kraken.com/... -- so S2b was codable from the
+   figures alone. No element authored into 0500000; the build only
+   reads it.
+
+3. BILL DIRECTIVES (chat-turn)
+   (1) "Cold-load TB00703 NSI + TB00000 from GitHub HEAD and follow
+       it." -> executed the S2b mission to close.
+   (2) "Close Session." -> session-close procedure (TB00000 sec 4.6):
+       this SL + the TB00705 NSI + OCS copy box + push + post-push
+       HEAD verification. (The close directive is Bill's permission
+       to create the two new TB-prefix close artifacts on C:.)
+
+4. WORK DONE (S2b - commit 2403679, 5 files, 740 ins)
+   All under tothbot/exchange/. Pure/testable units, I/O at edges.
+
+     connection.py - connection lifecycle shell: Kraken endpoint
+       constants (WS-EP-003 / REST-HTTP-006/007 / REST-STAT-002);
+       WS-client connection invariants (rule:HR-WM-002 / A-18:
+       max_size=10MB, open_timeout=10, max_queue=None,
+       ping_interval=None) via ws_connect_kwargs(); ConnectionRole
+       (PUBLIC/PRIVATE) + endpoint_for(); ConnectionState machine
+       (DISCONNECTED/CONNECTING/CONNECTED/CLOSED with strict
+       transitions incl CLOSED->CONNECTING reconnect edge);
+       WSConnection holding role/state/connection_id (WS-STAT-006).
+
+     dispatch.py - inbound O(1) dispatch table (the read-side
+       gatekeeper, PA-001): channel_from_wire() resolver mapping
+       Kraken wire (name, interval) -> the logical channel (ohlc+5
+       -> OHLC_5M, ohlc+60 -> OHLC_60M, the rest by name); a frame
+       that resolves to no known channel raises UnknownChannelError
+       -- NEVER silently dropped (A-12 / rule:HR-WM-006). DispatchTable
+       register/dispatch/route with one handler per channel; routes
+       all 7 channels (5 public + 2 private).
+
+     seam.py - contract:WSManager_Dispatch_Seam, the outbound
+       order-dispatch mode gate (PA-004 divergence #2). Mode read
+       ONCE at construction (rule:HR-WM-021, immutable). Six
+       outbound order methods (add_order, batch_add, cancel_order,
+       amend_order, batch_cancel, dispatch_market_sell) -- the sole
+       order-dispatch surface; callers are mode-OPAQUE (rule:HR-EE-015).
+       Branch: paper -> paper_simulator + evt:PAPER_ORDER_SIMULATED,
+       nothing to Kraken (rule:HR-WM-023); live -> live_sender +
+       evt:ENTRY_SUBMITTED on the entry add_order. Defensive canary
+       evt:PAPER_DISPATCH_BLOCKED + PaperDispatchBlockedError if the
+       live transmit branch is ever reached in paper mode
+       (rule:HR-WM-023, must be unreachable). Live sender + paper
+       simulator are INJECTED (real bodies land in a later session).
+
+     ws_manager.py - mod:WS_Manager shell, the sole dispatch
+       gatekeeper (PA-001). Binds run mode ONCE (rule:HR-WM-021);
+       public WSConnection always, private WSConnection ONLY in live
+       (rule:HR-WM-022, private WS never connected in paper / PA-004
+       #1); owns the inbound DispatchTable + the outbound DispatchSeam;
+       register_handler/route_frame read-loop entry points. Ships
+       unwired live/paper dispatch I/O defaults that raise until
+       wired in S2c. Note in module: HR-PM-009 sole-writer-to-
+       Position_Mirror authority is wired when Position_Mirror exists.
+
+     tests/test_ws_manager.py - 23 tests: endpoints + invariants,
+       lifecycle transitions (happy path, reconnect edge, illegal
+       transition), wire resolver incl unknown-never-silent, O(1)
+       routing of all 7 channels + double-register reject, seam
+       paper-simulate-never-transmit (all 6 ops), seam live-transmit
+       + ENTRY_SUBMITTED, the PAPER_DISPATCH_BLOCKED canary, and the
+       WS_Manager paper/live private-connection split.
+
+   SCOPE per TB00703 sec 3 -- DEFERRED to S2c (NOT built this slice):
+   PATH-2 connection sharding (WM-SHARD-*), subscribe pacing
+   (WM-PACE-*), keepalive ping (A-7/HR-WM-003) + zombie detection
+   (A-8/HR-WM-004), reconnect (AR-056 11-step / WM-RECONNECT-016 /
+   AR-080 Cloudflare / WS-REC-003/004 / HR-WM-012 pipeline-no-fire),
+   the silent-pair state machine (WM-SHARD-010 / HR-WM-030), and the
+   contract:Reconciliation_REST fallback (A-9/A-10 seq-gap recovery).
+
+5. VERIFICATION
+   pytest on Python 3.12.10: 52 passed (29 prior + 23 new S2b).
+   All four new modules import cleanly. Commit staged surgically
+   (5 named files; no __pycache__; .gitignore confirmed). Post-push
+   DR-010: git fetch; local == origin/master (2403679); all 5 files
+   present in HEAD; working-tree vs HEAD-blob md5 identical for each
+   of the 5 files. Commit present in HEAD.
+
+6. DELIVERABLES (TothBot_V2-Code, branch master)
+   2403679  S2b WS_Manager gatekeeper shell (5 files)
+   No Docs/SessionLogs design changes from the build (0500000
+   unchanged at dv1_240; the build reads it, does not edit it).
+   DEC-125 stays CLOSED; TB00000 stays v2_97 (build mandate sec 3
+   unchanged). This session adds TB00704 (this SL) + TB00705 (NSI)
+   to SessionLogs.
+
+7. SESSION ROADMAP (Claude-scoped; adaptive)
+   S1 Foundation [DONE] -> S2 Data layer [S2a DONE; S2b DONE; S2c
+   sharding/pacing/keepalive/reconnect/silent-pair/reconcile OPEN]
+   -> S3 Regime + signal models -> S4 Module spine (gates, wallet,
+   sizing, A1 R:R floor, drawdown halts) -> S5 Execution (entry +
+   Exit Controller L1a/2/3 + paper/live seam I/O bodies) -> S6 CIATS
+   -> S7 Operations + integration. S4-S6 may split further per figure.
+
+8. HOUSEKEEPING (deferred, non-blocking)
+   The old top-level config/.gitkeep, deploy/.gitkeep,
+   scripts/.gitkeep remain tracked in Code HEAD and do not match the
+   TB00000 sec 9 tothbot/ + operations/ + tests/ layout. Harmless
+   empty placeholders; fold a git rm --cached into a later slice.
+
+9. OPEN -> TB00705 NSI
+   Continue Phase 2 Option B at S2c: the connection-robustness
+   completion of the data layer deferred from S2b -- PATH-2 sharding,
+   subscribe pacing, keepalive (ping + zombie), reconnect, silent-pair
+   state machine, and contract:Reconciliation_REST. Read sec 2 Image1
+   (the A-5/A-7/A-8/A-9/A-10 + AR-056/AR-080 + WM-SHARD/WM-PACE/
+   WM-RECONNECT facts) + the sec-7 WS_Manager desc before coding. No
+   open Bill business judgment outstanding.
+
+============================================================
+END TB00704
+============================================================
