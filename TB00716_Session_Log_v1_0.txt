@@ -1,0 +1,162 @@
+DocDCN:     TB00716
+DocTitle:   TB00716_Session_Log
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00716_Session_Log_v1_0.txt
+DocDate:    06-14-2026
+DocTime:    08:23:56 UTC
+
+============================================================
+TB00716 SESSION LOG
+PHASE 2 OPTION B - S2 mod:Position_Mirror + PATH-2 STARTUP ASSEMBLER
+Sole-writer open-position mirror (HR-PM-009) with the WS-EXE-009
+exec_type dispatch + snap_orders reconcile; and the assembler that
+fans a ShardPlan into N receive loops + one shared reconnect driver
+and runs the paced subscribe path
+EXECUTOR: CLAUDE CODE (local, direct C: access)
+============================================================
+
+1. MISSION / CONTEXT
+   Cold-loaded TB00715 NSI + TB00000 v2_99 + the TB00714 Session Log from GitHub
+   HEAD and followed it. Bill chose the next two Path A modules directly:
+   "Build the assembler and Position_Mirror next." That selects TB00715 sec 4 (A)
+   items 2 (mod:Position_Mirror) + 3 (the shard/subscribe assembler); the outbound
+   seam I/O bodies (item 1) were NOT in scope this session.
+
+2. BILL DIRECTIVES (chat-turn)
+   (1) "Build the assembler and Position_Mirror next." -> build Path A items 2 + 3
+       (Position_Mirror + the assembler), not the outbound seam and not S3.
+
+3. ENTRY / COLD-LOAD + VERIFY (all from HEAD, confirmed before work)
+   TB00000 v2_99 (read), TB00715 NSI (read), TB00714 SL (read).
+     0500000 dv1_241   md5 cb94f3b149fec582d5fdcab8a5635a5f  (Image1 R21) VERIFIED
+     0521001 dv1_51    present                                            VERIFIED
+     Docs HEAD         60cf32d, local == origin                          VERIFIED
+     Code HEAD         0d02278, local == origin, 191 tests green          VERIFIED
+     SessionLogs HEAD  149e782, local == origin                          VERIFIED
+   Python 3.12.10 (full-path interpreter); no async test libs installed, so the
+   assembler + reconnect edges are driven with stdlib asyncio.run over hand-built
+   fakes (the established TB00714 pattern).
+
+4. GOVERNING FIGURE READ (DIAGRAMS GOVERN; no diagram edit needed)
+   0500000 dv1_241 sec 7 mod:Position_Mirror desc + sec 7 mod:WS_Manager D1
+   PRIVATE-CHANNEL INBOUND wire facts + D6 mod:Position_Mirror + the AR-021 /
+   AR-023 / AR-024 / AR-047 / AR-052 / AR-054 / AR-056 / AR-057 / AR-061 executions
+   rules were read in full for the mirror; sec 2 Image1 SHARD ASSIGNMENT +
+   Subscribe Token Bucket + Per-Shard Reconnect Coordinator blocks + sec 7
+   mod:WS_Manager q1_do/q4_triggers for the assembler. The figures are CODE-COMPLETE
+   for both slices - no gap, no diagram amendment. Facts consumed:
+     - WS-EXE-009: the executions exec_type dispatch table = EXACTLY 10 values
+       (pending_new, new, trade, filled, iceberg_refill, canceled, expired, amended,
+       restated, status); ALL handled explicitly, unknown logged WARN never dropped.
+     - WS-EXE-011 / WS-EXE-012 / AR-061: trade fires on every fill; cum_qty + avg_price
+       are the AUTHORITATIVE Position_Mirror fields; last_qty/last_price are analytics.
+     - AR-024: restated MUST NOT update the mirror (engine-maintenance amend).
+     - AR-057: amended is unexpected (TothBot never amends its own orders) -> CRITICAL
+       integrity alert, no auto-correct.
+     - AR-047: Decimal(str()) on receipt, no float.
+     - AR-056 / startup Step 6: Position Mirror reconciled via snap_orders COMPARISON;
+       positions open pre-disconnect but absent from snap_orders closed during the gap.
+     - rule:HR-PM-009 (verbatim "WS Manager is the SOLE writer to Position Mirror") +
+       HR-PM-011 single-writer enforcement in BOTH modes; PA-004 div #4.
+     - record fields = the sec-7 box (symbol/entry/qty/cl_ord_id/emergSL id) reconciled
+       with the D6 net-state {qty, avg_entry_price, unrealized_pnl, fill_sequence_id,
+       regime_at_entry, exit_layer_armed}.
+     - WM-SHARD-001 N_conns; PER_PAIR_CHANNELS = ohlc_5m + ticker; GLOBAL = instrument +
+       status on shard 0; WM-PACE-001/002 process-singleton token bucket; T_silent.
+
+5. WORK DONE (TothBot_V2-Code, commit 5a5444b; 4 source + 4 test files)
+   5a. tothbot/exchange/position_mirror.py [NEW] - the O(1) symbol-keyed open-position
+       store. PURE (mirrors keepalive/silent_pair). ExecType enum (10 values) +
+       classify_exec_type (unknown -> None, logged UNKNOWN_EXEC_TYPE never dropped).
+       apply_execution() is the WS-EXE-009 dispatch: trade/filled OPEN/UPDATE/CLOSE the
+       position from cum_qty + avg_price (Decimal); a fill on the side opposite the open
+       position CLOSES it (net reconstruction; AR-054 atomic IOC, no partial/dust);
+       restated -> no mirror update + elevated ORDER_RESTATED_ALERT if a position rests
+       (AR-024); amended -> UNEXPECTED_ORDER_AMENDED CRITICAL no mutation (AR-057);
+       pending_new/new/canceled/expired/iceberg_refill/status acknowledged, no position
+       change. restore_from_snapshot() reconciles against snap_orders and returns
+       POSITION_CLOSED_DURING_GAP for symbols closed during the disconnect (AR-056);
+       still-present symbols retained verbatim (snap_orders cannot rebuild avg_entry).
+       rule:HR-PM-009 sole-writer guard: every mutating method requires writer=WRITER_ID
+       ("WS_Manager") else emits POSITION_SOLE_WRITER_VIOLATION CRITICAL and raises;
+       reads return the frozen Position record (consumers cannot mutate the store).
+   5b. tothbot/exchange/ws_manager.py [MOD] - wired the sole writer. WSManager holds the
+       PositionMirror and is the ONLY caller that tags a write with WRITER_ID:
+       record_execution() + restore_position_mirror() are the write surface; position()/
+       has_position()/open_position_symbols()/open_positions() are the read helpers other
+       modules use (HR-PM-009 read contract). The deferred shell comment was updated.
+   5c. tothbot/exchange/assembler.py [NEW] - the PATH-2 startup assembler (async edge).
+       DataLayerAssembler.build() opens N public sockets from a ShardPlan and constructs,
+       per shard, a ConnectionKeepalive, the per-pair SilentPairMachine registry, a
+       DispatchTable, and a ShardReceiveLoop bound to the SHARED ShardReconnectCoordinator
+       (one HR-WM-012 gate) + the SHARED ReconnectDriver; then runs the initial PACED
+       subscribe (subscribe_requests -> to_wire, one RPC per global channel + per
+       pair x per-pair channel = assignment.subscribe_count) over the process-singleton
+       SubscribeTokenBucket (WM-PACE-001, NO bypass). On a shard's local drop the driver
+       reopens that shard's socket and run_step re-arms its silent pairs
+       (mark_shard_reconnect) + re-subscribes on the fresh socket (RESUME_KEEPALIVE resets
+       the keepalive). Public shards carry no private channels, so the restore set is
+       public-only regardless of mode (the private connection is a separate single
+       connection, assembled later). DataLayer.run()/stop() fan the shard loops out.
+   5d. tothbot/exchange/reconnect_driver.py [MOD] - the single shared driver is now
+       shard-aware: OpenSocket/RunStep take shard_index so one driver (over the one shared
+       coordinator) drives N shards - open_socket(shard) opens that shard's fresh socket,
+       run_step(shard, step) re-subscribes THAT shard's pairs. No change to the restore
+       sequencing, the backoff seed, the HR-WM-012 gate, or never-abandon.
+   Tests: test_position_mirror.py [NEW, 27], test_assembler.py [NEW, 9],
+   test_ws_manager.py [MOD, +4 mirror-wiring], test_reconnect_driver.py [MOD, shard-aware
+   callback signatures].
+
+6. VERIFICATION
+   pytest on Python 3.12.10: 231 passed (191 prior + 40 net new: position_mirror 27,
+   ws_manager +4, assembler 9). New modules import cleanly. One test self-correction
+   during the slice (the pacing test's synthetic clock advanced by EXACTLY the computed
+   wait, which let token accrual asymptote to 1.0 without crossing it - a float artifact
+   of the test clock, NOT the pacing unit; modelled the real asyncio.sleep overshoot and
+   used a frozen clock for the shared-bucket drain). Surgical staging (8 files; no
+   __pycache__). Post-push DR-010 on TothBot_V2-Code: git fetch; local == origin;
+   HEAD = origin/master = 5a5444b; all 8 files present in HEAD; working-tree blob ==
+   HEAD blob for all 8 (git hash-object vs HEAD:path; the raw-md5 delta was
+   core.autocrlf=input LF normalization, not a content difference - diff HEAD empty).
+     Code         5a5444b  (position_mirror.py, assembler.py + ws_manager.py,
+                            reconnect_driver.py + 4 tests)
+     Docs         60cf32d  UNCHANGED (no diagram edit needed - figures code-complete)
+     SessionLogs  <this push>  (TB00716 SL + TB00717 NSI)
+
+7. SCOPE NOTE (honest slicing)
+   Built: the sole-writer Position_Mirror (mirror + exec_type dispatch + snap_orders
+   reconcile) and the public-shard startup assembler (fan-out + paced subscribe + the
+   reconnect loop). NOT built this session (out of Bill's two-module scope):
+     - the OUTBOUND seam I/O bodies (live transmitter + paper simulator stub; TB00715
+       A.1) - WSManager still ships the unwired live_sender/paper_simulator;
+     - the full paper fill simulator (contract:Synthetic_Capital_Ledger, PA-004 div #3)
+       - it will feed the SAME apply_execution surface the mirror already exposes;
+     - the PRIVATE WS connection (live only; executions -> WSManager.record_execution ->
+       mirror) - a separate single connection, NOT a public shard; the assembler builds
+       the public data layer only;
+     - the Position_Mirror MTM unrealized_pnl write path (AR-052 drawdown reads qty +
+       bid; the field is stored, default 0, no MTM writer yet);
+     - S3 regime + signal models.
+
+8. OBSERVATIONS / CARRY-FORWARD FLAGS (no action taken; cosmetic, no blocker)
+   (a) keepalive.py DEAD_CONNECTION_LOG_KEY = "WS_PONG_TIMEOUT" should reconcile to the
+       canonical event_registry code "PING_TIMEOUT" (the receive loop already emits
+       PING_TIMEOUT). Left untouched per the keep-pure-policy-untouched method; fix in a
+       later consistency pass. (carried from TB00714/TB00715)
+   (b) reconnect.py is_immediate_attempt() docstring still says "BLOCKED exponential
+       backoff" - stale pre-TB00712 phrasing; the backoff is now a seed. Cosmetic.
+       (carried from TB00714/TB00715)
+   (c) reconnect_driver.py module/class docstrings still describe the driver as the
+       single shared sequencer (correct); the OpenSocket/RunStep type aliases now carry
+       the shard_index contract. No stale prose introduced.
+
+9. OPEN -> TB00717 NSI
+   No outstanding Bill blocker. Position_Mirror + the public-shard assembler are wired
+   and green. Next: the OUTBOUND seam I/O bodies + the private-WS executions wiring to
+   close the live fill -> mirror path, OR the paper fill simulator
+   (Synthetic_Capital_Ledger), OR S3 regime + signal models. All unblocked. See TB00717.
+
+============================================================
+END TB00716
+============================================================
