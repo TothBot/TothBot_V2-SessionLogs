@@ -1,0 +1,135 @@
+DocDCN:     TB00714
+DocTitle:   TB00714_Session_Log
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00714_Session_Log_v1_0.txt
+DocDate:    06-14-2026
+DocTime:    07:31:28 UTC
+
+============================================================
+TB00714 SESSION LOG
+PHASE 2 OPTION B - S2 I/O-EDGE INTEGRATION (PATH A, inbound)
+Wire the data layer to the socket: async receive loop + per-shard
+reconnect, driving the existing pure units at the I/O edge
+EXECUTOR: CLAUDE CODE (local, direct C: access)
+============================================================
+
+1. MISSION / CONTEXT
+   Cold-loaded TB00713 NSI + TB00000 v2_99 + TB00712 SL from GitHub HEAD and
+   followed it. Bill chose PATH A: "wire the data layer to the socket this
+   session" (the TB00713 sec 4 (A) S2 I/O-edge integration option). All
+   data-layer PURE units were already complete + green (155 tests); this session
+   built the async I/O edge that drives them against a real (injected) socket.
+
+2. BILL DIRECTIVES (chat-turn)
+   (1) "I choose Path A: wire the data layer to the socket this session."
+       -> Build the S2 I/O-edge integration, not S3.
+
+3. ENTRY / COLD-LOAD + VERIFY (all from HEAD, confirmed before work)
+   TB00000 v2_99 (read), TB00713 NSI (read), TB00712 SL (read).
+     0500000 dv1_241   md5 cb94f3b149fec582d5fdcab8a5635a5f  (Image1 R21) VERIFIED
+     0521001 dv1_51    present                                            VERIFIED
+     Docs HEAD         60cf32d, local == origin                          VERIFIED
+     Code HEAD         15a5bb5, local == origin, 155 tests green          VERIFIED
+     SessionLogs HEAD  2302992, local == origin                          VERIFIED
+   Python 3.12.10 (full-path interpreter); no async test libs installed, so the
+   I/O edge is driven with stdlib asyncio.run over hand-built fakes (no
+   pytest-asyncio, no websockets/aiohttp install required).
+
+4. GOVERNING FIGURE READ (DIAGRAMS GOVERN; no diagram edit needed)
+   0500000 dv1_241 sec 2 Image1 + sec 7 mod:WS_Manager desc were read in full
+   for the inbound edge. The figure is CODE-COMPLETE for this slice - no gap, no
+   diagram amendment required. Wire facts consumed: "per-shard receive loops";
+   "transient WS errors caught LOCALLY -> _initiate_reconnect"; the D1 KEEPALIVE
+   facts (WS-PING-002 10s pong-timeout, WS-ZOM-003 90s zombie, AR-042 only real
+   market data resets zombie); WS-EXE-019 / WS-BAL-005 private seq-gap; WS-STAT-002
+   /005/006 status engine-state + connection_id; rule:HR-WM-012 (pipeline-no-fire
+   + candle-discard during reconnect); WS-REC-003 (Scenario A/B); WS-REC-004 (the
+   8-step restore sequence + WM-RECONNECT-019 paper skip of private-side steps);
+   WS-LIB-001..004 connection invariants; and the canonical Logger event_registry
+   (WS_CONNECTED / PING_SENT / PONG_RECEIVED / PING_TIMEOUT / ZOMBIE_CONNECTION_
+   DETECTED / SUBSCRIPTION_ACK / UNKNOWN_MESSAGE_TYPE / RECONNECT_INITIATED /
+   RECONNECT_COMPLETE / EXECUTIONS_/BALANCES_SEQUENCE_GAP).
+
+5. WORK DONE (TothBot_V2-Code, commit 0d02278; 3 source + 3 test files, +1407 lines)
+   5a. tothbot/exchange/transport.py - the injectable async socket boundary.
+       Transport Protocol (async send/recv/close) + WebsocketsTransport adapter
+       (JSON encode/decode; maps every library connection-closed / OSError onto a
+       single transient TransportClosed). connect() lazily imports the mandatory
+       asyncio-native websockets client (WS-LIB-001) with the fixed invariants
+       (WS-LIB-002..004 via connection.ws_connect_kwargs); websockets stays a
+       VPS-runtime dep, never imported at module load (suite runs without it).
+   5b. tothbot/exchange/receive_loop.py - the per-shard steady-state receive loop.
+       PURE classify() sorts each frame (PONG/HEARTBEAT/STATUS/SUBSCRIBE_ACK/
+       CHANNEL_DATA/UNKNOWN). SYNC handle_message()/on_tick() drive the existing
+       pure units: keepalive.mark_real_data (only real data resets zombie; pong
+       clears the ping; heartbeat + status do NOT reset zombie), silent-pair
+       mark_data/mark_subscribed/evaluate, reconcile.observe_executions/_balances
+       (private seq-gap), and DispatchTable routing. rule:HR-WM-012 candle-discard
+       gate: an ohlc_5m frame arriving while ANY shard is mid-reconnect is NOT
+       routed onward (liveness + silent-pair still applied; only the pipeline fire
+       is suppressed). WS-REC-003 reason select: a status maintenance announcement
+       before a drop -> Scenario B, else Scenario A. Async run()/_step() is the
+       only I/O surface (asyncio.wait_for(recv) with the tick interval as timeout
+       so timers fire under a steady stream); a TransportClosed is caught LOCALLY
+       and turned into a reconnect for that shard (HR-WM-029), then the loop reads
+       from the fresh Transport the reconnect returns. Emits ONLY canonical
+       event_registry codes.
+   5c. tothbot/exchange/reconnect_driver.py - the async _initiate_reconnect body.
+       Wraps the PURE reconnect.py policy. coordinator.begin raises the HR-WM-012
+       in-progress gate for the WHOLE reconnect (cleared only on restore success);
+       each attempt sleeps reconnect_delay_sec(scenario, attempt) - the CIATS-owned
+       Scenario-A backoff seed (5 immediate, 1-16s, 30s cap) or the Scenario-B 5s
+       floor - then runs build_restore_sequence(paper_mode): RECONNECT_SOCKET opens
+       the fresh socket (returned to the loop), every other step delegated to the
+       injected run_step (token / paced re-subscribe / maxratecount reset /
+       keepalive resume / silent-pair re-arm / reconcile reset / Position Mirror /
+       ticker event_trigger). Paper skips the private-side steps (WM-RECONNECT-019).
+       Never abandoned (loss-min): a transient restore failure retries the whole
+       sequence after closing the partial socket; ar:AR-080 bounds the rate.
+
+6. VERIFICATION
+   pytest on Python 3.12.10: 191 passed (155 prior + 36 net new: transport 9,
+   receive_loop 21, reconnect_driver 6). New modules import cleanly. Surgical
+   staging (6 files; no __pycache__). Post-push DR-010 on TothBot_V2-Code:
+   git fetch; local == origin; HEAD = origin/master = 0d02278; all 6 files present
+   in HEAD; working-tree vs HEAD-blob md5 identical for all 6.
+     Code         0d02278  (transport.py, receive_loop.py, reconnect_driver.py + 3 tests)
+     Docs         60cf32d  UNCHANGED (no diagram edit needed - figure code-complete)
+     SessionLogs  <this push>  (TB00714 SL + TB00715 NSI)
+
+7. SCOPE NOTE (honest slicing of Path A)
+   TB00713 sec 4 (A) bundles, beyond the inbound edge built here, the OUTBOUND
+   half: the seam's live transmitter body + the paper simulator I/O body
+   (contract:Synthetic_Capital_Ledger, PA-004 div #2/#3) and the HR-PM-009
+   sole-writer mod:Position_Mirror (div #4). Those are the order-dispatch / mirror
+   side and are NOT in this commit - they are distinct modules (the ws_manager.py
+   shell already flags _unwired_live_sender / _unwired_paper_simulator as later).
+   ALSO not built: the startup subscribe orchestration / assembler that constructs
+   N shard loops + the driver and opens the initial sockets (the ShardPlan ->
+   paced subscribe path). The inbound receive loop + reconnect driver are complete
+   and unit-tested in isolation (codebase pattern: units file-by-file, assembly
+   later). Next session picks up the outbound seam bodies + Position_Mirror +
+   the assembler, OR S3 regime + signal models. See TB00715 NSI.
+
+8. OBSERVATIONS / FLAGS (no action taken; surfaced for a later pass)
+   (a) Event-code drift in a green pure unit: keepalive.py exports
+       DEAD_CONNECTION_LOG_KEY = "WS_PONG_TIMEOUT", but the canonical 0500000
+       event_registry names the dead-connection code PING_TIMEOUT [CRITICAL]. The
+       new receive loop emits the canonical PING_TIMEOUT (DIAGRAMS GOVERN +
+       LG-EVT-001 no-undocumented-code). The keepalive constant was left UNTOUCHED
+       (TB00713 method: keep the pure policy untouched); recommend reconciling
+       DEAD_CONNECTION_LOG_KEY -> "PING_TIMEOUT" in a later consistency pass.
+   (b) reconnect.py is_immediate_attempt() docstring still says "after which the
+       BLOCKED exponential backoff begins" - a stale phrase from the pre-TB00712
+       NotImplementedError era (the backoff is now seeded, not blocked). Cosmetic;
+       left untouched this session.
+
+9. OPEN -> TB00715 NSI
+   No outstanding Bill blocker. The inbound socket edge is wired + green. Next:
+   outbound seam I/O bodies + Position_Mirror + the shard/subscribe assembler to
+   finish S2 end-to-end, OR S3 regime + signal models. Both unblocked.
+
+============================================================
+END TB00714
+============================================================
