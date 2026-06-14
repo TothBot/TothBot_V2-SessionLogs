@@ -1,0 +1,139 @@
+DocDCN:     TB00709
+DocTitle:   TB00709_Next_Session_Instructions
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00709_Next_Session_Instructions_v1_0.txt
+DocDate:    06-14-2026
+DocTime:    05:40:39 UTC
+
+============================================================
+TB00709 NSI - PHASE 2 OPTION B BUILD, CONTINUE AT S2c3
+PATH-2 silent-pair state machine + per-shard reconnect orchestrator
+EXECUTOR: CLAUDE CODE (local, direct C: access)
+============================================================
+
+NSIs are Claude-authored and informational; Bill's chat directives
+govern. One primary mission per session.
+
+0. WHY CLAUDE CODE
+   Direct C: build of the trading organism into TothBot_V2-Code,
+   coded from the 0500000 dv1_240 diagrams (TB00000 sec 4.7). Same
+   rhythm as TB00702/TB00704/TB00706/TB00708: read the governing
+   figure(s) -> build a scoped slice -> test on Python 3.12 -> push ->
+   verify HEAD.
+
+1. ENTRY / COLD-LOAD + VERIFY (from GitHub HEAD)
+   Read TB00000 (v2_98) + this NSI + the TB00708 Session Log.
+   Confirm before coding:
+     0500000 dv1_240   md5 64f3b870d0d649e12b4dd5b572589a5f
+                       (the clean, verified, sole build source)
+     TothBot_V2-Code HEAD = 1364d39 (S2c2). tothbot/ package with
+       config/ (settings, registry, fees) + exchange/ (channels,
+       candle, clock, events, connection, dispatch, seam, ws_manager,
+       keepalive, reconcile, sharding, pacing) + 8 sub-package anchors;
+       tests green (111).
+
+   NOTE (TB00000 v2_98): the session-close procedure is STANDING and
+   automatic - write the SL + NSI + OCS at the END of EVERY session
+   without waiting for a "close the session" directive (sec 4.6).
+   Repo paths (literal): C:\Users\wstot\GitHub\TothBot\
+     TothBot_V2-Code (build target), ...\TothBot_V2-Docs (read
+     0500000), ...\TothBot_V2-SessionLogs (TB files). All branch
+     master.
+
+2. ENVIRONMENT (already set up in TB00702)
+   Python interpreter for all runs:
+     C:\Users\wstot\AppData\Local\Programs\Python\Python312\
+       python.exe   (3.12.10; pytest installed). The default PATH
+     `python` is still 3.10.11 -- DO NOT use it; call the 3.12
+     interpreter by full path. VPS authoritative runtime = 3.12.3.
+   Working tree is clean (local == origin at HEAD 1364d39); build
+   directly in place.
+
+3. MISSION (S2c3 - data layer, slice 5; silent-pair + reconnect)
+   Code the remaining mod:WS_Manager robustness units. Governing
+   sources in 0500000 dv1_240 (DIAGRAMS GOVERN):
+     - sec 2 Image1 Kraken API Connection Architecture (A-5 reconnect
+       distinction: random disconnect vs post-maintenance)
+     - sec 7 Image6 mod:WS_Manager desc - the Silent-Pair State Machine
+       block and the Per-Shard Reconnect Coordinator block, plus the
+       D1 RECONNECT-RESIDUAL wire facts WS-REC-003 / WS-REC-004.
+
+   Scope, in two parts:
+
+   (A) SILENT-PAIR STATE MACHINE (fully code-complete; UNBLOCKED).
+     contract:WM-SHARD-010 + contract:WM-PS-007 + rule:HR-WM-030,
+     T_silent = 60s (fixed engineering constant). Per-pair states +
+     transitions exactly as the figure draws them:
+       INITIAL --[sub ack]--> SUBSCRIBED
+       SUBSCRIBED --[update <= T_silent]--> DATA_READY
+       SUBSCRIBED --[no data > T_silent]--> DATA_PENDING
+       DATA_PENDING --[update]--> DATA_READY
+       (any) --[shard reconnect]--> SUBSCRIBED (on the reconnecting
+                                    shard's pairs)
+     DATA_PENDING is gated at Gate 1 BEFORE indicator eval (the pipeline
+     skips a DATA_PENDING pair, rule:HR-WM-030); NO automatic universe
+     removal (rule:HR-WM-031 anti-AR-070) - a silent pair is held, never
+     evicted. Emits evt:PAIR_DATA_PENDING + evt:PAIR_DATA_READY_RECOVERED.
+     Build it as a pure per-pair timer over an injected monotonic clock
+     (mirror keepalive.py / pacing.py); the receive loop drives the
+     marker methods at the I/O edge.
+
+   (B) PER-SHARD RECONNECT COORDINATOR (partly blocked - see sec 6).
+     contract:WM-RECONNECT-016 + rule:HR-WM-029 (per-shard independent).
+     Transient WS errors caught LOCALLY -> _initiate_reconnect for that
+     shard only. WS-REC-003 two scenarios: Scenario A (random disconnect)
+     = up to 5 immediate attempts, then exponential backoff starting at
+     1s; Scenario B (after a confirmed Kraken trading-engine maintenance
+     disconnect) = a MINIMUM 5-second delay before reconnect. WS-REC-004:
+     on EVERY reconnect run the full ar:AR-056 restore sequence (fresh
+     GetWebSocketsToken; reconnect with the WS-LIB params; re-subscribe
+     all channels parsing each ACK; extract maxratecount and reset the
+     rate-counter ceiling, NEVER hardcode 125; resume the keepalive ping
+     + zombie tasks; restore Position Mirror from snap_orders; restore
+     per-pair ticker event_trigger). rule:HR-WM-012: pipeline evaluations
+     PROHIBITED during reconnect + candles queued during reconnect
+     DISCARDED. ar:AR-080 Cloudflare 150-conns/10-min/IP is the ceiling
+     the backoff respects; paper-mode gating WM-RECONNECT-019 (skip
+     private-side restore steps in paper). Build the backoff schedule +
+     restore-step sequencer as pure/testable units; the socket reconnect
+     itself is the I/O edge.
+
+   Suggested sizing (Claude owns it): the silent-pair machine is fully
+   unblocked and is the natural primary unit; take the reconnect
+   coordinator as far as the diagram is code-complete (the restore-step
+   SEQUENCE + the Scenario A/B selection are stated), and STOP at the
+   backoff-schedule numbers if the 181s pin (sec 6) is unresolved.
+
+4. METHOD (reuse TB00702/TB00704/TB00706/TB00708)
+   Build pure/testable units first; keep I/O at the edges. Deliver
+   file by file (no end-of-session mega-turn). Tests alongside each
+   unit; run the FULL suite on the 3.12 interpreter each slice.
+   Stage surgically (named paths; no __pycache__). ASCII-only commit
+   messages, no parens; literal absolute paths; branch master.
+   Post-push DR-010: git fetch; assert local == origin; confirm files
+   in HEAD (working-tree vs HEAD-blob md5). Write the SL + NSI + OCS at
+   session close - STANDING and automatic per TB00000 v2_98 sec 4.6.
+
+5. PROVENANCE / SCOPE DISCIPLINE
+   This is a CODE build: it READS 0500000, never edits it. If a
+   figure is found code-incomplete (a value/interface/rule needed to
+   code cannot be read directly from it), STOP and surface to Bill --
+   author the missing element INTO the diagram first (DIAGRAMS GOVERN;
+   no code workaround), then code. Do not invent behavior the diagram
+   does not specify.
+
+6. OPEN BILL INPUT (BLOCKS the S2c3 reconnect backoff schedule only)
+   The reconnect coordinator annotation (D1, mod:WS_Manager) reads
+   "5 attempts, backoff 1s->30s, 181s max sleep". The 181s value is not
+   stated in the WS-REC-003 prose; it is consistent with a cumulative-
+   sleep cap (1+2+4+8+16 then 30 x5 = 181) but that is a reconstruction,
+   not a read. Before coding the backoff schedule, pin the exact per-
+   attempt schedule from the figure or surface to Bill - do NOT invent
+   the value (DIAGRAMS GOVERN). This blocks ONLY the backoff numbers;
+   the silent-pair machine (3A), the Scenario A/B selection, and the
+   WS-REC-004 restore-step sequence (3B) are unblocked and can proceed.
+
+============================================================
+END TB00709
+============================================================

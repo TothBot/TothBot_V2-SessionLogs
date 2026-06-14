@@ -1,0 +1,174 @@
+DocDCN:     TB00708
+DocTitle:   TB00708_Session_Log
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00708_Session_Log_v1_0.txt
+DocDate:    06-14-2026
+DocTime:    05:40:39 UTC
+
+============================================================
+TB00708 SESSION LOG
+PHASE 2 OPTION B - DATA LAYER S2c2
+PATH-2 subscribe fan-out: connection sharding + subscribe pacing
+plus session-close-procedure correction (TB00000 v2_98)
+============================================================
+
+1. MISSION
+   Fourth build session of Phase 2 Option B (DEC-120 clean-slate): code the
+   PATH-2 subscribe fan-out - how the universe is split across N WS connections
+   (connection sharding) and how every outbound subscribe is rate-paced
+   (subscribe token bucket) - directly from the 0500000 dv1_240 design diagrams
+   into TothBot_V2-Code, per TB00000 v2_97 + TB00707 NSI v1_0. Executor: Claude
+   Code (direct C: access; edit -> verify -> push in place). Continues the
+   TB00702/TB00704/TB00706 rhythm: read the governing figure(s) -> build a
+   scoped slice -> test on Python 3.12 -> push -> verify HEAD.
+
+2. ENTRY / COLD-LOAD + VERIFY (from GitHub HEAD)
+   Read: TB00000 v2_97, TB00707 NSI v1_0, TB00706 SL v1_0.
+   Confirmed per TB00707 sec 1:
+     0500000 dv1_240 md5 64f3b870d0d649e12b4dd5b572589a5f (the clean, verified,
+       sole build source) - MATCH.
+     TothBot_V2-Code HEAD = b037c01 (S2c), local == origin, working tree clean;
+       tothbot/ package with config/ + exchange/ (channels, candle, clock,
+       events, connection, dispatch, seam, ws_manager, keepalive, reconcile) +
+       8 sub-package anchors; 73 tests green on the 3.12.10 interpreter - ALL
+       CONFIRMED.
+
+   Grounding read (0500000 dv1_240, DIAGRAMS GOVERN): sec 2 Image1 Kraken API
+   Connection Architecture - the SHARD ASSIGNMENT block (WM-SHARD-001/002,
+   N_conns / SYMBOLS_PER_CONN_SAFE / shard_index, the per-shard channel layout)
+   + the Subscribe Token Bucket block (WM-PACE-001/002) - and sec 7 Image6
+   mod:WS_Manager desc (rule:HR-WM-028/029/031, contract:WM-PACE-005 state
+   logging, ar:AR-080 Cloudflare ceiling).
+
+   COMPLETENESS CHECK (no gap, no STOP): every value needed for both units is
+   stated explicitly in the diagram - SYMBOLS_PER_CONN_SAFE=500,
+   N_conns=ceil(universe/500), shard_index=i%N (alternating-index, balanced
+   +/-1), globals (instrument, status) on shard 0 only, ohlc_5m + ticker
+   partitioned per pair, SUBSCRIBE_RATE_PER_SEC=10, SUBSCRIBE_BURST_CAPACITY=20,
+   refill 10 tok/sec, acquire blocks until a token is available, every subscribe
+   awaits acquire with no bypass/priority lane. No element authored into
+   0500000; the build only reads it.
+
+3. BILL DIRECTIVES (chat-turn)
+   (1) "Cold-load TB00707 NSI + TB00000 from GitHub HEAD and follow it."
+       -> executed the S2c2 mission (PATH-2 sharding + subscribe pacing) to
+       close per the diagram facts above.
+   (2) "Kill that precedent. In the future write the SL, NSI, and OCS at the end
+       of every session." Bill ruled that the prior practice of WITHHOLDING the
+       session-close artifacts until an explicit "close the session" directive
+       (the TB00704 + TB00706 sessions) was an ERROR that had propagated into a
+       second occurrence (this session initially deferred the close docs too).
+       -> CORRECTED at the authoritative source so no future cold-loaded session
+       can repeat it: TB00000 bumped v2_97 -> v2_98 (sec 4.6 close bullet marked
+       STANDING/automatic; sec 4.4 EXCEPTIONS gains a pre-authorization that the
+       SL + NSI + OCS are created at session close without separate per-file C:
+       permission). This SL + the TB00709 NSI + the OCS + the OP4 push box are
+       now produced automatically as the standing close, not on request.
+
+4. WORK DONE (S2c2 - commit 1364d39, 4 files, 607 ins)
+   All new units under tothbot/exchange/. Pure/testable, I/O at the edges (the
+   async connect + subscribe loop that drives them is the I/O edge, wired later).
+
+     sharding.py - PATH-2 connection sharding (the subscribe fan-out). Pure
+       partition: SYMBOLS_PER_CONN_SAFE = 500 (fixed engineering constant,
+       WM-SHARD-001); N_conns = ceil(universe_size / 500), integer-only ceil,
+       floored at 1 so the global channels always have a home (AR-038 startup);
+       shard_index = i % N_conns (alternating-index, balanced +/-1). GLOBAL_
+       CHANNELS (instrument, status) subscribe ONCE on shard 0 only; PER_PAIR_
+       CHANNELS (ohlc_5m, ticker) follow each pair to shard i%N; shard 0 is the
+       system-clock shard. ShardAssignment (per-shard pairs + channels +
+       subscribe_count) and ShardPlan (builds N shards over the ordered universe
+       + the pair_to_shard_index map). rule:HR-WM-029 shard independence (each
+       shard owns a disjoint pair set); rule:HR-WM-031 / anti-ar:AR-070 every
+       universe pair assigned exactly once, never dropped (subscribe-count
+       decoupled from connection count).
+
+     pacing.py - the process-singleton subscribe token bucket (contract:WM-PACE-
+       001/002). SubscribeTokenBucket is a pure unit over an injected monotonic
+       clock (mirrors keepalive.py): SUBSCRIBE_RATE_PER_SEC = 10, SUBSCRIBE_
+       BURST_CAPACITY = 20; starts full (the allowed startup burst), refills 10
+       tok/sec capped at capacity; try_acquire() consumes one token if available,
+       time_until_next() returns the seconds the I/O edge sleeps before retrying,
+       available() exposes the live level for the WM-PACE-005 state log. ONE
+       bucket governs EVERY shard's subscribes (the ar:AR-080 Cloudflare
+       150-subscribes/10-min ceiling is per-IP for the whole process) and is
+       deliberately NOT reset on a shard reconnect, so paced re-subscribes draw
+       from the same bucket; no bypass, no priority lane. A backward clock step
+       accrues nothing and never drains the bucket.
+
+     tests/test_sharding.py - 21 tests: SYMBOLS_PER_CONN_SAFE=500; global +
+       per-pair channel sets; N_conns ceiling table (0/1/499/500->1, 501/700/
+       1000->2, 1001->3) + floor-at-1 + negative-reject; shard_index = i%N +
+       arg guards; N=2 partition by index parity; shard sizes balanced within 1
+       (701 -> 351/350); shard 0 carries globals only; every shard carries the
+       per-pair channels; shard 0 is the clock shard; pair_to_shard_index round
+       trip; HR-WM-031 every pair assigned exactly once + subscribe-count
+       decoupling; single-shard (<=500) carries everything; empty universe still
+       has the clock shard with globals.
+
+     tests/test_pacing.py - 17 tests: constants match the diagram + WM-PACE-005
+       key; starts full at burst capacity; burst of 20 then empty; refill 10/sec;
+       refill caps at capacity; fractional partial refill; time_until_next = 0
+       when a token is available, 0.1s when empty, 0.05s after a 0.5-token
+       partial; acquire succeeds after waiting the indicated time; backward clock
+       step does not drain; construction rejects non-positive rate/capacity.
+
+   SCOPE per TB00707 sec 3 -- DEFERRED to S2c3 (NOT built this slice): the
+   silent-pair state machine (contract:WM-SHARD-010 / rule:HR-WM-030,
+   T_silent=60s) and the per-shard reconnect orchestrator (ar:AR-056 11-step /
+   contract:WM-RECONNECT-016 / ar:AR-080 / WS-REC-003 Scenario A vs B backoff /
+   rule:HR-WM-012 pipeline-no-fire). Also deferred (land with their consumers):
+   the seam's live transmitter + paper simulator I/O bodies and the HR-PM-009
+   sole-writer mod:Position_Mirror.
+
+5. VERIFICATION
+   pytest on Python 3.12.10: 111 passed (73 prior + 38 new: 21 sharding +
+   17 pacing). Both new modules import cleanly. Commit staged surgically
+   (4 named files; no __pycache__; .gitignore confirmed). Post-push DR-010:
+   git fetch; local == origin/master (1364d39); all 4 files present in HEAD;
+   working-tree vs HEAD-blob md5 identical for each of the 4 files. Commit
+   present in HEAD.
+
+6. DELIVERABLES
+   TothBot_V2-Code (branch master):
+     1364d39  S2c2 PATH-2 subscribe fan-out: sharding + subscribe pacing
+              (4 files)
+   TothBot_V2-SessionLogs (branch master):
+     TB00000 v2_98 (session-close procedure made STANDING; supersedes v2_97)
+     TB00708 (this SL) + TB00709 (NSI)
+   No Docs design changes from the build (0500000 unchanged at dv1_240; the
+   build reads it, does not edit it). DEC-125 stays CLOSED.
+
+7. SESSION ROADMAP (Claude-scoped; adaptive)
+   S1 Foundation [DONE] -> S2 Data layer [S2a DONE; S2b DONE; S2c keepalive +
+   Reconciliation_REST DONE; S2c2 sharding + subscribe pacing DONE; S2c3
+   silent-pair + reconnect OPEN] -> S3 Regime + signal models -> S4 Module spine
+   (gates, wallet, sizing, A1 R:R floor, drawdown halts) -> S5 Execution (entry
+   + Exit Controller L1a/2/3 + paper/live seam I/O bodies) -> S6 CIATS -> S7
+   Operations + integration. S4-S6 may split further per figure.
+
+8. HOUSEKEEPING (deferred, non-blocking)
+   (a) The old top-level config/.gitkeep, deploy/.gitkeep, scripts/.gitkeep
+   remain tracked in Code HEAD and do not match the TB00000 sec 9 tothbot/ +
+   operations/ + tests/ layout. Harmless empty placeholders; fold a
+   git rm --cached into a later slice.
+   (b) The reconnect coordinator visual annotation in D1 reads "5 attempts,
+   backoff 1s->30s, 181s max sleep". The 181s figure is not stated in the
+   WS-REC-003 prose; it is consistent with a cumulative-sleep cap
+   (1+2+4+8+16 then 30 x5 = 181) but that is a reconstruction. This is now
+   IN-scope for S2c3: pin the exact schedule from the figure or surface to Bill
+   before coding the reconnect backoff (DIAGRAMS GOVERN; do not invent).
+
+9. OPEN -> TB00709 NSI
+   Continue Phase 2 Option B at S2c3: the silent-pair state machine
+   (contract:WM-SHARD-010 / rule:HR-WM-030, T_silent=60s - fully code-complete
+   in the diagram, unblocked) + the per-shard reconnect orchestrator
+   (contract:WM-RECONNECT-016 / ar:AR-056 11-step restore / WS-REC-003 Scenario
+   A vs B - the backoff SCHEDULE is blocked on the 181s pin per housekeeping 8b).
+   Read sec 2 Image1 (A-5 reconnect distinction) + the sec-7 WS_Manager desc
+   silent-pair + reconnect coordinator blocks before coding.
+
+============================================================
+END TB00708
+============================================================
