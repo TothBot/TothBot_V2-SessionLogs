@@ -1,0 +1,172 @@
+DocDCN:     TB00718
+DocTitle:   TB00718_Session_Log
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00718_Session_Log_v1_0.txt
+DocDate:    06-14-2026
+DocTime:    23:27:00 UTC
+
+============================================================
+TB00718 SESSION LOG
+PHASE 2 OPTION B - PATH A: CLOSE THE LIVE FILL -> MIRROR LOOP
+Outbound dispatch-seam I/O bodies (live transmitter + paper boundary)
++ the single private WS connection + executions ingest, wiring the
+reconnect RESTORE_POSITION_MIRROR step to restore_position_mirror
+EXECUTOR: CLAUDE CODE (local, direct C: access)
+============================================================
+
+1. MISSION / CONTEXT
+   Cold-loaded TB00717 NSI + TB00000 v2_99 + the TB00716 Session Log from GitHub
+   HEAD and followed it. Bill chose Path A directly: "outbound seam bodies +
+   private-WS executions wiring to close the live fill->mirror loop." That selects
+   TB00717 sec 4 (A) items 1 (outbound seam I/O bodies) + 2 (private WS connection +
+   executions ingest + RESTORE_POSITION_MIRROR wiring). NOT the paper fill simulator
+   (B) and NOT S3 (C).
+
+2. BILL DIRECTIVES (chat-turn)
+   (1) "Path: (A) outbound seam bodies + private-WS executions wiring to close the
+       live fill->mirror loop." -> build Path A items 1 + 2.
+
+3. ENTRY / COLD-LOAD + VERIFY (all from HEAD, confirmed before work)
+   TB00000 v2_99 (read), TB00717 NSI (read), TB00716 SL (read).
+     0500000 dv1_241   md5 cb94f3b149fec582d5fdcab8a5635a5f  (Image1 R21) VERIFIED
+     0521001 dv1_51    present                                            VERIFIED
+     Docs HEAD         60cf32d, local == origin                          VERIFIED
+     Code HEAD         5a5444b, local == origin, 231 tests green          VERIFIED
+     SessionLogs HEAD  7edd6c5 (TB00716 SL + TB00717 NSI)                 VERIFIED
+   Python 3.12.10 (full-path interpreter); no async test libs, so the outbound +
+   private-WS edges are driven with stdlib asyncio.run over hand-built fakes
+   (the established TB00714/TB00716 pattern).
+
+4. GOVERNING FIGURE READ (DIAGRAMS GOVERN; no diagram edit needed)
+   0500000 dv1_241 sec 7 container:Private_WS_v2 + sec 12 Image7
+   contract:WSManager_Dispatch_Seam + sec 12.1 PA-004 divergence points 1/2/4 +
+   sec 12.3 the dispatch seam (GATE BEHAVIOR / _send_private) + sec 2 Image1 AR-049
+   startup sequence steps 5/6 + the AR-056 / WS-REC-004 restore sequence were read
+   in full. The figures are CODE-COMPLETE for both slices - no gap, no amendment.
+   Facts consumed:
+     - Image7 / sec 12.3: live = ws_private.send(add_order) via _send_private over
+       the single private WS; paper = _simulate_entry_fill local, NO Kraken
+       transmission, returns WITHOUT _send_private (rule:HR-WM-023 - reaching the
+       live branch in paper is a session-halting defect). Caller is mode-opaque
+       (rule:HR-EE-013) and awaits one dispatch in both modes.
+     - container:Private_WS_v2: SINGLE connection, live only (PA-004 div #1 / HR-WM-022,
+       paper keeps it None for the session). executions subscribe order_status:true
+       MANDATORY (rule:HR-WM-005), snap_orders:true, ratecounter:true (A-1 / AR-030);
+       balances real-time settlement. Routes order RPCs out + executions/balances in.
+     - AR-049 startup steps 5 (connect private WS + subscribe executions/balances) + 6
+       (snap_orders reconciliation -> Position Mirror).
+     - The restore-sequence public/private channel partition (already stated in the
+       reconnect.py RestoreStep docstring as "the diagram's own public/private channel
+       partition"): RESUBSCRIBE_PUBLIC + RESTORE_TICKER_TRIGGER are public-channel;
+       ACQUIRE_WS_TOKEN + RESUBSCRIBE_PRIVATE + RESET_RATE_CEILING + RESTORE_POSITION_MIRROR
+       are private; RECONNECT_SOCKET + RESUME_KEEPALIVE are shared.
+
+5. WORK DONE (TothBot_V2-Code, commit a3141bf; 4 source new/mod + 1 source mod x2 + 3 test)
+   SLICE 1 - OUTBOUND SEAM I/O BODIES (TB00717 A.1; PA-004 div #2)
+   5a. tothbot/exchange/outbound.py [NEW] - the two injected seam I/O bodies.
+       PrivateTransmitter = the live _send_private: holds the CURRENT private Transport
+       (late-bound by the private_ws assembler on connect, re-bound on every reconnect),
+       async __call__ awaits transport.send(message) = ws_private.send. A send with no
+       socket bound raises OutboundNotConnectedError (live MUST have a private WS;
+       never a silent drop). PaperDispatchSimulator = the paper boundary: transmits
+       NOTHING to Kraken, records the dispatched (op,message), and delegates to an
+       INJECTED fill_simulator hook (contract:Synthetic_Capital_Ledger, PA-004 div #3,
+       Path B - absent this session, so a faithful no-op boundary; never reaches the
+       live transmitter, HR-WM-023).
+   5b. tothbot/exchange/seam.py [MOD] - the six order methods + _dispatch/_transmit_live
+       are now ASYNC (the live body awaits the async private Transport.send; the
+       mode-opaque caller awaits one coroutine regardless of mode). LiveSender/
+       PaperSimulator are now async callables. The mode GATE, the HR-WM-023 canary,
+       and the EntrySubmitted/PaperOrderSimulated/PaperDispatchBlocked events are
+       byte-unchanged.
+   5c. tothbot/exchange/ws_manager.py [MOD] - the _unwired_live_sender/_unwired_paper_simulator
+       stubs are REPLACED by the real bodies: self.transmitter = PrivateTransmitter,
+       self.paper_dispatch = PaperDispatchSimulator, both passed to the seam (still
+       overridable by injection). transmitter is EXPOSED so the private_ws assembler
+       binds the socket.
+   SLICE 2 - PRIVATE WS CONNECTION + EXECUTIONS INGEST (TB00717 A.2; PA-004 div #1)
+   5d. tothbot/exchange/private_ws.py [NEW] - the single private connection (live only;
+       ValueError if built in paper, HR-WM-022). executions_subscribe()/balances_subscribe()
+       build the subscribe RPCs (order_status/snap_orders/ratecounter true). ExecutionsIngest
+       routes each executions frame onto the mirror sole-writer surface: an update frame
+       -> WSManager.record_execution() per fill (WS-EXE-009 dispatch); a snapshot frame
+       -> WSManager.restore_position_mirror() (AR-056 reconcile) + captures snap_orders.
+       PrivateConnectionAssembler.build() acquires a token, opens the socket, BINDS the
+       transmitter (ws_private.send now live), issues the executions/balances subscribes,
+       and wires a ShardReceiveLoop (with a ReconciliationTracker for exec/bal seq-gap) +
+       a private ReconnectDriver. The driver runs the PRIVATE restore subset and its
+       run_step wires ACQUIRE_WS_TOKEN (fresh token, never reused), RESUBSCRIBE_PRIVATE
+       (re-subscribe on the fresh socket), RESUME_KEEPALIVE, and RESTORE_POSITION_MIRROR
+       (snap_orders from the injected REST GetOpenOrders edge or the last executions
+       snapshot -> restore_position_mirror). This closes live fill -> mirror end-to-end.
+   5e. tothbot/exchange/reconnect.py [MOD] - RestoreStepSpec gains a public_side flag (the
+       symmetric completion of the figure's existing public/private channel partition);
+       build_private_restore_sequence() returns the private connection's restore steps
+       (private + shared, no public-channel steps). build_restore_sequence(paper_mode) is
+       UNCHANGED (public shards).
+   5f. tothbot/exchange/reconnect_driver.py [MOD] - ReconnectDriver accepts an optional
+       restore_sequence (defaults to build_restore_sequence(paper_mode) - public shards
+       unchanged); the private connection injects build_private_restore_sequence().
+   Tests: test_outbound.py [NEW, 8], test_private_ws.py [NEW, 10], test_ws_manager.py
+   [MOD - the seam tests are async (asyncio.run); the unwired-raises test is replaced by
+   a paper-boundary no-op test + a live-transmitter-unbound-raises test].
+
+6. VERIFICATION
+   pytest on Python 3.12.10: 250 passed (231 prior + net 19: outbound 8, private_ws 10,
+   ws_manager seam net +1). New modules import cleanly. End-to-end closure proven: a
+   Kraken executions update frame driven through the private ShardReceiveLoop routes to
+   the ingest -> record_execution and OPENS the position in the mirror; a reconnect runs
+   the private restore subset and RESTORE_POSITION_MIRROR gap-closes the disconnect-closed
+   position via restore_position_mirror(snap_orders). Surgical staging (9 files; no
+   __pycache__). Post-push DR-010 on TothBot_V2-Code: git fetch; local == origin;
+   HEAD = origin/master = a3141bf; all 9 files present in HEAD; working-tree blob ==
+   HEAD blob for all 9 (git hash-object vs HEAD:path; any raw-md5 delta is the
+   core.autocrlf=input LF normalization, not content - diff HEAD empty).
+     Code         a3141bf  (outbound.py, private_ws.py [NEW] + seam.py, ws_manager.py,
+                            reconnect.py, reconnect_driver.py [MOD] + 3 tests)
+     Docs         60cf32d  UNCHANGED (no diagram edit - figures code-complete)
+     SessionLogs  <this push>  (TB00718 SL + TB00719 NSI)
+
+7. SCOPE NOTE (honest slicing)
+   Built: the outbound seam I/O bodies (live transmitter + paper boundary) and the single
+   private WS connection + executions ingest, closing the live fill -> mirror loop. NOT
+   built this session (out of Path A scope):
+     - the FULL paper fill simulator (contract:Synthetic_Capital_Ledger, PA-004 div #3) -
+       it plugs into the PaperDispatchSimulator boundary + feeds the SAME record_execution
+       surface (Path B);
+     - the REST bodies the private connection injects: GetWebSocketsToken (token acquire)
+       and GetOpenOrders (snap_orders for the reconnect restore) - injected edges here,
+       real aiohttp bodies are a later slice;
+     - the maxratecount rate-ceiling unit (AR-030): the RESET_RATE_CEILING restore step is
+       a documented no-op placeholder for now;
+     - the balances -> capital-ledger ingest (default no-op handler; Path B);
+     - the Position_Mirror MTM unrealized_pnl write path (still default 0; carried);
+     - S3 regime + signal models.
+
+8. OBSERVATIONS / CARRY-FORWARD FLAGS (no action taken; cosmetic / deferred, no blocker)
+   (a) keepalive.py DEAD_CONNECTION_LOG_KEY = "WS_PONG_TIMEOUT" -> reconcile to the
+       canonical "PING_TIMEOUT" in a later consistency pass. (carried from TB00714..TB00716)
+   (b) reconnect.py is_immediate_attempt() docstring still says "BLOCKED exponential
+       backoff" - stale pre-TB00712 phrasing; the backoff is now a seed. (carried)
+   (c) position_mirror.py Position.unrealized_pnl is stored, default 0; no MTM writer yet
+       (AR-052 drawdown reads qty + bid). Wire if/when the MTM path is built. (carried)
+   (d) NEW: private_ws.py RESET_RATE_CEILING is a no-op placeholder - the AR-030
+       maxratecount rate-ceiling unit (extract from the executions ACK; never hardcode
+       125) is a later slice. Wire it when that unit lands.
+   (e) NEW: the private connection's reconnect snap_orders source defaults to the last
+       executions snapshot when no REST GetOpenOrders edge is injected; the figure's
+       canonical reconnect reconcile source is GetOpenOrders (REST) - inject it when the
+       REST client lands.
+
+9. OPEN -> TB00719 NSI
+   No outstanding Bill blocker. The live fill -> mirror loop is closed and green (250
+   tests). Next ready paths: the PAPER FILL SIMULATOR (contract:Synthetic_Capital_Ledger,
+   PA-004 div #3) that plugs into the paper boundary + feeds record_execution; the REST
+   client (GetWebSocketsToken + GetOpenOrders + the maxratecount rate ceiling) that
+   replaces the injected private-connection edges; OR S3 regime + signal models. All
+   unblocked. See TB00719.
+
+============================================================
+END TB00718
+============================================================
