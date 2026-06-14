@@ -1,0 +1,167 @@
+DocDCN:     TB00706
+DocTitle:   TB00706_Session_Log
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00706_Session_Log_v1_0.txt
+DocDate:    06-14-2026
+DocTime:    05:16:32 UTC
+
+============================================================
+TB00706 SESSION LOG
+PHASE 2 OPTION B - DATA LAYER S2c
+CONNECTION ROBUSTNESS + contract:Reconciliation_REST
+============================================================
+
+1. MISSION
+   Third build session of Phase 2 Option B (DEC-120 clean-slate): code the
+   data-layer connection-robustness slice deferred from S2b - the
+   mod:WS_Manager connection-liveness keepalive and the
+   contract:Reconciliation_REST sequence-gap detection - directly from the
+   0500000 dv1_240 design diagrams into TothBot_V2-Code, per TB00000 v2_97 +
+   TB00705 NSI v1_0. Executor: Claude Code (direct C: access; edit -> verify
+   -> push in place). Continues the TB00702/TB00704 rhythm: read the governing
+   figure(s) -> build a scoped slice -> test on Python 3.12 -> push -> verify
+   HEAD.
+
+2. ENTRY / COLD-LOAD + VERIFY (from GitHub HEAD)
+   Read: TB00000 v2_97, TB00705 NSI v1_0, TB00704 SL v1_0.
+   Confirmed per TB00705 sec 1:
+     0500000 dv1_240 md5 64f3b870d0d649e12b4dd5b572589a5f (the clean, verified,
+       sole build source) - MATCH.
+     TothBot_V2-Code HEAD = 2403679 (S2b), local == origin, working tree clean;
+       tothbot/ package with config/ + exchange/ (channels, candle, clock,
+       events, connection, dispatch, seam, ws_manager) + 8 sub-package anchors;
+       52 tests green on the 3.12.10 interpreter - ALL CONFIRMED.
+
+   Grounding read (0500000 dv1_240, DIAGRAMS GOVERN): sec 2 Image1 Kraken API
+   Connection Architecture (A-5 reconnect-distinction, A-7 ping/keepalive, A-8
+   zombie detection, A-9 balances seq-gap, A-10 executions seq-gap) + sec 7
+   Image6 mod:WS_Manager desc (rule:HR-WM-003 / HR-WM-004 and the D1 wire facts
+   WS-PING-002, WS-ZOM-003, WS-EXE-019, WS-BAL-005; plus the D1
+   container:Kraken_REST_API GetOpenOrders REST-OO-* / GetAccountBalance
+   REST-BAL-* recovery contracts).
+
+   COMPLETENESS CHECK (no gap, no STOP): every value needed to code this slice
+   is stated explicitly in the diagram - 30s application ping, 10s pong
+   timeout = dead, 90s no-real-data = zombie, real-data-only timer reset,
+   forward seq gap (skip > 1) -> alert + REST recovery, independent
+   executions/balances trackers, reset on each new subscription. No element
+   authored into 0500000; the build only reads it.
+
+3. BILL DIRECTIVES (chat-turn)
+   (1) "Cold-load TB00705 NSI + TB00000 from GitHub HEAD and follow it."
+       -> executed the S2c mission (connection robustness + Reconciliation_REST)
+       to close; sized the slice per the TB00705 Claude-owns-sizing mandate to
+       keepalive + sequence-gap (the NSI-title pairing), deferring sharding,
+       pacing, silent-pair and reconnect-backoff to S2c2/S2c3.
+   (2) "Close the session properly with all the closing documents."
+       -> session-close procedure (TB00000 sec 4.6): this SL + the TB00707 NSI
+       + OCS copy box + OP4 push box + post-push HEAD verification. (The close
+       directive is Bill's permission to create the two new TB-prefix close
+       artifacts on C:.)
+
+4. WORK DONE (S2c - commit b037c01, 4 files, 576 ins)
+   All new units under tothbot/exchange/. Pure/testable, I/O at the edges (the
+   async read loop that drives them is the I/O edge, wired in a later session).
+
+     keepalive.py - mod:WS_Manager connection-liveness (rule:HR-WM-003 ping +
+       rule:HR-WM-004 zombie). ConnectionKeepalive is a pure timer over an
+       injected monotonic clock. PING/PONG (A-7 / WS-PING-002): send the
+       application JSON ping {"method":"ping"} every 30s (PING_INTERVAL_SEC);
+       a ping with no pong within 10s (PONG_TIMEOUT_SEC) = DEAD connection ->
+       reconnect; a ping is never stacked on an unanswered one. ZOMBIE (A-8 /
+       WS-ZOM-003): last_real_data_time tracked via time.monotonic; ONLY real
+       market-data events reset it (pong AND heartbeat do NOT); elapsed > 90s
+       (ZOMBIE_THRESHOLD_SEC) = ZOMBIE -> log ZOMBIE_CONNECTION_DETECTED,
+       reconnect. liveness() returns ALIVE / DEAD_NO_PONG / ZOMBIE (the acuter
+       10s pong timeout reported ahead of the 90s zombie). reset() re-arms all
+       timers on every (re)connect (WS-REC-004 resumes the ping + zombie tasks).
+
+     reconcile.py - contract:Reconciliation_REST sequence-gap detection (A-9 /
+       A-10). SequenceGapDetector tracks the last-seen sequence for ONE channel;
+       a forward gap (received_seq > last_seq + 1) returns a SequenceGap naming
+       the recovery to run; the first message is the baseline; duplicate /
+       out-of-order (seq <= last_seq) is not a forward gap and never moves the
+       watermark backwards; after a gap the watermark advances so there is no
+       re-alert on the following in-order messages. Per-channel wiring:
+       executions -> alert EXECUTIONS_SEQUENCE_GAP, REST GetOpenOrders, severity
+       HIGH (WS-EXE-019; a missed fill leaves a live position unmanaged);
+       balances -> alert BALANCES_SEQUENCE_GAP, REST GetAccountBalance, severity
+       MEDIUM (WS-BAL-005). ReconciliationTracker owns the two INDEPENDENT
+       detectors; reset() clears both on reconnect (A-10: sequence tracking
+       resets on each new subscription; no cross-session gap-detection). The
+       REST recovery call itself is the I/O edge, driven later; this module owns
+       detection and names the endpoint.
+
+     tests/test_keepalive.py - 11 tests: constants match the diagram; 30s ping
+       cadence; ping-not-stacked-while-awaiting-pong; pong clears + reschedules;
+       no-pong-in-10s = DEAD; pong-before-deadline stays ALIVE; 90s zombie
+       threshold; real-data resets the zombie timer; pong does NOT reset zombie;
+       dead-pong reported ahead of zombie; reset clears outstanding ping + zombie.
+
+     tests/test_reconcile.py - 10 tests: first-message baseline; clean advance;
+       forward-gap detected with missed count; no re-alert after gap advance;
+       duplicate/out-of-order is not a gap; executions -> GetOpenOrders/HIGH;
+       balances -> GetAccountBalance/MEDIUM; reset drops the watermark; tracker
+       channels independent; tracker reset clears both.
+
+   SCOPE per TB00705 sec 3 -- DEFERRED to S2c2/S2c3 (NOT built this slice):
+   PATH-2 connection sharding (contract:WM-SHARD-001 N_conns=ceil(universe/500),
+   shard_index=i%N_conns; rule:HR-WM-028/029/031), subscribe pacing
+   (contract:WM-PACE-001/002 process-singleton token bucket SUBSCRIBE_RATE_PER_
+   SEC=10 / SUBSCRIBE_BURST_CAPACITY=20), the silent-pair state machine
+   (contract:WM-SHARD-010 / rule:HR-WM-030, T_silent=60s), and the reconnect
+   orchestrator (ar:AR-056 11-step restore / contract:WM-RECONNECT-016 /
+   ar:AR-080 Cloudflare 150-conns-per-10-min ceiling / WS-REC-003 Scenario A vs
+   B backoff / rule:HR-WM-012 pipeline-no-fire). Also deferred (land with their
+   consumers): the seam's live transmitter (container:Private_WS_v2 send) + paper
+   simulator (contract:Synthetic_Capital_Ledger) I/O bodies, and the HR-PM-009
+   sole-writer mod:Position_Mirror.
+
+5. VERIFICATION
+   pytest on Python 3.12.10: 73 passed (52 prior + 21 new: 11 keepalive +
+   10 reconcile). Both new modules import cleanly. Commit staged surgically
+   (4 named files; no __pycache__; .gitignore confirmed). Post-push DR-010:
+   git fetch; local == origin/master (b037c01); all 4 files present in HEAD;
+   working-tree vs HEAD-blob md5 identical for each of the 4 files. Commit
+   present in HEAD.
+
+6. DELIVERABLES
+   TothBot_V2-Code (branch master):
+     b037c01  S2c connection robustness + Reconciliation_REST (4 files)
+   No Docs design changes from the build (0500000 unchanged at dv1_240; the
+   build reads it, does not edit it). DEC-125 stays CLOSED; TB00000 stays v2_97
+   (build mandate sec 3 unchanged). This session adds TB00706 (this SL) +
+   TB00707 (NSI) to SessionLogs.
+
+7. SESSION ROADMAP (Claude-scoped; adaptive)
+   S1 Foundation [DONE] -> S2 Data layer [S2a DONE; S2b DONE; S2c keepalive +
+   Reconciliation_REST DONE; S2c2 sharding + pacing OPEN; S2c3 silent-pair +
+   reconnect OPEN] -> S3 Regime + signal models -> S4 Module spine (gates,
+   wallet, sizing, A1 R:R floor, drawdown halts) -> S5 Execution (entry + Exit
+   Controller L1a/2/3 + paper/live seam I/O bodies) -> S6 CIATS -> S7 Operations
+   + integration. S4-S6 may split further per figure.
+
+8. HOUSEKEEPING (deferred, non-blocking)
+   (a) The old top-level config/.gitkeep, deploy/.gitkeep, scripts/.gitkeep
+   remain tracked in Code HEAD and do not match the TB00000 sec 9 tothbot/ +
+   operations/ + tests/ layout. Harmless empty placeholders; fold a
+   git rm --cached into a later slice.
+   (b) The reconnect coordinator visual annotation in D1 reads "5 attempts,
+   backoff 1s->30s, 181s max sleep". The 181s figure is not stated in the
+   WS-REC-003 prose; it is consistent with a cumulative-sleep cap (1+2+4+8+16
+   then 30 x5 = 181) but that is a reconstruction. Before coding the S2c3
+   reconnect backoff, pin the exact schedule from the figure or surface to Bill
+   (DIAGRAMS GOVERN; do not invent the value).
+
+9. OPEN -> TB00707 NSI
+   Continue Phase 2 Option B at S2c2: PATH-2 connection sharding
+   (contract:WM-SHARD-001) + subscribe pacing (contract:WM-PACE-001/002), both
+   fully code-complete in the diagram with fixed engineering constants. Read
+   sec 2 Image1 (the shard-assignment + token-bucket facts) + the sec-7
+   WS_Manager desc before coding. No open Bill business judgment outstanding;
+   the 181s reconnect value (housekeeping 8b) is an S2c3 concern, not S2c2.
+
+============================================================
+END TB00706
+============================================================
