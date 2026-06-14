@@ -1,0 +1,117 @@
+DocDCN:     TB00712
+DocTitle:   TB00712_Session_Log
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00712_Session_Log_v1_0.txt
+DocDate:    06-14-2026
+DocTime:    06:59:48 UTC
+
+============================================================
+TB00712 SESSION LOG (continuation of the TB00710 session)
+PHASE 2 OPTION B - S2c3 RECONNECT BACKOFF CLOSE-OUT
+Reconnect backoff registered as a CIATS-owned paper-validated seed
++ diagram/Docs edits moved to Claude Code (TB00000 v2_99)
+============================================================
+
+1. MISSION / CONTEXT
+   Continuation of the same working session that produced TB00710 SL +
+   TB00711 NSI (the S2c3 silent-pair + reconnect-coordinator build). After that
+   premature close, Bill resolved the one open blocker (the Scenario-A reconnect
+   backoff schedule) and directed that the diagram amendment be done HERE in
+   Claude Code, not punted to a chat session. This SL records that close-out:
+   register the backoff as a CIATS-owned paper-validated SEED in the diagram +
+   parameter registry, then code it.
+
+2. BILL DIRECTIVES (chat-turn)
+   (1) "Can't you update the diagram? You finalized them. Claude chat screws
+       everything up." + "I want you to run the whole thing here in Claude Code."
+       -> Bill ruled that DIAGRAM / Docs-design FILE EDITS are done in Claude
+       Code (surgical, well-formedness-validated, DR-010-verified push), NOT
+       regenerated in chat (chat full-file regeneration corrupts the inline-SVG
+       HTML and drops content). Codified at the authoritative source: TB00000
+       v2_98 -> v2_99 sec 4.7 amended so no future cold-loaded session re-routes
+       diagram edits to chat.
+   (2) "Can we use the (1+2+4+8+16 then 30x5 = 181) and validate it in paper
+       trading again." Bill: the backoff values were DERIVED from paper-trading
+       reconnection experience during the early connection troubles -- they are
+       an EMPIRICAL operating parameter, not a fixed spec value.
+       -> RULING: the backoff is a CIATS-owned / operator SEED (only the net
+       1:1.5 R:R floor is hardcoded; every other operating number is a
+       paper-refined seed). Bill ratified the reconstruction as the seed; use it
+       and re-validate in paper. This RESOLVES the TB00709 sec 6 / TB00710 sec 8
+       open Bill input (it was never a "read it off the figure" problem).
+
+3. WORK DONE
+   3a. Docs (TothBot_V2-Docs, commit 60cf32d) -- diagram amendment in Claude Code
+       (the new TB00000 v2_99 sec 4.7 practice). 0500000 dv1_240 -> dv1_241:
+         - Diagram 1 / Image1 mod:WS_Manager Per-Shard Reconnect Coordinator
+           VISUAL annotation: the ambiguous "5 attempts, backoff 1s->30s, 181s
+           max sleep" replaced by the seed framing ("Scenario A: 5 immediate then
+           exp 1-16s, 30s cap | Scenario B: min 5s | per-shard" + "backoff =
+           CIATS-owned paper-validated SEED (value home TB00000 sec 8) |
+           WM-RECONNECT-019 skip private-side in paper").
+         - The WS-REC-003 desc wire fact extended: the Scenario-A exponential
+           backoff schedule (base 1s, doubling, per-attempt cap, ar:AR-080
+           bounded) is a CIATS-owned / operator SEED validated in paper, NOT a
+           fixed engineering constant; the numeric per-attempt schedule lives in
+           TB00000 sec 8 (seed-value-home rule + DEC-125 live-coding-only); the
+           figure carries the architecture + mechanism + value-home pointer.
+         - Image1 R20 -> R21 (visual + desc change); 8 Image1_T2_R21 drill/parent
+           refs updated in lockstep; all other figures R HELD.
+         - 0521001 dv1_50 -> dv1_51: TB00712 dv1_241 OP RECORD appended
+           (append-only provenance).
+         - VERIFICATION: HTML well-formed (tag classes balanced: g 217/217, text
+           956/956, desc 126/126, svg 10/10); the 3 strict-XML bare-& warnings are
+           PRE-EXISTING in HEAD and untouched; no residual dv1_240 / Image1-R20;
+           new 0500000 md5 cb94f3b149fec582d5fdcab8a5635a5f.
+   3b. Governance (TothBot_V2-SessionLogs) -- TB00000 v2_98 -> v2_99:
+         - sec 4.7 amended (diagram/Docs FILE edits in Claude Code, not chat).
+         - sec 8 NEW: reconnect_backoff_schedule_seed = Scenario-A per-attempt
+           delay [0,0,0,0,0, 1,2,4,8,16, 30,30,30,30,30] s (cumulative 181 s) +
+           scenario_b_min_delay_sec = 5 s; CIATS-owned, paper-validated; ar:AR-080
+           ceiling note.
+         - v2_99 changelog entry; supersedes v2_98.
+   3c. Code (TothBot_V2-Code, commit 15a5bb5) -- reconnect.py:
+         - RECONNECT_BACKOFF_SEED_SEC = (0,0,0,0,0, 1,2,4,8,16, 30,30,30,30,30);
+           RECONNECT_BACKOFF_CAP_SEC=30, RECONNECT_SEEDED_ATTEMPTS=15,
+           RECONNECT_CUMULATIVE_SLEEP_SEC=181.
+         - reconnect_delay_sec() Scenario-A backoff phase now reads the seed
+           (replaces the prior NotImplementedError block); attempt 1..15 -> seed
+           value, attempt > 15 -> 30 s cap (reconnection never abandoned -
+           loss-min; ar:AR-080 still bounds the rate). Scenario B unchanged (5 s).
+         - test_reconnect.py: removed the BLOCKED-phase test; added 4 schedule
+           tests (seed shape + cumulative 181; per-attempt matches seed; immediate
+           phase 0 s; beyond-schedule holds at cap).
+
+4. VERIFICATION
+   pytest on Python 3.12.10: 155 passed (152 prior + 3 net new). reconnect.py
+   imports cleanly. Surgical staging (no __pycache__). Post-push DR-010 on all
+   three repos: local == origin; files present in HEAD; working-tree vs HEAD-blob
+   md5 identical.
+     Docs           60cf32d  (0500000 dv1_241 + 0521001 dv1_51)
+     Code           15a5bb5  (reconnect.py + test_reconnect.py)
+     SessionLogs    <this push>  (TB00000 v2_99 + TB00712 SL + TB00713 NSI)
+
+5. DELIVERABLES
+   TothBot_V2-Docs:        0500000 dv1_241, 0521001 dv1_51.
+   TothBot_V2-Code:        15a5bb5 reconnect Scenario-A backoff seed schedule.
+   TothBot_V2-SessionLogs: TB00000 v2_99 (supersedes v2_98), TB00712 (this SL),
+                           TB00713 (NSI). TB00711 v1_1 superseded by the outcome.
+   DEC-125 stays CLOSED.
+
+6. SESSION ROADMAP (Claude-scoped; adaptive)
+   S1 [DONE] -> S2 Data layer [S2a/S2b/S2c/S2c2 DONE; S2c3 silent-pair + reconnect
+   coordinator incl. backoff seed DONE - all data-layer PURE units complete] ->
+   S2-integration (wire the async receive loop + per-shard socket reconnect that
+   drive the pure units; the seam live transmitter + paper simulator I/O bodies;
+   the HR-PM-009 sole-writer mod:Position_Mirror) -> S3 Regime + signal models ->
+   S4 Module spine -> S5 Execution -> S6 CIATS -> S7 Ops + integration.
+
+7. OPEN -> TB00713 NSI
+   No outstanding Bill blocker. Next: either S2 I/O-edge integration (wire the
+   receive loop + socket reconnect + seam I/O bodies + Position_Mirror) or S3
+   Regime + signal models. Both unblocked.
+
+============================================================
+END TB00712
+============================================================
