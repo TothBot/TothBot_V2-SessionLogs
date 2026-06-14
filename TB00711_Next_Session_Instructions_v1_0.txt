@@ -1,0 +1,108 @@
+DocDCN:     TB00711
+DocTitle:   TB00711_Next_Session_Instructions
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00711_Next_Session_Instructions_v1_0.txt
+DocDate:    06-14-2026
+DocTime:    06:05:19 UTC
+
+============================================================
+TB00711 NSI - PHASE 2 OPTION B BUILD
+Finalize S2c3 reconnect backoff (Bill pin) OR proceed to S3
+EXECUTOR: CLAUDE CODE (local, direct C: access)
+============================================================
+
+NSIs are Claude-authored and informational; Bill's chat directives
+govern. One primary mission per session.
+
+0. WHY CLAUDE CODE
+   Direct C: build of the trading organism into TothBot_V2-Code, coded from the
+   0500000 dv1_240 diagrams (TB00000 sec 4.7). Same rhythm as
+   TB00702/.../TB00710: read the governing figure(s) -> build a scoped slice ->
+   test on Python 3.12 -> push -> verify HEAD.
+
+1. ENTRY / COLD-LOAD + VERIFY (from GitHub HEAD)
+   Read TB00000 (v2_98) + this NSI + the TB00710 Session Log.
+   Confirm before coding:
+     0500000 dv1_240   md5 64f3b870d0d649e12b4dd5b572589a5f
+                       (the clean, verified, sole build source)
+     TothBot_V2-Code HEAD = 460886d (S2c3). tothbot/ package with config/ +
+       exchange/ (channels, candle, clock, events, connection, dispatch, seam,
+       ws_manager, keepalive, reconcile, sharding, pacing, silent_pair,
+       reconnect) + 8 sub-package anchors; tests green (152).
+
+   NOTE (TB00000 v2_98): the session-close procedure is STANDING and automatic -
+   write the SL + NSI + OCS at the END of EVERY session without waiting for a
+   "close the session" directive (sec 4.6).
+   Repo paths (literal): C:\Users\wstot\GitHub\TothBot\
+     TothBot_V2-Code (build target), ...\TothBot_V2-Docs (read 0500000),
+     ...\TothBot_V2-SessionLogs (TB files). All branch master.
+
+2. ENVIRONMENT (already set up in TB00702)
+   Python interpreter for all runs:
+     C:\Users\wstot\AppData\Local\Programs\Python\Python312\python.exe
+       (3.12.10; pytest installed). The default PATH `python` is still 3.10.11 --
+     DO NOT use it; call the 3.12 interpreter by full path. VPS authoritative
+     runtime = 3.12.3.
+   Working tree is clean (local == origin at HEAD 460886d); build directly in
+   place.
+
+3. MISSION - TWO READY PATHS (Bill chooses sequencing)
+
+   (A) FINALIZE S2c3 RECONNECT - BLOCKED on the backoff pin (see sec 4).
+     If Bill has pinned the Scenario-A exponential backoff schedule: author the
+     pinned schedule INTO the D1 mod:WS_Manager figure FIRST (DIAGRAMS GOVERN; no
+     code workaround), bump 0500000 + append the provenance entry to 0521001,
+     THEN code reconnect_delay_sec()'s backoff phase (currently raises
+     NotImplementedError) and its tests. Optionally begin wiring the async receive
+     loop + per-shard socket reconnect that drive the existing pure units
+     (silent_pair.py marker/poll methods, reconnect.py restore sequence) at the
+     I/O edge - that is the next robustness integration step.
+
+   (B) PROCEED TO S3 - Regime + signal models (UNBLOCKED).
+     Code the regime engine + SSS signal model units from the governing 0500000
+     figures (sec 7 mod:Regime_Engine + mod:Signal_Pipeline; the section-8 seed
+     values adx_threshold=25, atr_percentile_thresh=67th, htf_ema 20/50 daily,
+     rsi bands, sss_ema 9/21, volume MA20, etc. - value homes are TB00000 sec 8 /
+     section 9, CIATS-owned). Build pure/testable indicator + gate units first.
+     Revisit the S2c3 backoff once Bill pins it.
+
+   Recommendation: path (A) is a small, high-value closeout IF the pin is ready;
+   otherwise path (B) keeps the build moving. Either is a clean one-mission
+   session.
+
+4. OPEN BILL INPUT (BLOCKS path A only)
+   The D1 reconnect-coordinator annotation reads "5 attempts, backoff 1s->30s,
+   181s max sleep". WS-REC-003 prose states ONLY: Scenario A = up to 5 immediate
+   attempts then exponential backoff starting at 1s; Scenario B = a minimum
+   5-second delay. The exact Scenario-A schedule (per-attempt growth, the 30s
+   cap, the number of capped attempts, and whether 181s is per-attempt or a
+   cumulative-sleep cap) is NOT readable from the figure. The 181s is consistent
+   with a cumulative cap (1+2+4+8+16 then 30 x5 = 181) but that is a
+   RECONSTRUCTION, not a read. Bill: confirm or correct that schedule so it can
+   be authored into the figure and coded. Do NOT invent the value (DIAGRAMS
+   GOVERN). This blocks ONLY the reconnect backoff numbers; the silent-pair
+   machine, the Scenario A/B selection, the Scenario-B 5s floor, the HR-WM-012
+   in-progress gate, and the WS-REC-004 restore sequence already shipped (S2c3,
+   commit 460886d).
+
+5. METHOD (reuse TB00702/.../TB00710)
+   Build pure/testable units first; keep I/O at the edges. Deliver file by file
+   (no end-of-session mega-turn). Tests alongside each unit; run the FULL suite
+   on the 3.12 interpreter each slice. Stage surgically (named paths; no
+   __pycache__). ASCII-only commit messages, no parens; literal absolute paths;
+   branch master. Post-push DR-010: git fetch; assert local == origin; confirm
+   files in HEAD (working-tree vs HEAD-blob md5). Write the SL + NSI + OCS at
+   session close - STANDING and automatic per TB00000 v2_98 sec 4.6.
+
+6. PROVENANCE / SCOPE DISCIPLINE
+   A CODE build READS 0500000 and never edits it - EXCEPT when authoring a
+   Bill-pinned missing element INTO the figure (path A backoff): that is a Docs
+   amendment (bump 0500000 dv + append provenance to 0521001 per TB00000 sec 4.6,
+   then code). If any other figure is found code-incomplete, STOP and surface to
+   Bill; author the missing element into the diagram first, then code. Do not
+   invent behavior the diagram does not specify.
+
+============================================================
+END TB00711
+============================================================

@@ -1,0 +1,184 @@
+DocDCN:     TB00710
+DocTitle:   TB00710_Session_Log
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00710_Session_Log_v1_0.txt
+DocDate:    06-14-2026
+DocTime:    06:05:19 UTC
+
+============================================================
+TB00710 SESSION LOG
+PHASE 2 OPTION B - DATA LAYER S2c3
+Silent-pair state machine + per-shard reconnect coordinator
+(reconnect backoff schedule BLOCKED pending Bill pin)
+============================================================
+
+1. MISSION
+   Fifth build session of Phase 2 Option B (DEC-120 clean-slate): code the
+   remaining mod:WS_Manager robustness units - the per-pair silent-pair state
+   machine and the per-shard reconnect coordinator - directly from the 0500000
+   dv1_240 design diagrams into TothBot_V2-Code, per TB00000 v2_98 + TB00709 NSI
+   v1_0. Executor: Claude Code (direct C: access; edit -> verify -> push in
+   place). Continues the TB00702/TB00704/TB00706/TB00708 rhythm: read the
+   governing figure(s) -> build a scoped slice -> test on Python 3.12 -> push ->
+   verify HEAD.
+
+2. ENTRY / COLD-LOAD + VERIFY (from GitHub HEAD)
+   Read: TB00000 v2_98, TB00709 NSI v1_0, TB00708 SL v1_0.
+   Confirmed per TB00709 sec 1:
+     0500000 dv1_240 md5 64f3b870d0d649e12b4dd5b572589a5f (the clean, verified,
+       sole build source) - MATCH.
+     TothBot_V2-Code HEAD = 1364d39 (S2c2), local == origin, working tree clean;
+       tothbot/ package with config/ + exchange/ (channels, candle, clock,
+       events, connection, dispatch, seam, ws_manager, keepalive, reconcile,
+       sharding, pacing) + 8 sub-package anchors; 111 tests green on the 3.12.10
+       interpreter - ALL CONFIRMED.
+
+   Grounding read (0500000 dv1_240, DIAGRAMS GOVERN): sec 2 Image1 Kraken API
+   Connection Architecture - the A-5 reconnect distinction, the ar:AR-056
+   mid-session restore path (DISTINCT from cold-start; portfolio_baseline_USD
+   never reset; pipeline-no-fire + candle-discard clause), the ar:AR-080
+   Cloudflare 150-conns/10-min ceiling - and sec 7 Image6 mod:WS_Manager desc:
+   the Silent-Pair State Machine block (contract:WM-SHARD-010 + contract:WM-PS-007
+   + rule:HR-WM-030, T_silent=60s) and the Per-Shard Reconnect Coordinator block
+   (contract:WM-RECONNECT-016 + rule:HR-WM-029; D1 RECONNECT-RESIDUAL wire facts
+   WS-REC-003 Scenario A/B + WS-REC-004 restore sequence; rule:HR-WM-012
+   pipeline-no-fire; contract:WM-RECONNECT-019 paper gating).
+
+   COMPLETENESS CHECK: the silent-pair machine is FULLY code-complete in the
+   figure (4 states, 5 transitions, T_silent=60s, the two named events, the
+   Gate-1 skip, the held-not-evicted rule - all explicit; UNBLOCKED). The
+   reconnect coordinator is code-complete EXCEPT the Scenario-A exponential
+   backoff schedule: the D1 visual reads "5 attempts, backoff 1s->30s, 181s max
+   sleep" but the 181s value is NOT stated in the WS-REC-003 prose - it is a
+   reconstruction (1+2+4+8+16 then 30 x5 = 181), not a diagram read. Per the
+   TB00709 sec 6 block + DIAGRAMS GOVERN, the backoff numbers were NOT invented;
+   this slice STOPPED at them. No element was authored into 0500000; the build
+   only reads it.
+
+3. BILL DIRECTIVES (chat-turn)
+   (1) "Cold-load TB00709_Next_Session_Instructions_v1_0.txt + TB00000 from
+       GitHub HEAD and follow it."
+       -> executed the S2c3 mission: built the silent-pair machine (fully) and
+       the unblocked parts of the reconnect coordinator; STOPPED at the blocked
+       Scenario-A backoff schedule and surfaced it (sec 8).
+
+4. WORK DONE (S2c3 - commit 460886d, 4 files, 807 ins)
+   New units under tothbot/exchange/. Pure/testable, I/O at the edges (the async
+   receive loop + the socket reconnect that drive them are the I/O edge, wired
+   later) - mirrors keepalive.py / pacing.py.
+
+     silent_pair.py - the per-pair silent-pair state machine (WM-SHARD-010 +
+       WM-PS-007 + HR-WM-030). A pure timer over an injected monotonic clock.
+       T_SILENT_SEC = 60.0 (fixed engineering constant). States INITIAL /
+       SUBSCRIBED / DATA_READY / DATA_PENDING; the five drawn transitions exactly:
+       INITIAL -[sub ack]-> SUBSCRIBED; SUBSCRIBED -[update <= T_silent]->
+       DATA_READY (no event); SUBSCRIBED -[no data > T_silent]-> DATA_PENDING
+       (emits evt:PAIR_DATA_PENDING at evaluate()); DATA_PENDING -[update]->
+       DATA_READY (emits evt:PAIR_DATA_READY_RECOVERED); (any) -[shard reconnect]->
+       SUBSCRIBED (re-arms the timer). gate_blocks() returns True ONLY in
+       DATA_PENDING (HR-WM-030 Pre-Gate-1 skip); the machine MARKS but never
+       removes a pair (HR-WM-031 anti-AR-070 held-not-evicted - no eviction API).
+       Boundary discipline: update <= T_silent is READY, evaluate at exactly
+       T_silent does NOT fire, a data frame racing in just after expiry still
+       resolves to DATA_READY (data presence wins - loss-min). Marker/poll methods
+       return the event to emit (or None), mirroring keepalive.liveness().
+
+     reconnect.py - the per-shard reconnect coordinator: scenario selection, the
+       HR-WM-012 in-progress gate, and the WS-REC-004 restore sequence (the PURE
+       policy core). Stated constants: SCENARIO_A_IMMEDIATE_ATTEMPTS=5,
+       SCENARIO_A_BACKOFF_BASE_SEC=1.0, SCENARIO_B_MIN_DELAY_SEC=5.0,
+       CLOUDFLARE_RECONNECT_LIMIT=150 / CLOUDFLARE_WINDOW_SEC=600 (AR-080).
+       select_scenario(): MAINTENANCE -> Scenario B, else Scenario A (WS-REC-003).
+       reconnect_delay_sec(): Scenario B -> 5s floor (any attempt); Scenario A
+       immediate phase (attempt <= 5) -> 0.0; Scenario A backoff phase (attempt
+       > 5) -> raises NotImplementedError citing the TB00709 sec 6 block (the
+       181s schedule is NOT invented). build_restore_sequence(paper_mode): the
+       ordered ar:AR-056 / WS-REC-004 steps (ACQUIRE_WS_TOKEN, RECONNECT_SOCKET,
+       RESUBSCRIBE_PUBLIC, RESUBSCRIBE_PRIVATE, RESET_RATE_CEILING,
+       RESUME_KEEPALIVE, RESTORE_POSITION_MIRROR, RESTORE_TICKER_TRIGGER); paper
+       mode drops the 4 private-side steps (WM-RECONNECT-019; PA-004 div #1 - no
+       private WS), preserving live order. WS-REC-004's single "re-subscribe all
+       channels" step is split along the diagram's own public/private channel
+       partition so the paper gate is exact (a read, not an added step).
+       ShardReconnectCoordinator: per-shard begin/complete/is_reconnecting/
+       any_reconnecting (HR-WM-029 independence; any_reconnecting() backs the
+       HR-WM-012 pipeline-no-fire / candle-discard gate).
+
+     tests/test_silent_pair.py - 20 tests: T_silent=60 constant + event log keys;
+       initial state; sub-ack transition; data within/at/after T_silent; evaluate
+       expiry at/before/after boundary; pending-recovers-with-event; Gate-1 gate
+       only in PENDING; held-not-evicted; shard-reconnect re-arm from pending /
+       ready / initial; data-before-ack ignored; DATA_READY idempotent;
+       data-racing-after-expiry goes READY; evaluate-after-ready no-op; explicit
+       now override.
+
+     tests/test_reconnect.py - 21 tests: stated constants; scenario selection
+       (random->A, maintenance->B); immediate-attempt window + below-one reject;
+       delay zero in immediate phase; Scenario-B 5s floor any attempt; delay
+       below-one reject; Scenario-A backoff phase raises NotImplementedError
+       (BLOCKED); restore sequence live full order; paper skips the 4 private-side
+       steps; paper is an order-preserving subsequence of live; private set is
+       exactly the 4 steps; specs cover every step once; coordinator idle/begin/
+       independent-shards/clears-when-all-complete; complete-unknown no-op;
+       begin-negative-shard reject; scenario_for-unknown is None.
+
+   DEFERRED (unchanged from TB00709 / land with their consumers): the seam's live
+   transmitter + paper simulator I/O bodies; the HR-PM-009 sole-writer
+   mod:Position_Mirror; the async receive loop + socket reconnect that drive these
+   pure units; and the BLOCKED Scenario-A backoff schedule (sec 8).
+
+5. VERIFICATION
+   pytest on Python 3.12.10: 152 passed (111 prior + 41 new: 20 silent_pair +
+   21 reconnect). Both new modules import cleanly. Commit staged surgically
+   (4 named files; no __pycache__; .gitignore confirmed). Post-push DR-010:
+   git fetch; local == origin/master (460886d); all 4 files present in HEAD;
+   working-tree vs HEAD-blob md5 identical for each of the 4 files. Commit
+   present in HEAD.
+
+6. DELIVERABLES
+   TothBot_V2-Code (branch master):
+     460886d  S2c3 silent-pair state machine + per-shard reconnect coordinator
+              (4 files, 807 ins)
+   TothBot_V2-SessionLogs (branch master):
+     TB00710 (this SL) + TB00711 (NSI)
+   No Docs design changes from the build (0500000 unchanged at dv1_240; the build
+   reads it, does not edit it). DEC-125 stays CLOSED. TB00000 unchanged at v2_98.
+
+7. SESSION ROADMAP (Claude-scoped; adaptive)
+   S1 Foundation [DONE] -> S2 Data layer [S2a DONE; S2b DONE; S2c keepalive +
+   Reconciliation_REST DONE; S2c2 sharding + subscribe pacing DONE; S2c3
+   silent-pair machine DONE + reconnect coordinator PARTIAL - scenario selection /
+   restore sequence / HR-WM-012 gate DONE, Scenario-A backoff schedule BLOCKED]
+   -> S3 Regime + signal models -> S4 Module spine (gates, wallet, sizing, A1 R:R
+   floor, drawdown halts) -> S5 Execution (entry + Exit Controller L1a/2/3 +
+   paper/live seam I/O bodies) -> S6 CIATS -> S7 Operations + integration. S4-S6
+   may split further per figure.
+
+8. OPEN BILL INPUT (BLOCKS the S2c3 reconnect backoff schedule only)
+   The D1 mod:WS_Manager reconnect-coordinator visual annotation reads "5
+   attempts, backoff 1s->30s, 181s max sleep". WS-REC-003 prose states only:
+   Scenario A = up to 5 immediate attempts then exponential backoff STARTING at
+   1s; Scenario B = a MINIMUM 5-second delay. The exact Scenario-A schedule -
+   the per-attempt growth factor, the 30s per-attempt cap, the number of capped
+   attempts, and whether 181s is a per-attempt or a cumulative-sleep cap - is NOT
+   readable from the figure. The 181s is consistent with a cumulative cap
+   (1+2+4+8+16 then 30 x5 = 181) but that is a RECONSTRUCTION, not a read. Per
+   DIAGRAMS GOVERN the value was not invented; reconnect_delay_sec() raises in
+   the backoff phase. RESOLUTION PATH: Bill pins the exact per-attempt schedule
+   (confirm or correct the 1+2+4+8+16-then-30x5=181 reconstruction); Claude
+   authors it INTO the D1 figure first; then codes the backoff in a follow-up
+   slice. This blocks ONLY the backoff numbers - everything else in the reconnect
+   coordinator shipped this session.
+
+9. OPEN -> TB00711 NSI
+   Two ready paths (Bill chooses sequencing): (a) resolve the sec-8 backoff pin,
+   then finalize the reconnect coordinator (code the Scenario-A backoff schedule
+   + wire the async receive loop / socket reconnect at the I/O edge); or (b)
+   proceed to S3 Regime + signal models and revisit the backoff when Bill pins
+   it. Read sec 7 Image6 (the relevant module desc) + sec 2 Image1 before coding
+   either.
+
+============================================================
+END TB00710
+============================================================
