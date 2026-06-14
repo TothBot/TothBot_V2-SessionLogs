@@ -1,0 +1,131 @@
+DocDCN:     TB00702
+DocTitle:   TB00702_Session_Log
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00702_Session_Log_v1_0.txt
+DocDate:    06-14-2026
+DocTime:    04:19:39 UTC
+
+============================================================
+TB00702 SESSION LOG
+PHASE 2 OPTION B - ORGANISM BUILD BEGINS (CLAUDE CODE)
+S1 FOUNDATION + S2a DATA-LAYER DOMAIN MODEL
+============================================================
+
+1. MISSION
+   First build session of Phase 2 Option B (DEC-120 clean-slate):
+   code the TothBot V2 organism (Long_Module + Short_Module +
+   CIATS) in Python directly from the 0500000 dv1_240 design
+   diagrams into the TothBot_V2-Code repo, per TB00000 v2_97 +
+   TB00701 NSI v1_1. Executor: Claude Code (direct C: access;
+   edit -> verify -> push in place). Bill chat directive: start
+   the build, scoped into crash-safe sessions sized by Claude.
+
+2. ENTRY / COLD-LOAD (from GitHub HEAD)
+   Read: TB00000 v2_97, TB00701 NSI v1_1, TB00700 SL v1_8.
+   Confirmed: DEC-125 CLOSED; 0500000 dv1_240 is the clean,
+   verified sole build source (md5
+   64f3b870d0d649e12b4dd5b572589a5f). TothBot_V2-Code HEAD was a
+   clean-slate scaffold (TB00683 f7890ce).
+
+3. BILL RULINGS (chat-turn)
+   (1) Scope: "start with [a scoped slice]; you scope your
+       sessions so you don't crash." -> Claude owns session
+       sizing; build/test/push/verify per slice, SL+NSI at real
+       session close (not per slice).
+   (2) Blocker 1 (stale working tree): the TB00683 purge removed
+       the old pre-Option-B code from HEAD but PRESERVED it on
+       C: (untracked: 14 modules in tothbot/, 26 tests/, plus
+       operations/config/deploy/scripts/logs + root files). It
+       blocked a clean-slate build (new files would have to
+       overwrite C: files). Bill ruling: "delete them." Verified
+       fully recoverable from git history at fb5de32 (39 tracked
+       files, parent of the purge). Cleared with git clean -fdx;
+       working tree now == HEAD.
+   (3) Blocker 2 (Python): local python was 3.10.11; spec is
+       3.12.3 (TB00000 sec 7 / VPS). Bill ruling: "update to
+       3.12.3." Installed Python 3.12.10 per-user via winget
+       (C:\Users\wstot\AppData\Local\Programs\Python\Python312\
+       python.exe). Note: winget delivers the latest 3.12 patch
+       (3.12.10), same minor as 3.12.3, behavior-compatible; the
+       VPS keeps 3.12.3 as the authoritative runtime. All session
+       test runs used 3.12.10.
+
+4. WORK DONE
+   Grounding read (0500000 dv1_240): sec 7 Image6 organism
+   decomposition (governs field -> full mod:/container:/contract:/
+   channel: set) drove the package tree; sec 2 Image1 + the
+   contract:OHLC_5m_System_Clock desc + A-16 drove the data model.
+
+   S1 - FOUNDATION (commit 00dec45, 17 files, 582 ins):
+     tothbot/ package root + 8 sub-package anchors (exchange,
+     pipeline, regime, modules, execution, risk, ciats, recorder)
+     -- each __init__.py docstring names the diagram elements it
+     will house + its build session (the decomposition map; no
+     trading logic). Real deliverable = tothbot/config/:
+       settings.py - single paper/live Mode flag + the four
+                     PA-004 divergence points (TB00000 sec 4.3).
+       registry.py - all 42 sec-8 seeds, each tagged class
+                     (SACRED/OPERATOR/CIATS) + scope; recipe seeds
+                     (per_trade_size_usd, expected_reward_estimator_
+                     seed, mpp_abs_cap_pct) carry value=None with
+                     the canonical diagram element noted; retired
+                     seeds documented. SACRED rr_minimum_net=1.5 is
+                     the lone SACRED entry.
+       fees.py     - FEE_MAKER_PCT 0.0016 / FEE_TAKER_PCT 0.0026.
+     pyproject.toml (requires-python >=3.12, pytest cfg),
+     operations/ skeleton, tests/test_config.py (19 tests).
+
+   S2a - DATA-LAYER DOMAIN MODEL (commit 67a9d3b, 5 files, 317
+     ins) -- pure types, no I/O, under tothbot/exchange/:
+       channels.py - PublicChannel (5) + PrivateChannel (2);
+                     SYSTEM_CLOCK_CHANNEL = OHLC_5M.
+       candle.py   - Interval (5m/60m); Candle (frozen) with A-16
+                     interval_begin parsing (RFC3339 nanosecond ->
+                     UTC, micros truncated; deprecated timestamp
+                     IGNORED); from_kraken(); open_ts/close_ts.
+       events.py   - CandleCloseTrigger (evt:CANDLE_CLOSE_TRIGGER).
+       clock.py    - SystemClock (contract:OHLC_5m_System_Clock):
+                     input-driven (no timers/polling); only 5m
+                     candles tick; rejects non-5m; dispatches the
+                     trigger to listeners.
+     tests/test_exchange.py (10 tests).
+
+5. VERIFICATION
+   pytest on Python 3.12.10: 29 passed (19 S1 + 10 S2a). All
+   packages import cleanly. Each commit staged surgically (no
+   __pycache__; .gitignore confirmed). Post-push DR-010: local ==
+   origin/master after both pushes; registry.py md5 identical
+   local vs HEAD. Both commits present in HEAD.
+
+6. DELIVERABLES (TothBot_V2-Code, branch master)
+   00dec45  S1 foundation (17 files)
+   67a9d3b  S2a data-layer domain model (5 files)
+   No Docs/SessionLogs design changes (0500000 unchanged at
+   dv1_240; build reads it, does not edit it). DEC-125 stays
+   CLOSED; TB00000 stays v2_97 (build mandate sec 3 unchanged).
+
+7. SESSION ROADMAP (Claude-scoped; adaptive)
+   S1 Foundation [DONE] -> S2 Data layer [S2a DONE; S2b WS_Manager
+   dispatch seam, S2c sharding/pacing/reconnect/reconcile OPEN] ->
+   S3 Regime + signal models -> S4 Module spine (gates, wallet,
+   sizing, A1 R:R floor, drawdown halts) -> S5 Execution (entry +
+   Exit Controller L1a/2/3 + paper/live seam) -> S6 CIATS -> S7
+   Operations + integration. S4-S6 may split further per figure.
+
+8. HOUSEKEEPING (deferred, non-blocking)
+   The old top-level config/.gitkeep, deploy/.gitkeep,
+   scripts/.gitkeep remain tracked in HEAD and do not match the
+   TB00000 sec 9 tothbot/ + operations/ + tests/ layout. Harmless
+   empty placeholders; fold a git rm --cached into a later slice.
+
+9. OPEN -> TB00703 NSI
+   Continue Phase 2 Option B at S2b: mod:WS_Manager connection +
+   the O(1) dispatch seam (contract:WSManager_Dispatch_Seam) incl.
+   the paper/live divergence at the seam. Read sec 2 + sec 12 +
+   the sec-7 WS_Manager desc before coding. No open Bill business
+   judgment outstanding.
+
+============================================================
+END TB00702
+============================================================
