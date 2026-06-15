@@ -1,0 +1,199 @@
+DocDCN:     TB00722
+DocTitle:   TB00722_Session_Log
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00722_Session_Log_v1_0.txt
+DocDate:    06-15-2026
+DocTime:    01:16:41 UTC
+
+============================================================
+TB00722 SESSION LOG
+PHASE 2 OPTION B - PATH A: THE PAPER EXIT LIFECYCLE
+0500000 D6 PositionRecord gains atr_14_entry + emergsl_price (dv1_242);
+mod:Exit_Controller close path (sec 12.5) + the ticker-bbo exit detector
+(AR-048 L2 MAE + L3 emergSL touch) - paper now produces CIATS TRADE_CLOSE records
+EXECUTOR: CLAUDE CODE (local, direct C: access)
+============================================================
+
+1. MISSION / CONTEXT
+   Cold-loaded TB00721 NSI + TB00000 v2_99 + the TB00720 Session Log from GitHub HEAD
+   and followed it. Bill chose Path A directly: "Build the paper exit lifecycle next."
+   That selects TB00721 sec 4 (A) - the paper EXIT lifecycle: (1) the ticker-bbo exit
+   detection and (2) the mod:Exit_Controller close path (sec 12.5 on_paper_close ->
+   _close_position -> evt:TRADE_CLOSE). NOT the REST client edges (B) and NOT S3 (C).
+
+2. BILL DIRECTIVES (chat-turn)
+   (1) "Fix this stale untracked item" (the TB00711_v1_0 NSI in the SessionLogs tree).
+   (2) "build the paper exit lifecycle next." -> TB00721 Path A.
+   (3) "Take Path A. I confirm that you should make the 0500000 diagram edits." -
+       after Claude surfaced that the figure was code-INCOMPLETE for an end-to-end
+       build (see sec 4), Bill ruled Path A: author the missing figure fields first,
+       then code (the v2_99 ruling - diagram FILE edits are a Claude Code task).
+
+3. ENTRY / COLD-LOAD + VERIFY (all from HEAD, confirmed before work)
+   TB00000 v2_99 (read), TB00721 NSI (read), TB00720 SL (read).
+     0500000 dv1_241   md5 cb94f3b149fec582d5fdcab8a5635a5f  (Image1 R21) VERIFIED
+     0521001 dv1_51    present                                            VERIFIED
+     Docs HEAD         60cf32d, local == origin                          VERIFIED
+     Code HEAD         438bb28 (ledger.py + paper_fill.py present), 274 green  VERIFIED
+     SessionLogs HEAD  0a74b03 (TB00720 SL + TB00721 NSI)                 VERIFIED
+   STALE-ITEM FIX (Bill directive 1): TB00711_Next_Session_Instructions_v1_0.txt was an
+   UNCOMMITTED draft superseded by the tracked v1_1 ("supersedes v1_0" in its own footer);
+   removed it - the SessionLogs working tree is now clean, tracked v1_1 intact.
+   Python 3.12.10 (full-path interpreter); no async test libs - the close + detection are
+   synchronous state work, driven directly over fakes (the TB00714../TB00720 pattern).
+
+4. GOVERNING FIGURE READ + THE CODE-INCOMPLETENESS SURFACED (DIAGRAMS GOVERN)
+   Read in full: sec 12.5 (Paper Exit Routing), sec 3 Image3 (Exit Architecture L1a/L2/L3),
+   sec 7 Image6 (mod:Exit_Controller + evt:TRADE_CLOSE 23-field schema), sec 12.6 (paper
+   telemetry), sec 12.4 (ledger), the D1 FEE-CALC-004 net-P&L formula, ar:AR-048 (bid/ask
+   MAE), ar:AR-073 / rule:HR-EC-014 (SC state via WSManager), WS-TKR-002/003 (ticker
+   event_trigger). Facts consumed:
+     - sec 12.5 EXIT FLOW (paper): WSManager detects -> applies HR-WM-032 ledger credit ->
+       logs PAPER_<EXIT_TYPE>_DETECTED -> on_paper_close(symbol, exit_price, exit_reason,
+       fees_exit, wm) -> _close_position -> emit evt:TRADE_CLOSE -> clear Position Mirror ->
+       AR-073 Selection-Controller state update -> release BoundedSemaphore -> WSManager
+       switches the symbol's ticker event_trigger to trades-mode.
+     - D1 FEE-CALC-004: net_pnl = (exit_fill_price - entry_price) * qty - fee_entry -
+       fee_exit (Decimal, ar:AR-047, identical every exit path); direction-symmetric for
+       the short leg.
+     - evt:TRADE_CLOSE = the 23-field contract:CIATS_Trade_Outcome_Bus record (component
+       EXIT_CTRL); the four EC exit_reasons {MAE_THRESHOLD_BREACH, HTF_REGIME_REVERSAL,
+       DAILY_REGIME_DOWNGRADE, PAIR_LIMIT_ONLY_EXIT} + EMERGENCY_SL_FIRED (the L3 producer).
+     - ar:AR-048: long_mae = entry - bid; short_mae = ask - entry; L2 fires at
+       mae >= ATR(14) * mae_mult (1.5x); MUST use bid/ask, never last.
+     - sec 12.6: evt:PAPER_EMERG_SL_TRIGGERED on bid <= emergsl_price.
+     - rule:HR-EC-014 + ar:AR-073: the Exit Controller is the SOLE updater of SC state,
+       executed via the WSManager AR-073 path; the mirror clear routes via the WSManager
+       HR-PM-009 sole-writer path (the EC never mutates the mirror directly).
+   CODE-INCOMPLETENESS FOUND + SURFACED to Bill (TB00721 sec 6 "STOP and surface; author
+   the missing element into the diagram first; never invent"): Image3 / sec-12.5 detection
+   sources the ATR(14) "from the PositionRecord entry-time snapshot" and the emergSL touch
+   from emergsl_price, but the canonical D6 PositionRecord schema enumerated NEITHER field.
+   Bill ruled Path A.
+
+   DIAGRAM AMENDMENT (Claude Code, per v2_99): 0500000 dv1_241 -> dv1_242. The D6
+   mod:Position_Mirror net-position schema gains atr_14_entry + emergsl_price (entry-time
+   snapshot, captured once at the opening fill, Decimal-on-receipt). Image6 R19 -> R20;
+   the System-Context Image6 cross-ref bumped in lockstep; the visual position-box text
+   updated. HTML well-formed (g 217/217, text 956/956, desc 126/126, svg 10/10, figure
+   10/10; no residual dv1_241 / Image6-R19). NO new seed VALUE (atr_14_entry is an
+   indicator snapshot; emergsl_price derives from the existing emergency_sl_mult) -> NO
+   TB00000 sec 8 change. Provenance appended to 0521001 dv1_51 -> dv1_52.
+
+5. WORK DONE
+   DOCS (commit f0d4561): 0500000 dv1_242 (D6 schema amendment, Image6 R20) + 0521001
+   dv1_52 (TB00722 OP record). The first 0500000 figure edit under the v2_99 "diagram
+   edits in Claude Code" ruling.
+   CODE (commit f12bee2; 2 source new + 3 source mod + 2 test new + 3 test mod):
+   5a. execution/exit_controller.py [NEW] - mod:Exit_Controller close path. ExitReason
+       (the 4 EC reasons + EMERGENCY_SL_FIRED); TradeClose (the 23-field evt:TRADE_CLOSE
+       record, component EXIT_CTRL; producer-unsourced fields default None); ExitController
+       .on_paper_close -> _close_position: reads the position via wm helpers, net P&L per
+       FEE-CALC-004 (direction-symmetric) + net_gain/net_loss split + actual_RR (net_pl /
+       (atr_14_entry * mae_mult * qty)), emits TRADE_CLOSE, then clears the mirror
+       (wm.close_position, HR-PM-009), updates SC state (wm.update_selection_state_on_close,
+       AR-073), releases the semaphore (wm.release_exit_semaphore). mae_pct_reached is the
+       adverse excursion at the exit tick (ar:AR-048); vol_regime derived from the entry
+       regime token. Pure - no socket, no asyncio. PaperCloseSkipped on a no-position close.
+   5b. exchange/paper_exit.py [NEW] - the PURE ticker-bbo detector (sec 12.5 step 1).
+       detect_paper_exit(position, bid, ask): ar:AR-048 L2 MAE (bid for longs / ask for
+       shorts) with L2 PRIORITY, and the synthetic L3 emergSL touch (bid <= emergsl_price /
+       ask >= emergsl_price) as the standalone backstop reached only when no atr snapshot is
+       present (faithful to Image3 "L3 never fires normally - L1a/L2 close first"). Plus the
+       PaperMaeDetected + evt:PAPER_EMERG_SL_TRIGGERED telemetry events.
+   5c. exchange/position_mirror.py [MOD] - Position gains atr_14_entry + emergsl_price (D6,
+       dv1_242), threaded through apply_execution/_handle_fill/_open as sole-writer-set
+       context. NEW close(symbol, writer) - the explicit sole-writer mirror clear for the
+       sec-12.5 step-7 path (distinct from the executions-fill _close), guarded + emits
+       POSITION_STATE_WRITE(CLOSED).
+   5d. exchange/ledger.py [MOD] - exit_fill_credit gains retain_fees_entry (default False
+       keeps the standalone-exit pop + TB00720 behavior; the sec-12.5 close path passes
+       True so on_paper_close can read pos.fees_entry_usd for the net P&L). NEW
+       clear_fees_entry(symbol, writer) - drops it after the close consumes it (step 7).
+   5e. exchange/ws_manager.py [MOD] - the sec-12.5 wiring. Constructs the ExitController in
+       paper mode; record_execution threads the two snapshot fields + switches the ticker
+       event_trigger to bbo on open (WS-TKR-003). NEW surfaces the EC calls through wm:
+       fees_entry_for, close_position (mirror clear + ledger fee clear), update_selection_
+       state_on_close (AR-073: loss -> increment consecutive_loss_count + stamp
+       exit_cooldown_log on a MONOTONIC clock per HR-SC-006; win -> reset to 0),
+       release_exit_semaphore (guarded; the G7 BoundedSemaphore is injected, None until
+       Risk_Engine wires the acquire side). handle_ticker runs the detector per open
+       position and drives the sec-12.5 close; _update_ticker_event_trigger does the
+       bbo<->trades switch (WS-TKR-003); SC read helpers consecutive_loss_count /
+       exit_cooldown_at for the future Selection Controller (G5).
+   Tests: test_exit_controller.py [NEW, 8], test_paper_exit.py [NEW, 10], test_ledger.py
+   [MOD +3], test_position_mirror.py [MOD +5], test_ws_manager.py [MOD +8 incl. the full
+   open -> adverse-bbo -> TRADE_CLOSE + clear + credit + AR-073 + semaphore + trades-mode
+   end-to-end lifecycle].
+
+6. VERIFICATION
+   pytest on Python 3.12.10: 308 passed (274 prior + net 34). New modules import cleanly.
+   END-TO-END PAPER EXIT PROVEN (the slice goal): WSManager(Mode.PAPER); a long BTC/USD
+   position is opened with the entry-time snapshot (atr_14_entry 2000, emergsl_price 54000)
+   + the entry-fill debit (5000 -> 1992.20, fees_entry 7.80); an adverse ticker bbo (bid
+   57000) trips the L2 MAE threshold (mae 3000 >= 2000*1.5) -> the synthetic exit credit
+   (1992.20 -> 4834.79, fees_exit 7.41) -> the EC emits the TRADE_CLOSE record (net P&L
+   -165.21, a loss) -> the mirror is cleared + fees_entry cleared -> AR-073 increments
+   consecutive_loss_count to 1 + stamps the cooldown -> the semaphore is released -> the
+   ticker event_trigger switches to trades-mode. The L3 emergSL bbo-touch path (no atr
+   context, bid <= emergsl_price) emits PAPER_EMERG_SL_TRIGGERED + closes at emergsl_price.
+   Surgical staging (10 Code files + 2 Docs files; no __pycache__).
+   Post-push DR-010 (both repos): git fetch; local == origin; git diff HEAD empty; every
+   touched file present in HEAD with working-tree blob == HEAD blob (git hash-object).
+     Docs         f0d4561  (0500000 dv1_242 + 0521001 dv1_52)
+     Code         f12bee2  (exit_controller.py + paper_exit.py [NEW] + 3 source mod + 5 tests)
+     SessionLogs  <this push>  (TB00722 SL + TB00723 NSI)
+
+7. SCOPE NOTE (honest slicing)
+   Built: the paper EXIT lifecycle end to end for the two ticker-bbo-driven exits - paper
+   now opens a position, fills it, runs to a simulated L2 MAE (or L3 emergSL) exit, and
+   emits the CIATS TRADE_CLOSE record with net P&L (the 200-trade corpus starts
+   accumulating). NOT built this session (out of scope / deferred - producers unbuilt, the
+   record schema is whole, values fill in as producers land):
+     - layer:L1a regime-reversal exits (HTF_REGIME_REVERSAL / DAILY_REGIME_DOWNGRADE):
+       mod:Regime_Engine-driven (daily classification), S3 - not a ticker-bbo trigger.
+     - the producer-sourced TRADE_CLOSE fields: entry/exit timestamps (no entry-time
+       writer; exit ts is stamped), hold_candle_count (no candle counter), asset_regime /
+       market_regime / signal_params (Regime_Engine + Signal_Pipeline, S3), and a
+       MAX-OVER-LIFE MAE tracker (no MTM writer - mae_pct_reached is the at-exit value).
+     - the G7 BoundedSemaphore ACQUIRE side (mod:Risk_Engine); release is wired + guarded.
+     - the entry-side production of atr_14_entry + emergsl_price (Gate-8 sizing + the
+       on-fill batch_add): the D6 FIELDS now exist + are recorded by the sole writer; the
+       PRODUCER that computes them at entry lands with Gate-8 / the batch_add emergSL leg.
+     - the REST client edges (B) and S3 regime + signal models (C).
+
+8. OBSERVATIONS / CARRY-FORWARD FLAGS (no action taken; cosmetic / deferred, no blocker)
+   (a) keepalive.py DEAD_CONNECTION_LOG_KEY = "WS_PONG_TIMEOUT" -> reconcile to the
+       canonical "PING_TIMEOUT" in a later consistency pass. (carried TB00714..TB00721)
+   (b) reconnect.py is_immediate_attempt() docstring still says "BLOCKED exponential
+       backoff" - stale pre-TB00712 phrasing; the backoff is now a seed. (carried)
+   (c) position_mirror.py Position.unrealized_pnl stored, default 0; no MTM writer yet -
+       this is also the home of the max-over-life MAE the TRADE_CLOSE mae_pct_reached wants
+       (currently the at-exit value). Wire when the MTM/drawdown path is built. (carried, extended)
+   (d) private_ws.py RESET_RATE_CEILING no-op placeholder - wire the AR-030 maxratecount
+       unit when it lands. (carried)
+   (e) private_ws.py reconnect snap_orders defaults to the last executions snapshot when no
+       REST GetOpenOrders edge is injected; inject the canonical source with the REST client (B). (carried)
+   (f) the paper exit price + qty for a ticker-detected exit come from the bbo tick (the
+       realizable bid/ask per AR-048) + the position qty - NOT from a dispatch_market_sell
+       message. The legacy DISPATCH_MARKET_SELL -> PaperFillSimulator EXIT path (TB00720)
+       still exists for an explicitly-dispatched market sell and closes via record_execution;
+       the sec-12.5 detection path is the lifecycle. When the Exit Controller gains its own
+       dispatch (L1a market sell), confirm the two close mechanisms stay distinct (no double-close).
+   (g) NEW: handle_ticker is implemented but NOT yet registered into the inbound dispatch
+       table (the ticker channel read-loop wiring is S2c); it is driven directly for now.
+       Register it (PublicChannel.TICKER) when the ticker read path is wired; the same
+       handler will also host the HR-WM-024 G7 continuous drawdown monitor.
+
+9. OPEN -> TB00723 NSI
+   No outstanding Bill blocker. Paper produces CIATS TRADE_CLOSE records (308 tests green).
+   Next ready paths: the REST client edges (B) that replace the injected private-connection
+   edges; S3 regime + signal models (C) - which also unblock the L1a regime-reversal exit +
+   the asset_regime/market_regime/signal_params TRADE_CLOSE fields; OR the Gate-8 sizer +
+   on-fill batch_add that PRODUCE atr_14_entry + emergsl_price at entry (closes the
+   producer gap for the fields authored this session). All unblocked. See TB00723.
+
+============================================================
+END TB00722
+============================================================
