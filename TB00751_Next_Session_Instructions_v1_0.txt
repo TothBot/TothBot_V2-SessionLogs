@@ -1,0 +1,103 @@
+DocDCN:     TB00751
+DocTitle:   TB00751_Next_Session_Instructions
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00751_Next_Session_Instructions_v1_0.txt
+DocDate:    06-15-2026
+DocTime:    23:59:00 UTC
+
+============================================================
+TB00751 NSI - DRIVE open_pdca OFF THE SURFACED DRIFT CANDIDATE (CONSTRUCT THE PROPOSAL, CLOSE THE CYCLE)
+The producer is wired (TB00750 a/b): each running close carries the per-trade signal_params LEVEL series
++ entry context on the TRADE_CLOSE. The drift-triggered PLAN candidate is IDENTIFIED + SURFACED (TB00750
+c): on a scan_drift signal conductor.on_close runs identify_spearman_candidate over the corpus levels and
+emits CIATS_PLAN_CANDIDATE. The one piece left is CONSTRUCTING the owned-parameter proposal open_pdca
+writes - blocked on a genuine design decision Claude SURFACED (see section 3). This mission rules it +
+drives the cycle end-to-end.
+EXECUTOR: CLAUDE CODE (autonomous, "auto mode on")
+============================================================
+
+NSIs are Claude-authored + informational; Bill's chat directives govern. PLAIN-TEXT choices ONLY - the
+AskUserQuestion / question-box tool is BANNED (TB00000 4.7). Per Bill's standing TB00731 ruling: a schema
+verification or an obvious method/legacy choice is something to DO automatically, NOT a question - build
+the organism on auto; surface ONLY a genuine new-seed value or a genuine design decision, in PLAIN TEXT.
+
+NUMBERING (Bill ruling TB00745): SL = this session's number; NSI = the next session's number; OCS = the
+SAME number as the NSI. This session is 751; it closes as TB00751 SL + TB00752 NSI + TB00752 OCS.
+
+0. WHY / RHYTHM
+   Build from the 0500000 diagrams (Long/Short symmetric, dv1_250). Pure/testable units first, I/O at the
+   edges (asyncio.run over fakes; websockets/aiohttp lazy). Deliver file by file, FULL pytest on the 3.12
+   interpreter each slice, surgical staging (no __pycache__), DR-010 post-push (git hash-object vs
+   origin/master:path). Diagram/Docs edits stay a Claude Code task. Session close is STANDING (SL+NSI+OCS
+   at the END).
+
+1. ENTRY / COLD-LOAD + VERIFY (from GitHub HEAD)
+   Read TB00000 (v2_100) + this NSI + the TB00750 Session Log. Cold-load the auto-memory (phase2-build is
+   current through 2008178).
+     Code HEAD        2008178 (857 tests green). Python = C:\Users\wstot\AppData\Local\Programs\Python\
+                      Python312\python.exe (3.12.10; default PATH python is 3.10 - full path ONLY). Run:
+                      python.exe -m pytest -q (expect 857 green).
+     Docs HEAD        18b555d - 0500000 dv1_250 / 0521001 dv1_60.
+     SessionLogs HEAD <the TB00750 SL + TB00751 NSI/OCS push>.
+
+2. STATE: the producer is wired + the candidate is identified/surfaced; the open_pdca construction is the gap.
+   ciats/proposal_engine.identify_spearman_candidate  the diagram PLAN-candidate identification over the
+                              corpus: for each continuous signal_params LEVEL key (rsi_14 / ema_9 / ema_21 /
+                              volume_ratio) run the Spearman gate (|rho| > 0.3 AND p < 0.05), return the
+                              strongest-|rho| qualifying IdentifiedCandidate (level_key + rho + n + the
+                              levels/outcomes series) or None.
+   ciats/conductor.identify_drift_candidate / on_close  on a scan_drift DriftSignal, IDENTIFY the candidate
+                              + SURFACE it (evt:CIATS_PLAN_CANDIDATE) off the running close. It does NOT yet
+                              build a ParameterChangeProposal or call open_pdca.
+   ciats/conductor.open_pdca  the PLAN -> DO (shadow_replay.build_shadow_evaluator real replay) -> CHECK ->
+                              stage cycle - takes a `proposal` + optional spearman_xy. Built, NOT yet driven
+                              by the drift candidate (no proposal is constructed).
+   ciats/shadow_replay        re-evaluates disallowed_regimes (gating), per_trade_size_usd (sizing), mae_mult
+                              / emergency_sl_mult (exit-stop); any other param is seed-then-correct (candidate
+                              == baseline -> CHECK finds no improvement, an honest reject).
+   THE GAP: constructing the owned-parameter ParameterChangeProposal from a qualifying signal_params indicator
+   LEVEL - the level->owned-threshold mapping + the proposed value (magnitude/direction) - is unspecified by
+   the diagram. Claude SURFACED it (TB00750 SL section 5); it is a genuine design decision, not fabricated.
+
+3. THE DESIGN DECISION TO RULE (Bill's call, PLAIN TEXT - the question-box is BANNED)
+   How should a Spearman-qualified per-trade LEVEL become a ParameterChangeProposal open_pdca can DO/CHECK?
+   (a) The LEVEL -> OWNED-PARAMETER mapping:
+       - volume_ratio -> volume_sss_threshold is a clean 1:1 gate.
+       - rsi_14 is gated by TWO owned bounds per side (rsi_long_low / rsi_long_high, the short mirror) -
+         which bound moves on a qualifying correlation?
+       - ema_9 / ema_21 are LEVELS but the owned params are the EMA PERIODS (sss_ema_short / sss_ema_long) -
+         a level correlation does not cleanly map to a period change (maybe ema levels are not candidates).
+       - OPTIONAL additional candidate (replayable today): the per-trade mae_pct_reached level (field 11,
+         already in the corpus) -> mae_mult (exit-stop, shadow_replay models it -> a real CHECK pass/fail).
+   (b) The PROPOSED VALUE (magnitude + direction). The Spearman sign gives direction-intent; the magnitude
+       rule (a fixed step? a data-driven quantile of the winning-trade levels? a bounded nudge?) is yours.
+   CLAUDE RECOMMENDATION: start with the SINGLE unambiguous, replayable candidate - mae_pct_reached ->
+   mae_mult (a bounded nudge in the Spearman-sign direction) - so the proof shows a REAL DO replay +
+   CHECK pass/fail; map volume_ratio -> volume_sss_threshold; DEFER rsi/ema until the bound/period rule is
+   set. NEVER the sacred R:R. If you want a different mapping/value rule, say so in chat and Claude builds it.
+
+4. MISSION - CONSTRUCT THE PROPOSAL + DRIVE open_pdca OFF THE RUNNING CLOSE. Bill's call on (3) first.
+   Once (3) is ruled: add a conductor method that, on the surfaced IdentifiedCandidate, builds the
+   ParameterChangeProposal (param_name = the ruled owned param, current_value = the live store/seed value,
+   proposed_value = the ruled value) and calls open_pdca(proposal, spearman_xy=(candidate.levels,
+   candidate.outcomes), out_of_cycle=True) from on_close (or scan_drift's handler) - PLAN (200-trade floor /
+   sacred-R:R gated) -> DO (real shadow replay) -> CHECK (absolute Mann-Whitney) -> on a pass STAGE to Bill
+   (the HR-CI-011 alert seam), on a fail surface the rejection. NEVER the sacred R:R. Prove it end-to-end on
+   the assembled real-wm organism: a degrading run with a Spearman-correlated level drives scan_drift -> a
+   constructed candidate PLAN -> a staged (or surfaced-rejected) PDCA proposal, all off the running close.
+
+5. PROVENANCE / SCOPE
+   A CODE build READS 0500000 (symmetric). The Spearman / CUSUM / Kelly / Mann-Whitney constants are
+   diagram-named - transcribed, not new seeds. The PROPOSED-VALUE rule (section 3b) is the genuine design
+   decision: if it introduces a NEW seed value (e.g. a fixed step size), that is a TB00000 sec-8 seed entry
+   + a 0500000 provenance note (a diagram/Docs edit in Claude Code, DR-010). If Bill's rule is a pure
+   data-derived formula (a quantile of the corpus), it is transcribed logic, not a seed. Surface any genuine
+   NEW seed or design decision in PLAIN TEXT (never the question-box); an obvious method/legacy correction
+   is NOT a question - do it automatically (TB00731). LONG-STANDING FLAGS persist (keepalive PING_TIMEOUT;
+   reconnect BLOCKED docstring; G7 semaphore ACQUIRE unbuilt; private_ws RESET_RATE_CEILING no-op; the
+   max-over-life MAE tracker).
+
+============================================================
+END TB00751
+============================================================

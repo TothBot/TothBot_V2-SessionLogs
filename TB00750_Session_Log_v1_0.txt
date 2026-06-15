@@ -1,0 +1,158 @@
+DocDCN:     TB00750
+DocTitle:   TB00750_Session_Log
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00750_Session_Log_v1_0.txt
+DocDate:    06-15-2026
+DocTime:    23:59:00 UTC
+
+============================================================
+TB00750 SESSION LOG
+WIRE THE ENTRY-TIME signal_params ONTO THE TRADE_CLOSE + IDENTIFY THE DRIFT-TRIGGERED PLAN CANDIDATE
+EXECUTOR: CLAUDE CODE (autonomous; Bill cold-start = the TB00750 OCS paste, auto mode)
+============================================================
+
+0. NUMBERING NOTE (Bill ruling TB00745, standing)
+   SL = THIS session's number; NSI = the NEXT session's number; OCS = the SAME number as the NSI. This
+   session (750, governed by the TB00750 NSI) closes as TB00750 SL + TB00751 NSI + TB00751 OCS.
+
+1. MISSION / CONTEXT
+   Continued from the TB00749 close (each running close drives the full per-module PROPOSE/DETECT
+   cadence: conductor.on_close ingests + recompute_kelly STAGES the Half-Kelly per_trade_size proposal +
+   scan_drift DETECTS the HR-CI-007 net-P/L CUSUM, off the wired learning sink; 840 green, Code 538255e).
+   The one piece of the drift cycle still missing was the open_pdca CANDIDATE-parameter PLAN, blocked on
+   the per-trade parameter-LEVEL series the Spearman candidate-identification needs - the producer-
+   unsourced contract:TRADE_CLOSE signal_params field. The TB00750 NSI mission: (a) CAPTURE signal_params
+   at ENTRY onto the position (the D6 pattern); (b) EMIT signal_params + market_regime + entry_timestamp_
+   utc + hold_candle_count on the TRADE_CLOSE; (c) DRIVE the drift-triggered candidate PLAN off the
+   per-trade level series. Recommended order (a) -> (b) -> (c). Delivered as 2 commits, each its own
+   commit + FULL pytest on 3.12.10 + DR-010. 840 -> 857 green. NO new seed, NO diagram edit. Docs
+   UNCHANGED at 18b555d. TB00000 UNCHANGED v2_100.
+
+   COLD-LOAD VERIFIED before working: Code HEAD 538255e - ran pytest on the 3.12.10 interpreter by full
+   path, 840 green, matched. Docs 18b555d (0500000 dv1_250 / 0521001 dv1_60). SessionLogs 41cf8eb (the
+   TB00749 SL + TB00750 NSI/OCS). Auto-memory (phase2-build) current through 538255e.
+
+2. BILL DIRECTIVES (chat-turn, this session)
+   (1) The TB00750 OCS paste = cold-start + execute the TB00750 NSI on auto. Standing rules hold: auto
+       mode, build the organism, question-box BANNED, surface only a genuine new seed or design decision
+       in plain text, diagram/Docs edits in Claude Code (DR-010), session close standing.
+
+3. PROVENANCE INVESTIGATION (a schema verification resolved from the diagram per TB00731, NOT a question)
+   The TB00750 NSI + the auto-memory loosely describe signal_params as "the per-cycle Parameter_Store_
+   Snapshot's owned-param levels" (the CIATS-owned THRESHOLD values). The DIAGRAM is the canonical schema
+   source and defines field (19) LITERALLY: 0500000 schema_fields_canonical line 4111 signal_params dict
+   {rsi_14, ema_9, ema_21, volume_ratio, sss_pass}; the SSS q5_logs line 5519-5522 adds `side` for
+   per-module routing. So signal_params is the SSS INDICATOR readings the entry was taken under - the
+   per-trade indicator LEVELS - NOT the threshold params. These per-trade levels ARE the "per-trade
+   parameter LEVEL" series the Spearman PLAN-candidate gate reads (the indicator the threshold gates).
+   The diagram literal governs; the NSI's looser phrasing reconciles to it. Resolved from the diagram and
+   built faithfully (TB00731: a schema verification is something to DO, not ask).
+
+4. WHAT WAS BUILT (Code: 2 commits 10b4399 -> 2008178; 840 -> 857 green on 3.12.10; DR-010 verified
+   against origin/master on EVERY push via git hash-object vs origin/master:path. Docs UNCHANGED at
+   18b555d. TB00000 UNCHANGED v2_100 - no new seed.)
+
+   (a+b) 10b4399  WIRE THE ENTRY-TIME signal_params PRODUCER ONTO THE TRADE_CLOSE.
+       regime/sss.SssVerdict.signal_params [NEW property] returns the diagram field-19 dict {rsi_14,
+       ema_9, ema_21, volume_ratio, sss_pass, side}; volume_ratio = current_volume / VolumeMA20 (the
+       SC-SSS-3 level the volume_sss_threshold gates), guarded at a zero MA. pipeline/signal_pipeline
+       run_pipeline carries signal_params on the ACCEPTED PipelineOutcome only. pipeline/driver.process_
+       candidate threads signal_params (from the accepted outcome) + market_regime + entry_timestamp_utc
+       (from the ExecutionContext) into execution/execution_engine.execute_entry -> wm.dispatch_entry.
+       exchange/ws_manager.dispatch_entry stashes the three new fields on the Pending Order Registry (the
+       D6 pattern); record_execution reads them onto positions.apply_execution; exchange/position_mirror
+       Position gains signal_params / market_regime / entry_timestamp_utc, threaded through apply_execution
+       -> _handle_fill -> _open and attached at the opening fill. pipeline/sweep.assemble_candidate sources
+       market_regime from the RegimeCache BTC/USD anchor (ar:AR-074) and entry_timestamp_utc from the
+       entry-trigger 5m candle interval_begin as ISO 8601 UTC. execution/exit_controller._close_position
+       reads the four entry-side producer fields off the position and fills them on the 23-field TradeClose,
+       computing hold_candle_count from the entry stamp + the exit clock floor-divided by the 300s candle
+       period (None when either is absent - no fabricated count; a same-candle exit floors to 0). +10 tests
+       (840 -> 850: sss 2, signal_pipeline 2, position_mirror 2, ws_manager +, sweep +, exit_controller 4,
+       driver 1). This unblocks the per-trade level series the Spearman gate reads.
+
+   (c) 2008178  IDENTIFY THE DRIFT-TRIGGERED PLAN CANDIDATE OVER THE LEVEL SERIES + SURFACE IT.
+       ciats/proposal_engine.identify_spearman_candidate [NEW] = the diagram PLAN-candidate identification
+       (lines 4111/4187), PURE over the Stream-2 corpus: for each continuous signal_params LEVEL key
+       (SPEARMAN_CANDIDATE_LEVELS = rsi_14 / ema_9 / ema_21 / volume_ratio; sss_pass + side are categorical,
+       excluded) build the aligned (level, outcome) pairs and run the CIATS Spearman gate (|rho| > 0.3 AND
+       p < 0.05); return the qualifying key with the STRONGEST |rho| (one candidate per cycle, the diagram
+       tie-break) or None. IdentifiedCandidate (evt:CIATS_PLAN_CANDIDATE) carries the level_key + rho + n +
+       the qualifying (levels, outcomes) series (the open_pdca CHECK Spearman-corroboration input). A record
+       without signal_params / without the key / without an outcome is skipped; a key under min_pairs is
+       skipped (no spurious candidate). ciats/conductor.identify_drift_candidate runs it over THIS module's
+       corpus; conductor.on_close now, on a scan_drift DriftSignal, IDENTIFIES the candidate and SURFACES it
+       (CIATS_PLAN_CANDIDATE) off the running close. +7 tests (850 -> 857: 4 identify_spearman_candidate, 3
+       conductor identify/on_close-surface).
+
+5. SURFACED DESIGN DECISION (genuine, surfaced in PLAIN TEXT per the TB00750 NSI - NOT fabricated)
+   The diagram specifies the PLAN-candidate IDENTIFICATION (the Spearman gate + advance the strongest
+   |rho|) - built + wired this session. It does NOT specify how to CONSTRUCT the owned-parameter proposal
+   open_pdca writes from a qualifying signal_params indicator level. TWO unspecified pieces:
+     (i)  the LEVEL -> OWNED-THRESHOLD mapping. rsi_14 is gated by TWO owned bounds per side (rsi_long_low
+          / rsi_long_high, the short mirror) - which bound a qualifying rsi_14 correlation should move is
+          unspecified. ema_9 / ema_21 are LEVELS but the owned params are the EMA PERIODS (sss_ema_short /
+          sss_ema_long) - a level correlation does not cleanly map to a period change. volume_ratio maps
+          most directly to volume_sss_threshold (a 1:1 gate).
+     (ii) the PROPOSED VALUE (magnitude + direction). The diagram derives no proposed value from the
+          correlation; the Spearman sign gives direction-intent only.
+   This is exactly the TB00750 NSI surface trigger ("the param-level-to-outcome pairing for Spearman is
+   ambiguous - STOP and surface it in PLAIN TEXT"). Per TB00749's "never a fabricated candidate" + TB00731,
+   the identification is wired + surfaced; the proposal construction awaits a Bill ruling, then open_pdca
+   drives PLAN -> DO (real replay) -> CHECK -> stage end-to-end (a CHECK pass alerts Bill, never the sacred
+   R:R). NOTE on the DO replay: ciats/shadow_replay can re-evaluate disallowed_regimes (gating), per_trade_
+   size_usd (sizing), mae_mult / emergency_sl_mult (exit-stop); an SSS-threshold change is seed-then-correct
+   (no record-level re-gate), so an SSS candidate CHECK-rejects honestly until a re-gate model lands.
+   CLAUDE RECOMMENDATION (for Bill's ruling next session): the cleanest faithful first wire is the SINGLE
+   unambiguous, replayable candidate - correlate the per-trade mae_pct_reached level (field 11, already in
+   the corpus) against the outcome and, on a qualifying Spearman, propose a mae_mult change (exit-stop,
+   replayable -> a real CHECK pass/fail), proposed value a bounded nudge in the Spearman-sign direction;
+   AND for the signal_params SSS levels, map volume_ratio -> volume_sss_threshold (the clean 1:1 gate) and
+   DEFER rsi/ema (the bound/period ambiguity) until you rule. But the value-magnitude rule is yours to set.
+
+6. VERIFICATION
+   857 pytest green on C:\Users\wstot\AppData\Local\Programs\Python\Python312\python.exe (3.12.10):
+   840 (cold-load) -> 850 (a+b, +10) -> 857 (c, +7). DR-010 verified after EVERY push via git hash-object
+   vs origin/master:path: Code 10b4399 (5 files spot-checked OK) -> 2008178 (proposal_engine + conductor
+   OK); HEAD == origin/master at each. The logger validates the TRADE_CLOSE by FIELD NAME and holds the
+   record object in memory (no Decimal serialization), so a populated signal_params dict needs no schema
+   change - the 23-field fingerprint is unchanged. Docs UNCHANGED at 18b555d. TB00000 UNCHANGED v2_100.
+
+7. STATE AT CLOSE - THE PRODUCER IS WIRED; THE DRIFT CANDIDATE IS IDENTIFIED + SURFACED
+   Each running paper close now stamps the entry-time signal_params + market_regime + entry_timestamp_utc
+   onto the position at the opening fill (the D6 snapshot) and emits them + hold_candle_count on the 23-field
+   TRADE_CLOSE - so the Stream-2 corpus carries the per-trade parameter-LEVEL series + the entry context.
+   On a drift signal conductor.on_close IDENTIFIES the strongest Spearman-qualified per-trade level over
+   that corpus and SURFACES the candidate (CIATS_PLAN_CANDIDATE) off the running close. The remaining piece
+   of the drift cycle - CONSTRUCTING the owned-parameter proposal (the level->owned-threshold mapping + the
+   proposed value) that open_pdca writes - is the surfaced design decision (section 5), awaiting a Bill
+   ruling; it is NOT fabricated.
+
+8. CARRY-FORWARD (see TB00751 NSI)
+   DRIVE open_pdca off the surfaced candidate once Bill rules the proposal construction (section 5): map
+   the identified level to its owned parameter + derive the proposed value, build the ParameterChangeProposal,
+   and call conductor.open_pdca(proposal, spearman_xy=(candidate.levels, candidate.outcomes), out_of_cycle=
+   True) from on_close (or scan_drift's handler) - PLAN -> DO (real replay) -> CHECK -> stage to Bill, never
+   the sacred R:R. Prove it end-to-end (a degrading run with a Spearman-correlated level -> a staged or
+   surfaced-rejected PDCA proposal off the running close). LONG-STANDING FLAGS persist: keepalive WS_PONG_
+   TIMEOUT -> PING_TIMEOUT naming; reconnect "BLOCKED" docstring; G7 BoundedSemaphore ACQUIRE side unbuilt
+   (mod:Risk_Engine); private_ws RESET_RATE_CEILING no-op (the AR-030 maxratecount unit); the max-over-life
+   MAE tracker (the MTM tracker; the at-exit MAE stands until then).
+
+9. CLOSE STATE
+   Code HEAD        2008178 (857 tests green; ciats/proposal_engine.py [identify_spearman_candidate +
+                    IdentifiedCandidate + SPEARMAN_CANDIDATE_LEVELS] + ciats/conductor.py [identify_drift_
+                    candidate + on_close surfacing] + regime/sss.py [signal_params] + pipeline/signal_
+                    pipeline.py + pipeline/driver.py + pipeline/sweep.py + execution/execution_engine.py +
+                    execution/exit_controller.py + exchange/ws_manager.py + exchange/position_mirror.py;
+                    tests across sss / signal_pipeline / driver / sweep / ws_manager / position_mirror /
+                    exit_controller / proposal_engine / ciats_conductor).
+   Docs HEAD        18b555d (0500000 dv1_250 / 0521001 dv1_60 - UNCHANGED).
+   SessionLogs HEAD <this close: TB00750 SL + TB00751 NSI + TB00751 OCS>.
+   TB00000          v2_100 (unchanged - no new seed).
+   Governing instructions next = TB00751 NSI. Auto memory (phase2-build) updated through 2008178.
+
+============================================================
+END TB00750
+============================================================
