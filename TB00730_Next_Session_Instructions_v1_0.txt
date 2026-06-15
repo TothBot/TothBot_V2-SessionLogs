@@ -1,0 +1,94 @@
+DocDCN:     TB00730
+DocTitle:   TB00730_Next_Session_Instructions
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00730_Next_Session_Instructions_v1_0.txt
+DocDate:    06-15-2026
+DocTime:    06:25:25 UTC
+
+============================================================
+TB00730 NSI - BUILD THE SHORT_MODULE CODE TO MATCH THE NOW-SYMMETRIC DIAGRAMS
+The 0500000 diagram half of Bill's Long/Short parity directive is DONE (all 10 figures +
+key prose symmetric, dv1_249; margin-fee seed ratified + registered, TB00000 v2_100).
+Next = the CODE half: build the short execution path + the unbuilt vertical.
+EXECUTOR: CLAUDE CODE (autonomous, "auto mode on")
+============================================================
+
+NSIs are Claude-authored + informational; Bill's chat directives govern. PLAIN-TEXT choices
+ONLY - the AskUserQuestion / question-box tool is BANNED (Bill ruling, repeated; TB00000 4.7).
+
+0. WHY / RHYTHM
+   Code is built from the 0500000 diagrams (now Long/Short symmetric). Pure/testable units
+   first, I/O at the edges (asyncio.run over fakes). Deliver file by file, FULL pytest on the
+   3.12 interpreter each slice, surgical staging (no __pycache__), DR-010 post-push. Diagram/
+   Docs edits stay a Claude Code task. Session close is STANDING (write SL+NSI+OCS at the END).
+
+1. ENTRY / COLD-LOAD + VERIFY (from GitHub HEAD)
+   Read TB00000 (v2_100) + this NSI + the TB00729 Session Log.
+     0500000 dv1_249  - re-verify md5 from a fresh HEAD pull (all 10 figures symmetric).
+     0521001 dv1_59   - present (append-only archive; the TB00728 parity OP records).
+     Docs HEAD        a1064ae.
+     SessionLogs HEAD <TB00729/TB00730 push>; TB00000 now v2_100 (sec 8 short-margin-fee group).
+     Code HEAD        bcd6b58 (registry.py has margin_open_fee_pct + margin_rollover_fee_pct;
+                      375 green). Python C:\Users\wstot\AppData\Local\Programs\Python\Python312\
+                      python.exe (3.12.10); default PATH python is 3.10 - full path ONLY.
+
+2. STATE: DIAGRAMS SYMMETRIC; SHORT CODE LARGELY UNBUILT
+   BUILT + already direction-symmetric (the pure units, ready to be CONSUMED by a short module):
+     exchange/position_mirror.py (PositionSide LONG/SHORT), paper_exit.py (ar:AR-048 bid/ask),
+     regime_exit.py (L1a both sides), regime/sss.py (SignalSide), regime/taxonomy.py (per-cell
+     long_/short_entry_permitted + size_multiplier), execution/exit_controller.py (net-P&L by
+     side). The data layer (exchange/*) is shared/symmetric.
+   SKELETON-ONLY (docstring only): modules/ (Long/Short spines), risk/ (Risk_Engine), ciats/,
+     pipeline/ (G1-G8), recorder/ (Logger).
+   NOTE: DECISION B (symmetric) means taxonomy.py NON_DIR_NORMAL must permit SHORT at 0.5 - the
+   code currently has short_entry_permitted=False there (long-only). FIRST taxonomy fix below.
+
+3. MISSION - THE SHORT-MODULE BUILD, ORDERED (Bill chooses sequencing; recommended order)
+   (A) THE SHORT ECONOMIC LOOP (recommended first - smallest, fully unit-testable, closes the
+     TB00728 BLOCKERS that make a short un-closeable in paper):
+       a1. taxonomy.py: NON_DIR_NORMAL short_entry_permitted=True at size_multiplier 0.5 (DEC-B
+           symmetric); update the test truth-set. (Matches Image4 R10.)
+       a2. seam.py OutboundOp + paper_fill.py _EXIT_OPS: add the BUY-to-cover exit op
+           (DISPATCH_MARKET_BUY / reduce_only) so a short position can be CLOSED (today only
+           DISPATCH_MARKET_SELL exists). (Image1 R22 / Image3 R14.)
+       a3. ledger.py: make SyntheticCapitalLedger DIRECTION-AWARE - a SHORT entry (sell-to-open)
+           CREDITS proceeds - taker fee + margin_open_fee_pct; a SHORT exit (buy-to-cover) DEBITS
+           cover cost + taker fee + margin_rollover_fee_pct x held-4h-blocks. Thread `side` through
+           entry_fill_debit/exit_fill_credit (rename or add a side param) + ws_manager apply_paper_
+           entry/exit_fill. (sec 12.4 / Image1 FEE block / the margin_*_fee_pct seeds.)
+       a4. on-fill emergSL leg direction (paper_fill / the batch_add): short = BUY-to-cover stop
+           ABOVE entry, reduce_only (Image1 WS-BA-002 / Image9 emergSL).
+     Full suite green each step. This makes a paper SHORT open + close + P&L correct end-to-end
+     through the EXISTING symmetric detectors (paper_exit / regime_exit already handle the ask/
+     buy-to-cover side).
+   (B) THE 2ND (SHORT) MODULE INSTANCE + WALLET: a second WSManager/ledger/mirror wired for the
+     short wallet (paper_starting_balance_short_usd), or refactor to per-module instances. The
+     margin order path (add_order leverage field / reduce_only) at the outbound seam.
+   (C) THE VERTICAL ABOVE THE WS LAYER (the larger build): the 8-gate Signal_Pipeline orchestration
+     (composes the regime + SSS units; the permitted_side cascade per Image2 R16), Gate-8 sizer
+     (the A1 1:1.5 R:R floor enforced; short margin sizing + margin_borrow_fee in net_loss),
+     Risk_Engine (per-wallet drawdown halts + the G7 semaphore acquire side), CIATS (per-module
+     pools), recorder/Logger (the side field on the 23-field TRADE_CLOSE; the permanent trade
+     file). And the REST client + daily/1H orchestrator (drives the regime engine + the L1a
+     handlers on live data).
+   Recommendation: (A) the short economic loop first - it is the smallest slice that makes the
+   short side actually tradeable in paper end-to-end, and it directly consumes the work just
+   done. Bill's call on sequencing.
+
+4. CARRY-FORWARD (from TB00729 sec 8; the diagram-side DEFERRED polish, no blocker)
+   Structural SVG drawing (2nd CIATS column Image5/6; drawn module boxes Image6 Zone 2); Image7
+   PA-004 short-sim cells; sec-12.4 per-module ledger prose; MINOR prose (AR-034 ASK / AR-065
+   per-module Kelly / sec-5 cascade paragraph / AR-008-vs-AR-011 Context citation). Plus the
+   long-standing code flags (keepalive WS_PONG_TIMEOUT->PING_TIMEOUT; reconnect "BLOCKED"
+   docstring; RESET_RATE_CEILING no-op; G7 semaphore acquire unbuilt; market_regime/signal_params
+   producers; entry-side atr_14_entry/emergsl_price producer = the Gate-8/batch_add of (C)).
+
+5. PROVENANCE / SCOPE
+   A CODE build READS 0500000 (now symmetric). No new seed is expected for the short build (all
+   values seeded: margin_*_fee_pct, leverage_cap_short, rsi_short_*, the multipliers). If a
+   genuinely new value arises, STOP and surface it to Bill in PLAIN TEXT (never the question-box).
+
+============================================================
+END TB00730
+============================================================
