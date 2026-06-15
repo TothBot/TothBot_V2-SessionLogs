@@ -1,0 +1,146 @@
+DocDCN:     TB00744
+DocTitle:   TB00744_Session_Log
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00744_Session_Log_v1_0.txt
+DocDate:    06-15-2026
+DocTime:    23:45:00 UTC
+
+============================================================
+TB00744 SESSION LOG
+FINISH THE PROVIDERS (expected_reward DEC-124 + ws_state), WIRE THE WS CAPSTONE (3d),
+THEN OPEN PHASE C (the CIATS_Statistical_Engine core)
+EXECUTOR: CLAUDE CODE (autonomous; Bill "Go with sequencing recommended order below")
+============================================================
+
+1. MISSION / CONTEXT
+   Continued from the TB00741 close (the live providers nearly all backed, 662 green, Code
+   dd5c41d). Bill: "Go with sequencing recommended order below" - execute the TB00742 NSI on auto
+   in the recommended order: (3a-part2) expected_reward + (ws_state) finish the providers ->
+   (3d) wire the WS capstone -> (C) open the fuller CIATS. 4 slices, each its own commit + FULL
+   pytest on 3.12.10 + DR-010. 662 -> 706 green. No new seed (the estimators COMPUTE the sec-8
+   seed from data; the CUSUM k/h are diagram-named starting values), no diagram edit (every figure
+   code-complete). Docs UNCHANGED at 18b555d. TB00000 UNCHANGED at v2_100.
+
+2. BILL DIRECTIVES (chat-turn, this session)
+   (1) "Go with sequencing recommended order below" - run the TB00742 mission on auto in the NSI's
+       recommended order, under the standing rules (plain-text only; question-box BANNED; obvious
+       method/legacy fixes done automatically per TB00731).
+
+3. WHAT WAS BUILT (Code: 4 commits dd5c41d -> f8df2d1; 662 -> 706 green on 3.12.10; DR-010
+   verified on EVERY push. Docs UNCHANGED at 18b555d. TB00000 UNCHANGED at v2_100 - no new seed.)
+
+   3a-part2 - THE DEC-124 expected_reward SEED ESTIMATOR (the larger remaining seed unit):
+     b5d6a85  ciats/expected_reward.py [NEW]: a PURE backtest harness that COMPUTES the sec-8
+       expected_reward_estimator_seed from historical OHLC (Bill ruling TB00654; CIATS owns the
+       value day one, NOT a hardcoded literal). rolling_classifications precomputes the daily regime
+       per bar ONCE (compute_regime over bars[:j+1], exclude_forming=False) - O(n) classifies, the
+       replay then reads them (NOT O(n^3)). replay_excursions: for each entry bar whose regime
+       permits an entry (gate:G3 permitted_sides), open on each permitted side + hold until the FIRST
+       layer:L1a reversal fires - composing the TWO PRODUCTION detectors exactly as the organism runs
+       them: detect_daily_regime_downgrade (EC-L1A-002) + detect_htf_regime_reversal (EC-L1A-001, fed
+       the rolling daily EMA20/50). Excursion = direction-symmetric (exit-entry)/entry, sign-
+       preserving (a losing reversal is negative - no clamp); entries that never reverse in-window are
+       DISCARDED (no artificial end-of-data exit). compute_expected_reward = the per-regime MEDIAN
+       (reusing seed_estimators.quantile at q=0.5). ExpectedRewardStore (per-(pair, regime)) +
+       pipeline/providers.py make_expected_reward_provider (ProviderNotReady on a missing seed). The
+       favorable=median / discard-non-reversing method choices are obvious calls done automatically
+       per TB00731 (no new tunable, no Bill question). +14 tests.
+
+   ws_state - THE SUBSCRIPTION-LIFECYCLE ADAPTER:
+     584f566  pipeline/providers.py make_ws_state_provider [MOD]: maps the per-pair SilentPairMachine
+       lifecycle to the Image2 gate:G1_State_Machine token. SUBSCRIBED / DATA_READY -> "Subscribed"
+       (the G1 PASS token, entry_eligibility.check_state_machine); INITIAL / DATA_PENDING / a missing
+       machine -> distinct non-Subscribed labels so G1 WAITs (SYSTEM_STATE_BLOCKED). A DATA_PENDING
+       pair is also skipped earlier at Pre-Gate-1 (silent_pair.gate_blocks); this keeps G1 consistent.
+       PURE read of the machine state (the receive loop drives the transitions). +5 tests.
+
+   3d - THE CAPSTONE WS WIRING (the organism runs on a real public WS):
+     b444cfd  pipeline/operational.py [NEW]: TWO deliverables.
+       (a) make_public_handler_provider - the DataLayerAssembler handler_provider binding each public
+           channel to its SOLE consumer: INSTRUMENT -> instrument_cache.ingest, TICKER ->
+           bbo_cache.ingest, OHLC_5M -> driver.ohlc_5m_handler(), OHLC_60M -> driver.ohlc_60m_handler(),
+           STATUS -> a default no-op (an injectable status_handler override). The shared caches/driver
+           back every shard, so it maps by channel; an unmapped channel raises (never silently dropped).
+       (b) assemble_operational - the ar:AR-049 cold-start sequence end state (the PUBLIC data layer):
+           REST warm-up (warmup.py) -> daily regime (scheduler.py, + the BTC/USD anchor + EC-L1A-002
+           wiring) -> liquidity probe (LiquidityProbe) -> make_live_providers over the caches + the
+           CIATS seed stores (expected_reward + mpp, injected pre-seeded) + ws_state -> the
+           LiveSweepDriver -> build the DataLayerAssembler with the handler_provider bound + the SHARED
+           silent-pair registry + the one reconnect coordinator -> returns the runnable OperationalSystem
+           (data_layer.run() drives it). The instrument/ticker snapshots arrive over the WS after
+           subscribe; until then the providers raise ProviderNotReady and the sweep cleanly SKIPS (no
+           crash) - faithful to AR-049. The wiring cycle (ws_state needs the machines the assembler
+           creates) is resolved by pre-creating ONE shared machine registry and injecting it into both.
+       SUPPORTING CONFORMANCE FIXES (diagram-backed, TB00731 auto-fixes, NOT new design):
+       - sharding.py PER_PAIR_CHANNELS now = (OHLC_5M, OHLC_60M, TICKER): the diagram is explicit
+         ("ohlc_5m + ohlc_60"; "1H candle close ohlc(60) WS event"; "1H EMA cache (ohlc-60)"), and
+         receive_loop already treated OHLC_60M as a per-pair data channel - the SUBSCRIBE set was the
+         only place out of sync, so the live 1H HTF feed (EC-L1A-001) never actually arrived. Fixed +
+         the 6 affected sharding/assembler count assertions updated (pairs x 3 channels now).
+       - assembler.py: an OPTIONAL injected silent_pairs registry (additive kwarg) so the ws_state
+         machines == the receive-loop machines (breaks the wiring cycle); None keeps the standalone
+         per-shard behavior.
+       - operational.py adapts bbo_cache.bbo (None on a miss) -> (None, None) for BOTH the scheduler
+         (EC-L1A-002) and the driver's 1H on_htf_ohlc_close, whose BboProvider contract is a 2-tuple -
+         a latent unpack-None crash exposed at startup (no ticker yet); scheduler.py UNCHANGED (its
+         contract was always a 2-tuple; bbo_cache.bbo was the wrong thing to pass raw). +14 tests
+         (6 operational + the 8 net sharding/assembler assertion edits).
+
+   C-part1 - THE mod:CIATS_Statistical_Engine CORE (opens phase C):
+     f8df2d1  ciats/statistical_engine.py [NEW]: the four detection-only significance/drift statistics
+       (EWMA is the existing ewma_monitor.py; Half-Kelly is pool.py). mann_whitney_u = the
+       nonparametric two-sample U test with the tie-corrected, continuity-corrected normal-approx z
+       (does a parameter change shift the net-outcome distribution?). sharpe_ratio = mean/stdev of a
+       return series. spearman_rho = the tie-aware rank correlation (Pearson over average ranks, the
+       general definition - valid with ties). cusum_lower = the one-sided LOWER-arm CUSUM (k=0.5*sigma,
+       h=4*sigma, the diagram's STARTING VALUES, transcribed like the EWMA lambda=0.2 - NOT invented):
+       detect a DOWNWARD shift in the Stream-2 net_gain series (degradation -> a PDCA PLAN signal),
+       lower arm ONLY (the loss-prevention direction). ALL PURE Decimal, DETECTION ONLY (D5 - never
+       writes a param), gated by the 200-trade floor at the caller. Values verified vs scipy
+       (Spearman-ties 0.94868, Mann-Whitney z -2.1651/-0.433, Sharpe 1.897367). No new seed. +19 tests.
+
+4. STATE AT CLOSE - THE PROVIDERS ARE FULLY BACKED + THE ORGANISM CAN RUN ON A REAL PUBLIC WS
+   Every LiveProviders plug-point now has a REAL backing (no remaining stubs): instrument/marginable/
+   vol_24h (the caches), bbo (ticker cache), base_per_trade_size (CR-06), mpp_abs_cap_pct (DEC-128
+   Q95), expected_reward (DEC-124 run-to-reversal median), ws_state (the SilentPairMachine lifecycle),
+   cl_ord_id/deadline (the generators). assemble_operational sequences the AR-049 cold start and
+   returns a runnable public organism (warm-up -> regime -> liquidity -> providers -> driver -> the
+   DataLayer with handlers bound). Phase C is OPENED: the CIATS_Statistical_Engine core is built.
+
+5. VERIFICATION
+   706 pytest green on C:\Users\wstot\AppData\Local\Programs\Python\Python312\python.exe (3.12.10).
+   DR-010 verified after EVERY push (git hash-object vs HEAD:path - the autocrlf-safe compare):
+   Code b5d6a85 -> 584f566 -> b444cfd -> f8df2d1. Docs UNCHANGED at 18b555d. The OHLC_60M subscribe
+   change did not regress the receive-loop/reconnect tests.
+
+6. CARRY-FORWARD (see TB00745 NSI)
+   PHASE C remaining: mod:CIATS_PDCA_Engine (PLAN/DO/CHECK/ACT at inter-trade boundaries; a CUSUM
+     lower-arm breach initiates an OUT-OF-CYCLE PLAN per HR-CI-007); mod:CIATS_Proposal_Engine
+     (proposals only at inter-trade boundaries, ar:AR-072 / HR-CI-003); mod:CIATS_Parameter_Store
+     (the live owned-parameter snapshot; the sacred 1:1.5 R:R is the one value NEVER tuned);
+     mod:CIATS_Regime_Library (per-regime parameter sets, activate at 600 trades). The
+     CIATS_Statistical_Engine (this session) + EWMA Monitor + Half-Kelly pool are the inputs they read.
+   OPERATIONAL wiring loose ends: (a) the universe-load HISTORICAL SEEDING of the mpp + expected_reward
+     stores (call MppCapStore.seed_from_bars over GetOHLCData(5) + ExpectedRewardStore.seed_from_bars
+     over GetOHLCData(1440)) is NOT yet wired into assemble_operational - the stores are injected
+     pre-seeded; a startup seeding phase (or threading warm-up/regime's already-fetched bars into the
+     stores) is the remaining slice. (b) assemble_operational is PUBLIC-only; the private executions/
+     balances connection (private_ws.py, token via GetWebSocketsToken) is the SEPARATE live-only
+     assembly - tying it into the top-level operational startup for live mode is a later item.
+   LONG-STANDING FLAGS persist: keepalive WS_PONG_TIMEOUT -> PING_TIMEOUT; reconnect "BLOCKED"
+     docstring; G7 BoundedSemaphore ACQUIRE side unbuilt (sweep passes semaphore_locked=False FREE);
+     private_ws RESET_RATE_CEILING no-op.
+
+7. CLOSE STATE
+   Code HEAD        f8df2d1 (706 tests green; +ciats/expected_reward.py, +pipeline/operational.py,
+                    +ciats/statistical_engine.py, pipeline/providers.py [expected_reward + ws_state
+                    providers], exchange/sharding.py [OHLC_60M], exchange/assembler.py [silent_pairs]).
+   Docs HEAD        18b555d (0500000 dv1_250 / 0521001 dv1_60 - UNCHANGED).
+   SessionLogs HEAD <this close: TB00744 SL + TB00745 NSI + TB00746 OCS>.
+   TB00000          v2_100 (unchanged - no new seed).
+   Governing instructions next = TB00745 NSI. Auto memory (phase2-build) updated through f8df2d1.
+
+============================================================
+END TB00744
+============================================================
