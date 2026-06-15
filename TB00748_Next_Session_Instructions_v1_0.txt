@@ -1,0 +1,102 @@
+DocDCN:     TB00748
+DocTitle:   TB00748_Next_Session_Instructions
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00748_Next_Session_Instructions_v1_0.txt
+DocDate:    06-15-2026
+DocTime:    23:59:00 UTC
+
+============================================================
+TB00748 NSI - EMIT THE EXIT PATH THROUGH THE PER-MODULE CIATS SINKS (CLOSE THE LEARNING/BOUNDARY LOOP IN THE RUNNING WM)
+The CIATS brain is now ASSEMBLED into assemble_operational, BACKING the gates' per-cycle snapshot LIVE,
+with the approval/boundary edges + the real DO replay built (821 green, Code 03a0a0c); the remaining
+work makes the RUNNING mod:WS_Manager emit each TRADE_CLOSE THROUGH the side's ciats_sink so the
+learning close + the HR-CI-003 boundary poll fire in production without a manual tie-in.
+EXECUTOR: CLAUDE CODE (autonomous, "auto mode on")
+============================================================
+
+NSIs are Claude-authored + informational; Bill's chat directives govern. PLAIN-TEXT choices ONLY - the
+AskUserQuestion / question-box tool is BANNED (TB00000 4.7). Per Bill's standing TB00731 ruling: a
+schema verification or an obvious method/legacy choice is something to DO automatically, NOT a question
+- build the organism on auto; surface ONLY a genuine new-seed value or a genuine design decision, in
+PLAIN TEXT.
+
+NUMBERING (Bill ruling TB00745): the close bundle is SL = this session's number; NSI = the next
+session's number; OCS = the SAME number as the NSI. This session is 748; it closes as TB00748 SL +
+TB00749 NSI + TB00749 OCS.
+
+0. WHY / RHYTHM
+   Build from the 0500000 diagrams (Long/Short symmetric, dv1_250). Pure/testable units first, I/O at
+   the edges (asyncio.run over fakes; websockets/aiohttp lazy). Deliver file by file, FULL pytest on the
+   3.12 interpreter each slice, surgical staging (no __pycache__), DR-010 post-push (git hash-object vs
+   origin/master:path). Diagram/Docs edits stay a Claude Code task. Session close is STANDING (SL+NSI+OCS
+   at the END).
+
+1. ENTRY / COLD-LOAD + VERIFY (from GitHub HEAD)
+   Read TB00000 (v2_100) + this NSI + the TB00747 Session Log. Cold-load the auto-memory (phase2-build is
+   current through 03a0a0c).
+     Code HEAD        03a0a0c (821 tests green). Python = C:\Users\wstot\AppData\Local\Programs\Python\
+                      Python312\python.exe (3.12.10; default PATH python is 3.10 - full path ONLY). Run:
+                      python.exe -m pytest -q (expect 821 green).
+     Docs HEAD        18b555d - 0500000 dv1_250 / 0521001 dv1_60.
+     SessionLogs HEAD <the TB00747 SL + TB00748 NSI/OCS push>.
+
+2. STATE: the CIATS brain is WIRED into the organism but the exit path does not yet FEED it in the
+   running wm.
+   pipeline/operational.py   assemble_operational builds, per side, a CiatsConductor + CiatsPool +
+                             RegimeLibrary + ParameterStore + ApprovalInbox + a TRADE_CLOSE learning sink
+                             (assemble_ciats_modules), BACKS LiveProviders.cycle_parameters(side) with
+                             build_cycle_parameters(store, conductor.disallowed_regimes()) [LIVE, not
+                             seed-only], and EXPOSES conductors / ciats_sinks / approval_inboxes on
+                             OperationalSystem. The conductor's on_approval defaults to the mod:Logger
+                             HR-LG-009 operator-alert seam.
+   pipeline/live_driver.py   make_ciats_learning_sink(logger, module, conductor, *, inbox): records to
+                             mod:Logger + drives conductor.ingest_close AND - because a confirmed close is
+                             the HR-CI-003 boundary - polls the inbox (conductor.on_inter_trade_boundary)
+                             to apply a Bill-approved change. make_approval_alert_sink wires on_approval.
+   ciats/conductor.py        ApprovalInbox (the injected operator yes/no edge) + on_inter_trade_boundary
+                             (never auto-applies) + open_pdca defaulting to the REAL replay.
+   ciats/shadow_replay.py    build_shadow_evaluator: gating includes/excludes, sizing/exit scales.
+   THE GAP: mod:WS_Manager (exchange/ws_manager.py) constructs ONE mod:Exit_Controller with a single
+   untagged on_event sink (it is NOT per-module). So in the running organism the exit path's TRADE_CLOSE
+   does not flow THROUGH the per-module ciats_sinks - the learning close + the boundary poll fire only
+   when the smoke/tests drive a sink directly. The membrane is composable; the wm-level emission is the
+   missing tie-in.
+
+3. MISSION - MAKE THE RUNNING WM EMIT EACH TRADE_CLOSE THROUGH THE SIDE'S CIATS SINK. Bill's call on order.
+
+   (a) PER-MODULE EXIT EMISSION. Make mod:WS_Manager route each closed trade to the EMITTING module's
+       ciats_sink (the side is known at close - position.side). Two faithful shapes (pick the one the
+       diagrams support; this is an obvious-method choice, DO it - do not ask): either (i) a per-module
+       mod:Exit_Controller (one per wallet, each with its side's on_event = the side's ciats_sink), or
+       (ii) keep one Exit_Controller but tag its emit with the closing position's side so a module-aware
+       sink partitions it. Goal: a real paper close drives conductor.ingest_close + the HR-CI-003 inbox
+       boundary poll for that side, with mod:Logger getting the Stream-1 + the side's Stream-2 corpus.
+
+   (b) THE ASSEMBLY TIE-IN. assemble_operational already builds the per-side ciats_sinks; wire them into
+       the wm it receives (or build the wm's exit emission from them). Resolve the construction-order
+       seam cleanly (the wm is injected today; the conductors are built inside assemble_operational) -
+       e.g. assemble the CIATS modules first and hand the sinks to the wm, or expose a wm setter the
+       assembly calls. Keep operational.py owning construction order only (no new policy).
+
+   (c) PROVE IT END-TO-END. Extend the live smoke: a real exit (the ticker-bbo exit detection -> the
+       Exit_Controller close path) drives a schema-valid TRADE_CLOSE through the wired sink into the
+       side's conductor (trade_count++, the Stream-2 corpus grows) and, with a staged+approved change in
+       that side's inbox, applies it at the close boundary - all through the assembled organism, paper
+       mode, no manual sink call.
+
+   Recommendation: (a) the per-module emission -> (b) the assembly tie-in -> (c) the end-to-end proof.
+
+4. PROVENANCE / SCOPE
+   A CODE build READS 0500000 (symmetric). REST/WS wire facts are NOT seeds. The CIATS thresholds
+   (alpha=0.01, |rho|>0.3, p<0.05, CUSUM k=0.5sigma/h=4sigma, EWMA lambda=0.2, the 200/50/600-trade
+   counts) are diagram-named rule constants - transcribed, not new seeds. If a genuinely NEW seed value
+   or a genuine DESIGN decision arises, STOP and surface it in PLAIN TEXT (never the question-box). A
+   schema verification or an obvious method/legacy correction is NOT a question - do it automatically
+   (Bill ruling TB00731). LONG-STANDING FLAGS persist (keepalive PING_TIMEOUT; reconnect BLOCKED
+   docstring; G7 semaphore ACQUIRE unbuilt; private_ws RESET_RATE_CEILING no-op). A fuller non-regime
+   gating DO replay waits on the contract:TRADE_CLOSE signal_params producer (today seed-then-correct).
+
+============================================================
+END TB00748
+============================================================

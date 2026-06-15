@@ -1,0 +1,137 @@
+DocDCN:     TB00747
+DocTitle:   TB00747_Session_Log
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00747_Session_Log_v1_0.txt
+DocDate:    06-15-2026
+DocTime:    23:59:00 UTC
+
+============================================================
+TB00747 SESSION LOG
+WIRE THE CIATS BRAIN INTO THE RUNNING ORGANISM - THE ASSEMBLY + THE APPROVAL/BOUNDARY EDGES + THE REAL REPLAY
+EXECUTOR: CLAUDE CODE (autonomous; Bill cold-start "auto mode, build the organism, stop stopping")
+============================================================
+
+0. NUMBERING NOTE (Bill ruling TB00745, standing)
+   The close bundle numbers as: SL = THIS session's number; NSI = the NEXT session's number; OCS =
+   the SAME number as the NSI. This session (747, governed by the TB00747 NSI) closes as TB00747 SL +
+   TB00748 NSI + TB00748 OCS.
+
+1. MISSION / CONTEXT
+   Continued from the TB00746 close (the CIATS brain built as UNITS + a DRIVING conductor + a frozen
+   per-cycle snapshot read + a live end-to-end smoke; 788 green, Code 3ccec26). The TB00747 NSI mission:
+   the remaining WIRING that ties the conductor into the running assemble_operational organism. Bill's
+   cold-start governed: run the recommended order (a) the assembly + the snapshot-provider backing ->
+   (b) the HR-CI-011 approval + inter-trade-boundary edges -> (c) the REAL DO gate/exit corpus replay.
+   Executed all three on auto. 3 slices, each its own commit + FULL pytest on 3.12.10 + DR-010.
+   788 -> 821 green. NO new seed (every CIATS threshold is a diagram-named rule constant; the replay
+   composes existing units), NO diagram edit (every figure code-complete). Docs UNCHANGED at 18b555d.
+   TB00000 UNCHANGED v2_100.
+
+   COLD-LOAD VERIFIED before working: Code HEAD 3ccec26 (788 green), Docs 18b555d (0500000 dv1_250 /
+   0521001 dv1_60), SessionLogs 3e20882 (TB00746 SL + TB00747 NSI/OCS). Ran pytest on the 3.12.10
+   interpreter by full path - 788 green, matched.
+
+2. BILL DIRECTIVES (chat-turn, this session)
+   (1) The cold-start: "auto mode, build the organism, stop stopping; question-box BANNED; surface only
+       a genuine new seed or design decision in plain text; diagram/Docs edits in Claude Code (DR-010);
+       session close standing." Mission = the TB00747 NSI (a)->(b)->(c), Claude's recommended order.
+
+3. WHAT WAS BUILT (Code: 3 commits 82fad65 -> eb7d839 -> 03a0a0c; 788 -> 821 green on 3.12.10; DR-010
+   verified against origin/master on EVERY push. Docs UNCHANGED at 18b555d. TB00000 UNCHANGED v2_100 -
+   no new seed.)
+
+   (a) 82fad65  ASSEMBLE THE CONDUCTOR + THE PER-MODULE PARAMETER STORE + BACK THE SNAPSHOT PROVIDER.
+       pipeline/operational.assemble_ciats_modules [NEW] builds the per-MODULE CIATS brain - one
+       CiatsConductor (fresh CiatsPool + RegimeLibrary + ParameterStore) + one TRADE_CLOSE learning sink
+       per wallet (Long + Short, no cross-module pooling). pipeline/providers.make_cycle_parameters_
+       provider [NEW] BACKS the sweep's LiveProviders.cycle_parameters(side) with build_cycle_parameters(
+       the side's store, disallowed_regimes=conductor.disallowed_regimes()) - so a CIATS-tuned value AND
+       the protective disallowed-regime block list genuinely FLOW into the gates per cycle (the TB00746
+       part-(b) read is now LIVE, not seed-only; CI-IF-003 frozen, sacred R:R never served).
+       pipeline/live_driver.make_ciats_learning_sink [NEW] is the per-module membrane that records to
+       mod:Logger (Stream-1 + the module's Stream-2 corpus) AND drives conductor.ingest_close (the full
+       learning-loop close: pool + the net-P/L drift series + the asset_regime bucket parsed off the
+       record). assemble_operational now constructs the conductors/sinks, threads cycle_parameters into
+       make_live_providers, and exposes conductors + ciats_sinks on OperationalSystem; ciats/conductor
+       gains a parameter_store accessor. +13 tests (788 -> 801).
+
+   (b) eb7d839  THE HR-CI-011 APPROVAL + INTER-TRADE-BOUNDARY EDGES. recorder/logger.Logger.alert [NEW]
+       is the HR-LG-009 operator-alert seam - it routes a record to the operator REGARDLESS of level (a
+       [HIGH] ApprovalRequested reaches Bill even though the level-driven CRITICAL auto-escalation would
+       miss it). live_driver.make_approval_alert_sink [NEW] wires the conductor's on_approval edge to it.
+       ciats/conductor.ApprovalInbox [NEW] is the INJECTED operator yes/no edge (where Bill's decision
+       lands, keyed by request_id); conductor.on_inter_trade_boundary(inbox) [NEW] is the HR-CI-003
+       boundary edge - at a confirmed close it polls the inbox and APPLIES any change Bill has decided on
+       via submit_approval(at_inter_trade_boundary=True); a write drops the request, a rejection is
+       consumed, a still-gated approval (e.g. the HR-CI-005 50-trade interval) stays pending to retry.
+       NEVER auto-applies (it acts only on Bill's recorded decision). The learning sink drives the
+       boundary poll off each TRADE_CLOSE; assemble_ciats_modules builds per-side inboxes + defaults
+       on_approval to the alert seam; OperationalSystem exposes approval_inboxes. +10 tests (801 -> 811).
+
+   (c) 03a0a0c  THE PDCA DO REAL GATE/EXIT CORPUS REPLAY. ciats/shadow_replay.build_shadow_evaluator
+       [NEW] replaces the injected counterfactual `evaluator` with a PURE replay over the Stream-2
+       records: a GATING change (param:disallowed_regimes) INCLUDES/EXCLUDES a record by its asset_regime
+       (gate:G3); a SIZING change (param:per_trade_size_usd) SCALES every outcome by proposed/current
+       (net P/L is proportional to size); an EXIT-stop change (param:mae_mult / emergency_sl_mult) SCALES
+       the LOSSES by proposed/current and leaves the GAINS unchanged (the mod:Exit_Controller net-P&L
+       sign semantics - the stop binds only a loser). Seed-then-correct: a parameter the record cannot
+       re-evaluate (e.g. a Gate-5 / signal-threshold gate - the contract:TRADE_CLOSE signal_params
+       producer is unwired) replays as the realized outcome (candidate == baseline -> CHECK finds no
+       improvement), never a crash. conductor.open_pdca now DEFAULTS its evaluator to this real replay
+       (over the proposal + the live store-owned current value); an evaluator may still be injected.
+       +10 tests (811 -> 821).
+
+   DESIGN NOTE (done automatically per TB00731, surfaced here for Bill's awareness, NOT a stop): the
+   conductor's TRADE_CLOSE learning sink + the approval inbox + the inter-trade-boundary poll are BUILT,
+   wired through assemble_ciats_modules, and EXPOSED on OperationalSystem (conductors / ciats_sinks /
+   approval_inboxes); the cycle_parameters provider is genuinely LIVE (CIATS-owned values + disallowed
+   regimes flow into the gates per cycle). The remaining boundary is that the paper organism's
+   mod:WS_Manager constructs a SINGLE mod:Exit_Controller with one untagged on_event sink - so the exit
+   path's TRADE_CLOSE does not yet flow THROUGH the per-module ciats_sinks automatically; the membrane
+   is composable and the smoke/tests drive it end-to-end, but making the running wm emit each close
+   through the side's sink (so the learning close + the boundary poll fire in production without a manual
+   tie-in) is a ws_manager restructure - the next-session wiring (see TB00748 NSI).
+
+4. STATE AT CLOSE - THE CIATS BRAIN IS WIRED INTO THE ORGANISM (assembled + backing-live + approval/
+   boundary edges + the real DO replay)
+   assemble_operational now builds one CiatsConductor + ParameterStore + RegimeLibrary + ApprovalInbox +
+   TRADE_CLOSE learning sink per side and BACKS the per-cycle Parameter_Store_Snapshot the gates read -
+   so a CIATS-tuned value and the protective disallowed-regime list genuinely flow into the live gates
+   per cycle (CI-IF-003 frozen, sacred R:R hardcoded in G8). A staged HR-CI-011 change is routed to the
+   mod:Logger operator-alert seam; Bill's yes/no lands in the per-module inbox; the conductor applies an
+   approved change ONLY at a confirmed inter-trade boundary (never auto-applied). The PDCA DO phase
+   replays the REAL gate/exit counterfactual over the module's own Stream-2 corpus (gating includes/
+   excludes, sizing/exit scales) to produce the candidate cohort CHECK ranks against the realized
+   baseline. Everything stays PROPOSE/DETECT only.
+
+5. VERIFICATION
+   821 pytest green on C:\Users\wstot\AppData\Local\Programs\Python\Python312\python.exe (3.12.10):
+   788 (cold-load) -> 801 (a, +13) -> 811 (b, +10) -> 821 (c, +10). DR-010 verified after EVERY push via
+   git hash-object vs origin/master:path: Code 82fad65 -> eb7d839 -> 03a0a0c, all OK. The seed-only
+   snapshot default path + the injected-evaluator path regressed no existing test. Docs UNCHANGED at
+   18b555d. TB00000 UNCHANGED v2_100.
+
+6. CARRY-FORWARD (see TB00748 NSI)
+   The per-module exit emission: make the running mod:WS_Manager emit each TRADE_CLOSE through the side's
+   ciats_sink (so the learning close + the HR-CI-003 boundary poll fire in production), i.e. a per-module
+   exit_controller / on_event partition rather than one untagged sink. Then a fuller DO replay for the
+   non-regime gating tunables once the contract:TRADE_CLOSE signal_params producer lands (today they
+   seed-then-correct to baseline). LONG-STANDING FLAGS persist: keepalive WS_PONG_TIMEOUT -> PING_TIMEOUT;
+   reconnect "BLOCKED" docstring; G7 BoundedSemaphore ACQUIRE side unbuilt (sweep passes
+   semaphore_locked=False FREE); private_ws RESET_RATE_CEILING no-op (the AR-030 maxratecount unit).
+
+7. CLOSE STATE
+   Code HEAD        03a0a0c (821 tests green; +ciats/shadow_replay.py, +tests/test_operational_ciats.py +
+                    test_shadow_replay.py; ciats/conductor.py + pipeline/operational.py +
+                    pipeline/providers.py + pipeline/live_driver.py + recorder/logger.py [the assembly +
+                    the approval/boundary edges + the real replay]; tests/test_live_driver.py +
+                    test_ciats_conductor.py + test_logger.py updated).
+   Docs HEAD        18b555d (0500000 dv1_250 / 0521001 dv1_60 - UNCHANGED).
+   SessionLogs HEAD <this close: TB00747 SL + TB00748 NSI + TB00748 OCS>.
+   TB00000          v2_100 (unchanged - no new seed).
+   Governing instructions next = TB00748 NSI. Auto memory (phase2-build) updated through 03a0a0c.
+
+============================================================
+END TB00747
+============================================================
