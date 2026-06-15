@@ -1,0 +1,159 @@
+DocDCN:     TB00738
+DocTitle:   TB00738_Session_Log
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00738_Session_Log_v1_0.txt
+DocDate:    06-15-2026
+DocTime:    20:30:00 UTC
+
+============================================================
+TB00738 SESSION LOG
+B2 THE LIVE MAIN LOOP - BUILT END TO END FOR BOTH SIDES
+The organism now RUNS on live Kraken candles: warm-up -> READY -> 5m candle-close ->
+incremental indicators -> assemble live inputs -> process_candidate -> dispatch ->
+1H HTF -> on_htf_ohlc_close -> TRADE_CLOSE -> CiatsPool.
+EXECUTOR: CLAUDE CODE (autonomous; Bill "auto mode on")
+============================================================
+
+1. MISSION / CONTEXT
+   Cold-loaded + followed the TB00736 NSI on auto (the standing TB00731 ruling: build the
+   organism, do obvious verifications/fixes automatically, surface only a genuine decision).
+   Continued from the TB00735 close: the REST edges + the daily regime-compute orchestrator
+   were built (562 green, Code be4da59). THIS session built B2 - the live main loop - in the
+   recommended order B2a (warm-up + live indicators) -> B2b (per-5m universe sweep). 6 slices,
+   each its own commit + FULL pytest on 3.12.10 + DR-010 post-push. 562 -> 622 green. No new
+   seed, no diagram edit (every figure was code-complete). TB00000 unchanged at v2_100.
+
+2. BILL DIRECTIVES (chat-turn, this session)
+   (1) Cold-load + follow the TB00736 NSI on auto mode. No new chat directives; ran
+       autonomously under the standing rules (plain-text only; question-box BANNED).
+
+3. THE B2a DESIGN DECISION - SETTLED FROM THE DIAGRAM (the NSI's first design step)
+   The AR-016/AR-075 LIVE indicator-maintenance contract = OPTION (i) EXACT INCREMENTAL RUNNING
+   VALUES. This is DIAGRAM-GOVERNED, not a Bill question (the NSI predicted no new seed would
+   fall out, and none did):
+     - ar:AR-016: "ATR(14) incremental running calculation. O(1) per update."
+     - ar:AR-075: the WS-Manager per-symbol state dict carries the SSS indicators as incremental
+       running values (rsi_14_avg_gain, rsi_14_avg_loss, ema_9, ema_21, volume_ma_20), "updated
+       incrementally on each ohlc(5m) candle close, same pattern as ATR(14)".
+     - ar:AR-076: the exact recurrences - RSI(14) = Wilder SMMA (alpha 1/14), EMA(9)/EMA(21) =
+       standard EMA (alpha 2/10, 2/22).
+     - ar:AR-068: the five-indicator seed boundaries (ATR first-14-TR SMA, RSI first-14, EMA9
+       first-9, EMA21 first-21, VolMA20 first-20; incremental thereafter).
+   KEY FACT that makes (i) safe: the Wilder/EMA/running-SMA incremental recurrences are
+   MATHEMATICALLY IDENTICAL to the batch computation over the full committed series (given the
+   same seed). So option (i) introduces NO new tunable and NO behavioral divergence from the pure
+   batch units - it is the same numbers maintained in O(1), exactly as the diagram specifies.
+   The equivalence is asserted DIRECTLY + bit-exactly in the unit tests (the divergence guard).
+
+4. WHAT WAS BUILT (Code: 6 commits be4da59 -> 2817c81; 562 -> 622 green on 3.12.10; DR-010
+   verified on EVERY push. Docs UNCHANGED at 18b555d - no figure was code-incomplete. TB00000
+   UNCHANGED at v2_100 - no new seed.)
+
+   B2a - WARM-UP + LIVE INCREMENTAL INDICATORS
+     (slice 1+2) c0cc3da  LiveIndicators + the sss.py refactor.
+       regime/live_indicators.py [NEW]: the per-symbol O(1) incremental maintainer (ar:AR-016/
+         AR-075). Holds Wilder ATR(14) (the 5m TRADE-ATR, distinct from the regime DAILY ATR) +
+         Wilder RSI(14) avg_gain/avg_loss + standard EMA(9)/EMA(21) + running VolumeMA(20).
+         seed_from_bars(committed) seeds all five via the SAME batch units; update(OhlcCandle)
+         steps every value O(1) on each committed 5m close; sss_verdict(side) serves the SSS
+         verdict from the running values (the Pre-Step-2 cache read, "without recomputation").
+       regime/sss.py [MOD]: extracted rsi_state / step_rsi_state / rsi_from_state (one RSI source
+         of truth) + sss_verdict_from_indicators (the shared three-factor PASS + SssVerdict
+         construction); evaluate_sss (batch) now DELEGATES to it. So the BATCH path and the LIVE
+         path produce BIT-IDENTICAL verdicts.
+       +17 tests (test_live_indicators.py) = THE DIVERGENCE GUARD: seed_from_bars(series[:k]) +
+         update over series[k:] == the batch evaluate_sss / atr_14_series / rsi_14 / ema /
+         volume_ma_20 over the FULL series, asserted bit-exactly across every split + both sides,
+         plus a step-by-step "stays equal to the growing batch" test (no drift).
+     (slice 3) ea4e3c9  exchange/warmup.py [NEW]: the per-pair startup WARM-UP orchestrator
+       (ar:AR-044/AR-068/AR-045). warm_pair: GetOHLCData(interval=5) -> seed LiveIndicators +
+       the AR-045 5m candle-close trackers; 1.1s same-pair stagger (AR-036); GetOHLCData(
+       interval=60) -> seed the 1H EMA(20)/EMA(50) HtfCache + the 1H trackers. warm_all: cross-
+       pair asyncio.gather (AR-044 parallelism) with per-pair failure isolation (WARM_UP_FAIL,
+       omitted - the pair stays WARM_UP). PairWarmup.is_ready (ar:AR-068 WARM_UP->READY) = 5m +
+       1H seeded AND the daily regime present in the RegimeCache; ready_pairs() filters the sweep
+       set. +10 tests.
+
+   B2b - THE PER-5m-CANDLE UNIVERSE SWEEP
+     (B2b-1) 64cca47  exchange/candle_close.py [NEW]: ar:AR-045 in-progress-vs-closed detection.
+       CommittedCandle (Decimal, ar:AR-047); to_interval_unix normalizes the REST int-Unix seed
+       AND the live WS RFC3339 interval_begin onto ONE Unix-second key; CandleCloseDetector.
+       observe - same interval_begin updates the in-progress snapshot (no fire), a newer
+       interval_begin emits the just-CLOSED committed candle. + promoted candle.parse_interval_
+       begin to public (kept the private alias). +16 tests.
+     (B2b-2) 5b7b13d  pipeline/sweep.py [NEW]: the live driver of process_candidate.
+       assemble_candidate builds the live PipelineInputs + ExecutionContext from the RegimeCache
+       + the PairWarmup (HtfCache + LiveIndicators) + the closed candle + the per-side WSManager/
+       TradingModule (wallet + selection state) + the injected LiveProviders. live_sss_evaluator
+       serves the verdict from LiveIndicators (ar:AR-075; the committed series is empty + ignored).
+       G8 atr_14 comes from LiveIndicators (ar:AR-016). permitted_sides = the G3 regime mirror.
+       AR-053 committed: LONG = the USD-debit estimate (notional x (1+taker)); SHORT = the
+       leverage-bounded margin/collateral (notional / leverage_cap_short x (1+taker)); total =
+       sum over open SAME-SIDE positions (per-module isolation). sweep_pair awaits process_
+       candidate per permitted side. The accept -> dispatch path is proven end to end. +13 tests.
+       (AR-053 sizing convention verified here: sized_usd = the order NOTIONAL = base x regime
+       multiplier; committed = notional/leverage feeds Gate-7 - confirmed, done automatically.)
+     (B2b-3) 2817c81  pipeline/live_driver.py [NEW]: the live wire.
+       LiveSweepDriver binds the public ohlc(5m)/ohlc(60m) stream to the sweep. on_ohlc_5m:
+       detect each pair's candle close (AR-045) -> STEP that pair's LiveIndicators with the
+       closed candle (ar:AR-016/AR-075, before the gates read it) -> sweep_pair per permitted
+       side. on_ohlc_60m: detect the 1H close -> advance the HtfCache EMA(20)/EMA(50)
+       incrementally (standard EMA step, ar:AR-044) -> drive wm.on_htf_ohlc_close (EC-L1A-001 1H
+       reversal exit). rule:HR-WM-012 skips the whole frame while any shard is reconnecting. The
+       sync DispatchTable Handler is bridged to the async sweep via ohlc_5m_handler() (schedules
+       on the running loop). make_ciats_sink = the per-MODULE mod:Logger on_event sink that
+       records every event (Stream-1) and ingests a TRADE_CLOSE into THAT module's CiatsPool
+       (the side is the emitting wallet - the record carries no side field). +9 tests.
+       A REAL CORRECTNESS FIX done automatically (TB00731 - not a question): the warm-up seeds
+       the indicators THROUGH committed[-1], and AR-045 re-emits committed[-1] on the first live
+       roll; a per-pair STEP-GUARD steps the indicators/HTF EMAs ONLY for a candle strictly newer
+       than the seed boundary, so the already-seeded candle is swept (AR-045) but NOT double-
+       counted. committed_candle_from_bar seeds the detectors with a symbol-bearing candle.
+
+5. STATE AT CLOSE - THE LIVE MAIN LOOP IS BUILT
+   THE ORGANISM NOW RUNS ON LIVE KRAKEN CANDLES (over the injected REST/WS/provider edges):
+     startup warm-up -> per-pair WARM_UP->READY -> per-5m candle-close detection -> step the
+     incremental indicators -> assemble the live snapshot inputs -> process_candidate (the 8
+     gates -> size -> dispatch into the side's wallet) ; the 1H feed -> HTF EMA maintenance ->
+     wm.on_htf_ohlc_close (L1a reversal) ; a closed trade -> TRADE_CLOSE -> the side's CiatsPool.
+   This is the deepest integration in the project and it is complete + tested for BOTH sides.
+
+6. VERIFICATION
+   622 pytest green on C:\Users\wstot\AppData\Local\Programs\Python\Python312\python.exe
+   (3.12.10). DR-010 verified after EVERY push (git fetch; local == origin): Code c0cc3da ->
+   ea4e3c9 -> 64cca47 -> 5b7b13d -> 2817c81. Docs UNCHANGED at 18b555d. SessionLogs = this close.
+   The divergence guard (test_live_indicators) anchors the live indicator path to the batch
+   units bit-exactly - the live verdict is the batch verdict, maintained in O(1).
+
+7. CARRY-FORWARD (see TB00739 NSI)
+   THE 5 INJECTED PROVIDER BACKINGS (LiveProviders are real plug-points, still stubs in tests):
+     - expected_reward estimator (DEC-124 historical-OHLC run-to-reversal seed, per pair/regime).
+     - mpp_abs_cap_pct (DEC-128 Q95 adverse close-to-next-open gap seed, per pair/side).
+     - base_per_trade_size (CR-06 max(50, 5*max(costmin, ordermin*price)) - needs the per-pair
+       cost_min/qty_min from the instrument cache).
+     - the instrument cache (instrument_status / marginable / vol_24h_usd from the instrument
+       channel) + the ticker bbo cache (best_bid/best_ask) - the runtime WS-fed caches.
+     - the ws_state feed ("Subscribed" per pair, from the silent-pair/subscription lifecycle) +
+       the cl_ord_id (uuid) + deadline (now+5s ISO8601) generators.
+   THE FINAL WS WIRING: bind LiveSweepDriver.ohlc_5m_handler / ohlc_60m_handler into the
+     DataLayerAssembler handler_provider for OHLC_5M / OHLC_60M (a real end-to-end run).
+   C THE FULLER CIATS: the stat suite (Mann-Whitney U / Sharpe / Spearman / CUSUM), PDCA, the
+     Proposal Engine, the Parameter Store (the sacred 1:1.5 R:R is the one value never tuned),
+     the Regime Library (activate at 600 trades).
+   LONG-STANDING FLAGS persist: keepalive WS_PONG_TIMEOUT -> PING_TIMEOUT; reconnect "BLOCKED"
+     docstring; G7 BoundedSemaphore ACQUIRE side unbuilt (the sweep passes semaphore_locked=False
+     FREE); private_ws RESET_RATE_CEILING no-op. Deferred 0500000 polish from TB00729 sec 8.
+
+8. CLOSE STATE
+   Code HEAD        2817c81 (622 tests green; +regime/live_indicators.py, +exchange/warmup.py,
+                    +exchange/candle_close.py, +pipeline/sweep.py, +pipeline/live_driver.py, the
+                    sss.py refactor, candle.py public parser).
+   Docs HEAD        18b555d (0500000 dv1_250 / 0521001 dv1_60 - UNCHANGED this session).
+   SessionLogs HEAD <this close: TB00738 SL + TB00739 NSI + TB00740 OCS>.
+   TB00000          v2_100 (unchanged - no new seed).
+   Governing instructions next = TB00739 NSI. Auto memory (phase2-build) updated through 2817c81.
+
+============================================================
+END TB00738
+============================================================
