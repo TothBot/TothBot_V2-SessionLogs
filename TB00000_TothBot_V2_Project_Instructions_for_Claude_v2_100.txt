@@ -1,10 +1,10 @@
 DocDCN:     TB00000
 DocTitle:   TothBot_V2_Project_Instructions_for_Claude
-DocVersion: v2_99
+DocVersion: v2_100
 DocOwner:   Bill
-DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00000_TothBot_V2_Project_Instructions_for_Claude_v2_99.txt
-DocDate:    06-14-2026
-DocTime:    06:45:00 UTC
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00000_TothBot_V2_Project_Instructions_for_Claude_v2_100.txt
+DocDate:    06-15-2026
+DocTime:    06:20:50 UTC
 
 ============================================================
 TOTHBOT V2 - WORKING INSTRUCTIONS FOR CLAUDE
@@ -14,6 +14,23 @@ This is Bill and Claude's working document. It is NOT a
 controlled document: no DCN, no lifecycle state, no namespace
 governance. It exists to keep us on track and moving forward.
 Keep it lean. Change history lives in git, not in here.
+
+v2_100: short margin borrow/rollover fee registered as a CIATS-owned
+seed (Bill ruling, TB00728 parity campaign DECISION A). Shorts trade
+Kraken spot-margin (ar:AR-009) and pay an OPENING fee + a per-4h
+ROLLOVER fee that a spot long never pays; this cost feeds short net
+P&L + the sacred 1:1.5 net (after-fee) R:R floor + the paper synthetic
+ledger (PA-005 parity). Section 8 gains the "CIATS - short-side margin
+fees" group: margin_open_fee_pct = 0.02% + margin_rollover_fee_pct =
+0.02% per 4h (Kraken's published spot-margin rate for major pairs,
+0.01-0.05% per pair; locked at order execution; per-pair/side,
+CIATS-refined from paper from the 200-trade floor; the 0500000 diagram
+token param:margin_borrow_fee = their combined effect over the held-
+4h blocks). The only hardcoded value remains the net 1:1.5 R:R floor;
+this is a paper-refined seed, never sacred. The 0500000 parity edits
+(Image1 FEE block / Image3 + Image9 net_loss / Image2 G8 / 12.4 ledger)
+already point to this sec-8 value home, so no further figure edit is
+needed for the value itself. v2_100 supersedes all prior versions.
 
 v2_99: reconnect backoff registered as a CIATS-owned paper-validated
 SEED + diagram/Docs FILE edits moved to Claude Code (Bill ruling
@@ -768,6 +785,26 @@ CIATS - selection controller (per-module)
 
 CIATS - short-side specific (Short only)
   leverage_cap_short = 3x (Kraken max 10x; low for loss-min)
+
+CIATS - short-side margin fees (Short only; Kraken spot-margin, ar:AR-009)
+  margin_open_fee_pct     = 0.0002 (0.02%)   Kraken spot-margin OPENING
+                            fee on a short sell-to-open.
+  margin_rollover_fee_pct = 0.0002 (0.02% per 4h)   Kraken spot-margin
+                            ROLLOVER fee charged every 4 hours a short
+                            position stays open.
+                            BOTH are CIATS-OWNED SEEDS (DEC-124/DEC-128
+                            seed-then-correct). The 0500000 diagram token
+                            param:margin_borrow_fee = the combined short
+                            borrow cost (open + rollover x held-4h-blocks)
+                            added to short net_loss / net P&L and the
+                            sacred 1:1.5 R:R floor. STARTING values =
+                            Kraken's published spot-margin rate for major
+                            pairs (0.01-0.05% per pair, ~0.02% majors;
+                            locked at order execution); per-pair/side,
+                            refined from paper data from the 200-trade
+                            floor. A spot LONG pays NEITHER (Short only).
+                            Canonical at 0500000 D1 FEE block + D9
+                            net_loss + D3 R:R + sec 12.4 ledger.
 
 CIATS - VPS deployment (single process, universal)
   StartLimitBurst       = 3       (systemd restart cap)
