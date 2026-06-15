@@ -1,0 +1,178 @@
+DocDCN:     TB00726
+DocTitle:   TB00726_Session_Log
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00726_Session_Log_v1_0.txt
+DocDate:    06-15-2026
+DocTime:    02:15:04 UTC
+
+============================================================
+TB00726 SESSION LOG
+PHASE 2 OPTION B - PATH A: WIRE THE layer:L1a REGIME-REVERSAL EXIT
+0500000 Image3 R12 layer:L1a_Regime_Exit + ar:AR-062 (EC-L1A-001 HTF / EC-L1A-002 daily)
++ rule:HR-EC-016(a) pair-status precondition coded as a PURE detector + the WS_Manager drive,
+routed through the SAME sec-12.5 on_paper_close. NO diagram amendment needed (Image3 + Image6
+already code-complete). EXECUTOR: CLAUDE CODE (local, direct C:)
+============================================================
+
+1. MISSION / CONTEXT
+   Cold-loaded TB00725 NSI v1_0 + TB00000 v2_99 + the TB00724 Session Log from GitHub HEAD and
+   followed it. Bill chose Path A (recommended): wire the layer:L1a regime-reversal exit into
+   mod:Exit_Controller - the THIRD exit layer the lifecycle still lacked (TB00722 built L2 MAE +
+   L3 emergSL; TB00724 built the regime engine this layer CONSUMES). The smallest integrative
+   slice that completes the 3-layer exit architecture. NOT (B) the 8-gate pipeline, NOT (C) the
+   REST/daily-compute orchestrator, NOT (D) the Gate-8 sizer.
+
+2. BILL DIRECTIVES (chat-turn)
+   (1) "Cold-load TB00725 + TB00000 from GitHub HEAD and follow it; read the TB00724 SL."
+   (2) "Next ready paths (Bill chooses): (A) wire the L1a regime-reversal exit ... recommended."
+       -> Path A selected.
+
+3. ENTRY / COLD-LOAD + VERIFY (all from HEAD, confirmed before work)
+   TB00000 v2_99 (read), TB00725 NSI (read), TB00724 SL (read).
+     0500000 dv1_242   md5 53459418c3fcd3d618dec38c931bdd39  re-verified from a fresh HEAD pull
+     0521001 dv1_52    present                                                       VERIFIED
+     Docs HEAD         f0d4561, local == origin                                      VERIFIED
+     Code HEAD         8ab7a02, local == origin; regime/ + exit_controller present; 351 green VERIFIED
+     SessionLogs HEAD  1f4920f (TB00724 SL + TB00725 NSI), local == origin           VERIFIED
+   Python 3.12.10 (full-path interpreter). The L1a detector is PURE synchronous compute (a
+   Position + the regime context in, a signal out) - no asyncio, no sockets; the TB00722/TB00724
+   pattern.
+
+4. GOVERNING FIGURE READ + CODE-COMPLETENESS (DIAGRAMS GOVERN)
+   Read in full: sec 3 Image3 R12 (Exit Architecture - mod:Exit_Controller owner, layer:L1a_
+   Regime_Exit element q1_do/q4_triggers/q5_logs, rule:HR-EC-016 conflict-resolution callout),
+   sec 7 ar:AR-062 (the two L1a triggers, verbatim), and sec 12.5 / 12.6 (the paper exit flow +
+   the PAPER_REGIME_EXIT_DETECTED telemetry). BOTH FIGURES ARE CODE-COMPLETE for this slice - no
+   missing element - so (like TB00724, unlike TB00722) NO diagram amendment was required and Docs
+   HEAD is unchanged (f0d4561). Facts consumed:
+     - EC-L1A-001 HTF Regime Reversal: 1H EMA(20) crosses BELOW 1H EMA(50) while a long is open
+       (Gate-4 symmetry). Check on every 1H ohlc(60) close. exit_reason HTF_REGIME_REVERSAL.
+     - EC-L1A-002 Daily Regime Downgrade: the 00:00 UTC regime refresh reclassifies an open-
+       position pair TRENDING_POS -> TRENDING_NEG or NON_DIR + ELEVATED (Gate-3 symmetry). Check
+       immediately after compute_regime. exit_reason DAILY_REGIME_DOWNGRADE.
+     - Both: exit sequence cancel emergSL -> market sell; paper dispatches via pt_mode:PT_MODE_002
+       simulated local fill; both use the I-6 cancel-timeout fallback (a LIVE ordering concern).
+     - rule:HR-EC-016(a) STEP 1: before any L1a cancel/sell, check pair status (ar:AR-040). IF
+       cancel_only OR maintenance -> HOLD position, CRITICAL alert, NO orders (the resting emergSL
+       is the only protection). ELSE proceed.
+     - rule:HR-EC-016(b): an L2 MAE breach during an in-progress L1a sequence overrides the L1a
+       reason (logged MAE_THRESHOLD_BREACH). A live ordering-window rule; in paper the close is
+       atomic (no in-progress window), so it is not reachable in the paper path - noted, not coded.
+     - sec 12.5: ALL paper exits route through the SAME Exit Controller _close_position sequence
+       (the PA-005 parity cornerstone); the L1a sell is NOT a second close mechanism.
+     - The ExitReason enum already carried HTF_REGIME_REVERSAL + DAILY_REGIME_DOWNGRADE (TB00722),
+       so the close path accepted the L1a reasons with no change.
+
+5. WORK DONE
+   DOCS: none (no figure amendment needed). Docs HEAD unchanged at f0d4561.
+   CODE (commit 95a8528; 2 source new... 1 source mod; 2 test new... 1 test mod):
+   5a. exchange/regime_exit.py [NEW] - the PURE layer:L1a detector (parallel to paper_exit.py):
+       PairStatus (ar:AR-040 ONLINE / CANCEL_ONLY / MAINTENANCE) + l1a_precondition_blocks (the
+       HR-EC-016(a) gate); RegimeExitSignal; detect_daily_regime_downgrade (EC-L1A-002: the fresh
+       classification turns TRENDING_NEGATIVE or NON_DIR_ELEVATED against the position direction);
+       detect_htf_regime_reversal (EC-L1A-001: the 1H EMA20 < EMA50 cross-below STATE); the Logger
+       events PaperRegimeExitDetected (sec 12.6 PAPER_REGIME_EXIT_DETECTED), L1aExitHeld (the
+       HR-EC-016(a) CRITICAL hold), RegimeExitNoQuote (no realizable bbo). Decimal-only.
+   5b. exchange/ws_manager.py [MOD] - the L1a drive: on_regime_classified (EC-L1A-002, run after
+       the 00:00 UTC compute_regime) + on_htf_ohlc_close (EC-L1A-001, run on each 1H close), each
+       detecting then calling _drive_regime_exit; _drive_regime_exit runs the HR-EC-016(a) Step-1
+       precondition FIRST (before the ledger credit, so a HELD exit never moves the ledger), then
+       the same sec-12.5 sequence (ledger credit -> PAPER_REGIME_EXIT_DETECTED -> on_paper_close
+       -> ticker trades-mode). Realizable fill price per ar:AR-048 (bid long / ask short). Paper-
+       only (a no-op in live, executions-driven later). Module docstring + DEFERRED note refreshed;
+       PositionSide added to the position_mirror import.
+   Tests: test_regime_exit.py [NEW, 16] (the daily long downgrade truth set incl. the NON_DIR_NORMAL
+   HOLD, the short mirror, the HTF cross-below + tie-holds + Decimal coercion, the precondition) and
+   test_ws_manager.py [MOD, +8] (the daily-downgrade + HTF full-close lifecycles, the cancel_only
+   HOLD, the no-double-close vs the ticker path, the no-quote defer, the still-supports-long hold,
+   the no-open-position + live no-ops).
+
+6. VERIFICATION
+   pytest on Python 3.12.10: 375 passed (351 prior + 24 new). regime_exit.py is float-free (grep-
+   verified Decimal-only). Surgical staging (4 files; no __pycache__).
+   Post-push DR-010 (Code): git fetch; local == origin; git diff HEAD empty; every touched file
+   present in HEAD with working-tree blob == HEAD blob (git hash-object).
+     Docs         f0d4561  (UNCHANGED - no figure amendment this session)
+     Code         95a8528  (regime_exit.py [NEW] + ws_manager.py [MOD] + 2 tests)
+     SessionLogs  <this push>  (TB00726 SL + TB00727 NSI)
+
+7. DECISIONS / DERIVATIONS (transparent; none invents a value)
+   (1) EC-L1A-002 DOWNGRADE TARGET, NOT SOURCE-GATED. The figure phrases the downgrade
+       "TRENDING_POS -> TRENDING_NEG or NON_DIR + ELEVATED". The detector fires on the two
+       enumerated TARGET states (directional TRENDING_NEGATIVE either vol, OR NON_DIR_ELEVATED) -
+       which together are EXACTLY the long-blocking regime cells (where the D4 profile denies a
+       long). It does NOT additionally require the ENTRY regime to have been TRENDING_POSITIVE: a
+       long held through NON_DIR_NORMAL (half-size, long permitted) that later downgrades into a
+       long-blocking cell MUST still exit; gating on entry==POS would suppress a needed loss-min
+       exit. Same target set as the figure; only the source-state guard dropped, on loss-min grounds.
+   (2) EC-L1A-001 AS THE CROSS-BELOW STATE. The detector fires on the 1H EMA20 < EMA50 STATE, not
+       the prev->cur EVENT. A long opens only under Gate-4 (1H EMA20 > EMA50 at entry), so the FIRST
+       1H close where EMA20 < EMA50 IS the cross - identical to the SSS SC-SSS-2 state treatment
+       (TB00724 sec 4). An exact EMA20 == EMA50 tie is not "below" (the figure's word is strict),
+       so it HOLDS; the daily downgrade path (which resolves an EMA tie under trend to TRENDING_
+       NEGATIVE, taxonomy.py) is the conservative backstop.
+   (3) SHORT MIRROR. The detector is direction-symmetric (the short downgrade target is TRENDING_
+       POSITIVE or NON_DIR_ELEVATED; the short HTF reversal is EMA20 > EMA50). LONG is the primary/
+       tested path; the Short_Module wiring remains the TB00724 sec 7(3) deferred item.
+   (4) PAIR-STATUS PRECONDITION SEAM. The HR-EC-016(a) Step-1 precondition is implemented + tested
+       (the cancel_only/maintenance HOLD + CRITICAL alert), but the LIVE instrument-status channel
+       that supplies the status is a later slice - pair_status is passed into the handlers
+       (defaulting ONLINE) until the channel is wired. The HOLD logic is real; only the live status
+       feed is stubbed.
+   (5) NO DOUBLE-CLOSE (carry-forward (f) RESOLVED for L1a). The L1a sell routes through the SAME
+       on_paper_close. A cleared mirror makes a follow-on ticker detection a no-op (handle_ticker
+       skips an empty symbol) AND makes a direct second on_paper_close a surfaced PAPER_CLOSE_SKIPPED
+       - both verified. No second TRADE_CLOSE is possible for one position.
+
+8. SCOPE NOTE (honest slicing)
+   Built: the PURE layer:L1a detector (the two AR-062 triggers + the HR-EC-016(a) precondition) and
+   the WS_Manager drive that routes a fired L1a exit through the sec-12.5 close. The 3-layer exit
+   architecture (L1a regime / L2 MAE / L3 emergSL) is now CODE-COMPLETE in paper. NOT built this
+   session (out of scope; the I/O edges + producers):
+     - the DAILY-COMPUTE / 1H ORCHESTRATOR that CALLS on_regime_classified at 00:00 UTC and
+       on_htf_ohlc_close on each 1H close (the REST GetOHLCData edges, the AR-036 stagger, the
+       BTC anchor pass) - Path C. The handlers are driven directly (by tests) for now.
+     - the LIVE instrument-status channel feeding pair_status (the precondition logic is built;
+       the live feed is stubbed - decision 7(4)).
+     - the LIVE executions-driven L1a path (the handlers are paper-only; live exit detection is a
+       later slice, as for L2/L3).
+     - the entry-side TRADE_CLOSE producers market_regime + signal_params (the pipeline writes
+       these onto the Position at entry - Path B/D); asset_regime + vol_regime already populate
+       from regime_at_entry on close.
+     - the short-side L1a wiring (the detector is symmetric; mod:Short_Module is deferred, 7(3)).
+
+9. OBSERVATIONS / CARRY-FORWARD FLAGS (no action taken; cosmetic / deferred, no blocker)
+   RESOLVED this session:
+   (f) the two paper close mechanisms - the L1a market-sell now routes through the SAME sec-12.5
+       on_paper_close; no double-close (decision 7(5)). The TB00724 sec 8 carry-forward (f) concern
+       is discharged for the L1a layer.
+   Carried (still open):
+   (i)  short-side SSS mirror + the short-side L1a mirror - implemented symmetric, flagged for Bill
+        ratification (optional one-line Image2 annotation before any short-module wiring).
+   (a)  keepalive.py DEAD_CONNECTION_LOG_KEY "WS_PONG_TIMEOUT" -> reconcile to "PING_TIMEOUT".
+   (b)  reconnect.py is_immediate_attempt() docstring still says "BLOCKED exponential backoff" -
+        stale pre-TB00712 phrasing; the backoff is now a seed.
+   (c)  position_mirror.py Position.unrealized_pnl stored, default 0; no MTM writer yet - the home
+        of the max-over-life MAE the TRADE_CLOSE mae_pct_reached wants.
+   (d)  private_ws.py RESET_RATE_CEILING no-op placeholder - wire the AR-030 maxratecount unit.
+   (e)  private_ws.py reconnect snap_orders defaults to the last executions snapshot; inject the
+        canonical GetOpenOrders source with the REST client (C).
+   (g)  handle_ticker + the new on_regime_classified / on_htf_ohlc_close handlers are driven
+        directly; their inbound wiring (ticker read-loop S2c + the daily/1H orchestrator C) is later.
+   (h)  the G7 BoundedSemaphore ACQUIRE side is unbuilt (mod:Risk_Engine); release is wired + guarded.
+   (j)  NEW: the entry-side TRADE_CLOSE producers market_regime + signal_params remain None until the
+        Signal_Pipeline writes them onto the Position at entry (Path B/D).
+
+10. OPEN -> TB00727 NSI
+   No outstanding Bill blocker. Paper now runs the FULL 3-layer exit architecture (L1a regime / L2
+   MAE / L3 emergSL), 375 green. The one standing item for Bill's eye: the short-side mirror
+   semantics (SSS + L1a; 9(i)). Next ready paths (Bill chooses sequencing): (B) the 8-gate
+   Signal_Pipeline orchestration that composes the regime + SSS units into the entry path; (C) the
+   REST client edges + the daily-compute / 1H orchestrator that DRIVE the regime engine + the new
+   L1a handlers on live data; (D) the Gate-8 sizer + on-fill batch_add that PRODUCE atr_14_entry +
+   emergsl_price at entry. See TB00727.
+
+============================================================
+END TB00726
+============================================================
