@@ -1,0 +1,99 @@
+DocDCN:     TB00736
+DocTitle:   TB00736_Next_Session_Instructions
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00736_Next_Session_Instructions_v1_0.txt
+DocDate:    06-15-2026
+DocTime:    16:30:00 UTC
+
+============================================================
+TB00736 NSI - BUILD THE LIVE MAIN LOOP (B2) THEN DEEPEN CIATS (C)
+The REST edges + the daily regime-compute orchestrator are built (562 green, Code be4da59).
+Next = the per-pair WARM-UP + LIVE indicators, then the per-5m-candle universe sweep that
+runs the whole organism on real Kraken candles; then the fuller CIATS stat suite.
+EXECUTOR: CLAUDE CODE (autonomous, "auto mode on")
+============================================================
+
+NSIs are Claude-authored + informational; Bill's chat directives govern. PLAIN-TEXT choices
+ONLY - the AskUserQuestion / question-box tool is BANNED (TB00000 4.7). Per Bill's standing
+TB00731 ruling: a schema verification or an obvious legacy fix is something to DO automatically,
+NOT a question - build the organism on auto, stop stopping; surface ONLY a genuine new-seed
+value or a genuine design decision, in PLAIN TEXT.
+
+0. WHY / RHYTHM
+   Build from the 0500000 diagrams (Long/Short symmetric, dv1_250). Pure/testable units first,
+   I/O at the edges (asyncio.run over fakes; websockets/aiohttp lazy-imported, never at module
+   load). Deliver file by file, FULL pytest on the 3.12 interpreter each slice, surgical staging
+   (no __pycache__), DR-010 post-push. Diagram/Docs edits stay a Claude Code task. Session close
+   is STANDING (write SL+NSI+OCS at the END without being asked).
+
+1. ENTRY / COLD-LOAD + VERIFY (from GitHub HEAD)
+   Read TB00000 (v2_100) + this NSI + the TB00735 Session Log. Cold-load the auto-memory
+   (phase2-build is current through be4da59 - the fastest orientation).
+     Code HEAD        be4da59 (562 tests green). Python = C:\Users\wstot\AppData\Local\Programs\
+                      Python\Python312\python.exe (3.12.10); default PATH python is 3.10 - full
+                      path ONLY. Run: python.exe -m pytest -q (expect 562 green).
+     Docs HEAD        18b555d - 0500000 dv1_250 / 0521001 dv1_60. Re-verify md5 from a fresh pull.
+     SessionLogs HEAD <the TB00735/TB00736/TB00737 push>.
+
+2. STATE: CORE COMPLETE (both sides) + the live edges started. What exists now:
+   rest/       auth (A-14/WS-AUTH-002 HMAC-SHA512 signing, Kraken-vector-validated) + client
+               (GetWebSocketsToken/GetOHLCData/GetOpenOrders/GetAccountBalance; pure parsers +
+               the lazy-aiohttp RestTransport edge). Plugs into private_ws AcquireToken/FetchSnapOrders.
+   regime/     scheduler (DailyRegimeCompute: the 00:00 UTC GetOHLCData(1440) sweep -> RegimeCache
+               + BTC/USD market_regime; AR-036 1.1s stagger; AR-017 via the REST parser; drives
+               wm.on_regime_classified). engine/indicators/sss/taxonomy (the pure cores) unchanged.
+   pipeline/   the 8-gate chain + signal_pipeline + driver.process_candidate (the conductor).
+   execution/ modules/ exchange/ recorder/ ciats/ - the rest of the built CORE (see phase2-build).
+
+3. MISSION - B2 THE LIVE MAIN LOOP (recommended), then C the fuller CIATS. Bill's call on order.
+   (B2a) WARM-UP + LIVE INDICATORS (do this first - it produces the caches the sweep reads):
+       - FIRST design step: settle the LIVE indicator-maintenance contract. evaluate_sss
+         recomputes RSI/EMA9/EMA21/VolumeMA20 in BATCH over the committed closes/volumes series
+         passed to it (no incremental dict); BUT sss.py + ar:AR-016/AR-075 name a DISTINCT
+         WS-Manager "live incremental" concern. Pick the diagram-faithful reading: either (i)
+         maintain exact incremental running values (Wilder ATR/RSI recurrence + EMA recurrence,
+         seeded from the warm-up series) and feed the gates those, or (ii) maintain a bounded
+         committed closes/volumes ring and let evaluate_sss batch-recompute. (i) is what AR-016/
+         AR-075 literally describe; (ii) is simplest + reuses the pure batch units. This is a
+         genuine design choice - decide it from the AR-016/AR-075 text; it is NOT a Bill question
+         unless a NEW seed/value falls out (none is expected).
+       - Per ar:AR-044: GetOHLCData(interval=5) seeds the 5m ATR(14) (G8's trade-ATR - NOT the
+         daily ATR) + the SSS closes/volumes; GetOHLCData(interval=60) seeds 1H EMA(20)/EMA(50)
+         (G4 close_1h/ema20_1h + the L1a EC-L1A-001 reversal). Use response[:-1] (already what
+         rest.parse_ohlc returns as .committed). STAGGER 1.1s same pair; asyncio.gather across
+         DIFFERENT pairs (ar:AR-044 explicitly allows cross-pair parallelism for warm-up, unlike
+         the daily compute). WARM_UP->READY (ar:AR-068) when ATR + EMA + regime all seeded;
+         AR-045 init last_interval_begin from GetOHLCData(5) response[-2] / response[-1] split.
+   (B2b) PER-5m-CANDLE UNIVERSE SWEEP (the conductor's live driver):
+       - For each READY pair, each permitted side: ASSEMBLE PipelineInputs (instrument_status,
+         marginable, ws_state, vol_24h_usd, regime+ema20/50_daily from RegimeCache, close_1h/
+         ema20_1h from the 1H cache, closes/volumes + candle OHLC + atr_14 from the 5m cache,
+         seconds_since_last_exit/consecutive_loss_count/has_active_same_side_position from wm,
+         the G6 base_per_trade_size_usd, wallet_balance/portfolio_baseline/committed from the
+         side's TradingModule + Gate-7 inputs, entry_fill_price/atr_14/expected_reward for G8) +
+         the ExecutionContext (sized_usd, bbo, mpp_abs_cap_pct, atr_14_entry, regime_at_entry,
+         cl_ord_id, deadline) -> await process_candidate(wm, logger, side, symbol, inputs, ctx).
+       - Honor rule:HR-WM-012 (skip the whole sweep while any shard is reconnecting). Drive it
+         off the receive_loop's 5m candle-close (the OHLC_5m_System_Clock); 1H ohlc close ->
+         wm.on_htf_ohlc_close. Wire the Logger as the on_event sink across wm + the gates; on a
+         TRADE_CLOSE, ingest into the right side's CiatsPool (close the learning loop live).
+       - Confirm the AR-053 margin-sizing convention here (sized_usd = NOTIONAL, qty = sized_usd/
+         limit; committed = notional/leverage feeds Gate-7) - a verification, do it automatically.
+   (C) FULLER CIATS: CIATS_Statistical_Engine (Mann-Whitney U / Sharpe / Spearman / CUSUM over
+       the >=200-trade per-module corpus); CIATS_PDCA_Engine + CIATS_Proposal_Engine (parameter
+       proposals at inter-trade boundaries only, ar:AR-072 / rule:HR-CI-003); CIATS_Parameter_
+       Store (the live owned-parameter snapshot; the sacred 1:1.5 R:R is the one value never
+       tuned); CIATS_Regime_Library (per-regime parameter sets, activate at 600 trades).
+   Recommendation: B2a -> B2b (the organism then RUNS on live/paper Kraken data) -> C.
+
+4. PROVENANCE / SCOPE
+   A CODE build READS 0500000 (symmetric). REST/rate-limit constants (nonce, endpoint paths,
+   the 1.1s stagger) are wire facts, not seeds. If a genuinely NEW seed value or a genuine
+   DESIGN decision arises (e.g. an indicator-maintenance choice that introduces a new tunable),
+   STOP and surface it in PLAIN TEXT (never the question-box). A schema verification or an
+   obvious legacy correction is NOT a question - do it automatically (Bill ruling TB00731).
+
+============================================================
+END TB00736
+============================================================

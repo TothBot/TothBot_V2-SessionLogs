@@ -1,0 +1,127 @@
+DocDCN:     TB00735
+DocTitle:   TB00735_Session_Log
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00735_Session_Log_v1_0.txt
+DocDate:    06-15-2026
+DocTime:    16:30:00 UTC
+
+============================================================
+TB00735 SESSION LOG
+THE LIVE-I/O PHASE OPENS - REST CLIENT EDGES + THE mod:Regime_Engine
+DAILY 00:00 UTC COMPUTE ORCHESTRATOR BUILT (the REST edge over the pure core).
+EXECUTOR: CLAUDE CODE (autonomous; Bill "auto mode on")
+============================================================
+
+1. MISSION / CONTEXT
+   Continued from the TB00731/TB00732/TB00733 close: the COMPLETE organism CORE (decide ->
+   size -> execute -> log -> learn) is built + tested for BOTH sides. THIS session began the
+   TB00732 live-I/O + advanced-stats phase, taking the recommended sequencing: (A) the REST
+   client edges first (small, self-contained, unblocks B), then (B1) the daily regime-compute
+   orchestrator that is the FIRST consumer of those edges. Run autonomously; no question-box;
+   no genuine new-seed or design fork arose (both confirmed below).
+
+2. BILL DIRECTIVES (chat-turn, this session)
+   (1) Cold-load + follow TB00732 NSI on auto mode (the standing TB00731 ruling: build the
+       organism, do obvious verifications/fixes automatically, surface only a genuine decision).
+   No new chat directives; ran autonomously per the standing rules.
+
+3. WHAT WAS BUILT (Code: 3 commits be4da59 carries d353b26..be4da59; 525 -> 562 tests green on
+   3.12.10; DR-010 verified on EVERY push. Docs: UNCHANGED at 18b555d - no diagram edit needed,
+   both figures were code-complete.)
+   SLICE A - REST CLIENT EDGES (new package tothbot/rest/; commit 4348d9e)
+     rest/auth.py    PURE signing core (A-14 / WS-AUTH-002): sign() = HMAC-SHA512 of
+                     (uri_path + SHA256(nonce + urlencoded POSTdata)) with the base64-decoded
+                     secret -> base64; VALIDATED against Kraken's PUBLISHED test vector (a real
+                     cryptographic anchor, not a self-referential round-trip). NonceGenerator =
+                     strictly-increasing ms nonce over an injected clock. Credentials value
+                     (operator-supplied at the edge; never a seed, never committed). auth_headers.
+     rest/client.py  PURE response parsers + the ONE HTTP edge. raise_for_error (Kraken's non-
+                     empty error[] is authoritative, not the HTTP status); parse_websockets_token;
+                     parse_ohlc -> OhlcResponse{committed, forming, last} EXCLUDING response[-1]
+                     per ar:AR-017 (the single home of the exclusion); parse_open_orders (txid
+                     attached -> FetchSnapOrders); parse_account_balance (Decimal). KrakenRestError.
+                     RestTransport Protocol + AiohttpRestTransport (lazy aiohttp, ONE reused
+                     session per A-23) = the lone I/O edge. KrakenRestClient: get_websockets_token
+                     (-> private_ws AcquireToken), get_ohlc_data(pair, interval 5/60/1440),
+                     get_open_orders, get_account_balance; signs every private call (fresh nonce +
+                     API-Sign). Endpoint PATHS = the real Kraken Spot wire paths (/0/private/
+                     GetWebSocketsToken, /0/public/OHLC, /0/private/OpenOrders, /0/private/Balance).
+     +26 tests (test_rest.py): the Kraken vector, nonce monotonicity, every parser incl. the
+     AR-017 exclusion + altname-key fallback, and the client over a fake RestTransport (private
+     requests carry nonce + API-Sign; public never signed; errors propagate). No network.
+   SLICE B1 - mod:Regime_Engine DAILY 00:00 UTC COMPUTE ORCHESTRATOR (regime/scheduler.py;
+   commit be4da59)
+     The REST edge over the PURE engine.compute_regime. DailyRegimeCompute.compute_all(pairs):
+     pulls GetOHLCData(interval=1440) per pair + the BTC/USD anchor (ar:AR-074 market_regime),
+     maps RestOhlcBar -> DailyBar, classifies, fills the symbol-keyed RegimeCache the
+     Signal_Pipeline (G3/G6) + Logger + CIATS read. AR-017 exclusion is DELEGATED to the REST
+     parser (compute_regime called with exclude_forming=False - the exclusion lives in ONE place).
+     ar:AR-036/AR-024: calls issued SEQUENTIALLY with a 1.1s inter-call stagger (a rate-limit
+     wire fact - confirmed NOT in the seed registry, so NOT a CIATS seed, no new-seed decision).
+     Per-pair failure isolation: a REST or compute error -> evt:REGIME_COMPUTE_FAIL, skipped,
+     the pair's PRIOR cache entry KEPT (a transient failure never silently clears a regime).
+     Optional EC-L1A-002 wiring: each fresh classification is fed to wm.on_regime_classified
+     (ar:AR-062 daily-downgrade exit for an open-position pair; bbo passed through). All I/O
+     injected (REST client, inter-call sleep) -> driven under asyncio.run over fakes, no network.
+     +11 tests (test_regime_scheduler.py).
+
+4. STATE AT CLOSE - THE LIVE-I/O PHASE IS UNDERWAY
+   The organism CORE is unchanged + still green (562). The live edges now exist:
+     - The Kraken Spot REST surface is built + signed + parsed (the GetWebSocketsToken token
+       refresh, the GetOHLCData warm-up/regime source, the GetOpenOrders/Balance reconcile
+       fallbacks). get_websockets_token plugs into private_ws.AcquireToken; get_open_orders into
+       FetchSnapOrders - the injected edges that were stubbed are now real.
+     - The daily regime cache is producible end-to-end from real Kraken daily candles (the first
+       half of the live main loop's daily side).
+   What does NOT yet exist (the remaining live wiring; see TB00736 NSI): the per-pair WARM_UP
+   seeding (interval 5/60) + the AR-016/AR-075 LIVE incremental indicators, and the per-5m-candle
+   universe sweep that assembles PipelineInputs + ExecutionContext and calls process_candidate.
+
+5. VERIFICATION
+   562 pytest green on C:\Users\wstot\AppData\Local\Programs\Python\Python312\python.exe
+   (3.12.10). DR-010 verified after EVERY push (git fetch; local == origin) - Code 4348d9e then
+   be4da59. The REST signing is anchored to Kraken's published API-Sign test vector (auth is
+   byte-correct, not merely internally consistent). Docs UNCHANGED at 18b555d (no figure was
+   code-incomplete this session); TB00000 UNCHANGED at v2_100 (no new seed).
+
+6. CARRY-FORWARD (the remaining live-I/O wiring + advanced stats; see TB00736 NSI)
+   - B2 LIVE MAIN LOOP (the deepest integration, two coherent sub-slices):
+     B2a WARM-UP + LIVE INCREMENTAL INDICATORS (ar:AR-044 / AR-068 / AR-016 / AR-075): per-pair
+         seed via GetOHLCData(interval=5) -> 5m ATR(14) (G8's trade-ATR, distinct from the DAILY
+         ATR in the regime engine) + the SSS committed closes/volumes series; GetOHLCData(
+         interval=60) -> 1H EMA(20)/EMA(50) (G4 close_1h/ema20_1h + the L1a EC-L1A-001 1H
+         reversal). WARM_UP->READY when ATR + EMA + regime all seeded. NOTE discovered this
+         session: evaluate_sss recomputes RSI/EMA9/EMA21/VolumeMA20 in BATCH over the passed
+         committed series (it does NOT consume an incremental dict), but sss.py flags a DISTINCT
+         "AR-016/AR-075 WS-Manager LIVE incremental concern" - decide the live indicator-
+         maintenance contract (incremental running values vs. batch-over-bounded-window) as the
+         FIRST design step of B2a; both are defensible, pick the diagram-faithful one.
+     B2b PER-5m-CANDLE UNIVERSE SWEEP: for each READY pair, each permitted side, assemble
+         PipelineInputs (the 30-odd snapshot fields - regime/EMAs from the RegimeCache; close_1h/
+         ema20_1h from the 1H cache; closes/volumes + candle OHLC + atr_14 from the 5m cache; SC
+         state via wm.consecutive_loss_count/exit_cooldown_at; wallet via the side's TradingModule;
+         bbo) + ExecutionContext -> await process_candidate. Honor rule:HR-WM-012 (no pipeline
+         during reconnect). 1H ohlc close -> wm.on_htf_ohlc_close. Wire the Logger sink + ingest
+         each TRADE_CLOSE into the right side's CiatsPool.
+   - C FULLER CIATS: the stat suite (Mann-Whitney U / Sharpe / Spearman / CUSUM), PDCA, the
+     Proposal Engine, the Parameter Store (writes the owned params at inter-trade boundaries;
+     the sacred 1:1.5 R:R is never tuned), the Regime Library (activate at 600 trades).
+   - REST follow-ups (small, when the live loop needs them): StatusAPI (ar:AR-038 maintenance
+     check), the AR-030 maxratecount unit (private_ws RESET_RATE_CEILING is still a no-op).
+   - Long-standing code flags persist (keepalive WS_PONG_TIMEOUT->PING_TIMEOUT; reconnect
+     "BLOCKED" docstring; G7 BoundedSemaphore ACQUIRE side unbuilt). Deferred 0500000 polish
+     from TB00729 sec 8 still open (structural SVG; Image7 PA-004 short-sim cells; MINOR prose).
+   - Margin-sizing convention (AR-053): confirm sized_usd = order NOTIONAL (qty = sized_usd/limit)
+     + the leverage_cap_short collateral relation feeding Gate-7, when the live per-pair sizer lands.
+
+7. CLOSE STATE
+   Code HEAD        be4da59 (562 tests green; +rest/ package, +regime/scheduler.py).
+   Docs HEAD        18b555d (0500000 dv1_250 / 0521001 dv1_60 - UNCHANGED this session).
+   SessionLogs HEAD <this close: TB00735 SL + TB00736 NSI + TB00737 OCS>.
+   TB00000          v2_100 (unchanged - no new seed).
+   Governing instructions next = TB00736 NSI. Auto memory (phase2-build) updated through be4da59.
+
+============================================================
+END TB00735
+============================================================
