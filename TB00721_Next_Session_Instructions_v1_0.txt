@@ -1,0 +1,153 @@
+DocDCN:     TB00721
+DocTitle:   TB00721_Next_Session_Instructions
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00721_Next_Session_Instructions_v1_0.txt
+DocDate:    06-14-2026
+DocTime:    23:59:33 UTC
+
+============================================================
+TB00721 NSI - PHASE 2 OPTION B BUILD
+Paper fill simulator CLOSED (synthetic capital ledger + paper-boundary
+fill hook -> record_execution). Paper now runs the full inbound+outbound
+cycle. Next = the paper EXIT lifecycle (bbo-touch fill + Exit Controller
+close), OR the REST client edges, OR S3 regime + signal models
+EXECUTOR: CLAUDE CODE (local, direct C: access)
+============================================================
+
+NSIs are Claude-authored and informational; Bill's chat directives
+govern. One primary mission per session.
+
+0. WHY CLAUDE CODE
+   The trading-organism CODE is built in Claude Code from the 0500000 dv1_241
+   diagrams (TB00000 sec 4.7). DIAGRAM / Docs-design FILE EDITS are ALSO done in
+   Claude Code (surgical, well-formedness-validated, DR-010-verified push) -- NOT
+   regenerated in chat (TB00000 v2_99). Rhythm: read figure -> build/amend a scoped
+   slice -> test on Python 3.12 -> push -> verify HEAD.
+
+1. ENTRY / COLD-LOAD + VERIFY (from GitHub HEAD)
+   Read TB00000 (v2_99) + this NSI + the TB00720 Session Log.
+   Confirm before working:
+     0500000 dv1_241   md5 cb94f3b149fec582d5fdcab8a5635a5f  (Image1 R21)
+     0521001 dv1_51    (provenance archive, append-only)
+     TothBot_V2-Code HEAD = 438bb28. tothbot/exchange/ now also has
+       ledger.py (SyntheticCapitalLedger single-owner spot_usd_balance: INIT seed +
+       entry-fill debit at taker + exit-fill credit at taker, Decimal AR-047,
+       PAPER_LEDGER_UPDATED, HR-WM-032 sole-writer guard) + paper_fill.py
+       (PaperFillSimulator: the paper-boundary fill_simulator hook -> synthetic
+       executions frame -> record_execution byte-identical D-06 + ledger drive);
+       ws_manager.py owns the ledger + binds the simulator in paper mode and exposes
+       apply_paper_entry_fill / apply_paper_exit_fill / spot_usd_balance. Tests green (274).
+     Docs HEAD 60cf32d, SessionLogs HEAD <TB00720/TB00721 push>.
+
+   NOTE (TB00000 v2_99): session close is STANDING / automatic - write SL + NSI +
+   OCS at the END of EVERY session (sec 4.6). Diagram edits are a Claude Code task
+   (sec 4.7).
+   Repo paths (literal): C:\Users\wstot\GitHub\TothBot\
+     TothBot_V2-Code (code target), ...\TothBot_V2-Docs (0500000 + 0521001),
+     ...\TothBot_V2-SessionLogs (TB files). All branch master.
+
+2. ENVIRONMENT
+   Python for all runs:
+     C:\Users\wstot\AppData\Local\Programs\Python\Python312\python.exe
+       (3.12.10; pytest). The default PATH python is 3.10.11 -- DO NOT use it;
+     full path only. VPS authoritative runtime = 3.12.3. No async test libs are
+     installed: drive the async edges with stdlib asyncio.run over hand-built
+     fakes (the seam, the private connection, the reconnect driver, the paper fill
+     hook are all driven this way). websockets + aiohttp are VPS-runtime deps,
+     imported LAZILY inside the I/O bodies, never at module load. NOTE the token-bucket
+     synthetic-clock overshoot caveat (TB00716 sec 6) still applies to any pacing test.
+
+3. STATUS: PAPER RUNS THE FULL INBOUND+OUTBOUND CYCLE
+   The data-layer PURE units, the inbound public socket edge (TB00714), the sole-writer
+   Position_Mirror + public-shard assembler (TB00716), the outbound dispatch-seam I/O
+   bodies + the private WS connection + executions ingest (TB00718), AND now the paper
+   fill simulator + synthetic capital ledger (TB00720) are green:
+     - ledger.py        contract:Synthetic_Capital_Ledger. Single-owner spot_usd_balance
+                        (WSManager sole writer, HR-WM-032). INIT seeds balance + baseline
+                        ($5,000/module, D-05) + emits PAPER_LEDGER_UPDATED(INIT).
+                        entry_fill_debit (proceeds + taker fee) / exit_fill_credit
+                        (proceeds - taker fee) in Decimal (AR-047); retains pos.fees_entry_usd
+                        per symbol for the Exit Controller net P&L; sole-writer guard.
+     - paper_fill.py    PaperFillSimulator = the injected fill_simulator hook. ADD_ORDER ->
+                        synthetic filled frame -> record_execution OPENS the mirror + entry
+                        debit; DISPATCH_MARKET_SELL -> closing frame -> record_execution CLOSES
+                        + exit credit; other ops no-op. PAPER_FILL_SIMULATED / PAPER_FILL_SKIPPED.
+     - ws_manager.py    paper mode owns self.ledger + self.paper_fill (bound into
+                        self.paper_dispatch.fill_simulator); apply_paper_entry_fill /
+                        apply_paper_exit_fill are the sole-writer ledger surfaces; spot_usd_balance
+                        read property (None in live). Live: ledger/paper_fill None, boundary inert.
+   NO outstanding Bill blocker.
+
+4. MISSION - READY PATHS (Bill chooses sequencing)
+
+   (A) THE PAPER EXIT LIFECYCLE (bbo-touch fill + Exit Controller close path).
+     Two coupled pieces that finish the paper trade lifecycle now that entry+ledger are wired:
+     (1) the _maybe_paper_fill BBO-TOUCH fill (rule:HR-WM-024 paper fill detection in
+         _handle_ticker): the on-fill batch_add emergSL is a resting stop that fills only on a
+         later bid <= emergsl_price touch (Image7 "_maybe_paper_fill on bbo touch",
+         evt:PAPER_EMERG_SL_TRIGGERED). The simulator currently no-ops BATCH_ADD; wire the
+         ticker-driven resting-order fill that detects the touch and produces the exit fill.
+     (2) the Exit Controller close path (sec 12.5): on_paper_close(symbol, exit_price,
+         exit_reason, fees_exit, wm) -> _close_position -> TRADE_CLOSE log with full P&L
+         (entry_price, exit_price, qty, fees_entry_usd, fees_exit, net_pnl_usd, mae_pct, vol_regime)
+         -> clear mirror -> Selection Controller state update (AR-073) -> semaphore release ->
+         ticker trades-mode switch. The ledger already retains fees_entry_usd ready for net P&L.
+     Built from 0500000 sec 12.5 + sec 3 Image3 Exit Architecture + the AR-048 bid/ask MAE math
+     + the L1a/L2/L3 exit layers (TB00000 sec 7). This makes paper produce CIATS TRADE_CLOSE records.
+
+   (B) THE REST CLIENT EDGES (replace the injected private-connection edges).
+     The shared aiohttp ClientSession + the private REST bodies the private connection currently
+     injects as fakes: GetWebSocketsToken (token acquire; REST-WST-002..006, fresh per reconnect,
+     HALT startup on 3x fail), GetOpenOrders (snap_orders for the RESTORE_POSITION_MIRROR reconcile;
+     REST-OO-002..006), and the maxratecount rate ceiling unit (AR-030; wire RESET_RATE_CEILING).
+     Plus GetAccountBalance / Status API / GetOHLCData as the startup sequence needs them. Built
+     from 0500000 sec 2 Image1 container:Kraken_REST_API D1 REST wire facts. Async edges,
+     asyncio.run + fakes; aiohttp imported lazily.
+
+   (C) S3 REGIME + SIGNAL MODELS (pure units; fully unblocked).
+     Code the regime engine + SSS signal-model units from 0500000 sec 7 mod:Regime_Engine +
+     mod:Signal_Pipeline (seeds adx_threshold=25, atr_percentile_thresh=67th, htf_ema 20/50 daily,
+     rsi bands, sss_ema 9/21, volume MA20 - homes TB00000 sec 8; CIATS-owned). Pure indicator +
+     gate units first.
+
+   Recommendation: (A) finishes the paper trade lifecycle end to end - paper would now place a
+   simulated entry, fill it, run to a simulated exit, and emit the CIATS TRADE_CLOSE record with
+   net P&L (the 200-trade corpus starts accumulating); (B) makes the live private connection real
+   end-to-end; (C) keeps building pure logic upward. Bill's call.
+
+5. METHOD (reuse TB00702/.../TB00720)
+   Pure/testable units first; I/O at the edges, injected + async-tested with asyncio.run over fakes.
+   Deliver file by file. Tests alongside each unit; FULL suite on the 3.12 interpreter each slice.
+   Stage surgically (no __pycache__). ASCII-only commit messages, no parens; literal absolute paths;
+   branch master. Post-push DR-010 on every repo touched: git fetch; local == origin; files in HEAD;
+   working-tree blob == HEAD blob (git hash-object vs HEAD:path -- a raw-md5 compare trips on
+   core.autocrlf=input LF normalization, TB00716 sec 6). Diagram/Docs edits in Claude Code, surgical
+   + well-formed (sec 4.7). Write SL + NSI + OCS at session close (STANDING, sec 4.6).
+
+6. PROVENANCE / SCOPE DISCIPLINE
+   A CODE build READS 0500000. A DIAGRAM amendment WRITES the figure surgically, validates
+   well-formedness, bumps the dv + appends provenance to 0521001 (sec 4.6), and updates TB00000
+   sec 8 for any seed VALUE. If a figure is found code-incomplete, STOP and surface to Bill; author
+   the missing element in first, then code - never invent (DIAGRAMS GOVERN). This session needed NO
+   diagram edit - sec 12.4 + Image7 + the dispatch/on-fill nodes were code-complete for the slice.
+
+7. CARRY-FORWARD FLAGS (from TB00720 sec 8; cosmetic / deferred, no blocker)
+   (a) keepalive.py DEAD_CONNECTION_LOG_KEY = "WS_PONG_TIMEOUT" -> reconcile to the canonical
+       "PING_TIMEOUT" in a later consistency pass (the receive loop already emits PING_TIMEOUT).
+   (b) reconnect.py is_immediate_attempt() docstring still says "BLOCKED exponential backoff"
+       - stale pre-TB00712 phrasing; the backoff is now a seed.
+   (c) position_mirror.py Position.unrealized_pnl stored, default 0; no MTM writer yet. The paper
+       per-wallet drawdown (AR-048/AR-052) wants spot_usd_balance + sum(bid*qty); the ledger now
+       supplies the spot_usd_balance term. Wire when the MTM/drawdown path is built.
+   (d) private_ws.py RESET_RATE_CEILING is a no-op placeholder - wire the AR-030 maxratecount
+       rate-ceiling unit (extract from the executions ACK; never hardcode 125) when it lands.
+   (e) private_ws.py reconnect snap_orders defaults to the last executions snapshot when no REST
+       GetOpenOrders edge is injected; inject the canonical GetOpenOrders source (B).
+   (f) the paper exit price + qty come from the dispatch_market_sell message (limit_price =
+       PAIR_LIMIT_ONLY IOC at best_bid; order_qty = the whole-position run-to-reversal qty). When
+       the Exit Controller is built (A) it owns the exit dispatch; confirm it supplies both fields.
+
+============================================================
+END TB00721
+============================================================

@@ -1,0 +1,174 @@
+DocDCN:     TB00720
+DocTitle:   TB00720_Session_Log
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00720_Session_Log_v1_0.txt
+DocDate:    06-14-2026
+DocTime:    23:59:33 UTC
+
+============================================================
+TB00720 SESSION LOG
+PHASE 2 OPTION B - PATH A: THE PAPER FILL SIMULATOR
+contract:Synthetic_Capital_Ledger single-owner spot_usd_balance +
+PaperFillSimulator paper-boundary hook feeding the byte-identical
+record_execution surface - paper now runs the full inbound+outbound cycle
+EXECUTOR: CLAUDE CODE (local, direct C: access)
+============================================================
+
+1. MISSION / CONTEXT
+   Cold-loaded TB00719 NSI + TB00000 v2_99 + the TB00718 Session Log from GitHub
+   HEAD and followed it. Bill chose Path A directly: "Build the paper fill simulator
+   next." That selects TB00719 sec 4 (A) - the synthetic-capital local fill simulator
+   (contract:Synthetic_Capital_Ledger, PA-004 divergence point #3) that plugs into the
+   PaperDispatchSimulator boundary and feeds the SAME WSManager.record_execution()
+   surface the live executions stream feeds (decision:D-06). NOT the REST client edges
+   (B) and NOT S3 (C).
+
+2. BILL DIRECTIVES (chat-turn)
+   (1) "Build the paper fill simulator next." -> build TB00719 Path A item (A).
+
+3. ENTRY / COLD-LOAD + VERIFY (all from HEAD, confirmed before work)
+   TB00000 v2_99 (read), TB00719 NSI (read), TB00718 SL (read).
+     0500000 dv1_241   md5 cb94f3b149fec582d5fdcab8a5635a5f  (Image1 R21) VERIFIED
+     0521001 dv1_51    present                                            VERIFIED
+     Docs HEAD         60cf32d, local == origin                          VERIFIED
+     Code HEAD         a3141bf, local == origin, 250 tests green          VERIFIED
+     SessionLogs HEAD  9cb3010 (TB00718 SL + TB00719 NSI)                 VERIFIED
+   Python 3.12.10 (full-path interpreter); no async test libs, so the async fill_simulator
+   hook is driven with stdlib asyncio.run over hand-built fakes (the established
+   TB00714/TB00716/TB00718 pattern).
+
+4. GOVERNING FIGURE READ (DIAGRAMS GOVERN; no diagram edit needed)
+   0500000 dv1_241 sec 12.4 (Synthetic Capital Ledger - Single-Owner Architecture) +
+   sec 12 Image7 PA-004(3) Capital Ledger paper cell (contract:Synthetic_Capital_Ledger
+   nested group) + PA-004(2) _simulate_entry_fill paper cell + PA-004(4) paper Position
+   Mirror sourcing + sec 12.6 PAPER_LEDGER_UPDATED taxonomy + the Execution_Engine
+   on-fill node (evt:PAPER_FILL_SIMULATED) + AR-047 Decimal-on-receipt + the
+   FEE_TAKER_PCT fee math were read in full. The figures are CODE-COMPLETE for the slice
+   - no gap, no amendment. Facts consumed:
+     - sec 12.4 OWNERSHIP: WSManager is the SOLE writer of spot_usd_balance in BOTH
+       modes (paper-live parity property). Single-owner eliminates the distributed-write
+       defect class (rule:HR-WM-032).
+     - sec 12.4 INIT: spot_usd_balance = paper_starting_balance ($5,000/module, D-05);
+       portfolio_baseline_USD = spot_usd_balance captured ONCE (HR-WM-011); emit
+       PAPER_LEDGER_UPDATED(INIT).
+     - sec 12.4 ENTRY-FILL DEBIT (FEE_TAKER_PCT, marketable-IOC fills at taker):
+       entry_proceeds = qty*entry_fill_price; fees_entry = entry_proceeds*FEE_TAKER_PCT;
+       spot_usd_balance -= (entry_proceeds + fees_entry); pos.fees_entry_usd = fees_entry
+       (required for net P&L on close); emit PAPER_LEDGER_UPDATED(ENTRY_FILL).
+     - sec 12.4 EXIT-FILL CREDIT (FEE_TAKER_PCT, all exits close at taker):
+       exit_proceeds = qty*exit_price; fees_exit = exit_proceeds*FEE_TAKER_PCT;
+       spot_usd_balance += (exit_proceeds - fees_exit); emit PAPER_LEDGER_UPDATED(EXIT_FILL).
+     - Image7 / sec 12.6 PAPER_LEDGER_UPDATED payload spine (event_type INIT|ENTRY_FILL|
+       EXIT_FILL, symbol, delta_usd, fee_usd, new_balance, exit_reason) + q5 telemetry
+       (prior_balance, fill_price, qty).
+     - PA-004 div #4 / D-06: the paper fill writes the SAME mirror surface (byte-identical
+       schema + write path); only the SOURCE of the fill differs. So the simulator emits a
+       synthetic executions frame (WS-EXE-009/WS-EXE-012 shape) into record_execution.
+       "live mimics the PAPER simulator's order shape exactly" (Image7) -> shared field names.
+     - AR-054: marketable-IOC fills-or-kills atomically, no partial/split/dust -> the
+       synthetic entry fills the whole accepted qty at the submitted limit_price (the
+       conservative MPP-capped bound; paper has no real book).
+
+5. WORK DONE (TothBot_V2-Code, commit 438bb28; 2 source new + 1 source mod + 2 test new + 1 test mod)
+   5a. tothbot/exchange/ledger.py [NEW] - contract:Synthetic_Capital_Ledger. The
+       single-owner synthetic spot_usd_balance (sec 12.4). Pure state store (mirrors
+       position_mirror.py - no socket, no asyncio). Construct one per module wallet,
+       seeded at paper_starting_balance. INIT on construction (balance + baseline +
+       PAPER_LEDGER_UPDATED(INIT)). entry_fill_debit / exit_fill_credit do the taker fee
+       arithmetic in Decimal (AR-047 - FEE_TAKER as Decimal converted once; _dec on every
+       value), debit/credit the balance, emit PaperLedgerUpdated, and retain/clear the
+       per-symbol entry fee (pos.fees_entry_usd for the Exit Controller net P&L, LATER).
+       Sole-writer guard (rule:HR-WM-032): every mutation requires writer=WRITER_ID
+       ("WS_Manager"); any other writer emits LEDGER_SOLE_WRITER_VIOLATION [CRITICAL] and
+       raises LedgerSoleWriterViolationError (the write never happens). Mirrors the
+       position_mirror.py sole-writer pattern.
+   5b. tothbot/exchange/paper_fill.py [NEW] - PaperFillSimulator, the body that plugs into
+       the PaperDispatchSimulator boundary via the injected fill_simulator hook. Dispatches
+       by OutboundOp: ADD_ORDER -> entry fill (open mirror + entry debit); DISPATCH_MARKET_SELL
+       -> exit fill (close mirror + exit credit); BATCH_ADD/CANCEL_ORDER/AMEND_ORDER/
+       BATCH_CANCEL -> clean no-op (the on-fill emergSL is a resting stop that fills later via
+       the _maybe_paper_fill bbo-touch path, ticker-driven, a LATER slice). Builds the
+       synthetic executions frame (exec_type=filled, symbol, side, cum_qty, avg_price,
+       cl_ord_id, order_id PAPER_FILL_ prefixed, sequence monotone per
+       contract:Executions_Channel_Sequence), feeds it to the injected record_execution
+       (byte-identical D-06), then drives the injected ledger apply. Emits PAPER_FILL_SIMULATED;
+       a fill-producing dispatch missing symbol/side/order_qty/limit_price emits a
+       PAPER_FILL_SKIPPED [WARNING] (never silently dropped). Imports only from seam (no
+       ws_manager import - injected bound methods avoid the circular import).
+   5c. tothbot/exchange/ws_manager.py [MOD] - the PAPER capital path wired. In paper mode
+       WSManager now constructs self.ledger = SyntheticCapitalLedger(seed) (seed = the D-05
+       $5,000 default from the registry, overridable via the new paper_starting_balance
+       ctor arg) and self.paper_fill = PaperFillSimulator(...) bound to the WSManager
+       sole-writer surfaces, then self.paper_dispatch = PaperDispatchSimulator(fill_simulator=
+       self.paper_fill). New sole-writer methods apply_paper_entry_fill / apply_paper_exit_fill
+       (tag the ledger write with WRITER_ID, rule:HR-WM-032) + the spot_usd_balance read
+       property (None in live - real Kraken balance authoritative). In live mode ledger and
+       paper_fill stay None and the paper boundary is an inert no-op (the seam uses the
+       transmitter). __init__ reordered so the mirror exists before the simulator binds to it.
+   Tests: test_ledger.py [NEW, 12], test_paper_fill.py [NEW, 8], test_ws_manager.py [MOD -
+   the stale paper-noop-boundary test renamed/updated; +7 paper-capital-path tests incl. the
+   full entry+exit round-trip through the seam].
+
+6. VERIFICATION
+   pytest on Python 3.12.10: 274 passed (250 prior + net 24). New modules import cleanly.
+   END-TO-END PAPER CYCLE PROVEN (the slice goal): WSManager(Mode.PAPER); a seam.add_order
+   with a well-formed marketable-IOC message runs the paper branch -> the boundary records +
+   delegates to the fill simulator -> a synthetic filled frame OPENS the BTC/USD position in
+   the mirror (qty 0.05 @ 60000) AND debits the synthetic ledger 5000 -> 1992.20 (proceeds
+   3000 + taker fee 7.80); a following seam.dispatch_market_sell CLOSES the mirror position
+   (opposite-side fill) AND credits the ledger 1992.20 -> 5283.62 (proceeds 3300 - taker fee
+   8.58); fees_entry retained at entry and cleared on close. Sole-writer guard rejects a
+   foreign ledger writer. Surgical staging (6 files; no __pycache__). Post-push DR-010 on
+   TothBot_V2-Code: git fetch; local == origin = 438bb28; all 6 files present in HEAD;
+   working-tree blob == HEAD blob for all 6 (git hash-object vs HEAD:path); git diff HEAD
+   empty.
+     Code         438bb28  (ledger.py, paper_fill.py [NEW] + ws_manager.py [MOD] + 2 tests
+                            [NEW] + test_ws_manager.py [MOD])
+     Docs         60cf32d  UNCHANGED (no diagram edit - figures code-complete)
+     SessionLogs  <this push>  (TB00720 SL + TB00721 NSI)
+
+7. SCOPE NOTE (honest slicing)
+   Built: the synthetic capital ledger (single-owner spot_usd_balance: INIT, entry-fill debit,
+   exit-fill credit, Decimal fee math, PAPER_LEDGER_UPDATED, sole-writer guard) + the
+   PaperFillSimulator that plugs into the paper boundary and feeds record_execution. Paper now
+   runs the full inbound+outbound cycle through the seam. NOT built this session (out of scope):
+     - the _maybe_paper_fill BBO-TOUCH emergSL fill (ticker-driven, rule:HR-WM-024 paper fill
+       detection in _handle_ticker): the on-fill batch_add places a resting emergSL that fills
+       only on a later bid <= emergsl_price touch. The simulator no-ops BATCH_ADD here; the
+       bbo-touch fill arrives with the ticker/exit wiring slice.
+     - the Exit Controller TRADE_CLOSE net-P&L close path (sec 12.5: on_paper_close ->
+       _close_position -> TRADE_CLOSE with net_pnl_usd combining fees_entry + fees_exit, SC
+       state update, semaphore release). The ledger retains fees_entry_usd ready for it; the
+       Exit Controller is a LATER module.
+     - the balances -> ledger reconciliation path (live spot_usd_balance from the balances
+       channel); paper is self-contained here.
+     - the REST client edges (B) and S3 regime + signal models (C).
+
+8. OBSERVATIONS / CARRY-FORWARD FLAGS (no action taken; cosmetic / deferred, no blocker)
+   (a) keepalive.py DEAD_CONNECTION_LOG_KEY = "WS_PONG_TIMEOUT" -> reconcile to the canonical
+       "PING_TIMEOUT" in a later consistency pass. (carried TB00714..TB00719)
+   (b) reconnect.py is_immediate_attempt() docstring still says "BLOCKED exponential backoff"
+       - stale pre-TB00712 phrasing; the backoff is now a seed. (carried)
+   (c) position_mirror.py Position.unrealized_pnl stored, default 0; no MTM writer yet (AR-052
+       drawdown reads qty + bid). The paper drawdown also wants spot_usd_balance + sum(bid*qty)
+       per AR-048; the ledger now supplies the spot_usd_balance term. Wire when the MTM/drawdown
+       path is built. (carried, extended)
+   (d) private_ws.py RESET_RATE_CEILING no-op placeholder - wire the AR-030 maxratecount unit
+       when it lands. (carried)
+   (e) private_ws.py reconnect snap_orders defaults to the last executions snapshot when no REST
+       GetOpenOrders edge is injected; inject the canonical source with the REST client (B). (carried)
+   (f) NEW: the paper exit price + qty come from the dispatch_market_sell message (limit_price =
+       PAIR_LIMIT_ONLY IOC at best_bid, order_qty = the whole-position run-to-reversal qty). When
+       the Exit Controller is built it owns the exit dispatch; confirm it supplies both fields.
+
+9. OPEN -> TB00721 NSI
+   No outstanding Bill blocker. Paper now runs the full inbound+outbound cycle (274 tests green).
+   Next ready paths: the BBO-TOUCH paper fill + ticker handling / Exit Controller close path
+   (completes the paper EXIT lifecycle and TRADE_CLOSE net P&L); the REST client edges (B) that
+   replace the injected private-connection edges; OR S3 regime + signal models (C). All
+   unblocked. See TB00721.
+
+============================================================
+END TB00720
+============================================================
