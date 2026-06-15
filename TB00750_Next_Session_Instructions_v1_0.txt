@@ -1,0 +1,104 @@
+DocDCN:     TB00750
+DocTitle:   TB00750_Next_Session_Instructions
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00750_Next_Session_Instructions_v1_0.txt
+DocDate:    06-15-2026
+DocTime:    23:59:00 UTC
+
+============================================================
+TB00750 NSI - WIRE THE ENTRY-TIME signal_params ONTO THE TRADE_CLOSE + DRIVE THE DRIFT-TRIGGERED CANDIDATE PLAN
+The propose/detect cadence now runs off the close (recompute_kelly STAGES + scan_drift DETECTS in
+production; 840 green, Code 538255e). The one piece of the drift cycle still missing is the open_pdca
+CANDIDATE-parameter PLAN - blocked on the per-trade parameter-LEVEL series the Spearman candidate-
+identification needs (the producer-unsourced contract:TRADE_CLOSE signal_params field). This mission
+WIRES that producer + closes the drift cycle.
+EXECUTOR: CLAUDE CODE (autonomous, "auto mode on")
+============================================================
+
+NSIs are Claude-authored + informational; Bill's chat directives govern. PLAIN-TEXT choices ONLY - the
+AskUserQuestion / question-box tool is BANNED (TB00000 4.7). Per Bill's standing TB00731 ruling: a
+schema verification or an obvious method/legacy choice is something to DO automatically, NOT a question
+- build the organism on auto; surface ONLY a genuine new-seed value or a genuine design decision, in
+PLAIN TEXT.
+
+NUMBERING (Bill ruling TB00745): SL = this session's number; NSI = the next session's number; OCS = the
+SAME number as the NSI. This session is 750; it closes as TB00750 SL + TB00751 NSI + TB00751 OCS.
+
+0. WHY / RHYTHM
+   Build from the 0500000 diagrams (Long/Short symmetric, dv1_250). Pure/testable units first, I/O at
+   the edges (asyncio.run over fakes; websockets/aiohttp lazy). Deliver file by file, FULL pytest on the
+   3.12 interpreter each slice, surgical staging (no __pycache__), DR-010 post-push (git hash-object vs
+   origin/master:path). Diagram/Docs edits stay a Claude Code task. Session close is STANDING (SL+NSI+OCS
+   at the END).
+
+1. ENTRY / COLD-LOAD + VERIFY (from GitHub HEAD)
+   Read TB00000 (v2_100) + this NSI + the TB00749 Session Log. Cold-load the auto-memory (phase2-build is
+   current through 538255e).
+     Code HEAD        538255e (840 tests green). Python = C:\Users\wstot\AppData\Local\Programs\Python\
+                      Python312\python.exe (3.12.10; default PATH python is 3.10 - full path ONLY). Run:
+                      python.exe -m pytest -q (expect 840 green).
+     Docs HEAD        18b555d - 0500000 dv1_250 / 0521001 dv1_60.
+     SessionLogs HEAD <the TB00749 SL + TB00750 NSI/OCS push>.
+
+2. STATE: the cadence runs off the close, but the drift candidate PLAN is blocked on signal_params.
+   ciats/conductor.on_close   ingest_close + recompute_kelly (STAGE per_trade_size) + scan_drift (DETECT
+                              the HR-CI-007 net-P/L CUSUM) + on_inter_trade_boundary (APPLY). Driven by
+                              the wired learning sink off each running close.
+   ciats/conductor.open_pdca  the PLAN->DO(real shadow_replay)->CHECK->stage cycle - takes a `proposal`
+                              (a ParameterChangeProposal candidate). The DO replay (shadow_replay.build_
+                              shadow_evaluator) already handles gating/sizing/exit candidates off the
+                              corpus. NOT yet driven by scan_drift (no candidate is identified).
+   ciats/proposal_engine.candidate_proposal  qualifies a candidate IFF the Spearman gate passes (|rho| >
+                              0.3 AND p < 0.05) between the PER-TRADE parameter LEVEL and the realized
+                              outcome - the diagram's PLAN-candidate rule (lines 4080/4147/4190/4196).
+   execution/exit_controller.TradeClose  the 23-field record. signal_params (19) + market_regime (18) +
+                              entry_timestamp_utc (8) + hold_candle_count (10) are producer-UNSOURCED
+                              (default None); MAE_pct_reached (11) is the at-exit value (no max-over-life
+                              tracker yet).
+   THE GAP: with signal_params None, the corpus carries no per-trade parameter-LEVEL series, so the
+   Spearman candidate-identification (and thus the drift-triggered open_pdca candidate PLAN) cannot run -
+   the conductor DETECTS drift but cannot PLAN a candidate. The membrane is ready (scan_drift fires,
+   open_pdca + the real replay are built); the producer is the missing input.
+
+3. MISSION - WIRE THE ENTRY-TIME PARAMETER-LEVEL PRODUCER + CLOSE THE DRIFT CYCLE. Bill's call on order.
+
+   (a) CAPTURE signal_params AT ENTRY. The gates already read a per-cycle Parameter_Store_Snapshot (the
+       CycleParameters the sweep threads). Capture THAT snapshot's owned-param levels at the ENTRY tick
+       onto the position (the D6 Pending-Order-Registry pattern: ws_manager stashes the entry-time
+       context, record_execution attaches it), so the position carries the entry-time signal_params.
+       This is the producer the Spearman gate needs - the per-trade level of each owned parameter the
+       trade was taken under. Faithful-shape choices (DO them per TB00731): which owned params to snapshot
+       (the CIATS-tunable set the diagram's signal_params enumerates), keyed how. If the diagram leaves
+       the signal_params CONTENT genuinely open, STOP and surface it in PLAIN TEXT.
+
+   (b) EMIT signal_params (+ market_regime / entry_timestamp_utc / hold_candle_count) ON THE TRADE_CLOSE.
+       exit_controller._close_position reads the entry-time snapshot off the position (as it does atr /
+       regime today) and fills the producer-sourced fields on the 23-field record - so the Stream-2
+       corpus carries the per-trade parameter levels + the entry-side context. market_regime = the AR-074
+       BTC/USD anchor regime at entry (already computed by the daily scheduler); entry_timestamp_utc +
+       hold_candle_count from the entry-time stamp + the 5m candle count held. (The max-over-life MAE
+       tracker is a separate carry-forward - the MTM tracker; the at-exit MAE stands until then.)
+
+   (c) DRIVE THE DRIFT-TRIGGERED CANDIDATE PLAN. With the per-trade param-level series now in the corpus,
+       make conductor.on_close (or scan_drift's signal handler) IDENTIFY a candidate via the Spearman
+       gate over (param_levels, outcomes) and open_pdca on it - the PLAN->DO(real replay)->CHECK->stage
+       cycle, alerting Bill on a CHECK pass. NEVER the sacred R:R. Prove it end-to-end: a degrading run
+       with a Spearman-correlated param level drives scan_drift -> a candidate PLAN -> a staged (or
+       surfaced-rejected) PDCA proposal, all off the running close.
+
+   Recommendation: (a) capture -> (b) emit -> (c) the candidate PLAN.
+
+4. PROVENANCE / SCOPE
+   A CODE build READS 0500000 (symmetric). The signal_params CONTENT + the Spearman/CUSUM/Kelly constants
+   are diagram-named - transcribed, not new seeds. If a genuinely NEW seed value or a genuine DESIGN
+   decision arises (e.g. the signal_params field set is genuinely unspecified, or the param-level-to-
+   outcome pairing for Spearman is ambiguous), STOP and surface it in PLAIN TEXT (never the question-box).
+   A schema verification or an obvious method/legacy correction is NOT a question - do it automatically
+   (Bill ruling TB00731). LONG-STANDING FLAGS persist (keepalive PING_TIMEOUT; reconnect BLOCKED
+   docstring; G7 semaphore ACQUIRE unbuilt; private_ws RESET_RATE_CEILING no-op; the max-over-life MAE
+   tracker).
+
+============================================================
+END TB00750
+============================================================

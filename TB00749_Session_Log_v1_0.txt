@@ -1,0 +1,127 @@
+DocDCN:     TB00749
+DocTitle:   TB00749_Session_Log
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00749_Session_Log_v1_0.txt
+DocDate:    06-15-2026
+DocTime:    23:59:00 UTC
+
+============================================================
+TB00749 SESSION LOG
+DRIVE THE CIATS PROPOSE/DETECT CADENCE FROM THE RUNNING CLOSE (STAGE PROPOSALS TO BILL IN PRODUCTION)
+EXECUTOR: CLAUDE CODE (autonomous; Bill chat directive "proceed with TB00749")
+============================================================
+
+0. NUMBERING NOTE (Bill ruling TB00745, standing)
+   SL = THIS session's number; NSI = the NEXT session's number; OCS = the SAME number as the NSI. This
+   session (749, governed by the TB00749 NSI) closes as TB00749 SL + TB00750 NSI + TB00750 OCS.
+
+1. MISSION / CONTEXT
+   Continued from the TB00748 close (the exit path now FEEDS the per-module conductor in the running wm
+   - ingest_close + the HR-CI-003 inbox boundary poll, no manual sink call; 831 green, Code 991a404).
+   Bill's chat directive this session: "proceed with TB00749". The TB00749 NSI mission: make each running
+   close ALSO drive the cadence so the conductor STAGES a parameter change to Bill in production -
+   completing the PROPOSE/DETECT loop on the organism. Recommended order (a) the Kelly cadence at the
+   close -> (b) the drift trigger -> (c) the end-to-end proof. Delivered as 2 commits (the (a)+(b)
+   cadence is one cohesive conductor method, so a single slice; then (c) the proof), each its own commit
+   + FULL pytest on 3.12.10 + DR-010. 831 -> 840 green. NO new seed, NO diagram edit. Docs UNCHANGED at
+   18b555d. TB00000 UNCHANGED v2_100.
+
+   COLD-LOAD VERIFIED before working: Code HEAD 03a0a0c... (continued same session from the TB00748
+   close at 991a404); ran pytest on the 3.12.10 interpreter by full path - 831 green, matched. Docs
+   18b555d (0500000 dv1_250 / 0521001 dv1_60), SessionLogs d7d2744 (TB00748 SL + TB00749 NSI/OCS).
+
+2. BILL DIRECTIVES (chat-turn, this session)
+   (1) "proceed with TB00749" - execute the TB00749 NSI on auto in the recommended order. Standing rules
+       hold: auto mode, build the organism, question-box BANNED, surface only a genuine new seed or
+       design decision in plain text, diagram/Docs edits in Claude Code (DR-010), session close standing.
+
+3. PROVENANCE INVESTIGATION (before building (b) - the NSI flagged the drift PLAN's candidate-parameter
+   selection as a possible design decision to surface)
+   Read 0500000 dv1_250 on the CIATS PDCA PLAN: the diagram does NOT leave the candidate-parameter
+   selection open - it specifies the PLAN "identifies a candidate parameter change from Statistical
+   Engine + Proposal Engine inputs" via the Spearman gate (|rho| > 0.3 AND p < 0.05 between the
+   PER-TRADE parameter LEVEL and the realized outcome; lines 4080/4147-4148/4190/4196 + proposal_engine.
+   candidate_proposal). The drift signal itself is the net_gain/net-P/L Stream-2 CUSUM (HR-CI-007). The
+   blocker: the per-trade parameter-LEVEL series the Spearman gate needs lives in the producer-unsourced
+   contract:TRADE_CLOSE signal_params field (the known TB00748 carry-forward) - it is NOT in the corpus
+   yet. So the drift-triggered open_pdca CANDIDATE-parameter PLAN cannot run faithfully today WITHOUT
+   fabricating a candidate-selection rule the diagram ties to Spearman-over-param-levels. This is a
+   DEPENDENCY GAP, not an open design decision (the diagram specifies the rule; its INPUT is unwired) -
+   so per TB00731 I built what is unblocked (the drift DETECT/emit trigger + the Kelly staging) and left
+   the candidate PLAN as carry-forward, NOT a fabricated candidate, NOT a Bill question.
+
+4. WHAT WAS BUILT (Code: 2 commits 476fa55 -> 538255e; 831 -> 840 green on 3.12.10; DR-010 verified
+   against origin/master on EVERY push. Docs UNCHANGED at 18b555d. TB00000 UNCHANGED v2_100 - no new seed.)
+
+   (a+b) 476fa55  DRIVE THE PROPOSE/DETECT CADENCE FROM THE RUNNING CLOSE.
+       ciats/conductor.on_close [NEW] = the complete per-close cadence the running exit path drives at
+       each confirmed TRADE_CLOSE (the close IS the cadence clock + the HR-CI-003 boundary): (1)
+       ingest_close (the learning-loop accumulate); (2) recompute_kelly at the 50-trade Half-Kelly
+       boundary after the 200-trade activation - STAGES the per_trade_size_usd proposal to Bill (the
+       HR-CI-011 alert seam fires through on_approval); SKIPPED when wallet_balance is None (live has no
+       synthetic wallet - no _dec(None) crash, the seed sizing stands); current_size read from THIS
+       module's store; (3) scan_drift - the HR-CI-007 net-P/L CUSUM out-of-cycle PLAN trigger (DETECT/
+       emit only; the candidate-parameter PLAN is NOT run - it awaits the signal_params per-trade
+       param-level producer, never a fabricated candidate); (4) on_inter_trade_boundary - poll the inbox
+       + APPLY any Bill-approved change (never auto-applied). pipeline/live_driver.make_ciats_learning_
+       sink now threads a per-side `wallet_balance` thunk and drives conductor.on_close (replacing the
+       direct ingest_close + boundary calls). pipeline/operational.assemble_ciats_modules gains a
+       `wallet_balance: Callable[[PositionSide], object]` param (binds per side); assemble_operational
+       wires it to getattr(wm, "wallet_balance", None). +6 tests (831 -> 837: 4 conductor on_close + 2
+       sink). PROPOSE/DETECT only - sacred R:R never a candidate; nothing applied without Bill's recorded
+       approval at the boundary.
+
+   (c) 538255e  PROVE THE CADENCE END-TO-END ON THE ASSEMBLED REAL-WM ORGANISM. tests/test_live_smoke.py
+       extended (+3): closes flowing THROUGH the wired ciats_sink (the production membrane) reach the
+       200-trade activation and STAGE the Half-Kelly per_trade_size proposal to Bill (the alert reaches
+       mod:Logger.alerts) with NO manual recompute_kelly - the sink reads wm.wallet_balance(LONG) for the
+       sizing; the full PROPOSE->APPROVE->APPLY loop runs through the sink (stage at activation -> Bill
+       approves into the inbox -> the next close applies it); a degrading net-P/L run emits a
+       CIATS_DRIFT_SIGNAL (the HR-CI-007 out-of-cycle PLAN trigger) into the module's Stream-1; the SHORT
+       module stays isolated (per-module). +3 tests (837 -> 840), NO production code changed.
+
+5. STATE AT CLOSE - THE CIATS PROPOSE/DETECT LOOP RUNS ON THE ORGANISM
+   Each running paper close now drives the full per-module cadence through the wired sink:
+   conductor.on_close = ingest (learn) + recompute_kelly (STAGE the Half-Kelly sizing proposal to Bill at
+   the cadence boundary) + scan_drift (the HR-CI-007 net-P/L CUSUM out-of-cycle PLAN trigger, detect/
+   emit) + on_inter_trade_boundary (APPLY a Bill-approved change). So in production the conductor LEARNS,
+   STAGES a proposal + alerts Bill, DETECTS drift, and APPLIES an approved change - all off the running
+   exit path, no manual call. Still PROPOSE/DETECT only. The one remaining piece of the drift cycle - the
+   open_pdca CANDIDATE-parameter PLAN - is blocked on the contract:TRADE_CLOSE signal_params per-trade
+   param-level producer (the Spearman candidate-identification input) and is left as carry-forward, not
+   fabricated.
+
+6. VERIFICATION
+   840 pytest green on C:\Users\wstot\AppData\Local\Programs\Python\Python312\python.exe (3.12.10):
+   831 (cold-load) -> 837 (a+b, +6) -> 840 (c, +3). DR-010 verified after EVERY push via git hash-object
+   vs origin/master:path: Code 476fa55 -> 538255e, all OK. The threaded wallet_balance default (None ->
+   skip) regressed no existing test (the prior boundary/approval tests pass no wallet_balance, so on_close
+   skips the recompute and applies via the boundary exactly as before). Docs UNCHANGED at 18b555d.
+   TB00000 UNCHANGED v2_100.
+
+7. CARRY-FORWARD (see TB00750 NSI)
+   The drift-triggered open_pdca CANDIDATE-parameter PLAN awaits the contract:TRADE_CLOSE signal_params
+   producer: the Spearman candidate-identification needs the PER-TRADE parameter-LEVEL series, which is
+   the producer-unsourced signal_params field. The natural next mission: WIRE THE ENTRY-SIDE
+   PRODUCER-SOURCED TRADE_CLOSE FIELDS - capture the per-cycle Parameter_Store_Snapshot (the CycleParameters
+   the gates read) at ENTRY onto the position (like the D6 atr/emergsl snapshot) so the close carries
+   signal_params = the entry-time owned-param LEVELS, plus market_regime (the AR-074 BTC anchor),
+   entry_timestamp_utc + hold_candle_count, and the max-over-life MAE tracker - then DRIVE the drift-
+   triggered open_pdca candidate PLAN off that param-level series. LONG-STANDING FLAGS persist: keepalive
+   WS_PONG_TIMEOUT -> PING_TIMEOUT; reconnect "BLOCKED" docstring; G7 BoundedSemaphore ACQUIRE side
+   unbuilt (mod:Risk_Engine); private_ws RESET_RATE_CEILING no-op (the AR-030 maxratecount unit).
+
+8. CLOSE STATE
+   Code HEAD        538255e (840 tests green; ciats/conductor.py [on_close] + pipeline/live_driver.py
+                    [sink threads wallet_balance + drives on_close] + pipeline/operational.py
+                    [assemble_ciats_modules/assemble_operational wire wm.wallet_balance]; tests/test_
+                    ciats_conductor.py + test_live_driver.py + test_live_smoke.py updated).
+   Docs HEAD        18b555d (0500000 dv1_250 / 0521001 dv1_60 - UNCHANGED).
+   SessionLogs HEAD <this close: TB00749 SL + TB00750 NSI + TB00750 OCS>.
+   TB00000          v2_100 (unchanged - no new seed).
+   Governing instructions next = TB00750 NSI. Auto memory (phase2-build) updated through 538255e.
+
+============================================================
+END TB00749
+============================================================
