@@ -1,0 +1,99 @@
+DocDCN:     TB00742
+DocTitle:   TB00742_Next_Session_Instructions
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00742_Next_Session_Instructions_v1_0.txt
+DocDate:    06-15-2026
+DocTime:    21:30:00 UTC
+
+============================================================
+TB00742 NSI - THE expected_reward SEED + ws_state, THEN WIRE THE WS (3d), THEN CIATS (C)
+The runtime caches + provider assembly + the DEC-128 mpp seed are built (662 green, Code dd5c41d).
+Two LiveProviders plug-points remain (expected_reward DEC-124 + ws_state); then bind the whole
+thing to the public-WS data layer (3d) for a real end-to-end run; then the fuller CIATS.
+EXECUTOR: CLAUDE CODE (autonomous, "auto mode on")
+============================================================
+
+NSIs are Claude-authored + informational; Bill's chat directives govern. PLAIN-TEXT choices ONLY -
+the AskUserQuestion / question-box tool is BANNED (TB00000 4.7). Per Bill's standing TB00731 ruling:
+a schema verification or an obvious method/legacy choice is something to DO automatically, NOT a
+question - build the organism on auto; surface ONLY a genuine new-seed value or a genuine design
+decision, in PLAIN TEXT.
+
+0. WHY / RHYTHM
+   Build from the 0500000 diagrams (Long/Short symmetric, dv1_250). Pure/testable units first, I/O
+   at the edges (asyncio.run over fakes; websockets/aiohttp lazy). Deliver file by file, FULL pytest
+   on the 3.12 interpreter each slice, surgical staging (no __pycache__), DR-010 post-push.
+   Diagram/Docs edits stay a Claude Code task. Session close is STANDING (SL+NSI+OCS at the END).
+
+1. ENTRY / COLD-LOAD + VERIFY (from GitHub HEAD)
+   Read TB00000 (v2_100) + this NSI + the TB00741 Session Log. Cold-load the auto-memory
+   (phase2-build is current through dd5c41d).
+     Code HEAD        dd5c41d (662 tests green). Python = C:\Users\wstot\AppData\Local\Programs\
+                      Python\Python312\python.exe (3.12.10; default PATH python is 3.10 - full path
+                      ONLY). Run: python.exe -m pytest -q (expect 662 green).
+     Docs HEAD        18b555d - 0500000 dv1_250 / 0521001 dv1_60.
+     SessionLogs HEAD <the TB00741/TB00742/TB00743 push>.
+
+2. STATE: the B2 live main loop is built (TB00738) + nearly all LiveProviders are backed (TB00741):
+   instrument_cache.py / bbo_cache.py / liquidity_cache.py  the runtime WS/REST caches (status/
+                       marginable/24h-vol, bbo, vol_24h_usd; the CR-06 base size).
+   providers.py        make_live_providers wires the caches into LiveProviders + the cl_ord_id/
+                       deadline generators; ProviderNotReady -> the sweep skips a not-ready tick.
+   ciats/seed_estimators.py  compute_mpp_cap (DEC-128 Q95 adverse-gap) + MppCapStore + the provider.
+   STILL INJECTED STUBS: expected_reward (DEC-124) + ws_state.
+
+3. MISSION - FINISH THE PROVIDERS (expected_reward + ws_state), WIRE THE WS (3d), then C. Bill's
+   call on order.
+
+   (3a-part2) THE expected_reward ESTIMATOR (DEC-124; the larger remaining seed unit). Recipe
+     (ar:expected_reward_estimator_seed, value home TB00000 sec 8; Bill ruling TB00654): replay the
+     EC-L1A-001 / EC-L1A-002 regime-reversal exit over historical OHLC per pair/regime; the seed =
+     the central-tendency (median) realized FAVORABLE excursion as a fraction of entry_fill_price.
+     Feeds the A1 acceptance floor ONLY, never an exit price. Per-module, per regime.
+     - Compose the EXISTING pure units: regime/engine.compute_regime (the daily regime over the
+       historical daily series), the regime/sss + indicators for the 1H EMA, and exchange/
+       regime_exit.py (detect_daily_regime_downgrade EC-L1A-002 + detect_htf_regime_reversal
+       EC-L1A-001). For each historical entry candle in a given regime, simulate holding until the
+       reversal exit fires, measure (exit_ref - entry)/entry (direction-symmetric), and take the
+       per-regime median. A PURE backtest harness over injected historical bars (no network).
+     - This is a seed COMPUTED from data (CIATS owning the value day one), NOT a new hardcoded
+       literal - so NOT a Bill question UNLESS the replay forces a genuinely new tunable (e.g. a
+       historical-window length that is not already a sec-8 seed). If one arises, STOP + surface it
+       in PLAIN TEXT. An ExpectedRewardStore (per-(pair, regime)) + make_expected_reward_provider
+       mirror the mpp pattern.
+
+   (ws_state) a small adapter: the silent-pair / subscription lifecycle -> the "Subscribed" string
+     the G1 gate reads (a pair is Subscribed once its SilentPairMachine reaches SUBSCRIBED/
+     DATA_READY). Inject it into make_live_providers as the ws_state callable.
+
+   (3d) THE FINAL WS WIRING (the capstone - the organism runs on a real public WS):
+     - the instrument + ticker cache ingest handlers (sync: frame -> cache.ingest) bound to
+       PublicChannel.INSTRUMENT / PublicChannel.TICKER via the DataLayerAssembler handler_provider;
+       LiveSweepDriver.ohlc_5m_handler() / ohlc_60m_handler() bound to OHLC_5M / OHLC_60M.
+     - a top-level OPERATIONAL assembly (the AR-049 startup sequence end state): Status check ->
+       token -> connect+subscribe -> instrument snapshot -> warm-up (warmup.py) -> the daily regime
+       compute (scheduler.py) + the liquidity probe (LiquidityProbe) -> make_live_providers ->
+       LiveSweepDriver -> run the data layer. Confirm HR-WM-012 still gates the sweep during a
+       reconnect (the receive loop already discards OHLC_5M; the driver guard is belt-and-suspenders).
+
+   (C) FULLER CIATS: the CIATS_Statistical_Engine (Mann-Whitney U / Sharpe / Spearman / CUSUM over
+     the >=200-trade per-module corpus); CIATS_PDCA_Engine + CIATS_Proposal_Engine (proposals at
+     inter-trade boundaries only, ar:AR-072 / HR-CI-003); CIATS_Parameter_Store (the live owned-
+     parameter snapshot; the sacred 1:1.5 R:R is the one value never tuned); CIATS_Regime_Library
+     (per-regime parameter sets, activate at 600 trades).
+
+   Recommendation: 3a-part2 + ws_state (finish the providers) -> 3d (wire it -> a real run) -> C.
+   Bill may reorder (e.g. C first if the live data feeds are deferred).
+
+4. PROVENANCE / SCOPE
+   A CODE build READS 0500000 (symmetric). REST/WS wire facts are NOT seeds. The historical-replay
+   estimators COMPUTE the sec-8 seed VALUES from data - that is CIATS owning the value, not a new
+   hardcoded literal; do NOT invent a literal. If a genuinely NEW seed value or a genuine DESIGN
+   decision arises, STOP and surface it in PLAIN TEXT (never the question-box). A schema
+   verification or an obvious method/legacy correction is NOT a question - do it automatically
+   (Bill ruling TB00731).
+
+============================================================
+END TB00742
+============================================================

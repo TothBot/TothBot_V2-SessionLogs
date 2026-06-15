@@ -1,0 +1,111 @@
+DocDCN:     TB00741
+DocTitle:   TB00741_Session_Log
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00741_Session_Log_v1_0.txt
+DocDate:    06-15-2026
+DocTime:    21:30:00 UTC
+
+============================================================
+TB00741 SESSION LOG
+BACK THE LIVE PROVIDERS - THE RUNTIME CACHES + CR-06 + THE PROVIDER ASSEMBLY (3b/3c) +
+THE DEC-128 mpp_abs_cap_pct SEED ESTIMATOR (3a-part1)
+EXECUTOR: CLAUDE CODE (autonomous; Bill "Go")
+============================================================
+
+1. MISSION / CONTEXT
+   Continued from the TB00738 close (B2 live main loop built, 622 green, Code 2817c81). Bill:
+   "Go" - proceed with the TB00739 NSI on auto. Took the recommended order: (3b+3c) the runtime
+   WS/REST caches + CR-06 base size + the provider assembly first (the smallest, unblock a real
+   run), then (3a-part1) the DEC-128 mpp_abs_cap_pct seed estimator. 5 slices, each its own
+   commit + FULL pytest on 3.12.10 + DR-010. 622 -> 662 green. No new seed (the estimators
+   COMPUTE the sec-8 seed from data), no diagram edit (every figure code-complete). TB00000
+   unchanged at v2_100.
+
+2. BILL DIRECTIVES (chat-turn, this session)
+   (1) "Go" - continue the TB00739 mission on auto under the standing rules (plain-text only;
+       question-box BANNED; obvious method choices done automatically per TB00731).
+
+3. WHAT WAS BUILT (Code: 5 commits 2817c81 -> dd5c41d; 622 -> 662 green on 3.12.10; DR-010
+   verified on EVERY push. Docs UNCHANGED at 18b555d. TB00000 UNCHANGED at v2_100 - no new seed.)
+
+   3b/3c - THE RUNTIME CACHES + CR-06 + THE PROVIDER ASSEMBLY (back the injected LiveProviders):
+     0975866  exchange/instrument_cache.py [NEW]: the per-pair instrument cache (A-17 / ar:AR-028).
+       InstrumentInfo (status, marginable, qty_min, cost_min, price_increment [A-17 GAP-C: NOT the
+       deprecated tick_size], qty_increment; Decimal ar:AR-047); parse_instrument_pair; InstrumentCache
+       sole-owner snapshot/update ingest (a malformed pair is skipped, the prior entry stands).
+       PLUS base_per_trade_size_usd = the CR-06 max(50, 5*max(cost_min, qty_min*entry_ref_price))
+       (value home TB00000 sec 8; the $50 floor + 5x margin above the pair's real minimum). +8 tests.
+     1bac182  the WS bbo cache + the REST liquidity cache (the Gate-2 + execution quote feeds):
+       exchange/bbo_cache.py [NEW]: BboCache - the per-pair best_bid/best_ask from channel:ticker
+         (ar:AR-048/AR-069); sole-owner ingest (list data), the (bid, ask) accessor + None-on-miss.
+       exchange/liquidity_cache.py [NEW]: LiquidityCache (the D1-owned liquidity_24h, Gate-2) -
+         vol_24h_usd with the liquidity_refresh_hours=4 TTL staleness; LiquidityProbe = the REST
+         GetTicker edge that fills it (ar:AR-036 1.1s stagger, per-pair failure isolation
+         LIQUIDITY_PROBE_FAIL -> the prior value kept). vol_24h_usd = v[1]*p[1] (24h base volume *
+         24h vwap). rest/client.py [MOD]: PATH_TICKER + parse_ticker_liquidity + get_ticker_liquidity.
+       +13 tests.
+     6850ce9  pipeline/providers.py [NEW]: make_live_providers - wires the caches into a REAL
+       LiveProviders. instrument_status/marginable from InstrumentCache + vol_24h_usd from
+       LiquidityCache; best_bid/best_ask from BboCache; base_per_trade_size = CR-06 over the
+       cached cost_min/qty_min. expected_reward (DEC-124) + mpp_abs_cap_pct (DEC-128) + ws_state
+       still INJECTED. new_cl_ord_id = a fresh uuid; new_deadline = now+5s ISO8601 (A-2/AR-069).
+       PLUS pipeline/sweep.py [MOD]: the ProviderNotReady exception - a cache miss for a symbol
+       (instrument/bbo/liquidity not populated yet) makes sweep_pair SKIP that (pair, side) tick,
+       exactly like a WARM_UP pair (never a crash). +10 tests.
+
+   3a-part1 - THE DEC-128 mpp_abs_cap_pct SEED ESTIMATOR:
+     dd5c41d  ciats/seed_estimators.py [NEW]: compute_mpp_cap = the per-pair/side empirical Q95 of
+       the adverse close-to-next-open displacement on the 5m OHLC series (DEC-128 / ar:AR-069). For
+       consecutive bars: gap = (open[i+1]-close[i])/close[i]; a LONG adverse = max(0, gap) (a gap UP
+       costs a buyer more), a SHORT adverse = max(0, -gap) (a gap DOWN pays a seller less); favorable
+       = 0. quantile() = the nonparametric linear-interpolation (type-7) quantile; MPP_QUANTILE=0.95
+       is the recipe, not a tunable. CIATS-OWNED FROM THE START - it COMPUTES the sec-8 seed VALUE
+       from historical data (NOT a new hardcoded literal; the sacred 1:1.5 R:R floor remains the only
+       hardcoded constant). MppCapStore (per-(pair, side); seed_from_bars both sides). pipeline/
+       providers.py [MOD]: make_mpp_provider (reads the store; ProviderNotReady on a missing seed).
+       +10 tests. (The favorable=0 / Q95-over-all-candles method is an obvious choice done
+       automatically per TB00731 - not a new seed value, not a Bill question.)
+
+4. STATE AT CLOSE - THE LIVE PROVIDERS ARE NEARLY ALL BACKED
+   The B2 live main loop (built TB00738) now has REAL backings for almost every LiveProviders
+   plug-point: instrument_status/marginable/vol_24h_usd (instrument + liquidity caches), bbo
+   (ticker cache), base_per_trade_size (CR-06), mpp_abs_cap_pct (the DEC-128 Q95 estimator),
+   cl_ord_id/deadline (the generators). make_live_providers assembles them; a cache miss is a
+   clean per-tick skip (ProviderNotReady). STILL INJECTED AS STUBS: expected_reward (the DEC-124
+   regime-reversal replay) + ws_state (the subscription-lifecycle source).
+
+5. VERIFICATION
+   662 pytest green on C:\Users\wstot\AppData\Local\Programs\Python\Python312\python.exe (3.12.10).
+   DR-010 verified after EVERY push: Code 0975866 -> 1bac182 -> 6850ce9 -> dd5c41d. Docs UNCHANGED
+   at 18b555d. The new REST GetTicker edge did not regress the existing rest tests.
+
+6. CARRY-FORWARD (see TB00742 NSI)
+   3a-part2 expected_reward estimator (DEC-124): replay the EC-L1A-001/EC-L1A-002 regime-reversal
+     exit over historical OHLC per pair/regime; seed = the central-tendency realized favorable
+     excursion as a fraction of entry. THE LARGER remaining seed unit (a backtest harness composing
+     compute_regime + the regime_exit detectors over historical 5m/1H/daily) - its own slice(s).
+   ws_state source: a small adapter from the silent-pair / subscription lifecycle to the
+     "Subscribed" string the G1 gate reads.
+   3d THE FINAL WS WIRING: bind the instrument/ticker cache ingests + LiveSweepDriver.ohlc_5m_
+     handler/ohlc_60m_handler into the DataLayerAssembler handler_provider, and a top-level
+     assembly tying warm-up -> caches -> providers -> the driver, so a real public-WS run drives
+     the sweep end to end.
+   C THE FULLER CIATS: the stat suite (Mann-Whitney U / Sharpe / Spearman / CUSUM), PDCA, the
+     Proposal Engine, the Parameter Store (the sacred 1:1.5 R:R is never tuned), the Regime Library.
+   LONG-STANDING FLAGS persist: keepalive WS_PONG_TIMEOUT -> PING_TIMEOUT; reconnect "BLOCKED"
+     docstring; G7 BoundedSemaphore ACQUIRE side unbuilt (sweep passes semaphore_locked=False FREE);
+     private_ws RESET_RATE_CEILING no-op.
+
+7. CLOSE STATE
+   Code HEAD        dd5c41d (662 tests green; +exchange/instrument_cache.py, +exchange/bbo_cache.py,
+                    +exchange/liquidity_cache.py, +ciats/seed_estimators.py, +pipeline/providers.py,
+                    rest/client.py GetTicker edge, pipeline/sweep.py ProviderNotReady skip).
+   Docs HEAD        18b555d (0500000 dv1_250 / 0521001 dv1_60 - UNCHANGED).
+   SessionLogs HEAD <this close: TB00741 SL + TB00742 NSI + TB00743 OCS>.
+   TB00000          v2_100 (unchanged - no new seed).
+   Governing instructions next = TB00742 NSI. Auto memory (phase2-build) updated through dd5c41d.
+
+============================================================
+END TB00741
+============================================================
