@@ -1,0 +1,145 @@
+DocDCN:     TB00731
+DocTitle:   TB00731_Session_Log
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00731_Session_Log_v1_0.txt
+DocDate:    06-15-2026
+DocTime:    09:15:12 UTC
+
+============================================================
+TB00731 SESSION LOG
+THE SHORT_MODULE CODE BUILD - THE COMPLETE ORGANISM CORE (DECIDE -> SIZE ->
+EXECUTE -> LOG -> LEARN) BUILT + TESTED END-TO-END FOR BOTH LONG AND SHORT.
+EXECUTOR: CLAUDE CODE (autonomous; Bill "auto mode on")
+============================================================
+
+1. MISSION / CONTEXT
+   Continued from the TB00729/TB00730 close (the 0500000 diagram half of Bill's Long/Short
+   parity directive DONE: all 10 figures + prose symmetric at dv1_249; margin-fee seed
+   registered, TB00000 v2_100). THIS session built the CODE half: the short execution path +
+   the entire unbuilt vertical, straight from the now-symmetric diagrams. Run autonomously;
+   surface only a genuine decision (plain text, never the question-box) or completion.
+
+2. BILL DIRECTIVES (chat-turn, this session)
+   (1) Resume the code build (after a prior premature checkpoint - "Why did you stop?").
+   (2) GATE-7 CONCENTRATION RULING (when surfaced): the position-COUNT form is OBSOLETE
+       LEGACY - concentration is a CAPITAL fraction of wallet, 100% CIATS-owned, no cap below
+       100%; sizing starts at the $50 (or pair-minimum) base order then CIATS may size up to
+       100% of the wallet; identical Long/Short. (Resolved the one genuine fork surfaced.)
+   (3) "Continue as planned" - proceed into the 2nd-wallet + margin-order-path build.
+   (4) BLUNT RULING: STOP asking obvious verify/fix questions - a schema verification or an
+       obvious legacy fix is something to DO automatically, not surface. Build the organism on
+       auto; stop stopping. (Acted on: did both flagged items myself + kept building.)
+
+3. WHAT WAS BUILT (Code: 19 commits d4b005a..d353b26; 375 -> 525 tests green on 3.12.10;
+   DR-010 verified on EVERY push. Docs: 1 commit 18b555d.)
+   SHORT ECONOMIC LOOP
+     d4b005a  taxonomy NON_DIR_NORMAL admits BOTH sides at half (was long-only) + the
+              SyntheticCapitalLedger made DIRECTION-AWARE (short sell-to-open CREDITS proceeds
+              net of taker + margin_open_fee; buy-to-cover DEBITS cover + taker + rollover);
+              ws_manager/paper_fill thread is_short by fill side.
+   THE 8-GATE SIGNAL_PIPELINE (all pure, Decimal-only, direction-symmetric; under pipeline/)
+     d67fef6  G8 Position Sizer (Image9): the SACRED 1:1.5 R:R floor (the one hardcoded value);
+              short margin_borrow_fee in net_loss; emergSL LONG-below / SHORT-above entry.
+     693c764  G7 Risk Guard (Image8 R7): 4 strict-order checks, drawdown HALT/PAUSE cascade,
+              capital-fraction concentration+exposure (inclusive, non-binding 100% seed),
+              per-module semaphore probe.
+     ef620cc  G6 Regime Sizer (AR-074): the regime size multiplier from taxonomy.
+     1cbaba4  G4 HTF Confirmation (HR-SP-006): long daily-EMA + 1H-close test, short mirror,
+              NON_DIR_NORMAL bypass.
+     624ea4f  G5 Selection Controller (AR-072/073): 4 per-module quality sub-gates (body /
+              monotonic cooldown / consecutive-loss / no-active-same-side).
+     64dc3c8  Pre-Gate-1 + G1 + G2 (entry_eligibility): per-pair status + the per-side universe
+              partition (SHORT = marginable subset, AR-073); WS-state; 24h-volume floor.
+     bb35aa1  mod:Signal_Pipeline ORCHESTRATOR: chains Pre-G1->...->G8 threading `side`, strict
+              order, first-failure short-circuit, WARM_UP clean skip, ACCEPTED -> G8 sized order.
+   THE EXECUTION PATH (under execution/)
+     8ec68aa  entry order builder (sec 7): LONG spot buy-to-open / SHORT margin sell-to-open +
+              the on-fill emergSL batch_add (single leg).
+     e4ae516  + fa05111  SCHEMA VERIFY/FIX against the TothBot docs: emergSL
+              triggers.reference="last" (UT-EE-004) + triggers.price_type="static" (WS-BA-002,
+              hard - explicit fixed-price stop) + reduce_only made SHORT-only (margin flag).
+     5223cdb  mod:Execution_Engine + execution_sizer: the AR-069 MPP cap
+              (min(mpp_abs_cap_pct, rr_headroom), clamped) + order_qty; emergSL recomputed from
+              the ACTUAL fill (UT-EE-007); execute_entry ties G8 -> dispatch.
+   THE TWO-WALLET ORGANISM (the legacy single-wallet bug, fixed)
+     7caa075  mod:Long_Module / mod:Short_Module (trading_module): the per-module entity - own
+              wallet (D-05 $5k seed) + side-bound order construction.
+     1cd382b  WSManager refactor: ONE shared data layer, TWO independent per-module wallets
+              ({LONG, SHORT} TradingModule); apply_paper_*_fill route by is_short; fees/close/
+              selection-state per-side; back-compat ledger/spot_usd_balance default LONG +
+              wallet_balance(side).
+     8733439  async ENTRY DISPATCH flow wm.dispatch_entry: G8-accepted entry -> shared seam ->
+              side wallet; Pending Order Registry (AR-053) attaches the entry-time D6 snapshot
+              (emergsl_price/atr_14_entry/regime) at the opening fill; on-fill emergSL (UT-EE-005).
+   LOG + LEARN (under recorder/ + ciats/)
+     7be1a25  mod:Logger: the two-stream membrane + sole CIATS data source - Stream-1
+              operational, Stream-2 the per-module CIATS_Trade_Outcome_Bus corpus (only
+              23-field-schema-valid TRADE_CLOSE; SCHEMA_FINGERPRINT_MISMATCH kept out; no
+              cross-module pooling; module tag = side); CRITICAL alert escalation (HR-LG-007).
+     dda0e00  mod:CIATS per-module pool: outcome accumulator + the 200-trade HARD floor +
+              Half-Kelly net-P&L sizing (AR-065, f*=W-(1-W)/R, half, clamped).
+     d353b26  mod:CIATS_EWMA_Monitor: lambda=0.2 EWMA + sustained-divergence fire condition
+              (e.g. FEE_TIER_CHANGE_DETECTED, CIATS-FEE-002/003).
+   THE CONDUCTOR
+     2a359dd  pipeline/driver.process_candidate: ties run_pipeline -> mod:Logger.record(side) ->
+              on-ACCEPT execute_entry into the side's wallet. The universe sweep is this per
+              (pair, side) per 5m candle. CIATS learns off-path via the corpus.
+
+   DOCS (0500000 dv1_249 -> dv1_250; 0521001 dv1_59 -> dv1_60; commit 18b555d)
+     18b555d  Image8 Gate-7 R6 -> R7: CHECK-2 concentration corrected from the obsolete
+              position-COUNT form to a CAPITAL fraction of wallet (CIATS-owned, 100% seed
+              NON-BINDING, no cap, identical Long/Short, per Bill ruling); CHECK-3 exposure
+              "<" -> "<=" inclusive. Tag-class balance verified identical (g217/text957/desc126/
+              svg10/figure10); OP RECORD appended to 0521001.
+
+4. STATE AT CLOSE - THE COMPLETE ORGANISM CORE IS BUILT + TESTED, BOTH SIDES
+   The full loop runs end-to-end, verified for Long AND Short with real money math:
+     DECIDE  (8 gates + orchestrator, side-threaded)
+       -> SIZE   (G6 regime + G7 risk + G8 sacred R:R floor + MPP cap)
+       -> EXECUTE (entry add_order + on-fill emergSL from the ACTUAL fill, into the side wallet)
+       -> two independent wallets (Long spot / Short Kraken-margin, isolated)
+       -> LOG    (mod:Logger two-stream, 23-field validation, per-module corpus)
+       -> LEARN  (mod:CIATS pool 200-floor Half-Kelly + the EWMA drift monitor)
+     conductor-tied (process_candidate); the learning loop closes (TRADE_CLOSE -> corpus -> Kelly).
+   Verified the Exit_Controller close path (net P&L, MAE, 23-field TRADE_CLOSE) was ALREADY
+   short-symmetric (no side field = side implicit by the per-module pool; diagram-faithful).
+
+5. VERIFICATION
+   525 pytest green on C:\Users\wstot\AppData\Local\Programs\Python\Python312\python.exe
+   (3.12.10). DR-010 verified after EVERY push (git fetch; local == origin) - all 3 repos.
+   The entry-order WS-v2 wire shape verified against the TothBot Exchange-Interface + coding-
+   spec docs (UT-EE-002/003/004 + WS-BA-002/003 + WS-ADD-002): triggers.reference="last" +
+   price_type="static", stp_type cancel_newest, deadline now+5s, time_in_force ioc, reduce_only
+   short-only.
+
+6. CARRY-FORWARD (the next phase - live-I/O wiring + advanced stats; see TB00732 NSI)
+   The organism CORE thinks + acts correctly; REMAINING is connecting it to the live Kraken
+   feed and deepening the learning:
+     - LIVE MAIN LOOP: assemble PipelineInputs from the receive_loop / regime engine / indicator
+       caches; the daily 00:00 UTC regime compute; the per-5m-candle universe sweep calling
+       process_candidate; wire 1H HTF + bbo. (The deepest data-layer integration.)
+     - REST CLIENT edges: GetWebSocketsToken (HMAC-SHA512 signing, WS-AUTH-002), GetOHLCData
+       (daily regime + SSS seeding, exclude response[-1]), GetOpenOrders (reconcile).
+     - FULLER CIATS: the stat suite (Mann-Whitney U / Sharpe / Spearman / CUSUM), PDCA, the
+       Proposal Engine, the Parameter Store (writes the 3 owned params at inter-trade
+       boundaries, AR-072/HR-CI-003), the Regime Library.
+   FLAGS (non-blocking): the short margin SIZING uses sized_usd as the order notional, qty =
+   sized_usd/limit; the leverage_cap_short collateral relation (committed = notional/leverage)
+   is a Gate-7 input the caller computes - confirm the notional-vs-collateral convention when
+   the live sizer lands. Long-standing code flags persist (keepalive WS_PONG_TIMEOUT->
+   PING_TIMEOUT; reconnect "BLOCKED" docstring; RESET_RATE_CEILING no-op; G7 semaphore acquire
+   side unbuilt). Deferred 0500000 polish from TB00729 sec 8 still open (structural SVG drawing;
+   Image7 PA-004 short-sim cells; MINOR prose).
+
+7. CLOSE STATE
+   Code HEAD        d353b26 (525 tests green).
+   Docs HEAD        18b555d (0500000 dv1_250 / 0521001 dv1_60).
+   SessionLogs HEAD <this close: TB00731 SL + TB00732 NSI + TB00733 OCS>.
+   TB00000          v2_100 (unchanged this session - no new seed; the Gate-7 ruling corrected
+                    CHECK semantics, not a value).
+   Governing instructions next = TB00732 NSI. Auto memory (phase2-build) current through d353b26.
+
+============================================================
+END TB00731
+============================================================

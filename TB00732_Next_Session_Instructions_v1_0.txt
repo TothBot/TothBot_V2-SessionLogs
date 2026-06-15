@@ -1,0 +1,111 @@
+DocDCN:     TB00732
+DocTitle:   TB00732_Next_Session_Instructions
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00732_Next_Session_Instructions_v1_0.txt
+DocDate:    06-15-2026
+DocTime:    09:15:12 UTC
+
+============================================================
+TB00732 NSI - WIRE THE ORGANISM TO LIVE DATA + DEEPEN CIATS
+The complete organism CORE (decide -> size -> execute -> log -> learn) is BUILT + tested
+end-to-end for BOTH Long and Short (525 green, Code d353b26). Next = the LIVE-I/O wiring +
+the advanced-stats phase: drive the universe sweep on real Kraken data; add the REST edges;
+build out the fuller CIATS stat suite.
+EXECUTOR: CLAUDE CODE (autonomous, "auto mode on")
+============================================================
+
+NSIs are Claude-authored + informational; Bill's chat directives govern. PLAIN-TEXT choices
+ONLY - the AskUserQuestion / question-box tool is BANNED (TB00000 4.7). And per Bill's TB00731
+ruling: a schema verification or an obvious legacy fix is something to DO automatically, NOT a
+question - build the organism on auto, stop stopping; surface ONLY a genuine design decision.
+
+0. WHY / RHYTHM
+   Build from the 0500000 diagrams (now Long/Short symmetric, dv1_250). Pure/testable units
+   first, I/O at the edges (asyncio.run over fakes; websockets/aiohttp lazy-imported, never at
+   module load). Deliver file by file, FULL pytest on the 3.12 interpreter each slice, surgical
+   staging (no __pycache__), DR-010 post-push. Diagram/Docs edits stay a Claude Code task
+   (surgical, well-formedness-validated). Session close is STANDING (write SL+NSI+OCS at the END).
+
+1. ENTRY / COLD-LOAD + VERIFY (from GitHub HEAD)
+   Read TB00000 (v2_100) + this NSI + the TB00731 Session Log. Also cold-load the auto-memory
+   (phase2-build is current through d353b26 - the fastest orientation to what exists).
+     0500000 dv1_250  - all 10 figures symmetric; Image8 Gate-7 R7 (concentration = capital
+                        fraction, the Bill ruling). Re-verify md5 from a fresh HEAD pull.
+     0521001 dv1_60   - append-only archive (the TB00728 OP records incl. the Gate-7 fix).
+     Docs HEAD        18b555d.
+     SessionLogs HEAD <TB00731/TB00732/TB00733 push>.
+     Code HEAD        d353b26 (525 tests green). Python = C:\Users\wstot\AppData\Local\Programs\
+                      Python\Python312\python.exe (3.12.10); default PATH python is 3.10 - full
+                      path ONLY. Run: python.exe -m pytest -q (expect 525 green).
+
+2. STATE: THE COMPLETE ORGANISM CORE IS BUILT (both sides). What exists now:
+   pipeline/   entry_eligibility (Pre-G1/G1/G2), htf_confirmation (G4), selection_controller
+               (G5), regime_sizer (G6), risk_guard (G7), position_sizer (G8), signal_pipeline
+               (the 8-gate orchestrator), driver (process_candidate conductor). [G3 = regime/
+               taxonomy permitted_side; SSS = regime/sss.]
+   execution/  exit_controller, entry_dispatch (order builders), execution_sizer (MPP),
+               execution_engine (execute_entry G8->dispatch).
+   modules/    trading_module (mod:Long_Module/Short_Module = per-side wallet + order build).
+   exchange/   ws_manager (TWO per-module wallets {LONG,SHORT}; dispatch_entry; the shared data
+               layer + seam + Position Mirror + paper fill/exit detection). ledger
+               (direction-aware). All the S2 data-layer units (sharding/pacing/keepalive/
+               reconnect/receive_loop/private_ws/assembler).
+   recorder/   logger (two-stream membrane, 23-field validation, per-module corpus).
+   ciats/      pool (200-floor + Half-Kelly), ewma_monitor (lambda=0.2 drift).
+   The loop is CLOSED in paper: process_candidate decides+logs+executes into the side wallet;
+   ticker/regime exit closes -> TRADE_CLOSE -> Logger Stream-2 corpus -> CiatsPool.ingest.
+
+3. MISSION - THE LIVE-I/O + ADVANCED-STATS PHASE (Bill chooses sequencing; recommended order)
+   (A) REST CLIENT edges (recommended first - small, self-contained, UNBLOCKS the daily compute
+       + token refresh the main loop needs):
+       - GetWebSocketsToken (HMAC-SHA512 of URIpath + SHA256(nonce + POSTdata) with the base64-
+         decoded secret, WS-AUTH-002; Kraken Spot REST unchanged by the 2025 futures change).
+       - GetOHLCData(interval=5 and 60) for the daily regime compute + the SSS 5-indicator
+         seeding (ALWAYS exclude response[-1], AR-017/HR-WM-013; 700+ candles returned).
+       - GetOpenOrders / GetAccountBalance (reconcile fallbacks). aiohttp lazy-imported; the
+         signing is the pure/testable core, the HTTP call the edge.
+   (B) THE LIVE MAIN LOOP / daily+per-candle orchestrator (the deepest integration - ties the
+       data layer to process_candidate):
+       - Daily 00:00 UTC: GetOHLCData(1440-day equivalent via interval) per pair -> compute_regime
+         -> per-pair regime tag + permitted_side; market_regime = the BTC/USD anchor; AR-036
+         stagger. Seed the 5 SSS indicators + ATR per pair (WARM_UP -> READY).
+       - Per 5m candle close (the system clock): for each READY pair, for each permitted side,
+         ASSEMBLE PipelineInputs from the caches (regime, daily/1H EMAs, the committed 5m
+         closes/volumes, the SC state via wm.consecutive_loss_count/exit_cooldown_at(side), the
+         wallet/committed via the side's TradingModule, the bbo) + the ExecutionContext (sized_usd
+         from the G6/per_trade_size recipe, bbo, mpp_abs_cap_pct, atr_14_entry, cl_ord_id,
+         deadline) -> await process_candidate. Honor HR-WM-012 (no pipeline during reconnect).
+       - 1H ohlc close -> wm.on_htf_ohlc_close (the L1a EC-L1A-001 exit already wired).
+       - Wire the Logger as the on_event sink across wm + the gates; on a close, ingest the
+         TRADE_CLOSE into the right side's CiatsPool.
+   (C) THE FULLER CIATS (the learning depth):
+       - CIATS_Statistical_Engine: Mann-Whitney U, Sharpe, Spearman, CUSUM over the per-module
+         corpus (>= 200 trades). CIATS_PDCA_Engine + CIATS_Proposal_Engine (parameter-change
+         proposals at inter-trade boundaries only, AR-072 / HR-CI-003). CIATS_Parameter_Store
+         (the live owned-parameter snapshot; the sacred 1:1.5 R:R is the one value never tuned).
+         CIATS_Regime_Library (per-regime parameter sets, activate at 600 trades).
+   Recommendation: (A) REST first (unblocks B), then (B) the main loop (makes it actually run on
+   live/paper Kraken data), then (C) the fuller CIATS. Bill's call on sequencing.
+
+4. CARRY-FORWARD FLAGS (non-blocking; from TB00731 sec 6)
+   - Margin sizing convention: confirm sized_usd = order NOTIONAL (qty = sized_usd/limit) and
+     the leverage_cap_short collateral relation (committed = notional/leverage) feeding Gate-7,
+     when the live per-pair sizer lands. (ar:AR-053.)
+   - Long-standing code flags: keepalive WS_PONG_TIMEOUT->PING_TIMEOUT; reconnect "BLOCKED"
+     docstring; private_ws RESET_RATE_CEILING no-op (wire AR-030 maxratecount); G7 BoundedSemaphore
+     ACQUIRE side unbuilt (release wired+guarded). market_regime/signal_params on TRADE_CLOSE are
+     written by the main loop at entry (B).
+   - Deferred 0500000 polish (TB00729 sec 8): structural SVG drawing (2nd CIATS column Image5/6;
+     drawn module boxes Image6 Zone 2); Image7 PA-004 short-sim cells; MINOR prose (AR-034 ASK /
+     AR-065 per-module Kelly / sec-5 cascade / AR-008-vs-AR-011 Context citation).
+
+5. PROVENANCE / SCOPE
+   A CODE build READS 0500000 (symmetric). REST signing constants (nonce/endpoint paths) are
+   wire facts, not seeds. If a genuinely NEW seed value or a genuine DESIGN decision arises,
+   STOP and surface it to Bill in PLAIN TEXT (never the question-box). A schema verification or
+   an obvious legacy correction is NOT a question - do it automatically (Bill ruling TB00731).
+
+============================================================
+END TB00732
+============================================================
