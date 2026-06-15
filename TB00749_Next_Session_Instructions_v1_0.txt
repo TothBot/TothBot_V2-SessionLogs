@@ -1,0 +1,106 @@
+DocDCN:     TB00749
+DocTitle:   TB00749_Next_Session_Instructions
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00749_Next_Session_Instructions_v1_0.txt
+DocDate:    06-15-2026
+DocTime:    23:59:00 UTC
+
+============================================================
+TB00749 NSI - DRIVE THE CIATS PROPOSE/DETECT CADENCE FROM THE RUNNING CLOSE (STAGE PROPOSALS TO BILL IN PRODUCTION)
+The exit path now FEEDS the per-module conductor in the running wm (ingest_close + the HR-CI-003 inbox
+boundary poll, no manual sink call; 831 green, Code 991a404). The remaining tie-in makes each running
+close ALSO drive the cadence - recompute_kelly + scan_drift -> open_pdca - so the conductor STAGES a
+parameter change to Bill in production, completing the PROPOSE/DETECT loop on the organism.
+EXECUTOR: CLAUDE CODE (autonomous, "auto mode on")
+============================================================
+
+NSIs are Claude-authored + informational; Bill's chat directives govern. PLAIN-TEXT choices ONLY - the
+AskUserQuestion / question-box tool is BANNED (TB00000 4.7). Per Bill's standing TB00731 ruling: a
+schema verification or an obvious method/legacy choice is something to DO automatically, NOT a question
+- build the organism on auto; surface ONLY a genuine new-seed value or a genuine design decision, in
+PLAIN TEXT.
+
+NUMBERING (Bill ruling TB00745): the close bundle is SL = this session's number; NSI = the next
+session's number; OCS = the SAME number as the NSI. This session is 749; it closes as TB00749 SL +
+TB00750 NSI + TB00750 OCS.
+
+0. WHY / RHYTHM
+   Build from the 0500000 diagrams (Long/Short symmetric, dv1_250). Pure/testable units first, I/O at
+   the edges (asyncio.run over fakes; websockets/aiohttp lazy). Deliver file by file, FULL pytest on the
+   3.12 interpreter each slice, surgical staging (no __pycache__), DR-010 post-push (git hash-object vs
+   origin/master:path). Diagram/Docs edits stay a Claude Code task. Session close is STANDING (SL+NSI+OCS
+   at the END).
+
+1. ENTRY / COLD-LOAD + VERIFY (from GitHub HEAD)
+   Read TB00000 (v2_100) + this NSI + the TB00748 Session Log. Cold-load the auto-memory (phase2-build is
+   current through 991a404).
+     Code HEAD        991a404 (831 tests green). Python = C:\Users\wstot\AppData\Local\Programs\Python\
+                      Python312\python.exe (3.12.10; default PATH python is 3.10 - full path ONLY). Run:
+                      python.exe -m pytest -q (expect 831 green).
+     Docs HEAD        18b555d - 0500000 dv1_250 / 0521001 dv1_60.
+     SessionLogs HEAD <the TB00748 SL + TB00749 NSI/OCS push>.
+
+2. STATE: the exit path FEEDS the conductor, but the cadence is not yet DRIVEN from the close.
+   pipeline/live_driver.py   make_ciats_learning_sink(logger, module, conductor, *, inbox): on a
+                             TRADE_CLOSE it records to mod:Logger + drives conductor.ingest_close AND
+                             polls the inbox (conductor.on_inter_trade_boundary). It does NOT run
+                             recompute_kelly or scan_drift.
+   exchange/ws_manager.py    per-module exit_controllers (one per wallet); set_ciats_exit_sinks rebinds
+                             each side's controller event sink to the side's ciats_sink (wired by the
+                             assembly). So a running paper close emits its TRADE_CLOSE through the side's
+                             sink automatically.
+   pipeline/operational.py   assemble_operational builds the conductors/sinks/inboxes and hands the
+                             sinks to wm.set_ciats_exit_sinks; exposes conductors / ciats_sinks /
+                             approval_inboxes on OperationalSystem.
+   ciats/conductor.py        recompute_kelly(wallet_balance, current_size) [the 50-trade Half-Kelly
+                             cadence after the 200-trade activation - STAGES the per_trade_size proposal]
+                             and scan_drift(mu, sigma) -> open_pdca(proposal) [the CUSUM/EWMA drift
+                             trigger -> the PDCA cycle that STAGES a candidate] are BUILT + unit-tested
+                             but NOT yet driven by the running close.
+   THE GAP: in production the conductor accumulates (ingest_close) and APPLIES an approved change (the
+   boundary poll), but never STAGES a proposal - recompute_kelly + scan_drift are only called by tests.
+   So Bill is never alerted to a CIATS-proposed change in the running organism.
+
+3. MISSION - DRIVE THE PROPOSE/DETECT CADENCE OFF THE RUNNING CLOSE. Bill's call on order.
+
+   (a) THE KELLY CADENCE AT THE CLOSE. Make the learning sink (or a conductor-driven close hook) run
+       recompute_kelly at each TRADE_CLOSE: the close is the cadence clock (trade_count). The sink needs
+       the side's wallet_balance + the store's current per_trade_size - wire wm.wallet_balance(side) (or
+       pass a balance provider) + conductor.parameter_store.get("per_trade_size_usd") so the recompute
+       has W,R + the wallet. kelly_due gates it to the 200-trade activation + every 50 closes (HR-CI-004
+       / CI-KE-007); a KELLY_NEGATIVE makes NO positive proposal (HR-CI-008). The staged proposal already
+       routes to the mod:Logger operator-alert seam (on_approval) - so Bill is alerted in production.
+
+   (b) THE DRIFT TRIGGER AT THE CLOSE. Make the same close hook run scan_drift (the net-P/L CUSUM lower-
+       arm breach forces an OUT-OF-CYCLE PLAN, HR-CI-007; the optional EWMA sustained divergence is the
+       secondary) and, on a DriftSignal, open_pdca on the candidate change (the real gate/exit replay
+       from TB00747 (c) is the default evaluator). A CHECK pass STAGES the proposal for approval (alerts
+       Bill); a fail / blocked PLAN is surfaced, not staged. Decide the candidate-parameter selection
+       faithfully (the drift is on net-P/L; the diagram's PLAN picks the degrading owned param) - this is
+       an obvious-method choice, DO it; if the diagram leaves the PLAN's parameter-selection genuinely
+       open, STOP and surface it in PLAIN TEXT.
+
+   (c) PROVE IT END-TO-END. Extend the live smoke: on the assembled REAL-wm organism, a run of paper
+       closes through the wired sink reaches the 200-trade activation and STAGES a Half-Kelly proposal
+       (the ApprovalRequested reaches mod:Logger.alerts) with NO manual recompute_kelly; and a degrading
+       net-P/L run drives scan_drift -> open_pdca -> a staged (or surfaced-rejected) PDCA proposal - all
+       off the running close. Then the full loop: stage -> Bill approves into the inbox -> the next close
+       applies it at the boundary.
+
+   Recommendation: (a) the Kelly cadence -> (b) the drift trigger -> (c) the end-to-end proof.
+
+4. PROVENANCE / SCOPE
+   A CODE build READS 0500000 (symmetric). The CIATS cadence/threshold constants (the 200-trade floor,
+   the 50-trade Kelly interval, alpha=0.01, |rho|>0.3, p<0.05, CUSUM k=0.5sigma/h=4sigma, EWMA
+   lambda=0.2) are diagram-named rule constants - transcribed, not new seeds. If a genuinely NEW seed
+   value or a genuine DESIGN decision arises (e.g. an unspecified balance-provider seam or PLAN
+   parameter-selection rule), STOP and surface it in PLAIN TEXT (never the question-box). A schema
+   verification or an obvious method/legacy correction is NOT a question - do it automatically (Bill
+   ruling TB00731). LONG-STANDING FLAGS persist (keepalive PING_TIMEOUT; reconnect BLOCKED docstring; G7
+   semaphore ACQUIRE unbuilt; private_ws RESET_RATE_CEILING no-op). A fuller non-regime gating DO replay
+   waits on the contract:TRADE_CLOSE signal_params producer (today seed-then-correct).
+
+============================================================
+END TB00749
+============================================================

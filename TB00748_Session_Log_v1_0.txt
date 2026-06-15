@@ -1,0 +1,135 @@
+DocDCN:     TB00748
+DocTitle:   TB00748_Session_Log
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00748_Session_Log_v1_0.txt
+DocDate:    06-15-2026
+DocTime:    23:59:00 UTC
+
+============================================================
+TB00748 SESSION LOG
+EMIT THE EXIT PATH THROUGH THE PER-MODULE CIATS SINKS - CLOSE THE LEARNING/BOUNDARY LOOP IN THE RUNNING WM
+EXECUTOR: CLAUDE CODE (autonomous; Bill cold-start "auto mode, build the organism, stop stopping")
+============================================================
+
+0. NUMBERING NOTE (Bill ruling TB00745, standing)
+   The close bundle numbers as: SL = THIS session's number; NSI = the NEXT session's number; OCS =
+   the SAME number as the NSI. This session (748, governed by the TB00748 NSI) closes as TB00748 SL +
+   TB00749 NSI + TB00749 OCS.
+
+1. MISSION / CONTEXT
+   Continued from the TB00747 close (the CIATS brain WIRED into the organism - assembled + backing the
+   gates' per-cycle snapshot LIVE + the HR-CI-011 approval/boundary edges + the real DO gate/exit
+   replay; 821 green, Code 03a0a0c). The TB00748 NSI mission: the remaining tie-in - make the RUNNING
+   mod:WS_Manager emit each TRADE_CLOSE THROUGH the side's ciats_sink so the learning close + the
+   HR-CI-003 inter-trade boundary poll fire in production WITHOUT a manual sink call. Bill's cold-start
+   governed: run the recommended order (a) per-module exit emission -> (b) the assembly tie-in -> (c)
+   the end-to-end proof. Executed all three on auto. 3 slices, each its own commit + FULL pytest on
+   3.12.10 + DR-010. 821 -> 831 green. NO new seed (per-module Exit Controllers are already the diagram
+   shape - exit_controller.py is documented "one per module wallet"; the TRADE_CLOSE record carries no
+   side field, so the partition IS the emitting wallet - pure code wiring). NO diagram edit. Docs
+   UNCHANGED at 18b555d. TB00000 UNCHANGED v2_100.
+
+   COLD-LOAD VERIFIED before working: Code HEAD 03a0a0c (821 green), Docs 18b555d (0500000 dv1_250 /
+   0521001 dv1_60), SessionLogs f99aec0 (TB00747 SL + TB00748 NSI/OCS). Ran pytest on the 3.12.10
+   interpreter by full path - 821 green, matched.
+
+2. BILL DIRECTIVES (chat-turn, this session)
+   (1) The cold-start: "auto mode, build the organism, stop stopping; question-box BANNED; surface only
+       a genuine new seed or design decision in plain text; diagram/Docs edits in Claude Code (DR-010);
+       session close standing." Mission = the TB00748 NSI (a)->(b)->(c), Claude's recommended order.
+
+3. WHAT WAS BUILT (Code: 3 commits 55171cf -> 955994a -> 991a404; 821 -> 831 green on 3.12.10; DR-010
+   verified against origin/master on EVERY push. Docs UNCHANGED at 18b555d. TB00000 UNCHANGED v2_100 -
+   no new seed.)
+
+   DESIGN CHOICE (done automatically per TB00731 - an obvious-method choice the NSI told me to DO, not
+   ask): the NSI offered two faithful shapes - (i) a per-module mod:Exit_Controller (one per wallet) or
+   (ii) one Exit_Controller with a side-tagged emit. Chose (i): the diagrams already carry it -
+   exit_controller.py's own docstring states "One per module wallet" and the close engine reads the
+   side off the position; the TRADE_CLOSE record has no side field (the partition is the emitting
+   wallet). One controller per side is the diagram-faithful shape and keeps the close engine pure.
+
+   (a) 55171cf  PER-MODULE EXIT EMISSION. exchange/ws_manager.py now builds ONE mod:Exit_Controller per
+       module wallet (self.exit_controllers = {LONG, SHORT}) instead of a single untagged controller.
+       The two paper close drivers (_drive_paper_exit on the ticker-bbo L2/L3 detection +
+       _drive_regime_exit on the L1a regime reversal) route to self._exit_controller_for(position.side)
+       - the EMITTING side's controller. NEW wm.set_ciats_exit_sinks(sinks) rebinds each side's
+       controller event sink to that side's CIATS learning sink (the per-module membrane), so a
+       TRADE_CLOSE emits THROUGH the side's ciats_sink (conductor.ingest_close + the HR-CI-003 inbox
+       boundary poll + mod:Logger Stream-1/Stream-2 with the module tag). execution/exit_controller.py
+       gains set_event_sink (the rebind seam) - the controller stays a pure close engine. Back-compat:
+       a wm.exit_controller property returns the LONG/default controller (mirrors the ledger /
+       spot_usd_balance default-wallet accessors); UNTIL the sinks are wired each controller keeps the
+       WSManager general on_event, so the close path is unchanged by default and the general telemetry
+       still carries every NON-close event (PaperMaeDetected / PaperRegimeExitDetected /
+       SelectionStateUpdated / TickerTriggerSwitched / L1aExitHeld / RegimeExitNoQuote). +6 tests
+       (821 -> 827).
+
+   (b) 955994a  THE ASSEMBLY TIE-IN. pipeline/operational.assemble_operational now hands the per-side
+       ciats_sinks it builds (assemble_ciats_modules) to the injected wm's per-module Exit Controllers
+       via wm.set_ciats_exit_sinks(ciats_sinks), right after the conductors/sinks are built. This
+       resolves the construction-order seam cleanly: the wm is INJECTED (built before this assembly),
+       the conductors/sinks are built INSIDE assemble_operational - so the assembly builds the sinks and
+       hands them to the wm. GUARDED via getattr(wm, "set_ciats_exit_sinks", None): a wm that does not
+       expose the surface (a lightweight test stand-in / a non-paper wm) is left untouched, not an
+       error. operational.py still owns construction order only - no new policy. +2 tests (827 -> 829).
+
+   (c) 991a404  THE END-TO-END PROOF. tests/test_live_smoke.py extended with a REAL WSManager (not the
+       decide-size stand-in) assembled by assemble_operational, so the exit path is wired end-to-end. A
+       real ticker-bbo adverse tick (bid 57000 -> L2 MAE 3000 >= atr 2000 * mae_mult 1.5) drives the
+       per-module close path: a schema-valid 23-field TRADE_CLOSE flows THROUGH the LONG module's wired
+       ciats_sink into that side's conductor - trade_count++ (the learning close), the Stream-2 corpus
+       grows, the SHORT loop stays untouched (per-module) - with NO manual sink call. A second test
+       proves the HR-CI-003 boundary end-to-end: a staged Half-Kelly proposal (200-trade activation)
+       that Bill approves into the side's inbox is APPLIED by the running paper exit close (the confirmed
+       inter-trade boundary the wired sink polls), per_trade_size_usd written at the real close - never
+       auto-applied, never a manual call. +2 tests (829 -> 831).
+
+4. STATE AT CLOSE - THE EXIT PATH FEEDS THE CIATS BRAIN IN THE RUNNING ORGANISM
+   The running mod:WS_Manager now emits each paper TRADE_CLOSE THROUGH the EMITTING side's ciats_sink:
+   one mod:Exit_Controller per wallet, routed by position.side, each wired (by the assembly) to that
+   side's CIATS learning sink. So in the assembled organism a real exit closes the full per-module loop
+   automatically - conductor.ingest_close (pool + the net-P/L drift series + the asset_regime bucket) +
+   the HR-CI-003 inter-trade-boundary inbox poll (a Bill-approved change applied at the confirmed close)
+   + mod:Logger Stream-1 + the side's Stream-2 corpus - with no manual sink call. The CIATS brain is
+   assembled, backing the gates' per-cycle snapshot LIVE, alerting Bill on a staged change, applying an
+   approved change at the boundary, and now FED by the live exit path. Everything stays PROPOSE/DETECT
+   only.
+
+5. VERIFICATION
+   831 pytest green on C:\Users\wstot\AppData\Local\Programs\Python\Python312\python.exe (3.12.10):
+   821 (cold-load) -> 827 (a, +6) -> 829 (b, +2) -> 831 (c, +2). DR-010 verified after EVERY push via
+   git hash-object vs origin/master:path: Code 55171cf -> 955994a -> 991a404, all OK. The default
+   (un-wired) close path + the existing per-module wallet/SC tests regressed nothing. Docs UNCHANGED at
+   18b555d. TB00000 UNCHANGED v2_100.
+
+6. CARRY-FORWARD (see TB00749 NSI)
+   The proposal/detect CADENCE is not yet DRIVEN from the running close: the wired sink drives
+   ingest_close + the boundary poll, but recompute_kelly (the 50-trade Half-Kelly cadence) + scan_drift
+   (the CUSUM out-of-cycle PLAN) + open_pdca (the drift-triggered PDCA) are NOT yet run at each close -
+   so the conductor accumulates and applies, but does not yet STAGE a proposal to Bill in production
+   (the smoke staged it via an explicit recompute_kelly). The next tie-in: drive the cadence off the
+   close (the learning sink runs recompute_kelly with wm.wallet_balance(side) + the store's current
+   per_trade_size, and scan_drift -> open_pdca on a drift signal), so the full PROPOSE/DETECT loop runs
+   on the organism. Then the producer-sourced TRADE_CLOSE fields (entry_timestamp_utc /
+   hold_candle_count / market_regime / signal_params - entry-side producers; a max-over-life MAE
+   tracker) and the fuller non-regime gating DO replay once contract:TRADE_CLOSE signal_params lands
+   (today seed-then-correct). LONG-STANDING FLAGS persist: keepalive WS_PONG_TIMEOUT -> PING_TIMEOUT;
+   reconnect "BLOCKED" docstring; G7 BoundedSemaphore ACQUIRE side unbuilt (mod:Risk_Engine; the sweep
+   passes semaphore_locked=False FREE); private_ws RESET_RATE_CEILING no-op (the AR-030 maxratecount
+   unit).
+
+7. CLOSE STATE
+   Code HEAD        991a404 (831 tests green; exchange/ws_manager.py + execution/exit_controller.py +
+                    pipeline/operational.py [per-module Exit Controllers + the set_ciats_exit_sinks tie-
+                    in]; tests/test_ws_manager.py + test_operational_ciats.py + test_live_smoke.py
+                    updated).
+   Docs HEAD        18b555d (0500000 dv1_250 / 0521001 dv1_60 - UNCHANGED).
+   SessionLogs HEAD <this close: TB00748 SL + TB00749 NSI + TB00749 OCS>.
+   TB00000          v2_100 (unchanged - no new seed).
+   Governing instructions next = TB00749 NSI. Auto memory (phase2-build) updated through 991a404.
+
+============================================================
+END TB00748
+============================================================
