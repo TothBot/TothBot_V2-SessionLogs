@@ -1,0 +1,143 @@
+DocDCN:     TB00746
+DocTitle:   TB00746_Session_Log
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00746_Session_Log_v1_0.txt
+DocDate:    06-15-2026
+DocTime:    23:59:00 UTC
+
+============================================================
+TB00746 SESSION LOG
+DRIVE THE CIATS BRAIN ON THE ORGANISM - THE CONDUCTOR + THE SNAPSHOT READ + THE LIVE SMOKE
+EXECUTOR: CLAUDE CODE (autonomous; Bill cold-start "auto mode, build the organism, stop stopping")
+============================================================
+
+0. NUMBERING NOTE (Bill ruling TB00745, standing)
+   The close bundle numbers as: SL = THIS session's number; NSI = the NEXT session's number; OCS =
+   the SAME number as the NSI. This session (746, governed by the TB00746 NSI) closes as TB00746 SL +
+   TB00747 NSI + TB00747 OCS.
+
+1. MISSION / CONTEXT
+   Continued from the TB00745 close (the full per-module CIATS brain built as PURE units + OPS-1/OPS-2;
+   753 green, Code 1852cc6). The TB00746 NSI mission: the remaining ORCHESTRATION that drives the brain
+   on the running organism. Bill's cold-start governed: run the recommended order (a) the CIATS
+   conductor -> (b) the Parameter_Store_Snapshot read into the pipeline -> (c) a live end-to-end smoke.
+   Executed all three on auto. 3 slices, each its own commit + FULL pytest on 3.12.10 + DR-010.
+   753 -> 788 green. NO new seed (every CIATS threshold is a diagram-named rule constant), NO diagram
+   edit (every figure code-complete). Docs UNCHANGED at 18b555d. TB00000 UNCHANGED v2_100.
+
+   COLD-LOAD VERIFIED before working: Code HEAD 1852cc6 (753 green), Docs 18b555d (0500000 dv1_250 /
+   0521001 dv1_60), SessionLogs 403eaf3 (TB00745 SL + TB00746 NSI/OCS). Ran pytest on the 3.12.10
+   interpreter by full path - 753 green, matched.
+
+2. BILL DIRECTIVES (chat-turn, this session)
+   (1) The cold-start: "auto mode, build the organism, stop stopping; question-box BANNED; surface only
+       a genuine new seed or design decision in plain text; diagram/Docs edits in Claude Code (DR-010);
+       session close standing." Mission = the TB00746 NSI (a)->(b)->(c), Claude's recommended order.
+
+3. WHAT WAS BUILT (Code: 3 commits 1852cc6 -> 3ccec26; 753 -> 788 green on 3.12.10; DR-010 verified
+   against origin/master on EVERY push. Docs UNCHANGED at 18b555d. TB00000 UNCHANGED v2_100 - no new seed.)
+
+   (a) 3a9cba0  THE CIATS CONDUCTOR `ciats/conductor.py` [NEW] - the per-module learning loop that
+       TIES the PURE CIATS units onto the organism off the module's Stream-2 corpus slice (one
+       CiatsConductor per wallet, like every other CIATS unit). Composes the pool + proposal/PDCA
+       engines + parameter store + regime library:
+         - ingest_close: accumulate one TRADE_CLOSE into the pool + the asset_regime bucket + the
+           per-trade net-P/L series the drift detectors read (the learning-loop close).
+         - recompute_kelly: at the 50-trade Half-Kelly cadence (ProposalEngine.kelly_due) emit
+           KELLY_UPDATE + STAGE the per_trade_size proposal for approval, or KELLY_NEGATIVE [CRITICAL]
+           (HR-CI-008 - no positive sizing proposal).
+         - scan_drift: the PDCA PLAN trigger - a cusum_lower LOWER-arm breach on the net-P/L series
+           (HR-CI-007 forces an OUT-OF-CYCLE PLAN) or an optional EWMA sustained divergence.
+         - open_pdca: PLAN (200-trade floor / sacred-R:R gated) -> DO (shadow_cohorts replays the
+           injected counterfactual `evaluator` over THIS corpus -> a candidate vs baseline cohort) ->
+           CHECK (the absolute Mann-Whitney gate); on a pass STAGE for the HR-CI-011 approval surface.
+           NEVER auto-applies.
+         - submit_approval: on Bill approval at a confirmed inter-trade boundary apply the staged change
+           to the Parameter Store (which owns the HR-CI-005 50-trade interval) + log the evolution
+           entry; a failed gate keeps the request retryable.
+         - disallowed_regimes: the Regime Library's protective param:disallowed_regimes read for Gate-3.
+       The two injected edges are the approval surface (`on_approval`, the mod:Logger HR-LG-009 SMTP
+       alert seam) + the inter-trade-boundary/approval signals (passed to submit_approval). The DO
+       shadow-replay's per-trade counterfactual is the injected `evaluator` (the seed-then-correct
+       discipline; a fuller build replaces it with a real gate/exit replay). +19 tests.
+       DESIGN NOTE (done automatically per TB00731, surfaced here for Bill's awareness, NOT a stop):
+       disallowed_regimes is surfaced as a DERIVED PROTECTIVE READ - the Regime Library is the authority
+       for the block list (the diagram: "produces a disallowed-regime list consumed by gate:G3") - it is
+       NOT routed through the HR-CI-011 approval / 50-trade-interval machinery that the Kelly/PDCA TUNING
+       proposals are. Gate-3 reads the live protective list via the part-(b) snapshot.
+
+   (b) b200bbb  THE PARAMETER_STORE_SNAPSHOT READ INTO THE PIPELINE (contract:CI-IF-003).
+       `pipeline/parameter_snapshot.py` [NEW] - CycleParameters, a FROZEN per-cycle CIATS view:
+       .get(name) resolves the store-owned value if CIATS has written it else the registry SEED;
+       .regime_disallowed(regime) is the param:disallowed_regimes read; the sacred 1:1.5 R:R is NEVER
+       served (it raises - hardcoded in G8). build_cycle_parameters(store, disallowed_regimes) takes ONE
+       frozen store.snapshot() at cycle start. run_pipeline now threads `params` (None -> a seed-only
+       view, behavior-identical to the pre-CIATS pipeline): G2 reads the owned min_volume_usd_daily, G5
+       the sc_* thresholds, G7 the drawdown/concentration/exposure limits, G8 gains mae_mult +
+       emergency_sl_mult overrides, plus a NEW G3 disallowed_regimes block. The sweep's LiveProviders
+       gains cycle_parameters(side) - the per-module snapshot provider; sweep_pair takes ONE frozen read
+       per side per cycle and threads it through process_candidate. The seed-only default path did not
+       regress any existing test. +12 tests.
+       CARRY-FORWARD: the cycle_parameters provider defaults to seed-only; BACKING it with the live
+       per-module ParameterStore (so a CIATS-tuned value genuinely flows in production) requires
+       assembling the conductor/store into operational.py - the next-session wiring (see TB00747 NSI).
+
+   (c) 3ccec26  THE LIVE END-TO-END SMOKE `tests/test_live_smoke.py` [NEW] - drives the ASSEMBLED
+       organism (assemble_operational, PAPER) over a fake public-WS frame stream and proves the capstone
+       runs end-to-end (operational.py was unit-wired but never run): an INSTRUMENT snapshot + TICKER
+       frame flow through the assembled shard dispatch into the shared caches; a 5m close (the
+       contract:OHLC_5m_System_Clock tick) drives the whole 8-gate pipeline through the assembled driver
+       and DISPATCHES the entry into the LONG module wallet; a 1H close drives the HTF maintenance
+       (EC-L1A-001); a schema-valid 23-field TRADE_CLOSE closes the Logger Stream-2 corpus + the
+       CiatsPool + the CiatsConductor per-module loop. DETERMINISM: the crafted daily + 5m REST series
+       classify TRENDING_POS (long permitted) with a pullback-in-uptrend passing long SSS (RSI in
+       (30,50), EMA9>EMA21, closing volume spike), and the candidate clears the sacred 1:1.5 R:R floor;
+       the two CIATS A1-floor inputs (expected_reward DEC-124, mpp DEC-128) are put() into their stores
+       as known values after the load seeding (the store IS the CIATS-owned source - this fixes the gate
+       input, it does not bypass any wiring). +4 tests. NO production code changed - the smoke exercises
+       the existing assembled organism.
+
+4. STATE AT CLOSE - THE CIATS BRAIN NOW RUNS ON THE ORGANISM (as units + a driving conductor + a frozen
+   per-cycle snapshot read + a proven end-to-end frame-stream run)
+   The per-module learning loop is now DRIVEN, not just built: the conductor ingests the Stream-2 corpus,
+   recomputes Half-Kelly on cadence, opens a PDCA cycle on a CUSUM drift signal, routes a CHECK-pass to
+   the HR-CI-011 Bill-approval surface, applies an approved change to the Parameter Store at an
+   inter-trade boundary, and surfaces disallowed_regimes to Gate-3. The pipeline reads ONE frozen
+   per-cycle Parameter_Store_Snapshot (CI-IF-003 no-drift), with the sacred 1:1.5 R:R still hardcoded in
+   G8. The live smoke proves the whole assembled organism runs a full decide->size->dispatch tick + the
+   TRADE_CLOSE learning close on a frame stream, paper mode. Everything is PROPOSE/DETECT only - no
+   parameter is written without an approved submit_approval at a boundary.
+
+5. VERIFICATION
+   788 pytest green on C:\Users\wstot\AppData\Local\Programs\Python\Python312\python.exe (3.12.10):
+   753 (cold-load) -> 772 (a, +19) -> 784 (b, +12) -> 788 (c, +4). DR-010 verified after EVERY push via
+   git hash-object vs origin/master:path: Code 3a9cba0 -> b200bbb -> 3ccec26, all OK. The seed-only
+   snapshot path + the new gate override threading regressed no existing test. The smoke's full
+   decide->size->dispatch + TRADE_CLOSE close was confirmed running against the real assembled organism.
+   Docs UNCHANGED at 18b555d. TB00000 UNCHANGED v2_100.
+
+6. CARRY-FORWARD (see TB00747 NSI)
+   The conductor + snapshot read exist as units; the remaining wiring is to ASSEMBLE them into the
+   running organism: construct the per-module ParameterStore + CiatsConductor in operational.py and BACK
+   the sweep's cycle_parameters provider with the live store (so CIATS-tuned values flow into the gates
+   in production, not just seed-only); wire the conductor's TRADE_CLOSE ingest off the Logger Stream-2
+   sink (make_ciats_sink) + its on_approval edge to the real SMTP alert seam + the inter-trade-boundary
+   signal off the exit path; and build the DO shadow-evaluation's REAL gate/exit corpus replay (today an
+   injected counterfactual evaluator). LONG-STANDING FLAGS persist: keepalive WS_PONG_TIMEOUT ->
+   PING_TIMEOUT; reconnect "BLOCKED" docstring; G7 BoundedSemaphore ACQUIRE side unbuilt (sweep passes
+   semaphore_locked=False FREE); private_ws RESET_RATE_CEILING no-op (the AR-030 maxratecount unit).
+
+7. CLOSE STATE
+   Code HEAD        3ccec26 (788 tests green; +ciats/conductor.py, +pipeline/parameter_snapshot.py,
+                    pipeline/position_sizer.py + signal_pipeline.py + driver.py + sweep.py [snapshot
+                    threading], +tests/test_ciats_conductor.py + test_parameter_snapshot.py +
+                    test_live_smoke.py).
+   Docs HEAD        18b555d (0500000 dv1_250 / 0521001 dv1_60 - UNCHANGED).
+   SessionLogs HEAD <this close: TB00746 SL + TB00747 NSI + TB00747 OCS>.
+   TB00000          v2_100 (unchanged - no new seed).
+   Governing instructions next = TB00747 NSI. Auto memory (phase2-build) updated through 3ccec26.
+
+============================================================
+END TB00746
+============================================================

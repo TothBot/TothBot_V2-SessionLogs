@@ -1,0 +1,96 @@
+DocDCN:     TB00747
+DocTitle:   TB00747_Next_Session_Instructions
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00747_Next_Session_Instructions_v1_0.txt
+DocDate:    06-15-2026
+DocTime:    23:59:00 UTC
+
+============================================================
+TB00747 NSI - ASSEMBLE THE CONDUCTOR INTO THE ORGANISM + THE APPROVAL/BOUNDARY EDGES + THE REAL REPLAY
+The CIATS brain is built AS UNITS and AS A DRIVING CONDUCTOR + a frozen snapshot read (788 green, Code
+3ccec26); the remaining work WIRES them into the running assemble_operational organism in production.
+EXECUTOR: CLAUDE CODE (autonomous, "auto mode on")
+============================================================
+
+NSIs are Claude-authored + informational; Bill's chat directives govern. PLAIN-TEXT choices ONLY - the
+AskUserQuestion / question-box tool is BANNED (TB00000 4.7). Per Bill's standing TB00731 ruling: a
+schema verification or an obvious method/legacy choice is something to DO automatically, NOT a question
+- build the organism on auto; surface ONLY a genuine new-seed value or a genuine design decision, in
+PLAIN TEXT.
+
+NUMBERING (Bill ruling TB00745): the close bundle is SL = this session's number; NSI = the next
+session's number; OCS = the SAME number as the NSI. This session is 747; it closes as TB00747 SL +
+TB00748 NSI + TB00748 OCS.
+
+0. WHY / RHYTHM
+   Build from the 0500000 diagrams (Long/Short symmetric, dv1_250). Pure/testable units first, I/O at
+   the edges (asyncio.run over fakes; websockets/aiohttp lazy). Deliver file by file, FULL pytest on the
+   3.12 interpreter each slice, surgical staging (no __pycache__), DR-010 post-push (git hash-object vs
+   origin/master:path). Diagram/Docs edits stay a Claude Code task. Session close is STANDING (SL+NSI+OCS
+   at the END).
+
+1. ENTRY / COLD-LOAD + VERIFY (from GitHub HEAD)
+   Read TB00000 (v2_100) + this NSI + the TB00746 Session Log. Cold-load the auto-memory (phase2-build is
+   current through 3ccec26).
+     Code HEAD        3ccec26 (788 tests green). Python = C:\Users\wstot\AppData\Local\Programs\Python\
+                      Python312\python.exe (3.12.10; default PATH python is 3.10 - full path ONLY). Run:
+                      python.exe -m pytest -q (expect 788 green).
+     Docs HEAD        18b555d - 0500000 dv1_250 / 0521001 dv1_60.
+     SessionLogs HEAD <the TB00746 SL + TB00747 NSI/OCS push>.
+
+2. STATE: the per-module CIATS brain is built as UNITS + a DRIVING CONDUCTOR + a frozen snapshot read.
+   ciats/conductor.py        CiatsConductor: ingest_close / recompute_kelly (50-trade cadence) /
+                             scan_drift (cusum_lower breach) / open_pdca (PLAN-DO[shadow replay]-CHECK) /
+                             submit_approval (boundary apply) / disallowed_regimes (Gate-3 read). Injected
+                             edges: on_approval (the SMTP seam) + the boundary/approval signals + the DO
+                             counterfactual evaluator. PROPOSE/DETECT only.
+   pipeline/parameter_snapshot.py  CycleParameters: the FROZEN per-cycle CI-IF-003 read (store-owned
+                             else seed; sacred R:R never served; disallowed_regimes); build_cycle_
+                             parameters(store, disallowed_regimes). run_pipeline threads `params`; the
+                             gates read it; sweep.LiveProviders.cycle_parameters(side) is the per-module
+                             provider (TODAY defaulting to seed-only - not yet store-backed).
+   pipeline/operational.py   assemble_operational: AR-049 cold start; OPS-1 self-seeds the CIATS seed
+                             stores at load; OPS-2 builds the live private connection. Does NOT yet build
+                             the per-module ParameterStore / CiatsConductor, nor back cycle_parameters.
+
+3. MISSION - WIRE THE BRAIN INTO THE RUNNING ORGANISM. Bill's call on order.
+
+   (a) ASSEMBLE THE CONDUCTOR + THE PER-MODULE PARAMETER STORE INTO assemble_operational, AND BACK THE
+       SNAPSHOT PROVIDER. Construct one ParameterStore + one CiatsConductor per side (Long/Short) in the
+       cold-start; back the sweep's LiveProviders.cycle_parameters(side) with build_cycle_parameters(the
+       side's store, the side's conductor.disallowed_regimes()) so a CIATS-tuned value (and the protective
+       disallowed_regimes) genuinely FLOWS into the gates per cycle - the part-(b) read is live, not
+       seed-only. Wire the conductor's TRADE_CLOSE ingest off the Logger Stream-2 sink (compose with
+       make_ciats_sink so a closed trade reaches conductor.ingest_close, per module). Frozen per cycle
+       (CI-IF-003); the sacred R:R stays hardcoded.
+
+   (b) THE HR-CI-011 APPROVAL + INTER-TRADE-BOUNDARY EDGES. Wire the conductor's on_approval edge to the
+       real mod:Logger HR-LG-009 alert seam (the SMTP operator surface - the ApprovalRequested becomes a
+       routed CRITICAL/HIGH alert) and the inter-trade-boundary signal off the exit path (a confirmed
+       close with no order pending, HR-CI-003) so submit_approval can apply an approved change at the
+       right moment. The approval RETURN (Bill's yes/no) is an injected operator edge; model it as the
+       organism's approval inbox the conductor polls at each boundary. NEVER auto-apply.
+
+   (c) THE DO SHADOW-EVALUATION REAL CORPUS REPLAY. Replace the injected counterfactual `evaluator` with a
+       PURE gate/exit replay over the Stream-2 records: re-evaluate each historical trade under the
+       candidate parameter (a gating change INCLUDES/EXCLUDES the trade; a sizing/exit change SCALES the
+       outcome) to produce the candidate cohort the CHECK gate ranks against the realized baseline. The
+       same seed-then-correct discipline as the estimators; compose the existing gate/exit units.
+
+   Recommendation: (a) the assembly+backing -> (b) the approval/boundary edges -> (c) the real replay.
+     Bill may reorder (e.g. (c) first as a pure unit, or (b) first to stand up the operator surface).
+
+4. PROVENANCE / SCOPE
+   A CODE build READS 0500000 (symmetric). REST/WS wire facts are NOT seeds. The CIATS thresholds
+   (alpha=0.01, |rho|>0.3, p<0.05, CUSUM k=0.5sigma/h=4sigma, EWMA lambda=0.2, the 200/50/600-trade
+   counts) are diagram-named rule constants - transcribed, not new seeds. The historical estimators
+   COMPUTE the sec-8 seed VALUES from data (CIATS owning the value, not a literal). If a genuinely NEW
+   seed value or a genuine DESIGN decision arises, STOP and surface it in PLAIN TEXT (never the
+   question-box). A schema verification or an obvious method/legacy correction is NOT a question - do it
+   automatically (Bill ruling TB00731). LONG-STANDING FLAGS persist (keepalive PING_TIMEOUT; reconnect
+   BLOCKED docstring; G7 semaphore ACQUIRE unbuilt; private_ws RESET_RATE_CEILING no-op).
+
+============================================================
+END TB00747
+============================================================
