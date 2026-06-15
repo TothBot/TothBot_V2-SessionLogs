@@ -1,0 +1,270 @@
+DocDCN:     TB00728
+DocTitle:   TB00728_Long_Short_Parity_Gap_Register
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00728_Long_Short_Parity_Gap_Register_v1_0.txt
+DocDate:    06-15-2026
+DocTime:    04:16:13 UTC
+
+============================================================
+TB00728 LONG/SHORT PARITY + CODE-COMPLETENESS GAP REGISTER
+0500000 dv1_243 full-diagram + tothbot code audit (5 parallel passes)
+Bill directive: make the diagrams correct, code-complete, and Long/Short SYMMETRIC,
+then build the code to match (incl. the Short_Module). DIAGRAMS GOVERN.
+============================================================
+
+0. HOW TO USE THIS REGISTER
+   Findings are tagged SEVERITY [BLOCKER | MODERATE | MINOR] and DISP [AUTO | DECISION].
+   AUTO = I fix it autonomously (symmetry/completeness with NO new numeric value - the
+   value either already exists in TB00000 sec 8 / registry.py, or it is a derivable
+   mirror, or it is pure wording/drawing). DECISION = blocked on a Bill ruling (a genuine
+   new value or a policy choice I must not invent). Only TWO DECISION items exist; both are
+   surfaced to Bill before the dependent edits. Everything else is AUTO.
+
+   THE UNIFYING DEFECT: the parallel-module / per-module-CIATS identity (each of Long_Module
+   + Short_Module owns its universe, gates, wallet, CIATS instance + statistical pool, sizing,
+   drawdown halts; they share ONLY the WS data layer) is fully + symmetrically specified in
+   the PROSE (sec 9 registry, AR-009/050/051/053/067/072/073) and the Image7 startup-build
+   figure - but it was NEVER propagated into (a) the system figures Image5/Image6/Context,
+   (b) the regime grid + entry gates Image2/Image4, (c) the order/price/stop layer Image1/3/9,
+   (d) the sec-12.4 paper ledger. Those surfaces still render ONE CIATS brain, ONE pool, ONE
+   long-only spot wallet, and an entry/exit path that is bid/sell/spot-only - which makes the
+   SHORT side presently NON-EXECUTABLE from the diagrams alone.
+
+============================================================
+1. DECISIONS NEEDED FROM BILL (the only two; everything else is AUTO)
+============================================================
+
+   DECISION A - SHORT MARGIN BORROW / ROLLOVER FEE.
+     Shorts run on Kraken MARGIN (ar:AR-009). A margin short pays an opening margin fee +
+     a rollover fee (per ~4h held) that a spot LONG never pays. This cost feeds short net
+     P&L and therefore the SACRED net 1:1.5 R:R floor and the paper synthetic ledger
+     (PA-005 paper=live parity). It is in NO figure and NO registry seed today.
+     -> Bill must rule: model it now (as a CIATS-owned seed, starting value = Kraken's
+        published margin open + rollover rates, refined from paper - the DEC-124 seed-then-
+        correct pattern), OR defer it (build short without the borrow leg, flag for pre-live).
+     Affects: Image1 FEE block, Image9 compute:net_loss, sec-12.4 ledger, Gate-8 R:R,
+     Image7 PA-004(3). NEW SEED if modeled: margin_open_fee_pct + margin_rollover_fee_pct.
+
+   DECISION B - SHORT PARTICIPATION IN THE NON-DIRECTIONAL REGIMES.
+     The six-regime grid: TRENDING_POS -> Long; TRENDING_NEG -> Short; NON_DIR_ELEVATED ->
+     both blocked (whipsaw, symmetric - no decision). The open cell is NON_DIR_NORMAL
+     (regime 3): today the code/taxonomy permits LONG at half-size (0.5) and does NOT permit
+     short. Symmetric alternative = Short also trades NON_DIR_NORMAL at half-size.
+     -> Bill must rule: (i) Short trades confirmed downtrends ONLY (TRENDING_NEG), leaving
+        NON_DIR_NORMAL long-only (current code); OR (ii) symmetric - Short also trades
+        NON_DIR_NORMAL at half-size (mirror of Long). No new numeric value either way (0.5
+        already seeded); this is a strategy/risk policy choice only Bill can make.
+     Affects: Image4 regime-3 cell, gate:G3/G4/G6, sec-5 prose, taxonomy.py PROFILES.
+
+============================================================
+2. ADOPTED DEFAULTS (AUTO - derivable, already-seeded, or pure mirror; no Bill input)
+============================================================
+   - leverage_cap_short = 3x: already a Bill-ratified seed (TB00000 sec 8). Draw it into the
+     order/sizing/risk path; short collateral = (qty*price)/leverage_cap_short*(1+taker) per
+     AR-053. No new value.
+   - Short size multiplier in TRENDING_NEG_NORMAL / _ELEVATED = 1.0 (full): the clean mirror
+     of Long's TRENDING_POS = 1.0, already in taxonomy.py. Make explicit in Image4 + G6.
+   - Short universe = Long universe INTERSECT {marginable == TRUE}: derivable from the
+     instrument-channel marginable flag (AR-073). No new value.
+   - evt:TRADE_CLOSE canonical schema gains an explicit top-level side field (LONG|SHORT):
+     required to compute the P&L sign and to partition the CIATS pools per module. Derivable
+     best-practice; reconcile identically in Image3/Image5/Image6 schema enumerations.
+   - Short min_volume_usd_daily, short SSS bounds (rsi_short 70/50), short wallet ($5,000),
+     short expected_reward run-to-reversal seed: all already seeded / per-module-instantiated
+     / CIATS-from-data. Adopt same as Long unless Bill later differs.
+   - AR-052 reconciled to the per-wallet form already mandated by AR-048 + sec 9 (two wallet
+     baselines, two independent halt machines). Mismatch fix, no new value.
+
+============================================================
+3. FINDINGS BY SURFACE
+============================================================
+
+  --- Image2 Trading Pipeline (8-gate entry) ---  [bid/sell/long-primary; short path dead]
+  P2-1  G3_Regime_Filter q1_do hardcodes TRENDING_NEG -> unconditional REGIME_BLOCKED, killing
+        every short candidate. Must split by side: Long blocked / Short permitted in TRENDING_NEG;
+        Short blocked in TRENDING_POS; both blocked NON_DIR_ELEVATED; emit permitted_side tag.
+        BLOCKER. AUTO (cell 3 short-permit pends DECISION B).
+  P2-2  G3 emits no permitted_side / regime_direction tag for downstream gates. MODERATE. AUTO.
+  P2-3  G4_HTF_Confirmation: short side written "inverse" (uncodeable) - spell EMA20_daily <
+        EMA50_daily AND last 1H close < 1H EMA20. MODERATE. AUTO.
+  P2-4  G4 gives no path for TRENDING_NEG short candidates (only TRENDING_POS long + NON_DIR
+        skip). Add short HTF-confirmation handling for the regime the short side trades. BLOCKER. AUTO.
+  P2-5  sss_engine SC-SSS-1 short bound ordering trap (rsi_short_high < RSI < rsi_short_low; the
+        "high" param holds the NUMERICALLY SMALLER value) - add a clarifying clause; no value
+        change. MODERATE. AUTO. (short SC-SSS-1/2 literalization already landed dv1_243.)
+  P2-6  SC-SSS-3 volume not marked direction-identical; P2-7 indicator state not marked shared
+        across sides. MINOR. AUTO.
+  P2-8  G5_Selection_Controller: 4 sub-gates state only WHAT they filter, not the pass condition
+        nor per-module independence (consecutive_loss / active-position sets must be per-side).
+        SC-Gate-1 body-strength must be direction-symmetric (absolute body fraction). MODERATE. AUTO.
+  P2-9  G5 entry_fill_disposition long-centric (emergSL "sell" stop, "market sell" TP). State
+        Short = buy-to-cover emergSL (reduce_only) + buy-to-cover run-to-reversal exit. MODERATE. AUTO.
+  P2-10 G6_Regime_Sizer maps multipliers only for NON_DIR_NORMAL/TRENDING_POS_* (long). Add the
+        TRENDING_NEG_NORMAL/_ELEVATED short rows (=1.0). BLOCKER. AUTO.
+  P2-11 G7_Risk_Guard doesn't state per-module independent instances (long vs short wallet/
+        drawdown/concentration). MODERATE. AUTO.
+  P2-12 G7 exposure check has no leverage term for the margin short (margin requirement, not full
+        notional). MODERATE. AUTO (uses leverage_cap_short).
+  P2-13 G8_Position_Sizer CR-06 formula has no leverage term + no margin order path for short.
+        Add short sizing via leverage_cap_short + Kraken margin add_order. BLOCKER. AUTO.
+  P2-14 G8 MAE/emergSL "+/-" never resolves the per-side sign (Long subtract / Short add) + short
+        breach on ASK. BLOCKER. AUTO.
+  P2-15 G8 net_loss is taker-only; short adds margin/borrow fee (DECISION A) + short loss-sign.
+        MODERATE. DECISION A (sign part AUTO).
+  P2-16 G8 CR-07 min-size guard not stated for margin-pair minimums / short notional. MINOR. AUTO.
+  P2-17 Pre_Gate_1 doesn't enforce the short margin-eligible universe subset. MODERATE. AUTO.
+  P2-18 G1 not marked side-shared; P2-19 G2 floor not side-selected (per-module). MINOR. AUTO.
+
+  --- Image3 Exit Architecture (L1a/L2/L3) ---  [every exit bid/sell/spot-only]
+  P3-1  Exit_Controller owner: MAE distance + MPP retry are Long/bid/sell only - add short
+        (ask - entry) MAE + IOC buy-to-cover at best_ask + 0.2%. BLOCKER. AUTO.
+  P3-2  q4_triggers MAE on bid + L1a EMA-cross long-only. Add short ask + L1a short conditions
+        (already literalized in q4 dv1_243 - extend to the MAE/action). BLOCKER. AUTO.
+  P3-3  L1a ACTION is market_sell only; add market BUY-to-cover (margin close). Update on-figure
+        ACTION rect. BLOCKER. AUTO.
+  P3-4  L1a on-figure text rects show only the long crosses-below; render both directions. MODERATE. AUTO.
+  P3-5  L2_MAE_Threshold entirely bid/sell; add short ASK breach + buy-to-cover step (q1_do,
+        q4_triggers, on-figure TRIGGER + step-2). BLOCKER. AUTO.
+  P3-6  L3_Emergency_SL short math only implied via AR-073 pointer; write short emergSL =
+        entry + ATR*emergency_sl_mult, resting BUY-to-cover stop ABOVE entry. BLOCKER. AUTO.
+  P3-7  4.2 R:R formula: state the two fee legs per side + the P&L sign convention (Long
+        (exit-entry)*qty / Short (entry-exit)*qty). MODERATE. AUTO (borrow-fee leg = DECISION A).
+  P3-8  HR-EC-016 breach expression + override action long-only; generalize bid/ask + sell/cover.
+        MODERATE. AUTO.
+  P3-9  No evt:TRADE_CLOSE field schema on Image3 (only the exit_reason enum); add the field
+        schema incl. side. MODERATE. AUTO (side field = adopted default).
+  P3-10 Whole figure: short exits are Kraken MARGIN buy-to-cover, not spot sells - flag on the
+        owner/each layer. BLOCKER. AUTO.
+
+  --- Image8 Gate-7 Risk Guard detail ---
+  P8-1  CHECK_1 drawdown wallet named spot_usd_balance; short wallet is margin equity. MODERATE. AUTO.
+  P8-2  CHECK_3 exposure has no leverage_cap_short bound for the margin short. BLOCKER. AUTO.
+  P8-3  Gate-7 has NO leverage-cap check for the short side (fold into CHECK_3 or add a check).
+        BLOCKER. AUTO (placement is a derivable design call; leverage_cap_short already seeded).
+  P8-4  CHECK_2 concentration / footer: note short wallet = margin. MINOR. AUTO.
+
+  --- Image9 Gate-8 Position Sizer detail ---
+  P9-1  compute:MAE: note breach side differs (bid below / ask above entry). MINOR. AUTO.
+  P9-2  compute:net_loss: state both leg directions + short loss-sign; borrow fee = DECISION A. MODERATE.
+  P9-3  compute:emergSL_distance: short stop ABOVE entry, buy-to-cover - state per-side sign. BLOCKER. AUTO.
+  P9-4  expected_reward_run_to_reversal: short favorable excursion is DOWNWARD + short reversal
+        condition. MODERATE. AUTO.
+  P9-5  g8d_sized_output: add side + order-type/leverage descriptor (Long spot buy / Short margin
+        sell at leverage_cap_short). BLOCKER. AUTO.
+  P9-6  A1 acceptance floor: symmetric in form; inherits upstream short framing. MINOR. AUTO.
+  P9-7  footer "no ceiling/cap" true only for long spot; short bounded by leverage_cap_short. MODERATE. AUTO.
+
+  --- Image1 Kraken API Connection / WS_Manager ---  [100% spot/long; the critical blocker zone]
+  P1-1  Private_WS_v2 add_order has no MARGIN/leverage field for short sell-to-open. BLOCKER. AUTO
+        (leverage_cap_short seeded; the Kraken add_order margin field name is a Kraken-API fact to
+        confirm from docs, not a seed).
+  P1-2  WS-BA-002 emergSL leg has no side/direction (short = BUY stop above entry). BLOCKER. AUTO.
+  P1-3  instrument marginable flag parsed (REST-TKR-010) but never consumed - add short eligibility
+        gate. BLOCKER. AUTO.
+  P1-4  FEE block (FEE-BASE-003/004) taker-in/out only; add short margin borrow/rollover fee.
+        BLOCKER. DECISION A.
+  P1-5  RL-MON exit-preservation + reduce_only: state short exit/cover = BUY. BLOCKER. AUTO.
+  P1-6  Risk_Engine sizer text: ATR MAE/emergSL applied directionally; short wallet = margin acct.
+        MODERATE. AUTO.
+  P1-7  diagram governs / TOTHBOT column omits Long_Module AND Short_Module as order-dispatch
+        callers. MODERATE. AUTO.
+  P1-8  REST set has no margin OpenPositions endpoint; reconnect cannot reconcile a live short.
+        BLOCKER. AUTO (Kraken OpenPositions is an API fact).
+
+  --- Image4 Regime Taxonomy ---
+  P4-1  cells 1-4 state Long permission/size only; convert all six cells to an explicit Long+Short
+        permission+size matrix. BLOCKER. AUTO (cell-3 short = DECISION B).
+  P4-2  NON_DIR_NORMAL/_ELEVATED short permission undefined. cell 4 = both-blocked (AUTO);
+        cell 3 = DECISION B.
+  P4-3  TRENDING_NEG cells route short but give NO size multiplier - add =1.0 + G6 cite. BLOCKER. AUTO.
+  P4-4  "Stage M sequencing" referenced but undefined anywhere - define inline or cite canonical. MODERATE. AUTO.
+  P4-5  Signal_Pipeline consumer G6 description long-only (regimes 1/2/3); add short regimes 5/6. MODERATE. AUTO.
+  P4-6  Risk_Engine market_regime interpretation is directional per module. MINOR. AUTO.
+
+  --- Image7 Paper-Mode Dispatch Boundary ---  [sibling present; the 4 cells are long/spot only]
+  P7-1  PA-004(2) order dispatch: add short sell-to-open (margin) on paper + live; side-aware
+        bbo-touch fill. BLOCKER. AUTO (synthetic-borrow treatment ties to DECISION A).
+  P7-2  PA-004(3) synthetic ledger: short P&L inverted (entry-exit); short wallet = margin-sourced;
+        short borrow fee in sim. BLOCKER. AUTO + DECISION A (borrow leg).
+  P7-3  PA-004(4) Position Mirror + PA-004(1): live short = open-margin-position reconcile; paper
+        short records buy-stop emergSL above entry. MODERATE. AUTO.
+  P7-4  Short_Module emergency close unlabeled - state emergency-IOC market BUY (buy-to-cover). MODERATE. AUTO.
+  P7-5  Short_Module cites AR-009 but no leverage cap - add leverage_cap_short. BLOCKER. AUTO.
+  P7-6  PA-004 legend: confirm short margin divergences subsume into points 1/3/4 (no 5th point). MINOR. AUTO.
+
+  --- Image5 CIATS Architecture / Image6 Complete System / Tier-1 Context ---  [single-instance]
+  P5-1  Image5 draws ONE CIATS; render TWO per-module instances (Long CIATS + Short CIATS), each
+        own pool/200-floor/parameter store, sharing only Logger/Trade-Outcome-Bus. BLOCKER. AUTO.
+  P5-2  Statistical Engine single corpus/floor; state per-module pools + per-module 200/600 floors. BLOCKER. AUTO.
+  P5-3  Parameter Store not marked per-module-instantiated. MODERATE. AUTO.
+  P5-4  Proposal Engine short sizing = margin collateral w/ leverage divisor (AR-053). MODERATE. AUTO.
+  P5-5  Regime_Engine box "blocks TRENDING_NEG unconditionally" - reword to long-block/short-route. MINOR. AUTO.
+  P6-1  Image6 governs omits mod:Short_Module. BLOCKER. AUTO.
+  P6-2  Image6 Zone 2 draws NO Long_Module / Short_Module boxes - add both as equal siblings
+        sharing only the WS layer (NEW SVG drawing). BLOCKER. AUTO.
+  P6-3  Image6 Zone 3 CIATS single-instance; render per-module pools/stores fed by own module's
+        records (long fills -> long pool). BLOCKER. AUTO.
+  P6-4  Risk_Engine: two independent per-wallet halt machines (long/short, sibling-isolated). MODERATE. AUTO.
+  P6-5  Parameter Store: per-module snapshots (AR-075). MODERATE. AUTO.
+  P6-6  DR-013 callout cites non-existent module groups (fixed once P6-2 lands). MODERATE. AUTO.
+  PC-1  Context CIATS_Zone described as one brain; state per-module framework. MODERATE. AUTO.
+  PC-2  Context TothBot_Zone desc omits Short_Module (visible label has it). MODERATE. AUTO.
+  PC-3  Context constraint range stale AR-001..AR-076 -> AR-001..AR-080. MINOR. AUTO.
+  PC-4  Context CIATS_Zone miscites sacred floor as AR-008 (is AR-011). MINOR. AUTO.
+
+  --- Governing prose (sec 1 / sec 5 / sec 12 / AR rules) ---
+  PR-1  sec 1.1 still says "long-only trades" - contradicts the whole parallel framework. MODERATE. AUTO.
+  PR-2  sec 12.4 synthetic ledger single + long-only arithmetic - make per-module + both-direction.
+        BLOCKER. AUTO + DECISION A (short borrow leg).
+  PR-3  sec 12.1 DP(3) ledger not stated per-module (long spot / short margin-collateral). MODERATE. AUTO.
+  PR-4  sec 12.2/12.5 omit Short_Module reader + per-module SC-state routing (AR-073). MINOR. AUTO.
+  PR-5  AR-034 ticker bbo rationale long-only (bid) - add short ASK clause. MODERATE. AUTO.
+  PR-6  AR-065 Kelly + sec 6 thresholds single-pool; add per-module qualifier. MODERATE. AUTO.
+  PR-7  AR-052 drawdown formulas account-wide - reconcile to per-wallet (contradicts AR-048/sec 9).
+        BLOCKER. AUTO. AR-079 full-halt scope = module-scoped.
+  PR-8  AR-070 universe rule doesn't note short = margin-eligible subset. MINOR. AUTO.
+  PR-9  sec 5 prose has no directional-cascade statement (HR-REGIME-007). MODERATE. AUTO.
+  PR-10 sec 7 / Image5+Image6 23-field schema lacks side/module discriminator the pools need.
+        BLOCKER. AUTO (adopt top-level side field; reconcile Image5/Image6 verbatim).
+
+============================================================
+4. CODE: SHORT-UNBUILT + FIDELITY GAPS (build AFTER the diagrams are correct)
+============================================================
+   BUILT + already symmetric: the data layer (exchange/*), position_mirror, paper_exit,
+   regime_exit, sss, taxonomy, exit_controller, regime/*. SKELETON-ONLY: modules/, risk/,
+   ciats/, pipeline/, recorder/ (the whole vertical above the WS layer).
+   SHORT-UNBUILT BLOCKERS:
+     C-1 no Short_Module (or Long_Module) spine class.
+     C-2 no buy-to-cover exit op (seam OutboundOp + paper_fill _EXIT_OPS = market sell only).
+     C-3 no Kraken margin/borrow/reduce_only order path (leverage_cap_short unwired).
+     C-4 SyntheticCapitalLedger direction-blind (debit-on-entry/credit-on-exit = spot long only);
+         needs side-aware inverted cash flow + margin collateral + borrow accounting (DECISION A).
+     C-5 single WSManager/ledger/mirror per process - no second (short) module instance + wallet.
+     C-6 no Risk_Engine (drawdown halts, G7 acquire side), no Gate-8 sizer (R:R floor unenforced),
+         no CIATS, no pipeline gate chain, no recorder.
+   FIDELITY (carry-forward) gaps: keepalive WS_PONG_TIMEOUT vs PING_TIMEOUT; reconnect "BLOCKED"
+   stale docstring; RESET_RATE_CEILING no-op (AR-030 unbuilt); G7 semaphore acquire unbuilt;
+   TRADE_CLOSE producer fields (entry ts/hold count/market_regime/signal_params) None; daily/1H
+   orchestrator + live instrument-status feed deferred; registry PER_MODULE seeds stored single.
+
+============================================================
+5. PROPOSED FIX SEQUENCING (after the two decisions)
+============================================================
+   Phase D1 (diagrams, no-decision, order/price/stop symmetry): Image1 margin order path +
+     marginable + OpenPositions + exit-direction; Image3 all-layer ask/buy-to-cover/short-emergSL;
+     Image9 sign/side/leverage; Image2 G3 cascade split + G4 short + G6 short rows + G8 margin
+     sizing; Image8 leverage check. (R/dv bump per figure touched, 0521001 provenance, well-formed.)
+   Phase D2 (diagrams, system symmetry): Image5/Image6/Context per-module CIATS instances +
+     drawn Long/Short module boxes; sec-12.4 per-module ledger; AR-052/AR-034/AR-065/AR-070/sec1/
+     sec5 prose; the side-field schema reconcile.
+   Phase D3 (decision-dependent diagram bits): short borrow-fee economics (DECISION A) into
+     Image1/9/12.4/Gate-8; NON_DIR_NORMAL short cell (DECISION B) into Image4/G3/G6/sec5.
+   Phase C (code, from the corrected diagrams): buy-to-cover op + margin/reduce_only order path;
+     side-aware ledger; second module instance + wallet; the Long/Short module spines; Gate-8 +
+     R:R floor; Risk_Engine + halts + G7 acquire; pipeline gate chain; CIATS; recorder. Full
+     pytest on 3.12 each slice; DR-010 each push.
+
+============================================================
+END TB00728
+============================================================
