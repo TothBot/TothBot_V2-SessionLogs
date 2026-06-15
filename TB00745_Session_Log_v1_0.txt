@@ -1,0 +1,139 @@
+DocDCN:     TB00745
+DocTitle:   TB00745_Session_Log
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00745_Session_Log_v1_0.txt
+DocDate:    06-15-2026
+DocTime:    23:59:00 UTC
+
+============================================================
+TB00745 SESSION LOG
+FINISH PHASE C (THE FULL CIATS BRAIN) + THE OPERATIONAL LOOSE ENDS (OPS-1 + OPS-2)
+EXECUTOR: CLAUDE CODE (autonomous; Bill "Go with sequencing recommended order below")
+============================================================
+
+0. NUMBERING NOTE (Bill ruling, this session)
+   The session-close bundle numbers as: SL = THIS session's number; NSI = the NEXT session's number;
+   OCS = the SAME number as the NSI (it is the Opening Chat Statement FOR that next session). So this
+   session (745, governed by the TB00745 NSI) closes as TB00745 SL + TB00746 NSI + TB00746 OCS. Last
+   session's OCS, mis-numbered TB00746_OCS, was renamed to its correct TB00745_OCS this session (it is
+   session 745's cold-start) - removing the collision with this session's new TB00746_OCS.
+
+1. MISSION / CONTEXT
+   Continued from the TB00744 close (providers fully backed, the public organism runnable, phase C
+   opened with the CIATS_Statistical_Engine; 706 green, Code f8df2d1). Bill: "Go with sequencing
+   recommended order below" (the TB00745 NSI recommended order). Executed it on auto: C-part2..5 (the
+   rest of the CIATS brain) -> OPS-1 -> OPS-2. 6 slices, each its own commit + FULL pytest on 3.12.10
+   + DR-010. 706 -> 753 green. No new seed (every CIATS threshold is a diagram-named rule constant),
+   no diagram edit (every figure code-complete). Docs UNCHANGED at 18b555d. TB00000 UNCHANGED v2_100.
+
+   NOTE: the session opened on a STALE OCS (Bill re-pasted the TB00743 cold-start pointing at the
+   already-done dd5c41d/662 state several times). Each time the cold-load was VERIFIED against the
+   real HEAD (f8df2d1/706) and the already-pushed TB00742 work was NOT re-done; the session proceeded
+   from the real state per the live TB00745 NSI. The mis-numbered OCS was corrected (see section 0).
+
+2. BILL DIRECTIVES (chat-turn, this session)
+   (1) "Go with sequencing recommended order below" - run the TB00745 mission on auto in the
+       recommended order, under the standing rules (plain-text only; question-box BANNED; obvious
+       method/legacy fixes done automatically per TB00731).
+   (2) The OCS-numbering ruling (section 0): the OCS shares the NSI number; the SL carries this
+       session's number.
+
+3. WHAT WAS BUILT (Code: 6 commits f8df2d1 -> 1852cc6; 706 -> 753 green on 3.12.10; DR-010 verified
+   on EVERY push. Docs UNCHANGED at 18b555d. TB00000 UNCHANGED at v2_100 - no new seed.)
+
+   PHASE C - the per-module CIATS learning brain (atop the existing ewma_monitor.py + pool.py):
+     ddf97b9  C-part2 mod:CIATS_PDCA_Engine `ciats/pdca_engine.py` [NEW] - the PLAN/DO/CHECK/ACT cycle
+       (PROPOSAL ONLY, a PURE state machine). PLAN: nominate a candidate, gated by the 200-trade floor
+       (HR-CI-004); the sacred R:R can never be a candidate; an out_of_cycle flag records a CUSUM
+       lower-arm breach forcing a PLAN (HR-CI-007). DO: record the shadow-evaluated candidate cohort vs
+       the baseline cohort. CHECK: the ABSOLUTE gate = Mann-Whitney U one-sided alpha=0.01 (the
+       candidate must rank significantly HIGHER) + Sharpe of both cohorts + optional Spearman (|rho|>0.3
+       AND p<0.05) corroboration. ACT: ONLY on Bill approval (HR-CI-011) at a confirmed inter-trade
+       boundary (HR-CI-003) with >=50 trades since the last change (HR-CI-005) -> an ApprovedChange for
+       the Parameter Store; NEVER writes a param. +16 tests.
+     8c31dee  C-part3 mod:CIATS_Proposal_Engine `ciats/proposal_engine.py` [NEW] - generate CIATS-owned
+       proposals (PROPOSAL ONLY). The Half-Kelly per_trade_size_usd: K_full=W-(1-W)/R (NET P/L), K_half
+       =K_full*0.5, per_trade_size=K_half*wallet, recomputed every 50 trades after the 200-trade
+       activation (KELLY_UPDATE); KellyNegative [CRITICAL] when K_full<=0 (HR-CI-008, no positive sizing).
+       The candidate-parameter rule: a parameter qualifies as a PLAN candidate IFF the Spearman gate
+       passes (|rho|>0.3 AND p<0.05). The sacred R:R is never proposed. ALSO extracted spearman_significant
+       into statistical_engine (one source of truth, shared by the PDCA CHECK + the Proposal candidate
+       gate) + guarded a constant/zero-variance series as "no association" not an error; refactored
+       pdca check_phase to use it. +10 tests.
+     3d6658b  C-part4 mod:CIATS_Parameter_Store `ciats/parameter_store.py` [NEW] - the per-module owned-
+       parameter store + the frozen read snapshot. HR-CI-002 sole CIATS write destination (holds all
+       tunables EXCEPT the sacred R:R). apply() writes a Bill-approved ApprovedChange + the parameter-
+       evolution log + the trade count, enforcing TWO hard invariants as defense-in-depth: IMMUTABILITY
+       (the sacred R:R + exchange-defined params - the taker fee, leverage cap - never written) + the
+       50-trade interval (HR-CI-005; the store owns last_change_trade_count, the authoritative interval
+       source the ACT consults). snapshot() returns a FROZEN read-only MappingProxyType copy
+       (contract:Parameter_Store_Snapshot) - TothBot reads one per pipeline cycle; a mid-cycle write
+       never perturbs an in-flight snapshot (CI-IF-003 no-drift). +9 tests.
+     a5b55ce  C-part5 mod:CIATS_Regime_Library `ciats/regime_library.py` [NEW] - per-regime parameter
+       buckets, activate at 600 trades / 100+ per bucket (distinct from + stricter than the 200-trade
+       module floor). Routes each closed trade to its asset_regime bucket (one CiatsPool per regime); a
+       regime is ACTIVE once total>=600 AND that bucket>=100. regime_edge = K_full=W-(1-W)/R per bucket;
+       disallowed_regimes() = the active regimes with a non-positive edge (-> param:disallowed_regimes,
+       Gate-3 blocks them); an under-100 bucket is never disallowed (insufficient evidence). +8 tests.
+       COMPLETES PHASE C: the full CIATS brain (Statistical Engine + PDCA + Proposal + Parameter Store
+       + Regime Library, on top of the EWMA Monitor + Half-Kelly pool).
+
+   OPS - the operational loose ends:
+     983eeb2  OPS-1 wire the universe-load HISTORICAL SEEDING into assemble_operational. Threaded the
+       bars the warm-up (5m) + daily-regime (1440) phases already fetch into the seed stores - NO
+       duplicate REST under the AR-036 stagger. warmup.py gains an optional on_5m_bars callback (-> the
+       DEC-128 MppCapStore.seed_from_bars); scheduler.py gains an optional on_daily_bars callback (-> the
+       DEC-124 ExpectedRewardStore.seed_from_bars); operational.py wires them. The stores are now passed
+       in EMPTY and seeded in-line during phases 1-2, so the A1 floor + MPP cap are CIATS-owned from the
+       first tick. Callbacks default None (backward compatible). +1 test.
+     1852cc6  OPS-2 the PRIVATE-WS tie-in for LIVE mode. assemble_operational, in Mode.LIVE only (PA-004
+       div #1 / HR-WM-022 - paper stays public-only), now ALSO builds the SEPARATE private executions/
+       balances connection (AR-049 steps 5/6: token via GetWebSocketsToken -> private connect -> subscribe
+       executions[order_status/snap_orders/ratecounter] -> the snap_orders mirror reconcile) via the
+       already-built PrivateConnectionAssembler (TB00718). New params open_private_socket/acquire_token
+       (required in live, else a surfaced wiring error) + fetch_snap_orders/balances_handler. OperationalSystem
+       gains private_connection + a combined run() (drives the public data layer + the live private
+       connection concurrently) + stop(). +3 tests. COMPLETES the TB00745 mission.
+
+4. STATE AT CLOSE - THE CIATS BRAIN IS COMPLETE + THE ORGANISM ASSEMBLES PUBLIC (paper) OR PUBLIC+PRIVATE (live)
+   The full per-module CIATS learning loop now exists: Statistical Engine (Mann-Whitney/Sharpe/Spearman/
+   CUSUM) + EWMA Monitor + Half-Kelly pool feed the PDCA cycle -> Proposal Engine -> (Bill approval) ->
+   Parameter Store (frozen per-cycle snapshot) + the Regime Library (per-regime sets @600). The CIATS
+   seed stores self-seed at universe load (OPS-1); assemble_operational runs the AR-049 cold start and
+   returns a runnable organism - public-only in paper, public + the private executions/mirror loop in
+   live (OPS-2). Everything is PROPOSE/DETECT only; the sacred 1:1.5 R:R is never tuned.
+
+5. VERIFICATION
+   753 pytest green on C:\Users\wstot\AppData\Local\Programs\Python\Python312\python.exe (3.12.10).
+   DR-010 verified after EVERY push (git hash-object vs HEAD:path): Code ddf97b9 -> 8c31dee -> 3d6658b
+   -> a5b55ce -> 983eeb2 -> 1852cc6. Docs UNCHANGED at 18b555d. The statistical_engine refactor +
+   the warm-up/scheduler optional callbacks did not regress any existing test. Stat values verified
+   vs scipy (Mann-Whitney z, Spearman rho, Sharpe).
+
+6. CARRY-FORWARD (see TB00746 NSI)
+   The CIATS brain is built as PURE/edge UNITS; the remaining work is the ORCHESTRATION that drives it
+   live: a CIATS conductor that, per module, recomputes Half-Kelly at the 50-trade cadence, runs the
+   PDCA cycle on a statistical signal, routes a CHECK-passed proposal to Bill (the HR-CI-011 SMTP
+   approval surface), applies an approved change to the Parameter Store at the inter-trade boundary,
+   and feeds the regime buckets + disallowed_regimes back to Gate-3; plus binding the Parameter_Store_
+   Snapshot READ into the pipeline (the gates read the frozen per-cycle snapshot). Also: a real end-to-
+   end live SMOKE (drive assemble_operational over a recorded/fake public-WS frame stream). The
+   PDCA->Proposal->Store wiring is unit-tested in isolation but not yet tied into a running conductor.
+   LONG-STANDING FLAGS persist: keepalive WS_PONG_TIMEOUT -> PING_TIMEOUT; reconnect "BLOCKED"
+     docstring; G7 BoundedSemaphore ACQUIRE side unbuilt (sweep passes semaphore_locked=False FREE);
+     private_ws RESET_RATE_CEILING no-op (the AR-030 maxratecount unit).
+
+7. CLOSE STATE
+   Code HEAD        1852cc6 (753 tests green; +ciats/pdca_engine.py, +ciats/proposal_engine.py,
+                    +ciats/parameter_store.py, +ciats/regime_library.py, ciats/statistical_engine.py
+                    [spearman_significant], exchange/warmup.py + regime/scheduler.py [OPS-1 callbacks],
+                    pipeline/operational.py [OPS-1 seeding + OPS-2 private tie-in]).
+   Docs HEAD        18b555d (0500000 dv1_250 / 0521001 dv1_60 - UNCHANGED).
+   SessionLogs HEAD <this close: TB00745 SL + TB00746 NSI + TB00746 OCS; + the TB00745_OCS rename>.
+   TB00000          v2_100 (unchanged - no new seed).
+   Governing instructions next = TB00746 NSI. Auto memory (phase2-build) updated through 1852cc6.
+
+============================================================
+END TB00745
+============================================================

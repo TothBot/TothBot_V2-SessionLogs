@@ -1,0 +1,95 @@
+DocDCN:     TB00746
+DocTitle:   TB00746_Next_Session_Instructions
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00746_Next_Session_Instructions_v1_0.txt
+DocDate:    06-15-2026
+DocTime:    23:59:00 UTC
+
+============================================================
+TB00746 NSI - THE CIATS CONDUCTOR + THE PARAMETER-STORE READ WIRING + A LIVE SMOKE
+The full CIATS brain is built as units (753 green, Code 1852cc6); the remaining work is the
+ORCHESTRATION that drives it on the running organism + the snapshot READ into the pipeline.
+EXECUTOR: CLAUDE CODE (autonomous, "auto mode on")
+============================================================
+
+NSIs are Claude-authored + informational; Bill's chat directives govern. PLAIN-TEXT choices ONLY -
+the AskUserQuestion / question-box tool is BANNED (TB00000 4.7). Per Bill's standing TB00731 ruling:
+a schema verification or an obvious method/legacy choice is something to DO automatically, NOT a
+question - build the organism on auto; surface ONLY a genuine new-seed value or a genuine design
+decision, in PLAIN TEXT.
+
+NUMBERING (Bill ruling TB00745): the close bundle is SL = this session's number; NSI = the next
+session's number; OCS = the SAME number as the NSI. This session is 746; it closes as TB00746 SL +
+TB00747 NSI + TB00747 OCS.
+
+0. WHY / RHYTHM
+   Build from the 0500000 diagrams (Long/Short symmetric, dv1_250). Pure/testable units first, I/O
+   at the edges (asyncio.run over fakes; websockets/aiohttp lazy). Deliver file by file, FULL pytest
+   on the 3.12 interpreter each slice, surgical staging (no __pycache__), DR-010 post-push.
+   Diagram/Docs edits stay a Claude Code task. Session close is STANDING (SL+NSI+OCS at the END).
+
+1. ENTRY / COLD-LOAD + VERIFY (from GitHub HEAD)
+   Read TB00000 (v2_100) + this NSI + the TB00745 Session Log. Cold-load the auto-memory
+   (phase2-build is current through 1852cc6).
+     Code HEAD        1852cc6 (753 tests green). Python = C:\Users\wstot\AppData\Local\Programs\
+                      Python\Python312\python.exe (3.12.10; default PATH python is 3.10 - full path
+                      ONLY). Run: python.exe -m pytest -q (expect 753 green).
+     Docs HEAD        18b555d - 0500000 dv1_250 / 0521001 dv1_60.
+     SessionLogs HEAD <the TB00745 SL + TB00746 NSI/OCS push>.
+
+2. STATE: the per-module CIATS brain is built as UNITS (all PURE/Decimal, DETECTION/PROPOSAL-only):
+   ciats/statistical_engine.py  Mann-Whitney U / Sharpe / Spearman / cusum_lower + spearman_significant.
+   ciats/ewma_monitor.py        the EWMA(lambda=0.2) drift monitor (prior).
+   ciats/pool.py                the trade-outcome accumulator + 200-trade floor + Half-Kelly (prior).
+   ciats/pdca_engine.py         the PLAN/DO/CHECK/ACT cycle (the Mann-Whitney alpha=0.01 absolute gate).
+   ciats/proposal_engine.py     the Half-Kelly per_trade_size + Spearman-qualified candidate proposals.
+   ciats/parameter_store.py     the owned-parameter store + the frozen per-cycle snapshot.
+   ciats/regime_library.py      per-regime buckets (@600/100) + disallowed_regimes.
+   pipeline/operational.py      assemble_operational: AR-049 cold start; OPS-1 self-seeds the CIATS
+                                stores at load; OPS-2 builds the live private connection (run() drives both).
+
+3. MISSION - DRIVE THE BRAIN ON THE ORGANISM. Bill's call on order.
+
+   (a) THE CIATS CONDUCTOR (the per-module learning loop, the missing orchestration). A per-module
+       async/edge unit that, off the Logger Stream-2 corpus (the CiatsPool + the Regime Library
+       buckets it already feeds):
+         - recomputes Half-Kelly at the 50-trade cadence (ProposalEngine.kelly_due) -> a per_trade_size
+           proposal; emits KELLY_UPDATE / KELLY_NEGATIVE.
+         - on a statistical signal (a cusum_lower breach on the net_gain series, or an EWMA sustained
+           divergence) initiates a PDCA PLAN (out-of-cycle on the CUSUM, HR-CI-007); runs DO (shadow-
+           eval the candidate over the corpus) + CHECK; on a CHECK pass routes the proposal to the
+           HR-CI-011 Bill-approval surface (the SMTP alert seam, mod:Logger HR-LG-009) - NEVER auto-applies.
+         - on Bill approval at a confirmed inter-trade boundary applies the change to the Parameter
+           Store (respecting the 50-trade interval the store owns) + logs the parameter-evolution entry.
+         - feeds the Regime Library disallowed_regimes back to param:disallowed_regimes (Gate-3 read).
+       Compose the EXISTING units; the inter-trade-boundary + approval signals are injected edges. The
+       DO shadow-evaluation needs a corpus replay producing the baseline vs candidate cohorts - a PURE
+       harness over the Stream-2 records (the same seed-then-correct discipline as the estimators).
+
+   (b) THE PARAMETER_STORE_SNAPSHOT READ INTO THE PIPELINE (contract:Parameter_Store_Snapshot /
+       CI-IF-003). The gates currently read seed constants from config.registry; wire a per-module
+       frozen snapshot read at the START of each pipeline cycle so CIATS-owned values (per_trade_size,
+       mae_mult, adx_threshold, disallowed_regimes, ...) flow into the sweep without mid-cycle drift.
+       The sacred 1:1.5 R:R stays hardcoded (never from the store).
+
+   (c) A LIVE END-TO-END SMOKE: drive assemble_operational over a recorded/fake public-WS frame
+       stream (instrument snapshot -> ticker -> 5m closes -> a 1H close) and assert the organism runs a
+       full decide->size->dispatch tick + a TRADE_CLOSE -> CiatsPool ingest, paper mode. Proves the
+       capstone wiring end-to-end on a frame stream (today operational.py is unit-wired but never run).
+
+   Recommendation: (a) the CIATS conductor -> (b) the snapshot read -> (c) the live smoke. Bill may
+     reorder (e.g. (c) first to exercise the assembled organism, or (b) first as the smallest).
+
+4. PROVENANCE / SCOPE
+   A CODE build READS 0500000 (symmetric). REST/WS wire facts are NOT seeds. The CIATS thresholds
+   (alpha=0.01, |rho|>0.3, p<0.05, CUSUM k=0.5sigma/h=4sigma, EWMA lambda=0.2, the 200/50/600-trade
+   counts) are diagram-named rule constants - transcribed, not new seeds. The historical estimators
+   COMPUTE the sec-8 seed VALUES from data (CIATS owning the value, not a literal). If a genuinely NEW
+   seed value or a genuine DESIGN decision arises, STOP and surface it in PLAIN TEXT (never the
+   question-box). A schema verification or an obvious method/legacy correction is NOT a question - do
+   it automatically (Bill ruling TB00731).
+
+============================================================
+END TB00746
+============================================================
