@@ -1,0 +1,161 @@
+DocDCN:     TB00751
+DocTitle:   TB00751_Session_Log
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00751_Session_Log_v1_0.txt
+DocDate:    06-15-2026
+DocTime:    23:59:30 UTC
+
+============================================================
+TB00751 SESSION LOG
+BUILD THE SELF-TESTING THEORY LOOP: FORM -> TEST -> ROUTE, THEN MAKE THE ENTRY FILTERS TESTABLE
+EXECUTOR: CLAUDE CODE (autonomous; Bill cold-start = the TB00751 OCS paste, auto mode)
+============================================================
+
+0. NUMBERING NOTE (Bill ruling TB00745, standing)
+   SL = THIS session's number; NSI = the NEXT session's number; OCS = the SAME number as the NSI. This
+   session (751, governed by the TB00751 NSI) closes as TB00751 SL + TB00752 NSI + TB00752 OCS.
+
+1. MISSION / CONTEXT
+   Continued from the TB00750 close (the per-trade signal_params LEVEL series + entry context ride the
+   23-field TRADE_CLOSE, and the drift-triggered PLAN candidate is IDENTIFIED + SURFACED off the running
+   close; 857 green, Code 2008178). Bill's TB00750-turn directive is the governing spec: the CIATS coach
+   must SELF-form, TEST, and route trading theories - profitable emails Bill (a C1 HR-CI-011 approval),
+   unprofitable is reported in the periodic pull reports - no asking Bill to pick knobs/values. The
+   TB00751 mission BUILDS that loop: (a) the stop-loss-width theory (mae_mult), fully testable today; (b)
+   wire it into the running close (both tracks) + prove end-to-end on the assembled real-wm organism; (c)
+   the entry re-simulation that makes the entry filters (rsi / ema / volume) testable. Delivered as 3
+   commits, each its own commit + FULL pytest on 3.12.10 + DR-010. 857 -> 882 green. ONE genuine new seed
+   (mae_mult_nudge_pct), surfaced in plain text + landed in TB00000 v2_101 sec 8 + 0500000 dv1_251.
+
+   COLD-LOAD VERIFIED before working: Code HEAD 2008178 - ran pytest on the 3.12.10 interpreter by full
+   path, 857 green, matched. Docs 18b555d (0500000 dv1_250 / 0521001 dv1_60). SessionLogs bbe48bb (the
+   TB00750 SL + TB00751 NSI/OCS). Auto-memory (phase2-build + ciats-self-tuning-directive) current.
+
+2. BILL DIRECTIVES (chat-turn, this session)
+   (1) The TB00751 OCS paste = cold-start + execute the TB00751 NSI on auto. Standing rules hold: auto
+       mode, build the organism, question-box BANNED, surface only a genuine new seed in plain text,
+       diagram/Docs edits in Claude Code (DR-010), session close standing.
+   (2) The governing spec is Bill's TB00750-turn FORM -> TEST -> ROUTE directive (auto-memory
+       ciats-self-tuning-directive): the value/magnitude is Claude's to derive; a fixed constant becomes a
+       documented seed surfaced in plain text. NEVER the sacred 1:1.5 R:R.
+
+3. THE ONE GENUINE NEW SEED (surfaced in plain text BEFORE coding, per the TB00751 NSI sec 4)
+   param:mae_mult_nudge_pct = 0.10 (CIATS class, per-module, fraction). The stop-width loop correlates
+   each trade's heat-taken (mae_pct_reached, field 11) against the realized outcome and proposes a
+   mae_mult change. The DIRECTION is fully data-derived (the sign of the Spearman heat-vs-outcome
+   correlation - tighten when more heat predicts a worse outcome, loosen on the converse). But the
+   MAGNITUDE cannot be cleanly derived: mae_mult is an ATR(14) multiple while mae_pct_reached is a
+   price fraction, and the per-trade ATR is NOT stored on the TRADE_CLOSE - so there is no faithful
+   conversion, and the loss-only-scaling replay cannot discriminate a tighten magnitude either. A
+   conservative bounded 10pct relative nudge stands in, every application gated by the PDCA CHECK + Bill
+   approval (HR-CI-011). This matches the TB00750 SL pre-recommendation + the TB00751 NSI's anticipated
+   "fixed step -> sec-8 seed." The entry-filter dials (volume_sss_threshold / the rsi bounds) need NO
+   seed - their proposed value is data-derived (the loser-median level). Value home TB00000 v2_101 sec 8;
+   0500000 dv1_251 provenance note.
+
+4. WHAT WAS BUILT (Code: 3 commits 87db343 -> 9d65b20 -> 0febc98; 857 -> 882 green on 3.12.10; DR-010
+   verified against origin/master on EVERY push via git hash-object vs origin/master:path. Docs:
+   d023cc9 = 0500000 dv1_251 + 0521001 dv1_61. TB00000 v2_100 -> v2_101 - one new seed.)
+
+   (a) 87db343  FORM THE STOP-LOSS-WIDTH THEORY (the fully-testable dial).
+       config/registry: NEW seed mae_mult_nudge_pct = 0.10 (CIATS, per-module). ciats/proposal_engine:
+       plan_stop_width_proposal [NEW] correlates each record's heat-taken (mae_pct_reached) against its
+       net P/L via the CIATS Spearman gate (|rho| > 0.3 AND p < 0.05); on a qualifying correlation
+       proposes a mae_mult change - rho < 0 TIGHTENS (mae_mult * (1 - nudge)), rho > 0 LOOSENS
+       (mae_mult * (1 + nudge)); returns a StopWidthTheory [NEW] carrying the proposal + the (heat,
+       outcome) series (the open_pdca CHECK Spearman-corroboration input) + the direction. Data-derived
+       direction, bounded seed magnitude; never the sacred R:R. +6 tests (857 -> 863).
+
+   (b) 0febc98  WIRE plan_from_drift INTO on_close - the FORM -> TEST -> ROUTE loop + the end-to-end proof.
+       ciats/conductor: plan_from_drift [NEW] runs, on a drift signal, the two-track loop -
+       Track 1 (stop-width, fully testable): FORM via plan_stop_width_proposal off the corpus's heat
+       series -> TEST via open_pdca (the real shadow replay scales the losses + the absolute CHECK) ->
+       ROUTE (a CHECK pass STAGES the HR-CI-011 ApprovalRequested = the C1 email to Bill; a fail emits the
+       CheckResult = the report track). Track 2 (entry-filter): identify_drift_candidate over the
+       signal_params LEVELS -> SURFACE the candidate -> if plan_entry_filter_proposal yields a testable
+       proposal, TEST + ROUTE it; otherwise FILE a DeferredCandidate [NEW evt:CIATS_CANDIDATE_DEFERRED]
+       to the report track (never sham-tested). on_close's drift branch now calls plan_from_drift (was:
+       surface-only). _resolve_mae_mult (store value else registry seed) + _side helpers. The sacred R:R
+       is never a candidate. +7 tests (875 -> 882) incl. the END-TO-END PROOF on the assembled real-wm
+       organism (test_live_smoke): closes flowing THROUGH the wired ciats_sink where losers ran HOT and
+       winners COOL -> a tested mae_mult TIGHTEN reaches mod:Logger.alerts (the C1 push to Bill); the
+       converse (winners hot, losers cool) -> a LOOSEN the replay cannot credit -> the CheckResult is
+       REPORTED into Stream-1 with NO C1 alert; the SHORT module stays isolated.
+
+   (c) 9d65b20  ENTRY RE-SIMULATION (makes the entry filters testable). ciats/shadow_replay:
+       ENTRY_FILTER_GATES [NEW] + an entry-filter branch in build_shadow_evaluator that re-decides "would
+       this trade have been ENTERED under the candidate threshold?" from the record's stored
+       signal_params LEVELS - a record whose level no longer satisfies the moved bound is EXCLUDED (None),
+       every still-passing record keeps its realized outcome (INCLUDES/EXCLUDES). volume_ratio ->
+       volume_sss_threshold (a single floor, clean 1:1); the rsi bounds re-decided against the moved bound
+       (long zone rsi_long_low / rsi_long_high + the short mirror); only a TIGHTENING is re-decidable; ema
+       (a level -> period change) is not re-simulatable -> seed-then-correct. ciats/proposal_engine:
+       plan_entry_filter_proposal [NEW] maps a qualifying IdentifiedCandidate's level_key to the owned SSS
+       threshold the Spearman sign says to move + a DATA-DERIVED bound (the MEDIAN of the level among the
+       LOSING trades) - volume_ratio rho > 0 -> volume_sss_threshold; rsi_14 rho > 0 -> the low bound,
+       rho < 0 -> the high bound (short the mirror); ema / a volume rho <= 0 / too-few-losers -> None
+       (DEFER). No new seed (the value is data-derived). +12 tests (863 -> 875).
+       NOTE on commit order: built a -> c -> b (the NSI's a, b, c) so part (b)'s entry-filter track could
+       TEST the re-simulation (c) instead of re-touching plan_from_drift; the SL section order follows the
+       NSI. Pushed in commit order 87db343 (a) -> 9d65b20 (c) -> 0febc98 (b).
+
+5. PROVENANCE / SCOPE
+   A CODE build READS 0500000 (symmetric). The Spearman / CUSUM / Kelly / Mann-Whitney constants are
+   diagram-named (transcribed). The data-derived directions + the loser-median entry-filter value are
+   transcribed logic (not seeds). The ONE fixed magnitude - mae_mult_nudge_pct = 0.10 - IS a new seed:
+   landed in config/registry (code), TB00000 v2_100 -> v2_101 sec 8 (the value home, + a v2_101 changelog
+   block + the filename bump), and 0500000 dv1_250 -> dv1_251 (a Stream-2 CIATS-proposal q1_do textual
+   note - no SVG geometry change, tag classes verified balanced g/text/desc/svg/rect) + 0521001
+   dv1_60 -> dv1_61 (the OP RECORD). All Docs edits done in Claude Code, DR-010 verified, superseded
+   versions confirmed absent from HEAD. The report VIEWS (C2-C6) remain FP8 over the captured record (the
+   routing now PRODUCES the report-track records; the views are the next mission). LONG-STANDING FLAGS
+   persist: keepalive WS_PONG_TIMEOUT -> PING_TIMEOUT naming; reconnect "BLOCKED" docstring; G7
+   BoundedSemaphore ACQUIRE side unbuilt; private_ws RESET_RATE_CEILING no-op; the max-over-life MAE
+   tracker - note: plan_stop_width_proposal reads mae_pct_reached which is the AT-EXIT MAE until the MTM
+   max-over-life tracker lands (the heat signal sharpens when it does).
+
+6. VERIFICATION
+   882 pytest green on C:\Users\wstot\AppData\Local\Programs\Python\Python312\python.exe (3.12.10):
+   857 (cold-load) -> 863 (a, +6) -> 875 (c, +12) -> 882 (b, +7). DR-010 verified after EVERY push via
+   git hash-object vs origin/master:path: Code 87db343 / 9d65b20 / 0febc98 (HEAD == origin at each); Docs
+   d023cc9 (0500000 dv1_251 + 0521001 dv1_61 hash-match; dv1_250 + dv1_60 absent from HEAD). A degenerate
+   (all-winner) post-exclusion cohort makes the Sharpe corroboration undefined; the established codebase
+   convention (the existing regime-gating test) is to keep cohorts non-degenerate, which real net P/L
+   always is - matched (the MW U gate is the absolute gate; Sharpe is corroboration only).
+
+7. STATE AT CLOSE - THE FORM -> TEST -> ROUTE LOOP RUNS ON THE ORGANISM
+   On a drift signal the running close now (1) FORMS data-derived candidates on the testable dials (the
+   stop-width mae_mult theory off the heat series; an entry-filter candidate off the signal_params
+   levels), (2) TESTS each via the real shadow replay + the absolute CHECK (the entry re-simulation
+   re-decides entry from the stored levels), and (3) ROUTES by result - a profitable result emails Bill a
+   C1 HR-CI-011 approval, a disproven one is reported, a not-yet-testable candidate (ema period / an
+   unexpressible direction) is FILED to the report track. Proven end-to-end on the assembled real-wm
+   organism (a tighten emails Bill / a loosen is reported only). The sacred 1:1.5 R:R is never a
+   candidate; nothing is applied without Bill's recorded approval at a boundary.
+
+8. CARRY-FORWARD (see TB00752 NSI)
+   The routing now PRODUCES the report-track records (CheckResult rejections + DeferredCandidates + the
+   parameter-evolution log) but the periodic PULL report VIEWS (contract:Operator_Reporting_Hierarchy
+   C2 daily / C3 weekly / C4 MONTHLY / C5 annual / C6 rolling-12mo - Bill specifically remembers "the
+   monthly report") are not built - that is the natural next mission (FP8 VIEWS over the already-captured
+   record, no new capture). Also: the max-over-life MAE (MTM) tracker would sharpen the heat signal the
+   stop-width theory reads (today it reads the at-exit MAE); ema-period testability needs re-running the
+   indicators over stored OHLC (bigger). LONG-STANDING FLAGS persist: keepalive PING_TIMEOUT naming;
+   reconnect "BLOCKED" docstring; G7 semaphore ACQUIRE unbuilt; private_ws RESET_RATE_CEILING no-op.
+
+9. CLOSE STATE
+   Code HEAD        0febc98 (882 tests green; config/registry.py [mae_mult_nudge_pct seed] +
+                    ciats/proposal_engine.py [plan_stop_width_proposal + StopWidthTheory +
+                    plan_entry_filter_proposal + _median] + ciats/shadow_replay.py [ENTRY_FILTER_GATES +
+                    the entry-filter re-gate] + ciats/conductor.py [plan_from_drift + DeferredCandidate +
+                    on_close wire + _resolve_mae_mult/_side]; tests across proposal_engine / shadow_replay
+                    / ciats_conductor / live_smoke).
+   Docs HEAD        d023cc9 (0500000 dv1_251 / 0521001 dv1_61).
+   SessionLogs HEAD <this close: TB00751 SL + TB00752 NSI + TB00752 OCS + TB00000 v2_101>.
+   TB00000          v2_101 (the mae_mult_nudge_pct seed, sec 8).
+   Governing instructions next = TB00752 NSI. Auto memory (phase2-build) updated through 0febc98.
+
+============================================================
+END TB00751
+============================================================
