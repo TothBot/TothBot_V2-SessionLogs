@@ -1,0 +1,184 @@
+DocDCN:     TB00765
+DocTitle:   TB00765_Session_Log
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00765_Session_Log_v1_0.txt
+DocDate:    06-16-2026
+DocTime:    18:00:00 UTC
+
+============================================================
+TB00765 SESSION LOG
+BUILT THE LIVE ENTRY PATH (async dispatch + AR-054 on-fill emergSL pump + RL-MON-003 suppression gate
++ end-to-end capstone) AND THE LIVE WALLET CACHE (the WS-BAL-002/003 BalancesCache unit + its wiring)
+EXECUTOR: CLAUDE CODE (no pending ruling; CODE-only reading the existing 0500000 dv1_253)
+============================================================
+
+0. NUMBERING NOTE (Bill ruling TB00745, standing)
+   SL = THIS session's number; NSI = the NEXT; OCS = the SAME as the NSI. This session (765, governed by
+   the TB00765 NSI) closes as TB00765 SL + TB00766 NSI + TB00766 OCS.
+
+1. MISSION / CONTEXT
+   NO pending Bill ruling. Per the continuous-run directive the session ran autonomously across the
+   TB00765 mission in one shot, no pauses. The mission: THE LIVE ENTRY PATH + the RL-MON-003 entry-
+   suppression gate (the live-deploy counterpart of the TB00763/764 exit loop; do NOT connect to Kraken
+   for real - all tests inject fakes). dispatch_entry RAISED in live before this session; LIVE is async
+   (PA-004 div #4) so the IOC entry fills LATER on the executions channel. SEVEN Code commits. 1057 ->
+   1082 green (+25). NO Docs change (a CODE build reading the existing diagram). NO new seed. TB00000
+   stays v2_101. Then continued (continuous-run) into the live-SIZING foundation: the WS-BAL-002/003
+   BalancesCache + its wiring (the balances channel was a no-op).
+
+2. SOURCE READ FIRST (the diagram is authority for the literal)
+   0500000 dv1_253 sec 7 mod:WS_Manager (the entry add_order + on-fill batch_add outbound wire; the
+   add_order dispatch OWNERSHIP note), gate:G5 entry_fill_disposition, ar:AR-054 (entry fill disposition
+   under marketable-IOC, direction-symmetric), ar:AR-009 (SHORT margin open / reduce_only cover), the
+   D1 RATE-COUNTER PROTECTIVE RESPONSE prose RL-MON-002/003 (the CRITICAL-tier ENTRY-only suppression,
+   OWNERSHIP = mod:WS_Manager), PA-004 (div #1 private-WS live-only, #2 dispatch, #4 async fill),
+   decision:D-06 (paper/live parity), the WS-ADD-002 / WS-BA-002 outbound facts; for the wallet cache:
+   the D1 PRIVATE-CHANNEL WIRE FACTS WS-BAL-002 (spot/main-only long; margin + OpenPositions short,
+   AR-050) / WS-BAL-003 (snapshot replaces, update merges) + REST-BAL-002/003/004 (GetAccountBalance
+   seed) + WS-REC-004 (reconnect re-seed). The PURE entry builders (execution/entry_dispatch.py
+   build_entry_order + build_emergsl_order) + the suppression predicate (exchange/rate_counter.py
+   is_entry_suppressed) ALREADY existed; this session built the LIVE dispatch wiring around them.
+
+3. WHAT WAS BUILT (seven commits; all CODE; final Code HEAD 92521d1)
+
+   SLICE A -- LIVE dispatch_entry, the async marketable-IOC entry (commit aec8395; 1057->1059).
+   The paper-only RuntimeError becomes _dispatch_entry_live: it checks the RL-MON-003 suppression hook
+   FIRST (returns False, no order, on suppression - wired in slice c), stashes the entry-time D6 snapshot
+   in the Pending Order Registry for the ASYNC opening fill to attach, transmits the entry add_order over
+   the seam (build_entry_order: LONG spot buy / SHORT margin sell-to-open, ar:AR-009), and RETURNS - it
+   NEVER checks has_position (the fill is async). The filled:bool return contract diverges by mode
+   (PA-004 #4): process_candidate maps PAPER -> (dispatched=True, filled=<returned>) and LIVE ->
+   (dispatched=<returned>, filled=False, the open is confirmed later via record_execution OPENED).
+
+   SLICE B -- the ar:AR-054 ON-FILL emergSL, the sync->async seam mirror of the exit (commit 58fcdbf;
+   1059->1064). record_execution's OPENED branch in LIVE enqueues a PendingEmergSl built from the just-
+   opened Position's ACTUAL filled qty + side + the D6 emergsl_price + the entry-derived '-sl' cl_ord_id
+   + a fresh now+5s deadline, and pops the resolved Pending Order Registry entry. NEW drive_after_batch
+   pump drains BOTH the on-fill emergSL queue (drive_pending_emergsls) AND the live-exit queue (drive_
+   live_exits) - emergSLs FIRST so a just-opened position is protected before any exit work this tick
+   (loss-prevention: NEVER an open live position with no resting emergSL). private_ws wires drive_after_
+   batch (preferring it over drive_live_exits). LONG sell-stop below / SHORT buy-to-cover reduce_only
+   above (ar:AR-009). A restore/degraded open with no D6 snapshot is skipped (its emergSL is already on
+   Kraken; the gap-close path owns it).
+
+   SLICE C -- the RL-MON-003 entry-suppression gate (commit e7296bc; 1064->1068). The dispatch-side hook
+   (set_entry_suppression_check + the FIRST-check in _dispatch_entry_live + the EntrySuppressed event)
+   was built in slice a; slice c BINDS it: PrivateConnectionAssembler.build calls wm.set_entry_
+   suppression_check(self._rate_counter.is_entry_suppressed), so a live entry add_order is SUPPRESSED
+   while the pair is armed above rl_critical_threshold_pct of its AR-030 operative ceiling. The predicate
+   lives on the rate counter (it reflects the per-pair executions-feed counter, A-1); the dispatch GATE
+   is WSManager's (the add_order owner). ENTRY-only by construction - the exit/cancel path never consults
+   it (the loss-prevention invariant is tested: a live exit ALWAYS dispatches even while entry is
+   suppressed - the suppression preserves the exit rate budget under pressure).
+
+   SLICE D -- the live entry END-TO-END capstone (commit 0805274; 1068->1069). The WIRED private loop
+   over an idle fake socket: the live dispatch_entry transmits the marketable-IOC add_order over the
+   bound socket (the RL-MON-003 gate bound in build is quiet), the IOC fills LATER on the executions
+   channel (record_execution OPENED attaches the D6 snapshot stashed at dispatch + enqueues the emergSL),
+   then ONE idle pc.loop._step runs the after_batch pump (drive_after_batch) which places the AR-054
+   emergSL batch_add over the SAME bound socket (the LONG sell-stop below entry) - proving slices a/b/c
+   work end-to-end through the real ShardReceiveLoop, no real socket.
+
+   SLICE E -- the live-sizing FOUNDATION: the pure BalancesCache unit (commit 60ed432; 1069->1078). NEW
+   exchange/balances_cache.py: the WS-BAL-002/003 live wallet state for the G8 live sizer. The LONG spot
+   module reads wallets[type=spot][id=main] USD ONLY (WS-BAL-002, an exact-key lookup so a futures/
+   staking wallet can NEVER leak in); the SHORT margin module reads the USD margin wallet (ar:AR-050 cash
+   component; the open-position equity is layered by the OpenPositions reconcile downstream). A SNAPSHOT
+   replaces wholesale (a stale wallet never lingers); an UPDATE merges only the changed entries (WS-BAL-
+   003). Decimal-on-receipt (AR-047), clock-free + pure (mirrors ledger.py / rate_counter.py), Long/Short
+   symmetric. UNWIRED at this commit (no organism change).
+
+   SLICE F -- the live-sizing WIRING: the balances channel feeds the cache (commit 92521d1; 1078->1082).
+   The no-op balances handler becomes _balances_handler_for routing each frame to WSManager.ingest_
+   balances (WS-BAL-003 snapshot replaces / update merges; WSManager is the cache's sole writer, the
+   sec-12.4 single-owner property). NEW live reads live_spot_wallet_usd (LONG) + live_margin_wallet_usd
+   (SHORT) are the G8 live-sizer sources. The reconnect RESET step drops the stale cache alongside the
+   rate latches (WS-REC-004), re-seeded by the fresh balances snapshot. Paper wallet_balance unchanged;
+   live wallet_balance STILL None (the sizer-read rewire is the next slice).
+
+4. PROVENANCE / SCOPE
+   A CODE build reading the EXISTING 0500000 dv1_253 (the entry/emergSL/suppression/balances wire facts
+   were all canonical at sec 7 mod:WS_Manager + ar:AR-054/AR-009/AR-050 + the RL-MON-003 prose + WS-BAL-
+   002/003 + PA-004; no diagram concept added). NO Docs change. NO new seed - the deadline 5s + the rate
+   thresholds + the wallet selectors are wire/registry constants, not new CIATS params. TB00000 stays
+   v2_101. The sacred 1:1.5 R:R is untouched. Long/Short SYMMETRY verified: the entry (LONG spot buy /
+   SHORT margin sell), the on-fill emergSL (LONG sell-stop below / SHORT buy-to-cover reduce_only above),
+   the suppression (both modules' RateCounters gate independently per private connection), and the wallet
+   cache (LONG spot/main / SHORT margin) are all co-equal.
+
+5. ENGINEERING CHOICES (per the NSI, NOT Bill rulings - documented here)
+   (1) THE RETURN CONTRACT: dispatch_entry stays -> bool but its meaning diverges by mode (PA-004 #4) -
+       PAPER = filled (synchronous sim open), LIVE = dispatched (an add_order transmitted; False if
+       suppressed). process_candidate maps live to (dispatched=<bool>, filled=False) since the open is
+       async (record_execution OPENED). Nothing downstream consumes CandidateResult.filled critically
+       (it is constructed-and-carried), so this is faithful without a sprawling contract change.
+   (2) THE ENTRY_SUPPRESSED EVENT: rate_counter.py notes RL_CRITICAL has no event_registry entry (the
+       PURE rate-counter unit emits no critical event). But the WSManager dispatch GATE emitting an
+       EntrySuppressed telemetry event is consistent with the established TB00763/764 practice - the
+       existing WSManager live-flow events (LIVE_EXIT_DETECTED / LIVE_EXIT_DISPATCHED / CANCEL_ACK_TIMEOUT
+       / TICKER_TRIGGER_SWITCHED) are NOT in the canon event_registry either; they are live-substrate
+       telemetry. So ENTRY_SUPPRESSED is emitted (a silent entry drop is a loss-prevention anti-pattern);
+       NOT a canon change. NO Bill ruling needed.
+   (3) THE PUMP DRAINS emergSLs FIRST then exits - a just-opened position is protected before any exit
+       work in the same private _step (the position is never momentarily unprotected).
+   (4) margin_usd AGGREGATES the (USD, margin, *) wallets (robust to the exact margin wallet id token the
+       live balances handler will confirm), filtered to type=margin so a spot/futures wallet can never
+       leak into the short; spot_main_usd is the strict exact (USD, spot, main) lookup (WS-BAL-002).
+   (5) ALL new wiring into a possibly-lightweight wm stand-in is getattr-guarded (drive_after_batch,
+       set_entry_suppression_check, ingest_balances, reset_balances_cache) - the operational.py pattern.
+
+6. VERIFICATION
+   1082 pytest green on the 3.12.10 interpreter (full path C:\Users\wstot\AppData\Local\Programs\Python\
+   Python312\python.exe): 1057 -> 1082 (+25). Each of the seven commits pushed + DR-010 verified
+   (local == origin == 92521d1): aec8395, 58fcdbf, e7296bc, 0805274, 60ed432, 92521d1 (six commits; the
+   slice numbering a-f maps to these - slices a and c+d share the early commits as noted above).
+
+7. STATE AT CLOSE - THE LIVE ENTRY LOOP IS NOW WIRED END-TO-END (dispatch -> async fill -> on-fill emergSL)
+   The live entry path runs the full cycle over injected fakes: dispatch_entry transmits the marketable-
+   IOC add_order over the bound transmitter (the RL-MON-003 gate suppresses under rate pressure); the IOC
+   fills async on the executions channel; record_execution OPENED attaches the D6 snapshot + enqueues the
+   AR-054 on-fill emergSL; the private read loop's after_batch pump (drive_after_batch) places it via
+   batch_add in the SAME _step as the fill (never unprotected) and drives any exits. The live wallet cache
+   (BalancesCache) is FED by the balances channel (WS-BAL-002/003) and reset on reconnect. NOTHING
+   connects to Kraken for real (every test injects fakes). What remains for live sizing (see TB00766 NSI):
+   the live G8 sizer READ - wm.wallet_balance(side) is still None in live + sweep reads wm.modules[side].
+   portfolio_baseline (crashes in live, modules is None); the live read must source from the cache
+   (live_spot_wallet_usd / live_margin_wallet_usd) + a live portfolio_baseline (REST-BAL-004 assigns the
+   GetAccountBalance USD directly) + the SHORT open-margin-position equity (REST OpenPositions, AR-050),
+   and the sweep must stop skipping the live side.
+
+8. CARRY-FORWARD (see TB00766 NSI)
+   NO pending Bill ruling. The AUTONOMOUS continue-building mission: THE LIVE G8 SIZER READ (make the
+   universe sweep live-ready). The BalancesCache foundation + wiring is done; the read side is open:
+   (a) wm.wallet_balance(side) in LIVE should read the cache (LONG live_spot_wallet_usd / SHORT live_
+   margin_wallet_usd) instead of returning None; (b) the SHORT full wallet adds the open-margin-position
+   equity via REST OpenPositions (ar:AR-050) - a new REST edge + reconcile (the REST-OO/OpenPositions
+   wire is canonical); (c) a LIVE portfolio_baseline source (REST-BAL-004: the GetAccountBalance USD
+   assigned directly as portfolio_baseline_USD) since sweep reads wm.modules[side].portfolio_baseline
+   which is None/crash in live; (d) the sweep's "if wm.wallet_balance(side) is None: continue" + assemble_
+   candidate's wm.modules[side] reads must become live-aware so a live candidate is sized + dispatched.
+   READ FIRST 0500000 sec 7 mod:WS_Manager balances + gate:G8 + sec 12.4 + WS-BAL-002/003 + REST-BAL-004
+   + REST OpenPositions / AR-050 + the G6/G7 sizing reads in pipeline/sweep.py. LIKELY a CODE-only slice
+   (the read paths are canonical); surface a Bill ruling ONLY if a value/decision is genuinely open.
+   ALTERNATIVE: any legacy Long-only / side-asymmetric artifact -> correct to Long/Short on sight.
+
+9. CLOSE STATE
+   Code HEAD        92521d1 (1082 tests green; NEW exchange/balances_cache.py [BalancesCache WS-BAL-002/
+                    003 + BalancesSnapshotApplied/BalancesUpdated] + MOD exchange/ws_manager.py [_dispatch_
+                    entry_live + set_entry_suppression_check + EntrySuppressed + PendingEmergSl/EmergSlPlaced
+                    + _enqueue_on_fill_emergsl + drive_pending_emergsls + drive_after_batch + ingest_balances
+                    + reset_balances_cache + live_spot/margin_wallet_usd + the record_execution OPENED live
+                    enqueue] + exchange/private_ws.py [drive_after_batch wiring + set_entry_suppression_check
+                    bind + _balances_handler_for + the reconnect balances reset] + pipeline/driver.py [the
+                    PA-004 #4 return-contract map] + execution/execution_engine.py [docstring] + tests
+                    [+25 net across test_ws_manager, test_private_ws, test_balances_cache (new)]).
+   Docs HEAD        ab77593 (0500000 dv1_253 / 0521001 dv1_63 - UNCHANGED; a CODE build reading the diagram).
+   SessionLogs HEAD <this close: TB00765 SL + TB00766 NSI + TB00766 OCS>.
+   TB00000          v2_101 - UNCHANGED (no new seed; a CODE build off the existing canon).
+   Governing instructions next = TB00766 NSI. Auto memory updated (phase2-build through Code 92521d1 /
+   Docs ab77593).
+
+============================================================
+END TB00765
+============================================================
