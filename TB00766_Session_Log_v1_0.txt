@@ -75,23 +75,53 @@ MISSION (AUTONOMOUS, CODE-only): THE LIVE G8 SIZER READ - make the universe swee
          FED end-to-end at startup (wallet snapshot + baseline). The SHORT startup baseline source is
          DEFERRED - the genuine open question below.
 
-3. THE GENUINE OPEN QUESTION SURFACED TO BILL (the stop condition - a real architecture ruling)
-   THE SHORT startup DRAWDOWN-BASELINE source. The diagram pins the LONG (ar:AR-052 "portfolio_baseline
-   _USD = spot_usd_balance"; REST-BAL-004 "GetAccountBalance USD assigned directly") - UNAMBIGUOUS, and
-   built. For the SHORT, AR-052 says "wallet = the Kraken MARGIN-account equity (borrow-adjusted, ar:AR-
-   009)" but does NOT pin the REST endpoint / computation for that equity at startup. Two readings:
-     OPTION 1 (symmetric, simplest): SHORT baseline = the GetAccountBalance MARGIN/main USD (cash),
-       captured once - exactly mirroring the LONG (spot cash). Clean, Long/Short symmetric, no new REST
-       edge; the open-position MTM is the AR-052 current_portfolio's job (same as the long's bid MTM,
-       which the code also defers).
-     OPTION 2 (literal "borrow-adjusted equity"): SHORT baseline = a TradeBalance-style margin-account
-       equity (balance + unrealized P&L - borrowed), needing a TradeBalance (or GetAccountBalance +
-       OpenPositions reconcile) edge. Heavier; reflects the open-position equity at a restart-with-open-
-       positions.
-   The SHORT live sweep is SAFELY GATED OFF until this is ruled (portfolio_baseline(SHORT) is None ->
-   the OR-skip drops the SHORT side - no broken/wrong-sized short entry can fire). The LONG live path is
-   complete. RECOMMENDATION (non-binding): OPTION 1 - symmetric with the long, the cash baseline is the
-   realized capital; MTM belongs to current_portfolio (a separate AR-052 slice). Awaiting Bill.
+3. THE SHORT DRAWDOWN-BASELINE QUESTION - SURFACED, THEN RESOLVED THIS SESSION (Bill engaged)
+   I first surfaced this as a pending ruling with a (non-binding) RECOMMENDATION of "Option 1" (mirror
+   the long with margin cash). Bill challenged it ("Longs and Shorts are different - is it appropriate
+   for the Short to mirror the Long? Do an FP/DP analysis ... to determine the best/correct option even
+   if not one of the two listed"). I ran the analysis (four methodologies) and CORRECTED my recommendation.
+
+   DETERMINATION (RESOLVED): the SHORT drawdown basis is the Kraken MARGIN-ACCOUNT EQUITY (TradeBalance
+   `e` = trade-balance eb + unrealized net P&L, borrow-adjusted ar:AR-009), NOT the margin cash. This IS
+   the AR-052 literal ("the Kraken MARGIN-account equity, borrow-adjusted") - so my original "Option 1"
+   cash recommendation was the one that CONTRADICTED the diagram; Bill's instinct was right.
+
+   THE ANALYSIS (FP = False Positive / DP = Detection Probability, the signal-detection framing, cross-
+   checked by accounting invariance + estimator bias/MSE + asymmetric-loss decision theory):
+     - THE L/S ASYMMETRY: the LONG can use a spot-cash baseline because (i) at a flat cold start spot
+       cash = total equity and (ii) AR-052 adds the long MTM explicitly (cash + Σ bid·qty), so cash+MTM
+       is INVARIANT to opening a position. Neither holds for a Kraken margin SHORT: opening a short
+       CREDITS sale proceeds to the margin wallet (cash inflates, an offsetting borrow liability is
+       tracked separately) AND the margin cash balance does NOT move with open-short MTM.
+     - METHOD 1 (invariance / dimensional consistency): AR-052 mandates the SHORT current_portfolio =
+       equity (borrow-adjusted, marked at the ask). drawdown = (B - C)/B is meaningful only if B and C
+       share a basis -> B must be equity. (Settles it; equity IS the AR-052 literal.)
+     - METHOD 2 (estimator bias/MSE): equity basis is unbiased (estimator = estimand); cash basis carries
+       an irreducible bias term (proceeds contamination + restart offset). MSE_equity < MSE_cash.
+     - METHOD 3 (FP/DP / ROC): cash/cash is BLIND to open-short MTM -> a structural FALSE NEGATIVE exactly
+       in the dangerous regime (an open short bleeding shows ~0 cash-drawdown -> the breaker never fires
+       until close); cash/equity carries an FP bias at restart-with-positions. Equity/equity sits on the
+       optimal ROC frontier (DP maximized, FP minimized, no blind spot).
+     - METHOD 4 (asymmetric loss): for a loss-prevention breaker L_FN >> L_FP; the cash basis's structural
+       FN bias maximizes expected loss -> the Bayes-optimal detector acts on the unbiased equity estimate.
+   CONCRETE FN: flat start $5,000 collateral, baseline(cash)=$5,000; open a short, price runs against it
+   -> EQUITY falls (collateral + negative MTM - borrow) and should trip -5%/-10%, but the margin CASH
+   balance has not moved with the MTM -> cash-drawdown ~ 0 -> NO halt -> the position bleeds to the
+   emergSL/MAE with the breaker asleep. Equity catches it on schedule.
+
+   THE REAL ASYMMETRY (the table): SIZING wallet stays CASH both sides (AR-051 deployable capital - LONG
+   spot cash, SHORT margin collateral cash); DRAWDOWN basis is spot-cash+MTM for the LONG and TradeBalance
+   EQUITY for the SHORT. The long's sizing-capital and drawdown-baseline coincide (spot mechanics); the
+   short's are DISTINCT. So the short must NOT mirror the long.
+
+   IMPLEMENTATION COUPLING (why not built this session): the SHORT baseline + the SHORT current_portfolio
+   must land TOGETHER, both on equity - wiring an equity baseline against the current cash-basis G7 CHECK
+   1 would CREATE the mixed-basis bug. And the running short equity must be reconstructed from WS state
+   (collateral + short MTM at the ask - the borrow accrual, the borrow fee an EXISTING CIATS seed) with
+   periodic TradeBalance `e` reconcile (`e` is REST, cannot be polled per ticker tick). That is a careful
+   safety-critical slice (the circuit breaker) = the TB00767 mission 4(A/B), NOT a session-tail bolt-on.
+   The SHORT live sweep stays SAFELY GATED OFF until then (portfolio_baseline(SHORT) is None -> the sweep
+   skips the short - no wrong-sized short can fire). NO new seed. The LONG live path is complete.
 
 4. STATE AT CLOSE
    Code HEAD        dfda7cf  - 1089 green (1082 -> 1089; +7 net tests).

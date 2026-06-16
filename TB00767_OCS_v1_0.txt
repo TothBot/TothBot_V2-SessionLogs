@@ -55,28 +55,34 @@ BILL STANDING DIRECTIVE: every legacy Long-only artifact gets corrected to the c
 on sight (auto-memory long-short-paradigm-standing). The CIATS coach SELF-forms / TESTS / routes -
 PROFITABLE emails Bill C1 / UNPROFITABLE in the periodic pull reports. NEVER the sacred 1:1.5 R:R.
 
-PENDING BILL RULING (one genuine architecture decision - surface it again at session start if unruled):
-THE SHORT STARTUP DRAWDOWN-BASELINE SOURCE. The LONG is pinned + built (ar:AR-052 = spot_usd_balance;
-REST-BAL-004 = GetAccountBalance USD assigned directly). For the SHORT, AR-052 says "the Kraken MARGIN-
-account equity (borrow-adjusted, ar:AR-009)" but does NOT pin the REST endpoint:
-  OPTION 1 (symmetric, RECOMMENDED): SHORT baseline = GetAccountBalance MARGIN/main USD (cash), captured
-    once - mirrors the long's spot cash; the open-position MTM is the AR-052 current_portfolio's job (same
-    as the long's bid MTM, which the code also defers). Clean, Long/Short symmetric, no new REST edge.
-  OPTION 2 (literal "borrow-adjusted equity"): SHORT baseline = a TradeBalance-style margin equity (balance
-    + unrealized P&L - borrowed), needing a TradeBalance (or GetAccountBalance + OpenPositions reconcile)
-    edge. Heavier; reflects open-position equity at a restart-with-open-positions.
-The SHORT live sweep is SAFELY GATED OFF until ruled (no wrong-sized short can fire); the LONG path is
-complete. Bill: which option for the SHORT startup baseline?
+RULING RESOLVED (TB00766 - Bill engaged + an FP/DP + estimator-bias + ROC + asymmetric-loss analysis): the
+SHORT drawdown basis is NOT a mirror of the long's cash. It is the Kraken MARGIN-ACCOUNT EQUITY (TradeBalance
+`e` = trade-balance eb + unrealized net P&L, borrow-adjusted ar:AR-009) - which IS the AR-052 literal. The
+margin CASH balance is contaminated by short-sale proceeds and BLIND to open-short MTM (a structural FALSE
+NEGATIVE - the breaker would sleep while an open short bleeds) and basis-inconsistent with the AR-052 short
+current_portfolio (equity). Only equity is invariant to the open transaction + matches the current_portfolio
+basis -> unbiased, on the optimal ROC frontier, Bayes-optimal under the asymmetric breaker loss (L_FN >>
+L_FP). The Long uses cash ONLY because spot cash = flat-start equity AND AR-052 adds the long MTM (cash + Σ
+bid·qty) explicitly; the short has no such coincidence - its sizing-collateral (AR-051 cash) and its
+drawdown-equity (AR-052 TradeBalance `e`) are DISTINCT. That is the real Long/Short asymmetry. NO new seed
+(the borrow fee is an EXISTING CIATS seed). The SHORT live sweep stays SAFELY GATED OFF until the equity
+baseline + current_portfolio land TOGETHER (next mission); the LONG path is complete.
 
-NEXT (TB00767 mission, AUTONOMOUS, priority order): (A) once Bill rules - THE SHORT STARTUP BASELINE wired
-symmetric to the long (the chosen REST edge captured once in build); (B) THE ar:AR-052 DRAWDOWN current_
-portfolio (BOTH sides, MTM at bid/ask over the Position Mirror) feeding gate:G7 CHECK 1 - the re-scoped
-slice c, the SHORT MTM via REST OpenPositions layered onto current_portfolio NOT the sizer wallet; (C) THE
-LIVE PROVIDER FEED - wire the sweep's LiveProviders (instrument / bbo / expected_reward / mpp_abs_cap_pct /
-base_per_trade_size / ws_state / cycle_parameters) to the real REST/WS caches. READ the 0500000 element
-first (ar:AR-052 / ar:AR-009 / ar:AR-050 / ar:AR-048 / REST-BAL-004 / REST OpenPositions / sweep.py
-LiveProviders / risk_guard.py), build the diagram literal, CODE-only unless the diagram changes (then
-DR-010 in Claude Code), test over injected fakes, close cleanly before context runs low.
+NEXT (TB00767 mission, AUTONOMOUS, priority order): (A)+(B) COUPLED - THE ar:AR-052 EQUITY DRAWDOWN (build
+the baseline + current_portfolio TOGETHER, both sides, or you create a mixed-basis bug): the LONG current_
+portfolio = spot cash + Σ(bid·qty) (long baseline already built); the SHORT baseline = the margin-account
+EQUITY captured once (TradeBalance `e`) + the SHORT current_portfolio = the RUNNING equity reconstructed
+from WS state (collateral + short MTM at the ASK - the borrow accrual, the borrow fee an EXISTING CIATS
+seed) with periodic TradeBalance reconcile (`e` cannot be REST-polled per ticker tick); feed gate:G7 CHECK
+1 (drawdown = (baseline - current_portfolio)/baseline), keeping SIZING (AR-051) on realized cash. A new
+TradeBalance REST edge captured once in build(). SAFETY: this is the loss-prevention circuit breaker -
+build deliberately, TEST the FN case (an open short bleeding -> equity drawdown FIRES, cash would not), do
+NOT rush. (C) THEN THE LIVE PROVIDER FEED - wire the sweep's LiveProviders (instrument / bbo /
+expected_reward / mpp_abs_cap_pct / base_per_trade_size / ws_state / cycle_parameters) to the real REST/WS
+caches. READ the 0500000 element first (ar:AR-052 / ar:AR-048 / ar:AR-009 / TradeBalance / risk_guard.py /
+position_mirror.py / the ticker bbo cache / the borrow-fee seed), build the diagram literal, CODE-only
+unless the diagram needs a small REST-BAL-* annotation pinning TradeBalance (then DR-010 in Claude Code),
+test over injected fakes, close cleanly before context runs low.
 ============================================================
 END TB00767 OCS
 ============================================================

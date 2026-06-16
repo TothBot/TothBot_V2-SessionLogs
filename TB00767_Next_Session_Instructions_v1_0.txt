@@ -55,32 +55,49 @@ PROVIDER FEED - finish feeding the live sweep
    SLICE-C SELF-CORRECTION (diagram is authority): the G8 sizer read is REALIZED CASH (ar:AR-051), so
    the SHORT sizer wallet = the margin CASH balance, NOT cash + open-position equity. The NSI-(c) "layer
    the OpenPositions equity onto live_margin_wallet_usd" was NOT built (it contradicts AR-051 for the
-   sizer); that equity is the ar:AR-052 DRAWDOWN current_portfolio (MTM), re-scoped to mission 4(B).
+   sizer); that equity is the ar:AR-052 DRAWDOWN current_portfolio (MTM), re-scoped to mission 4(A/B).
 
-4. THE TB00767 MISSION (AUTONOMOUS) - in priority order:
+   RULING RESOLVED (TB00766 - Bill engaged + an FP/DP + estimator-bias + ROC + asymmetric-loss analysis):
+   the SHORT drawdown basis must NOT mirror the long's cash. It is the Kraken MARGIN-ACCOUNT EQUITY
+   (TradeBalance `e` = trade-balance eb + unrealized net P&L, borrow-adjusted ar:AR-009) - which IS the
+   AR-052 literal. The margin CASH balance is contaminated by short-sale proceeds and is BLIND to open-
+   short MTM (a structural FALSE NEGATIVE for the breaker - it would not fire while an open short bleeds);
+   only equity is invariant to the open transaction and basis-consistent with the AR-052 short current_
+   portfolio. The Long "gets away with" a cash baseline only because spot cash = flat-start equity AND
+   AR-052 adds the long MTM (cash + Σ bid·qty) explicitly; the short has no such coincidence (its sizing-
+   collateral and its drawdown-equity are DISTINCT - the real Long/Short asymmetry). So: SIZING stays cash
+   both sides (AR-051); DRAWDOWN is spot-cash+MTM for the long and TradeBalance equity for the short.
 
-   (A) FIRST: THE SHORT STARTUP BASELINE (needs the Bill ruling in section 5; if unruled, do (C)/(B)
-       first and leave (A) for when Bill rules). Once ruled, wire the SHORT baseline symmetric to the
-       LONG: build the chosen REST edge (Option 1 = GetAccountBalance margin/main USD; Option 2 = a
-       TradeBalance-style equity) and capture it ONCE in PrivateConnectionAssembler.build via
-       wm.set_live_portfolio_baseline(SHORT, ...) - same once-only / never-on-reconnect contract as the
-       long. Then the SHORT live sweep produces a sized short entry over fakes (the symmetric capstone).
-       READ FIRST: 0500000 dv1_253 ar:AR-052 (SHORT wallet = margin-account equity borrow-adjusted) +
-       ar:AR-009 + ar:AR-050 + REST-BAL-004 + container:Kraken_REST_API (the OpenPositions / TradeBalance
-       edges). LIKELY CODE-only once ruled.
+4. THE TB00767 MISSION (AUTONOMOUS) - the SHORT EQUITY-BASIS DRAWDOWN (one COUPLED slice), then the feed:
 
-   (B) THE ar:AR-052 DRAWDOWN current_portfolio (the re-scoped slice c, BOTH sides, MTM): the diagram's
-       drawdown uses current_portfolio_USD = wallet + sum(MTM of open positions) - LONG marked at the
-       BID (ar:AR-048), SHORT at the ASK - but the code's gate:G7 CHECK 1 currently uses the realized
-       wallet_balance (a pre-existing simplification). Build the AR-052 current_portfolio (the per-side
-       MTM sum over the Position Mirror, bid for longs / ask for shorts) and feed G7 CHECK 1 with it
-       (drawdown_pct = (baseline - current_portfolio)/baseline), keeping the SIZING reads (AR-051) on
-       realized cash. For the SHORT this needs the open-margin-position equity via REST OpenPositions
-       (the original NSI-(c) edge) - layered onto current_portfolio, NOT onto the sizer wallet. READ:
-       ar:AR-052 + ar:AR-048 + REST OpenPositions + pipeline/risk_guard.py. CODE-only; surface a ruling
-       only if the borrow-adjustment formula is genuinely undecided.
+   (A)+(B) COUPLED - THE ar:AR-052 EQUITY DRAWDOWN (build baseline + current_portfolio TOGETHER, both
+       sides, or you create a mixed-basis bug). The code's gate:G7 CHECK 1 today uses the SIZING wallet
+       (realized cash) as BOTH terms - a pre-existing simplification. Build:
+       - The LONG current_portfolio = spot cash + Σ(bid · qty) over open longs (ar:AR-048 bid). The LONG
+         baseline (spot cash, captured once) is ALREADY built + correct (TB00766 slice e).
+       - The SHORT baseline = the margin-account EQUITY captured ONCE at startup (TradeBalance `e`), and
+         the SHORT current_portfolio = the RUNNING equity. NOTE: `e` is a REST snapshot - it CANNOT be
+         polled on every ticker tick (AR-052 evaluates "on every bbo ticker event"). So the running short
+         equity is reconstructed from WS state: margin collateral (the balances cache) + Σ(open-short MTM
+         marked at the ASK, ar:AR-048) - the borrow/rollover accrual (the borrow fee is a CIATS SEED per
+         [[long-short-parity-mission]] Bill ruling A), with TradeBalance `e` used PERIODICALLY to reconcile/
+         re-seed (the WS-BAL-005 -> REST reconcile pattern). Feed G7 CHECK 1: drawdown_pct = (baseline -
+         current_portfolio)/baseline, keeping the SIZING reads (AR-051 CHECK 2/3 + G8) on realized cash.
+       - A new TradeBalance REST edge (the SHORT equity source), captured once in build() via
+         wm.set_live_portfolio_baseline(SHORT, e) - same once-only / never-on-reconnect contract as the
+         long. The flat-cold-start sanity check: at startup flat, `e` == margin cash == GetAccountBalance
+         margin USD (cross-validate).
+       READ FIRST: 0500000 dv1_253 ar:AR-052 (the per-side baseline + current_portfolio + the borrow-
+       adjusted short equity) + ar:AR-048 (bid for long MTM / ask for short MTM) + ar:AR-009 + container:
+       Kraken_REST_API (the TradeBalance / OpenPositions edges) + pipeline/risk_guard.py CHECK 1 +
+       exchange/position_mirror.py (qty/avg_entry/side) + the ticker bbo cache + the borrow-fee seed home.
+       MOSTLY CODE-only; if the diagram does not name the TradeBalance endpoint for the short equity,
+       a SMALL diagram annotation (a REST-BAL-* note pinning TradeBalance `e`) is the only Docs touch
+       (DR-010 in Claude Code) - the AR-052 SEMANTICS are already canonical, this only pins the endpoint.
+       SAFETY: this is the loss-prevention circuit breaker - build deliberately, test the FN case (an open
+       short bleeding -> equity drawdown FIRES; cash would not), do NOT rush it.
 
-   (C) THE LIVE PROVIDER FEED (the sweep's LiveProviders plug-points, sweep.py docstring): instrument
+   (C) THEN THE LIVE PROVIDER FEED (the sweep's LiveProviders plug-points, sweep.py docstring): instrument
        (status/marginable/24h-vol), bbo, expected_reward (DEC-124), mpp_abs_cap_pct (DEC-128), base_
        per_trade_size (CR-06), ws_state, cycle_parameters - currently INJECTED as fakes. Wire make_live_
        providers to the real REST/WS caches (the instrument cache, the ticker bbo, the per-module
@@ -90,17 +107,20 @@ PROVIDER FEED - finish feeding the live sweep
    ALTERNATIVES if a mission stalls on a ruling: any legacy Long-only / side-asymmetric artifact ->
    correct to Long/Short on sight (STANDING).
 
-5. THE PENDING BILL RULING (surface again at session start if still unruled)
-   THE SHORT STARTUP DRAWDOWN-BASELINE SOURCE. The LONG is pinned + built (ar:AR-052 = spot_usd_balance;
-   REST-BAL-004 = GetAccountBalance USD). For the SHORT, AR-052 says "the Kraken MARGIN-account equity
-   (borrow-adjusted, ar:AR-009)" but does not pin the REST endpoint:
-     OPTION 1 (symmetric, RECOMMENDED): SHORT baseline = GetAccountBalance MARGIN/main USD (cash),
-       captured once - mirrors the long's spot cash; MTM is the AR-052 current_portfolio's job.
-     OPTION 2 (literal borrow-adjusted equity): SHORT baseline = a TradeBalance-style equity (balance +
-       unrealized P&L - borrowed), needing a TradeBalance (or GetAccountBalance + OpenPositions) edge.
-   The SHORT live sweep is SAFELY GATED OFF until ruled (no wrong-sized short can fire). If Bill rules
-   OPTION 1 it is CODE-only; OPTION 2 adds a REST edge but is still likely CODE-only (the components are
-   canonical). Surface ONLY this genuine decision, in plain text.
+5. NO PENDING BILL RULING (the prior TB00766 ruling was RESOLVED above - section 3, the SHORT equity basis)
+   The SHORT startup drawdown-baseline source is DETERMINED: the Kraken margin-account EQUITY (TradeBalance
+   `e`, borrow-adjusted ar:AR-009) - NOT the margin cash. Rationale (full analysis in the TB00766 SL):
+     - REJECTED (the old "Option 1", cash mirror of the long): margin cash is blind to open-short MTM ->
+       a structural FALSE NEGATIVE (the breaker sleeps while an open short bleeds) + basis-inconsistent
+       with the AR-052 short current_portfolio (equity) -> a drawdown-measurement bias. Disqualifying for
+       a loss-prevention gate (L_FN >> L_FP).
+     - CHOSEN: the margin-account EQUITY (TradeBalance `e`), captured once + reconstructed running from
+       WS state (collateral + short MTM at the ask - borrow accrual) with periodic TradeBalance reconcile.
+       Unbiased (estimator = estimand), basis-consistent with current_portfolio, no FN blind spot - it sits
+       on the optimal ROC frontier and is the Bayes-optimal choice under the asymmetric breaker loss.
+   The SHORT live sweep stays SAFELY GATED OFF (baseline None -> the sweep skips the short) until 4(A/B)
+   lands the equity baseline + current_portfolio TOGETHER (a basis-consistent pair - never the baseline
+   alone). No NEW seed (the borrow fee is an EXISTING CIATS seed per [[long-short-parity-mission]]).
 
 6. RULES RECAP
    READ the 0500000 element first; build the diagram literal; CODE-only unless the diagram changes (then
