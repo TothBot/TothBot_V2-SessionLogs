@@ -1,0 +1,81 @@
+DocDCN:     TB00759
+DocTitle:   TB00759_Next_Session_Instructions
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00759_Next_Session_Instructions_v1_0.txt
+DocDate:    06-15-2026
+DocTime:    23:59:59 UTC
+
+============================================================
+TB00759 NSI - WIRE THE ar:AR-030 maxratecount UNIT (the autonomous next mission) + TWO BILL RULINGS QUEUED
+The runner + the C1/C2-C6 SMTP edges + the durable corpus + the heat signal are built (TB00758). The next
+AUTONOMOUS (no-ruling) mission wires the ar:AR-030 maxratecount order-rate-counter unit (private_ws's
+RESET_RATE_CEILING is a no-op placeholder today). TWO higher-value missions await a Bill ruling (sec 0).
+EXECUTOR: CLAUDE CODE (autonomous, "auto mode on", continuous-run)
+============================================================
+
+NSIs are Claude-authored + informational; Bill's chat directives govern. PLAIN-TEXT choices ONLY - the
+AskUserQuestion / question-box tool is BANNED (TB00000 4.7). Per Bill's standing CONTINUOUS-RUN directive
+([[continuous-run-directive]]): run continuously across missions until context runs LOW; do NOT pause to
+ask "should I proceed"; close cleanly BEFORE the limit. A session close (SL+NSI+OCS) is NOT a "pause to
+ask" - it is the standing protocol; the next OCS paste resumes immediately.
+
+NUMBERING (Bill ruling TB00745): SL = this session's number; NSI = the next; OCS = the same as the NSI.
+This session is 759; it closes as TB00759 SL + TB00760 NSI + TB00760 OCS.
+
+0. TWO BILL RULINGS QUEUED (the two highest-value missions; surfaced TB00758, await Bill's call)
+   (D1) C5 FORM 8949 qty FIELD - expand the SACRED "23-field canonical" contract:TRADE_CLOSE schema to
+        24 fields (add qty), so C5 can compute proceeds (exit_price*qty) + cost_basis (entry_fill_price*
+        qty). qty is NOT derivable from the existing fields; the diagram itself flags the gap. This is a
+        DIAGRAM-LEVEL change: 0500000 (24 "23-field" sites + the schema_fields_canonical line + the
+        visual) -> dv1_252, 0521001 -> dv1_62, + the code schema fingerprint + the durable serializer +
+        the C5 tax lots. RECOMMEND: approve; author qty as field (24) in Claude Code (DR-010). RULING
+        NEEDED: expand the sacred schema to 24 fields? (If Bill says go, this is the mission.)
+   (D2) G7 SEMAPHORE ACQUIRE SEMANTICS - ar:AR-043. The diagram (0500000 line 2737) says "per-module
+        DISPATCH SERIALIZATION" (transient, the dispatch round-trip) but the in-code comment says
+        "acquired at entry, released ON CLOSE" (position-lifetime, max-1-open-per-module). These differ
+        materially for capital concurrency. RULING NEEDED: (a) transient dispatch-round-trip serialization
+        [release when the fill resolves] or (b) position-lifetime [release on close]? Then the acquire
+        side is a clean pure-code build.
+   If Bill rules on either, that becomes the session's mission. ABSENT a ruling, execute the AR-030
+   maxratecount unit below (it needs no ruling - keep building, do not wait).
+
+1. ENTRY / COLD-LOAD + VERIFY (from GitHub HEAD)
+   Read TB00000 (v2_101) + this NSI + the TB00758 Session Log. Cold-load the auto-memory (phase2-build
+   current through e5c1e21; ciats-self-tuning-directive; continuous-run-directive).
+     Code HEAD        e5c1e21 (956 tests green). Python = C:\Users\wstot\AppData\Local\Programs\Python\
+                      Python312\python.exe (3.12.10; default PATH python is 3.10 - full path ONLY). Run:
+                      python.exe -m pytest -q (expect 956 green).
+     Docs HEAD        d023cc9 - 0500000 dv1_251 / 0521001 dv1_61.
+     SessionLogs HEAD <the TB00758 SL + TB00759 NSI/OCS push>.
+
+2. STATE: every subsystem + the runnable cold-start are built. The ar:AR-030 maxratecount unit is a
+   placeholder no-op.
+   exchange/private_ws  RESET_RATE_CEILING is a no-op placeholder; the per-pair Kraken order-rate counter
+                        (maxratecount) is not tracked. The sec-7 event_registry defines MAXRATECOUNT_SET
+                        [INFO] {value}, RATE_COUNTER_UPDATE [INFO] {symbol, value, maxratecount}, and
+                        RATE_COUNTER_WARNING [WARNING] {symbol, value, maxratecount}.
+   What is MISSING: the ar:AR-030 maxratecount unit - track the per-pair order-rate counter against the
+                    Kraken-published maxratecount ceiling, emit RATE_COUNTER_UPDATE per change +
+                    RATE_COUNTER_WARNING as it approaches the ceiling, and set the ceiling from
+                    MAXRATECOUNT_SET (the ratecounter/instrument feed). PURE unit + the private_ws wiring.
+
+3. MISSION (absent a D1/D2 ruling) - wire the ar:AR-030 maxratecount unit (a CODE build).
+   READ 0500000 ar:AR-030 + the RATE_COUNTER event_registry entries + the private_ws ratecounter feed
+   FIRST - build the diagram literal. PURE unit (a clock-free counter, the edge injected), no diagram
+   edit unless a genuine gap appears. Build: (a) the maxratecount counter unit (per-pair value vs
+   ceiling, the warning threshold, the events); (b) wire it into private_ws (replace the RESET_RATE_
+   CEILING no-op; the ratecounter channel updates it); (c) prove it (unit + the private_ws integration).
+   If a maxratecount WARNING THRESHOLD fraction is unspecified by the diagram, that is a genuine NEW SEED
+   -> surface it in plain text (TB00000 sec 8 + a 0500000 note + DR-010), do NOT hardcode silently.
+
+4. PROVENANCE / SCOPE
+   A CODE build READS 0500000. If a new seed (the warning threshold) or an architecture gap appears,
+   surface it in plain text + the Docs edit + DR-010. LONG-STANDING FLAGS persist: G7 semaphore ACQUIRE
+   (D2); the C5 qty field (D1); the durable per-module restore needs a side field the 23-field schema
+   lacks; live exit detection + live MTM marking are a later slice; the runner's real websockets/REST
+   construction is the live-deploy slice.
+
+============================================================
+END TB00759
+============================================================
