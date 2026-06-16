@@ -1,0 +1,104 @@
+DocDCN:     TB00766
+DocTitle:   TB00766_Session_Log
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00766_Session_Log_v1_0.txt
+DocDate:    06-16-2026
+DocTime:    22:00:00 UTC
+
+============================================================
+TB00766 SESSION LOG
+MISSION (AUTONOMOUS, CODE-only): THE LIVE G8 SIZER READ - make the universe sweep live-ready
+============================================================
+
+0. NUMBERING (Bill ruling TB00745, standing): this SL = session 766 (it ran the TB00766 NSI); its
+   NSI = TB00767; its OCS = TB00767.
+
+1. COLD-LOAD VERIFIED BEFORE WORKING
+   Code HEAD        92521d1  - python.exe -m pytest -q = 1082 green (confirmed).
+   Docs HEAD        ab77593  - 0500000 dv1_253 / 0521001 dv1_63 (UNCHANGED).
+   SessionLogs HEAD 79dfb96  - TB00765 SL + TB00766 NSI/OCS.
+   Auto-memory loaded (phase2-build + long-short-paradigm-standing + ciats-self-tuning-directive +
+   continuous-run-directive + no-question-box-tool + session-close-standing + tothbot-commit-rules).
+
+2. DONE TB00766 (autonomous, CODE-only reading the existing 0500000 dv1_253): THE LIVE G8 SIZER READ.
+   THREE Code commits, 1082 -> 1089 green, NO Docs change, NO new seed, TB00000 stays v2_101. The
+   universe sweep can now PRODUCE a live entry: the live wallet + drawdown-baseline reads are wired,
+   the sweep is live-ready, and the LONG live path is fed end-to-end at startup. Nothing connects to
+   Kraken for real (all tests inject fakes).
+
+   THE KEY DIAGRAM READING (the slice-c self-correction, diagram is authority over the NSI framing):
+   the G8 SIZER read (wallet_balance, feeding gate:G7 CHECK 1/2/3 + gate:G8) is REALIZED CAPITAL /
+   cash-in-hand per ar:AR-051 ("short_portfolio_USD = short_module_wallet_balance ... REALIZED CAPITAL
+   ONLY ... does NOT include mark-to-market of open positions ... Cash-in-hand basis"). So the SHORT
+   sizer wallet = the margin-account CASH balance (live_margin_wallet_usd), NOT cash + open-position
+   equity. The NSI's slice (c) - "layer the open-margin-position equity onto live_margin_wallet_usd" -
+   would CONTRADICT AR-051 for the sizer; that equity is the ar:AR-052 DRAWDOWN current_portfolio (MTM
+   at the ask), a DISTINCT computation (and the code's G7 CHECK 1 already uses realized wallet_balance,
+   not an MTM current_portfolio). So slice (c) was deliberately NOT built into the wallet read; it is
+   re-scoped to the AR-052 drawdown current_portfolio slice (see TB00767 NSI). Read STRUCTURE kept
+   Long/Short symmetric.
+
+   (a)+(b) commit 5da306d - THE LIVE SIZER-READ ACCESSORS on WSManager:
+       - wallet_balance(side) now branches mode: PAPER -> the module synthetic wallet (unchanged);
+         LIVE -> the BalancesCache (LONG live_spot_wallet_usd spot/main WS-BAL-002; SHORT live_margin_
+         wallet_usd margin cash AR-050) - ar:AR-051 realized cash, the synthetic ledger bypassed (sec
+         12.4). None before the first balances frame (the sweep skips the side that tick).
+       - NEW portfolio_baseline(side) accessor: PAPER -> the module ledger's captured baseline; LIVE ->
+         the _live_portfolio_baseline captured via set_live_portfolio_baseline (REST-BAL-004: the
+         GetAccountBalance USD assigned directly as portfolio_baseline_USD). rule:HR-WM-011 - captured
+         ONCE, never updated, never reset on reconnect (AR-056: a recapture is ignored; reset_balances_
+         cache never touches the baseline). Per-module isolated.
+
+   (d) commit b85497f - THE SWEEP IS LIVE-READY (pipeline/sweep.py):
+       - assemble_candidate reads wm.portfolio_baseline(side) (the mode-aware accessor) instead of
+         wm.modules[side].portfolio_baseline (which is None/crash in live - modules is paper-only).
+       - sweep_pair skips a permitted side when wallet_balance(side) OR portfolio_baseline(side) is
+         None: PAPER a side with no wired module; LIVE the balances snapshot / the REST-BAL-004 startup
+         baseline has not arrived yet - a not-yet-ready wallet, skipped this tick like a WARM_UP pair,
+         never a crash (G7 would reject a None/<=0 baseline). Once both land the (pair, side) candidate
+         is sized through G6/G7/G8 and dispatched via the TB00765 live dispatch_entry.
+       - CAPSTONE (the entry mirror of the TB00764 exit capstone): a REAL live WSManager with a fed
+         BalancesCache + a captured baseline runs the full sweep over fakes -> process_candidate ->
+         a marketable-IOC entry add_order transmitted on the bound socket. Plus the mirror skip (wallet
+         cache not yet fed -> no dispatch, no crash on modules being None in live). The three sibling WM
+         test fakes (test_providers/test_live_driver/test_live_smoke) gained the portfolio_baseline
+         accessor.
+
+   (e) commit dfda7cf - THE REST-BAL-004 STARTUP BASELINE CAPTURE (LONG) (exchange/private_ws.py):
+       - PrivateConnectionAssembler gains an OPTIONAL fetch_account_balance edge (REST-BAL-004
+         GetAccountBalance). build() (the initial startup) captures the LONG drawdown baseline ONCE via
+         wm.set_live_portfolio_baseline (ar:AR-052: the GetAccountBalance spot USD assigned directly as
+         portfolio_baseline_USD). Runs ONLY in build(), never in a reconnect restore step (AR-056) - a
+         reconnect never recaptures; the baseline survives the WS-REC-004 cache drop. Absent the edge no
+         live baseline is captured (back-compat, like fetch_snap_orders). So the LONG live sweep is now
+         FED end-to-end at startup (wallet snapshot + baseline). The SHORT startup baseline source is
+         DEFERRED - the genuine open question below.
+
+3. THE GENUINE OPEN QUESTION SURFACED TO BILL (the stop condition - a real architecture ruling)
+   THE SHORT startup DRAWDOWN-BASELINE source. The diagram pins the LONG (ar:AR-052 "portfolio_baseline
+   _USD = spot_usd_balance"; REST-BAL-004 "GetAccountBalance USD assigned directly") - UNAMBIGUOUS, and
+   built. For the SHORT, AR-052 says "wallet = the Kraken MARGIN-account equity (borrow-adjusted, ar:AR-
+   009)" but does NOT pin the REST endpoint / computation for that equity at startup. Two readings:
+     OPTION 1 (symmetric, simplest): SHORT baseline = the GetAccountBalance MARGIN/main USD (cash),
+       captured once - exactly mirroring the LONG (spot cash). Clean, Long/Short symmetric, no new REST
+       edge; the open-position MTM is the AR-052 current_portfolio's job (same as the long's bid MTM,
+       which the code also defers).
+     OPTION 2 (literal "borrow-adjusted equity"): SHORT baseline = a TradeBalance-style margin-account
+       equity (balance + unrealized P&L - borrowed), needing a TradeBalance (or GetAccountBalance +
+       OpenPositions reconcile) edge. Heavier; reflects the open-position equity at a restart-with-open-
+       positions.
+   The SHORT live sweep is SAFELY GATED OFF until this is ruled (portfolio_baseline(SHORT) is None ->
+   the OR-skip drops the SHORT side - no broken/wrong-sized short entry can fire). The LONG live path is
+   complete. RECOMMENDATION (non-binding): OPTION 1 - symmetric with the long, the cash baseline is the
+   realized capital; MTM belongs to current_portfolio (a separate AR-052 slice). Awaiting Bill.
+
+4. STATE AT CLOSE
+   Code HEAD        dfda7cf  - 1089 green (1082 -> 1089; +7 net tests).
+   Docs HEAD        ab77593  - UNCHANGED (CODE-only build; 0500000 dv1_253 / 0521001 dv1_63).
+   TB00000          v2_101   - UNCHANGED (no new seed, no architecture change).
+   DR-010 verified each commit (local == origin/master after each push).
+
+============================================================
+END TB00766 SESSION LOG
+============================================================
