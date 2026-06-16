@@ -1,0 +1,104 @@
+DocDCN:     TB00762
+DocTitle:   TB00762_Next_Session_Instructions
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00762_Next_Session_Instructions_v1_0.txt
+DocDate:    06-16-2026
+DocTime:    02:30:00 UTC
+
+============================================================
+TB00762 NSI - ONE BILL RULING STILL PENDING (item A, the per-module restore side-gap) + KEEP BUILDING
+The live executions-confirmed close (sec 12.5 LIVE FLOW) + live MTM marking are DONE (TB00761). The next
+session continues BUILDING autonomously -- the natural next is the LIVE EXIT DETECTION -> MARKET-SELL
+DISPATCH (the close tail is already wired) -- and otherwise no pause to ask.
+EXECUTOR: CLAUDE CODE (autonomous, "auto mode on", continuous-run)
+============================================================
+
+NSIs are Claude-authored + informational; Bill's chat directives govern. PLAIN-TEXT choices ONLY - the
+question-box tool is BANNED (TB00000 4.7). Per the CONTINUOUS-RUN directive: run continuously across
+missions until context runs LOW; do NOT pause to ask "should I proceed"; a session close is the standing
+protocol, not a pause; close cleanly BEFORE the limit.
+
+NUMBERING (Bill ruling TB00745): SL = this session's number; NSI = the next; OCS = the same as the NSI.
+This session is 762; it closes as TB00762 SL + TB00763 NSI + TB00763 OCS.
+
+0. BILL'S GOVERNING DIRECTIVE (TB00750 turn - still the spec). The CIATS coach FORM -> TEST -> ROUTE:
+   PROFITABLE -> a C1 IMMEDIATE email / UNPROFITABLE -> the periodic PULL reports. NEVER the sacred R:R.
+
+1. ENTRY / COLD-LOAD + VERIFY (from GitHub HEAD)
+   Read TB00000 (v2_101) + this NSI + the TB00761 Session Log. Cold-load the auto-memory (phase2-build
+   current through Code 6c3bcf0 / Docs 5e16a7b; ciats-self-tuning-directive; continuous-run-directive).
+     Code HEAD        6c3bcf0 (988 tests green). Python = C:\Users\wstot\AppData\Local\Programs\Python\
+                      Python312\python.exe (3.12.10; default PATH python is 3.10 - full path ONLY). Run:
+                      python.exe -m pytest -q (expect 988 green).
+     Docs HEAD        5e16a7b - 0500000 dv1_252 / 0521001 dv1_62 (the 24-field schema; UNCHANGED TB00761).
+     SessionLogs HEAD <the TB00761 SL + TB00762 NSI/OCS push>.
+
+2. STATE: the LIVE close tail is wired (sec 12.5 LIVE FLOW). An executions-confirmed close fill emits the
+   24-field evt:TRADE_CLOSE through the emitting side's Exit Controller + CIATS membrane, byte-identical to
+   paper: ws_manager.record_execution(CLOSED) in live -> _drive_live_close -> exit_controller.on_live_close
+   (clear_mirror=False -- the executions fill already cleared the mirror). exit_reason = the note_live_exit_
+   dispatch stamp ELSE EMERGENCY_SL_FIRED; exit_price = the close fill avg_price (WS-EXE-012); fees_exit =
+   the executions fee (FEE-CALC-006); the live entry fee is retained at the live OPEN. handle_ticker marks
+   the max-over-life MAE in BOTH modes (live MTM marking) so the live close carries true heat. The exit
+   DETECTION + market-sell DISPATCH (the upstream that PRODUCES the close fill in live) is NOT yet built.
+
+3. ONE BILL RULING STILL PENDING (carried from TB00761 item A - a genuine architecture decision; do NOT
+   silently pick):
+   (A) THE DURABLE PER-MODULE RESTORE SIDE-GAP. The contract:TRADE_CLOSE durable schema (24 fields) carries
+       NO side field. At runtime the per-module (Long/Short) partition IS the emitting side's controller, so
+       the in-memory CIATS corpus is correctly partitioned AND the live TRADE_CLOSE now routes through the
+       right side's membrane (TB00761). BUT the on-disk trades_<YYYY>.jsonl is SIDELESS, so a cold-start
+       cannot rebuild the PER-MODULE corpus from disk. C5 ANNUAL (combined tax) is fine. TWO options:
+         (a) ADD schema field 25 "side" to contract:TRADE_CLOSE (a diagram authority edit 0500000 24 -> 25,
+             mirrored in code, like the D1 23 -> 24 qty expansion). Self-describing; one durable source of
+             truth. A canonical-record change -> Bill ratifies. RECOMMENDED.
+         (b) Carry side OUT-OF-BAND - a per-module index / per-side files (trades_long_/trades_short_);
+             no schema change; the durable record stays the tax/Form-8949 canonical exactly as today.
+       SURFACE in plain text; do NOT build until ruled. (TB00761's work did NOT resolve this - it routed by
+       the in-memory side; the on-disk record is still sideless.)
+
+4. THE AUTONOMOUS NEXT MISSION (no ruling needed - keep building while (A) awaits a ruling)
+   HIGHEST-VALUE NEXT = THE LIVE EXIT DETECTION -> MARKET-SELL DISPATCH (completes the live exit loop; the
+   close tail is already built TB00761). This is LARGE + canon-rich - build it END-TO-END, faithfully, in a
+   focused session. READ FIRST: 0500000 sec 3 Image3 (Layer 1a/L2/L3) + sec 12.5 + ar:AR-048. CANON:
+     - Layer 2 MAE is SEQUENCE-CRITICAL: "(1) cancel emergSL THEN (2) market sell" -- NOT a bare market
+       sell. The I-6 CANCEL-TIMEOUT FALLBACK: a req_id registry tracks each cancel ACK; on timeout check
+       the executions channel state; confirmed-cancelled -> proceed; state-unknown -> retry once; second
+       timeout -> ALERT + HOLD position + alert operator; "NEVER issue market sell with ambiguous order
+       state". Plus the MPP-rejection retry (C-1: a market sell may reject on a wide spread; EC must handle
+       + retry). Layer 1a adds the AR-040 pair-status precondition FIRST (cancel_only/maintenance -> HOLD,
+       the resting emergSL is the only protection - mirror the paper l1a_precondition_blocks).
+     - NO builders exist yet: add build_market_sell_order (order_type=market, side OPPOSITE the position --
+       LONG sells, SHORT BUYS-to-cover reduce_only=true per ar:AR-009, whole-position qty, cl_ord_id,
+       stp_type=cancel_newest, deadline now+5s) + build_cancel_order (cancel the resting emergSL by its
+       cl_ord_id) in execution/entry_dispatch.py (or a new exit_dispatch.py), mirroring the existing
+       build_entry_order / build_emergsl_order style (pure, Decimal-stringified, no I/O).
+     - THE SYNC->ASYNC BOUNDARY (an engineering choice, NOT a Bill ruling): the read loop drives SYNC
+       handlers (handle_ticker) but the seam (cancel_order / dispatch_market_sell) is ASYNC. Resolve it
+       cleanly: a sync detector that enqueues an exit INTENT + an async driver (or an async dispatch_live_
+       exit method, like dispatch_entry) that drains it -> cancel -> await/track the ACK -> market sell ->
+       note_live_exit_dispatch(symbol, reason) so the executions confirm carries the reason onto the
+       TRADE_CLOSE (the hook is already in place). Add a double-dispatch guard (a reason already stamped =
+       an exit already in flight -> skip re-dispatch). Test with an injected live_sender (the dispatch_entry
+       live tests are the pattern).
+   ALTERNATIVES if you judge them higher value: the runner's real websockets/REST construction (the live-
+   deploy slice -- the websockets asyncio client WS-LIB-001 + the aiohttp REST bodies GetWebSocketsToken /
+   GetOpenOrders / GetAccountBalance; the same async read-loop integration the exit dispatch needs; do NOT
+   connect to Kraken for real); OR the AR-056 reconnect gap-close TRADE_CLOSE (emergSL fired while
+   disconnected -> fire the CIATS bus for each gap-closed position via on_live_close -- but FIRST decide the
+   gap-close exit price/fees source: REST ownTrades reconciliation vs the known entry-time emergsl_price
+   estimate; if that is a genuine modeling decision, surface it).
+   READ the relevant 0500000 element FIRST for whichever you pick; build the diagram literal; a genuine new
+   seed or architecture gap -> surface in plain text (do NOT hardcode silently).
+
+5. PROVENANCE / SCOPE
+   A CODE build READS 0500000. A new seed or architecture gap -> plain text + the Docs edit + DR-010.
+   LONG-STANDING FLAGS persist: the durable per-module restore side-gap (item A, awaiting a ruling); the
+   live exit detection -> market-sell dispatch (the cancel-then-sell sequence + I-6 timeout fallback + MPP
+   retry; the close tail is built); the runner's real websockets/REST (live deploy); the AR-056 reconnect
+   gap-close TRADE_CLOSE; the RL-MON-003 entry-suppression gate (lands with the live entry path).
+
+============================================================
+END TB00762
+============================================================

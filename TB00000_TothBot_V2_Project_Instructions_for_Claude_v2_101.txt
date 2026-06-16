@@ -1,10 +1,10 @@
 DocDCN:     TB00000
 DocTitle:   TothBot_V2_Project_Instructions_for_Claude
-DocVersion: v2_100
+DocVersion: v2_101
 DocOwner:   Bill
-DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00000_TothBot_V2_Project_Instructions_for_Claude_v2_100.txt
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00000_TothBot_V2_Project_Instructions_for_Claude_v2_101.txt
 DocDate:    06-15-2026
-DocTime:    06:20:50 UTC
+DocTime:    23:59:30 UTC
 
 ============================================================
 TOTHBOT V2 - WORKING INSTRUCTIONS FOR CLAUDE
@@ -14,6 +14,30 @@ This is Bill and Claude's working document. It is NOT a
 controlled document: no DCN, no lifecycle state, no namespace
 governance. It exists to keep us on track and moving forward.
 Keep it lean. Change history lives in git, not in here.
+
+v2_101: the CIATS stop-loss-width self-tuning step registered as a
+CIATS-owned seed (TB00751, building Bill's TB00750 FORM->TEST->ROUTE
+directive). The coach now self-forms the stop-width theory off the
+running close (correlate each trade's heat-taken mae_pct_reached vs the
+realized outcome via the Spearman gate), TESTS it via the real shadow
+replay + the absolute CHECK, and ROUTES by result: a profitable result
+emails Bill a C1 ApprovalRequested (HR-RPT-001 push) / a disproven one
+is REPORTED into the periodic pull reports. The proposed mae_mult
+DIRECTION is data-derived (the Spearman sign - tighten when more heat
+predicts a worse outcome, loosen on the converse); only the MAGNITUDE
+is a seed, because mae_mult is an ATR(14) multiple while mae_pct_reached
+is a price fraction and the per-trade ATR is NOT stored on the
+contract:TRADE_CLOSE record, so an exact data value cannot be derived.
+Section 8 gains the "CIATS - self-tuning step" group: mae_mult_nudge_pct
+= 0.10 (a conservative 10pct relative nudge; per-module; CIATS-owned;
+refined from paper; every application gated by the PDCA CHECK + Bill
+approval HR-CI-011). NEVER the sacred R:R. The entry-filter dials
+(volume_sss_threshold / the rsi bounds) need NO seed - their proposed
+value is data-derived (the loser-median level), re-tested by the entry
+re-simulation; ema defers (a level cannot re-decide a period). Companion:
+0500000 dv1_250 -> dv1_251 (Stream-2 CIATS-proposal q1_do self-tuning
+step note), 0521001 dv1_60 -> dv1_61, TB00751 SL + TB00752 NSI. v2_101
+supersedes all prior versions.
 
 v2_100: short margin borrow/rollover fee registered as a CIATS-owned
 seed (Bill ruling, TB00728 parity campaign DECISION A). Shorts trade
@@ -712,6 +736,32 @@ CIATS - exit controller
   emergency_sl_mult     = 3.0x ATR(14)
   cancel_timeout_window = 5.0 s
   mpp_retry_count       = 3
+
+CIATS - self-tuning step (TB00751)
+  mae_mult_nudge_pct    = 0.10 (fraction). The conservative
+                          RELATIVE step the stop-width self-
+                          tuning loop nudges param:mae_mult by
+                          per qualifying drift signal. DIRECTION
+                          is data-derived (the sign of the
+                          Spearman heat-vs-outcome correlation:
+                          tighten when more heat predicts a worse
+                          outcome, loosen on the converse); only
+                          this MAGNITUDE is a seed, because
+                          mae_mult is an ATR(14) multiple while
+                          mae_pct_reached is a price fraction and
+                          the per-trade ATR is NOT stored on the
+                          TRADE_CLOSE, so an exact data value
+                          cannot be derived -- a bounded 10pct
+                          nudge stands in, every application gated
+                          by the PDCA CHECK + Bill approval
+                          (HR-CI-011). NEVER the sacred R:R.
+                          Per-module; CIATS-owned; refined from
+                          paper. The entry-filter dials
+                          (volume_sss_threshold / the rsi bounds)
+                          need no seed -- data-derived loser-
+                          median value, re-tested by the entry
+                          re-simulation; ema defers (level !=
+                          period).
 
 CIATS - run-to-reversal expected-reward estimator (DEC-124)
   expected_reward_estimator_seed = historical-OHLC backtest

@@ -1,0 +1,165 @@
+DocDCN:     TB00761
+DocTitle:   TB00761_Session_Log
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00761_Session_Log_v1_0.txt
+DocDate:    06-16-2026
+DocTime:    02:30:00 UTC
+
+============================================================
+TB00761 SESSION LOG
+WIRE THE LIVE EXECUTIONS-DRIVEN CLOSE evt:TRADE_CLOSE sec 12.5 LIVE FLOW + LIVE MTM MARKING OF OPEN POSITIONS
+EXECUTOR: CLAUDE CODE (autonomous, auto mode, continuous-run; NO ruling needed this session)
+============================================================
+
+0. NUMBERING NOTE (Bill ruling TB00745, standing)
+   SL = THIS session's number; NSI = the NEXT; OCS = the SAME as the NSI. This session (761, governed by
+   the TB00761 NSI) closes as TB00761 SL + TB00762 NSI + TB00762 OCS.
+
+1. MISSION / CONTEXT
+   Continued autonomously per the CONTINUOUS-RUN directive. The TB00761 NSI queued the autonomous
+   continue-building mission (no Bill ruling needed): "pick the highest value remaining and build it",
+   naming the LIVE executions-driven exit + MTM slice first. Delivered TWO slices in one shot, no pause.
+   ONE Code commit, NO Docs edit, NO new seed. 980 -> 988 green. The session ran end-to-end with no
+   should-I-proceed pause; closed via the standing protocol with context budget reserved for a clean close.
+
+   COLD-LOAD VERIFIED before working: Code 39ab703 (pytest 980 green on 3.12.10 full-path interpreter);
+   Docs 5e16a7b (0500000 dv1_252 / 0521001 dv1_62, the 24-field schema); SessionLogs bcc485d (TB00760 SL
+   + TB00761 NSI/OCS). Auto-memory loaded (phase2-build, ciats-self-tuning-directive, continuous-run).
+
+2. BILL DIRECTIVES (chat-turn, this session)
+   (1) "emphasize auto mode, continuous-run, build the organism, stop stopping; do not stop until you run
+       low on context or surface a real Bill question." Honored: ran two slices in one shot, no pause;
+       closing only as the standing protocol once the next increment became a large multi-part protocol.
+   (2) The standing CIATS coach directive + the sacred 1:1.5 R:R are untouched (no CIATS/R:R work this turn).
+
+3. SOURCE READ FIRST (the diagram is authority for the build literal)
+   0500000 dv1_252 sec 12.5 "Paper Exit Routing Through Exit Controller" (line ~6756) -- the EXIT FLOW
+   steps 1-10 + the LIVE FLOW block (line ~6787): "every step identical except origin of step 1: Kraken
+   executions channel exec_type=filled or exec_type=triggered for emergSL; Steps 2-10 IDENTICAL to paper
+   flow except no synthetic ledger application (real Kraken balances channel applies the credit)." Plus
+   ar:AR-052 (line ~5240: current_portfolio includes MTM; "marked to market ... on every bbo ticker event")
+   for the MTM-marking cadence; ar:AR-048 (long marked at bid / short at ask); WS-EXE-012 (cum_qty +
+   avg_price authoritative on the fill frame); FEE-CALC-006 (actual fees from the executions fee field);
+   the mod:Exit_Controller above-seam desc (line ~7100: "close-side traverses same seam; close emits evt:
+   TRADE_CLOSE mode-agnostic; no paper_trading_mode branch above seam"); the MaeHighWaterTracker docstring
+   ("live MTM marking is executions/quote-feed driven, a later slice" -- THIS session is that later slice).
+
+   NO NEW SEED, NO Docs edit needed: the 12.5 LIVE FLOW is ALREADY canonical (steps 2-10 identical, step-1
+   origin = the executions fill). This session BUILT THE EXISTING DIAGRAM LITERAL. TB00000 stays v2_101.
+
+4. WHAT WAS BUILT (one Code commit, 980 -> 988)
+
+   THE GAP CLOSED: before this session, in LIVE an executions opposite-side fill CLEARED the Position
+   Mirror but emitted NO evt:TRADE_CLOSE -- so the CIATS Stream-2 corpus was EMPTY in live (only paper
+   populated it). The 12.5 LIVE FLOW (steps 2-10 identical) was unbuilt. Now the executions-confirmed
+   close emits the 24-field TRADE_CLOSE, byte-identical to the paper close.
+
+   SLICE 1 -- THE LIVE EXECUTIONS-DRIVEN CLOSE (sec 12.5 LIVE FLOW).
+   - tothbot/exchange/position_mirror.py: the executions-fill close (_close, an opposite-side fill) now
+     carries the just-closed record + the close fill avg_price (WS-EXE-012) on ExecOutcome -- two NEW
+     optional fields closed_position + exit_fill_price (additive, back-compat; position stays None on a
+     close). _handle_fill passes avg_price into _close.
+   - tothbot/execution/exit_controller.py: NEW on_live_close(position, exit_price, exit_reason, fees_exit,
+     wm) -- the executions-confirmed close entry point. The position is handed in DIRECTLY (the mirror is
+     already cleared off the fill, PA-004 div #4), so _close_position runs with a NEW clear_mirror flag =
+     False: step 7 (the mirror clear) is SKIPPED in live (no double-close); steps 6 (emit TRADE_CLOSE) /
+     8 (Selection Controller AR-073) / 9 (semaphore release) are byte-identical to the paper close
+     (rule:HR-EC-013 / PA-005). Net-P&L math is the SAME direction-symmetric FEE-CALC-004 formula.
+   - tothbot/exchange/ws_manager.py: Exit Controllers are now constructed in BOTH modes (a pure close
+     engine above the seam -- "no paper_trading_mode branch above seam"). record_execution: the OPENED
+     branch in live RETAINS the opening fill's actual taker entry fee (executions fee field, FEE-CALC-006)
+     per symbol (no synthetic ledger in live); the CLOSED branch in live drives _drive_live_close. exit_
+     reason resolves from a NEW per-symbol _pending_exit_reason stamp (set by note_live_exit_dispatch, the
+     hook the future live exit DISPATCH path will call) ELSE defaults to EMERGENCY_SL_FIRED -- a close TothBot
+     did not dispatch IS the off-book emergSL backstop firing ("backfilled from the executions channel",
+     sec 7). exit_price = the close fill avg_price; fees_exit = the executions fee (_frame_fee helper).
+     fees_entry_for now reads the live entry-fee map in live. set_ciats_exit_sinks + _exit_controller_for
+     + the exit_controller accessor all lifted to BOTH modes, so the live close emits THROUGH the same
+     per-module CIATS membrane (operational.py wires it in both modes -- comment accuracy fixed).
+
+   SLICE 2 -- LIVE MTM MARKING OF OPEN POSITIONS.
+   - tothbot/exchange/ws_manager.py handle_ticker: now MARKS the max-over-life MAE (MaeHighWaterTracker)
+     in BOTH modes on every ticker bbo (the "live MTM marking of open positions"); the ticker-bbo exit
+     DETECTION + close routing stays PAPER-only (the live exit detection -> market-sell dispatch is the
+     async-seam slice, deferred). So the live TRADE_CLOSE mae_pct_reached now carries TRUE worst-over-the-
+     hold heat (the CIATS stop-width signal), not the at-exit fallback. _drive_live_close clears the MAE
+     tracker after the close (the live close runs clear_mirror=False, so close_position -- which clears the
+     tracker in paper -- does not run; the clear is done here): a reopened symbol starts fresh.
+
+   TESTS (+8 net, 980 -> 988): tests/test_position_mirror.py [the executions close carries closed_position
+   + exit_fill_price]; tests/test_exit_controller.py [on_live_close emits + updates SC + releases the
+   semaphore but does NOT clear the mirror]; tests/test_ws_manager.py [5 live-close: emit + EMERGENCY_SL_
+   FIRED default + net-P&L + qty + fees; dispatched-reason via note_live_exit_dispatch; semaphore release +
+   entry-fee clear; CIATS-sink routing; short mirror | 2 live-MTM: marks without detecting; the live close
+   carries max-over-life heat + clears the tracker]; 4 EXISTING live-no-op tests UPDATED to the new contract
+   (Exit Controllers now exist in live; set_ciats_exit_sinks wires in live; handle_ticker/L1a stay inert as
+   no-CLOSE/no-emit, no longer asserting "exit_controller is None").
+
+5. PROVENANCE / SCOPE
+   A CODE build that READS the diagram literal (sec 12.5 LIVE FLOW, already canonical). NO new seed. NO
+   Docs/diagram edit (0500000 already carries the LIVE FLOW; the 24-field schema is dv1_252). TB00000 stays
+   v2_101. The live TRADE_CLOSE carries NO side field still -- the per-module partition is the emitting
+   side's controller (in-memory, correct); the on-disk record is still sideless (item A persists).
+
+   FLAGS CLEARED this session: in live a close fill cleared the mirror but emitted no TRADE_CLOSE (now
+   emits); the live MTM marking of open positions was unbuilt (now marks in both modes).
+   LONG-STANDING / NEW FLAGS that persist (see TB00762 NSI):
+   - THE LIVE EXIT DETECTION -> MARKET-SELL DISPATCH is the natural NEXT slice and it is LARGE + canon-rich,
+     NOT a quick add. sec 3 Image3 / sec 12.5: Layer 2 is SEQUENCE-CRITICAL -- "(1) cancel emergSL THEN
+     (2) market sell" with the I-6 cancel-timeout fallback (req_id registry tracks each cancel ACK; on
+     timeout check executions state, retry once, second timeout ALERT + HOLD; "NEVER issue market sell with
+     ambiguous order state") + MPP-rejection retry (C-1). Layer 1a adds the AR-040 pair-status precondition
+     first. There is NO market-sell builder and NO cancel-order builder yet (only build_entry_order +
+     build_emergsl_order). AND the read loop drives SYNC handlers (handle_ticker) while the seam is ASYNC
+     -- the sync-detect -> async-dispatch boundary is an engineering choice (a command/intent queue the
+     async loop drains, or async handlers), NOT a Bill ruling. The close TAIL is already built (this
+     session): detect -> dispatch -> executions-confirm -> on_live_close. The note_live_exit_dispatch hook
+     is in place for the dispatch path to stamp the reason. Build it END-TO-END in a focused session.
+   - The durable per-module corpus restore still needs a side the 24-field schema does not carry -> a
+     GENUINE Bill architecture ruling (item A, still pending; see NSI).
+   - The runner's real websockets/REST = the live-deploy slice (the async read-loop integration the live
+     exit dispatch also needs). The AR-056 reconnect gap-close TRADE_CLOSE (emergSL fired while
+     disconnected -> fire the CIATS bus for each) -- needs the gap-close exit price/fees source (REST
+     ownTrades vs the emergsl_price estimate) decided; flagged, not built.
+
+6. VERIFICATION
+   988 pytest green on the 3.12.10 interpreter (full path C:\Users\wstot\AppData\Local\Programs\Python\
+   Python312\python.exe): 980 -> 988 (+8 net; 4 existing tests updated to the new live contract). One Code
+   commit 6c3bcf0. DR-010: Code HEAD == origin/master confirmed post-push (see CLOSE STATE). NO Docs push
+   this session (no diagram edit).
+
+7. STATE AT CLOSE - THE LIVE TRADE_CLOSE PATH IS WIRED (CIATS LEARNS IN LIVE)
+   In LIVE, an executions-confirmed close fill now emits the 24-field evt:TRADE_CLOSE through the emitting
+   side's Exit Controller + CIATS membrane -- byte-identical to the paper close (PA-005): net P&L from the
+   direction-symmetric FEE-CALC-004 formula (actual exit fee from the executions frame, entry fee retained
+   at the live open), exit_reason = the dispatched stamp else EMERGENCY_SL_FIRED, mae_pct_reached lifted to
+   the live-ticker-marked worst-over-the-hold heat. The Selection Controller state + the G7 capital-
+   commitment semaphore update/release identically in live. The sacred 1:1.5 R:R is untouched.
+
+8. CARRY-FORWARD (see TB00762 NSI)
+   ONE genuine Bill architecture ruling STILL PENDING: (A) the durable per-module restore side-gap -- add a
+   schema field 25 side, or carry side out-of-band? Plus the autonomous continue-building candidates: THE
+   LIVE EXIT DETECTION -> MARKET-SELL DISPATCH (the cancel-emergSL-then-market-sell sequence + I-6 timeout
+   fallback + MPP retry + the missing builders + the sync->async boundary; the close tail is already built);
+   the runner's real websockets/REST (live deploy); the AR-056 reconnect gap-close TRADE_CLOSE.
+
+9. CLOSE STATE
+   Code HEAD        6c3bcf0 (988 tests green; tothbot/exchange/position_mirror.py [MOD: ExecOutcome
+                    closed_position + exit_fill_price on the executions close] + tothbot/execution/exit_
+                    controller.py [MOD: on_live_close + _close_position clear_mirror flag] + tothbot/
+                    exchange/ws_manager.py [MOD: Exit Controllers in both modes; record_execution live
+                    close drive + live entry-fee retain; note_live_exit_dispatch + _drive_live_close +
+                    _frame_fee; fees_entry_for live; handle_ticker marks in both modes; set_ciats_exit_
+                    sinks/_exit_controller_for/exit_controller both-mode] + tothbot/pipeline/operational.py
+                    [MOD: comment accuracy] + tests/test_position_mirror.py + test_exit_controller.py +
+                    test_ws_manager.py [+8 net, 4 updated]).
+   Docs HEAD        5e16a7b (0500000 dv1_252 / 0521001 dv1_62) - UNCHANGED (no diagram edit this session).
+   SessionLogs HEAD <this close: TB00761 SL + TB00762 NSI + TB00762 OCS>.
+   TB00000          v2_101 - UNCHANGED (no new seed; a code build of the diagram literal).
+   Governing instructions next = TB00762 NSI. Auto memory (phase2-build) updated through Code 6c3bcf0 /
+   Docs 5e16a7b.
+
+============================================================
+END TB00761
+============================================================
