@@ -1,0 +1,95 @@
+DocDCN:     TB00763
+DocTitle:   TB00763_Next_Session_Instructions
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00763_Next_Session_Instructions_v1_0.txt
+DocDate:    06-16-2026
+DocTime:    03:00:00 UTC
+
+============================================================
+TB00763 NSI - NO PENDING RULING (item A built TB00762) - KEEP BUILDING THE LIVE EXIT DISPATCH
+The contract:TRADE_CLOSE (25) side field is DONE; the live close tail is DONE (TB00761). The next session
+continues BUILDING autonomously - the natural next is the LIVE EXIT DETECTION -> MARKET-SELL DISPATCH.
+EXECUTOR: CLAUDE CODE (autonomous, "auto mode on", continuous-run)
+============================================================
+
+NSIs are Claude-authored + informational; Bill's chat directives govern. PLAIN-TEXT choices ONLY - the
+question-box tool is BANNED (TB00000 4.7). Per the CONTINUOUS-RUN directive: run continuously across
+missions until context runs LOW; do NOT pause to ask "should I proceed"; a session close is the standing
+protocol, not a pause; close cleanly BEFORE the limit.
+
+NUMBERING (Bill ruling TB00745): SL = this session's number; NSI = the next; OCS = the same as the NSI.
+This session is 763; it closes as TB00763 SL + TB00764 NSI + TB00764 OCS.
+
+0. STANDING DIRECTIVES (Bill - still the spec).
+   (a) The Long/Short PARADIGM (TB00762): TothBot is co-equal Long AND Short. Past Long-only / single-pair
+       limits were ROGUE / unauthorized. CORRECT every legacy Long-only / side-asymmetric artifact to the
+       Long/Short paradigm ON SIGHT, autonomously - do not ask whether to fix it (the answer is always
+       yes). See auto-memory long-short-paradigm-standing.
+   (b) The CIATS coach FORM -> TEST -> ROUTE: PROFITABLE -> a C1 IMMEDIATE email / UNPROFITABLE -> the
+       periodic PULL reports. NEVER the sacred 1:1.5 R:R.
+
+1. ENTRY / COLD-LOAD + VERIFY (from GitHub HEAD)
+   Read TB00000 (v2_101) + this NSI + the TB00762 Session Log. Cold-load the auto-memory (phase2-build
+   current through Code a9233bd / Docs ab77593; long-short-paradigm-standing; ciats-self-tuning-directive;
+   continuous-run-directive).
+     Code HEAD        a9233bd (991 tests green). Python = C:\Users\wstot\AppData\Local\Programs\Python\
+                      Python312\python.exe (3.12.10; default PATH python is 3.10 - full path ONLY). Run:
+                      python.exe -m pytest -q (expect 991 green).
+     Docs HEAD        ab77593 - 0500000 dv1_253 / 0521001 dv1_63 (the 25-field schema incl. (25) side).
+     SessionLogs HEAD <the TB00762 SL + TB00763 NSI/OCS push>.
+
+2. STATE: the contract:TRADE_CLOSE is now 25-field - (25) side LONG | SHORT self-carries the emitting
+   module on every record (paper AND live), so load_trade_records_by_side rebuilds each per-module CIATS
+   corpus from disk (the per-module restore gap is CLOSED). The LIVE close TAIL is wired (sec 12.5 LIVE
+   FLOW): an executions-confirmed close fill -> ws_manager.record_execution(CLOSED) in live -> _drive_live_
+   close -> exit_controller.on_live_close emits the 25-field TRADE_CLOSE (exit_reason = the note_live_exit_
+   dispatch stamp else EMERGENCY_SL_FIRED; exit_price = close fill avg_price; fees from the executions
+   frame). handle_ticker marks the max-over-life MAE in BOTH modes. What is MISSING is the UPSTREAM that
+   PRODUCES the live close fill: the live exit DETECTION + the market-sell DISPATCH.
+
+3. NO PENDING BILL RULING. Item A (the side-gap) was ruled (OPTION A) and BUILT this turn. Proceed
+   autonomously; surface a NEW ruling only if a genuinely new architecture/seed decision arises.
+
+4. THE AUTONOMOUS NEXT MISSION (no ruling needed - keep building)
+   HIGHEST-VALUE = THE LIVE EXIT DETECTION -> MARKET-SELL DISPATCH (completes the live exit loop; the close
+   tail is already built). LARGE + canon-rich - build it END-TO-END, faithfully. READ FIRST: 0500000 sec 3
+   Image3 (Layer 1a/L2/L3) + sec 12.5 + ar:AR-048. CANON (do NOT shortcut to a bare market sell):
+     - Layer 2 MAE is SEQUENCE-CRITICAL: "(1) cancel emergSL THEN (2) market sell". The I-6 CANCEL-TIMEOUT
+       FALLBACK: a req_id registry tracks each cancel ACK; on timeout check the executions channel state;
+       confirmed-cancelled -> proceed; state-unknown -> retry once; second timeout -> ALERT + HOLD position
+       + alert operator; "NEVER issue a market sell with ambiguous order state". Plus the MPP-rejection
+       retry (C-1: a market sell may reject on a wide spread). Layer 1a adds the AR-040 pair-status
+       precondition FIRST (cancel_only/maintenance -> HOLD; mirror the paper l1a_precondition_blocks).
+     - NO builders exist yet - add build_market_sell_order (order_type=market, side OPPOSITE the position:
+       LONG sells, SHORT BUYS-to-cover reduce_only=true per ar:AR-009, whole-position qty, cl_ord_id,
+       stp_type=cancel_newest, deadline now+5s) + build_cancel_order (cancel the resting emergSL by its
+       cl_ord_id) in execution/entry_dispatch.py (or a new exit_dispatch.py), mirroring the existing
+       build_entry_order / build_emergsl_order style (pure, Decimal-stringified, no I/O).
+     - THE SYNC->ASYNC BOUNDARY (an ENGINEERING choice, NOT a Bill ruling): the read loop drives SYNC
+       handlers (handle_ticker) but the seam (cancel_order / dispatch_market_sell) is ASYNC. Resolve it
+       cleanly - a sync detector that enqueues an exit INTENT + an async driver, or an async dispatch_live_
+       exit method (like dispatch_entry). The driver: precondition -> cancel -> track/await the ACK (I-6
+       fallback) -> market sell (MPP retry) -> note_live_exit_dispatch(symbol, reason) so the executions
+       confirm carries the reason onto the TRADE_CLOSE (the hook is already in place). Add a double-dispatch
+       guard (a reason already stamped = an exit in flight -> skip re-dispatch). Test with an injected
+       live_sender (the dispatch_entry live tests are the pattern).
+   ALTERNATIVES if higher value: the runner's real websockets/REST (the live-deploy slice - the websockets
+   asyncio client WS-LIB-001 + the aiohttp REST bodies; the same async read-loop integration the exit
+   dispatch needs; do NOT connect to Kraken for real); OR the AR-056 reconnect gap-close TRADE_CLOSE via
+   on_live_close (decide the gap-close exit price/fees source FIRST - REST ownTrades vs the entry-time
+   emergsl_price estimate; if a genuine modeling decision, surface it).
+   READ the relevant 0500000 element FIRST; build the diagram literal; a genuine new seed or architecture
+   gap -> surface in plain text (do NOT hardcode silently).
+
+5. PROVENANCE / SCOPE
+   A CODE build READS 0500000. A new seed or architecture gap -> plain text + the Docs edit + DR-010.
+   LONG-STANDING FLAGS persist: the live exit detection -> market-sell dispatch (the cancel-then-sell
+   sequence + I-6 timeout fallback + MPP retry; the close tail is built); the runner's real websockets/REST
+   (live deploy); the AR-056 reconnect gap-close TRADE_CLOSE; the RL-MON-003 entry-suppression gate (lands
+   with the live entry path). PLUS the STANDING Long/Short-paradigm correction (any legacy Long-only
+   artifact -> fix on sight).
+
+============================================================
+END TB00763
+============================================================

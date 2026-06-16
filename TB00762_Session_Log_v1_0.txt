@@ -1,0 +1,128 @@
+DocDCN:     TB00762
+DocTitle:   TB00762_Session_Log
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00762_Session_Log_v1_0.txt
+DocDate:    06-16-2026
+DocTime:    03:00:00 UTC
+
+============================================================
+TB00762 SESSION LOG
+BILL RULED OPTION A - ADD FIELD 25 side TO contract:TRADE_CLOSE (the durable per-module Long/Short restore)
++ STANDING DIRECTIVE: correct EVERY legacy Long-only artifact to the co-equal Long/Short paradigm
+EXECUTOR: CLAUDE CODE (Bill ruling executed; diagram-authority-first then code)
+============================================================
+
+0. NUMBERING NOTE (Bill ruling TB00745, standing)
+   SL = THIS session's number; NSI = the NEXT; OCS = the SAME as the NSI. This session (762, governed by
+   the TB00762 NSI) closes as TB00762 SL + TB00763 NSI + TB00763 OCS. (The TB00762 NSI/OCS were authored
+   at the TB00761 close with item A "pending"; this session is when Bill RULED it.)
+
+1. MISSION / CONTEXT
+   The TB00761 close surfaced ONE genuine Bill architecture ruling (item A: the durable per-module restore
+   side-gap). Bill RULED in chat this session: OPTION A - add a 25th field "side" directly onto the
+   canonical contract:TRADE_CLOSE record (NOT an out-of-band index). Plus a STANDING DIRECTIVE (see 2).
+   Executed diagram-authority-first then code, mirroring the TB00759 D1 23 -> 24 qty precedent exactly.
+   ONE Docs commit + ONE Code commit. 988 -> 991 green. NO new seed. TB00000 stays v2_101.
+
+2. BILL DIRECTIVES (chat-turn, this session)
+   (1) RULING: OPTION A - the side stamp goes directly onto every trade record. "obviously we need to add
+       the stamp Long/Short directly onto every slip."
+   (2) STANDING DIRECTIVE (codified to auto-memory long-short-paradigm-standing + the 0521001 OP RECORD):
+       TothBot is and ALWAYS SHOULD HAVE BEEN co-equal Long AND Short. A past Claude Chat action, WITHOUT
+       Bill's knowledge or approval, unilaterally limited the program to Longs only (and at one point to
+       BTC Long pairs only) - ROGUE, UNAUTHORIZED. "Everything gets corrected to the Long/Short paradigm.
+       You may see things like this again." -> correct any legacy Long-only / side-asymmetric artifact on
+       sight, autonomously, the Long/Short way; do not ask whether to fix it (the answer is always yes).
+   (3) "Finish this up and end the chat so I can start a new chat. Don't forget to write me an OCS."
+
+3. SOURCE READ FIRST (the diagram is authority for the schema literal)
+   0500000 dv1_252 sec 5/7 the contract:CIATS_Trade_Outcome_Bus + the D5 mod:Logger boxes: the
+   schema_fields_canonical enumeration (BOTH canonical sites - the Image5 Stream-2 box at x=495 + the
+   Image6 Trade Outcome Bus box at x=1010), the sec 7.5 EC -> CIATS_Trade_Outcome_Bus visual field-list
+   {ts ... qty}, and every "24-field" count (24 occurrences). The D1 23 -> 24 qty edit (TB00759) is the
+   exact precedent: count + both enumerations + the §7.5 visual.
+
+4. WHAT WAS BUILT
+
+   PHASE 1 -- DIAGRAM AUTHORITY (Docs commit ab77593; 0500000 dv1_252 -> dv1_253, 0521001 dv1_62 -> dv1_63).
+   0500000: every "24-field" -> "25-field" (24 sites across the D5 logger box / the CIATS_Trade_Outcome_Bus
+   stream2 box / the Statistical+Proposal+Regime+PDCA consumer boxes / the visual subtitles); the
+   schema_fields_canonical enumeration in BOTH canonical sites gains "(25) side str enum LONG | SHORT (the
+   emitting module - mod:Long_Module LONG / mod:Short_Module SHORT - carried so a cold-start rebuilds the
+   PER-MODULE Long/Short CIATS corpus from the durable on-disk record, which the runtime in-memory
+   partition cannot recover after a restart; not derivable, so carried explicitly per the TB00762 ruling
+   expanding the canonical schema 24 -> 25 fields, the co-equal Long/Short paradigm)"; the §7.5 visual
+   field-list gains ", side" after qty -> {..., qty, side}. Title/DocVersion/DocPath/DocDate bumped; both
+   files git-renamed. 0521001: header bump + a new "----- BEGIN TB00762 ... dv1_253 OP RECORD -----"
+   appended (incl. the STANDING DIRECTIVE record). HTML well-formed - tag classes balanced g 217/217,
+   text 957/957, desc 126/126, svg 10/10 (IDENTICAL to the D1-verified baseline; only text content +
+   renames changed, no structure); no residual "24-field"; no residual dv1_252; (25) side present in both
+   enumerations + the §7.5 visual. DR-010 verified post-push.
+
+   PHASE 2 -- CODE (Code commit a9233bd; 988 -> 991).
+   - execution/exit_controller.py: TradeClose gains side (field 25, str | None); _close_position emits it
+     from the closing position's side as the LONG | SHORT token (direction-symmetric, same is_long the
+     net-P&L uses). Both on_paper_close + on_live_close route through _close_position, so paper AND live
+     records carry side.
+   - recorder/trade_record_file.py: _CANONICAL_ORDER gains "side" as the FINAL field (the on-disk order);
+     parse_trade_close reads side (a str, NOT a Decimal); serialize/parse round-trip the LONG|SHORT token.
+     NEW load_trade_records_by_side(records_dir, years) -> {"LONG": [...], "SHORT": [...]}: the per-module
+     Long/Short corpus restore from disk - the capability the side field unblocks (THE GAP CLOSED). A
+     sideless legacy record drops from BOTH side pools (cannot be module-attributed) but still counts in
+     the combined load_trade_records / the C5 tax view (C5 is intentionally the cross-module total).
+   - recorder/logger.py: TRADE_CLOSE_SCHEMA fingerprint gains "side" (now 25 names - the dataclass field
+     set must match EXACTLY or validate_trade_close rejects the record); the "carries no side field"
+     comments corrected (the schema now self-carries side AND the in-memory pool is keyed by the module).
+   - PROSE ALIGNMENT (the standing thoroughness, like TB00760's 23->24 sweep): every "24-field" -> "25-
+     field" across exit_controller / ws_manager / logger / reporting / live_driver / trade_record_file +
+     6 test files; the now-false "the TRADE_CLOSE record carries no side field" comments in ws_manager +
+     live_driver (3 sites) corrected to "self-carries (25) side since dv1_253".
+   TESTS (+3 net, 988 -> 991): test_logger test_schema_has_24_fields -> test_schema_has_25_fields (asserts
+   25 + side present); test_trade_record_file +the (25)-side-last round-trip + load_trade_records_by_side
+   partitions LONG/SHORT + the sideless-legacy-drop; _tc fixture gains side="LONG".
+
+5. PROVENANCE / SCOPE
+   A Bill-RATIFIED canonical-record change (the SACRED-adjacent contract:TRADE_CLOSE schema, expanded
+   24 -> 25 per Bill's explicit OPTION A ruling) - diagram authority FIRST (Docs), then code matches the
+   diagram literal. NO new seed (side is a record field, not a CIATS-tuned value). TB00000 stays v2_101.
+   ITEM A IS NOW RESOLVED + BUILT (no longer a pending ruling). The STANDING Long/Short-paradigm directive
+   is codified (auto-memory long-short-paradigm-standing + the 0521001 OP RECORD) for all future sessions.
+
+6. VERIFICATION
+   991 pytest green on the 3.12.10 interpreter (full path C:\Users\wstot\AppData\Local\Programs\Python\
+   Python312\python.exe): 988 -> 991. Docs HTML tag-balanced (g/text/desc/svg = 217/957/126/10, the
+   D1-verified baseline); no residual "24-field" in Docs OR code; (25) side present in both canonical
+   enumerations + the §7.5 visual {..., qty, side}; the side field serialize/parse round-trips; the
+   per-module restore partitions LONG/SHORT. DR-010 post-push: see CLOSE STATE.
+
+7. STATE AT CLOSE - THE DURABLE RECORD IS SELF-DESCRIBING PER SIDE (the per-module restore gap is closed)
+   Every TRADE_CLOSE record (paper AND live) now self-carries (25) side LONG | SHORT. A cold-start /
+   restart rebuilds each module's Long/Short CIATS corpus from disk via load_trade_records_by_side - the
+   runtime in-memory partition is no longer lost on restart. C5 / tax stays the combined cross-module view.
+   The Long/Short paradigm is now enforced on the canonical record; the standing directive governs all
+   future legacy-Long-only corrections. The sacred 1:1.5 R:R is untouched.
+
+8. CARRY-FORWARD (see TB00763 NSI)
+   NO pending Bill ruling (item A is resolved + built this session). The AUTONOMOUS continue-building
+   missions: THE LIVE EXIT DETECTION -> MARKET-SELL DISPATCH (the close TAIL is built TB00761; this is the
+   large canon-rich Layer-2 sequence-critical cancel-emergSL-then-market-sell + I-6 timeout fallback + MPP
+   retry + the missing build_market_sell_order / build_cancel_order + the sync->async boundary); the
+   runner's real websockets/REST (live deploy); the AR-056 reconnect gap-close TRADE_CLOSE. PLUS the
+   STANDING directive: any legacy Long-only artifact encountered gets corrected to Long/Short on sight.
+
+9. CLOSE STATE
+   Code HEAD        a9233bd (991 tests green; execution/exit_controller.py [MOD: TradeClose (25) side +
+                    emit] + recorder/trade_record_file.py [MOD: _CANONICAL_ORDER + parse side; NEW load_
+                    trade_records_by_side] + recorder/logger.py [MOD: fingerprint + side] + exchange/
+                    ws_manager.py + recorder/reporting.py + pipeline/live_driver.py [MOD: prose/comments]
+                    + 7 test files [+3 net]).
+   Docs HEAD        ab77593 (0500000 dv1_253 / 0521001 dv1_63 - the 25-field schema, (25) side).
+   SessionLogs HEAD <this close: TB00762 SL + TB00763 NSI + TB00763 OCS>.
+   TB00000          v2_101 - UNCHANGED (no new seed; a Bill-ratified canonical-record expansion).
+   Governing instructions next = TB00763 NSI. Auto memory updated (phase2-build through Code a9233bd /
+   Docs ab77593; NEW long-short-paradigm-standing).
+
+============================================================
+END TB00762
+============================================================
