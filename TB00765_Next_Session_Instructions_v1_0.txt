@@ -1,0 +1,118 @@
+DocDCN:     TB00765
+DocTitle:   TB00765_Next_Session_Instructions
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00765_Next_Session_Instructions_v1_0.txt
+DocDate:    06-16-2026
+DocTime:    18:00:00 UTC
+
+============================================================
+TB00765 NEXT SESSION INSTRUCTIONS
+NEXT MISSION (AUTONOMOUS): THE LIVE ENTRY PATH + the RL-MON-003 entry-suppression gate
+============================================================
+
+0. NUMBERING NOTE (Bill ruling TB00745, standing)
+   SL = the session that runs THIS NSI (765); its NSI = 766; its OCS = 766. This file (TB00765 NSI) governs
+   session 765.
+
+1. STANDING DIRECTIVES (Bill - do not re-litigate)
+   - AUTO MODE / CONTINUOUS-RUN / BUILD THE ORGANISM / STOP STOPPING. Run continuously across missions in
+     one shot until context runs LOW; never pause to ask "should I proceed/go". A session close (SL+NSI+OCS)
+     is the STANDING protocol, not a pause - close cleanly BEFORE the context limit.
+   - LONG/SHORT PARADIGM IS STANDING: TothBot is co-equal Long AND Short. Correct EVERY legacy Long-only /
+     side-asymmetric artifact to the Long/Short paradigm ON SIGHT, autonomously - never ask whether to fix.
+   - QUESTION-BOX BANNED (AskUserQuestion enrages Bill / he cannot answer it). Surface ONLY a genuine NEW
+     seed value or a genuine architecture ruling, in PLAIN CHAT TEXT.
+   - CIATS self-tuning: the coach SELF-forms / TESTS / routes (profitable -> C1 email Bill / unprofitable ->
+     periodic pull report). NEVER the sacred 1:1.5 R:R.
+   - DR-010: push every commit and verify local == origin. Diagram/Docs edits done in Claude Code.
+
+2. COLD-LOAD FROM GITHUB HEAD AND VERIFY BEFORE WORKING
+   Load: TB00765 NSI (this) + TB00000 (v2_101) + the TB00764 Session Log. Auto-memory: phase2-build +
+   long-short-paradigm-standing + ciats-self-tuning-directive + continuous-run-directive + no-question-box-
+   tool + session-close-standing + tothbot-commit-rules.
+     Code HEAD        38f62ec  - run python.exe -m pytest -q, expect 1057 green. Python =
+                      C:\Users\wstot\AppData\Local\Programs\Python\Python312\python.exe (3.12.10; the default
+                      PATH python is 3.10 - use the FULL PATH ONLY).
+     Docs HEAD        ab77593  - 0500000 dv1_253 / 0521001 dv1_63 (UNCHANGED; TB00764 was a CODE build).
+     SessionLogs HEAD <the TB00764 SL + TB00765 NSI/OCS push>.
+
+3. DONE TB00764 (autonomous, CODE-only reading the existing 0500000 dv1_253): BUILT THE LIVE I/O SUBSTRATE
+   that pumps the TB00763 live-exit loop. SEVEN Code commits, 1022 -> 1057 green, NO Docs change, NO new
+   seed, TB00000 stays v2_101. (1) REST edge 6b0c488: AiohttpRestTransport REST-HTTP-002 ClientTimeout(10/
+   5/8) + TCPConnector(10/5/force_close=False) + parse_query_orders/gap_close_fill/query_orders (REST-QOI,
+   the AR-056 actual-fill). (2) receive-loop d7b8a57: MessageClass.ORDER_ACK + on_order_ack + the after_
+   batch pump (drains drive_live_exits each tick, skips while reconnecting). (3) feeds 2717b5e: executions
+   exec_type=canceled -> record_cancel_ack (I-6); record_order_response + _default_market_rejected registry
+   poll (C-1); private_ws OrderAckHandler. (4) instrument 1b4129c: pair_status_from_wire + make_instrument_
+   handler drives on_instrument_status (AR-040 limit_only). (5) gap-close 5640c7c: _restore_position_mirror
+   + ExecutionsIngest snapshot drive on_reconnect_gap_close (QueryOrders actual fill / degraded estimate).
+   (6) ticker a61f782: make_ticker_handler wires handle_ticker (was BUILT-but-UNWIRED) - the L2 MAE detector
+   + paper exit lifecycle now run in the organism. (7) capstone 38f62ec: the wired private loop end-to-end.
+   The live transmitter + aiohttp session are wired. Everything tests over injected fakes; NOTHING connects
+   to Kraken for real.
+
+4. THE TB00765 MISSION (AUTONOMOUS, no pending ruling): THE LIVE ENTRY PATH + RL-MON-003 gate
+   The exit loop is wired end-to-end (TB00763 dispatch + TB00764 substrate). The ENTRY side is the
+   counterpart and is the next live-deploy slice. TODAY dispatch_entry RAISES in live ("dispatch_entry is
+   paper-mode only for now") - it is the paper synchronous flow (send entry -> the simulator opens the
+   position synchronously -> has_position True -> batch_add the emergSL inline). LIVE is async (PA-004
+   divergence #4): the IOC entry fills on Kraken and the fill arrives LATER on the executions channel.
+
+   READ FIRST (the diagram is authority): 0500000 dv1_253 sec 7 mod:WS_Manager (the entry add_order +
+   on-fill batch_add outbound wire) + mod:Signal_Pipeline gate:G8 (the entry fill disposition) + the
+   contract:WSManager_Dispatch_Seam + ar:AR-054 (the ON-FILL emergSL) + ar:AR-009 (SHORT margin open) +
+   the RL-MON-003 CRITICAL-tier entry-suppression prose (already quoted in the sec-7 mod:WS_Manager desc)
+   + the PA-004 divergence points (#1 private WS live-only, #2 order dispatch, #4 fill sourcing) +
+   decision:D-06 (paper/live parity). The PURE entry builders already exist (execution/entry_dispatch.py:
+   build_entry_order + build_emergsl_order); the RL-MON-003 predicate already exists (exchange/rate_
+   counter.py: is_entry_suppressed, the arm>critical / release<=warning hysteresis latch). The work is
+   the LIVE dispatch wiring around them.
+
+   BUILD (slice by slice, each green, each pushed + DR-010):
+   (a) LIVE dispatch_entry: branch on mode. PAPER keeps the existing synchronous flow. LIVE sends the
+       entry add_order via seam.add_order and RETURNS (the fill is async - do NOT check has_position
+       synchronously). NOTE the return-contract divergence: the paper return is filled:bool (the simulator
+       opened it); live cannot know "filled" at return (async). Decide how the pipeline/LiveSweepDriver
+       consumes the return in live (the position opens later via record_execution OPENED) - this touches
+       the driver's post-dispatch handling; read sweep.py / live_driver.py.
+   (b) AR-054 ON-FILL emergSL (the sync->async seam, MIRROR the exit): record_execution's OPENED branch in
+       LIVE enqueues an emergSL-placement intent (symbol, side, qty, emergsl_price, cl_ord_id=entry+"-sl",
+       deadline) built from the just-opened Position (it carries cl_ord_id / qty / side / emergsl_price
+       from the D6 pending registry); an async driver (fold into the after_batch pump - extend it to drain
+       BOTH drive_live_exits AND the pending-emergSL queue) places it via seam.batch_add(build_emergsl_
+       order(...)). The pump runs in the SAME private _step as the opening fill, so the emergSL is placed
+       promptly - the position is never left unprotected. (Loss-prevention: NEVER an open live position
+       with no resting emergSL.)
+   (c) RL-MON-003 entry-suppression gate: the predicate is_entry_suppressed lives on the PRIVATE
+       connection's RateCounter; the dispatch gate is owned by WSManager (the add_order dispatch owner, per
+       the sec-7 OWNERSHIP note). Wire a settable hook (e.g. wm.set_entry_suppression_check(fn)) the
+       PrivateConnectionAssembler binds to its RateCounter.is_entry_suppressed; LIVE dispatch_entry checks
+       it FIRST and SKIPS (emit an ENTRY_SUPPRESSED event, return not-dispatched) when suppressed. Exits/
+       cancels are NEVER gated (the suppression exists to PRESERVE the exit rate budget).
+
+   LIKELY ARCHITECTURE-DECISION / RULING SURFACE (read the canon first; surface to Bill in PLAIN TEXT only
+   if genuinely undecided by the diagram): LIVE position SIZING. The G8 sizer reads wm.wallet_balance(side),
+   which returns the synthetic ledger in paper but None in live (modules is None - real Kraken balances are
+   authoritative, sec 12.4). The live entry needs a LIVE wallet source (the balances channel cache /
+   contract:Reconciliation_REST GetAccountBalance for the long spot/main wallet per WS-BAL-002, and the
+   margin account / REST OpenPositions for the short per AR-050). Check whether the diagram already
+   specifies the live-balance read path end-to-end (it likely does via the balances channel + WS-BAL-002/
+   003 + REST-BAL); if so it is CODE-only, if a value/decision is genuinely open, surface it.
+
+   ALTERNATIVES if the live entry path stalls on a ruling: any legacy Long-only / side-asymmetric artifact
+   -> correct to Long/Short on sight (STANDING). Per the Long/Short directive, verify the live entry +
+   emergSL + suppression are SYMMETRIC (LONG spot buy / SHORT margin sell-to-open per AR-009; the emergSL
+   SELL-below for long / BUY-to-cover-reduce_only-above for short; both modules' RateCounters gate
+   independently).
+
+5. RULES RECAP
+   READ the 0500000 element first; build the diagram literal; CODE-only unless the diagram changes (then
+   DR-010 in Claude Code, bump 0500000 dv + 0521001 + the seed home if a NEW seed); test over injected
+   fakes (do NOT connect to Kraken for real); ASCII-only commits, no parens, no Co-Authored-By; close
+   standing (SL=this session 765, NSI+OCS=766); surface only a genuine new seed value or architecture
+   ruling in plain text.
+
+============================================================
+END TB00765 NSI
+============================================================

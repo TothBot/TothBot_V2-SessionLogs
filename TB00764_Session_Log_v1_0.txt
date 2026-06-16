@@ -1,0 +1,184 @@
+DocDCN:     TB00764
+DocTitle:   TB00764_Session_Log
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00764_Session_Log_v1_0.txt
+DocDate:    06-16-2026
+DocTime:    18:00:00 UTC
+
+============================================================
+TB00764 SESSION LOG
+BUILT THE LIVE I/O SUBSTRATE THAT PUMPS THE NOW-BUILT EXIT LOOP (autonomous, continuous-run)
++ closed a real companion gap (the ticker channel was not wired to the L2 MAE detector)
+EXECUTOR: CLAUDE CODE (no pending ruling; CODE-only reading the existing 0500000 dv1_253)
+============================================================
+
+0. NUMBERING NOTE (Bill ruling TB00745, standing)
+   SL = THIS session's number; NSI = the NEXT; OCS = the SAME as the NSI. This session (764, governed by
+   the TB00764 NSI) closes as TB00764 SL + TB00765 NSI + TB00765 OCS.
+
+1. MISSION / CONTEXT
+   NO pending Bill ruling. Per the continuous-run directive the session ran autonomously across the
+   TB00764 mission in one shot, no pauses. The mission: THE LIVE I/O SUBSTRATE that pumps the TB00763
+   live-exit loop (the live-deploy slice; do NOT connect to Kraken for real - all tests inject fakes).
+   Wired the async read loop to pump WSManager.drive_live_exits + feed every exit-loop surface the
+   TB00763 build left as an injected/no-op edge. SEVEN Code commits. 1022 -> 1057 green (+35). NO Docs
+   change (a CODE build reading the existing diagram). NO new seed. TB00000 stays v2_101.
+
+2. SOURCE READ FIRST (the diagram is authority for the substrate literal)
+   0500000 dv1_253 sec 7 mod:WS_Manager (the D1 KEEPALIVE/SEQ-GAP/PRIVATE-CHANNEL/OUTBOUND/RECONNECT-
+   RESIDUAL/CONNECTION-LIBRARY wire facts: WS-LIB-001 the websockets.asyncio client, WS-REC-004 the full
+   reconnect restore sequence, WS-EXE-009 the 10 exec_types, WS-INST-008 the 8 instrument trading-states),
+   container:Kraken_REST_API (the D1 REST CONNECTION/AUTH/HTTP-CLIENT PRIMITIVES: REST-HTTP-001/002/004/005
+   the mandatory aiohttp ClientSession config; REST-QOI-002/003 QueryOrders; REST-AUTH-003/004 + REST-WST/
+   OO/BAL wire), container:Private_WS_v2 (executions/balances inbound + add/cancel order outbound). The
+   substrate was ALREADY half-built (transport.py / private_ws.py / receive_loop.py / rest/client.py +
+   the live transmitter PrivateTransmitter); this session WIRED the gaps that connect the inbound/outbound
+   I/O edges to the TB00763 exit-loop surfaces (all of which were defined on WSManager but called by
+   NOTHING in the running system before this session).
+
+3. WHAT WAS BUILT (seven commits; all CODE; final Code HEAD 38f62ec)
+
+   SLICE 1 -- THE REST EDGE: mandatory values + QueryOrders gap-close source (commit 6b0c488; 1022->1028).
+   AiohttpRestTransport._ensure_session now builds the SINGLE shared ClientSession with the REST-HTTP-002
+   MANDATORY config VALUES: ClientTimeout(total=10, connect=5, sock_read=8) + TCPConnector(limit=10,
+   limit_per_host=5, force_close=False) - no indefinite hang on a degraded network (REST-HTTP-001/002),
+   HTTP keepalive reuse (REST-HTTP-004), one session for the process (REST-HTTP-005). NEW PATH_QUERY_ORDERS
+   + parse_query_orders (REST-QOI-002/003: the txid-keyed, Decimal-typed order-info) + gap_close_fill (the
+   ar:AR-056 gap-close ACTUAL fill avg_price + fee, FEE-CALC-006 record-of-truth; None when not closed /
+   zero-fill so the caller falls to the entry-time estimate) + KrakenRestClient.query_orders (txid comma-
+   joined, trades=true; empty short-circuits to no call).
+
+   SLICE 2 -- THE RECEIVE-LOOP PUMP + the order-ack reject seam (commit d7b8a57; 1028->1034).
+   ShardReceiveLoop gains MessageClass.ORDER_ACK - classify the add_order/batch_add/amend_order/cancel_
+   order/batch_cancel/cancel_all method-RESPONSE frames (previously these fell to UNKNOWN), routed to an
+   injected on_order_ack consumer (NOT market data -> does NOT reset the zombie timer, like the subscribe
+   ACK). NEW after_batch async pump: run once per _step AFTER handle_message + on_tick, so a sync detector
+   that enqueued an exit intent drains its cancel-then-sell within one tick_interval - even on a recv
+   timeout (message None). SKIPPED while reconnecting (the outbound socket is down; the queued intent
+   persists) and after a drop-reconnect (returns early).
+
+   SLICE 3 -- THE I-6 cancel-confirm feed + the C-1 add_order-reject registry now LIVE (commit 2717b5e;
+   1034->1045). ExecutionsIngest detects exec_type=canceled (WS-EXE-009) carrying a cl_ord_id and feeds
+   WSManager.record_cancel_ack (the I-6 "confirmed -> proceed" branch). NEW WSManager.record_order_response
+   (cl_ord_id, rejected) + _default_market_rejected now POLLS that registry (cl_ord_id from the outbound
+   params, up to cancel_timeout_window): rejected=True on a Max-Price-Protection reject, an accept short-
+   circuits to not-rejected (no happy-path full-window wait), absent any response -> not rejected (the
+   executions fill confirms). Mirrors _default_cancel_ack_wait. NEW private_ws OrderAckHandler routes
+   add_order/batch_add RESPONSE frames (success:false=reject / true=accept) to record_order_response,
+   surfacing ORDER_REJECTED; cancel_order responses ignored (cancel ACK is executions-sourced). Wired as
+   the private loop's on_order_ack + drive_live_exits as its after_batch (both getattr-guarded for a
+   lightweight wm stand-in).
+
+   SLICE 4 -- THE INSTRUMENT-STATUS CHANNEL now drives the ar:AR-040 exit (commit 1b4129c; 1045->1050).
+   NEW regime_exit.pair_status_from_wire maps a WS-INST-008 wire trading-status to the AR-040 PairStatus
+   (limit_only / cancel_only / maintenance -> their members; every other state -> ONLINE, inert at the
+   instrument handler since on_instrument_status acts only on limit_only and the HOLD set is enforced at
+   the L1a/L2 dispatch precondition). NEW operational.make_instrument_handler wraps instrument_cache.ingest:
+   after ingest, each OPEN-position pair whose status changed drives wm.on_instrument_status with the
+   realizable bbo (a limit_only transition fires the active single-IOC-limit close; a no-op in paper / for
+   any other status). Wired via make_public_handler_provider (wm + bbo_provider=bbo_pair); wrapping added
+   only when the wm exposes on_instrument_status (a stand-in keeps the bare ingest).
+
+   SLICE 5 -- THE WS-REC-004 RESTORE now emits the ar:AR-056 gap-close TRADE_CLOSE (commit 5640c7c;
+   1050->1054). PrivateConnectionAssembler gains an injected query_orders edge (REST QueryOrders, the
+   actual-fill source). _restore_position_mirror now, for each PositionClosedDuringGap, awaits _resolve_
+   gap_fill (query the off-book emergSL leg id then the entry cl_ord_id; read gap_close_fill the first
+   closed-order avg_price + fee, FEE-CALC-006) and calls wm.on_reconnect_gap_close with the ACTUAL fill;
+   absent a fill / a query_orders edge -> the degraded entry-time emergsl_price estimate (GapCloseEstimated).
+   The ExecutionsIngest snapshot branch ALSO drives on_reconnect_gap_close on the SYNC path (degraded
+   estimate) so a gap is never silently dropped (was a count-only). Whichever reconciles the symbol FIRST
+   wins (restore_from_snapshot removes it -> the other path sees no gap; never a double TRADE_CLOSE). Wired
+   via operational (query_orders=getattr(rest_client,"query_orders",None)). Both getattr-guarded.
+
+   SLICE 6 -- THE TICKER CHANNEL now drives the sec-12.5 L2 MAE detector, CLOSING the loop (commit a61f782;
+   1054->1056). A REAL companion gap found this session: handle_ticker was BUILT in TB00763 but UNWIRED -
+   NOTHING in the running organism called it, so the ticker-bbo L2 MAE detector AND the paper exit
+   lifecycle were DEAD in the running system (verified by grep: only the definition + docstring, no
+   caller). NEW operational.make_ticker_handler wraps bbo_cache.ingest so the public TICKER channel ingests
+   the ar:AR-048 best bid/ask AND drives wm.handle_ticker: PAPER runs the synthetic close (L2 MAE + the L3
+   emergSL touch); LIVE marks the max-over-life MAE and ENQUEUES the layer:L2 market-sell intent the
+   private-loop after_batch pump dispatches. Wrapping added only when the wm exposes handle_ticker.
+
+   SLICE 7 -- THE LIVE END-TO-END CAPSTONE TEST (commit 38f62ec; 1056->1057). Drives the WIRED private
+   ShardReceiveLoop over injected fakes: a LIVE WSManager + PrivateConnectionAssembler.build, open a live
+   long via an executions fill, an adverse ticker enqueues the L2 MAE intent, then ONE pc.loop._step on an
+   idle recv-timeout runs the after_batch pump which drains drive_live_exits and the SEQUENCE-CRITICAL
+   cancel_order (off-book emergSL) THEN add_order (market close) are BOTH transmitted over the bound
+   private socket - proving slices 1-6 work end-to-end through the real loop, no real socket.
+
+4. PROVENANCE / SCOPE
+   A CODE build reading the EXISTING 0500000 dv1_253 (the substrate wire facts were all canonical at
+   sec 7 mod:WS_Manager + container:Kraken_REST_API + container:Private_WS_v2; no diagram concept added).
+   NO Docs change. NO new seed - the REST-HTTP-002 timeout/connector values are wire constants from the
+   diagram (module-level constants, NOT CIATS params); the C-1 reject probe reuses the existing
+   cancel_timeout_window registry value. TB00000 stays v2_101. The sacred 1:1.5 R:R is untouched. The live
+   transmitter (PrivateTransmitter / ws_private.send) was already built (TB00761/763) and is now wired +
+   re-bound on reconnect; this session added the inbound feeds + the REST edge config + QueryOrders.
+
+5. ENGINEERING CHOICES (per the NSI, NOT Bill rulings - documented here)
+   (1) The after_batch pump runs on the PRIVATE loop only (not the public shards): the private socket is
+       guaranteed bound when not reconnecting (the transmitter targets it), and the private loop pumps
+       every tick (<= tick_interval) even on a recv timeout, so a public-ticker/instrument-enqueued intent
+       drains within ~1 tick. Pumping from a public shard would risk dispatching over an unbound/mid-
+       reconnect private transmitter (public + private have SEPARATE reconnect coordinators) - avoided.
+   (2) The C-1 default reject probe POLLS the order-response registry (rejected/accepted, short-circuit on
+       either) up to cancel_timeout_window - the consistent sibling of _default_cancel_ack_wait. The pre-
+       existing TB00763 happy-path dispatch tests relied on the old instant-False stub; they now inject an
+       "accepted" stub (a _never_reject default in _live_manager, the analogue of injecting _always_ack),
+       preserving their intent. A genuine response in live resolves the probe in ms (no full-window wait).
+   (3) The gap-close uses QueryOrders (REST-QOI) for the actual fill (FEE-CALC-006) on the async WS-REC-004
+       restore path; the sync ExecutionsIngest snapshot path emits the degraded estimate (it cannot await
+       REST). Idempotency (restore_from_snapshot removes the symbol) prevents a double TRADE_CLOSE.
+   (4) ALL new wiring into a possibly-lightweight wm stand-in is getattr-guarded (matching operational.py's
+       set_ciats_exit_sinks pattern) so the operational/assemble tests' _FakeWM / _LiveWM are untouched.
+
+6. VERIFICATION
+   1057 pytest green on the 3.12.10 interpreter (full path C:\Users\wstot\AppData\Local\Programs\Python\
+   Python312\python.exe): 1022 -> 1057 (+35). Each of the seven commits pushed + DR-010 verified
+   (local == origin == 38f62ec): 6b0c488, d7b8a57, 2717b5e, 1b4129c, 5640c7c, a61f782, 38f62ec.
+
+7. STATE AT CLOSE - THE LIVE EXIT LOOP IS NOW WIRED END-TO-END (detection -> pump -> dispatch -> feeds)
+   The live exit loop runs the full cycle over injected fakes: the public ticker channel (L2 MAE) + the
+   instrument channel (AR-040 limit_only) + the daily/HTF orchestrator (L1a) DETECT and ENQUEUE; the
+   private read loop's after_batch pump drains WSManager.drive_live_exits (cancel-then-sell over the bound
+   transmitter); the executions cancel-confirm feeds record_cancel_ack (I-6); the add_order reject feeds
+   record_order_response (C-1); the WS-REC-004 restore + REST QueryOrders emits the AR-056 gap-close
+   TRADE_CLOSE. The REST edge carries the REST-HTTP-002 mandatory values. NOTHING connects to Kraken for
+   real (every test injects fakes). What remains is the LIVE ENTRY path (see TB00765 NSI) - dispatch_entry
+   still raises in live; the entry IOC fill is async (PA-004 #4) so the on-fill emergSL needs the same
+   sync->async seam the exit uses, the RL-MON-003 entry-suppression predicate (already built in RateCounter
+   as is_entry_suppressed) needs wiring to the dispatch gate, and live sizing needs a live wallet source.
+
+8. CARRY-FORWARD (see TB00765 NSI)
+   NO pending Bill ruling. The AUTONOMOUS continue-building mission: (a) THE LIVE ENTRY PATH - the live
+   dispatch_entry (send the entry add_order via the seam; the IOC fills async, PA-004 #4); the AR-054
+   ON-FILL emergSL placement (record_execution OPENED in live enqueues an emergSL-placement intent the
+   after_batch pump places via batch_add - the same sync->async seam as the exit, so the position is never
+   left unprotected); the RL-MON-003 critical-tier ENTRY-suppression gate (wire RateCounter.is_entry_
+   suppressed -> a WSManager dispatch-gate hook; suppress entry add_orders under rate pressure, exits/
+   cancels NEVER suppressed); plus the live-wallet sourcing the live G8 sizer needs (the balances channel /
+   REST GetAccountBalance vs the paper synthetic ledger - a likely architecture-decision surface to read
+   the canon on, possibly a Bill ruling). PLUS the STANDING Long/Short-paradigm correction (any legacy
+   Long-only artifact -> fix on sight).
+
+9. CLOSE STATE
+   Code HEAD        38f62ec (1057 tests green; MOD rest/client.py [REST-HTTP-002 ClientSession config +
+                    PATH_QUERY_ORDERS + parse_query_orders + gap_close_fill + query_orders] + exchange/
+                    receive_loop.py [MessageClass.ORDER_ACK + on_order_ack + after_batch pump] + exchange/
+                    ws_manager.py [record_order_response + _default_market_rejected registry poll +
+                    _order_cl_ord_id + _order_responses] + exchange/private_ws.py [ExecutionsIngest cancel-
+                    confirm -> record_cancel_ack + OrderAckHandler + query_orders edge + _resolve_gap_fill +
+                    _emit_gap_close + the on_order_ack/after_batch/gap-close wiring] + exchange/regime_exit.py
+                    [pair_status_from_wire] + pipeline/operational.py [make_instrument_handler +
+                    make_ticker_handler + the public-handler wiring] + tests [+35 net across test_rest,
+                    test_receive_loop, test_private_ws, test_ws_manager, test_regime_exit, test_operational]).
+   Docs HEAD        ab77593 (0500000 dv1_253 / 0521001 dv1_63 - UNCHANGED; a CODE build reading the diagram).
+   SessionLogs HEAD <this close: TB00764 SL + TB00765 NSI + TB00765 OCS>.
+   TB00000          v2_101 - UNCHANGED (no new seed; a CODE build off the existing canon).
+   Governing instructions next = TB00765 NSI. Auto memory updated (phase2-build through Code 38f62ec /
+   Docs ab77593).
+
+============================================================
+END TB00764
+============================================================
