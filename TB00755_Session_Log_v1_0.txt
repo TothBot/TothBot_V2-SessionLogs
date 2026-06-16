@@ -1,0 +1,159 @@
+DocDCN:     TB00755
+DocTitle:   TB00755_Session_Log
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00755_Session_Log_v1_0.txt
+DocDate:    06-15-2026
+DocTime:    23:59:55 UTC
+
+============================================================
+TB00755 SESSION LOG
+BIND THE PULL CADENCE SCHEDULER + SMTP TRANSPORT INTO THE LIVE ORGANISM CLOCK
+EXECUTOR: CLAUDE CODE (autonomous; continued from the TB00754 close on Bill's "proceed" - auto mode)
+============================================================
+
+0. NUMBERING NOTE (Bill ruling TB00745, standing)
+   SL = THIS session's number; NSI = the NEXT session's number; OCS = the SAME number as the NSI. This
+   session (755, governed by the TB00755 NSI) closes as TB00755 SL + TB00756 NSI + TB00756 OCS. This
+   session CONTINUED directly from the TB00754 close (Bill: "Do you have enough left to proceed?" -> yes,
+   auto mode, build the organism).
+
+1. MISSION / CONTEXT
+   Continued from the TB00754 close (the C2-C6 reports RENDER + EMIT over the REAL transport [SmtpReport
+   Transport / DashboardReportTransport, the low-level send injected] and a deterministic PullCadence
+   Scheduler fires the pull on each cadence; 916 green, Code 3562f3b). The transport + scheduler were
+   built + proven driven by an EXTERNAL tick(now); the PRODUCTION binding into the live organism was the
+   open gap. The TB00755 mission wires (a) the LIVE CLOCK BINDING - the scheduler fired off the OHLC_5m
+   system clock; (b) the REAL SMTP EDGE - the injected send bound to a real smtplib.SMTP; (c) proven
+   END-TO-END on the assembled real-wm organism. Delivered as 2 commits, each its own commit + FULL
+   pytest on 3.12.10 + DR-010. 916 -> 921 green. NO new seed, NO Docs/diagram edit (the binding/transport
+   form is implementation per the contract's SSS-precedent note - no architecture gap appeared).
+
+   COLD-LOAD: this session continued in-process from the TB00754 close (Code 3562f3b/916 green verified at
+   that close; Docs d023cc9 = 0500000 dv1_251 / 0521001 dv1_61; SessionLogs e2ff69a = TB00754 SL +
+   TB00755 NSI/OCS). Auto-memory (phase2-build + ciats-self-tuning-directive) current.
+
+2. BILL DIRECTIVES (chat-turn, this session)
+   (1) "Do you have enough left to proceed?" -> proceed into the TB00755 mission on auto. Standing rules
+       hold: auto mode, build the organism, question-box BANNED, surface only a genuine new seed in plain
+       text, diagram/Docs edits in Claude Code (DR-010), session close standing.
+   (2) The governing spec remains Bill's TB00750-turn FORM -> TEST -> ROUTE directive: PROFITABLE emails
+       Bill (a C1 IMMEDIATE alert) / UNPROFITABLE is REPORTED in the periodic PULL reports (C2-C6). The
+       value is Claude's to derive; a fixed constant is a documented seed surfaced in plain text. NEVER
+       the sacred 1:1.5 R:R.
+
+3. SOURCE READ FIRST (the binding is implementation coded FROM the ratified contract)
+   contract:Operator_Reporting_Hierarchy (0500000 dv1_251 sec 7 mod:Logger reporting_hierarchy) +
+   contract:OHLC_5m_System_Clock (the 5m candle close is the SOLE pipeline clock tick) + rule:HR-RPT-
+   001/002/003. The contract's OWN note: the delivery edge + the cadence trigger are implementation coded
+   from the contract, NOT preserved as architecture (the SSS construction-scheme precedent). The 5m candle
+   carries interval_begin (an integer Unix-second UTC key, ar:AR-045/A-16) - the natural UTC instant the
+   cadence reads. The C1 IMMEDIATE push (mod:Logger.alert -> SMTP) is the SEPARATE approval/alert track.
+
+4. WHAT WAS BUILT (Code: 2 commits 829922c -> f8070f3; 916 -> 921 green on 3.12.10; DR-010 verified
+   against origin/master on the push via git hash-object vs origin/master:path. Docs UNCHANGED at
+   d023cc9. TB00000 UNCHANGED at v2_101 - NO new seed.)
+
+   (a) 829922c  THE LIVE CLOCK BINDING + THE REAL SMTP EDGE.
+       - LiveSweepDriver (pipeline/live_driver.py) gains an injected `on_clock_tick` (Callable[[datetime],
+         None] | None). on_ohlc_5m calls it once per CLOSED 5m candle with that candle's UTC instant
+         (datetime.fromtimestamp(closed.interval_begin, tz=UTC)) - the OHLC_5m close is the system clock,
+         so each close advances the periodic-report cadence. Optional/injected: a paper/unit assembly that
+         wires no reporting leaves it None (the existing behaviour, unchanged).
+       - assemble_operational (pipeline/operational.py) gains `report_emit` (a ReportSink - e.g. an
+         SmtpReportTransport / a dashboard write, the low-level send injected at cold-start) +
+         `report_categories`. When report_emit is wired it builds a PullReportService over mod:Logger +
+         the per-module Parameter Stores and a PullCadenceScheduler over the C2-C6 categories, and feeds
+         scheduler.tick as the driver's on_clock_tick - so a calendar boundary crossed by the 5m clock
+         FIRES the periodic pull through the wired transport (DISTINCT from the C1 push; the pull never
+         raises a C1 alert). OperationalSystem exposes `pull_scheduler`. No report_emit -> no cadence
+         wiring (the pull stays operator-invoked only), the existing assemblies untouched.
+       - report_transport.smtplib_send(host, port, *, smtp_factory=, starttls=, username=, password=)
+         [NEW] = the LOW-LEVEL SmtpSend bound to a real smtplib.SMTP server (the actual operator delivery
+         edge for the pull track). Each send opens a connection, optional STARTTLS + login, sendmails the
+         RFC-822 message, quits in a finally. smtp_factory defaults to smtplib.SMTP, LAZY-imported at the
+         edge (never at module load - the transport.py/websockets pattern); a unit test injects a fake
+         factory so NO socket opens. +4 tests (test_report_transport.py).
+
+   (b) f8070f3  PROVE THE LIVE-CLOCK-BOUND CADENCE END-TO-END ON THE ASSEMBLED REAL-WM ORGANISM
+       (tests/test_live_smoke.py). assemble_operational wires the C4 MONTHLY scheduler off the OHLC_5m
+       clock + a real SmtpReportTransport (its socket the injected smtplib edge via smtplib_send + a
+       capturing fake SMTP). Asserts the scheduler is built + its tick IS the driver's clock tick
+       (on_clock_tick.__self__ is pull_scheduler). A degrading June run (winners hot / losers cool -> a
+       stop-width LOOSEN -> a CHECK-failed theory REPORTED into Stream-1, no C1) builds the LONG corpus;
+       the 5m detector is reseeded to a clean June-2026 boundary (the _FakeRest warm-up uses a 2023 epoch
+       base, so the live clock origin is set to the test timeline - a real organism warmed in June 2026
+       has a contemporaneous clock), then 5m closes are driven whose fired-close UTC instants run June 1
+       (baseline, no fire), June 20 (same month, no fire), July 2 (rolls -> fires). The month boundary
+       fires exactly the C4 MONTHLY pull for June -> the SMTP transport delivers ONE message carrying the
+       LONG 200-trade net -200 trade performance + the REPORTED disproven theory, with the X-TothBot-
+       Track: periodic-pull marker, NO manual tick, NO new capture (len(logger.operational) unchanged),
+       NO C1 alert. +1 test (920 -> 921).
+
+5. PROVENANCE / SCOPE
+   A CODE build READS 0500000 (the ratified contract + the OHLC_5m clock). The binding/transport form is
+   implementation, not architecture (the contract's own SSS-precedent note) - so NO diagram edit. NO new
+   seed appeared (expected for a binding/transport layer) - TB00000 stays at v2_101 and 0500000 stays at
+   dv1_251 (no Docs edit). The binding adds NO new capture. The PULL EMIT is the DISTINCT periodic-pull
+   track (the X-TothBot-Track marker, never logger.alert); the C1 SMTP push remains the separate
+   approval/alert track.
+
+   KNOWN GAPS surfaced by THIS build (carry-forward, not Bill questions):
+   - The clock tick uses the closed candle's interval_begin (its UTC start). The scheduler reports the
+     just-completed period on a boundary crossing and assumes ticks at least once per the shortest
+     scheduled cadence (true for the 5m clock vs a daily/weekly/monthly cadence) - documented, not silent.
+   - smtplib_send is the real socket edge but the SMTP server config (host/port/credentials) + the
+     cold-start CALL SITE that constructs the SmtpReportTransport from settings are not yet wired into a
+     top-level runner (assemble_operational accepts the transport; the process main that builds it from
+     ops config is the deploy-wiring step). The C1 alert SMTP send is in the same still-injected state.
+   - The corpus the C5 ANNUAL report reads is in-memory; the rule:HR-LG-013 durable trade-record FILE
+     sink (the authoritative C5 + 200-trade source) is still not built.
+
+   LONG-STANDING FLAGS persist: keepalive WS_PONG_TIMEOUT -> PING_TIMEOUT naming; reconnect "BLOCKED"
+   docstring; G7 BoundedSemaphore ACQUIRE side unbuilt (mod:Risk_Engine); private_ws RESET_RATE_CEILING
+   no-op (the AR-030 maxratecount unit); the max-over-life MAE (MTM) tracker - the stop-width theory reads
+   the AT-EXIT mae_pct_reached until it lands; the C5 Form 8949 proceeds/cost-basis need a TRADE_CLOSE qty
+   field the 23-field schema does not carry.
+
+6. VERIFICATION
+   921 pytest green on C:\Users\wstot\AppData\Local\Programs\Python\Python312\python.exe (3.12.10):
+   916 (TB00754 close) -> 920 (a, +4) -> 921 (b, +1). DR-010 verified after the push via git hash-object
+   vs origin/master:path: live_driver.py + operational.py + report_transport.py + test_report_transport.py
+   + test_live_smoke.py all hash-match; HEAD == origin/master (f8070f3). Docs d023cc9 unchanged (no edit).
+
+7. STATE AT CLOSE - THE C2-C6 PULL REPORTS FIRE OFF THE LIVE OHLC_5m CLOCK OVER A REAL SMTP EDGE
+   The contract:Operator_Reporting_Hierarchy C2-C6 PULL pipeline is now wired end-to-end in the running
+   organism: VIEW (reporting.py) -> RENDER (report_render.py) -> REAL TRANSPORT (report_transport.py
+   SmtpReportTransport / DashboardReportTransport, the socket bound via smtplib_send) -> CADENCE
+   SCHEDULER (PullCadenceScheduler) -> the OHLC_5m SYSTEM CLOCK (LiveSweepDriver.on_clock_tick, wired by
+   assemble_operational). A 5m close advances the cadence; a calendar boundary fires the periodic pull and
+   the real transport delivers the rendered body to the operator - on the DISTINCT periodic-pull track,
+   with no new capture and no C1 alert. Proven end-to-end on the assembled real-wm organism (a June run +
+   5m closes crossing the month boundary -> the C4 MONTHLY pull delivered). The sacred 1:1.5 R:R is never
+   a candidate and is never served from the parameter snapshot.
+
+8. CARRY-FORWARD (see TB00756 NSI)
+   The C2-C6 reporting is fully wired into the live clock. The natural next mission is the rule:HR-LG-013
+   permanent trade-record FILE sink: the durable append-only /home/tothbot/records/trades_<YYYY>.jsonl
+   (fsync-per-write, annual UTC segmentation, no rotation) - the authoritative C5 ANNUAL source + the
+   durable 200-trade corpus that survives a restart (today the corpus is in-memory), reading C5 from it.
+   Also genuinely valuable: the max-over-life MAE (MTM) tracker that would sharpen the heat signal the
+   stop-width theory reads; the TRADE_CLOSE qty field the C5 Form 8949 proceeds/cost-basis needs; the
+   top-level process runner that constructs the SmtpReportTransport from ops settings (the deploy-wiring
+   for the still-injected SMTP send, shared with the C1 alert seam). LONG-STANDING FLAGS persist:
+   keepalive PING_TIMEOUT naming; reconnect "BLOCKED" docstring; G7 semaphore ACQUIRE unbuilt; private_ws
+   RESET_RATE_CEILING no-op.
+
+9. CLOSE STATE
+   Code HEAD        f8070f3 (921 tests green; tothbot/pipeline/live_driver.py [MOD: on_clock_tick] +
+                    tothbot/pipeline/operational.py [MOD: report_emit/report_categories + the scheduler
+                    wiring + pull_scheduler] + tothbot/recorder/report_transport.py [MOD: smtplib_send] +
+                    tests/test_report_transport.py [+4] + tests/test_live_smoke.py [the live-clock e2e]).
+   Docs HEAD        d023cc9 (0500000 dv1_251 / 0521001 dv1_61) - UNCHANGED (no diagram edit; no seed).
+   SessionLogs HEAD <this close: TB00755 SL + TB00756 NSI + TB00756 OCS>.
+   TB00000          v2_101 - UNCHANGED (no new seed this session).
+   Governing instructions next = TB00756 NSI. Auto memory (phase2-build) updated through f8070f3.
+
+============================================================
+END TB00755
+============================================================

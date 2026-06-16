@@ -1,0 +1,93 @@
+DocDCN:     TB00756
+DocTitle:   TB00756_Next_Session_Instructions
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00756_Next_Session_Instructions_v1_0.txt
+DocDate:    06-15-2026
+DocTime:    23:59:55 UTC
+
+============================================================
+TB00756 NSI - BUILD THE rule:HR-LG-013 DURABLE PERMANENT TRADE-RECORD FILE SINK (THE AUTHORITATIVE C5
+SOURCE + THE DURABLE 200-TRADE CORPUS)
+The C2-C6 reporting pipeline is now wired end-to-end into the live clock (TB00755). The corpus it reads
+is in-memory; this mission builds the durable append-only trades_<YYYY>.jsonl FILE sink - the
+authoritative C5 ANNUAL source + the 200-trade corpus that survives a restart - and reads C5 from it.
+EXECUTOR: CLAUDE CODE (autonomous, "auto mode on")
+============================================================
+
+NSIs are Claude-authored + informational; Bill's chat directives govern. PLAIN-TEXT choices ONLY - the
+AskUserQuestion / question-box tool is BANNED (TB00000 4.7). Per Bill's standing TB00731 ruling: a schema
+verification or an obvious method/legacy choice is something to DO automatically, NOT a question.
+
+NUMBERING (Bill ruling TB00745): SL = this session's number; NSI = the next session's number; OCS = the
+SAME number as the NSI. This session is 756; it closes as TB00756 SL + TB00757 NSI + TB00757 OCS.
+
+0. BILL'S GOVERNING DIRECTIVE (TB00750 turn - still the spec; auto-memory ciats-self-tuning-directive).
+   The CIATS coach must ALWAYS act on what it finds: FORM a theory, TEST it, ROUTE by result -
+   PROFITABLE -> a C1 IMMEDIATE email (HR-RPT-001 push; Bill approves via HR-CI-011) / UNPROFITABLE ->
+   SIMPLY REPORTED in the periodic PULL reports (C2 daily / C3 weekly / C4 MONTHLY / C5 annual / C6
+   rolling-12mo). The loop is BUILT (TB00751); the report VIEWS (TB00752), the RENDER + EMIT surface
+   (TB00753), the REAL TRANSPORT + the CADENCE SCHEDULER (TB00754), and the LIVE-CLOCK BINDING + the real
+   smtplib edge (TB00755) are BUILT. The Operator_Reporting_Hierarchy + HR-RPT/HR-LG rules were ratified
+   by Bill at TB00604/TB00605. Claude does NOT ask Bill to hand-pick anything - the HOW + the ORDER are
+   delegated; a genuine new seed is surfaced in plain text. NEVER the sacred R:R.
+
+1. ENTRY / COLD-LOAD + VERIFY (from GitHub HEAD)
+   Read TB00000 (v2_101) + this NSI + the TB00755 Session Log. Cold-load the auto-memory (phase2-build
+   current through f8070f3; ciats-self-tuning-directive).
+     Code HEAD        f8070f3 (921 tests green). Python = C:\Users\wstot\AppData\Local\Programs\Python\
+                      Python312\python.exe (3.12.10; default PATH python is 3.10 - full path ONLY). Run:
+                      python.exe -m pytest -q (expect 921 green).
+     Docs HEAD        d023cc9 - 0500000 dv1_251 / 0521001 dv1_61.
+     SessionLogs HEAD <the TB00755 SL + TB00756 NSI/OCS push>.
+
+2. STATE: the C2-C6 reporting fires off the live OHLC_5m clock over a real SMTP edge; the corpus it reads
+   is IN-MEMORY (mod:Logger Stream-2). The durable FILE sink is the build.
+   recorder/logger     mod:Logger - Stream-1 operational + Stream-2 per-module TRADE_CLOSE corpus, both
+                       in-memory lists; the 23-field schema validation gates Stream-2.
+   recorder/reporting  the C2-C6 VIEW reads that in-memory record; the C5 tax projection surfaces the
+                       available TRADE_CLOSE fields + flags the qty gap.
+   What is MISSING: (1) the rule:HR-LG-013 DURABLE permanent trade-record FILE sink - an append-only
+                    /home/tothbot/records/trades_<YYYY>.jsonl: one JSON line per closed trade, fsync-per-
+                    write (no loss on crash), annual UTC segmentation (a new file per calendar year),
+                    NO rotation (the record is permanent - the authoritative C5 + the multi-year corpus).
+                    (2) the corpus READ from the file (so the 200/600-trade floors + the C5 ANNUAL report
+                    survive a process restart - today they reset with the in-memory lists). (3) C5 read
+                    from the durable file as its authoritative source.
+
+3. MISSION - build the rule:HR-LG-013 durable trade-record FILE sink (a CODE build).
+   READ 0500000 for the rule:HR-LG-013 contract (the file path, the fsync/segmentation/no-rotation
+   semantics, the record shape) FIRST - build the diagram literal, do not invent. The file form is
+   implementation (the SSS precedent) - a clean code build, NO diagram edit unless a genuine architecture
+   gap appears. Build:
+   (a) the DURABLE WRITER: an append-only JSONL sink keyed by the close's UTC year (trades_<YYYY>.jsonl),
+       fsync-per-write, no rotation. Wire it as a TRADE_CLOSE sink alongside the in-memory Stream-2 (the
+       schema-valid record is BOTH learned in-memory AND durably appended) - the low-level file open/write/
+       fsync injected (an injected opener / a write edge) so it is unit-testable without real disk I/O,
+       the same injected-edge pattern the SMTP/socket seams use.
+   (b) the CORPUS READ-BACK: a loader that reads the durable file(s) back into the per-module corpus shape
+       the report VIEW + the CIATS floors consume, so a cold-start restores the 200/600-trade history.
+   (c) C5 FROM THE FILE: point the C5 ANNUAL report's authoritative source at the durable year file; prove
+       end-to-end on the assembled real-wm organism (a run of closes -> the durable file carries them ->
+       a fresh load reconstructs the corpus -> the C5 ANNUAL report reads the durable record).
+
+   ALTERNATIVELY (Bill's call - surface as a plain-text choice if Bill is in the loop; otherwise pick the
+   HR-LG-013 file sink above as the natural continuation): the max-over-life MAE (MTM) tracker that
+   sharpens the heat signal the stop-width theory reads (today it reads the AT-EXIT mae_pct_reached); OR
+   the top-level process runner that constructs the SmtpReportTransport from ops settings (the deploy-
+   wiring for the still-injected SMTP send, shared with the C1 alert seam).
+
+4. PROVENANCE / SCOPE
+   A CODE build READS 0500000 (symmetric; the HR-LG-013 contract). The file form is implementation (not
+   architecture) - no diagram edit for the sink itself. If a genuine new seed or an architecture gap
+   appears (e.g. the file path / the record shape is underspecified in the diagram), surface it in plain
+   text -> TB00000 sec 8 + a 0500000 note + a Claude Code Docs edit + DR-010. LONG-STANDING FLAGS persist:
+   keepalive WS_PONG_TIMEOUT -> PING_TIMEOUT naming; reconnect "BLOCKED" docstring; G7 BoundedSemaphore
+   ACQUIRE side unbuilt (mod:Risk_Engine); private_ws RESET_RATE_CEILING no-op (the AR-030 maxratecount
+   unit); the max-over-life MAE (MTM) tracker; the C5 Form 8949 proceeds/cost-basis need a TRADE_CLOSE qty
+   field the 23-field schema does not carry; the SMTP server config + the cold-start call site that builds
+   the SmtpReportTransport from ops settings (the deploy-wiring step).
+
+============================================================
+END TB00756
+============================================================
