@@ -1,0 +1,99 @@
+DocDCN:     TB00767
+DocTitle:   TB00767_Session_Log
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00767_Session_Log_v1_0.txt
+DocDate:    06-16-2026
+DocTime:    23:30:00 UTC
+
+============================================================
+TB00767 SESSION LOG
+MISSION: the ar:AR-052 EQUITY-BASIS DRAWDOWN (both sides COUPLED) + pin the SHORT TradeBalance
+baseline endpoint + correct the gate:G7 CHECK 1 numerator to the MARK-TO-MARKET current_portfolio
+============================================================
+
+0. COLD-LOAD VERIFIED (before working)
+   Code HEAD        dfda7cf  - python.exe -m pytest -q = 1089 green. CONFIRMED.
+   Docs HEAD        ab77593  - 0500000 dv1_253 / 0521001 dv1_63. CONFIRMED.
+   SessionLogs HEAD 8deeab2  - TB00766 SL + TB00767 NSI/OCS. CONFIRMED.
+   Auto-memory loaded; the resolved TB00766 ruling read in full (NO pending Bill ruling - the
+   SHORT drawdown basis = the Kraken MARGIN-account EQUITY, TradeBalance e, NOT margin cash).
+
+1. WHAT WAS BUILT (TB00767 mission 4(A)+(B) COUPLED - the safety-critical equity drawdown; DONE)
+   THE CORE: gate:G7 CHECK 1 now measures drawdown against the ar:AR-052 MARK-TO-MARKET
+   current_portfolio (NOT the realized sizing cash). The SIZING reads (CHECK 2/3 + gate:G8) stay on
+   realized cash (ar:AR-051). The two baselines land TOGETHER, basis-consistent, both sides:
+     LONG  current_portfolio = spot cash + sum(bid * qty)          baseline = REST-BAL-004 spot USD (TB00766)
+     SHORT current_portfolio = margin collateral + sum((entry-ask) * qty) - rollover accrual
+                                                                   baseline = REST-BAL-008 TradeBalance e
+   The SHORT mark is the UNREALIZED P&L at the ask (entry-ask)*qty, NOT the full market value -
+   exactly why the margin CASH basis is a structural FALSE NEGATIVE (blind to open-short MTM) and
+   only the EQUITY basis fires. The borrow rollover (param:margin_rollover_fee_pct, an EXISTING
+   CIATS seed) is subtracted - conservative (un-reconciled rollover over-subtracts -> fires sooner,
+   FN-safe).
+
+   CODE - THREE commits (TothBot_V2-Code), 1089 -> 1112 green, NO new seed, TB00000 stays v2_101:
+   (A) 79f8def: pipeline/portfolio.py - the PURE ar:AR-052 current_portfolio_usd compute (both
+       sides) + held_4h_blocks + short_rollover_accrued_usd helpers. PURE save the injected now_utc
+       clock; Decimal-only. 12 tests (the FN signal, the rollover hold math, the flat-start sanity).
+   (B) f12cf08: wire it into gate:G7 CHECK 1. evaluate_risk_guard gains a current_portfolio keyword
+       (CHECK 1 numerator; None falls back to wallet_balance = the pre-MTM simplification, so every
+       pre-existing caller is unchanged). G7DrawdownHalt gains a current_portfolio field (the MTM
+       value the drawdown measured; wallet_balance retained as the realized-cash audit value).
+       PipelineInputs.current_portfolio threaded (trailing + defaulted); signal_pipeline passes it;
+       sweep assemble_candidate feeds current_portfolio_usd over the open same-side positions (a
+       missing open-position quote raises ProviderNotReady -> skip tick). +7 tests incl. the
+       END-TO-END FN case (an open short bleeding -> G7 CHECK 1 HALT; the cash basis would PASS).
+   (C) 80d205c: the SHORT equity baseline REST edge. rest/client.py PATH_TRADE_BALANCE +
+       parse_trade_balance (every field Decimal; result.e the borrow-adjusted margin EQUITY) +
+       get_trade_balance (signed, asset=ZUSD). exchange/private_ws.py gains a FetchTradeBalance edge
+       captured ONCE in build() via set_live_portfolio_baseline(SHORT, e) - the BASIS-CONSISTENT
+       pair to the REST-BAL-004 long; once-only, never on reconnect (HR-WM-011 / AR-056); stands
+       alone (independent of the long edge). +4 tests (both sides captured once, flat-cold-start
+       sanity e == margin cash, the edge stands alone, the parser equity field).
+
+   DOCS - ONE commit (TothBot_V2-Docs), 0500000 dv1_253 -> dv1_254 / 0521001 dv1_63 -> dv1_64:
+   a31a271: the AUTHORIZED small annotation (the NSI pre-authorized a REST-BAL-* note pinning
+   TradeBalance) PLUS a standing-directive correction:
+     - container:Kraken_REST_API: new wire fact REST-BAL-008 (TradeBalance endpoint, result.e the
+       SHORT portfolio_baseline_USD captured once, flat-cold-start cross-validation e == margin
+       cash, the running short equity reconstruction); channel:kraken_rest_TradeBalance added to
+       drill_targets + q1_do + the visible REST API box text.
+     - ar:AR-052: the SHORT baseline sentence pins REST-BAL-008 TradeBalance e (NOT margin cash) +
+       states the running SHORT current_portfolio reconstruction; the LONG baseline pins REST-BAL-004.
+     - gate:G7 CHECK 1 (Image8): the q1_do drawdown numerator CORRECTED from spot_usd_balance to the
+       AR-052 current_portfolio (a LONG-centric legacy artifact - corrected ON SIGHT per the Bill
+       standing Long/Short paradigm directive); the CHECK-1 visual Inputs text + the q5_logs field
+       list updated. Tier 1 System Context R7 -> R8. HTML tag-balanced (g 217/217, text 957/957,
+       desc 126/126, svg 10/10, title 126/126, figcaption 10/10).
+
+2. NO PENDING BILL RULING. The TB00766 ruling (the SHORT drawdown basis = TradeBalance e) was
+   already resolved + preserved in the TB00767 NSI section 5; this session IMPLEMENTED it. No new
+   seed (the borrow rollover is the existing param:margin_rollover_fee_pct, TB00728 DEC-A). NEVER
+   the sacred 1:1.5 R:R.
+
+3. DEFERRED / CARRY-FORWARD (deliberate, documented - never a silent cap):
+   - The PERIODIC TradeBalance reconcile that re-seeds the reconstructed SHORT running equity to the
+     true `e` (to bound the rollover-accrual estimate drift) - needs a REST poll scheduler. The
+     reconstruction shipped is conservative (FN-safe) between reconciles. This is part of the live
+     wiring (next to mission 4(C)).
+   - Mission 4(C) THE LIVE PROVIDER FEED (make_live_providers wiring the sweep's LiveProviders -
+     instrument / bbo / expected_reward / mpp_abs_cap_pct / base_per_trade_size / ws_state /
+     cycle_parameters - to the real REST/WS caches). NOT started this session (4(A)+(B) was the
+     safety-critical coupled priority; built deliberately, not rushed). This is the TB00768 mission.
+
+4. ***PUSH BLOCKER (Bill action required)*** - the 4 commits below are LOCAL ONLY:
+   The auto-mode classifier SOFT-BLOCKED `git push origin master` ("Direct push to the default
+   branch bypasses PR review"). The TothBot workflow pushes both repos directly to master (no PR
+   flow; tothbot-commit-rules), so this blocks the DR-010 push+verify. NOTHING reached origin:
+     Code        80d205c, f12cf08, 79f8def  (origin still dfda7cf)
+     Docs        a31a271                     (origin still ab77593)
+     SessionLogs  this SL + TB00768 NSI/OCS  (origin still 8deeab2)
+   TO UNBLOCK: Bill authorizes the push (or adds a Bash permission rule for `git push`); then push
+   all three repos to origin/master and run DR-010 (fresh-fetch, md5-match, confirm dv1_253/dv1_63
+   absent from Docs HEAD). Until then the work is committed + verified locally (1112 green) but the
+   next session's GitHub cold-load will NOT see it.
+
+============================================================
+END TB00767 SESSION LOG
+============================================================
