@@ -1,0 +1,165 @@
+DocDCN:     TB00754
+DocTitle:   TB00754_Session_Log
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00754_Session_Log_v1_0.txt
+DocDate:    06-15-2026
+DocTime:    23:59:45 UTC
+
+============================================================
+TB00754 SESSION LOG
+WIRE THE REAL EMIT TRANSPORT + THE PULL CADENCE SCHEDULER FOR THE C2-C6 REPORTS
+EXECUTOR: CLAUDE CODE (autonomous; Bill cold-start = the TB00754 OCS paste, auto mode)
+============================================================
+
+0. NUMBERING NOTE (Bill ruling TB00745, standing)
+   SL = THIS session's number; NSI = the NEXT session's number; OCS = the SAME number as the NSI. This
+   session (754, governed by the TB00754 NSI) closes as TB00754 SL + TB00755 NSI + TB00755 OCS.
+
+1. MISSION / CONTEXT
+   Continued from the TB00753 close (the C2-C6 PULL report VIEWS [TB00752] RENDER to the operator-facing
+   body and EMIT through an INJECTED sink [TB00753, recorder/report_render.py]: render_operator_report ->
+   a deterministic Decimal-as-string body, PullReportService.pull = the operator-invoked build + render +
+   emit, DISTINCT from the C1 IMMEDIATE SMTP push; 903 green, Code 2fa6b9c). The render produced the body
+   and the pull was operator-invoked through an injected emit seam; the ACTUAL delivery edge + the cadence
+   trigger were still injected/manual. The TB00754 mission wires (a) the REAL EMIT TRANSPORT - the SMTP
+   send for the periodic-pull retrieval + a dashboard/file write, the low-level send/write injected; and
+   (b) the PULL CADENCE SCHEDULER - the deterministic injected-clock trigger that fires the pull on the C2
+   daily / C3 weekly / C4 monthly / C5 annual / C6 rolling-12mo cadence; (c) proven END-TO-END on the
+   assembled real-wm organism. Delivered as 2 commits, each its own commit + FULL pytest on 3.12.10 +
+   DR-010. 903 -> 916 green. NO new seed, NO Docs/diagram edit (the transport/cadence form is
+   implementation per the contract's SSS-precedent note - no architecture gap appeared).
+
+   COLD-LOAD VERIFIED before working: Code HEAD 2fa6b9c - ran pytest on the 3.12.10 interpreter by full
+   path, 903 green, matched. Docs d023cc9 (0500000 dv1_251 / 0521001 dv1_61). SessionLogs 58d36dc (the
+   TB00753 SL + TB00754 NSI/OCS). Auto-memory (phase2-build + ciats-self-tuning-directive) current.
+
+2. BILL DIRECTIVES (chat-turn, this session)
+   (1) The TB00754 OCS paste = cold-start + execute the TB00754 NSI on auto. Standing rules hold: auto
+       mode, build the organism, question-box BANNED, surface only a genuine new seed in plain text,
+       diagram/Docs edits in Claude Code (DR-010), session close standing.
+   (2) The governing spec remains Bill's TB00750-turn FORM -> TEST -> ROUTE directive: PROFITABLE emails
+       Bill (a C1 IMMEDIATE alert) / UNPROFITABLE is REPORTED in the periodic PULL reports (C2-C6). The
+       value is Claude's to derive; a fixed constant is a documented seed surfaced in plain text. NEVER
+       the sacred 1:1.5 R:R.
+
+3. SOURCE READ FIRST (the transport/cadence is implementation coded FROM the ratified contract)
+   contract:Operator_Reporting_Hierarchy (0500000 dv1_251 sec 7 mod:Logger desc reporting_hierarchy) +
+   rule:HR-RPT-001/002/003. The contract's OWN note: the rendered output form + the delivery edge are
+   "implementation coded from this contract -- NOT preserved as architecture (SSS construction-scheme
+   precedent)." The cadence anchors are already in recorder/reporting.report_window (C2 = the calendar
+   day, C3 = the Monday-anchored week, C4 = the calendar month, C5 = the calendar year, C6 = the trailing
+   12 months). The C1 IMMEDIATE push (mod:Logger.alert -> SMTP) is the SEPARATE approval/alert track.
+
+4. WHAT WAS BUILT (Code: 2 commits d53b9d5 -> 3562f3b; 903 -> 916 green on 3.12.10; DR-010 verified
+   against origin/master on the push via git hash-object vs origin/master:path. Docs UNCHANGED at
+   d023cc9. TB00000 UNCHANGED at v2_101 - NO new seed.)
+
+   (a) d53b9d5  THE C2-C6 PULL REAL EMIT TRANSPORT + THE PULL CADENCE SCHEDULER
+       (tothbot/recorder/report_transport.py [NEW]). The low-level send/write edge is INJECTED (the
+       socket is the process edge, bound at cold-start - mirroring the C1 SMTP seam) so the message
+       construction + the cadence logic stay unit-testable without I/O.
+       - SmtpReportTransport(send, sender=, recipients=) [NEW] = the REAL emit transport for the periodic-
+         pull track. It is CALLABLE, so it plugs straight into PullReportService(emit=...). build_message
+         constructs the RFC-822 message: the From / To / Subject headers + the body VERBATIM (the Decimal
+         numbers never re-wrapped) + the markers X-TothBot-Report (the category code), X-TothBot-Cadence,
+         and X-TothBot-Track: periodic-pull - DISTINCT from the C1 immediate push so the operator surface
+         separates the two tracks. It NEVER calls mod:Logger.alert. Deterministic (same rendered report ->
+         same message).
+       - DashboardReportTransport(write) [NEW] = the REAL emit transport for the C2 operational dashboard
+         / a file surface (the body -> the injected write). Also callable, also a usable emit sink.
+       - fan_out(*sinks) [NEW] = compose several emit sinks into one (e.g. SMTP + the dashboard at once).
+       - PullCadenceScheduler(service, categories, on_fire=) [NEW] = the cadence trigger. tick(now) is
+         driven by a DETERMINISTIC injected clock (the OHLC_5m_System_Clock close or a UTC-calendar
+         tick). On each tick, for every scheduled category, if the cadence bucket rolled over since the
+         last tick the JUST-COMPLETED period is reported: the scheduler calls service.pull(category,
+         as_of=<the completed period anchor>) which builds + renders + EMITS through the wired transport.
+         The FIRST observation of a category establishes the baseline (no spurious startup fire). C2-C5
+         buckets are the report_window calendar anchors; C6 (no calendar boundary of its own - its window
+         is the trailing 12 months) is PULLED on the MONTHLY cadence. DETERMINISTIC (same tick sequence
+         -> same fires). +12 tests (test_report_transport.py [NEW]).
+
+   (b) 3562f3b  PROVE THE CADENCE SCHEDULER + REAL SMTP TRANSPORT END-TO-END ON THE ASSEMBLED REAL-WM
+       ORGANISM (tests/test_live_smoke.py). The same degrading June run as the TB00752/TB00753 capstone
+       flows through the wired ciats_sink (winners HOT, losers COOL -> a stop-width LOOSEN the replay
+       cannot credit -> the absolute CHECK fails -> a CheckResult REPORTED into Stream-1, NO mae_mult C1
+       alert). A PullCadenceScheduler scheduling [C4 MONTHLY], emit = a SmtpReportTransport with its
+       socket send INJECTED + captured, is driven by a deterministic clock: a June tick (baseline, no
+       fire), then a July tick (the month rolls over) -> the scheduler fires the C4 MONTHLY pull for the
+       COMPLETED month -> the real transport delivers exactly one message carrying the LONG module's
+       realized trade performance (200 trades, net -200, inference-valid) + the REPORTED disproven stop-
+       width theory, with the X-TothBot-Track: periodic-pull marker. Asserts NO new capture
+       (len(logger.operational) unchanged by the scheduled pull), NO C1 alert (_mae_alert empty). +1 test
+       (915 -> 916).
+
+5. PROVENANCE / SCOPE
+   A CODE build READS 0500000 (the ratified contract:Operator_Reporting_Hierarchy). The transport +
+   cadence form is implementation, not architecture (the contract's own SSS-precedent note) - so NO
+   diagram edit. NO new seed appeared (expected for a transport/cadence layer per the TB00754 NSI sec 4)
+   - so TB00000 stays at v2_101 and 0500000 stays at dv1_251 (no Docs edit). The transport adds NO new
+   capture - it carries the already-rendered OperatorReport body to the operator surface. The PULL EMIT
+   is the DISTINCT periodic-pull track (the X-TothBot-Track marker, never logger.alert); the C1 SMTP
+   push remains the separate approval/alert track.
+
+   KNOWN GAPS surfaced by THIS build (carry-forward, not Bill questions - production-binding gaps):
+   - The scheduler is proven on the assembled organism driven by a deterministic clock via tick(now);
+     the PRODUCTION binding - firing tick() automatically off the live driver's OHLC_5m candle-derived
+     UTC instant (LiveSweepDriver / assemble_operational), and binding the injected SmtpReportTransport
+     send to a real smtplib edge at cold-start - is the next wiring step (the same injected-edge pattern
+     the C1 alert SMTP send uses; both are still injected seams).
+   - The scheduler reports the most recently completed period on a rollover; it assumes ticks at least
+     once per the shortest scheduled cadence (true for the 5m system clock vs a daily/weekly/monthly
+     cadence) and does not back-fill a period skipped entirely between two distant ticks (documented in
+     the class docstring; not silent).
+
+   LONG-STANDING FLAGS persist: keepalive WS_PONG_TIMEOUT -> PING_TIMEOUT naming; reconnect "BLOCKED"
+   docstring; G7 BoundedSemaphore ACQUIRE side unbuilt (mod:Risk_Engine); private_ws RESET_RATE_CEILING
+   no-op (the AR-030 maxratecount unit); the max-over-life MAE (MTM) tracker - the stop-width theory
+   reads the AT-EXIT mae_pct_reached until it lands; the C5 Form 8949 proceeds/cost-basis need a
+   TRADE_CLOSE qty field the 23-field schema does not carry; the rule:HR-LG-013 durable permanent trade-
+   record FILE sink (the authoritative C5 source) is not yet built (the corpus is in-memory).
+
+6. VERIFICATION
+   916 pytest green on C:\Users\wstot\AppData\Local\Programs\Python\Python312\python.exe (3.12.10):
+   903 (cold-load) -> 915 (a, +12) -> 916 (b, +1). DR-010 verified after the push via git hash-object vs
+   origin/master:path: report_transport.py + test_report_transport.py + test_live_smoke.py all hash-
+   match; HEAD == origin/master (3562f3b). Docs d023cc9 unchanged (no edit). A C4 MONTHLY SMTP message
+   was built + eyeballed: the From/To/Subject headers, the periodic-pull track marker, and the Decimal-
+   as-string body carried verbatim.
+
+7. STATE AT CLOSE - THE C2-C6 PULL REPORTS HAVE A REAL EMIT TRANSPORT + A CADENCE SCHEDULER
+   tothbot/recorder/report_transport.py carries the rendered OperatorReport to the operator surface over
+   the real delivery edge - SmtpReportTransport (the RFC-822 message + the injected socket send, the
+   X-TothBot-Track: periodic-pull marker) and DashboardReportTransport (the dashboard/file write), both
+   usable as the PullReportService emit sink and composable via fan_out - and PullCadenceScheduler fires
+   the pull on the C2 daily / C3 weekly / C4 monthly / C5 annual / C6 rolling-12mo cadence off a
+   deterministic injected clock, reporting the just-completed period. Proven end-to-end on the assembled
+   real-wm organism: a degrading run -> the clock rolls June into July -> the scheduler fires the C4
+   MONTHLY pull -> the SMTP transport delivers the rendered body carrying the trade performance + the
+   reported theory, on the periodic-pull track, with no new capture and no C1 alert. The sacred 1:1.5
+   R:R is never a candidate and is never served from the parameter snapshot.
+
+8. CARRY-FORWARD (see TB00755 NSI)
+   The C2-C6 reports now render + emit over the real transport on the cadence. The natural next mission
+   is the PRODUCTION BINDING: fire the scheduler tick() automatically off the live driver's OHLC_5m
+   candle-derived UTC instant + bind the injected SmtpReportTransport send to a real smtplib edge at
+   cold-start (so the periodic pull fires + delivers during a live run, no manual tick). Also genuinely
+   valuable: the rule:HR-LG-013 permanent trade-record FILE sink (the durable append-only
+   trades_<YYYY>.jsonl, the authoritative C5 + 200-trade corpus source); the max-over-life MAE (MTM)
+   tracker that would sharpen the heat signal the stop-width theory reads; the TRADE_CLOSE qty field the
+   C5 Form 8949 proceeds/cost-basis needs. LONG-STANDING FLAGS persist: keepalive PING_TIMEOUT naming;
+   reconnect "BLOCKED" docstring; G7 semaphore ACQUIRE unbuilt; private_ws RESET_RATE_CEILING no-op.
+
+9. CLOSE STATE
+   Code HEAD        3562f3b (916 tests green; tothbot/recorder/report_transport.py [NEW: SmtpReport
+                    Transport + DashboardReportTransport + fan_out + PullCadenceScheduler] + tests/
+                    test_report_transport.py [NEW] + tests/test_live_smoke.py [the cadence + SMTP
+                    transport end-to-end proof]).
+   Docs HEAD        d023cc9 (0500000 dv1_251 / 0521001 dv1_61) - UNCHANGED (no diagram edit; no seed).
+   SessionLogs HEAD <this close: TB00754 SL + TB00755 NSI + TB00755 OCS>.
+   TB00000          v2_101 - UNCHANGED (no new seed this session).
+   Governing instructions next = TB00755 NSI. Auto memory (phase2-build) updated through 3562f3b.
+
+============================================================
+END TB00754
+============================================================
