@@ -1,0 +1,70 @@
+DocDCN:     TB00760
+DocTitle:   TB00760_Next_Session_Instructions
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00760_Next_Session_Instructions_v1_0.txt
+DocDate:    06-16-2026
+DocTime:    00:45:00 UTC
+
+============================================================
+TB00760 NSI - WIRE THE ar:AR-030 maxratecount UNIT (the autonomous next mission)
+D1 (the 24-field schema / C5 Form 8949 qty) + D2 (the G7 capital-commitment dispatch semaphore) are DONE
+(TB00759). The next autonomous mission wires the ar:AR-030 maxratecount order-rate-counter unit
+(private_ws's RESET_RATE_CEILING is a no-op placeholder today).
+EXECUTOR: CLAUDE CODE (autonomous, "auto mode on", continuous-run)
+============================================================
+
+NSIs are Claude-authored + informational; Bill's chat directives govern. PLAIN-TEXT choices ONLY - the
+question-box tool is BANNED (TB00000 4.7). Per the CONTINUOUS-RUN directive ([[continuous-run-directive]]):
+run continuously across missions until context runs LOW; do NOT pause to ask "should I proceed"; a session
+close is the standing protocol, not a pause; close cleanly BEFORE the limit.
+
+NUMBERING (Bill ruling TB00745): SL = this session's number; NSI = the next; OCS = the same as the NSI.
+This session is 760; it closes as TB00760 SL + TB00761 NSI + TB00761 OCS.
+
+0. BILL'S GOVERNING DIRECTIVE (TB00750 turn - still the spec). The CIATS coach FORM -> TEST -> ROUTE:
+   PROFITABLE -> a C1 IMMEDIATE email / UNPROFITABLE -> the periodic PULL reports. NEVER the sacred R:R.
+
+1. ENTRY / COLD-LOAD + VERIFY (from GitHub HEAD)
+   Read TB00000 (v2_101) + this NSI + the TB00759 Session Log. Cold-load the auto-memory (phase2-build
+   current through Code b6591b7 / Docs 5e16a7b; ciats-self-tuning-directive; continuous-run-directive).
+     Code HEAD        b6591b7 (965 tests green). Python = C:\Users\wstot\AppData\Local\Programs\Python\
+                      Python312\python.exe (3.12.10; default PATH python is 3.10 - full path ONLY). Run:
+                      python.exe -m pytest -q (expect 965 green).
+     Docs HEAD        5e16a7b - 0500000 dv1_252 / 0521001 dv1_62 (the 24-field schema, qty added D1).
+     SessionLogs HEAD <the TB00759 SL + TB00760 NSI/OCS push>.
+
+2. STATE: the schema is 24-field (qty), G7 serializes capital commitment per module, the organism is
+   runnable. The ar:AR-030 maxratecount unit is a placeholder no-op.
+   exchange/private_ws  RESET_RATE_CEILING is a no-op placeholder; the per-pair Kraken order-rate counter
+                        (maxratecount) is not tracked. The sec-7 event_registry defines MAXRATECOUNT_SET
+                        [INFO] {value}, RATE_COUNTER_UPDATE [INFO] {symbol, value, maxratecount}, and
+                        RATE_COUNTER_WARNING [WARNING] {symbol, value, maxratecount}.
+   What is MISSING: the ar:AR-030 maxratecount unit - track the per-pair order-rate counter against the
+                    Kraken-published maxratecount ceiling, emit RATE_COUNTER_UPDATE per change +
+                    RATE_COUNTER_WARNING as it approaches the ceiling, and set the ceiling from
+                    MAXRATECOUNT_SET (the ratecounter feed). PURE unit + the private_ws wiring.
+
+3. MISSION - wire the ar:AR-030 maxratecount unit (a CODE build).
+   READ 0500000 dv1_252 ar:AR-030 + the RATE_COUNTER event_registry entries + the private_ws ratecounter
+   feed FIRST - build the diagram literal. PURE unit (a clock-free counter; the feed edge injected), no
+   diagram edit unless a genuine gap appears. Build: (a) the maxratecount counter unit (per-pair value vs
+   ceiling, the warning threshold, the three events); (b) wire it into private_ws (replace the
+   RESET_RATE_CEILING no-op; the ratecounter channel updates it); (c) prove it (unit + the private_ws
+   integration). If a maxratecount WARNING THRESHOLD fraction is unspecified by the diagram, that is a
+   genuine NEW SEED -> surface it in plain text (TB00000 sec 8 + a 0500000 note + DR-010), do NOT hardcode
+   silently.
+
+   THEN (continuous-run, no pause): the next candidates are the live executions-driven exit + MTM slice;
+   the runner's real websockets/REST construction (the live deploy); the durable per-module restore side
+   gap. Pick the highest-value remaining and keep building; close cleanly before context runs low.
+
+4. PROVENANCE / SCOPE
+   A CODE build READS 0500000. A new seed (the warning threshold) or an architecture gap -> surface in
+   plain text + the Docs edit + DR-010. LONG-STANDING FLAGS persist: private_ws maxratecount (this
+   mission); the durable per-module restore needs a side field the 24-field schema does not carry; live
+   exit detection + live MTM marking are a later slice; the runner's real websockets/REST = live deploy.
+
+============================================================
+END TB00760
+============================================================

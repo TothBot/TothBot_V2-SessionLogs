@@ -1,0 +1,128 @@
+DocDCN:     TB00759
+DocTitle:   TB00759_Session_Log
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00759_Session_Log_v1_0.txt
+DocDate:    06-16-2026
+DocTime:    00:45:00 UTC
+
+============================================================
+TB00759 SESSION LOG
+D1 EXPAND THE TRADE_CLOSE SCHEMA 23 -> 24 (qty / C5 Form 8949) + D2 BUILD THE G7 SEMAPHORE ACQUIRE SIDE
+EXECUTOR: CLAUDE CODE (autonomous, continuous-run; Bill ruled D1=yes / D2=b this turn)
+============================================================
+
+0. NUMBERING NOTE (Bill ruling TB00745, standing)
+   SL = THIS session's number; NSI = the NEXT; OCS = the SAME as the NSI. This session (759, governed by
+   the TB00759 NSI) closes as TB00759 SL + TB00760 NSI + TB00760 OCS.
+
+1. MISSION / CONTEXT
+   Continued from the TB00758 close per the CONTINUOUS-RUN directive. The TB00759 NSI had queued two
+   Bill rulings (D1, D2) + an autonomous fallback (the AR-030 maxratecount unit). Bill RULED both this
+   turn: "go, and rule D1=yes / D2=b" - so both ruled missions were executed (the maxratecount fallback
+   carries forward). Delivered as: 1 Docs commit (the D1 diagram authority) + 2 Code commits (D1 code,
+   D2). Each its own commit + FULL pytest on 3.12.10 + DR-010. 956 -> 965 green. ONE Docs/diagram edit
+   (D1, ratified by Bill's ruling); NO new seed.
+
+   COLD-LOAD: continued in-process from the TB00758 close (Code e5c1e21/956 green; Docs d023cc9; SessionLogs
+   42defbc). Auto-memory current (incl. continuous-run-directive).
+
+2. BILL DIRECTIVES (chat-turn, this session)
+   (1) "go, and rule D1=yes / D2=b": execute both. D1 = expand the SACRED 23-field TRADE_CLOSE schema to
+       24 fields (add qty for C5 Form 8949 proceeds/cost-basis). D2 = the G7 ar:AR-043 semaphore is
+       POSITION-LIFETIME (b): acquired at entry, released on close, max one open commitment per module.
+   (2) CONTINUOUS-RUN remains in force; the sacred 1:1.5 R:R is never touched.
+
+3. SOURCE READ FIRST
+   D1: 0500000 dv1_251 schema_fields_canonical (line 4111/4687, the two canonical enumeration sites) +
+   the 24 "23-field" reference sites + the section 7.5 visual {...} field list. D2: ar:AR-043 (0500000
+   line 2737 "per-module dispatch serialization; Long has its own semaphore, Short has its own") + the
+   G7 Image8 CHECK 4 + the existing ws_manager release seam + the providers.semaphore_locked gate seam.
+
+4. WHAT WAS BUILT
+
+   D1 -- THE SCHEMA EXPANSION 23 -> 24 (qty).
+   Docs `5e16a7b` (0500000 dv1_251 -> dv1_252, 0521001 dv1_61 -> dv1_62): every "23-field" -> "24-field"
+   (24 sites); field "(24) qty Decimal" added to BOTH canonical schema_fields_canonical enumerations (the
+   CIATS_Trade_Outcome_Bus box + the stream2 box); ", qty" added to the section 7.5 visual {...} list;
+   3 internal dv1_251 refs -> dv1_252; both files renamed (git rename); a 0521001 OP RECORD appended.
+   HTML tag-balanced (g 217/217, text 957/957, desc 126/126, svg 10/10); no residual 23-field / dv1_251.
+   DR-010 verified (both new files hash-match origin/master; old versions absent from HEAD).
+   Code `1db3570` (956 -> 959): TradeClose gains qty: Decimal | None = None (field 24, emitted at close
+   from position.qty); the logger TRADE_CLOSE_SCHEMA fingerprint frozenset gains "qty" (24 names); the
+   durable serializer _CANONICAL_ORDER + _DECIMAL_FIELDS + parse_trade_close gain qty; the C5 TaxLot
+   gains qty + proceeds_usd (exit_price*qty) + cost_basis_usd (entry_fill_price*qty) via a new _tax_lot
+   helper (None only for a legacy record with no qty - never fabricated); report_render surfaces qty +
+   proceeds + cost-basis in the C5 lot. THE PRIOR C5 qty GAP IS CLOSED. +3 tests (qty emitted at close;
+   serialize carries field 24 + round-trips; build_c5_from_durable_file computes proceeds/cost-basis).
+   The schema-count test became test_schema_has_24_fields.
+
+   D2 -- THE G7 CAPITAL-COMMITMENT DISPATCH SEMAPHORE ACQUIRE SIDE (position-lifetime).
+   Code `b6591b7` (959 -> 965): tothbot/risk/dispatch_semaphore.py [NEW - the FIRST mod:Risk_Engine unit]
+   DispatchSemaphore = a bound-1 BoundedSemaphore (ar:AR-043): non-blocking acquire() (False if already
+   held - the no-double-commit guard), bounded release() (over-release raises - a lifecycle defect), a
+   non-mutating locked() probe. ws_manager holds per-module instances {LONG, SHORT}; ACQUIRES on the
+   mirror OPEN (record_execution PositionAction.OPENED, keyed by the opened position's side - so EVERY
+   fill path acquires, not just dispatch_entry); RELEASES per side at close via release_exit_semaphore(
+   side) (guarded; the legacy no-side path still hits the optional injected _exit_semaphore); the G7
+   CHECK 4 probe wm.dispatch_semaphore_locked(side) is wired into make_live_providers(semaphore_locked=).
+   exit_controller releases position.side at close (step 9). So a module holds at most ONE open
+   commitment and G7 SKIPs its next candidate while held; per-module independence preserved (opening a
+   LONG never locks SHORT). +6 tests (the DispatchSemaphore primitive +5; per-module independence +1; the
+   two ws_manager lifecycle tests migrated from the old injected-semaphore model to dispatch_semaphore_
+   locked).
+
+5. PROVENANCE / SCOPE
+   D1 is an architecture change RATIFIED by Bill's ruling -> the diagram edit (0500000 dv1_252 + 0521001
+   dv1_62) is the authority; the code mirrors it. NO new seed (qty is a record field, not a tunable) -
+   TB00000 stays v2_101. D2 is implementation of the already-ratified ar:AR-043 (Bill's D2=b ruling fixed
+   the ambiguous semantics) - NO diagram edit, NO seed. The qty field is OPTIONAL-defaulted in code
+   (back-compat: a record without qty still validates - qty name present on the dataclass) but is always
+   emitted by the real close.
+
+   FLAGS CLEARED this session: the C5 qty gap (D1); the G7 semaphore ACQUIRE side unbuilt (D2);
+   mod:Risk_Engine had no real unit (now has DispatchSemaphore).
+   LONG-STANDING FLAGS that persist: private_ws RESET_RATE_CEILING no-op (the ar:AR-030 maxratecount
+   unit - the queued autonomous next mission); the durable per-module corpus restore needs a side field
+   the schema still does not carry (qty is not a side); live exit detection + live MTM marking are a
+   later (executions-driven) slice; the runner's real websockets/REST construction is the live-deploy
+   slice.
+
+6. VERIFICATION
+   965 pytest green on the 3.12.10 interpreter (full path): 956 -> 959 (D1 code) -> 965 (D2). DR-010
+   verified after each push via git hash-object vs origin/master:path. Docs: 0500000 dv1_252 + 0521001
+   dv1_62 hash-match origin/master, old dv1_251/dv1_61 absent from HEAD. Code HEAD == origin/master
+   (b6591b7). NOTE: the first Docs push hit a transient "remote hung up" disconnect (the large HTML);
+   the retry succeeded - verified clean.
+
+7. STATE AT CLOSE - C5 IS FORM-8949-COMPLETE; G7 SERIALIZES CAPITAL COMMITMENT PER MODULE
+   The contract:TRADE_CLOSE schema is 24 fields (dv1_252): field 24 qty flows entry -> close -> the
+   durable file -> the C5 ANNUAL report, which now computes Form 8949 proceeds + cost_basis. gate:G7
+   CHECK 4 is live: a per-module DispatchSemaphore (ar:AR-043) is acquired when a position opens and
+   released at close, so each module carries at most one open capital commitment and G7 SKIPs a new
+   candidate while one is in flight; the two sides are independent. The sacred 1:1.5 R:R is untouched.
+
+8. CARRY-FORWARD (see TB00760 NSI)
+   The AUTONOMOUS next mission is the ar:AR-030 maxratecount unit (private_ws RESET_RATE_CEILING is a
+   no-op; emit RATE_COUNTER_UPDATE / RATE_COUNTER_WARNING / MAXRATECOUNT_SET per the sec-7 event_registry;
+   if a warning-threshold fraction is unspecified that is a genuine NEW SEED -> surface it + a Docs edit +
+   DR-010). Also: the live executions-driven exit + MTM slice; the runner's real websockets/REST (live
+   deploy); the durable per-module restore side gap. LONG-STANDING FLAGS persist (private_ws maxratecount;
+   the per-module durable-restore side gap; the live exit/MTM slice).
+
+9. CLOSE STATE
+   Code HEAD        b6591b7 (965 tests green; tothbot/risk/dispatch_semaphore.py [NEW] + tothbot/exchange/
+                    ws_manager.py [MOD: per-module dispatch semaphores, acquire on open, per-side release,
+                    probe] + tothbot/execution/exit_controller.py [MOD: qty field 24 + release side] +
+                    tothbot/recorder/logger.py + trade_record_file.py + reporting.py + report_render.py
+                    [MOD: qty schema + C5 proceeds/cost-basis] + tothbot/pipeline/operational.py [MOD:
+                    semaphore_locked wiring] + tests [test_dispatch_semaphore NEW + 6 updated files]).
+   Docs HEAD        5e16a7b (0500000 dv1_252 / 0521001 dv1_62) - D1 schema 23 -> 24 (qty), tag-balanced.
+   SessionLogs HEAD <this close: TB00759 SL + TB00760 NSI + TB00760 OCS>.
+   TB00000          v2_101 - UNCHANGED (no new seed; D1 is a schema/architecture change, not a seed).
+   Governing instructions next = TB00760 NSI. Auto memory (phase2-build) updated through b6591b7 /
+   Docs 5e16a7b.
+
+============================================================
+END TB00759
+============================================================
