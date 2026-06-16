@@ -1,0 +1,163 @@
+DocDCN:     TB00763
+DocTitle:   TB00763_Session_Log
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00763_Session_Log_v1_0.txt
+DocDate:    06-16-2026
+DocTime:    06:00:00 UTC
+
+============================================================
+TB00763 SESSION LOG
+BUILT THE LIVE EXIT DETECTION -> MARKET-SELL DISPATCH END-TO-END (autonomous, continuous-run)
++ THREE adjacent canon slices: HR-EC-016(b) L2 priority, AR-040 PAIR_LIMIT_ONLY_EXIT, AR-056 gap-close
+EXECUTOR: CLAUDE CODE (no pending ruling; CODE-only reading the existing 0500000 dv1_253)
+============================================================
+
+0. NUMBERING NOTE (Bill ruling TB00745, standing)
+   SL = THIS session's number; NSI = the NEXT; OCS = the SAME as the NSI. This session (763, governed by
+   the TB00763 NSI) closes as TB00763 SL + TB00764 NSI + TB00764 OCS.
+
+1. MISSION / CONTEXT
+   NO pending Bill ruling (item A resolved + built TB00762). Per the continuous-run directive the session
+   ran autonomously across the TB00763 mission and three adjacent canon slices, in one shot, no pauses.
+   The mission: THE LIVE EXIT DETECTION -> MARKET-SELL DISPATCH (the close TAIL was built TB00761; this is
+   the UPSTREAM that produces the live close fill). Built END-TO-END from the 0500000 dv1_253 literal.
+   FOUR Code commits. 991 -> 1022 green (+31). NO Docs change (a CODE build reading the existing diagram).
+   NO new seed. TB00000 stays v2_101.
+
+2. SOURCE READ FIRST (the diagram is authority for the live-exit literal)
+   0500000 dv1_253 sec 3 Image3 Exit Architecture: layer:L2_MAE_Threshold q1_do (the ordered sequence
+   "(1) WS cancel_order(emergSL) -> (2) WS add_order market sell"; the req_id cancel-ACK registry + the
+   cancel-timeout fallback; the MPP retry), layer:L1a_Regime_Exit q1_do (cancel emergSL then market close;
+   the AR-040 Step-1 precondition), the conflict_resolution_callout rule:HR-EC-016 rule_text (a)+(b), the
+   mod:Exit_Controller q1_do/q4_triggers (the FOUR CIATS-owned params - mae_mult, emergency_sl_mult,
+   cancel_timeout_window I-6, mpp_retry_count C-1 with the best_bid -/+ 0.2% increment - and the AR-040
+   limit_only PAIR_LIMIT_ONLY_EXIT single-IOC-limit active exit). Plus sec 4.1 (SEQUENCE CRITICAL + I-6 +
+   C-1), ar:AR-009 (SHORT margin buy-to-cover reduce_only), ar:AR-048, ar:AR-056 + layer:L3 q5_logs +
+   FEE-CALC-006 (the gap-close exit-price/fees source). The two CIATS params already existed in the code
+   registry (cancel_timeout_window 5.0s, mpp_retry_count 3); the 0.2% increment is the diagram literal.
+
+3. WHAT WAS BUILT (four commits; all CODE; final Code HEAD 055a91e)
+
+   SLICE 1 -- THE CORE LIVE EXIT DISPATCH (commit 506ad3a; 991 -> 1009).
+   - NEW execution/exit_dispatch.py (pure, Decimal-stringified, no I/O, mirrors entry_dispatch.py):
+       build_market_sell_order (order_type=market, OPPOSITE side - LONG spot sell / SHORT Kraken MARGIN
+       buy-to-cover reduce_only ar:AR-009 - whole-position qty, cl_ord_id, stp_type cancel_newest,
+       deadline now+5s); build_cancel_order (pulls the resting off-book emergSL by cl_ord_id);
+       build_mpp_retry_order + mpp_retry_limit_price (the C-1 marketable IOC limit at best_bid - 0.2%*n
+       / best_ask + 0.2%*n).
+   - WSManager async dispatch_live_exit + drive_live_exits (the sync->async seam, an ENGINEERING choice):
+       the sync read-loop handlers DETECT and ENQUEUE a LiveExitIntent (handle_ticker live branch detects
+       the L2 MAE on the ticker bbo; on_regime_classified / on_htf_ohlc_close live branches enqueue the
+       L1a EC-L1A-002 / EC-L1A-001); drive_live_exits drains the queue; dispatch_live_exit owns the
+       SEQUENCE-CRITICAL cancel-emergSL-then-market-sell. Only the L2 MAE dispatches; the L3 off-book
+       emergSL is Kraken-side (never TothBot-dispatched).
+   - The I-6 cancel-timeout fallback: send the cancel, await the ACK up to param:cancel_timeout_window;
+       on timeout check the executions-channel state (record_cancel_ack registry) - confirmed-cancelled
+       proceeds; state-unknown retries the cancel ONCE; a 2nd timeout still unknown HOLDS the position +
+       alerts (LiveExitHeldAmbiguous) and issues NO market sell ("NEVER market sell with ambiguous order
+       state"). CancelAckTimeout logged per attempt (the q5_logs req_id registry).
+   - The C-1 MPP-rejection retry: the market close, then up to param:mpp_retry_count IOC-limit retries
+       walked out 0.2%*attempt on a rejection; all rejected -> HOLD + alert (LiveExitMppExhausted).
+   - The AR-040 Step-1 precondition FIRST (cancel_only / maintenance -> HOLD, L1aExitHeld, no order);
+       note_live_exit_dispatch stamps the reason onto the executions TRADE_CLOSE (the existing hook);
+       a double-dispatch guard (a reason stamped / held / queued -> skip). The I-6 ACK wait + the MPP
+       reject probe are INJECTED async edges (defaults wire live; tests inject deterministic stubs).
+       record_cancel_ack (the executions cancel-confirm surface) + clear_live_exit_held (operator) +
+       _drive_live_close drops stale intents on close. Registry descriptions filled for the two params.
+
+   SLICE 2 -- THE rule:HR-EC-016(b) LAYER-2 PRIORITY OVERRIDE (commit 5e27434; 1009 -> 1011).
+   An L2 MAE breach detected while an L1a regime exit is IN FLIGHT (a reason stamped, the cancel sequence
+   underway) or still QUEUED takes PRIORITY: it does NOT dispatch a second exit - it OVERRIDES the
+   in-flight stamped reason / the queued intent's reason to MAE_THRESHOLD_BREACH so the SAME cancel-then-
+   sell completes and the ONE close fill carries the L2 reason (the L1a reason suppressed, never two
+   records). NEW LiveExitPriorityOverride; _enqueue_live_exit applies it on both the in-flight and the
+   queued path; dispatch_live_exit reports the FINAL (possibly-overridden) reason on LiveExitDispatched.
+
+   SLICE 3 -- THE ar:AR-040 PAIR_LIMIT_ONLY_EXIT ACTIVE EXIT (commit 1ebd58f; 1011 -> 1019).
+   The 4th and final Exit-Controller normal-operation reason. An open-position pair transitioning to
+   limit_only triggers an ACTIVE exit via a SINGLE IOC limit order ("NOT a market order"): LONG sell at
+   best_bid / SHORT buy-to-cover at best_ask (reduce_only, ar:AR-009), exit_reason PAIR_LIMIT_ONLY_EXIT -
+   distinct from the cancel_only / maintenance HOLD branch. NEW PairStatus.LIMIT_ONLY; build_limit_only_
+   exit_order; WSManager on_instrument_status entry point (enqueues the intent; the live instrument-status
+   channel that drives it is a later slice, driven directly for now like on_regime_classified);
+   dispatch_live_exit branches close_type (market = L1a/L2 with the C-1 MPP retry vs limit_only = a single
+   IOC limit close, no retry) + a no-quote defer (LiveExitDeferredNoQuote). INTERPRETATION grounded in
+   rule:HR-EC-013: the emergSL is cancelled FIRST by the same sequence-critical cancel (never an active
+   close with a resting stop), then the single IOC limit closes - the diagram's "single IOC limit"
+   describes the close order being one limit (not market + retries), not precluding the safety cancel.
+
+   SLICE 4 -- THE ar:AR-056 RECONNECT GAP-CLOSE TRADE_CLOSE (commit 055a91e; 1019 -> 1022).
+   A position open before a disconnect and ABSENT from the reconnect executions snapshot closed during the
+   gap (its off-book L3 emergSL fired while TothBot was offline; restore_from_snapshot returns the
+   PositionClosedDuringGap). NEW WSManager on_reconnect_gap_close emits the evt:TRADE_CLOSE for it,
+   exit_reason EMERGENCY_SL_FIRED, routed through the side's Exit_Controller on_live_close (clear_mirror
+   =False - the restore already removed the symbol; steps 6/8/9 emit + AR-073 SC update + G7 semaphore
+   release byte-identical), then drops the per-symbol live state (retained entry fee + MAE tracker +
+   stale intents). The EXIT-PRICE/FEES SOURCE the TB00763 NSI flagged is RESOLVED BY CANON (not a Bill
+   ruling): FEE-CALC-006 + layer:L3 q5_logs make the ACTUAL close fill (REST QueryOrders / ownTrades or
+   the executions backfill avg_price + fee) the record-of-truth, passed in; a DEGRADED fallback estimates
+   from the entry-time emergsl_price + a calculated taker fee (FEE-CALC-001) and surfaces GapCloseEstimated
+   so a later actual backfill supersedes it.
+
+4. PROVENANCE / SCOPE
+   A CODE build reading the EXISTING 0500000 dv1_253 (the live-exit dispatch was fully canonical at
+   sec 3 Image3 + sec 4.1; no diagram concept added). NO Docs change. NO new seed - the two CIATS params
+   (cancel_timeout_window, mpp_retry_count) already existed in the registry; the 0.2% MPP increment is the
+   diagram literal (a module constant, not a CIATS param). TB00000 stays v2_101. All FOUR Exit-Controller
+   normal-operation reasons now live-dispatch: MAE_THRESHOLD_BREACH (L2), HTF_REGIME_REVERSAL +
+   DAILY_REGIME_DOWNGRADE (L1a), PAIR_LIMIT_ONLY_EXIT (AR-040); EMERGENCY_SL_FIRED stays the L3 / gap-close
+   backstop (never an Exit-Controller dispatch). The sacred 1:1.5 R:R is untouched.
+
+5. ENGINEERING CHOICES (per the NSI, NOT Bill rulings - documented here)
+   (1) The sync->async seam: a sync detector enqueues a LiveExitIntent + an async drive_live_exits driver
+       drains it (mirrors dispatch_entry). The intent queue carries the bbo + pair_status + close_type.
+   (2) The I-6 ACK wait + the C-1 MPP-reject detection are INJECTED async callables (the seam-style
+       injected-I/O-body pattern) so the driver is deterministic under test; defaults wire the live
+       behavior (the live reject-frame + the real cancel-ACK wiring land with the websockets/REST slice).
+   (3) limit_only cancels the emergSL first per rule:HR-EC-013 (above), then the single IOC limit.
+   (4) The gap-close exit-price/fees source is resolved by FEE-CALC-006 (actual fill) with the emergsl_
+       price estimate as the degraded fallback - canon-resolved, no ruling needed.
+
+6. VERIFICATION
+   1022 pytest green on the 3.12.10 interpreter (full path C:\Users\wstot\AppData\Local\Programs\Python\
+   Python312\python.exe): 991 -> 1022 (+31). The two former live-no-op tests (handle_ticker / L1a in live)
+   were updated to the new behavior (live now detects+enqueues on an open position; inert with no
+   position). Each of the four commits pushed + DR-010 verified (local == origin): 506ad3a, 5e27434,
+   1ebd58f, 055a91e.
+
+7. STATE AT CLOSE - THE LIVE EXIT LOOP IS CLOSED END-TO-END (detection -> dispatch -> the TB00761 close tail)
+   The live exit now runs the full loop: the sync read-loop handlers DETECT (ticker L2 MAE / regime L1a /
+   instrument-status limit_only) and ENQUEUE; drive_live_exits dispatches the SEQUENCE-CRITICAL cancel-
+   emergSL-then-close (market for L1a/L2 with I-6 + C-1, single IOC limit for limit_only), stamps the
+   reason; the executions close fill (the TB00761 tail) emits the 25-field TRADE_CLOSE carrying that
+   reason. HR-EC-016(b) L2-priority + the AR-056 reconnect gap-close are covered. What remains is the live
+   I/O substrate (the real websockets/REST read loop that PUMPS drive_live_exits + supplies the cancel ACK
+   / reject frames / the gap-close REST fill / the instrument-status channel) - a deliberate later slice
+   (do NOT connect to Kraken for real).
+
+8. CARRY-FORWARD (see TB00764 NSI)
+   NO pending Bill ruling. The AUTONOMOUS continue-building missions: (a) the runner's real websockets/REST
+   live-deploy slice (the websockets.asyncio client WS-LIB-001 + the aiohttp REST bodies + the async read
+   loop that pumps drive_live_exits and feeds record_cancel_ack / the reject probe / the gap-close REST
+   fill / on_instrument_status; do NOT connect for real); (b) the RL-MON-003 critical-tier ENTRY-suppression
+   gate (suppresses entry add_orders under rate pressure; exits/cancels NEVER suppressed - lands with the
+   live entry path); (c) the live entry path slice. PLUS the STANDING Long/Short-paradigm correction (any
+   legacy Long-only artifact -> fix on sight).
+
+9. CLOSE STATE
+   Code HEAD        055a91e (1022 tests green; NEW execution/exit_dispatch.py [build_market_sell_order /
+                    build_cancel_order / build_mpp_retry_order / mpp_retry_limit_price / build_limit_only_
+                    exit_order] + exchange/ws_manager.py [MOD: dispatch_live_exit + drive_live_exits + the
+                    I-6 / C-1 / AR-040 / HR-EC-016(b) / on_instrument_status / on_reconnect_gap_close + the
+                    live-exit events] + exchange/regime_exit.py [MOD: PairStatus.LIMIT_ONLY] + config/
+                    registry.py [MOD: the two param descriptions] + tests/test_ws_manager.py [+31 net]).
+   Docs HEAD        ab77593 (0500000 dv1_253 / 0521001 dv1_63 - UNCHANGED; a CODE build reading the diagram).
+   SessionLogs HEAD <this close: TB00763 SL + TB00764 NSI + TB00764 OCS>.
+   TB00000          v2_101 - UNCHANGED (no new seed; a CODE build off the existing canon).
+   Governing instructions next = TB00764 NSI. Auto memory updated (phase2-build through Code 055a91e /
+   Docs ab77593).
+
+============================================================
+END TB00763
+============================================================

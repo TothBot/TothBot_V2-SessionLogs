@@ -1,0 +1,90 @@
+DocDCN:     TB00764
+DocTitle:   TB00764_Next_Session_Instructions
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00764_Next_Session_Instructions_v1_0.txt
+DocDate:    06-16-2026
+DocTime:    06:00:00 UTC
+
+============================================================
+TB00764 NSI - NO PENDING RULING - KEEP BUILDING THE LIVE I/O SUBSTRATE (or the live entry path)
+The live exit DETECTION -> DISPATCH loop is built END-TO-END (TB00763); all FOUR Exit-Controller reasons
+live-dispatch + the AR-056 gap-close. The next natural slice is the real websockets/REST read loop that
+PUMPS it (or the live entry path + the RL-MON-003 entry-suppression gate).
+EXECUTOR: CLAUDE CODE (autonomous, "auto mode on", continuous-run)
+============================================================
+
+NSIs are Claude-authored + informational; Bill's chat directives govern. PLAIN-TEXT choices ONLY - the
+question-box tool is BANNED (TB00000 4.7). Per the CONTINUOUS-RUN directive: run continuously across
+missions until context runs LOW; do NOT pause to ask "should I proceed"; a session close is the standing
+protocol, not a pause; close cleanly BEFORE the limit.
+
+NUMBERING (Bill ruling TB00745): SL = this session's number; NSI = the next; OCS = the same as the NSI.
+This session is 764; it closes as TB00764 SL + TB00765 NSI + TB00765 OCS.
+
+0. STANDING DIRECTIVES (Bill - still the spec).
+   (a) The Long/Short PARADIGM (TB00762): TothBot is co-equal Long AND Short. Past Long-only / single-pair
+       limits were ROGUE / unauthorized. CORRECT every legacy Long-only / side-asymmetric artifact to the
+       Long/Short paradigm ON SIGHT, autonomously - do not ask whether to fix it (the answer is always
+       yes). See auto-memory long-short-paradigm-standing.
+   (b) The CIATS coach FORM -> TEST -> ROUTE: PROFITABLE -> a C1 IMMEDIATE email / UNPROFITABLE -> the
+       periodic PULL reports. NEVER the sacred 1:1.5 R:R.
+
+1. ENTRY / COLD-LOAD + VERIFY (from GitHub HEAD)
+   Read TB00000 (v2_101) + this NSI + the TB00763 Session Log. Cold-load the auto-memory (phase2-build
+   current through Code 055a91e / Docs ab77593; long-short-paradigm-standing; ciats-self-tuning-directive;
+   continuous-run-directive).
+     Code HEAD        055a91e (1022 tests green). Python = C:\Users\wstot\AppData\Local\Programs\Python\
+                      Python312\python.exe (3.12.10; default PATH python is 3.10 - full path ONLY). Run:
+                      python.exe -m pytest -q (expect 1022 green).
+     Docs HEAD        ab77593 - 0500000 dv1_253 / 0521001 dv1_63 (UNCHANGED; TB00763 was a CODE build).
+     SessionLogs HEAD <the TB00763 SL + TB00764 NSI/OCS push>.
+
+2. STATE: the live exit loop is CLOSED end-to-end (TB00763). The sync read-loop handlers DETECT and
+   ENQUEUE a LiveExitIntent (handle_ticker L2 MAE / on_regime_classified + on_htf_ohlc_close L1a /
+   on_instrument_status limit_only); WSManager.drive_live_exits drains the queue; dispatch_live_exit runs
+   the SEQUENCE-CRITICAL cancel-emergSL-then-close - a market close (L1a/L2) with the I-6 cancel-timeout
+   fallback + the C-1 MPP-rejection retry, or a single IOC limit close (AR-040 limit_only) - the AR-040
+   Step-1 precondition first, the HR-EC-016(b) L2-priority override, a double-dispatch guard, and
+   note_live_exit_dispatch stamping the reason; the executions close fill (the TB00761 tail) emits the
+   25-field TRADE_CLOSE carrying that reason. on_reconnect_gap_close emits the AR-056 gap-close TRADE_CLOSE
+   (EMERGENCY_SL_FIRED, FEE-CALC-006 actual-fill source). What is MISSING is the live I/O SUBSTRATE that
+   drives all of it: the real websockets/REST read loop.
+
+3. NO PENDING BILL RULING. Proceed autonomously; surface a NEW ruling only if a genuinely new
+   architecture/seed decision arises.
+
+4. THE AUTONOMOUS NEXT MISSION (no ruling needed - keep building)
+   HIGHEST-VALUE = THE LIVE I/O SUBSTRATE that pumps the now-built exit loop (the live-deploy slice; do NOT
+   connect to Kraken for real). READ FIRST: 0500000 sec 7 mod:WS_Manager + container:Kraken_REST_API +
+   container:Private_WS_v2 (the D1 wire facts: WS-LIB-001 the websockets.asyncio client "from
+   websockets.asyncio.client import connect"; WS-LIB-002..004 + HR-WM-002 connection invariants; the
+   aiohttp REST bodies REST-HTTP-001..007 + REST-AUTH-003..005; WS-REC-004 the 11-step reconnect restore;
+   the executions exec_type dispatch WS-EXE-009..012). BUILD:
+     - the async READ LOOP that routes inbound frames (route_frame already exists) AND, after a batch,
+       PUMPS WSManager.drive_live_exits (the async seam the TB00763 detector enqueues into); feed
+       record_cancel_ack from the executions cancel-confirm frame (exec_type=canceled, WS-EXE-009), the
+       C-1 reject probe from the add_order reject frame, on_instrument_status from the instrument-status
+       channel (WS-INST-008 limit_only), and on_reconnect_gap_close from the WS-REC-004 restore + the REST
+       QueryOrders / ownTrades gap-close fill (FEE-CALC-006 actual price + fee).
+     - the live transmitter body (ws_private.send over the single private Transport, the seam's live_sender
+       late-bound by the private_ws assembler at WS-REC-004 reconnect) + the aiohttp REST ClientSession
+       (REST-HTTP-002 mandatory timeout/connector VALUES; ONE shared session REST-HTTP-005).
+     - DECIMAL-safe on every wire field (ar:AR-047). Test with injected fakes (no real socket).
+   ALTERNATIVES if higher value: the LIVE ENTRY path (dispatch_entry is paper-only today - the live
+   add_order + the RL-MON-003 critical-tier ENTRY-suppression gate that suppresses entry add_orders under
+   rate pressure while NEVER suppressing exits/cancels, mod:WS_Manager-owned); OR any legacy Long-only
+   artifact encountered -> correct to Long/Short on sight (standing).
+   READ the relevant 0500000 element FIRST; build the diagram literal; a genuine new seed or architecture
+   gap -> surface in plain text (do NOT hardcode silently).
+
+5. PROVENANCE / SCOPE
+   A CODE build READS 0500000. A new seed or architecture gap -> plain text + the Docs edit + DR-010.
+   LONG-STANDING FLAGS persist: the live I/O substrate (the real websockets/REST read loop that pumps the
+   built exit-dispatch loop; live deploy, do NOT connect for real); the live ENTRY path + the RL-MON-003
+   entry-suppression gate; the live instrument-status channel feeding on_instrument_status; the cancel-ACK
+   + reject-frame wiring feeding the I-6 / C-1 paths. PLUS the STANDING Long/Short-paradigm correction.
+
+============================================================
+END TB00764
+============================================================
