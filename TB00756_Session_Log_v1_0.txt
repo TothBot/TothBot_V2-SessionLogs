@@ -1,0 +1,167 @@
+DocDCN:     TB00756
+DocTitle:   TB00756_Session_Log
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00756_Session_Log_v1_0.txt
+DocDate:    06-15-2026
+DocTime:    23:59:59 UTC
+
+============================================================
+TB00756 SESSION LOG
+BUILD THE rule:HR-LG-013 DURABLE PERMANENT TRADE-RECORD FILE SINK (THE AUTHORITATIVE C5 + DURABLE CORPUS)
+EXECUTOR: CLAUDE CODE (autonomous; continued from the TB00755 close on Bill's "go" - auto mode)
+============================================================
+
+0. NUMBERING NOTE (Bill ruling TB00745, standing)
+   SL = THIS session's number; NSI = the NEXT session's number; OCS = the SAME number as the NSI. This
+   session (756, governed by the TB00756 NSI) closes as TB00756 SL + TB00757 NSI + TB00757 OCS. This
+   session CONTINUED directly from the TB00755 close (Bill: "go").
+
+1. MISSION / CONTEXT
+   Continued from the TB00755 close (the C2-C6 reporting fires off the live OHLC_5m clock over a real
+   SMTP edge; the corpus it reads is in-memory; 921 green, Code f8070f3). The TB00756 mission builds the
+   rule:HR-LG-013 DURABLE permanent trade-record FILE sink - the second, independent, append-only Stream-2
+   sink that makes the closed-trade corpus durable (tothbot.log self-deletes on rotation and would
+   PERMANENTLY LOSE closed trades): the authoritative source for the CIATS 200/600-trade floors AND IRS
+   Form 8949 / 26 CFR 1.6001-1 tax recordkeeping. Delivered as 2 commits, each its own commit + FULL
+   pytest on 3.12.10 + DR-010. 921 -> 935 green. NO new seed, NO Docs/diagram edit (the file form is
+   implementation per the contract's SSS-precedent note; the HR-LG-013 contract was already fully
+   specified in 0500000 dv1_251 - no architecture gap appeared).
+
+   COLD-LOAD: continued in-process from the TB00755 close (Code f8070f3/921 green; Docs d023cc9 = 0500000
+   dv1_251 / 0521001 dv1_61; SessionLogs aa67333 = TB00755 SL + TB00756 NSI/OCS). Auto-memory current.
+
+2. BILL DIRECTIVES (chat-turn, this session)
+   (1) "go" -> proceed into the TB00756 mission on auto. Standing rules hold: auto mode, build the
+       organism, question-box BANNED, surface only a genuine new seed in plain text, diagram/Docs edits
+       in Claude Code (DR-010), session close standing.
+   (2) The governing spec remains Bill's TB00750-turn FORM -> TEST -> ROUTE directive (the periodic PULL
+       reports + the durable corpus they read). NEVER the sacred 1:1.5 R:R.
+
+3. SOURCE READ FIRST (the file sink is the diagram literal, not invented)
+   contract:rule:HR-LG-013 - read VERBATIM from 0500000 dv1_251 sec 7 mod:Logger desc q5_logs "PERMANENT
+   TRADE-RECORD FILE" + constraints + event_registry (evt:TRADE_RECORD_WRITE_FAILED [CRITICAL]) +
+   contract:Two_Stream_Record_Architecture. The contract specifies: path /home/tothbot/records/trades_
+   <YYYY>.jsonl (dir made at startup); filter event=="TRADE_CLOSE" only; one NDJSON object per line +
+   trailing newline, all numerics JSON-STRINGS (Decimal-as-string, never float) parsed back to Decimal,
+   mandatory fields ts/event/level/component lead; open append-only O_WRONLY|O_APPEND|O_CREAT mode 0o644,
+   fsync after EACH write and BEFORE close, single write per record, no handle held across events; annual
+   UTC segmentation (<YYYY> = the close UTC year); NO rotation / size cap / TTL; FAILURE PATH = catch
+   locally (never raise out), emit evt:TRADE_RECORD_WRITE_FAILED CRITICAL {path, error} (a C1 IMMEDIATE
+   email) + stderr fallback, the original write unaffected. orjson is the named serializer; it is NOT
+   installed here, so stdlib json with a Decimal-as-string default is used - the WIRE FORMAT is the
+   architecture, the library is the SSS implementation choice.
+
+4. WHAT WAS BUILT (Code: 2 commits 5e32477 -> f0acdbc; 921 -> 935 green on 3.12.10; DR-010 verified
+   against origin/master via git hash-object vs origin/master:path. Docs UNCHANGED at d023cc9. TB00000
+   UNCHANGED at v2_101 - NO new seed.)
+
+   (a) 5e32477  THE HR-LG-013 DURABLE FILE SINK (tothbot/recorder/trade_record_file.py [NEW]).
+       - serialize_trade_close(record) -> str + parse_trade_close(doc) -> TradeClose [NEW] = the
+         canonical single-line NDJSON wire-format for the durable Stream-2 record: Decimal-as-string
+         throughout (ar:AR-047, never float), exit_reason -> its value, signal_params -> a nested
+         Decimal-as-string dict, the mandatory ts/event/level/component fields leading, the 23-field
+         figure enumeration order; parse is the exact inverse (numerics back to Decimal, exit_reason back
+         to the enum). Deterministic. When the tothbot.log NDJSON serializer is built it MUST share this.
+       - PermanentTradeRecordSink(records_dir, *, now_utc=, on_event=, stderr_write=, os_open/os_write/
+         os_fsync/os_close/makedirs=) [NEW] = the durable append-only sink, CALLABLE so it chains as a
+         learning-sink downstream. Filters event=="TRADE_CLOSE" only; appends trades_<YYYY>.jsonl for the
+         close's UTC year via os.open O_WRONLY|O_APPEND|O_CREAT (+ O_BINARY where present) mode 0o644,
+         single os.write, os.fsync BEFORE os.close, no handle held across events (so the annual rollover
+         is implicit); the records dir is made at construction (exist_ok=True). The low-level os edges +
+         the UTC clock + the stderr write are INJECTED (the real os by default) so it is unit-testable
+         without disk. FAILURE PATH: any exception is caught locally (never raised), emits a
+         TradeRecordWriteFailed [CRITICAL] {path, error} dataclass to on_event (the CRITICAL level
+         escalates through mod:Logger.alerts -> the C1 seam) + writes stderr; the fd is still closed.
+       - load_trade_records / load_trade_records_file / load_trade_records_dir [NEW] = the read-back
+         (the cold-start corpus restore + the C5 authoritative read). NOTE the 23-field schema carries NO
+         side field (the per-module partition IS the emitting side, sec 7), so the read-back restores the
+         COMBINED corpus; per-module Long/Short restoration would need a side field the durable schema
+         does not carry (a documented gap). +13 tests (test_trade_record_file.py [NEW]).
+
+   (b) f0acdbc  WIRE THE DURABLE SINK INTO THE LIVE ORGANISM + C5 READS IT BACK (operational.py +
+       trade_record_file.py + tests/test_live_smoke.py).
+       - assemble_ciats_modules gains `trade_record_sink`, chained as each side's learning-sink
+         downstream - so a closed trade is BOTH learned in-memory AND durably appended (both sides write
+         the one combined permanent file). assemble_operational gains `records_dir`: when given it builds
+         the PermanentTradeRecordSink (now_utc = the providers' UTC clock drives the annual segmentation;
+         the failure event sinks to mod:Logger -> the C1 alert seam) and exposes system.trade_record_sink.
+         No records_dir -> no durable sink (existing assemblies untouched).
+       - build_c5_from_durable_file(records_dir, year, *, parameter_stores=, as_of=) [NEW] = C5 reads
+         from the durable file as its authoritative source (the contract's "C5 reads from the permanent
+         trade-record file"): loads the calendar-year records off disk + views them as ONE combined,
+         sideless corpus (module label "all") through build_operator_report - the C5 all-trades
+         compliance + Form 8949 view. Independent of the live in-memory state (a cold-start / audit can
+         build C5 from disk alone).
+       - PROVEN END-TO-END on the assembled real-wm organism: 200 closes flow through the LONG ciats_sink
+         -> learned in-memory AND durably persisted to a REAL temp trades_2026.jsonl (200 NDJSON lines,
+         fsync-per-write); a FRESH load off disk reconstructs the 200-trade corpus (net 250); the C5
+         ANNUAL report is built from the durable file ALONE - combined trade_count 200, net 250,
+         inference_valid True (the 200-trade floor restored), 200 Form 8949 tax lots; NO write-failure
+         C1 alert. +1 test (934 -> 935).
+
+5. PROVENANCE / SCOPE
+   A CODE build READS 0500000 (the ratified rule:HR-LG-013 + the 23-field schema). The file form is
+   implementation, not architecture (the SSS precedent) - so NO diagram edit. NO new seed appeared -
+   TB00000 stays at v2_101, 0500000 stays at dv1_251 (no Docs edit). The durable sink ADDS a second
+   persistence edge for the SAME TRADE_CLOSE record (no new capture of new data; the in-memory write is
+   unaffected). evt:TRADE_RECORD_WRITE_FAILED is a registered event code (sec 7 event_registry).
+
+   KNOWN GAPS surfaced by THIS build (carry-forward, not Bill questions):
+   - PER-MODULE restore: the durable 23-field schema carries no side, so the read-back restores the
+     COMBINED corpus (the C5 / tax / total-floor source). Restoring the per-module Long/Short pools from
+     the file would need a side field the sacred 23-field schema does not carry (a diagram-level change,
+     not built; the in-memory per-module pools remain the runtime source).
+   - C5 Form 8949 proceeds/cost-basis still need a position QTY the 23-field schema does not carry (the
+     tax lots surface entry/exit prices + gain/loss + fees + the acquired/disposed instants, qty flagged).
+   - The records_dir / SMTP server config are passed in by the caller; the top-level process runner that
+     constructs them from ops settings (the deploy-wiring) is not yet built.
+
+   LONG-STANDING FLAGS persist: keepalive WS_PONG_TIMEOUT -> PING_TIMEOUT naming; reconnect "BLOCKED"
+   docstring; G7 BoundedSemaphore ACQUIRE side unbuilt (mod:Risk_Engine); private_ws RESET_RATE_CEILING
+   no-op (the AR-030 maxratecount unit); the max-over-life MAE (MTM) tracker - the stop-width theory
+   reads the AT-EXIT mae_pct_reached until it lands.
+
+6. VERIFICATION
+   935 pytest green on C:\Users\wstot\AppData\Local\Programs\Python\Python312\python.exe (3.12.10):
+   921 (TB00755 close) -> 934 (a, +13) -> 935 (b, +1). DR-010 verified after the push via git hash-object
+   vs origin/master:path: trade_record_file.py + operational.py + test_trade_record_file.py + test_live_
+   smoke.py all hash-match; HEAD == origin/master (f0acdbc). Docs d023cc9 unchanged (no edit). The
+   durable round-trip was proven on REAL disk (a tempdir): write via the sink -> read back via the dir
+   loader -> byte-faithful Decimal corpus.
+
+7. STATE AT CLOSE - THE CLOSED-TRADE CORPUS IS DURABLE; C5 READS THE PERMANENT FILE
+   tothbot/recorder/trade_record_file.py is the rule:HR-LG-013 durable Stream-2 sink: a closed trade is
+   serialized to canonical NDJSON (Decimal-as-string) and append-only persisted to trades_<YYYY>.jsonl
+   (fsync-per-write, annual UTC segmentation, no rotation), chained into the live organism as each
+   module's learning-sink downstream by assemble_operational (records_dir). The corpus survives a restart
+   (load_trade_records_dir reconstructs it) and the C5 ANNUAL report reads the permanent file as its
+   authoritative source (build_c5_from_durable_file - the combined, sideless all-trades + Form 8949 view).
+   A durable-write failure is caught locally and escalates a C1 IMMEDIATE alert, the in-memory write
+   unaffected. The sacred 1:1.5 R:R is never a candidate and is never served from any snapshot.
+
+8. CARRY-FORWARD (see TB00757 NSI)
+   The durable corpus + the C2-C6 reporting are complete. The natural next mission is the max-over-life
+   MAE (MTM) tracker: today the stop-width FORM->TEST->ROUTE theory reads the AT-EXIT mae_pct_reached
+   (the L2 reading at the exit instant), not the WORST adverse excursion over the whole hold - a
+   per-tick/per-candle running-max MTM tracker while a position is open would feed a truer heat signal
+   the stop-width theory ranks. Also genuinely valuable: the top-level process runner that constructs the
+   SmtpReportTransport + the records_dir from ops settings (the deploy-wiring for the still-injected SMTP
+   send + the durable sink path, shared with the C1 alert seam); the C5 Form 8949 qty field (a 24th
+   schema field - a diagram-level change). LONG-STANDING FLAGS persist: keepalive PING_TIMEOUT naming;
+   reconnect "BLOCKED" docstring; G7 semaphore ACQUIRE unbuilt; private_ws RESET_RATE_CEILING no-op.
+
+9. CLOSE STATE
+   Code HEAD        f0acdbc (935 tests green; tothbot/recorder/trade_record_file.py [NEW: serialize/parse
+                    + PermanentTradeRecordSink + the read-back + build_c5_from_durable_file] +
+                    tothbot/pipeline/operational.py [MOD: trade_record_sink wiring + records_dir +
+                    trade_record_sink field] + tests/test_trade_record_file.py [NEW] + tests/test_live_
+                    smoke.py [the durable-corpus + C5-from-file e2e]).
+   Docs HEAD        d023cc9 (0500000 dv1_251 / 0521001 dv1_61) - UNCHANGED (no diagram edit; no seed).
+   SessionLogs HEAD <this close: TB00756 SL + TB00757 NSI + TB00757 OCS>.
+   TB00000          v2_101 - UNCHANGED (no new seed this session).
+   Governing instructions next = TB00757 NSI. Auto memory (phase2-build) updated through f0acdbc.
+
+============================================================
+END TB00756
+============================================================

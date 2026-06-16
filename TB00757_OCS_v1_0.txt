@@ -1,0 +1,77 @@
+DocDCN:     TB00757
+DocTitle:   TB00757_OCS
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00757_OCS_v1_0.txt
+DocDate:    06-15-2026
+DocTime:    23:59:59 UTC
+
+============================================================
+TB00757 OCS - THE OPENING CHAT STATEMENT FOR THE NEXT SESSION (paste to start session 757)
+============================================================
+
+Cold-load from GitHub HEAD and follow it: TB00757_Next_Session_Instructions_v1_0 + TB00000 (v2_101) +
+the TB00756 Session Log. Also load the auto-memory (phase2-build + ciats-self-tuning-directive). Verify
+the cold-load before working:
+  Code HEAD        f0acdbc  - run python.exe -m pytest -q, expect 935 green. Python =
+  C:\Users\wstot\AppData\Local\Programs\Python\Python312\python.exe (3.12.10; default PATH python is
+  3.10 - full path ONLY).
+  Docs HEAD        d023cc9  - 0500000 dv1_251 / 0521001 dv1_61.
+  SessionLogs HEAD <the TB00756 SL + TB00757 NSI/OCS push>.
+
+DONE TB00756 (BUILD THE rule:HR-LG-013 DURABLE PERMANENT TRADE-RECORD FILE SINK): the closed-trade corpus
+is now durable on disk + C5 reads it. tothbot/recorder/trade_record_file.py [NEW]. `a` serialize_trade_
+close / parse_trade_close = the canonical single-line NDJSON wire-format (Decimal-as-string never float,
+exit_reason value, signal_params nested, mandatory ts/event/level/component lead, 23-field figure order;
+parse the exact inverse); PermanentTradeRecordSink(records_dir, ...) = the durable append-only sink,
+CALLABLE so it chains as a learning-sink downstream - filters event TRADE_CLOSE only, appends
+trades_<YYYY>.jsonl for the close UTC year via os.open O_WRONLY|O_APPEND|O_CREAT mode 0o644, single
+os.write, os.fsync BEFORE os.close, no handle across events (annual rollover implicit), dir made at
+construction; the low-level os edges + UTC clock + stderr injected for testability; FAILURE PATH catches
+locally (never raises), emits TradeRecordWriteFailed [CRITICAL] {path, error} to on_event (escalates to a
+C1 alert through mod:Logger) + stderr; load_trade_records / _file / _dir = the read-back (cold-start
+restore + the C5 read) - the 23-field schema carries NO side, so the restore is the COMBINED corpus
+(per-module split would need a side field the schema lacks, a documented gap). orjson is the named
+serializer but is not installed, so stdlib json with a Decimal-as-string default is used (the wire format
+is the architecture, the library is the SSS implementation choice). `b` wired into the live organism:
+assemble_ciats_modules gains trade_record_sink chained as each side learning-sink downstream (a closed
+trade is BOTH learned in-memory AND durably appended); assemble_operational gains records_dir + builds the
+sink + exposes system.trade_record_sink; build_c5_from_durable_file loads the calendar-year file and views
+it as one combined sideless corpus (the C5 all-trades compliance + Form 8949 view). Proven END-TO-END on
+the real-wm organism: 200 closes durably persisted to a real trades_2026.jsonl -> a fresh load
+reconstructs the 200-trade corpus (net 250) -> C5 built from the file alone (combined trade_count 200,
+inference-valid, 200 tax lots), no write-failure C1 alert. 921 -> 935 green. NO new seed, NO Docs/diagram
+edit (the file form is implementation, not architecture - the HR-LG-013 contract was already fully
+specified).
+
+BILL'S DIRECTIVE (TB00750 turn, still governing): the CIATS coach must SELF-form, TEST, and route -
+PROFITABLE emails Bill (a C1 IMMEDIATE alert) / UNPROFITABLE is REPORTED in the periodic pull reports.
+The value is Claude's to derive; a fixed constant is a documented seed, surfaced in plain text. NEVER the
+sacred 1:1.5 R:R.
+
+NEXT (TB00757 mission): BUILD THE MAX-OVER-LIFE MAE (MTM) TRACKER. Today the stop-width FORM->TEST->ROUTE
+theory reads the AT-EXIT mae_pct_reached (the L2 reading at the exit instant), not the WORST adverse
+excursion over the whole hold; build (a) the MTM MAE tracker - while a position is open, update a running
+MAX adverse excursion (pct of entry, side-correct: long adverse = down, short adverse = up) on each mark
+(the ticker bbo / 5m candle the exit path already sees), kept on the position (the D6 entry-snapshot
+pattern), reset per position; (b) feed the max-over-life value onto the TRADE_CLOSE mae_pct_reached (byte-
+identical paper<->live) so the durable corpus + the CIATS stop-width theory read the true heat; (c) prove
+end-to-end on the real-wm organism (a position that runs deep against itself then exits benign carries the
+DEEP max-over-life mae_pct_reached, not the shallow at-exit value). READ 0500000 for the L2 MAE + position
+spec first - build the diagram literal; if the mae_pct_reached field semantics change at-exit -> max-over-
+life that IS an architecture clarification (a Docs edit + DR-010). ALTERNATIVELY (Bill's call): the top-
+level process runner that builds the SmtpReportTransport + records_dir from ops settings (the deploy-
+wiring), or the C5 Form 8949 qty field (a 24th schema field, a diagram-level change).
+
+RULES: auto mode, build the organism, stop stopping; question-box BANNED; surface only a genuine NEW seed
+value (a TB00000 sec-8 entry + 0500000 note, a Claude Code Docs edit + DR-010) in plain text; diagram/
+Docs edits in Claude Code (DR-010); session close standing (SL = this session; NSI + OCS share the next
+session's number).
+
+One note: the OCS file as committed has SessionLogs HEAD <the TB00756 SL + TB00757 NSI/OCS push> as a
+placeholder (the OCS can't contain its own post-push hash). Read the actual SessionLogs HEAD from GitHub
+after the push.
+
+============================================================
+END TB00757 OCS
+============================================================
