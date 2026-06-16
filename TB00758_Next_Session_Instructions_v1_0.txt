@@ -1,0 +1,97 @@
+DocDCN:     TB00758
+DocTitle:   TB00758_Next_Session_Instructions
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00758_Next_Session_Instructions_v1_0.txt
+DocDate:    06-15-2026
+DocTime:    23:59:59 UTC
+
+============================================================
+TB00758 NSI - BUILD THE TOP-LEVEL PROCESS RUNNER (THE COLD-START MAIN; THE DEPLOY-WIRING)
+The organism is feature-complete through the CIATS loop + the C1-C6 reporting + the durable HR-LG-013
+corpus + the max-over-life heat signal (TB00757). This mission builds the top-level RUNNABLE process: a
+cold-start main that reads ops settings, constructs the still-injected delivery edges (the SMTP transport,
+the records_dir, the C1 alert send), and runs assemble_operational - proven end-to-end.
+EXECUTOR: CLAUDE CODE (autonomous, "auto mode on", continuous-run)
+============================================================
+
+NSIs are Claude-authored + informational; Bill's chat directives govern. PLAIN-TEXT choices ONLY - the
+AskUserQuestion / question-box tool is BANNED (TB00000 4.7). Per Bill's standing TB00731 ruling: a schema
+verification or an obvious method/legacy choice is something to DO automatically, NOT a question. Per
+Bill's standing CONTINUOUS-RUN directive (auto-memory continuous-run-directive): run continuously across
+missions until context runs LOW; do NOT pause to ask "should I proceed"; close cleanly BEFORE the limit.
+
+NUMBERING (Bill ruling TB00745): SL = this session's number; NSI = the next session's number; OCS = the
+SAME number as the NSI. This session is 758; it closes as TB00758 SL + TB00759 NSI + TB00759 OCS.
+
+0. BILL'S GOVERNING DIRECTIVE (TB00750 turn - still the spec; auto-memory ciats-self-tuning-directive).
+   The CIATS coach must FORM -> TEST -> ROUTE: PROFITABLE -> a C1 IMMEDIATE email / UNPROFITABLE ->
+   REPORTED in the periodic PULL reports. The loop + the report VIEWS + the RENDER+EMIT + the TRANSPORT+
+   SCHEDULER + the LIVE-CLOCK BINDING + the DURABLE corpus + the max-over-life HEAT are all BUILT. Claude
+   does NOT ask Bill to hand-pick anything; a genuine new seed is surfaced in plain text. NEVER the R:R.
+
+1. ENTRY / COLD-LOAD + VERIFY (from GitHub HEAD)
+   Read TB00000 (v2_101) + this NSI + the TB00757 Session Log. Cold-load the auto-memory (phase2-build
+   current through 188c0f2; ciats-self-tuning-directive; continuous-run-directive).
+     Code HEAD        188c0f2 (943 tests green). Python = C:\Users\wstot\AppData\Local\Programs\Python\
+                      Python312\python.exe (3.12.10; default PATH python is 3.10 - full path ONLY). Run:
+                      python.exe -m pytest -q (expect 943 green).
+     Docs HEAD        d023cc9 - 0500000 dv1_251 / 0521001 dv1_61.
+     SessionLogs HEAD <the TB00757 SL + TB00758 NSI/OCS push>.
+
+2. STATE: every organism subsystem is built + unit/e2e tested, but the delivery edges (SMTP send, the
+   records_dir path, the C1 alert SMTP) are INJECTED seams - there is no top-level process that binds them
+   from config + runs the whole thing.
+   pipeline/operational.assemble_operational  takes report_emit / records_dir / open_socket / rest_client
+                       / bucket / the clocks - all INJECTED. OperationalSystem.run() drives the data layer
+                       (+ the private connection in live). config/settings has the Mode paper/live flag +
+                       the seed registry + fees.
+   What is MISSING: (1) the COLD-START MAIN - a top-level entry point (e.g. tothbot/app/run.py or
+                    tothbot/__main__.py) that reads ops settings (the universe, the SMTP host/port/creds
+                    from env per HR-LG-009, the records_dir, paper/live), constructs the REAL edges (the
+                    SmtpReportTransport via smtplib_send, the records_dir, the websockets transport opener,
+                    the REST client), and calls assemble_operational + OperationalSystem.run(). (2) the C1
+                    alert SMTP send wired to the same smtplib edge (today logger.alert -> on_alert is an
+                    injected seam; bind it to a real send at cold-start, mirroring the pull-track SMTP).
+                    (3) an end-to-end proof of the assembled runnable (over fakes, asyncio.run, no real
+                    network) that the main wires every edge + the organism runs a tick.
+
+3. MISSION - build the top-level process runner (a CODE build; the deploy-wiring, the SSS precedent).
+   READ 0500000 ar:AR-049 (the cold-start startup sequence) + the mod:Logger HR-LG-009 SMTP contract
+   (env-var creds, the bounded-retry send, the BYPASSES-the-queue direct send) FIRST - build the diagram
+   literal. The runner form is implementation - a clean code build, NO diagram edit unless a genuine
+   architecture gap appears. Build:
+   (a) the COLD-START MAIN: a top-level callable that reads ops settings (env / a settings object - the
+       universe, SMTP host/port + env-var creds, sender/recipients, records_dir, Mode), constructs the
+       real edges (SmtpReportTransport over smtplib_send for the pull track; the records_dir for the
+       durable sink; the websockets opener + REST client for live, or the paper fakes), and runs
+       assemble_operational -> OperationalSystem.run(). Keep the low-level socket/SMTP/file edges injected
+       behind the settings read so it stays unit-testable without I/O.
+   (b) the C1 ALERT SMTP SEND: bind mod:Logger's on_alert to a real SMTP send at cold-start (the HR-LG-009
+       direct send that BYPASSES the Logger queue, env-var creds, the bounded-retry loop: 20s per-attempt
+       timeout, 2 attempts, 1s backoff; evt:ALERT_SENT on success / evt:ALERT_SMTP_FAILED CRITICAL once on
+       total failure per rule:HR-LG-011/012/LG-ALERT-005). Reuse the smtplib edge; keep the socket
+       injected for testability.
+   (c) prove it end-to-end (over fakes, asyncio.run): the main reads a settings object, wires the SMTP
+       transport + records_dir + the C1 alert send + the data-layer fakes, and assemble_operational
+       returns a runnable system with system.pull_scheduler + system.trade_record_sink + the alert send
+       all bound; a driven tick + a forced alert reach the captured SMTP edges.
+
+   ALTERNATIVELY (Bill's call - surface as a plain-text choice if Bill is in the loop; otherwise pick the
+   process runner above): the C5 Form 8949 qty field (a 24th TRADE_CLOSE schema field - a genuine diagram-
+   level change: surface it -> a 0500000 schema_fields_canonical edit + 0521001 provenance + TB00000 if a
+   seed + DR-010 - it unblocks the C5 proceeds/cost-basis); OR the live (executions-driven) exit detection
+   + MTM marking slice; OR the G7 BoundedSemaphore ACQUIRE side (mod:Risk_Engine).
+
+4. PROVENANCE / SCOPE
+   A CODE build READS 0500000 (ar:AR-049 + the HR-LG-009 SMTP contract). The runner form is implementation
+   (not architecture) - no diagram edit for the runner itself. If a genuine new seed or an architecture gap
+   appears (e.g. the C5 qty field), surface it in plain text -> TB00000 sec 8 (if a seed) + a 0500000 note
+   + a Claude Code Docs edit + DR-010. LONG-STANDING FLAGS persist: keepalive WS_PONG_TIMEOUT ->
+   PING_TIMEOUT naming; reconnect "BLOCKED" docstring; G7 BoundedSemaphore ACQUIRE side unbuilt; private_ws
+   RESET_RATE_CEILING no-op; the durable per-module restore needs a side field the 23-field schema lacks;
+   the C5 Form 8949 qty (24th) field; live exit detection + live MTM marking are a later slice.
+
+============================================================
+END TB00758
+============================================================

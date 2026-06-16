@@ -1,0 +1,148 @@
+DocDCN:     TB00757
+DocTitle:   TB00757_Session_Log
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00757_Session_Log_v1_0.txt
+DocDate:    06-15-2026
+DocTime:    23:59:59 UTC
+
+============================================================
+TB00757 SESSION LOG
+BUILD THE MAX-OVER-LIFE MAE (MTM) TRACKER (SHARPEN THE STOP-WIDTH HEAT SIGNAL)
+EXECUTOR: CLAUDE CODE (autonomous; continued from the TB00756 close - Bill's standing continuous-run
+directive: keep building across missions until context runs low, never pause to ask)
+============================================================
+
+0. NUMBERING NOTE (Bill ruling TB00745, standing)
+   SL = THIS session's number; NSI = the NEXT session's number; OCS = the SAME number as the NSI. This
+   session (757, governed by the TB00757 NSI) closes as TB00757 SL + TB00758 NSI + TB00758 OCS. This
+   session CONTINUED directly from the TB00756 close per Bill's TB00756-turn directive (codified in the
+   auto-memory continuous-run-directive: run continuously across missions in one shot until context runs
+   LOW; close cleanly BEFORE the limit). This SL is that proactive clean close (ample context headroom).
+
+1. MISSION / CONTEXT
+   Continued from the TB00756 close (the HR-LG-013 durable corpus + the C2-C6 reporting are complete;
+   943-... no: 935 green, Code f0acdbc). The TB00757 mission sharpens the CIATS stop-width FORM->TEST->
+   ROUTE heat signal: the contract:TRADE_CLOSE field (11) MAE_pct_reached is "max adverse move as pct"
+   computed over the whole hold, but the implementation set it from the AT-EXIT reading only (the L2
+   detector's value at the exit instant), understating a trade that ran DEEP against the position then
+   recovered to a benign exit. Built the max-over-life (mark-to-market) tracker so the corpus carries the
+   worst-over-the-hold heat. Delivered as 2 commits, each its own commit + FULL pytest on 3.12.10 +
+   DR-010. 935 -> 943 green. NO new seed, NO Docs/diagram edit.
+
+   KEY PROVENANCE FINDING (the at-exit -> max-over-life change is NOT an architecture change): the diagram
+   ALREADY ratifies the field semantics. 0500000 dv1_251 line 4111 schema_fields_canonical: "(11)
+   MAE_pct_reached Decimal (max adverse move as pct)"; line 4572 mod:Exit_Controller q1_do: "L2 fires on
+   MAE_pct_reached >= param:mae_mult x ATR(14)/fill_price computed on every 5m candle close". So "max
+   adverse move ... computed on every candle" IS the spec; the at-exit-only reading was the UNDER-
+   implementation. The MTM tracker is implementation catching up to the ratified field (the SSS precedent)
+   - so NO Docs edit + NO new seed (confirmed by reading the diagram, per the TB00757 NSI sec 4 gate).
+
+   COLD-LOAD: continued in-process from the TB00756 close (Code f0acdbc/935 green; Docs d023cc9 = 0500000
+   dv1_251 / 0521001 dv1_61; SessionLogs 89f99f7 = TB00756 SL + TB00757 NSI/OCS). Auto-memory current
+   (phase2-build + ciats-self-tuning-directive + the new continuous-run-directive).
+
+2. BILL DIRECTIVES (chat-turn, this session)
+   (1) CONTINUOUS-RUN directive (new, codified to auto-memory): when on auto, CONTINUE across missions in
+       one continuous shot until context runs LOW - do NOT pause between missions to ask "do you have
+       enough left / should I proceed / go". Close cleanly BEFORE the limit. Stopping to confirm wastes
+       time. (This session ran TB00757 straight off the TB00756 close and is closing proactively.)
+   (2) The governing spec remains Bill's TB00750-turn FORM -> TEST -> ROUTE directive. NEVER the sacred
+       1:1.5 R:R.
+
+3. SOURCE READ FIRST (the tracker is the diagram literal, not invented)
+   contract:TRADE_CLOSE field (11) MAE_pct_reached "max adverse move as pct" (0500000 dv1_251 line 4111)
+   + mod:Exit_Controller layer:L2_MAE_Threshold "computed on every 5m candle close" (line 4572) +
+   ar:AR-048 (MAE uses the bbo - bid for longs, ask for shorts - never last). The MTM marking is the
+   realizable-price adverse excursion tracked across the hold; the at-exit reading is its final sample.
+
+4. WHAT WAS BUILT (Code: 2 commits fae16be -> 188c0f2; 935 -> 943 green on 3.12.10; DR-010 verified
+   against origin/master via git hash-object vs origin/master:path. Docs UNCHANGED at d023cc9. TB00000
+   UNCHANGED at v2_101 - NO new seed.)
+
+   (a) fae16be  THE MAX-OVER-LIFE MAE (MTM) TRACKER (tothbot/exchange/paper_exit.py +
+       tothbot/exchange/ws_manager.py + tothbot/execution/exit_controller.py).
+       - paper_exit.current_mae_pct(position, bid, ask) [NEW] = the per-mark adverse-excursion pct
+         (ar:AR-048: a long marked at the bid, a short at the ask; clamped at 0 on a favorable mark;
+         None on no quote / entry 0). DISTINCT from detect_paper_exit - it MARKS every tick, it does not
+         decide an exit.
+       - paper_exit.MaeHighWaterTracker [NEW] = the per-symbol running-MAX adverse excursion over the
+         whole hold. mark() on each bbo tick; high() at close; clear() when the mirror clears (a reopened
+         symbol starts fresh). PURE state; lives OUTSIDE the frozen Position (the D6 entry snapshot is
+         captured once + never live-recomputed, sec 7) - the exit path owns one tracker. Paper-mode
+         marking (the ticker bbo); live MTM marking is executions/quote-feed driven (a later slice).
+       - ws_manager: owns one MaeHighWaterTracker; handle_ticker MARKS it (current_mae_pct) on each
+         ticker BEFORE detect_paper_exit (so the running max captures the final / breaching tick);
+         mae_pct_high_for(symbol) reads the high; close_position CLEARS it (after the Exit Controller has
+         read it for the record).
+       - exit_controller._close_position: LIFTS mae_pct_reached to max(at-exit, wm.mae_pct_high_for) -
+         the worst over the hold; a wm without the tracker (a lightweight test stand-in) falls back to the
+         at-exit reading (back-compat). +7 tests (test_paper_exit.py +4, test_exit_controller.py +3).
+
+   (b) 188c0f2  PROVE IT END-TO-END ON THE ASSEMBLED REAL-WM ORGANISM (tests/test_live_smoke.py): a long
+       opens (entry 60000, atr 2000 -> L2 threshold 3000); a DEEP but sub-threshold adverse ticker (bid
+       57100 -> adverse 2900 < 3000) does NOT fire an exit but MARKS the MTM high (2900/60000); then a
+       BENIGN HTF 1H regime reversal (EMA20<EMA50) at a profitable bid 60500 closes the position in
+       profit (at-exit adverse = 0). The emitted TRADE_CLOSE carries the DEEP max-over-life mae_pct_
+       reached (2900/60000), NOT the benign at-exit 0 - the sharper heat the CIATS stop-width theory
+       reads; the tracker was cleared at close. +1 test (942 -> 943).
+
+5. PROVENANCE / SCOPE
+   A CODE build READS 0500000 (the ratified field-11 semantics + AR-048). The tracker form is
+   implementation, not architecture (the SSS precedent; the field was ALREADY "max adverse move ...
+   computed on every candle") - so NO diagram edit + NO new seed; TB00000 stays v2_101, 0500000 stays
+   dv1_251. One honest nuance: the diagram says "computed on every 5m candle close" while the marking is
+   on every TICKER bbo (a finer-grained superset, faithful to AR-048's bbo-based MAE) - the max-over-life
+   is captured either way; not a discrepancy worth a Docs edit.
+
+   KNOWN GAPS surfaced by THIS build (carry-forward, not Bill questions):
+   - LIVE MTM marking is executions/quote-feed driven (a later slice, like the rest of live exit
+     detection); the tracker is paper-mode (ticker bbo) for now.
+   - The top-level process runner that constructs the SmtpReportTransport + the records_dir from ops
+     settings (the deploy-wiring for the still-injected SMTP send + the durable sink) is not yet built.
+
+   LONG-STANDING FLAGS persist: keepalive WS_PONG_TIMEOUT -> PING_TIMEOUT naming; reconnect "BLOCKED"
+   docstring; G7 BoundedSemaphore ACQUIRE side unbuilt (mod:Risk_Engine); private_ws RESET_RATE_CEILING
+   no-op (the AR-030 maxratecount unit); the durable per-module restore needs a side field the 23-field
+   schema does not carry; the C5 Form 8949 proceeds/cost-basis need a TRADE_CLOSE qty (24th) field.
+
+6. VERIFICATION
+   943 pytest green on C:\Users\wstot\AppData\Local\Programs\Python\Python312\python.exe (3.12.10):
+   935 (TB00756 close) -> 942 (a, +7) -> 943 (b, +1). DR-010 verified after the push via git hash-object
+   vs origin/master:path: paper_exit.py + ws_manager.py + exit_controller.py + test_paper_exit.py +
+   test_exit_controller.py + test_live_smoke.py all hash-match; HEAD == origin/master (188c0f2). Docs
+   d023cc9 unchanged (no edit).
+
+7. STATE AT CLOSE - THE CIATS STOP-WIDTH THEORY READS THE TRUE (MAX-OVER-LIFE) HEAT
+   The TRADE_CLOSE field (11) mae_pct_reached now carries the WORST adverse excursion over the whole hold
+   (the max-over-life MTM tracker, paper_exit.MaeHighWaterTracker, marked per ticker in ws_manager,
+   cleared at close), lifted in exit_controller from the at-exit reading. A deep-then-benign trade (a
+   run-to-reversal take-profit that survived a deep drawdown) now reports the deep heat the CIATS Spearman
+   heat-vs-outcome gate ranks, not the shallow at-exit value. Proven end-to-end on the assembled real-wm
+   organism. The sacred 1:1.5 R:R is never a candidate and is never served from any snapshot.
+
+8. CARRY-FORWARD (see TB00758 NSI)
+   The reporting + the durable corpus + the heat signal are complete. The natural next mission is the
+   TOP-LEVEL PROCESS RUNNER (the cold-start main) that constructs the SmtpReportTransport + the
+   records_dir (+ the C1 alert SMTP send) from ops settings and runs assemble_operational - the deploy-
+   wiring that makes the organism runnable as a process (the still-injected SMTP/socket + durable-sink
+   edges bound at the real cold-start). Also genuinely valuable: the C5 Form 8949 qty field (a 24th
+   TRADE_CLOSE schema field - a diagram-level change with a Docs edit + DR-010); the live (executions-
+   driven) exit detection + MTM marking slice; the G7 BoundedSemaphore ACQUIRE side (mod:Risk_Engine).
+   LONG-STANDING FLAGS persist: keepalive PING_TIMEOUT naming; reconnect "BLOCKED" docstring; G7
+   semaphore ACQUIRE unbuilt; private_ws RESET_RATE_CEILING no-op.
+
+9. CLOSE STATE
+   Code HEAD        188c0f2 (943 tests green; tothbot/exchange/paper_exit.py [MOD: current_mae_pct +
+                    MaeHighWaterTracker] + tothbot/exchange/ws_manager.py [MOD: tracker + mae_pct_high_for
+                    + mark/clear] + tothbot/execution/exit_controller.py [MOD: max-over-life lift] +
+                    tests/test_paper_exit.py [+4] + tests/test_exit_controller.py [+3] + tests/test_live_
+                    smoke.py [the max-over-life e2e]).
+   Docs HEAD        d023cc9 (0500000 dv1_251 / 0521001 dv1_61) - UNCHANGED (no diagram edit; no seed).
+   SessionLogs HEAD <this close: TB00757 SL + TB00758 NSI + TB00758 OCS>.
+   TB00000          v2_101 - UNCHANGED (no new seed this session).
+   Governing instructions next = TB00758 NSI. Auto memory (phase2-build) updated through 188c0f2.
+
+============================================================
+END TB00757
+============================================================

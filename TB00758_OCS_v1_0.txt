@@ -1,0 +1,74 @@
+DocDCN:     TB00758
+DocTitle:   TB00758_OCS
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00758_OCS_v1_0.txt
+DocDate:    06-15-2026
+DocTime:    23:59:59 UTC
+
+============================================================
+TB00758 OCS - THE OPENING CHAT STATEMENT FOR THE NEXT SESSION (paste to start session 758)
+============================================================
+
+Cold-load from GitHub HEAD and follow it: TB00758_Next_Session_Instructions_v1_0 + TB00000 (v2_101) +
+the TB00757 Session Log. Also load the auto-memory (phase2-build + ciats-self-tuning-directive +
+continuous-run-directive). Verify the cold-load before working:
+  Code HEAD        188c0f2  - run python.exe -m pytest -q, expect 943 green. Python =
+  C:\Users\wstot\AppData\Local\Programs\Python\Python312\python.exe (3.12.10; default PATH python is
+  3.10 - full path ONLY).
+  Docs HEAD        d023cc9  - 0500000 dv1_251 / 0521001 dv1_61.
+  SessionLogs HEAD <the TB00757 SL + TB00758 NSI/OCS push>.
+
+STANDING (Bill TB00756-turn, auto-memory continuous-run-directive): run CONTINUOUSLY across missions in
+one shot until context runs LOW; do NOT pause between missions to ask "should I proceed / go"; close
+cleanly (SL + NSI + OCS + memory + DR-010) BEFORE the limit. Stopping to confirm wastes time.
+
+DONE TB00757 (BUILD THE MAX-OVER-LIFE MAE MTM TRACKER): the CIATS stop-width heat signal is sharpened.
+The contract:TRADE_CLOSE field 11 MAE_pct_reached is "max adverse move as pct ... computed on every 5m
+candle close" (0500000 lines 4111/4572) but was set from the AT-EXIT reading only; built the max-over-
+life tracker so the corpus carries the worst-over-the-hold heat. `a` paper_exit.current_mae_pct = the
+per-mark adverse-excursion pct (AR-048 bid for long / ask for short, clamped at 0); paper_exit.MaeHigh
+WaterTracker = the per-symbol running-MAX over the whole hold (lives OUTSIDE the frozen Position, mark on
+each tick, high at close, clear on mirror clear); ws_manager owns one tracker, marks it on each ticker
+BEFORE detection, exposes mae_pct_high_for, clears in close_position; exit_controller lifts mae_pct_
+reached to max(at-exit, tracked high), a wm without the tracker falls back to at-exit. `b` proven end-to-
+end on the real-wm organism: a long runs DEEP sub-threshold (bid 57100 adverse 2900 < the 3000 L2
+threshold) marking the high WITHOUT firing, then a BENIGN HTF reversal at a profitable bid 60500 closes in
+profit -> the TRADE_CLOSE carries the DEEP max-over-life mae_pct_reached (2900/60000), not the benign at-
+exit 0, tracker cleared at close. 935 -> 943 green. NO new seed, NO Docs/diagram edit - the diagram ALREADY
+ratifies "max adverse move ... computed on every candle", so the tracker is implementation catching up to
+the field (the SSS precedent), confirmed by reading 0500000.
+
+BILL'S DIRECTIVE (TB00750 turn, still governing): the CIATS coach must SELF-form, TEST, and route -
+PROFITABLE emails Bill (a C1 IMMEDIATE alert) / UNPROFITABLE is REPORTED in the periodic pull reports.
+The value is Claude's to derive; a fixed constant is a documented seed, surfaced in plain text. NEVER the
+sacred 1:1.5 R:R.
+
+NEXT (TB00758 mission): BUILD THE TOP-LEVEL PROCESS RUNNER (the cold-start main; the deploy-wiring). Every
+subsystem is built + tested but the delivery edges (SMTP send, records_dir, the C1 alert SMTP) are
+INJECTED seams with no top-level process binding them from config. Build (a) the COLD-START MAIN - a top-
+level entry point that reads ops settings (the universe, SMTP host/port + env-var creds per HR-LG-009,
+sender/recipients, records_dir, Mode), constructs the REAL edges (SmtpReportTransport via smtplib_send for
+the pull track; the records_dir for the durable sink; the websockets opener + REST client, or the paper
+fakes), and runs assemble_operational -> OperationalSystem.run(); (b) the C1 ALERT SMTP SEND bound to the
+same smtplib edge at cold-start (the HR-LG-009 direct send that BYPASSES the Logger queue, env-var creds,
+bounded-retry 20s/2-attempt/1s-backoff, evt:ALERT_SENT / evt:ALERT_SMTP_FAILED CRITICAL once per
+HR-LG-011/012/LG-ALERT-005), socket injected for testability; (c) prove end-to-end over fakes (asyncio.run)
+that the main wires every edge + a driven tick + a forced alert reach the captured SMTP edges. READ
+0500000 ar:AR-049 + the HR-LG-009 SMTP contract first - build the diagram literal. The runner form is
+IMPLEMENTATION, not architecture (the SSS precedent) - no diagram edit unless a genuine gap appears.
+ALTERNATIVELY (Bill's call): the C5 Form 8949 qty 24th TRADE_CLOSE field (a genuine diagram-level change -
+a 0500000 schema edit + DR-010), the live executions-driven exit + MTM slice, or the G7 semaphore ACQUIRE.
+
+RULES: auto mode, build the organism, stop stopping (continuous-run); question-box BANNED; surface only a
+genuine NEW seed value (a TB00000 sec-8 entry + 0500000 note, a Claude Code Docs edit + DR-010) in plain
+text; diagram/Docs edits in Claude Code (DR-010); session close standing (SL = this session; NSI + OCS
+share the next session's number).
+
+One note: the OCS file as committed has SessionLogs HEAD <the TB00757 SL + TB00758 NSI/OCS push> as a
+placeholder (the OCS can't contain its own post-push hash). Read the actual SessionLogs HEAD from GitHub
+after the push.
+
+============================================================
+END TB00758 OCS
+============================================================
