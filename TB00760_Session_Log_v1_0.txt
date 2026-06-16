@@ -1,0 +1,157 @@
+DocDCN:     TB00760
+DocTitle:   TB00760_Session_Log
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00760_Session_Log_v1_0.txt
+DocDate:    06-16-2026
+DocTime:    02:30:00 UTC
+
+============================================================
+TB00760 SESSION LOG
+WIRE THE ar:AR-030 maxratecount ORDER-RATE-COUNTER UNIT + FOLLOW-THROUGH THE TB00759 D1 23 -> 24 PROSE
+EXECUTOR: CLAUDE CODE (autonomous, auto mode, continuous-run; NO ruling needed this session)
+============================================================
+
+0. NUMBERING NOTE (Bill ruling TB00745, standing)
+   SL = THIS session's number; NSI = the NEXT; OCS = the SAME as the NSI. This session (760, governed by
+   the TB00760 NSI) closes as TB00760 SL + TB00761 NSI + TB00761 OCS.
+
+1. MISSION / CONTEXT
+   Continued autonomously per the CONTINUOUS-RUN directive. The TB00760 NSI queued ONE autonomous mission
+   (no Bill ruling needed): wire the ar:AR-030 maxratecount order-rate-counter unit. Delivered that, then
+   - per continuous-run - kept building and cleared a TB00759 D1 carry-over (the stale "23-field" prose).
+   TWO Code commits, NO Docs edit, NO new seed. 965 -> 980 green. The session ran end-to-end with no pause.
+
+   COLD-LOAD VERIFIED before working: Code b6591b7 (pytest 965 green on 3.12.10 full-path interpreter);
+   Docs 5e16a7b (0500000 dv1_252 / 0521001 dv1_62, the 24-field schema); SessionLogs 5eac10d (TB00759 SL
+   + TB00760 NSI/OCS). Auto-memory loaded (phase2-build, ciats-self-tuning-directive, continuous-run).
+
+2. BILL DIRECTIVES (chat-turn, this session)
+   (1) "emphasize auto mode, continuous-run, build the organism, stop stopping; do not stop until context
+       runs low or a real Bill question surfaces." Honored: ran two slices in one shot, no should-I-proceed
+       pause; closing only as the standing protocol with context budget reserved for a clean close.
+   (2) The standing CIATS coach directive + the sacred 1:1.5 R:R are untouched (no CIATS/R:R work this turn).
+
+3. SOURCE READ FIRST (the diagram is authority for the build literal)
+   0500000 dv1_252: ar:AR-030 (line ~4996: "maxratecount from the executions subscription ACK is the
+   operative rate counter ceiling. Use it, not the hardcoded 125") + A-19/IMP-11 (line ~1099) + A-1 (line
+   ~889: executions ratecounter:true delivers the real-time rate counter per pair) + the mod:WS_Manager
+   desc D1 RATE-COUNTER PROTECTIVE RESPONSE (RL-MON-002 WARNING tier / RL-MON-003 CRITICAL tier +
+   entry-order suppression, owned by WS_Manager, distinct from the CIATS signals-only monitor) + the sec-7
+   event_registry WS_MGR codes MAXRATECOUNT_SET [INFO] {value} / RATE_COUNTER_UPDATE [INFO] {symbol, value,
+   maxratecount} / RATE_COUNTER_WARNING [WARNING] {symbol, value, maxratecount} + the section-9 seeds
+   rl_warning_threshold_pct=0.80 / rl_critical_threshold_pct=0.95 (line ~6190). Code: private_ws.py
+   RESET_RATE_CEILING no-op, the ExecutionsIngest, the receive_loop SubscriptionAck path, config/registry.py.
+
+   NO NEW SEED needed: BOTH threshold fractions (0.80 warning, 0.95 critical) ALREADY EXIST - in the
+   0500000 section-9 parameter registry AND in code config/registry.py (rl_warning_threshold_pct=0.80,
+   rl_critical_threshold_pct=0.95). The NSI's "if a warning-threshold fraction is unspecified that is a NEW
+   SEED" branch did NOT trigger - the diagram specifies it. So no surface, no Docs edit, TB00000 stays v2_101.
+
+4. WHAT WAS BUILT
+
+   SLICE 1 -- THE ar:AR-030 maxratecount UNIT + private_ws WIRING.  Code commit 1 (965 -> 980).
+   tothbot/exchange/rate_counter.py [NEW] - RateCounter, a PURE + CLOCK-FREE per-pair order-rate counter.
+   Kraken delivers the live per-pair counter on the executions feed (A-1) and the 2.34/s decay is
+   engine-side, so the unit only REFLECTS each pushed value against the operative ceiling - exactly the
+   NSI "clock-free counter; the feed edge injected" contract. Surface:
+     set_ceiling(maxratecount) -> MAXRATECOUNT_SET   (the executions-ACK operative ceiling; rejects <= 0)
+     observe(symbol, value)    -> [RATE_COUNTER_UPDATE, (RATE_COUNTER_WARNING if value > 0.80*ceiling)]
+                                   + drives the RL-MON-003 critical-suppression latch
+     reset()                     the reconnect WS-REC-004 reset: drop stale per-pair values + latches,
+                                 KEEP the ceiling provisional until the fresh ACK re-sets it
+     ceiling / value / warning_threshold / critical_threshold / is_warning / is_entry_suppressed (probes)
+   The thresholds default from config/registry.py seeds (0.80 / 0.95). The RL-MON-003 CRITICAL tier is a
+   PURE PREDICATE - is_entry_suppressed(symbol) - with HYSTERESIS: ARM when value exceeds 0.95*ceiling,
+   RELEASE only when it decays back to/below 0.80*ceiling (the diagram's "until it decays below the warning
+   fraction"). NO critical event is emitted - none is registered (LG-EVT-001 rejects unregistered codes;
+   the RL-MON-003 prose "log RL_CRITICAL" has NO event_registry entry), so suppression is an ACTION, not a
+   logged event. Pre-ACK (no ceiling) only RATE_COUNTER_UPDATE with maxratecount=None is emitted - the
+   bands cannot be derived and the unit NEVER assumes 125.
+
+   WIRING into tothbot/exchange/private_ws.py + receive_loop.py:
+   - receive_loop.SubscriptionAck gains an optional maxratecount field; _handle_subscribe_ack extracts
+     result.maxratecount (the executions ACK returns it per AR-030). Backward-compatible (defaults None;
+     non-executions ACKs carry None) and consistent with the dataclass already carrying symbol/success
+     beyond its strict {channel, warnings} registry fields.
+   - PrivateConnectionAssembler owns a RateCounter and wraps the event sink: every executions ACK flowing
+     through the loop (initial subscribe + every reconnect resubscribe) sets the ceiling and emits
+     MAXRATECOUNT_SET. ExecutionsIngest feeds each frame's per-pair ratecount (A-1) to observe() and routes
+     the resulting RATE_COUNTER_UPDATE/WARNING. The RESET_RATE_CEILING reconnect step - a no-op placeholder
+     before - now calls rate_counter.reset; the fresh executions ACK after resubscribe re-sets the ceiling.
+   +15 tests: tests/test_rate_counter.py [NEW, 11: seeds-from-registry, MAXRATECOUNT_SET, reject <=0,
+   below/at/in warning band, critical arm, hysteresis hold+release, per-pair independence, no-ceiling, reset]
+   + tests/test_private_ws.py [+4: ACK sets ceiling + MAXRATECOUNT_SET; non-executions ACK no ceiling;
+   executions-frame ratecount -> UPDATE+WARNING + mirror untouched; reconnect RESET_RATE_CEILING clears].
+
+   SLICE 2 -- TB00759 D1 FOLLOW-THROUGH: THE STALE "23-field" PROSE.  Code commit 2 (980 stays 980).
+   TB00759 D1 expanded the contract:TRADE_CLOSE canonical schema 23 -> 24 (field 24 qty) and updated the
+   Docs + the live code schema (_CANONICAL_ORDER, TRADE_CLOSE_SCHEMA, TradeClose - all 24-field, verified)
+   but LEFT 25 stale "23-field"/"23-FIELD"/"1..23" comments + docstrings across code + tests. Aligned the
+   prose to the actual 24-field schema (Bill already ratified 24 at D1; this is prose-only, not a new
+   decision): ws_manager.py, exit_controller.py, logger.py, trade_record_file.py + 5 test files. The ONE
+   "legacy 23-field record" reference in reporting._tax_lot is KEPT - it correctly describes a pre-qty
+   record whose proceeds/cost_basis are None (never fabricated). Comments/docstrings only; NO behavior
+   change (the 980 suite is green before + after).
+
+5. PROVENANCE / SCOPE
+   A CODE build that READS the diagram literal. NO new seed (the 0.80/0.95 fractions pre-exist in both the
+   diagram and code; qty is a record field). NO Docs/diagram edit (0500000 already carries AR-030, the
+   three events, and the seeds; the 24-field schema is already dv1_252). TB00000 stays v2_101.
+
+   FLAGS CLEARED this session: the private_ws RESET_RATE_CEILING no-op (now the live AR-030 unit); the
+   ar:AR-030 maxratecount unit unbuilt (now built + proven); the TB00759 D1 stale "23-field" prose.
+   LONG-STANDING / NEW FLAGS that persist (see TB00761 NSI):
+   - The RL-MON-003 entry-order SUPPRESSION GATE is NOT yet wired into order dispatch. This is CORRECT for
+     now: ws_manager.dispatch_entry is paper-only today (it raises in live - the live entry path is a later
+     slice) and the rate counter is fed only in LIVE (the executions feed; private WS is live-only, PA-004
+     div #1). A suppression gate in dispatch_entry would be DEAD CODE today (paper never arms it; live never
+     reaches it). The gate belongs WITH the live-entry-path slice. The unit exposes is_entry_suppressed for
+     that slice to read. When it lands: the rate counter should move to WS_Manager ownership (the diagram
+     names WS_Manager as the RL-MON owner), and the suppression event is a genuine question (see NSI).
+   - The durable per-module corpus restore still needs a side the 24-field schema does not carry (qty is
+     not a side) -> a GENUINE Bill architecture ruling (NSI item A).
+   - Live exit detection + live MTM marking = a later executions-driven slice; the runner's real
+     websockets/REST = the live-deploy slice.
+
+6. VERIFICATION
+   980 pytest green on the 3.12.10 interpreter (full path C:\Users\wstot\AppData\Local\Programs\Python\
+   Python312\python.exe): 965 -> 980 after slice 1 (+15 tests), 980 unchanged after slice 2 (prose-only).
+   DR-010: Code HEAD 39ab703 == origin/master (git rev-parse confirmed equal after push). NO Docs push
+   this session (no diagram edit). NOTE/CORRECTION: Code commit 1's message says "965 to 974"; the actual
+   verified count is 965 -> 980 (the rate counter slice added 15 tests). The message number is a cosmetic
+   undercount; the code + suite are correct at 980. Recorded here as the authoritative count (no force-push
+   to amend a pushed commit message over a cosmetic typo).
+
+7. STATE AT CLOSE - THE LIVE RATE-COUNTER LOSS-PREVENTION SENSOR IS WIRED
+   The ar:AR-030 rate counter is live on the private connection: the executions ACK sets the operative
+   per-pair ceiling (maxratecount, never 125) and emits MAXRATECOUNT_SET; each ratecounter:true frame
+   updates the per-pair counter (RATE_COUNTER_UPDATE) and warns above 0.80 (RATE_COUNTER_WARNING); the
+   RL-MON-003 critical latch (0.95 arm / 0.80 release, hysteresis) is computable via is_entry_suppressed
+   for the future entry-dispatch gate; a reconnect clears stale per-pair state and the fresh ACK re-sets the
+   ceiling. The TRADE_CLOSE schema prose is now consistently 24-field across the whole codebase. The sacred
+   1:1.5 R:R is untouched.
+
+8. CARRY-FORWARD (see TB00761 NSI)
+   ONE genuine Bill architecture ruling SURFACED: (A) the durable per-module restore side-gap - add a
+   schema field 25 side, or carry side out-of-band in a per-module index? Plus the autonomous continue-
+   building candidates: the live executions-driven exit + MTM slice; the runner's real websockets/REST
+   (live deploy); and, when the live entry path is built, the RL-MON-003 suppression gate + its event
+   question (reuse ENTRY_REJECTED_RATE_LIMIT for pre-emptive local suppression, or register a new code?).
+
+9. CLOSE STATE
+   Code HEAD        39ab703 (980 tests green; tothbot/exchange/rate_counter.py [NEW] + tothbot/exchange/
+                    private_ws.py [MOD: RateCounter ownership + the ceiling sink + ExecutionsIngest ratecount
+                    feed + RESET_RATE_CEILING reset] + tothbot/exchange/receive_loop.py [MOD: SubscriptionAck
+                    maxratecount] + tothbot/exchange/ws_manager.py + tothbot/execution/exit_controller.py +
+                    tothbot/recorder/logger.py + trade_record_file.py [MOD: 23-field -> 24-field prose] +
+                    tests/test_rate_counter.py [NEW] + 6 test files [test_private_ws +4; 5 prose-only]).
+   Docs HEAD        5e16a7b (0500000 dv1_252 / 0521001 dv1_62) - UNCHANGED (no diagram edit this session).
+   SessionLogs HEAD <this close: TB00760 SL + TB00761 NSI + TB00761 OCS>.
+   TB00000          v2_101 - UNCHANGED (no new seed; a code build of the diagram literal).
+   Governing instructions next = TB00761 NSI. Auto memory (phase2-build) updated through Code 39ab703 /
+   Docs 5e16a7b.
+
+============================================================
+END TB00760
+============================================================

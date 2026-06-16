@@ -1,0 +1,90 @@
+DocDCN:     TB00761
+DocTitle:   TB00761_Next_Session_Instructions
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00761_Next_Session_Instructions_v1_0.txt
+DocDate:    06-16-2026
+DocTime:    02:30:00 UTC
+
+============================================================
+TB00761 NSI - ONE BILL RULING SURFACED (the durable per-module restore side-gap) + KEEP BUILDING
+ar:AR-030 (the maxratecount unit) is DONE (TB00760). The next session surfaces ONE genuine architecture
+ruling and otherwise CONTINUES BUILDING autonomously (live exit/MTM or the runner) - no pause to ask.
+EXECUTOR: CLAUDE CODE (autonomous, "auto mode on", continuous-run)
+============================================================
+
+NSIs are Claude-authored + informational; Bill's chat directives govern. PLAIN-TEXT choices ONLY - the
+question-box tool is BANNED (TB00000 4.7). Per the CONTINUOUS-RUN directive: run continuously across
+missions until context runs LOW; do NOT pause to ask "should I proceed"; a session close is the standing
+protocol, not a pause; close cleanly BEFORE the limit.
+
+NUMBERING (Bill ruling TB00745): SL = this session's number; NSI = the next; OCS = the same as the NSI.
+This session is 761; it closes as TB00761 SL + TB00762 NSI + TB00762 OCS.
+
+0. BILL'S GOVERNING DIRECTIVE (TB00750 turn - still the spec). The CIATS coach FORM -> TEST -> ROUTE:
+   PROFITABLE -> a C1 IMMEDIATE email / UNPROFITABLE -> the periodic PULL reports. NEVER the sacred R:R.
+
+1. ENTRY / COLD-LOAD + VERIFY (from GitHub HEAD)
+   Read TB00000 (v2_101) + this NSI + the TB00760 Session Log. Cold-load the auto-memory (phase2-build
+   current through Code 39ab703 / Docs 5e16a7b; ciats-self-tuning-directive; continuous-run-directive).
+     Code HEAD        39ab703 (980 tests green). Python = C:\Users\wstot\AppData\Local\Programs\Python\
+                      Python312\python.exe (3.12.10; default PATH python is 3.10 - full path ONLY). Run:
+                      python.exe -m pytest -q (expect 980 green).
+     Docs HEAD        5e16a7b - 0500000 dv1_252 / 0521001 dv1_62 (the 24-field schema; UNCHANGED TB00760).
+     SessionLogs HEAD <the TB00760 SL + TB00761 NSI/OCS push>.
+
+2. STATE: the ar:AR-030 rate counter is live on the private connection (the executions ACK sets the
+   per-pair maxratecount ceiling -> MAXRATECOUNT_SET; each ratecounter:true frame -> RATE_COUNTER_UPDATE
+   + RATE_COUNTER_WARNING above 0.80; the RL-MON-003 critical latch 0.95-arm/0.80-release is a pure
+   is_entry_suppressed predicate; reconnect resets per-pair state). The TRADE_CLOSE prose is uniformly
+   24-field. tothbot/exchange/rate_counter.py is the unit; the wiring is in private_ws.py + receive_loop.py.
+
+3. ONE BILL RULING SURFACED (genuine architecture decision - needs a ruling, do NOT silently pick):
+   (A) THE DURABLE PER-MODULE RESTORE SIDE-GAP. The contract:TRADE_CLOSE durable schema (now 24 fields)
+       carries NO side field - the per-module partition (Long / Short) IS the emitting side at runtime, so
+       the mod:Logger Stream-2 corpus is correctly partitioned in memory, but the on-disk trades_<YYYY>.
+       jsonl is SIDELESS. C5 ANNUAL (the combined IRS/tax view) is fine. BUT a cold-start cannot rebuild
+       the PER-MODULE (per-side) CIATS corpus from disk - which side a closed trade belonged to is not
+       recoverable. TWO options for Bill:
+         (a) ADD schema field 25 "side" to contract:TRADE_CLOSE (a diagram authority edit 0500000 24 -> 25,
+             mirrored in code, like the D1 23 -> 24 qty expansion). Clean + self-describing on disk; the
+             schema grows by one enum field. This is a schema/architecture change -> Bill ratifies (it is
+             the SACRED-adjacent canonical record).
+         (b) Carry side OUT-OF-BAND - keep the 24-field record sideless and write a parallel per-module
+             index (or per-side files trades_long_<YYYY> / trades_short_<YYYY>). No schema change; the
+             durable record stays the tax/Form-8949 canonical exactly as today; the per-module restore
+             reads the side from the index/filename.
+       RECOMMENDATION: (a) field 25 side - it mirrors the D1 precedent, is self-describing, and keeps ONE
+       durable file as the single source of truth (no index to keep in sync). But this is Bill's call (it
+       touches the canonical TRADE_CLOSE schema). SURFACE in plain text; do NOT build until ruled.
+
+4. THE AUTONOMOUS NEXT MISSION (no ruling needed - keep building while (A) awaits a ruling):
+   Pick the HIGHEST-VALUE remaining and build it (continuous-run):
+   - THE LIVE EXECUTIONS-DRIVEN EXIT + MTM SLICE: live exit detection (the L1a/L2 conditions on the live
+     ticker bbo + the executions fills) feeding mod:Exit_Controller's close path, and live mark-to-market
+     marking of open positions. The paper exit path exists (exit_controller.py sec 12.5); this is the LIVE
+     (executions/ticker-driven) counterpart - the natural next executions-driven capability now that the
+     private feed is fully wired (fills -> mirror, rate counter).
+   - THE RUNNER'S REAL WEBSOCKETS/REST CONSTRUCTION (the live-deploy slice): replace the injected fake
+     edges with the real websockets asyncio client (WS-LIB-001 import path) + the aiohttp REST bodies
+     (GetWebSocketsToken, GetOpenOrders, GetAccountBalance) so the organism connects to Kraken for real.
+   - When the LIVE ENTRY PATH is built (ws_manager.dispatch_entry currently raises in live): wire the
+     RL-MON-003 entry-order SUPPRESSION GATE (read rate_counter.is_entry_suppressed(symbol) before the
+     entry add_order; suppress ENTRY ONLY, never exit/cancel/emergSL) and MOVE the RateCounter to
+     WS_Manager ownership (the diagram names WS_Manager the RL-MON owner; private_ws would feed the WM's
+     instance). FLAG (not blocking now, decide when it lands): the pre-emptive local suppression has NO
+     clean registered event - ENTRY_REJECTED_RATE_LIMIT [WARNING] {symbol, req_id} reads as a post-send
+     Kraken rejection; reuse it for the pre-emptive case, or register a new code? Surface that when you
+     reach the gate.
+   READ the relevant 0500000 element FIRST for whichever you pick; build the diagram literal; a genuine new
+   seed or architecture gap -> surface in plain text (do NOT hardcode silently).
+
+5. PROVENANCE / SCOPE
+   A CODE build READS 0500000. A new seed or architecture gap -> plain text + the Docs edit + DR-010.
+   LONG-STANDING FLAGS persist: the durable per-module restore side-gap (item A, awaiting a ruling); the
+   live exit detection + live MTM slice; the runner's real websockets/REST (live deploy); the RL-MON-003
+   suppression gate (lands with the live entry path).
+
+============================================================
+END TB00761
+============================================================
