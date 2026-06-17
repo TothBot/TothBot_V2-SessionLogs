@@ -1,0 +1,106 @@
+DocDCN:     TB00772
+DocTitle:   TB00772_Session_Log
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00772_Session_Log_v1_0.txt
+DocDate:    06-17-2026
+DocTime:    15:00:00 UTC
+
+============================================================
+TB00772 SESSION LOG
+MISSION (TB00772 NSI): continue the universe-expansion arc, in PAPER. (A) phase 2 bulk pre-screen
+bootstrap; (B) phase 3 CIATS-owned viability seed; (C) the OWED 0500000 Docs sync; (D) Hetzner rescale
+if N warrants (decide N first). Auto mode, continuous-run; HOW-forks resolved by FP/DP, never asked Bill.
+OUTCOME: A + B + C BUILT, tested, pushed, DR-010 verified. D correctly GATED (N undecided + paid action
+= Bill's WHAT). Code 1164 -> 1188 green. Docs 0500000 dv1_257 -> dv1_258 / 0521001 dv1_67 -> dv1_68.
+TB00000 stays v2_101 (no new seed). VPS left running on b5065ac (3-pair pin) - my commits add opt-in
+env-gated screening that does NOT change the pinned paper behaviour, so NOT redeployed per Bill's rule.
+============================================================
+
+0. THE VPS (checked FIRST, per the OCS)
+   pid 1036988 python3 -m tothbot.app HEALTHY on b5065ac (3-pair pin BTC/ETH/SOL); PING/PONG cycling
+   clean, 0 tracebacks, 0 records (no trades - the expected trending-negative idle). Left running
+   untouched: the TB00772 work is opt-in/env-gated and does NOT change the pinned paper behaviour, so
+   per the standing "do not redeploy unless a commit changes paper behaviour" rule it stays on b5065ac.
+
+1. (A) PHASE 2 - THE BULK PRE-SCREEN BOOTSTRAP  [Code bfff411, 1164 -> 1177 green]
+   THE CUT: ONE bulk Kraken Ticker call (PATH_TICKER, no pair arg -> all pairs, O(1) REST) ranks every
+   pair by 24h USD volume; ONE AssetPairs call maps the REST pair key (XXBTZUSD) -> the WS v2 symbol
+   (BTC/USD); trim the AR-070 derived set to the top-N most liquid, the ar:AR-074 anchor always kept.
+   - rest/client.py [MOD]: PATH_ASSET_PAIRS + parse_asset_pairs (rest_key -> wsname, drop no-wsname) +
+     get_all_ticker_liquidity (bulk, no pair) + get_asset_pairs. Both go through the global governor.
+   - app/prescreen.py [NEW]: liquidity_by_symbol (the REST-key<->wsname join) + select_top_n (rank by
+     liquidity desc, anchor always kept, missing-liquidity scores 0, deterministic tie-break, top_n<=0/
+     >=len no-op) + screen_universe (two governed calls -> top-N; top_n<=0 short-circuits with NO call).
+   - app/__main__.py [MOD]: TOTHBOT_TOP_N parse + the screen runs AFTER the AR-070 derive, BEFORE the
+     data layer subscribes/warms; a TOTHBOT_UNIVERSE pin is NOT screened (the explicit pin wins). The
+     rest_client is now hoisted + injectable (a test seam like connect_fn/run_fn).
+   - tests: test_prescreen.py (10) + test_rest.py (3) + test_app_main.py (2). +13 net.
+
+2. (B) PHASE 3 - THE CIATS-OWNED VIABILITY SEED  [Code c62e25a, 1177 -> 1188 green]
+   THE RE-SIM IS THE EXISTING ENGINE: ciats/expected_reward.compute_expected_reward / replay_excursions
+   already run a PURE run-to-reversal daily backtest per regime (DEC-124). Phase 3 reduces that per-
+   regime structure to ONE per-pair viability scalar and lets CIATS pick N.
+   - ciats/viability.py [NEW]: weighted_viability (FREQUENCY-weighted mean of per-regime median
+     excursions sum_r (n_r/N)*median_r; None on no realized reversal) + compute_pair_viability (=
+     weighted_viability(replay_excursions(...))) + select_viable_universe (drop non-viable [None or <=0],
+     rank by viability desc, top capacity_n = GREEDY-OPTIMAL for summed captured expectancy under the
+     hard capacity budget, anchor always kept, deterministic) + ViabilityStore (put/get/seed_from_bars/
+     select; a non-viable pair is NOT stored). PURE.
+   - app/viability_screen.py [NEW]: screen_viable_universe - the async I/O orchestrator: one GOVERNED
+     daily GetOHLCData(1440) call per candidate -> seed the store -> CIATS select. A fetch failure /
+     too-short series is dropped (FN-safe), never a crash.
+   - app/__main__.py [MOD]: TOTHBOT_VIABILITY_N parse + a SECOND cut after the phase-2 liquidity screen
+     (735 -> top-N_liq candidates -> per-candidate daily re-sim -> the monitored top-N by expectancy),
+     so the daily re-sim is bounded. 0/unset -> no viability screen.
+   - tests: test_viability.py (10) + test_app_main.py (1). +11 net.
+   NOTE (engine behaviour observed while testing): a POSITIVE viability from a SYNTHETIC daily series is
+   fragile - the lagging L1a EMA-cross/daily-downgrade exit tends to realize a non-positive run-to-
+   reversal excursion on hand-crafted shapes (flat -> None; trend-then-reverse -> negative). So the
+   end-to-end "a viable pair survives" assertion is tested by supplying the per-pair expectancy EXPLICITLY
+   (select_viable_universe + a pre-seeded ViabilityStore), not by relying on a crafted bar shape. Real
+   Kraken data will differ; this is exactly why N must be decided from a LIVE screen run (see D + the NSI).
+
+3. (C) THE OWED 0500000 DOCS SYNC  [Docs a1c45f9, 0500000 dv1_257 -> dv1_258 / 0521001 dv1_67 -> dv1_68]
+   Surgical, text-only edits in Claude Code (TB00000 v2_99 sec 4.7), tag-balance + DR-010 verified.
+   - NEW ar:AR-081 (global per-IP REST governor: every public AND private call awaits one process-
+     singleton leaky-bucket pacer rest/rate_limiter.RestRateLimiter; relocates the AR-036 per-IP budget
+     from the daily-compute edge to the client; the TB00771 flood-fix; min_interval = an ENGINEERING
+     per-IP rate budget, NOT a CIATS seed) + NEW ar:AR-082 (the two-stage pre-screen + CIATS-owned
+     viability seed; CIATS picks N greedy-optimal under the capacity budget; anchor always monitored).
+   - AMENDED ar:AR-036 (per-IP budget now enforced globally at the client via AR-081), ar:AR-044 (the
+     warm-up gather now funnels through the AR-081 governor), ar:AR-070 (the monitored set is now
+     capacity-bounded by the AR-082 two-stage cut; the "no top-N cap" PRESERVED verbatim as the LOGICAL
+     ELIGIBILITY scope, AR-082 selects which ELIGIBLE pairs are MONITORED - additive, nothing deleted).
+   - container:Kraken_REST_API constraints gains ar:AR-081 + ar:AR-082; ar:AR-001..AR-080 range refs
+     bumped to ..AR-082 (2 sites).
+   - VERIFICATION: tag classes balanced + UNCHANGED from the dv1_257 baseline (g 217, text 957, desc 126,
+     svg 10, title 126, figcaption 10; pre 112); NO new bare-ampersand introduced (the lone bare-& at the
+     P&L log line is pre-existing, not mine); no residual dv1_257/dv1_67; both files renamed via git mv
+     (one-version rule). DR-010: new files present at origin HEAD, superseded absent, hash-object==HEAD.
+
+4. (D) HETZNER RESCALE - CORRECTLY GATED, NOT DONE
+   N is NOT yet decided: the two-stage screen mechanism is built + tested, but it has NOT been run
+   against REAL Kraken (the VPS is on the 3-pair pin and synthetic data does not decide N). Deciding N
+   requires a live screen run (expand the VPS run under TOTHBOT_TOP_N / TOTHBOT_VIABILITY_N), which is a
+   PAPER-behaviour change Bill should green-light, AND the rescale itself is a PAID outward action = a
+   WHAT-level decision that is Bill's. FP/DP: do NOT rescale, do NOT redeploy this session. The path to
+   decide N is in the NSI. (Reference: VPS = Hetzner CPX11 2vCPU/1.9GiB; reversible rescale to CPX21
+   3/4, CPX31 4/8, CPX41 8/16; the 3-pair run uses ~46 MB / ~0.2% CPU.)
+
+5. PROCESS / STANDING
+   No HOW asked of Bill (every fork - keep load_universe pure vs fold the screen in [kept pure, added
+   app/prescreen + app/viability_screen]; pure-math vs I/O split; how to test positive viability
+   deterministically; whether to redeploy/rescale - resolved by FP/DP for the organism). No question-box.
+   Pushed every commit as I went + DR-010 verified each. TB00000 stays v2_101, NO new seed. NEVER the
+   sacred 1:1.5 R:R.
+
+ARTIFACTS THIS SESSION
+   Code (TothBot_V2-Code, master): 2cd43a4 -> bfff411 (phase 2) -> c62e25a (phase 3). 1164 -> 1188 green.
+   Docs (TothBot_V2-Docs, master): 83b0e1f -> a1c45f9. 0500000 dv1_258 / 0521001 dv1_68.
+   SessionLogs (this commit): TB00772 SL + TB00773 NSI + TB00773 OCS.
+   TB00000 stays v2_101.
+
+============================================================
+END TB00772 SESSION LOG
+============================================================
