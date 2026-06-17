@@ -1,0 +1,111 @@
+DocDCN:     TB00771
+DocTitle:   TB00771_Session_Log
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00771_Session_Log_v1_0.txt
+DocDate:    06-17-2026
+DocTime:    05:30:00 UTC
+
+============================================================
+TB00771 SESSION LOG (continued from the TB00770 close in the SAME session)
+MISSION (Bill-directed, mid-session): stay in paper (NOT enough data to go live). Re-check the VPS and
+DETERMINE whether we can open the pin from 3 pairs to the WHOLE universe - verify first. Then: approve
+the staged ramp as a temporary data-gathering fix BUT fix the genuine warm-up defect; do an FP/DP
+analysis for an elegant out-of-the-box solution beyond the two proposed; find ways to pre-screen pairs
+for trading viability. Then Bill asked: can CIATS determine the seed (N) from historical data and keep
+tuning it?
+OUTCOME: feasibility DETERMINED (no, not as-is - a genuine flood defect); the genuine warm-up defect
+FIXED + tested + pushed (a global REST governor); the FP/DP analysis delivered with an elegant design;
+the CIATS-viability-seed path confirmed (half already built). Code 1158 -> 1164 green. TB00000 v2_101.
+Also corrected on a process error: I asked Bill a HOW question - logged the standing what/how rule.
+============================================================
+
+0. THE VPS + FEASIBILITY DETERMINATION
+   VPS = Hetzner Cloud (AMD EPYC, 2 vCPU / 1.9 GiB RAM / ~38 GB disk = the CPX11 tier); YES capacity is
+   buyable - Hetzner rescales to a bigger plan from the console (CPU+RAM reversible, disk-grow one-way;
+   CPX21 3/4, CPX31 4/8, CPX41 8/16). The current box is fine for a SCREENED universe (the 3-pair run =
+   46 MB / 0.2% CPU); not for warming all 735 unscreened.
+   FULL AR-070 universe (measured live from the VPS) = 735 pairs (647 USD + 43 USDC + 45 USDT). Kraken
+   public REST latency ~0.1 s/call, no pushback at ~10/s.
+   VERDICT: NOT safe to open to 735 as-is. The blocker is a genuine code defect (below). Cold-start would
+   also be ~39 min (regime 19.6 + liquidity 17, sequential 1.1s stagger). And 735 includes hundreds of
+   illiquid tokens Gate 2 would block anyway - we'd pay full data-layer cost for un-tradeable pairs.
+
+1. THE GENUINE WARM-UP DEFECT - FIXED (Code 2cd43a4, 1158 -> 1164 green, pushed + DR-010)
+   ROOT CAUSE: the REST rate control was at the WRONG SCOPE. WarmupOrchestrator.warm_all fans out one
+   coroutine PER PAIR (asyncio.gather); the only throttle was a per-pair 1.1s sleep that spaces a SINGLE
+   pair's own two calls. So a large universe fired ~one REST call per pair at once (bounded only by the
+   aiohttp connector to ~5-10 concurrent = a sustained ~50-100 calls/s drain) - far over Kraken's ~1/s
+   public budget -> mass rate-limit -> mass WARM_UP_FAIL -> a large fraction of the universe silently
+   never seeds (a systemic false-negative). Invisible at 3 pairs (6 calls), dangerous at 735.
+   THE FIX: new mod rest/rate_limiter.py RestRateLimiter - a single shared leaky-bucket pacer (rate
+   1/min_interval, no burst). Every _public/_private call in KrakenRestClient now awaits this ONE
+   governor, so calls are spaced >= min_interval GLOBALLY no matter how many coroutines call concurrently
+   (warm-up + regime + liquidity + the periodic reconcile all honor the one per-IP budget). asyncio.Lock
+   serializes the slot + is held across the spacing sleep (N acquirers released one per interval). AIMD
+   back-off: _maybe_penalize pushes the next slot out on a Kraken rate-limit/too-many response. Default
+   1.1s (AR-036, an engineering cadence NOT a seed); min_interval 0 = no-op (test-fast). PURE save the
+   injected clock+sleep. Minimal blast radius - the existing per-phase staggers are left (harmless double-
+   pacing); no trading-latency impact (dispatch is WS not REST). Tests: test_rate_limiter.py (zero-interval
+   no-op, spacing, no-burst-credit, penalize, N concurrent released one/interval) + test_rest.py injects a
+   zero-interval limiter. NO NEW SEED.
+
+2. THE FP/DP ANALYSIS + THE ELEGANT SOLUTION (delivered to Bill; design, not yet built)
+   Frame: admit pair p to the warmed/monitored set? FP = warm a non-viable pair (wasted capacity); FN =
+   exclude a pair that would have traded profitably (forgone profit). KEY INSIGHT: FP and FN are COUPLED
+   here - over-admission CAUSES systemic FN (flooding -> mass un-seed; OOM -> total death), so effective
+   c_FP rises super-linearly in N -> an INTERIOR optimum N*. Six methodologies converge: signal-detection/
+   ROC (multi-factor score > single volume floor), asymmetric-loss Bayes risk (interior N*), heavy-tail/
+   Pareto (top ~50-150 pairs hold ~all tradeable value; the ~600 tail = ~all cost, ~0 value -> sharp
+   cutoff), queueing/Little's-Law (priority-streaming warm-up minimizes time-to-first-trade), AIMD control
+   (the governor = the genuine fix), estimator-MSE (ensemble of cheap features beats volume alone).
+   ELEGANT DESIGN (beyond the two I first proposed = staged-ramp + volume-floor): "bulk pre-screen ->
+   priority-streaming warm-up under the global governor": ONE bulk Kraken Ticker call screens all 735 in
+   O(1) REST -> a viability score {volume, spread, range%, margin-eligible, tick resolution} -> admit
+   top-N -> warm best-first (trading starts minute one, no 39-min wall) -> a cheap ticker-only "watch"
+   tail with promotion. This is V1's pattern generalized (V1 bulk-ranked by volume and monitored only the
+   top 20 - see below).
+
+3. V1 PRIOR ART (recovered from C:\Users\wstot\GitHub\TothBot-Code / -Docs)
+   No "500 at a time" batcher exists in the current V1 code. What V1 DID: monitor a SMALL universe (10
+   approved + top-20-by-24h-volume), discovered/ranked via ONE bulk Binance /ticker/24hr call, backfilled
+   SEQUENTIALLY with a 5s retry-backoff, 310s startup budget, single-pair integration tests. The "500" is
+   likely a misremembered detail (Binance klines returns 500 BARS/call) or lived in an earlier branch/doc.
+   The real V1 lesson = the pre-screen pattern: bulk-rank, monitor only the top-N. (If Bill has the earlier
+   branch/doc, fold it in.)
+
+4. CIATS DETERMINES + TUNES THE VIABILITY SEED (Bill's question - YES, and half is already built)
+   - ALREADY BUILT: ciats/shadow_replay.py re-simulates entry-filter thresholds over the trade corpus
+     ("would this trade have been ENTERED under the candidate threshold?", gate:G5) -> continuous tuning
+     is native. ciats/expected_reward.py (DEC-124) + seed_estimators.py (DEC-128) already SEED per-pair
+     values from historical OHLC at startup. The discipline is named in-code: "seed-then-correct".
+   - NET-NEW: (a) a FORWARD re-sim over historical OHLC to seed the never-traded tail (the existing replay
+     runs over the trade corpus; the gates are pure + indicators seed from bars, so a bar-replay of the
+     gate stack is buildable); (b) register VIABILITY as a CIATS-owned parameter with the cutoff estimator
+     (CIATS picks N by optimizing captured expectancy subject to the capacity budget - Bill does NOT pick
+     N); (c) the ticker-watch promotion signal. Caveats handled by the same machinery: thin pairs -> shrink
+     toward the regime prior; drift -> the continuous tuning IS the point.
+
+5. PROCESS CORRECTION (logged to auto-memory what-how-division)
+   I asked Bill "would you rather I prove the estimator first or build the pacer first?" - a HOW question.
+   Bill: "I am the what, you are the how... if you ask me a how I will ALWAYS answer: do an FP/DP analysis
+   to determine the best path for the OVERALL TothBot organism." Standing rule saved: never surface a HOW;
+   resolve every path fork by FP/DP for the whole organism, then proceed. The build order this session was
+   set that way: pacer first (FN-critical keystone + FP-safe), then pre-screen, then the CIATS estimator.
+
+6. PUSH / DR-010
+   Code ce8f008 -> 2cd43a4 pushed to master (EXIT=0, ref line confirmed; the PowerShell NativeCommandError
+   is the known git-banner-on-stderr wrap). SessionLogs pushed this close.
+
+7. OWED (carried to TB00772): the 0500000 Docs sync for the global REST governor (container:Kraken_REST_API
+   / ar:AR-036 now enforced GLOBALLY at the client, not just the Path-B daily-compute edge) - DEFERRED to
+   bundle with the phase 2/3 universe-expansion architecture update (one coherent edit), NOT yet done.
+
+NOTE: this session began as TB00770 (the reconcile mission; SL + TB00771 NSI/OCS were written at that
+close), then CONTINUED when Bill redirected to the universe-expansion arc = this TB00771 work. The earlier
+TB00771 NSI/OCS (the pre-redirect "re-review VPS / lifecycle" plan) are left as historical; TB00772 NSI/OCS
+are the authoritative next-session instructions.
+
+============================================================
+END TB00771 SESSION LOG
+============================================================
