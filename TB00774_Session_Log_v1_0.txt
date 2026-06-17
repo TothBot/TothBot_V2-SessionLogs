@@ -1,0 +1,98 @@
+DocDCN:     TB00774
+DocTitle:   TB00774_Session_Log
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00774_Session_Log_v1_0.txt
+DocDate:    06-17-2026
+DocTime:    21:00:00 UTC
+
+============================================================
+TB00774 SESSION LOG
+MISSION: Bill returned ("tell me what happened overnight") -> review the 49-pair screened run, then a
+chain of his directives: investigate the exit controller + explain MAE; fix the actual_rr basis; wire
+operator visibility (email reports); audit the entry estimator (#2) then backtest profitability (#1).
+Auto mode, continuous-run, PAPER. HOW-forks by FP/DP; no question-box.
+OUTCOME: FIRST EVER live trade lifecycle observed (clean). actual_rr fee-basis FIXED (cd749da, 1189
+green, pushed). Operator reporting WIRED (config-only; SMTP env corrected; test email delivered;
+relaunched). Entry-economics audit (#2) found a STRUCTURAL timeframe mismatch (daily reward vs 5m stop);
+an indicative backtest (#1-A) CONFIRMED it (88% stop-out, median -1.0R). #1-B (5m-stream persistence for
+a deep backtest) SCOPED + deferred one session (no data lost - Kraken backfills the window). Code
+c62e25a -> cd749da, 1188 -> 1189 green. No Docs change. TB00000 stays v2_101 (no new seed).
+============================================================
+
+0. THE VPS / OVERNIGHT REVIEW
+   The 49-pair screened run (pid 1042899 -> later relaunched) traded for the FIRST TIME observed live.
+   trades_2026.jsonl: 3 closed trades, ALL SHORT, ALL small losses via L2 MAE_THRESHOLD_BREACH, net
+   ~-$1.37 on $5000, held 1/9/10 5m candles. The FULL lifecycle fired clean end-to-end (signal -> entry
+   fill -> POSITION_STATE_WRITE -> ledger -> PAPER_MAE_DETECTED -> exit fill -> close -> SELECTION_STATE_
+   UPDATED), 0 tracebacks, 0 halts, 0 rate-limits, per-symbol consecutive_loss_count = 1. The headline
+   alarm (actual_rr -2.4..-3.1) drove the rest of the session.
+
+1. EXIT-CONTROLLER INVESTIGATION + MAE EXPLAINED (Bill ask)
+   MAE = Maximum Adverse Excursion - how far a trade runs AGAINST entry (the "heat"). L2 MAE_THRESHOLD_
+   BREACH = a volatility-scaled stop: fires when MAE >= atr_14_entry * mae_mult (1.5x), bid for a long /
+   ask for a short (ar:AR-048). L3 emergSL backstop = 3.0x ATR. The take-profit is run-to-reversal (no
+   fixed TP). VERDICT: the exit controller is CORRECT - the 3 trades were true full-risk stop-outs.
+
+2. THE actual_rr FIX  [Code cd749da, 1188 -> 1189 green, pushed + DR-010]
+   ROOT CAUSE: TRADE_CLOSE.actual_rr = net_pl / risk_exposed where risk_exposed was the STOP LEG ALONE
+   (atr*mae_mult*qty, fee-EXCLUSIVE) while net_pl is fee-INCLUSIVE -> an apples/oranges ratio that
+   inflated a normal ~1R net loss to a displayed ~3R (fees on a $50 position ~= 2R of the tiny ATR risk).
+   FIX (exit_controller.py): risk_exposed now = the SAME fee-inclusive net_loss the G8 entry gate uses
+   = (atr*mae_mult/entry + 2*FEE_TAKER + SHORT margin_open_fee) * entry * qty, so expected_rr (entry) and
+   actual_rr (exit) are one basis and CIATS learns on a correctly-scaled reward. Mirrors position_sizer.py
+   exactly. +1 short-side test (margin-open-fee term). The 3 prior records keep the old basis (pre-fix,
+   pre-learning, negligible).
+
+3. OPERATOR REPORTING WIRED  [config-only, NO code change]
+   The entire stack (C1 alert track + C2-C6 periodic reports + SmtpReportTransport + PullCadenceScheduler
+   ticked off the 5m clock) was ALREADY built + wired into the common assembly (runner.py / operational.py);
+   it only activates when SMTP + recipients are in env. The paper run launched without them. FIXES:
+   corrected /root/.tothbot.env - GOTCHA: it stored TOTHBOT_SMTP_PASS but runner.py reads TOTHBOT_SMTP_
+   PASSWORD; added TOTHBOT_SMTP_STARTTLS=true, TOTHBOT_EMAIL_SENDER=alerts@tothbot.com, TOTHBOT_ALERT_
+   RECIPIENTS + TOTHBOT_REPORT_RECIPIENTS = nwoguy56@proton.me (Bill's confirmed address, NOT his profile
+   gmail). Sent a one-off SMTP test (Bill confirmed RECEIVED). Relaunched sourcing the env (pid 1050031,
+   on cd749da). Now: C2 daily report ~00:00 UTC; C1 alerts on a profitable approved theory (~200 trades
+   away). The classifier correctly blocked my first test send to an inferred address - resolved by Bill
+   naming nwoguy56@proton.me explicitly.
+
+4. ENTRY-ECONOMICS AUDIT (#2) - STRUCTURAL FINDING
+   The sacred 1:1.5 gate (expected_reward / net_loss >= 1.5) compares INCOMMENSURABLE timeframes
+   (sweep.py:225-226): expected_reward = the median run-to-reversal excursion over DAILY bars (a DAYS-long
+   hold, ciats/expected_reward.py); net_loss = 1.5*ATR on 5m + fees (a MINUTES-long risk). The estimator
+   replays ONLY the L1a reversal exit, NEVER the L2 MAE stop - so it cannot see trades cut early. The real
+   exit is the tight 5m MAE stop, which fires on intraday noise long before the daily reward can form. So
+   the gate "believes" a reward the stop won't let the trade reach. (3 trades isn't proof - a hypothesis,
+   confirmed in #1-A.)
+
+5. #1-A INDICATIVE BACKTEST - CONFIRMS #2  [throwaway scripts/tb00774_realized_backtest.py, untracked]
+   Reuses production units (LiveIndicators real SSS signal + 5m ATR; compute_regime -> permitted side;
+   the production MAE/emergSL stop rule + constants; FEE_TAKER + the fee-inclusive R basis) over Kraken
+   5m history (capped ~720 bars = ~2.5 days/pair). 167 real SSS-gated entries / 27 pairs: 88% STOPPED
+   (69% L2 + 19% L3, the L3 share inflated by 5m-bar granularity vs tick), median net -1.0R / -0.93% of
+   notional. Stop distance ~0.42% < median adverse ~0.49% -> the stop loses the intraday race ~88% of the
+   time. HONEST CAVEAT: 0% win is partly STRUCTURAL (the reward leg = daily reversal cannot fire in-window
+   and the backtest has no TP) - the 12% survivors are the UNMEASURED potential winners. So this PROVES
+   the timeframe mismatch + the stop-out dominance, NOT that the strategy is unprofitable overall. ~48% of
+   entries did see a favorable move >= 1.5x the stop distance at some point - the edge may exist but the
+   stop geometry forfeits it.
+
+6. #1-B SCOPED + DEFERRED ONE SESSION (FP/DP)
+   B = persist the live 5m stream so a DEEP backtest (entry + the reward leg) is possible in ~2wk. Seam =
+   LiveSweepDriver.ohlc_5m_handler (the committed CommittedCandle); a PermanentOhlc5mSink mirroring
+   recorder/trade_record_file.PermanentTradeRecordSink, wired build_system -> assemble_operational from
+   records_dir, +test, redeploy. DEFERRED because: A delivered the core answer; B's payoff is weeks out;
+   Kraken backfills the ~2.5-day 5m gap so NO data is lost by a 1-session defer; and a data-layer change
+   deserves a clean pass, not the deep end of a long context. This is the standing close, B is task 1 next.
+
+ARTIFACTS THIS SESSION
+   Code (TothBot_V2-Code, master): c62e25a -> cd749da (actual_rr fix + test). 1188 -> 1189 green.
+   Docs (TothBot_V2-Docs, master): UNCHANGED at a1c45f9.
+   VPS: /root/.tothbot.env corrected (SMTP/reporting); relaunched on cd749da with reporting (pid 1050031);
+     scripts/tb00774_realized_backtest.py left untracked (the tool #1-B's deep run will reuse).
+   SessionLogs (this commit): TB00774 SL + TB00775 NSI + TB00775 OCS.
+   TB00000 stays v2_101.
+
+============================================================
+END TB00774 SESSION LOG
+============================================================
