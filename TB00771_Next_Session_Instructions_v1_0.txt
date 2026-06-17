@@ -1,0 +1,67 @@
+DocDCN:     TB00771
+DocTitle:   TB00771_Next_Session_Instructions
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00771_Next_Session_Instructions_v1_0.txt
+DocDate:    06-17-2026
+DocTime:    04:00:00 UTC
+
+============================================================
+TB00771 NEXT SESSION INSTRUCTIONS
+============================================================
+
+WHERE TB00770 LEFT IT
+  (A) VPS paper review done -- the organism is healthy on b5065ac (pid 1036988), the TB00769 fixes are
+      CONFIRMED live (subscribe_count 11 -> 7, SUBSCRIPTION_REJECTED 4 -> 0, ACK oddity gone). 0 trades
+      (all 3 pairs trending-negative -- a clean idle, not a fault).
+  (B) DONE: the periodic SHORT-equity TradeBalance reconcile carry-forward is built, tested, pushed.
+      NEW pipeline/equity_reconcile.py PeriodicTradeBalanceReconcile re-anchors the SHORT G7 CHECK-1
+      numerator to the true margin equity e (REST-BAL-008) each hourly poll; the previously-dead REST
+      baseline edges (fetch_account_balance / fetch_trade_balance) are now threaded build_system ->
+      assemble_operational -> PrivateConnectionAssembler. Code 1143 -> 1158 green (ce8f008); Docs
+      0500000 dv1_257 / 0521001 dv1_67 (83b0e1f). The reconcile is LIVE-ONLY and built only when the
+      SHORT TradeBalance edge is wired -- so it is dormant until mission (C).
+  (C) NOT done (Bill-gated): the live-deploy tail. The reconcile + startup-baseline PLUMBING is in place
+      and tested over fakes; it comes alive when (C) binds the real REST + private edges.
+
+THE COLD-LOAD TO VERIFY (read from GitHub HEAD)
+  Code        ce8f008  - 1158 green (py = C:\Users\wstot\AppData\Local\Programs\Python\Python312\
+                         python.exe, full path only).
+  Docs        83b0e1f  - 0500000 dv1_257 / 0521001 dv1_67.
+  SessionLogs (this commit) - TB00770 SL + TB00771 NSI/OCS.
+  Auto-memory: phase2-build + ohlc60m-derived-from-5m + long-short-paradigm-standing + ciats-self-
+  tuning-directive + continuous-run-directive + no-question-box-tool + session-close-standing +
+  tothbot-commit-rules + never-disappear-content + push-is-permitted.
+
+CHECK THE VPS FIRST (do NOT redeploy unless a commit changes PAPER behaviour -- TB00770's work is
+live-only / paper-irrelevant, so the running b5065ac organism is still current for paper):
+  ! ssh root@87.99.141.44 'pgrep -af python3 | grep -i toth; tail -n 80 /root/tothbot_paper.log; cat /root/tothbot_records/* 2>/dev/null | wc -l'
+  GOTCHA: `pkill -f tothbot.app` matches its OWN ssh line -- kill BY PID via `pgrep -af python3 | grep
+  -i toth`, and launch in a command line without the literal "tothbot.app".
+
+TB00771 MISSION (in priority order; run continuously, plain-text choices only, never a question box)
+  (A) REVIEW the VPS paper run again -- has it traded yet? Summarise any new behaviour. If still 0 trades
+      after the extended window, the most valuable next step is to VALIDATE THE FULL PAPER TRADE LIFECYCLE
+      against real Kraken: confirm the entry path is reachable (regime/gate trace), and -- if the pinned
+      universe simply never qualifies -- consider widening TOTHBOT_UNIVERSE or otherwise exercising an
+      entry so the entry -> sizing -> dispatch -> synthetic close -> TRADE_CLOSE -> CIATS learning
+      membrane runs end-to-end on the real feed (the one lifecycle never yet observed live). This is paper
+      validation, not new architecture; keep it faithful to the gates.
+  (B) ANY remaining live-hardening that is NOT credential-gated (e.g. confirm get_trade_balance /
+      get_account_balance on the real KrakenRestClient are sound async private calls ready for (C); audit
+      the reconcile cadence under the real REST stagger). Build + test over fakes; do not connect live.
+  (C) THE LIVE-DEPLOY TAIL -- GATED on Bill's Kraken API credentials + an explicit operator go. Construct
+      the REAL private edges in app/__main__: the authenticated PRIVATE socket (wss://ws-auth.kraken.com/
+      v2) + a REST GetWebSocketsToken, and BIND fetch_account_balance / fetch_trade_balance to live
+      KrakenRestClient calls (so the startup baselines + the periodic reconcile both come alive). Do NOT
+      connect live without Bill's creds + go.
+
+STANDING
+  Auto mode, continuous-run, build the organism, stop stopping. Concise. Don't stop until context is low
+  or a genuine Bill ruling / new-seed value is needed (plain text, never a question box). Push to master
+  is permitted (DR-010). Session-close (SL + NSI + OCS) is the standing protocol -- write it at the end
+  of EVERY session, close cleanly BEFORE the limit. TB00000 stays v2_101. NEVER the sacred 1:1.5 R:R.
+
+============================================================
+END TB00771 NEXT SESSION INSTRUCTIONS
+============================================================

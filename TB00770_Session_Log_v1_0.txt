@@ -1,0 +1,93 @@
+DocDCN:     TB00770
+DocTitle:   TB00770_Session_Log
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00770_Session_Log_v1_0.txt
+DocDate:    06-17-2026
+DocTime:    04:00:00 UTC
+
+============================================================
+TB00770 SESSION LOG
+MISSION: (A) review the VPS paper log/records and summarise the real-Kraken behaviour; (B) build the
+periodic TradeBalance reconcile carry-forward (re-seed the reconstructed SHORT equity to the true e,
+REST-BAL-008); (C) the live-deploy tail (real private edges) -- GATED on Bill creds + an explicit go.
+OUTCOME: (A) done -- the organism is healthy, the TB00769 fixes are CONFIRMED live. (B) BUILT, tested,
+committed, pushed -- the new pipeline/equity_reconcile.py PeriodicTradeBalanceReconcile re-anchors the
+SHORT drawdown numerator to the true margin equity e each poll; the previously-dead REST baseline edges
+are now threaded through build_system. (C) correctly NOT done -- stays Bill-gated. Code 1143 -> 1158
+green; 0500000 dv1_256 -> dv1_257, 0521001 dv1_66 -> dv1_67; both pushed; TB00000 stays v2_101.
+============================================================
+
+0. COLD-LOAD VERIFIED (before working)
+   Code HEAD        ea73def  - python.exe -m pytest -q = 1143 green. CONFIRMED.
+   Docs HEAD        3ed9ec8  - 0500000 dv1_256 / 0521001 dv1_66. CONFIRMED.
+   SessionLogs HEAD 6d2be6b  - TB00769 SL + TB00770 NSI/OCS. CONFIRMED.
+   VPS organism checked FIRST (per OCS, not killed): pid 1036988 `python3 -m tothbot.app` alive on
+   b5065ac, clean.
+
+1. MISSION A -- VPS PAPER REVIEW (done; healthy, the TB00769 fixes confirmed live)
+   pid 1036988 on b5065ac, running since Jun 17 03:01 UTC, 0 tracebacks/errors/halts, 0 trades (0
+   records). Event histogram (non ping/pong): dual PAPER_LEDGER_UPDATED INIT $5000 (LONG+SHORT, per-side
+   isolation); 3 WARM_UP_READY (BTC/ETH/SOL); 3 REGIME_CLASSIFIED (BTC + ETH TRENDING_NEG_NORMAL, SOL
+   TRENDING_NEG_ELEVATED); subscribe_count=7 with 7 SUBSCRIPTION_ACK success=True (instrument + ohlc/
+   ticker per pair); steady PING/PONG. CONFIRMS the TB00769 cleanup in production: subscribe_count 11 ->
+   7, SUBSCRIPTION_REJECTED 4 -> 0, and the TB00768 ACK ODDITY (success=False channel=None) is GONE.
+   0 trades is EXPECTED (all 3 pairs trending-negative, no qualifying entry) -- a clean idle, not a fault.
+   VERDICT: first sustained real-network paper run is healthy; no remediation needed. Left running.
+
+2. MISSION B -- THE PERIODIC SHORT-EQUITY RECONCILE CARRY-FORWARD (done; Code ce8f008, Docs 83b0e1f)
+   DESIGN (the AR-052 prose already NAMED it -- "reconciled periodically to REST-BAL-008 e"; this BUILDS
+   it). The SHORT G7 CHECK 1 numerator is current_portfolio_usd's reconstruction = margin collateral +
+   open-short MTM at the ask - the ESTIMATED borrow rollover. The rollover is an estimate; the cash/MTM
+   marks drift. Un-reconciled it is conservative (the estimate OVER-subtracts -> the breaker fires SOONER
+   -> FN-safe) but it accumulates error.
+   CODE (1143 -> 1158 green):
+   - NEW pipeline/equity_reconcile.py: PeriodicTradeBalanceReconcile, a live-only async poll loop. Each
+     poll fetches the true margin equity e (REST-BAL-008 TradeBalance), computes the RAW reconstruction
+     (current_portfolio_usd with reconcile_offset=0), and re-seeds the carry-forward offset on the
+     WSManager: offset = e_true - raw. current_portfolio_usd adds that offset back for the SHORT so the
+     numerator lands EXACTLY on e at the poll instant and tracks MTM between polls. UNLIKE the once-only
+     startup baseline (HR-WM-011) the offset is UPDATED every poll. A poll that cannot compute (fetch
+     None / wallet not fed / missing quote ProviderNotReady) is SKIPPED cleanly (prior offset stands).
+     evt:SHORT_EQUITY_RECONCILED [MEDIUM]. Cadence DEFAULT_RECONCILE_INTERVAL_SEC = hourly, an
+     ENGINEERING constant NOT a CIATS seed.
+   - WSManager: + _short_equity_reconcile_offset + short_equity_reconcile_offset() + set_short_equity_
+     reconcile_offset() (live only; paper stays 0).
+   - portfolio.py current_portfolio_usd: + reconcile_offset param (None -> the wm offset via getattr,
+     back-compat; the reconcile passes 0 for its raw read), SHORT only; LONG never reads it.
+   - WIRING: the previously-DEAD REST baseline edges now flow build_system -> assemble_operational ->
+     PrivateConnectionAssembler: fetch_account_balance (REST-BAL-004) + fetch_trade_balance
+     (REST-BAL-008), so _capture_startup_baseline actually fires in live AND the SHORT TradeBalance edge
+     ALSO builds the equity reconcile. OperationalSystem + equity_reconcile field; run() drives its loop,
+     stop() halts it; live only.
+   - TESTS: test_equity_reconcile.py (offset math + end-to-end re-anchor to e + negative-offset case +
+     three clean SKIPs + run/stop loop); test_portfolio.py (offset application + param override + LONG
+     never adds it + back-compat); test_operational.py (live wires both baselines + builds the reconcile;
+     no edge -> no reconcile; paper -> no reconcile).
+   DOCS (0500000 dv1_257 / 0521001 dv1_67): the AR-052 reconcile clause now names mod:equity_reconcile
+   the PeriodicTradeBalanceReconcile hourly poll, the carry-forward offset (wm.short_equity_reconcile_
+   offset = e_true - raw), evt:SHORT_EQUITY_RECONCILED, the HR-WM-011 once-only contrast, and the
+   before-first-poll / paper FN-safe fallback. Text-only inside the existing AR-052 desc; tag-balanced
+   (g 217/text 957/desc 126/svg 10/title 126/figcaption 10 unchanged); no residual dv1_256. 0521001
+   appends the TB00770 OP RECORD + the FA-HDR bump.
+
+3. MISSION C -- THE LIVE-DEPLOY TAIL (correctly NOT done; Bill-gated)
+   app/__main__ still HALTs on TOTHBOT_MODE=live. The remaining slice is the REAL private edges -- the
+   authenticated PRIVATE socket (wss://ws-auth.kraken.com/v2) + a REST GetWebSocketsToken + the real
+   REST credential edges (fetch_account_balance / fetch_trade_balance bound to live KrakenRestClient
+   calls) -- which need Bill's Kraken API credentials and an explicit operator go. NOT wired this session.
+   NOTE: the reconcile PLUMBING is in place and tested over fakes; when (C) binds the real REST edges the
+   reconcile + the startup baseline capture both come alive with no further wiring.
+
+4. PUSH / DR-010
+   Code ea73def -> ce8f008 pushed to master (EXIT=0). Docs 3ed9ec8 -> 83b0e1f pushed to master (EXIT=0).
+   The PowerShell NativeCommandError on push is the known git-banner-on-stderr wrap, not a failure
+   (per the push-is-permitted record); both pushes returned exit 0 with the real ref update line.
+
+5. NO NEW SEED / TB00000
+   The reconcile cadence is an engineering constant; the borrow fee is the EXISTING margin_rollover_
+   fee_pct (TB00728 DEC-A). NO new seed. TB00000 stays v2_101. NEVER the sacred 1:1.5 R:R.
+
+============================================================
+END TB00770 SESSION LOG
+============================================================
