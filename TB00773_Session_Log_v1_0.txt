@@ -94,6 +94,38 @@ TB00771 governor (49/49 warm-up ready, ZERO warm-up-fail, ZERO rate-limit/error)
    NO new seed (TOP_N/VIABILITY_N capacity = engineering constants; the viability scalar is CIATS-owned/
    data-computed). NEVER the sacred 1:1.5 R:R MINIMUM.
 
+6. CAPACITY STRESS TEST - "test N until you break it" (Bill directive, post-ramp)
+   Bill asked for the TOP BOUND: how many pairs CPX11 can MONITOR before it breaks (distinct from N=49,
+   which is the VIABILITY selection = what's worth TRADING, not a capacity limit). FP/DP method: disable
+   the viability cut and throw the ENTIRE AR-070 eligible universe at it AT ONCE (735 pairs, no screen) -
+   the absolute maximum (735 is everything Kraken streams in USD/USDC/USDT; nothing larger exists to
+   monitor). The box has NO SWAP, so RAM exhaustion = a hard OOM kill = a clean hard ceiling.
+   RESULT - IT DID NOT BREAK. Threw all 735 at once; it stood up under every limit with respectable margin:
+     - RAM: peaked ~424 MB of 1919 MB (22%), ~1.16 GB free under the no-swap hard line (~4.5x headroom).
+       The warm-up holds all pairs' bar buffers concurrently (asyncio.gather - all ~735 first-interval
+       calls drain through the governor BEFORE any pair's second call, so READY events are back-loaded and
+       RSS climbs through warm-up then plateaus at ~424 MB); never threatened the ceiling.
+     - CPU/load: near-idle through the governed warm-up (~1% - it is I/O-wait on the 1.1s pacer), load
+       ~0.6 on 2 vCPU at the transition; far from saturation.
+     - Reliability: 734/735 pairs WARM_UP_READY (the 1 fail = APXUSD/USDC, a DEAD pair with 0 closes / 0
+       volumes - junk data, not a fault); ZERO rate-limits, ZERO SUBSCRIPTION_REJECTED, ZERO tracebacks,
+       no OOM. The TB00771 global governor held the REST flood-free at MAXIMUM scale - exactly its purpose.
+   THE REAL LIMITS ARE NOT THE HARDWARE (both non-hardware):
+     (1) COLD-START LATENCY: at 735 the governed warm-up alone is ~31 min (1.1s/call x ~1500 calls) and
+         the full cold-start to live-streaming is longer - it had not even begun streaming at the 35-min
+         mark. A latency cost, not a break; it scales with N.
+     (2) DATA QUALITY: most of the 735 are illiquid/dead - only ~150 are meaningfully liquid and 48 viable.
+         Monitoring all 735 spends the long cold-start on pairs you would never trade.
+   VERDICT: CPX11 is NOT the constraint - it swallows the whole eligible universe with ~4.5x RAM headroom
+   and a near-idle CPU. NO Hetzner upgrade needed (confirmed empirically, not estimated). What bounds N in
+   practice is how long a cold-start you tolerate + how many pairs have real edge - so N=49 (viable+anchor)
+   is the right OPERATING point, not a capacity-forced one. The stress run was throwaway (logs archived to
+   /root/tothbot_stress_735_*.log); the healthy 49/50-pair screened operating run was RESTORED afterward.
+   WHAT RESOLVED (Bill, at close): "Leave it running and collecting data." -> the monitored set STAYS at
+   the viable ~49/50 (the current screened run); NOT widened. Left running on the VPS overnight to build
+   the trade/viability record. (The widen-to-~150-liquid-for-data option remains available later if Bill
+   wants faster record-building; not taken now.)
+
 ARTIFACTS THIS SESSION
    Code (TothBot_V2-Code, master): UNCHANGED at c62e25a (1188 green). The probe was throwaway + deleted.
    Docs (TothBot_V2-Docs, master): UNCHANGED at a1c45f9 (0500000 dv1_258 / 0521001 dv1_68).
