@@ -1,0 +1,97 @@
+DocDCN:     TB00776
+DocTitle:   TB00776_Session_Log
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00776_Session_Log_v1_0.txt
+DocDate:    06-17-2026
+DocTime:    23:00:00 UTC
+
+============================================================
+TB00776 SESSION LOG  (THE PROFITABILITY HUNT - DEPLOY THE SEARCH + DEEP RESEARCH)
+MISSION (TB00776 OCS): check VPS first; (1) deploy+cron the auto-strategy-search (smoke-run, confirm
+email); (2) DEEP RESEARCH durable 1:1.5+ R:R edges incl crypto non-OHLC; (3) risk fix stays PAUSED on
+Bill's 2 design calls. PAPER, continuous-run, FP/DP the forks, no question-box. The real question:
+"How do we achieve 1:1.5 R:R or better?"
+OUTCOME: ALL THREE done + a convergent result. (0) The VPS check surfaced the FIRST live trades EVER
+observed - and they prove the entry economics are broken. (1) Auto-search DEPLOYED + CRONNED (daily
+06:00 UTC) - but I found + fixed TWO real correctness defects in it first: a degenerate bootstrap CI
+(false significance) and regime-persistence false positives (the 1h "survivors" are short-carried +
+front-loaded regime artifacts, NOT durable edges). (2) Deep research COMPLETE (104 agents, 22 primary
+sources, 16 confirmed / 9 refuted) - it INDEPENDENTLY confirms the whole arc: mechanical OHLC entry
+combos are mostly illusory after fees+overfit; the profit LEVER is EXIT/stop design, not entry;
+non-OHLC microstructure is out of retail reach. This ELEVATES Bill's 2 PAUSED risk-design calls from
+"bleed-insurance" to plausibly THE profit lever. Report written + emailed to Bill. Code 5dc449d->
+8106391, 1194 green throughout. No Docs change. TB00000 v2_101. Risk fix STILL Bill-gated (item 3).
+============================================================
+
+0. VPS CHECK -> FIRST LIVE TRADES EVER OBSERVED  [the headline; never seen live before this session]
+   The 49/50-pair paper run is HEALTHY (pid 1052343, e78a035 at start), 5m corpus accruing (817->
+   growing). records_dir/trades_2026.jsonl held 5 CLOSED trades + 1 open (AVAX). EVERY closed trade:
+   SHORT (correct - all TRENDING_NEG), sss_pass=true, exited MAE_THRESHOLD_BREACH (stopped) on a TINY
+   adverse move (mae_pct_reached only 0.26/0.49/0.36/0.53/0.96%), a LOSS, actual_rr -1.02 to -3.15,
+   net_loss ~0.40-0.75 USD, holds 1/9/10/17/1. CONFIRMS from REAL data the TB00774 diagnosis: a tight
+   intraday stop hit on sub-1% noise while the reward target is daily-ATR-sized = R:R INVERTED at the
+   trade level, structurally incapable of 1:1.5. (memory: first-live-trades-evidence)
+
+1. AUTO-SEARCH DEPLOYED + CRONNED + TWO DEFECTS FIXED  [Code 5dc449d->8106391, 1194 green]
+   Fast-forwarded the VPS e78a035->5dc449d (auto_strategy_search.py only ADDS operations/+scripts/ files
+   the live app never imports - safe under the running paper proc). Smoke-run worked + emailed. THEN:
+   - DEFECT A - DEGENERATE BOOTSTRAP CI (Code 7aa3bdb): boot() drew pairs via LCG-mod-m; with a
+     power-of-2 pair count (our PAIRS list is 32), s%32 used only the LOW 5 bits of the LCG (period 32),
+     so all 400 resamples drew the IDENTICAL multiset -> lo==mid==hi==E -> "SIG" ALWAYS true for any
+     E>0. A structural false-positive that let the email oversell any positive combo. FIX: draw the
+     index from the LCG HIGH bits via multiply-shift (s*m)>>31; verified real CI spread for m=16/32/49/64.
+     This cut the 1h "SIG survivors" from 12 (all fake-SIG) to 3.
+   - DEFECT B - REGIME-PERSISTENCE FALSE POSITIVES (Code a5915ac, tightened 8106391): a TB00776
+     diagnostic proved the top 1h survivors are regime artifacts - momentum/btc_tide/5x/rev OOS profit
+     was ENTIRELY short side (+2.34% vs long +0.03% flat) AND front-loaded (OOS thirds +3.48/-1.37/
+     +0.65); bb_break worse (+4.14/-1.27/-0.30, only the first third positive). The contiguous IS/OOS
+     split shares one 30-day macro regime, so a one-directional strategy "survives" by riding the trend.
+     FIX: added per-direction E split (L/S) + a 3-way OOS sub-window stability count to run_combo, and a
+     REGIME-ROBUST gate - robust ONLY if profit is NOT one-directional (weaker side E>0 AND >=20% of the
+     stronger) AND stable across OOS thirds (<=1 losing third). Report tags each survivor ROBUST or
+     REGIME-FRAGILE(reasons); the email now shouts + the GOAL line counts REGIME-ROBUST, never raw OOS
+     survivors. Same anti-oversell spirit as Defect A.
+   - DEPLOY: /root/run_strategy_search.sh wrapper (sources /root/.tothbot.env, sets RECORDS_DIR) +
+     crontab "0 6 * * * /root/run_strategy_search.sh"; full cron path confirmed end-to-end (env->run->
+     log->email). VPS ff'd to 8106391 so the cron runs the fully-hardened version.
+
+2. DEEP RESEARCH - COMPLETE + CONVERGENT  [deep-research skill: 104 agents, 22 sources, 25 claims
+   verified, 16 confirmed / 9 killed; report /root/tothbot_records/TB00776_research_verdict.md, emailed]
+   VERDICT (memory: profitability-research-verdict): (a) mechanical OHLC entry strategies "rarely"
+   produce significant excess returns after data-snooping correction + fees (Anghel 2021; Hudson &
+   Urquhart 2019 - no OOS predictability for BTC); what survives is RISK-ADJUSTED, asset-specific,
+   regime-dependent, degrades to ~buy-and-hold OOS = EXACTLY our 0-survivor daily result. (b) The bot's
+   failure is EXIT/sizing, not entry; the credible path to 1:1.5+ is wide vol-scaled stops +
+   timeframe-matched targets + low-win/high-payoff - BUT the canonical TS-MOM "let winners run" papers
+   were REFUTED in verification (0-3), so this is a strong HYPOTHESIS (medium conf), supported directly
+   only by our own single-window 1h result (itself regime-fragile per section 1). (c) Non-OHLC: order
+   flow is strongest (daily Sharpe 3.63 / 82 coins) but daily/ML/near-frictionless, break-even ~0.48%/
+   day eats the retail taker; intraday OBI is latency-RANK-driven (only the single fastest trader
+   profits) = uncapturable at retail. (d) Fees decisive for high-turnover intraday. IMPLICATION:
+   ELEVATES Bill's 2 PAUSED risk calls to plausibly THE profit lever (the evidence says exits, not
+   entry). The mechanical-combo search should continue ONLY as a regime-robust, after-cost, multi-window
+   VALIDATOR (now hardened), not the primary hope.
+
+3. STILL OPEN (Bill-gated)
+   - THE RISK FIX remains PAUSED on Bill's 2 DESIGN DECISIONS (WHAT-level): (a) reverse ratified DEC-124
+     to allow a fast take-profit? (b) re-anchor the SACRED-FLOOR net_loss to DAILY ATR (1.5 floor stays,
+     only the ATR unit changes 5m->daily)? The research now strongly motivates these - they are no longer
+     just bleed-insurance. Needs diagram-first discipline (Image3/Image9 + the DEC amendment) once Bill
+     rules. The sacred 1:1.5 R:R MIN is NEVER touched - it is the GOAL we are hunting to meet.
+   - AVAX short was still OPEN at close (never observed a full open->close lifecycle live yet).
+
+ARTIFACTS THIS SESSION
+   Code (TothBot_V2-Code, master): 5dc449d -> 7aa3bdb (boot CI fix) -> a5915ac (regime-robust gate) ->
+     8106391 (tighten dir gate). 1194 green throughout. All pushed + DR-010 verified. VPS ff'd to 8106391.
+   VPS ops: /root/run_strategy_search.sh + crontab (daily 06:00 UTC); research verdict report +
+     strategy_search_report.txt under /root/tothbot_records. Paper run left RUNNING (49/50, e78a035 live
+     proc - operations/ changes don't touch the running app; it picks them up only on restart).
+   Docs (TothBot_V2-Docs, master): UNCHANGED at a1c45f9.
+   SessionLogs (this commit): TB00776 SL + TB00777 NSI + TB00777 OCS.
+   TB00000 stays v2_101 (no new seed: bug fixes + validation hardening + research = engineering, no new
+     CIATS parameter).
+
+============================================================
+END TB00776 SESSION LOG
+============================================================
