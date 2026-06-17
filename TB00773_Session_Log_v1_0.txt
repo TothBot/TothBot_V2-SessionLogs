@@ -1,0 +1,107 @@
+DocDCN:     TB00773
+DocTitle:   TB00773_Session_Log
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00773_Session_Log_v1_0.txt
+DocDate:    06-17-2026
+DocTime:    18:30:00 UTC
+
+============================================================
+TB00773 SESSION LOG
+MISSION (TB00773 NSI): in PAPER, close the universe-expansion arc operationally. (A) DECIDE N from a
+REAL Kraken screen run; (B) RAMP the paper run to N; (C) recommend a Hetzner tier if N warrants;
+(D) live-deploy tail stays Bill-gated. Auto mode, continuous-run; HOW-forks resolved by FP/DP, never
+asked Bill; no question-box.
+OUTCOME: N DECIDED from a live read-only Kraken screen = 48 VIABLE pairs (49 monitored incl the BTC/USD
+anchor). VPS RAMPED 3 -> 49 pairs: redeployed b5065ac -> c62e25a, screened cold-start HEALTHY under the
+TB00771 governor (49/49 warm-up ready, ZERO warm-up-fail, ZERO rate-limit/error). (C) STAY ON CPX11 - the
+49-pair run measures 71 MB RSS / ~37% of one core / load 0.10 on 2 vCPU; no paid upgrade warranted.
+(D) untouched. NO code change, NO Docs change, NO new seed. TB00000 stays v2_101.
+============================================================
+
+0. THE VPS (checked FIRST, per the OCS)
+   pid 1036988 python3 -m tothbot.app HEALTHY on b5065ac (3-pair pin BTC/ETH/SOL), 3h26m uptime, clean
+   PING/PONG, 0 records. CPX11 = 2 vCPU / 1919 MB; the 3-pair run used 45 MB RSS / 0.1% CPU - huge
+   headroom. This run was a MANUAL nohup launch (NOT the systemd unit, which runs `-m tothbot`); env
+   TOTHBOT_MODE=paper, TOTHBOT_UNIVERSE=BTC/USD,ETH/USD,SOL/USD, TOTHBOT_RECORDS_DIR=/root/tothbot_records;
+   log -> /root/tothbot_paper.log.
+
+1. (A) DECIDE N FROM A REAL KRAKEN SCREEN  [live read-only probe; no code committed]
+   The screen had only ever run over fakes/synthetic bars, which cannot decide N (the TB00772 GOTCHA:
+   synthetic daily viability is fragile). So I ran the REAL thing, read-only: a throwaway probe that drives
+   the REAL KrakenRestClient over a stdlib-urllib transport (NO aiohttp - it is not installed locally - NO
+   credentials, PUBLIC GET only) through the REAL app/prescreen + ciats/viability modules against live
+   Kraken. The probe is the organism's own code path, not a reimplementation. Probe DELETED after the run
+   (the Code repo stays clean; methodology recorded here).
+   PHASE 2 (liquidity, real bulk Ticker + AssetPairs):
+     - AR-070 candidate pool = 775 USD/USDC/USDT pairs.
+     - SHARP heavy tail: top 29 pairs = 90% of all 24h USD volume, top 62 = 95%, top 187 = 99%. Below
+       ~rank 200 the per-pair 24h volume falls under ~$50k and tails to $0 - exactly the heavy-tailed
+       distribution the FP/DP cutoff argument predicted.
+   PHASE 3 (viability, REAL daily re-sim ~720 daily bars over the top-150 liquidity candidates):
+     - 48 VIABLE (positive frequency-weighted run-to-reversal expectancy), 96 non-viable, 6 alias-fetch-
+       fail (XBT/USD, XDG/USD etc. - AssetPairs altname aliases the OHLC endpoint rejects; harmless, the
+       canonical BTC/USD / DOGE-equivalent keys are present elsewhere).
+     - Top viable by expectancy: IP/USD +0.142, TIA/USD +0.075, VVV/USD +0.066, HBAR/USD +0.057,
+       PORTAL/USD +0.055, XDC/USD +0.054, ... a healthy mix of majors and liquid mid-caps.
+   DECISION: CIATS picks N = the viable count under capacity. The liquidity cut deliberately BOUNDS the
+   candidate set BEFORE viability (thin-liquidity viability is operationally fragile - slippage + the
+   lagging L1a exit), so N is taken from the VIABLE-and-LIQUID set => N ~= 48 viable. CPX11 capacity is not
+   binding (measured below), so capacity_n = 50 keeps all 48 + the anchor.
+
+2. (B) RAMP THE PAPER RUN TO N  [VPS b5065ac -> c62e25a; first large screened cold-start]
+   This DOES change paper behaviour, so a redeploy is warranted (per the NSI). Steps:
+   - Captured the rollback point (b5065ac); VPS git was clean (only untracked .tothbot.env*).
+   - Stopped pid 1036988 BY PID (the pkill-self-match gotcha), git pull --ff-only -> c62e25a, archived the
+     old 3-pair log to /root/tothbot_paper_3pair_b5065ac.log.
+   - Relaunched paper with NO TOTHBOT_UNIVERSE pin (-> AR-070 derive + the 2-stage screen) and
+     TOTHBOT_TOP_N=150 TOTHBOT_VIABILITY_N=50, interpreter /root/tothbot_env/bin/python3 -m tothbot.app.
+   THE LIVE COLD-START REPRODUCED THE PROBE EXACTLY:
+     - AR-070 derive = 735 pairs (the instrument-channel online filter trims 775 -> 735).
+     - liquidity pre-screen -> top-150 = 151 pairs (+ the BTC/USD anchor union).
+     - viability cut -> 49 pairs = the 48 viable + BTC/USD anchor. Matches the probe to the pair.
+   HEALTH UNDER THE TB00771 GOVERNOR (the first large screened cold-start ever observed):
+     - 49/49 WARM_UP_READY (ZERO WARM_UP_FAIL), 49/49 REGIME_CLASSIFIED, 99 SUBSCRIPTION_ACK all
+       success=True, subscribe pacing batch complete, PING/PONG flowing.
+     - ZERO rate-limit / reject / error / traceback anywhere in the cold-start. The global per-IP REST
+       governor (rest/rate_limiter.py, AR-081) held the 49-pair warm-up + 150-candidate viability re-sim
+       flood-free at scale - the TB00771 fix VALIDATED LIVE, which is precisely the scenario it was built
+       for.
+     - Regime mix is now DIVERSE: 18 TRENDING_NEG_ELEVATED, 14 NON_DIR_NORMAL, 8 TRENDING_NEG_NORMAL,
+       7 NON_DIR_ELEVATED, 2 TRENDING_POS_ELEVATED - versus the old 3-pair all-TRENDING_NEG idle. Far
+       higher odds of finally observing a trade lifecycle (still never seen live).
+   0 trades yet (just ramped - expected). Paper ledger init $5000.
+
+3. (C) HETZNER - STAY ON CPX11 (no paid upgrade; the WHAT input for Bill)
+   Measured at N=49 on CPX11 (2 vCPU / 1.9 GiB): 71 MB RSS (3.7% of RAM, 1.5 GiB still free), CPU ~37% of
+   ONE core and DECLINING post-cold-start (49% -> 40% -> 37%), load average 0.10 / 0.20 / 0.16 on 2 vCPU.
+   Huge headroom - 16x the pairs of the 3-pair run cost ~1.5x the RAM and a fraction of one core. NO rescale
+   warranted for N~=49. UPGRADE TRIGGER (the WHAT input if N grows materially or the live private-WS +
+   reconcile load is added): sustained load average approaching ~2.0 (both cores busy) or RSS > ~1.4 GiB
+   -> CPX21 (3 vCPU / 4 GiB). Documented so Bill can decide if/when those bind.
+
+4. (D) LIVE-DEPLOY TAIL - UNTOUCHED, BILL-GATED
+   No private-WS edges bound, no credentials used, TOTHBOT_MODE stays paper. The live tail remains the
+   plumbing built TB00769/TB00770, gated on Bill's explicit go-live + creds.
+
+5. PROCESS / STANDING
+   No HOW asked of Bill. Every fork resolved by FP/DP for the organism: read-only probe vs screened
+   redeploy (did BOTH - probe to DECIDE N cheaply/reversibly, then the redeploy to RAMP); big-bang 3->49
+   vs staged ramp (went to the full screened N but watched the cold-start live with the b5065ac rollback
+   ready); how deep to probe viability (bounded at the top-150 liquidity candidates - the 2-stage design's
+   whole point is that the liquidity cut bounds the fragile-when-thin viability re-sim). Reported N + the
+   liquidity/viability shape to Bill in plain chat as a WHAT input; CIATS picked N. No question-box.
+   NO new seed (TOP_N/VIABILITY_N capacity = engineering constants; the viability scalar is CIATS-owned/
+   data-computed). NEVER the sacred 1:1.5 R:R MINIMUM.
+
+ARTIFACTS THIS SESSION
+   Code (TothBot_V2-Code, master): UNCHANGED at c62e25a (1188 green). The probe was throwaway + deleted.
+   Docs (TothBot_V2-Docs, master): UNCHANGED at a1c45f9 (0500000 dv1_258 / 0521001 dv1_68).
+   VPS (operational): b5065ac 3-pair -> c62e25a 49-pair screened paper run (TOTHBOT_TOP_N=150,
+     TOTHBOT_VIABILITY_N=50). Healthy.
+   SessionLogs (this commit): TB00773 SL + TB00774 NSI + TB00774 OCS.
+   TB00000 stays v2_101.
+
+============================================================
+END TB00773 SESSION LOG
+============================================================
