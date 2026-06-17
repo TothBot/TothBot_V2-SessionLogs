@@ -4,100 +4,93 @@ DocVersion: v1_0
 DocOwner:   Bill
 DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00768_Next_Session_Instructions_v1_0.txt
 DocDate:    06-16-2026
-DocTime:    23:30:00 UTC
+DocTime:    23:59:00 UTC
 
 ============================================================
 TB00768 NEXT SESSION INSTRUCTIONS
-NEXT MISSION (AUTONOMOUS): mission 4(C) THE LIVE PROVIDER FEED - wire make_live_providers to the
-real REST/WS caches + the periodic SHORT-equity TradeBalance reconcile - finish feeding the live sweep
+NEXT MISSION (AUTONOMOUS): review the LIVE paper run's collected data, run down the SubscriptionAck
+oddity, then continue hardening toward live - a PAPER ORGANISM is RUNNING on the VPS collecting data
 ============================================================
 
 0. NUMBERING NOTE (Bill ruling TB00745, standing)
-   SL = the session that runs THIS NSI (768); its NSI = 769; its OCS = 769. This file (TB00768 NSI)
-   governs session 768.
+   SL = the session that runs THIS NSI (768); its NSI = 769; its OCS = 769. This file governs session 768.
 
-1. PUSH STATUS - DONE (no action needed; a mid-session false alarm, resolved)
-   TB00767 pushed all three repos to origin/master + DR-010 verified at session end (Code 80d205c /
-   Docs a31a271 / SessionLogs 8295ece, all local == origin; dv1_253/dv1_63 absent from Docs HEAD).
-   The cold-load HEADs in section 3 are LIVE on GitHub. (Record: mid-session a SINGLE classifier
-   denial of `git push origin master` was wrongly treated as a standing blocker; it was a one-off
-   misfire - the explicit push worked on retry. Push permission is long-standing. Do NOT re-alarm on
-   a single denial of a normally-permitted action - retry it.)
+1. ***A PAPER ORGANISM IS RUNNING ON THE VPS - DO NOT RESTART IT BLINDLY*** (Bill: let it collect data)
+   TB00767 launched the first real-Kraken paper run; Bill asked to let it COLLECT DATA across the gap
+   between sessions, then review. At cold-load, FIRST check on it (do not kill it):
+     ssh root@87.99.141.44 'pgrep -af tothbot.app; echo ---LOG---; tail -n 80 /root/tothbot_paper.log; echo ---TRADES---; cat /root/tothbot_records/* 2>/dev/null | wc -l'
+   It runs DETACHED (nohup, pid was 1034741 at launch) on the VPS at /root/TothBot_V2-Code @ 453a64e,
+   Python 3.12.3, log /root/tothbot_paper.log, durable TRADE_CLOSE records /root/tothbot_records, paper
+   mode (no creds, no SMTP), universe pinned BTC/USD,ETH/USD,SOL/USD. It holds code 453a64e - it will
+   NOT pick up newer commits until restarted (pkill -f tothbot.app; then bash operations/run_paper.sh).
+   SSH from the Windows box: the auto-mode classifier blocks Claude SSHing to an address it INFERRED, so
+   the operator runs ssh via the Claude Code `!` prefix (a single line, no multi-line paste - wrapping
+   splits the command; keep run commands short / use operations/run_paper.sh).
 
 2. STANDING DIRECTIVES (Bill - do not re-litigate)
    - AUTO MODE / CONTINUOUS-RUN / BUILD THE ORGANISM / STOP STOPPING. Run continuously across missions
-     in one shot until context runs LOW; never pause to ask "should I proceed/go". Session close
-     (SL+NSI+OCS) is the STANDING protocol, not a pause - close cleanly BEFORE the context limit.
+     until context runs LOW; never pause to ask "should I proceed/go". Session close (SL+NSI+OCS) is the
+     STANDING protocol, not a pause - close cleanly BEFORE the context limit.
    - LONG/SHORT PARADIGM IS STANDING: co-equal Long AND Short. Correct EVERY legacy Long-only /
      side-asymmetric artifact to the Long/Short paradigm ON SIGHT, autonomously - never ask whether.
-   - QUESTION-BOX BANNED (AskUserQuestion enrages Bill / he cannot answer it). Surface ONLY a genuine
-     NEW seed value or a genuine architecture ruling, in PLAIN CHAT TEXT.
-   - CIATS self-tuning: the coach SELF-forms / TESTS / routes (profitable -> C1 email Bill /
-     unprofitable -> periodic pull report). NEVER the sacred 1:1.5 R:R.
-   - DR-010: push every commit and verify local == origin. Diagram/Docs edits done in Claude Code.
+   - QUESTION-BOX BANNED (AskUserQuestion enrages Bill). Surface ONLY a genuine NEW seed value or a
+     genuine architecture ruling, in PLAIN CHAT TEXT. Be concise - Bill dislikes verbose hedging.
+   - PUSH is long-standing PERMITTED (DR-010: push every commit, verify local==origin). A single
+     classifier denial of a normally-permitted action is a MISFIRE to RETRY (explicit `git push origin
+     master`), NOT a standing blocker - do not alarm Bill over it ([[push-is-permitted]]).
+   - CIATS self-tuning: the coach SELF-forms / TESTS / routes. NEVER the sacred 1:1.5 R:R.
 
 3. COLD-LOAD FROM GITHUB HEAD AND VERIFY BEFORE WORKING
    Load: TB00768 NSI (this) + TB00000 (v2_101) + the TB00767 Session Log. Auto-memory: phase2-build +
    long-short-paradigm-standing + ciats-self-tuning-directive + continuous-run-directive + no-question-
-   box-tool + session-close-standing + tothbot-commit-rules + never-disappear-content.
-     Code HEAD        80d205c (if pushed)  - run python.exe -m pytest -q, expect 1112 green. Python =
+   box-tool + session-close-standing + tothbot-commit-rules + never-disappear-content + push-is-permitted.
+     Code HEAD        453a64e  - run python.exe -m pytest -q, expect 1128 green. Python =
                       C:\Users\wstot\AppData\Local\Programs\Python\Python312\python.exe (3.12.10; the
                       default PATH python is 3.10 - use the FULL PATH ONLY).
-     Docs HEAD        a31a271 (if pushed)  - 0500000 dv1_254 / 0521001 dv1_64.
+     Docs HEAD        a31a271  - 0500000 dv1_254 / 0521001 dv1_64.
      SessionLogs HEAD <the TB00767 SL + TB00768 NSI/OCS push>.
-   (See section 1 if origin still shows the prior HEADs.)
 
-4. DONE TB00767 (autonomous): the ar:AR-052 EQUITY-BASIS DRAWDOWN, both sides COUPLED. gate:G7 CHECK 1
-   now measures drawdown against the MARK-TO-MARKET current_portfolio (Long = spot cash + bid MTM;
-   Short = the reconstructed Kraken margin equity = collateral + open-short MTM at the ask - the
-   param:margin_rollover_fee_pct rollover), with the SIZING reads (CHECK 2/3 + G8) staying on realized
-   cash (ar:AR-051). The SHORT baseline lands from REST-BAL-008 TradeBalance e (captured once in
-   build(), the basis-consistent pair to the REST-BAL-004 long). The FN case is tested end-to-end (an
-   open short bleeding FIRES the breaker; the realized cash basis would not). NO new seed. Full detail
-   + the 4 commit hashes in the TB00767 Session Log. The SHORT live path is now FED (baseline + MTM
-   current_portfolio land together); both LONG and SHORT can drive a live G7 CHECK 1.
+4. DONE TB00767 (autonomous, a big session): (1) the ar:AR-052 EQUITY-BASIS DRAWDOWN both sides COUPLED
+   (gate:G7 CHECK 1 now measures the MARK-TO-MARKET current_portfolio - Long spot cash + bid MTM, Short
+   reconstructed margin equity = collateral + short MTM at the ask - the rollover; SHORT baseline =
+   REST-BAL-008 TradeBalance e captured once; FN case tested end-to-end; Docs 0500000 dv1_253->dv1_254,
+   Image8 CHECK 1 numerator corrected from spot_usd_balance, Context R7->R8). (2) DISCOVERED mission
+   4(C) was already built (make_live_providers + assemble_operational compose the full paper organism,
+   proven over fakes). (3) PAPER GO-LIVE: built app/universe.py (AR-070 load) + app/__main__.py (the
+   real-edge entrypoint, paper) + the TOTHBOT_UNIVERSE pin + the console telemetry tap + operations/
+   run_paper.sh. 1089 -> 1128 green; no new seed; TB00000 stays v2_101. (4) LAUNCHED the first paper
+   run on the VPS - a CLEAN AR-049 cold-start against the real Kraken public feed (universe READY,
+   regimes classified, WS connected, keepalive cycling, no traceback). Full detail in the TB00767 SL.
 
-5. THE TB00768 MISSION (AUTONOMOUS) - mission 4(C) THE LIVE PROVIDER FEED + the periodic reconcile:
-
-   (C) WIRE make_live_providers (currently the sweep's LiveProviders are INJECTED as fakes -
-       test_sweep.py _providers). Build a make_live_providers factory that backs each plug-point with
-       the real live cache, so a running live organism assembles a real candidate (the mirror of the
-       TB00766 live-sweep capstone, now over real caches):
-         instrument(symbol)              -> the instrument cache (status / marginable / 24h-vol; the
-                                            24h vol is REST Ticker per REST-TKR-010, NOT the instrument
-                                            channel - DEFECT-SS-006).
-         bbo(symbol)                     -> the live ticker bbo cache (best_bid / best_ask; ar:AR-048).
-                                            NOTE this is the SAME bbo the TB00767 current_portfolio_usd
-                                            calls over the open same-side positions - wire it so an
-                                            open-position pair (event_trigger:bbo, WS-TKR-003) always
-                                            has a fresh quote; a missing quote raises ProviderNotReady.
-         expected_reward(symbol, regime) -> the DEC-124 CIATS run-to-reversal estimator.
-         mpp_abs_cap_pct(symbol, side)   -> the DEC-128 Q95 adverse-gap cap.
-         base_per_trade_size(...)        -> the CR-06 per-pair base order USD.
-         ws_state(symbol)                -> the G1 WS state-machine string.
-         cycle_parameters(side)          -> the per-module frozen contract:Parameter_Store_Snapshot.
-       READ FIRST: pipeline/sweep.py LiveProviders + ProviderNotReady; the instrument cache; the
-       ticker bbo cache; contract:Parameter_Store_Snapshot + build_cycle_parameters; the CIATS
-       estimator homes. LIKELY CODE-only (the providers READ the caches, they never invent a value).
-       Test over injected fakes (do NOT connect to Kraken for real).
-
-   (C-reconcile) THE PERIODIC TradeBalance RECONCILE (the TB00767 carry-forward): re-seed the
-       reconstructed SHORT running equity to the true REST-BAL-008 TradeBalance e on a periodic poll
-       (the WS-BAL-005 -> REST reconcile pattern; `e` cannot be polled per ticker tick). This bounds
-       the rollover-accrual estimate drift in current_portfolio_usd. Needs the REST poll scheduler /
-       a periodic tick; build deliberately (it feeds the loss-prevention breaker). The reconstruction
-       shipped in TB00767 is conservative (FN-safe) between reconciles, so this is a refinement, not a
-       gap.
-
-   ALTERNATIVES if a mission stalls on a ruling: any legacy Long-only / side-asymmetric artifact ->
-   correct to Long/Short on sight (STANDING).
+5. THE TB00768 MISSION (AUTONOMOUS, priority order)
+   (A) RUN DOWN THE ACK ODDITY (first - it muddies every run's log). The TB00767 startup log shows
+       SubscriptionAck(channel=None, success=False) frames interleaved 1:1 with the real success acks.
+       Almost certainly a non-ack frame (a heartbeat / the subscribe method-response / a status frame)
+       being misclassified by the ack parser into a SubscriptionAck with no channel + success=False.
+       HARMLESS to operation (data flows; pairs subscribed; keepalive ok) but: clean the logs +
+       guarantee nothing downstream acts on a phantom "failed" ack. READ the receive_loop / the ack
+       classifier (the SubscriptionAck emit path) + a real Kraken WS v2 subscribe-response vs heartbeat
+       frame shape; fix the classifier to only emit an ack for a genuine subscribe response; test over
+       a crafted frame stream (a heartbeat + a real ack -> ONE ack). CODE-only.
+   (B) REVIEW THE COLLECTED PAPER DATA (it ran across the gap): tail the log + read /root/tothbot_records
+       - did 5m sweeps fire on the candle closes? any paper entries/exits + TRADE_CLOSE records? any
+       gate-reject pattern (e.g. everything stuck at one gate)? ANY error/traceback over the window?
+       Each finding is a work item (fix or confirm-correct). This is the first real behavioral signal
+       from the organism - mine it.
+   (C) CONTINUE HARDENING TOWARD LIVE (after A/B): the live-deploy slice app/__main__.py HALTs on
+       TOTHBOT_MODE=live because build_system does not yet pass the private-WS edges (open_private_
+       socket + acquire_token) to assemble_operational - wire those through (the live private executions/
+       balances connection, PA-004 #1) + the periodic TradeBalance reconcile carry-forward (re-seed the
+       reconstructed SHORT running equity to the true `e`). LIVE needs real Kraken creds (env, never
+       hardcoded, rule:HR-LG-009/REST-KEY-004) - a Bill step. Do NOT connect live without Bill's go.
+   ALTERNATIVES if a mission stalls: any legacy Long-only / side-asymmetric artifact -> correct on sight.
 
 6. RULES RECAP
-   READ the 0500000 element first; build the diagram literal; CODE-only unless the diagram changes
-   (then DR-010 in Claude Code, bump 0500000 dv + 0521001 + the seed home if a NEW seed); test over
-   injected fakes (do NOT connect to Kraken for real); ASCII-only commits, no parens, no
-   Co-Authored-By; close standing (SL=this session 768, NSI+OCS=769); surface only a genuine new seed
-   value or architecture ruling in plain text.
+   READ the 0500000 element first; build the diagram literal; CODE-only unless the diagram changes (then
+   DR-010 in Claude Code, bump 0500000 dv + 0521001 + the seed home if a NEW seed); test over injected
+   fakes (the VPS run is the only thing that touches real Kraken, and only the PUBLIC paper feed); push
+   every commit + DR-010 verify; ASCII-only commits, no parens, no Co-Authored-By; close standing
+   (SL=session 768, NSI+OCS=769); surface only a genuine new seed value or architecture ruling, concise.
 
 ============================================================
 END TB00768 NSI

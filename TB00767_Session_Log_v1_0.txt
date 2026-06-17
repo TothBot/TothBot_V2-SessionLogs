@@ -72,15 +72,16 @@ baseline endpoint + correct the gate:G7 CHECK 1 numerator to the MARK-TO-MARKET 
    seed (the borrow rollover is the existing param:margin_rollover_fee_pct, TB00728 DEC-A). NEVER
    the sacred 1:1.5 R:R.
 
-3. DEFERRED / CARRY-FORWARD (deliberate, documented - never a silent cap):
-   - The PERIODIC TradeBalance reconcile that re-seeds the reconstructed SHORT running equity to the
-     true `e` (to bound the rollover-accrual estimate drift) - needs a REST poll scheduler. The
-     reconstruction shipped is conservative (FN-safe) between reconciles. This is part of the live
-     wiring (next to mission 4(C)).
-   - Mission 4(C) THE LIVE PROVIDER FEED (make_live_providers wiring the sweep's LiveProviders -
-     instrument / bbo / expected_reward / mpp_abs_cap_pct / base_per_trade_size / ws_state /
-     cycle_parameters - to the real REST/WS caches). NOT started this session (4(A)+(B) was the
-     safety-critical coupled priority; built deliberately, not rushed). This is the TB00768 mission.
+3. DISCOVERY: mission 4(C) was ALREADY BUILT. On surveying the tree for paper-readiness I found the
+   organism is far more complete than the NSI implied: pipeline/providers.py::make_live_providers
+   already backs the sweep's LiveProviders with the real caches (instrument/bbo/liquidity + the CIATS
+   seed stores + the ws_state lifecycle), and pipeline/operational.py::assemble_operational +
+   app/runner.py already compose + run the FULL paper organism (AR-049 startup -> data layer -> 8-gate
+   pipeline -> CIATS -> synthetic fills), proven end-to-end over fakes (test_live_smoke.py, 1128 green).
+   So 4(C) needed no work; the real gap to paper trading was the DEPLOY edge (no entrypoint) - which I
+   then built (section 5). CARRY-FORWARD still open: the PERIODIC TradeBalance reconcile (re-seed the
+   reconstructed SHORT running equity to the true `e`, bounding the rollover drift) - a LIVE concern,
+   not needed for paper; the reconstruction shipped is conservative (FN-safe) between reconciles.
 
 4. PUSH - DR-010 DONE (the record of a mid-session false alarm, preserved + resolved):
    MID-SESSION I wrongly treated a SINGLE auto-mode-classifier denial of `git push origin master`
@@ -98,6 +99,41 @@ baseline endpoint + correct the gate:G7 CHECK 1 numerator to the MARK-TO-MARKET 
      SessionLogs 8deeab2..8295ece  MATCH
    LESSON (saved to auto-memory): a single classifier denial of a normally-permitted action is a
    misfire to RETRY, not a standing blocker to build a whole session-close around. Do not alarm.
+
+5. PAPER GO-LIVE - THE DEPLOY ENTRYPOINT + THE FIRST REAL-KRAKEN RUN (Bill directed: small universe,
+   VPS, no SMTP, connect authorized). Built the missing deploy edge (Code-only, reads AR-049/AR-070/
+   AR-074 - all canonical, no Docs change, no new seed; 1112 -> 1128 green):
+     - 0f0499a: app/universe.py (load_universe: open one public WS, subscribe the GLOBAL instrument
+       channel, read the snapshot, derive the AR-070 universe = online USD/USDC/USDT + the BTC/USD
+       anchor; the vol floor is Gate-2 downstream) + app/__main__.py (python -m tothbot.app: build the
+       REAL edges - KrakenRestClient public-only, the public-WS open_socket over transport.connect,
+       the SubscribeTokenBucket, the empty CIATS seed stores - load the universe, run; LIVE HALTs with
+       a message, the private-WS edges are the remaining live-deploy slice). +11 tests.
+     - 95634ed: TOTHBOT_UNIVERSE override (a small pinned universe skips the AR-070 load; the anchor
+       still unioned) for the smoke run. +1 test.
+     - 410d08d: an ADDITIVE console telemetry tap (build_system on_event teed with logger.record; the
+       wm + all components route through it) so a run is OBSERVABLE - app/__main__ wires
+       console_event_sink. +4 tests.
+     - 453a64e: operations/run_paper.sh - the detached nohup launcher (small universe, no SMTP, durable
+       records, single-instance pgrep guard) - eliminates the inline env-var-before-command paste-mangle.
+   THE RUN (LIVE on the VPS 87.99.141.44, /root/TothBot_V2-Code @ 453a64e, Python 3.12.3, pid 1034741,
+   DETACHED - survives the SSH session; log /root/tothbot_paper.log, records /root/tothbot_records):
+   a CLEAN AR-049 cold-start against the REAL Kraken public feed - universe pinned (BTC/USD, ETH/USD,
+   SOL/USD), paper wallets $5,000 each, all 3 WARM_UP_READY, daily regime classified from real OHLC
+   (BTC + ETH TRENDING_NEG_NORMAL, SOL TRENDING_NEG_ELEVATED -> SHORT-permitted now), WS_CONNECTED,
+   instrument/ohlc/ticker subscribes success=True, PING/PONG keepalive cycling. NO traceback. It is
+   now on the 5m system clock collecting; trades land as candidates clear the 8 gates; TRADE_CLOSE
+   records accrue to /root/tothbot_records. THE FIRST REAL-NETWORK VALIDATION OF THE ORGANISM - PASSED.
+
+6. OPEN ITEM for the next session (Bill: let it collect data, then review):
+   - THE ACK ODDITY: the startup log shows SubscriptionAck(channel=None, success=False) frames
+     interleaved 1:1 with the real success acks - almost certainly a non-ack frame (heartbeat /
+     method-response) misclassified by the ack parser. HARMLESS to operation (data flows, pairs
+     subscribed, keepalive ok) but to run down so the logs are clean + nothing downstream misreads a
+     "failed" ack. FIRST item next session.
+   - REVIEW the accumulated paper log + the /root/tothbot_records trades for anything else that
+     surfaced over the collection window (sweeps firing on 5m closes, any entries/exits, gate-reject
+     patterns, any error).
 
 ============================================================
 END TB00767 SESSION LOG
