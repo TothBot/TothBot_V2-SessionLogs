@@ -1,0 +1,94 @@
+DocDCN:     TB00770
+DocTitle:   TB00770_Next_Session_Instructions
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00770_Next_Session_Instructions_v1_0.txt
+DocDate:    06-16-2026
+DocTime:    23:59:00 UTC
+
+============================================================
+TB00770 NEXT SESSION INSTRUCTIONS
+NEXT MISSION (AUTONOMOUS): review the collected VPS paper data, build the periodic TradeBalance
+reconcile carry-forward, then the live-deploy tail (real private edges) -- the last is GATED on Bill's
+Kraken creds + an explicit go. A PAPER ORGANISM is RUNNING (on the CURRENT cleanup build) on the VPS.
+============================================================
+
+0. NUMBERING NOTE (Bill ruling TB00745, standing)
+   SL = the session that runs THIS NSI (770); its NSI = 771; its OCS = 771. This file governs 770.
+
+1. ***A PAPER ORGANISM IS RUNNING ON THE VPS*** (Bill: let it collect data). At cold-load check it
+   FIRST (do not kill blindly). It is on the CURRENT build (b5065ac, the TB00769 cleanup) -- NO redeploy
+   is needed unless a new commit changes PAPER behaviour (mission C is live-only / paper-irrelevant):
+     ssh root@87.99.141.44 'pgrep -af python3 | grep -i toth; echo ---LOG---; tail -n 80 /root/tothbot_paper.log; echo ---TRADES---; cat /root/tothbot_records/* 2>/dev/null | wc -l'
+   GOTCHA: `pkill -f tothbot.app` matches its OWN ssh command line when the command string contains the
+   literal "tothbot.app" (drops the session, exit 255; false single-instance guard). KILL BY PID instead:
+   `PID=$(ssh ... "pgrep -af python3 | grep -i toth | awk '{print \$1}'"); ssh ... "kill $PID"`, then
+   launch with `bash /root/TothBot_V2-Code/operations/run_paper.sh` in a command line WITHOUT the literal.
+   SSH from the Windows box runs via the Claude Code `!` prefix (single line - no multi-line paste).
+
+2. STANDING DIRECTIVES (Bill - do not re-litigate)
+   - AUTO MODE / CONTINUOUS-RUN / BUILD THE ORGANISM / STOP STOPPING. Run across missions until
+     context runs LOW; never pause to ask "should I proceed". Session close (SL+NSI+OCS) is STANDING.
+   - LONG/SHORT PARADIGM IS STANDING: correct EVERY legacy Long-only / side-asymmetric artifact on
+     sight, autonomously.
+   - QUESTION-BOX BANNED (AskUserQuestion enrages Bill). Surface ONLY a genuine NEW seed value or a
+     genuine architecture ruling, in PLAIN CHAT TEXT. Concise - no verbose hedging.
+   - PUSH is long-standing PERMITTED (DR-010). A single classifier denial is a MISFIRE to RETRY,
+     NOT a standing blocker - do not alarm Bill.
+   - NEVER DISAPPEAR CONTENT: preserve a posed question + Bill's response VERBATIM, append resolutions.
+   - CIATS self-tuning: the coach SELF-forms / TESTS / routes. NEVER the sacred 1:1.5 R:R.
+
+3. COLD-LOAD FROM GITHUB HEAD AND VERIFY BEFORE WORKING
+   Load: TB00770 NSI (this) + TB00000 (v2_101) + the TB00769 Session Log. Auto-memory: phase2-build +
+   ohlc60m-derived-from-5m + long-short-paradigm-standing + ciats-self-tuning-directive + continuous-
+   run-directive + no-question-box-tool + session-close-standing + tothbot-commit-rules + never-
+   disappear-content + push-is-permitted.
+     Code HEAD        ea73def  - python.exe -m pytest -q expects 1143 green. Python =
+                      C:\Users\wstot\AppData\Local\Programs\Python\Python312\python.exe (FULL PATH ONLY;
+                      default PATH python is 3.10).
+     Docs HEAD        3ed9ec8  - 0500000 dv1_256 / 0521001 dv1_66.
+     SessionLogs HEAD <the TB00769 SL + TB00770 NSI/OCS push>.
+
+4. DONE TB00769 (autonomous): (A) REDEPLOYED the VPS onto the TB00768 fix then the cleanup -- FIRST
+   real-Kraken validation of the derived-1H path PASSED (ohlc_5m drives the fold; the refusals are now
+   correctly NAMED). (B) FINISHED the Opt 5 cleanup -- dropped the two Kraken-refused subscribes (status
+   auto-pushed, ohlc_60m derived), subscribe_count 11 -> 7, and WIRED the HTF_1H_GAP self-heal (new
+   evt:HTF_1H_HEAL: refetch GetOHLCData(60) -> re-seed HtfCache -> drive EC-L1A-001 on the healed EMAs).
+   Confirmed live: SUBSCRIPTION_REJECTED 4 -> 0. (C) WIRED the private-WS edges THROUGH build_system to
+   assemble_operational (a live cold-start now builds the PrivateConnection via the runner). Code 1139
+   -> 1143 green; 0500000 dv1_256 / 0521001 dv1_66; all pushed + DR-010 verified. Full detail in the
+   TB00769 SL.
+
+5. THE TB00770 MISSION (AUTONOMOUS, priority order)
+   (A) REVIEW THE COLLECTED VPS PAPER DATA: tail the log + read /root/tothbot_records over the window
+       since the redeploy -- look for sweeps, gate decisions, any TRADE_CLOSE, any HTF_1H_GAP /
+       HTF_1H_HEAL (the derived-1H path in action), and ANY traceback / error. Summarise the organism's
+       real-Kraken behaviour for Bill. (A clean, healthy run with no trades is the expected baseline; a
+       trade or a recurring gap is the interesting signal.)
+   (B) CARRY-FORWARD: the PERIODIC TradeBalance RECONCILE (deferred since TB00767). The SHORT drawdown
+       current_portfolio runs a reconstructed equity (collateral + open-short MTM - rollover) between
+       reconciles; `e` (REST-BAL-008 TradeBalance) cannot be polled per tick, so build a periodic REST
+       poll that RE-SEEDS the reconstructed SHORT running equity to the true `e` (bounds rollover drift).
+       Mirror the REST-BAL-008 capture-once path (private_ws FetchTradeBalance); the new piece is the
+       cadence (a poll scheduler) + the re-seed write. FN-safe today (conservative between reconciles),
+       so this is precision not safety. Likely a Docs touch if a new poll cadence/contract is named.
+   (C) THE LIVE-DEPLOY TAIL (build_system already forwards the edges, TB00769): construct the REAL
+       private edges in app/__main__ for live mode -- open_private_socket over the PRIVATE endpoint
+       (wss://ws-auth.kraken.com/v2, ConnectionRole.PRIVATE) + acquire_token via REST GetWebSocketsToken
+       + fetch_snap_orders (REST GetOpenOrders) + the balances_handler -- then flip the live HALT. This
+       NEEDS real Kraken API credentials in the environment (HR-LG-009 / REST-KEY-004, NEVER hardcoded)
+       and is a BILL STEP: do NOT connect live without Bill's creds + an explicit go. You MAY build the
+       edge CONSTRUCTORS (testable over fakes, no connection) and keep the live RUN gated behind creds
+       presence + Bill's go.
+   ALTERNATIVES if a mission stalls: any legacy Long-only / side-asymmetric artifact -> correct on sight.
+
+6. RULES RECAP
+   READ the 0500000 element first; build the diagram literal; CODE-only unless the diagram changes
+   (then DR-010 in Claude Code, bump 0500000 dv + 0521001 + the seed home if a NEW seed); test over
+   injected fakes (the VPS run is the only thing touching real Kraken, public paper feed only); push
+   every commit + DR-010 verify; ASCII-only commits, no parens, no Co-Authored-By; close standing
+   (SL=session 770, NSI+OCS=771); surface only a genuine new seed value or architecture ruling.
+
+============================================================
+END TB00770 NSI
+============================================================

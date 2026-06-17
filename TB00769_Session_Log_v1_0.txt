@@ -1,0 +1,97 @@
+DocDCN:     TB00769
+DocTitle:   TB00769_Session_Log
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00769_Session_Log_v1_0.txt
+DocDate:    06-16-2026
+DocTime:    23:59:00 UTC
+
+============================================================
+TB00769 SESSION LOG
+MISSION: redeploy the VPS paper organism onto the TB00768 1H-fix, finish the Opt 5 cleanup (drop the
+two Kraken-refused subscribes + wire the HTF_1H_GAP REST self-heal), then continue hardening toward live.
+OUTCOME: ALL THREE missions done, validated against real Kraken, pushed, DR-010 verified. The derived-1H
+path is confirmed live; the two refused subscribes are gone (SUBSCRIPTION_REJECTED 4 -> 0); the gap self-
+heal is wired (new evt:HTF_1H_HEAL); build_system now forwards the private-WS edges. Code 1139 -> 1143
+green; 0500000 dv1_255 -> dv1_256, 0521001 dv1_65 -> dv1_66; TB00000 stays v2_101.
+============================================================
+
+0. COLD-LOAD VERIFIED (before working)
+   Code HEAD        d9bb5bb  - python.exe -m pytest -q = 1139 green. CONFIRMED.
+   Docs HEAD        71423ec  - 0500000 dv1_255 / 0521001 dv1_65. CONFIRMED.
+   SessionLogs HEAD 86b0f3d  - TB00768 SL + TB00769 NSI/OCS. CONFIRMED.
+   VPS organism checked FIRST (not killed blindly): pid 1034741 alive on OLD 453a64e (frozen-1H defect),
+   WS connected, keepalive cycling, 0 records, no traceback.
+
+1. MISSION A -- REDEPLOY THE VPS ONTO THE FIX (done; FIRST real-Kraken validation of the derived-1H path)
+   git pull moved /root/TothBot_V2-Code to d9bb5bb (then b5065ac after the cleanup). Relaunched via
+   operations/run_paper.sh. The clean AR-049 cold-start held against the REAL Kraken public feed: 3 pairs
+   WARM_UP_READY, daily regimes classified (all TRENDING_NEG), WS_CONNECTED, ohlc_5m ACK'd all 3 pairs
+   (the ohlc_5m close now DRIVES the derived 1H fold), no traceback. CRUCIALLY the SUBSCRIPTION_REJECTED
+   frames now correctly NAME the refusals -- "Already subscribed to one ohlc interval on this symbol" x3
+   (ohlc_60m) + "Symbol(s) not found" x1 (status) -- instead of the old phantom channel=None acks. The
+   TB00768 fix behaves exactly as designed against real Kraken.
+   GOTCHA (recorded): `pkill -f tothbot.app` matches its OWN ssh command line whenever the remote command
+   string contains the literal "tothbot.app" -> it drops the session (exit 255) and the run_paper.sh
+   single-instance guard false-positives on the ssh shell. Fix: kill by PID via
+   `pgrep -af python3 | grep -i toth`, and launch in a command line that does not contain the literal.
+
+2. MISSION B -- THE Opt 5 CLEANUP (done; Code b5065ac, Docs 3ed9ec8)
+   CODE (1139 -> 1141 green):
+     - exchange/sharding.py: GLOBAL_CHANNELS drops PublicChannel.STATUS (-> instrument only);
+       PER_PAIR_CHANNELS drops PublicChannel.OHLC_60M (-> ohlc_5m + ticker). Docstrings record the
+       Kraken refusals + the derived feed. subscribe_count for 3 pairs 11 -> 7 (globals 2->1, per-pair
+       3->2). Confirmed receive_loop._handle_status still adopts connection_id + maintenance from the
+       AUTO-pushed status frame BEFORE the dispatch-registered check -- status needs no subscribe/handler.
+     - exchange/ohlc_aggregate.py: NEW evt:HTF_1H_HEAL (Htf1hHealed) -- the successful self-heal.
+     - pipeline/live_driver.py: LiveSweepDriver gains htf_rest_client; the Htf1hGap branch now awaits
+       _heal_htf -- one targeted REST GetOHLCData(60) -> RE-SEED HtfCache close_1h + EMA(20)/EMA(50)
+       (reuse warmup ema(), the REST 1H series is authoritative, it already folds in the dropped hour)
+       -> emit HTF_1H_HEAL -> drive EC-L1A-001 once on the healed EMAs (a reversal the gap would have
+       hidden still fires, FN->0). A REST failure / no client wired = bounded resume on the next complete
+       hour (the gap was already logged).
+     - pipeline/operational.py: wires the existing rest_client into the driver.
+     - Tests: the self-heal re-seeds + HEAL event + reversal drive, and the no-client path records gap
+       but no heal (test_live_driver); subscribe-count 11->7 + the channel lists (test_sharding/
+       test_assembler); test_live_smoke gap filter also excludes HTF_1H_HEAL.
+   DOCS DR-010 (0500000 dv1_255 -> dv1_256, 0521001 dv1_65 -> dv1_66; text-only, tag classes unchanged
+   g 217 / text 957 / desc 126 / svg 10 / title 126 / figcaption 10; no residual dv1_255):
+     - container:Public_WS_v2 q1_do: WS_Manager SUBSCRIBES only instrument (GLOBAL) + ohlc_5m + ticker
+       (PER-PAIR); status AUTO-PUSHED; the 1H feed DERIVED; ohlc_60m NOT subscribed.
+     - Image1 SHARD ASSIGNMENT visual: the shard-0 status row "global -- AR-038 startup" ->
+       "global -- AUTO-PUSHED not subscribed".
+     - gate:G4 q1_do: the channel:kraken_ws_ohlc_60m clause gains the derived-feed note.
+     - ar:AR-045 derived-1H block: the HTF_1H_GAP sentence gains the WIRED self-heal -> HTF_1H_HEAL.
+     - NOTE: the external container:Kraken_Zone KEEPS ohlc_60m + status in produces (Kraken's CAPABILITY,
+       not the TothBot subscribe set) -- only the TothBot-side sites changed.
+   REDEPLOY OF THE CLEANUP CONFIRMED LIVE: SUBSCRIPTION_REJECTED 4 -> 0, SUBSCRIPTION_ACK 7, batch
+   subscribe_count 11 -> 7, WS_CONNECTED with a connection_id (status STILL adopted from the auto-pushed
+   frame -- proves no subscribe needed), 3 WARM_UP_READY, 0 tracebacks.
+
+3. MISSION C -- LIVE HARDENING, the private-WS-edge passthrough (done; Code ea73def, code-only)
+   build_system (app/runner.py) gains open_private_socket / acquire_token / fetch_snap_orders /
+   balances_handler and FORWARDS them straight to assemble_operational -- closing the exact gap the
+   TB00769 NSI named ("build_system does not yet pass the private-WS edges"). A LIVE cold-start now
+   builds the PrivateConnection THROUGH the runner composition root (not only the direct assemble_
+   operational call). app/__main__ still HALTs on TOTHBOT_MODE=live, message updated to the new boundary
+   -- the only remaining slice is THIS entrypoint constructing the REAL private socket
+   (wss://ws-auth.kraken.com/v2) + a REST GetWebSocketsToken, which need real Kraken creds (env,
+   HR-LG-009 / REST-KEY-004, NEVER hardcoded) + an explicit Bill go. DID NOT connect live.
+   Tests (1141 -> 1143 green): a LIVE build forwards the edges and issues the executions subscribe with
+   the token; a no-edges LIVE build raises the wiring guard (test_runner). Code-only -- the private-WS
+   architecture (PA-004 div #1) is already in 0500000, no diagram change.
+
+4. STATE AT CLOSE
+   Code        ea73def  - 1143 green (1139 -> 1141 cleanup -> 1143 live edges). local == origin.
+   Docs        3ed9ec8  - 0500000 dv1_256 / 0521001 dv1_66. local == origin.
+   SessionLogs (this commit) - TB00769 SL + TB00770 NSI/OCS.
+   VPS         pid 1036988 alive on b5065ac (the cleanup build), 0 records (no trades yet, expected).
+               LEFT RUNNING -- mission C is live-only / paper-irrelevant, so NOT restarted (preserves
+               Bill's data collection). Redeploy is only needed when a future commit changes paper behavior.
+   TB00000 stays v2_101. NO new seed (the cleanup is efficiency; the self-heal reuses the warm-up
+   GetOHLCData(60) + ema() math; HTF_1H_HEAL fires on the structural HTF_1H_GAP shortfall). NO pending
+   Bill ruling (the live-connect go is the only gated item, deferred to TB00770 mission C).
+
+============================================================
+END TB00769 SL
+============================================================
