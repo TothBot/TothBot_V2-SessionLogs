@@ -1,0 +1,96 @@
+DocDCN:     TB00769
+DocTitle:   TB00769_Next_Session_Instructions
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00769_Next_Session_Instructions_v1_0.txt
+DocDate:    06-16-2026
+DocTime:    23:55:00 UTC
+
+============================================================
+TB00769 NEXT SESSION INSTRUCTIONS
+NEXT MISSION (AUTONOMOUS): redeploy the paper organism onto the 1H-fix build, then finish the Opt 5
+cleanup (drop the superseded ohlc_60m + status subscribes; wire the HTF_1H_GAP REST self-heal), then
+continue hardening toward live - a PAPER ORGANISM is RUNNING (on OLD code) on the VPS.
+============================================================
+
+0. NUMBERING NOTE (Bill ruling TB00745, standing)
+   SL = the session that runs THIS NSI (769); its NSI = 770; its OCS = 770. This file governs 769.
+
+1. ***A PAPER ORGANISM IS RUNNING ON THE VPS*** (Bill: let it collect data). At cold-load check it
+   FIRST (do not kill blindly):
+     ssh root@87.99.141.44 'pgrep -af tothbot.app; echo ---LOG---; tail -n 80 /root/tothbot_paper.log; echo ---TRADES---; cat /root/tothbot_records/* 2>/dev/null | wc -l'
+   IMPORTANT: it is running OLD code (453a64e) which has the FROZEN-1H defect (no derived-1H fix).
+   TB00768 fixed it in Code d9bb5bb. RECOMMENDED FIRST ACTION this session: redeploy onto the fix --
+     ssh root@87.99.141.44 'cd /root/TothBot_V2-Code && git pull && pkill -f tothbot.app; sleep 2; bash operations/run_paper.sh'
+   (run_paper.sh is the detached nohup launcher; single-instance pgrep guard; universe BTC/USD,ETH/USD,
+   SOL/USD; log /root/tothbot_paper.log; records /root/tothbot_records; paper, no creds/SMTP). SSH from
+   the Windows box runs via the Claude Code `!` prefix (single line - no multi-line paste; use the
+   script). Then confirm a CLEAN AR-049 cold-start (READY pairs, WS connected, no traceback) and that
+   the SUBSCRIPTION_REJECTED frames now name the refusals instead of phantom acks.
+
+2. STANDING DIRECTIVES (Bill - do not re-litigate)
+   - AUTO MODE / CONTINUOUS-RUN / BUILD THE ORGANISM / STOP STOPPING. Run across missions until
+     context runs LOW; never pause to ask "should I proceed". Session close (SL+NSI+OCS) is STANDING.
+   - LONG/SHORT PARADIGM IS STANDING: correct EVERY legacy Long-only / side-asymmetric artifact on
+     sight, autonomously.
+   - QUESTION-BOX BANNED (AskUserQuestion enrages Bill). Surface ONLY a genuine NEW seed value or a
+     genuine architecture ruling, in PLAIN CHAT TEXT. Concise - no verbose hedging.
+   - PUSH is long-standing PERMITTED (DR-010). A single classifier denial is a MISFIRE to RETRY,
+     NOT a standing blocker - do not alarm Bill.
+   - NEVER DISAPPEAR CONTENT: preserve a posed question + Bill's response VERBATIM, append resolutions.
+   - CIATS self-tuning: the coach SELF-forms / TESTS / routes. NEVER the sacred 1:1.5 R:R.
+
+3. COLD-LOAD FROM GITHUB HEAD AND VERIFY BEFORE WORKING
+   Load: TB00769 NSI (this) + TB00000 (v2_101) + the TB00768 Session Log. Auto-memory: phase2-build +
+   ohlc60m-derived-from-5m + long-short-paradigm-standing + ciats-self-tuning-directive + continuous-
+   run-directive + no-question-box-tool + session-close-standing + tothbot-commit-rules + never-
+   disappear-content + push-is-permitted.
+     Code HEAD        d9bb5bb  - python.exe -m pytest -q expects 1139 green. Python =
+                      C:\Users\wstot\AppData\Local\Programs\Python\Python312\python.exe (FULL PATH ONLY;
+                      default PATH python is 3.10).
+     Docs HEAD        71423ec  - 0500000 dv1_255 / 0521001 dv1_65.
+     SessionLogs HEAD <the TB00768 SL + TB00769 NSI/OCS push>.
+
+4. DONE TB00768 (autonomous): captured Kraken's REAL subscribe responses -> the "ack oddity" was the
+   symptom of a SAFETY-CRITICAL defect: Kraken WS v2 refuses a 2nd ohlc interval per symbol per
+   connection, so the ohlc_60m subscribe is REJECTED and the 1H HtfCache FREEZES (EC-L1A-001 1H
+   reversal dead) - a structural FALSE NEGATIVE. Bill ordered an FP/DP analysis; the determination
+   (Opt 5, outside the options) was BUILT: DERIVE the live 1H feed by folding the 5m stream
+   (mod:OhlcAggregator, exact lossless twelve-candle fold, eager-emit on the twelfth close,
+   completeness-gated, HTF_1H_GAP for the REST self-heal). receive_loop now emits SUBSCRIPTION_REJECTED
+   for a refused subscribe (not a phantom ack). 1128 -> 1139 green. Full detail in the TB00768 SL.
+
+5. THE TB00769 MISSION (AUTONOMOUS, priority order)
+   (A) REDEPLOY the VPS organism onto d9bb5bb (section 1) and confirm the clean cold-start + the
+       derived-1H path. This is the FIRST behavioral validation of the 1H fix against real Kraken.
+   (B) FINISH the Opt 5 cleanup (a clean code+diagram DR-010, deferred from TB00768):
+       - DROP PublicChannel.OHLC_60M from sharding PER_PAIR_CHANNELS (the derived feed supersedes the
+         refused WS subscription) and DROP PublicChannel.STATUS from GLOBAL_CHANNELS (Kraken auto-
+         pushes status; the explicit subscribe is refused "Symbol(s) not found"). Update the
+         subscribe-count assertions (test_sharding ~lines 40-43/114-119/151-156, test_assembler
+         ~67-71/131/156/173: 3 per-pair channels -> 2; subscribe_count 11 -> 8 for 3 pairs). Confirm
+         the status auto-push still feeds connection_id + maintenance with STATUS unregistered (the
+         receive_loop _handle_status adopts those BEFORE the dispatch-registered check). Then update
+         0500000 (the GLOBAL/PER_PAIR channel lists + the consumes/produces ohlc_60m/status mentions)
+         + 0521001, bump dv, push both, DR-010 verify.
+       - WIRE the HTF_1H_GAP -> REST GetOHLCData(60) SELF-HEAL (the gap is recorded today; the auto-
+         refetch of the HtfCache for the gapped pair is the next step). The REST client + warm-up
+         seed math already exist (warmup.py HtfCache + ema()); reuse them.
+   (C) CONTINUE HARDENING TOWARD LIVE: app/__main__.py HALTs on TOTHBOT_MODE=live because build_system
+       does not yet pass the private-WS edges (open_private_socket + acquire_token) to assemble_
+       operational - wire those through (PA-004 #1) + the periodic TradeBalance reconcile carry-forward
+       (re-seed the reconstructed SHORT running equity to the true e, mirrors REST-BAL-008). LIVE needs
+       real Kraken creds (env, never hardcoded, rule:HR-LG-009/REST-KEY-004) - a Bill step. Do NOT
+       connect live without Bill's go.
+   ALTERNATIVES if a mission stalls: any legacy Long-only / side-asymmetric artifact -> correct on sight.
+
+6. RULES RECAP
+   READ the 0500000 element first; build the diagram literal; CODE-only unless the diagram changes
+   (then DR-010 in Claude Code, bump 0500000 dv + 0521001 + the seed home if a NEW seed); test over
+   injected fakes (the VPS run is the only thing touching real Kraken, public paper feed only); push
+   every commit + DR-010 verify; ASCII-only commits, no parens, no Co-Authored-By; close standing
+   (SL=session 769, NSI+OCS=770); surface only a genuine new seed value or architecture ruling.
+
+============================================================
+END TB00769 NSI
+============================================================

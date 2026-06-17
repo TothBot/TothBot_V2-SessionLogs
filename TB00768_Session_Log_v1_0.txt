@@ -1,0 +1,93 @@
+DocDCN:     TB00768
+DocTitle:   TB00768_Session_Log
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00768_Session_Log_v1_0.txt
+DocDate:    06-16-2026
+DocTime:    23:55:00 UTC
+
+============================================================
+TB00768 SESSION LOG
+MISSION: review the LIVE paper run, run down the SubscriptionAck oddity, harden toward live.
+OUTCOME: the ACK oddity was the symptom of a SAFETY-CRITICAL defect the live run exposed -- Kraken
+WS v2 refuses a 2nd ohlc interval per connection, FREEZING the 1H HtfCache (EC-L1A-001 dead). Bill
+ordered an FP/DP analysis; the determination (Opt 5) was BUILT: derive the live 1H feed by folding
+the 5m stream. Code + DR-010 landed, both repos pushed, 1139 green.
+============================================================
+
+0. COLD-LOAD VERIFIED (before working)
+   Code HEAD        453a64e  - python.exe -m pytest -q = 1128 green. CONFIRMED.
+   Docs HEAD        a31a271  - 0500000 dv1_254 / 0521001 dv1_64. CONFIRMED.
+   SessionLogs HEAD 2f006fc  - TB00767 SL + TB00768 NSI/OCS. CONFIRMED.
+   VPS organism checked FIRST (not restarted): pid 1034741 alive ~44 min, WS connected, keepalive
+   cycling, universe READY, 0 trades, /root/tothbot_records empty, no traceback.
+
+1. MISSION A -- THE ACK ODDITY, RUN DOWN TO GROUND TRUTH (done; it was a real-defect symptom)
+   The startup log showed SubscriptionAck(channel=None, success=False) frames interleaved 1:1 with
+   real acks. I did NOT guess -- I captured Kraken's REAL subscribe responses on the VPS (a throwaway
+   /root/capture_acks.py replaying the exact subscribe sequence against the public feed). Ground truth:
+   the 4 phantoms are TWO genuine Kraken REJECTIONS (success:false, error string, NO result):
+     (a) ohlc 60m  -> "Already subscribed to one ohlc interval on this symbol" (one per pair, x3).
+                      Kraken WS v2 allows only ONE ohlc interval per symbol PER CONNECTION.
+     (b) status    -> "Symbol(s) not found". Kraken AUTO-pushes status on connect; the explicit
+                      subscribe is a refused no-op (connection_id + maintenance still arrive).
+
+2. THE DEFECT (a) EXPOSED -- a STRUCTURAL FALSE NEGATIVE (mission B's real finding)
+   The design (Image1 / sharding PER_PAIR_CHANNELS) subscribed ohlc_5m AND ohlc_60m on the same
+   per-shard connection. Kraken REFUSES the 60m. The 1H HtfCache is REST-seeded at warm-up but only
+   LIVE WS 60m closes ADVANCE it (live_driver.on_ohlc_60m) -> the cache FREEZES, and the EC-L1A-001
+   1H reversal exit (+ G4 HTF confirmation) can NEVER fire live. Same failure class as the TB00766
+   FP/DP ruling: a loss-prevention layer blind to the truth it watches. Degrades over hours; the
+   paper run had 0 trades so nothing was harmed, but it would silently fail in live.
+
+3. BILL'S DIRECTIVE: FP/DP ANALYSIS to pick the best fix, even outside the 3 options I presented.
+   Delivered (asymmetric expected-loss / reliability-fault-tree / lossless-reconstruction / rate-
+   limit-scaling / statistical-dominance). DETERMINATION = Opt 5 (outside the options): DERIVE the
+   1H candle by folding the 5m stream. A 1H candle IS the exact lossless fold of its twelve
+   contiguous 5m candles, so it DOMINATES a dedicated 60m connection (more reconnect surface = more
+   FN windows) and a REST poll (staleness = poll interval) on BOTH accuracy (FN/FP) and cost.
+
+4. WHAT WAS BUILT (Opt 5; Code d9bb5bb, 1128 -> 1139 green)
+   - exchange/ohlc_aggregate.py: NEW pure mod:OhlcAggregator. Folds closed 5m CommittedCandles ->
+     the exact 1H candle (open=first, close=last, high=max, low=min, volume=sum). EAGER-emits on the
+     twelfth (:55->:00) contiguous close = NATIVE 1H timing, zero added latency. COMPLETENESS-GATED
+     (emit only at twelve interval_begin-contiguous slots: HR-WM-012 never-act-on-partial, FP->0);
+     an hour-aligned shortfall (a reconnect dropped 5m closes) -> Htf1hGap for REST self-heal (FN->0);
+     an expected mid-hour partial -> discarded. 8 unit tests.
+   - pipeline/live_driver.py: on_ohlc_5m folds each closed 5m candle; a complete hour advances the
+     SAME HtfCache + EC-L1A-001 path via the EXTRACTED _step_htf (shared with the retained frame-
+     driven on_ohlc_60m); an hour-aligned gap is recorded evt:HTF_1H_GAP. 2 new tests (derived-1H
+     advance + drive; the gap signal).
+   - exchange/receive_loop.py: a refused subscribe (success:false, no result) now emits a distinct
+     evt:SUBSCRIPTION_REJECTED carrying Kraken's error string -- NOT a phantom channel=None ack; it
+     never arms silent-pair. 1 new test. (This cleans the logs + surfaces every Kraken refusal.)
+   - one smoke test (the day-spaced monthly-clock fixture) updated to tolerate the aggregator's
+     expected feed-gap observability (it is orthogonal to the monthly-pull capture under test).
+
+5. THE DR-010 (Docs 71423ec; 0500000 dv1_254 -> dv1_255 / 0521001 dv1_64 -> dv1_65)
+   The HTF-cache SOURCE wire facts corrected to the derived feed: the Gate-4 1H-EMA pre-compute row,
+   the Gate-4 prose, the Diagram-2 visual text, ar:AR-045 (gains the mod:OhlcAggregator + Kraken-
+   limit + HTF_1H_GAP + SUBSCRIPTION_REJECTED wire fact), ar:AR-062 EC-L1A-001 (check on every
+   DERIVED 1H close). HTML tag-balanced unchanged (g 217 / text 957 / desc 126 / svg 10 / title 126
+   / figcaption 10; text-only edits). No figure R bump (prose/visual-text only). NO new seed (the
+   twelve-fold + gate are structural, 3600/300). TB00000 stays v2_101.
+
+6. PUSHED + DR-010 VERIFIED (local == origin both repos)
+   Code        d9bb5bb  (1139 green)
+   Docs        71423ec  (0500000 dv1_255 / 0521001 dv1_65)
+   SessionLogs <this SL + TB00769 NSI/OCS push>
+
+7. DEFERRED (a clean code+diagram follow-up, NOT urgent -- see TB00769 NSI)
+   DROP the now-superseded ohlc_60m subscribe from sharding PER_PAIR_CHANNELS + the refused status
+   subscribe from GLOBAL_CHANNELS. Pure efficiency cleanup: the derived feed already supersedes
+   ohlc_60m and both refusals are now surfaced as SUBSCRIPTION_REJECTED. Plus the REST GetOHLCData(60)
+   HTF_1H_GAP self-heal wiring (the gap is recorded today; the auto-refetch is the next step). Plus
+   mission C live-hardening (the private-WS edges) which still awaits Bill's creds.
+
+8. THE VPS ORGANISM was left RUNNING on the OLD code (453a64e) -- it does NOT have the 1H fix. Per
+   Bill's standing "do not restart blindly" I did not redeploy. RECOMMENDED next session: restart
+   onto d9bb5bb (pkill -f tothbot.app; bash operations/run_paper.sh) to exercise the derived-1H path.
+
+============================================================
+END TB00768 SESSION LOG
+============================================================
