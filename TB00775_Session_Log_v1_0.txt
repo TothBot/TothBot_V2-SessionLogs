@@ -1,0 +1,81 @@
+DocDCN:     TB00775
+DocTitle:   TB00775_Session_Log
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00775_Session_Log_v1_0.txt
+DocDate:    06-17-2026
+DocTime:    23:30:00 UTC
+
+============================================================
+TB00775 SESSION LOG  (THE PROFITABILITY HUNT)
+MISSION: Bill drove a chain - find where the stops must be; FP/DP it; pressure-test; keep the universe
+open; "How do we achieve 1:1.5 R:R or better?"; build #1-B + the risk fix; set up an automated search.
+Bill's correction mid-session: TothBot CAN be profitable (people do, with these tools) - we have the
+wrong COMBINATION; let the data lead, do not restrict to current tools.
+OUTCOME: #1-B (5m persistence) BUILT + DEPLOYED (corpus accruing). A rigorous nested-validated strategy
+search PROVED daily mechanical tool-combos do NOT clear 1:1.5 R:R out-of-sample (8 IS winners, 0 OOS
+survivors - I caught my own overfit trap). Built (not deployed) the automated server-side search runner.
+The risk fix is PAUSED on 2 Bill design decisions. Deep research NOT YET started. Code cd749da->5dc449d,
+1189->1194 green. No Docs change. TB00000 v2_101. Session ended by Bill ("Stop / end the session, pick up
+in a new session with full context").
+============================================================
+
+1. #1-B - DURABLE 5m-STREAM PERSISTENCE  [Code e78a035, 1189->1194 green, DEPLOYED]
+   new recorder/ohlc_record_file.py PermanentOhlc5mSink (append-only os.open O_APPEND|O_CREAT, fsync-per-
+   write, JSONL ohlc5m_<YYYY> segmented by the CANDLE's own UTC year, write-fail caught never raised;
+   mirrors trade_record_file). Wired LiveSweepDriver.on_committed_5m (called once per genuinely-new closed
+   5m candle - the step-guard dedups the re-emitted seed) + assemble_operational builds it from records_dir.
+   +5 tests. VPS redeployed on e78a035 (sourcing /root/.tothbot.env); the 5m corpus is now ACCRUING at
+   /root/tothbot_records/ohlc5m_2026.jsonl - the ONLY way past Kraken's ~720-bar / ~2.5-day OHLC cap, so a
+   DEEP realized backtest on the INTENDED 5m timeframe becomes possible as it fills.
+
+2. THE STOP/EXIT FP-DP SAGA  [scripts/, daily 2yr, 32 pairs, reuses production units; committed for provenance]
+   - stop_optimization v1: the run-to-reversal reward vs tight-5m-stop timeframe mismatch (the gate admits a
+     DAILY-horizon reward, the 5m MAE stop fires on intraday noise first).
+   - v2 HARDENED (walk-forward OOS + block-bootstrap + E/DAY time-normalization + margin rollover +
+     outliers): the tight 5m stop is STATISTICALLY losing (CI<0); wide-stop+fast-TP only reaches BREAK-EVEN
+     (CI spans 0); the edge is SHORT-only + regime-dependent (a bearish sample).
+   - v3 regime-conditioned: the elegant "trade WITH the BTC macro tide" hypothesis was REFUTED by the data
+     (it did not help; the pattern was counterintuitive + small-n).
+
+3. THE STRATEGY-COMBINATION SEARCH - THE DECISIVE NEGATIVE  [scripts/tb00775_strategy_search.py]
+   Bill's correction reframed the work: stop tuning ONE config; SEARCH the tool space. 9 entry signals
+   (rsi_meanrev / rsi_trend / ema_cross / macd / bb_break / bb_revert / donchian / momentum / rs_btc) x 4
+   filters (none / trend100 / vol / btc_tide) x 14 exits (the stop x target grid + the CHANDELIER TRAILING
+   stop) = 525 combos. NON-OVERLAPPING position management (I caught + fixed a fee-multiplication artifact -
+   a new trade every signal-true bar). NESTED validation: SELECT goal-meeters (E>0 AND realized R:R>=1.5) on
+   the in-sample half, then report ONLY those that SURVIVE on the truly UNTOUCHED out-of-sample half.
+   RESULT: an exciting "6 combos meet the goal" appeared when selecting ON the test set (the overfit trap);
+   under proper nested validation = 8 in-sample goal-meeters, and 0 SURVIVE OOS (all flip negative; npairs=32
+   so it is TIME-period overfit, not pair concentration). CONCLUSION: NO combination of mechanical DAILY
+   indicator tools yields a robust 1:1.5-R:R positive-expectancy edge out-of-sample on this universe. This
+   does NOT contradict Bill - it NARROWS the hunt: the edge must be INTRADAY (5m, the intended timeframe,
+   untestable on daily) or NON-OHLC (microstructure / funding / order-flow). I reported the rigorous negative
+   rather than the overfit fake-win - the discipline stopped a curve-fit deploy.
+
+4. AUTOMATED SEARCH RUNNER - BUILT, NOT DEPLOYED  [operations/auto_strategy_search.py, Code 5dc449d]
+   The standing hunt Bill asked for: a cron-able server-side runner that each run sweeps the GROWING 5m
+   corpus PLUS fresh Kraken 1h/4h/1d, runs the SAME nested-validated search, writes records_dir/strategy_
+   search_report.txt, and EMAILs (same SMTP) ONLY OOS survivors (subject flags them loudly) - so it can
+   never oversell an overfit win; thin data -> "ACCUMULATING/ETA". NOT yet deployed/cronned/smoke-tested
+   (Bill said stop) - that is TB00776 task 1.
+
+5. STILL OPEN
+   - THE RISK FIX is PAUSED on 2 Bill DESIGN DECISIONS (WHAT-level, surfaced): (a) reverse ratified DEC-124
+     to allow a fast take-profit? (b) re-anchor the SACRED-FLOOR net_loss to DAILY ATR (the 1.5 floor stays,
+     only its ATR UNIT changes 5m->daily)? Daily ATR IS available at entry (RegimeClassification.atr_14).
+     Now framed as "stop the proven bleed" INSURANCE, NOT the profit lever (the search proved exits alone
+     don't make money). Needs the diagram-first discipline (author Image3/Image9 + the DEC amendment first).
+   - THE DEEP RESEARCH Bill ordered ("research profitable trading strategies while the test runs, to broaden
+     scope; the real question is how to achieve 1:1.5 R:R") - NOT YET STARTED (use the deep-research skill).
+
+ARTIFACTS THIS SESSION
+   Code (TothBot_V2-Code, master): cd749da -> e78a035 (#1-B + tests, 1194 green) -> 5dc449d (search engine +
+     auto runner, tools). VPS redeployed on e78a035 (5m corpus accruing).
+   Docs (TothBot_V2-Docs, master): UNCHANGED at a1c45f9.
+   SessionLogs (this commit): TB00775 SL + TB00776 NSI + TB00776 OCS.
+   TB00000 stays v2_101.
+
+============================================================
+END TB00775 SESSION LOG
+============================================================
