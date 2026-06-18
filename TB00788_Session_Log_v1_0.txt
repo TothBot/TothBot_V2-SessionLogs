@@ -1,0 +1,74 @@
+DocDCN:     TB00788
+DocTitle:   TB00788_Session_Log
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00788_Session_Log_v1_0.txt
+DocDate:    06-18-2026
+DocTime:    14:30:00 UTC
+
+============================================================
+TB00787-788 SESSION LOG  (THE LONG-ONLY BUILD BEGINS - DIAGRAM-FIRST, TWO CLEAN SLICES)
+NOTE: TB00787 and TB00788 ran in ONE continuous session executing the TB00787 OCS. The TB00780-786 arc
+delivered the validated, stress-tested LONG-ONLY edge; THIS session began BUILDING it into the organism.
+Per-step detail lives in the Code commit messages (2d8a610, 12cb63f) + the 0521001 OP RECORDS (dv1_259,
+dv1_260). TB00000 stays v2_101.
+============================================================
+
+SESSION SUMMARY. Opened the build of the validated long-only strategy (liquid USD/USDC/USDT, 24h decision
+bars, LONG-ONLY, fixed ~$50 notional, entry = EMA12/26 bullish cross on 24h, exit = EMA12/26 reversal OR a
+wide ~2.5x ATR disaster stop, no take-profit). Scoped TWO clean, foundational, NON-BREAKING slices,
+diagram-first each. Code 1194 -> 1209 green throughout; the live 5m/1H trading path is BYTE-UNCHANGED (zero
+regression). All four commits (2 Code, 2 Docs) pushed to master + DR-010 verified.
+
+VPS CHECK (first action). The 49/50-pair paper run is HEALTHY (pid 1052343), auto-search cron healthy (the
+06-18 06:01 UTC run found 3 REGIME-ROBUST 1h survivors, emailed). It STILL runs the OLD short strategy:
+5 live SHORTs observed, ALL stopped out negative (MAE_THRESHOLD_BREACH, actual_rr -1 to -3) - the known
+tight-MAE-stop bleed the build replaces. The build is paper/code-only this session; NOT yet deployed.
+
+KEY STEPS
+ TB00787 (Code 2d8a610; Docs 0500000 dv1_258->dv1_259, 0521001 dv1_68->dv1_69): the 24h DERIVE layer.
+   mod:OhlcAggregator gains a SECOND fold stage (fold_hour) folding the twenty-four contiguous hour-aligned
+   1H closes (each the TB00768 5m fold) that partition a UTC day into one exact 24h DECISION candle
+   (open=first/close=last/high=max/low=min/volume=sum, lossless = Kraken's native 1440 when complete).
+   EAGER-emitted on the 00:00-UTC 1H close, COMPLETENESS-GATED on 24 day-aligned slots (HR-WM-012, FP->0),
+   a day-aligned shortfall -> evt:HTF_24H_GAP self-healed by one REST GetOHLCData(1440) (the mirror of the
+   TB00769 1H heal). FP/DP: fold 1H->24h (reuse the validated fold + its self-heal + natural 00:00-UTC
+   alignment) DOMINATES a fresh 5m->24h fold or a REST 1440 poll. Structural mirror of the 1H fold one
+   timeframe up; the 1H path is byte-unchanged. +9 tests incl a 5m->1H->24h end-to-end chain over 288
+   contiguous 5m closes. Diagram: AR-045 second-fold paragraph + the pre-compute cache row (prose-only).
+ TB00788 (Code 12cb63f; Docs 0500000 dv1_259->dv1_260, 0521001 dv1_69->dv1_70): the DAILY DECISION CACHE.
+   New tothbot/exchange/daily_decision.py DailyDecisionCache: per-pair close_24h + EMA(12)/EMA(26) on the
+   daily closes + ATR(14) on the daily bars (the wide-stop basis) - the daily analog of the 1H HtfCache.
+   FP/DP RESOLVED (the seed source): SEED + gap-heal from the SAME GetOHLCData(1440) series mod:Regime_
+   Engine ALREADY fetches per pair (a SECOND consumer, NOT a third per-pair warm-up call - so AR-049 step 8
+   "1440 is NOT part of the per-pair warm-up" STANDS, zero added REST, one authoritative series, natural
+   00:00-UTC alignment). ADVANCE incrementally on each live Closed24H (the standard EMA step matching the
+   AR-044 HtfCache advance + the Wilder ATR step). PROVEN: one advance is Decimal-IDENTICAL to a fresh
+   re-seed over the extended series, so the live cache NEVER drifts from a Htf24hGap REST 1440 re-seed.
+   Cache + seed + advance are PURE + fully tested (+6 tests incl the incrementality invariant).
+
+NEW CIATS SEEDS (flagged for the TB00000 v2_101 seed registry; NOT yet entered there). All CIATS-owned;
+only the net 1:1.5 R:R floor stays hardcoded:
+   param:decision_bar_interval_min = 1440   (the decision cadence; TB00787)
+   param:decision_ema_fast        = 12      (24h-series entry/exit fast EMA; TB00788)
+   param:decision_ema_slow        = 26      (24h-series entry/exit slow EMA; TB00788)
+   param:decision_atr_period      = 14      (24h-series ATR for the wide stop; TB00788)
+   (still pending with its consuming slice: param:decision_atr_stop_mult ~2.5 = the wide disaster stop.)
+
+WHAT IS NOT DONE (the build is deliberately incremental; each slice is pure + non-breaking, no dead rail in
+the live hot path until its consumer lands):
+ - The live wire-in (live_driver feeding Closed1H -> fold_hour, advancing the DailyDecisionCache) is NOT
+   done - it lands WITH its entry/exit consumer next slice.
+ - The LONG-ONLY ENTRY (EMA12/26 bullish cross on the 24h close, replacing the 5m Gate-8 entry) is NOT done.
+ - The EXIT migration (L1a = 24h EMA reversal; L2 tight-MAE REPLACED by the wide ~2.5xATR fixed stop; keep
+   L3 emergSL; DEC-124 no-TP STANDS) is NOT done.
+ - The sacred-floor net_loss re-anchor to the ATR-stop basis is NOT done (the 1.5 floor stays SACRED).
+ - No VPS redeploy (the live run stays on the old strategy until the build is complete + Bill's go).
+
+ARCHITECTURE NOTE. Stays Long/Short-CAPABLE (mod:Short_Module plumbing intact); the RATIFIED trading
+strategy is LONG-ONLY (TB00786); the Short side stays dormant. Do NOT correct the long-only strategy back to
+symmetric shorts (long-short-paradigm-standing).
+
+STATE AT CLOSE. Code HEAD 12cb63f (1209 green). Docs HEAD 47a0127 (0500000 dv1_260 / 0521001 dv1_70).
+TB00000 v2_101 (no version bump; the new seeds are flagged here for entry when their slices land). VPS
+unchanged (old strategy, paper, healthy). All pushes + DR-010 verified.
