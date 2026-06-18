@@ -1,0 +1,126 @@
+DocDCN:     TB00791
+DocTitle:   TB00791_Session_Log
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00791_Session_Log_v1_0.txt
+DocDate:    06-18-2026
+DocTime:    22:10:00 UTC
+
+============================================================
+TB00791 SESSION LOG  (FINISH THE LONG-ONLY STRATEGY: F1 VERIFY + F2 DEPLOY-PAPER)
+============================================================
+
+SESSION SUMMARY. Executed the TB00791 OCS FINISH plan: the BUILD was done (TB00790), the STRATEGY was
+not. This session FINISHED it through F1 (full-lifecycle verification) + F2 (deploy the new build to
+the VPS in PAPER), and established the F3 baseline. F4 (live go-live) stays the only Bill-gated step.
+No diagram change (F1-F3 are verification/ops, as the OCS predicted), no new TB00000 seed. Code 6029f61
+-> 3c67ace (1226 -> 1230 green, +4 tests), pushed + DR-010 verified. Docs UNCHANGED (5ee8ecb). The VPS
+now runs the NEW long-only 24h-decision strategy in PAPER (replacing the old short strategy).
+
+------------------------------------------------------------
+F1 - FULL-LIFECYCLE VERIFICATION (paper, dev machine; Code 3c67ace, +4 tests, 1226 -> 1230 green)
+------------------------------------------------------------
+The validated long-only 24h-decision strategy had NEVER been observed driven through a whole trade end-
+to-end. F1 closes that: a focused integration test over the ASSEMBLED organism with the REAL WSManager
+(decision_entry=True, set_decision_stop_mult(2.5) applied by the assembly - modules + seam + per-side
+Exit_Controllers + per-side CiatsConductors all wired), driving a crafted 24h EMA12/26 BULLISH CROSS
+through a clean-providers LiveSweepDriver. De-risked first with a throwaway probe (since removed), then
+committed as 4 tests:
+
+  tests/test_live_smoke.py (+3, the paper full-lifecycle over assemble_real_wm):
+   - test_f1_24h_bullish_cross_opens_a_real_long_stamped_with_the_daily_atr: the bearish-seeded
+     DailyDecisionStore + 24 rising 1H closes fires the bullish cross -> a REAL paper LONG opens,
+     stamped with the DAILY decision-bar ATR (pos.atr_14_entry == cache.atr_14_24h, the ONE 1R basis),
+     the L3 emergSL at entry - 3x that same daily ATR, the field-19 signal_params carrying trigger
+     DECISION_24H_BULLISH_CROSS / side long.
+   - test_f1_lifecycle_entry_then_wide_2_5x_atr_l2_stop_close: after the cross entry, an adverse ticker
+     at 2.6x the daily ATR (past the 2.5x L2 threshold, INSIDE the 3x L3 emergSL) fires the WIDE L2 ->
+     TRADE_CLOSE exit_reason MAE_THRESHOLD_BREACH, actual_rr on the ONE 2.5x basis (< 0, a stopped
+     loss), field-19 24h signal_params carried, learned by the LONG conductor (SHORT loop isolated).
+   - test_f1_lifecycle_entry_then_24h_bearish_cross_reversal_close: after the cross entry, a falling
+     day (24 crashing 1H closes) flips the cache bearish -> the Closed24H branch drives
+     wm.on_htf_ohlc_close with the 24h EMAs -> EC-L1A-001 reversal -> TRADE_CLOSE exit_reason
+     HTF_REGIME_REVERSAL, actual_rr re-anchored onto the ONE basis, field-19 signal_params carried,
+     learned by the LONG conductor.
+
+  tests/test_ws_manager.py (+1, the LIVE-mode branch, is_live=True):
+   - test_f1_live_mode_24h_decision_entry_and_wide_2_5x_stop_exit_enqueue: set_decision_stop_mult(2.5)
+     rebinds the WIDE L2 basis; the entry transmits via _dispatch_entry_live (async marketable-IOC,
+     returns dispatched=True, no synchronous position); the async opening fill opens the LONG;
+     _detect_and_enqueue_live_exit enqueues ONLY past the wide 2.5x L2 - an adverse of 4500 (which WOULD
+     have stopped at the legacy 1.5 default = 3000) does NOT enqueue, an adverse of 5000 DOES (proving
+     the wide stop is the ONE basis); then drive_live_exits dispatches the cancel-then-sell and the
+     executions close carries MAE_THRESHOLD_BREACH onto the TRADE_CLOSE.
+
+  RESULT: the strategy is PROVEN through a whole trade in both paper and live-mode branches. Full suite
+  1230 green. Code 3c67ace pushed to master, DR-010 verified (local == origin/master).
+
+------------------------------------------------------------
+F2 - DEPLOY THE NEW BUILD TO THE VPS IN PAPER (mine, autonomous; still paper)
+------------------------------------------------------------
+VPS CHECK (first). The OLD organism was pid 1052343 (/root/tothbot_env/bin/python3 -m tothbot.app) from
+/root/TothBot_V2-Code at commit 8106391 (TB00776 - the OLD short strategy, pre-decision_entry). The 5
+old SHORT trades (all MAE_THRESHOLD_BREACH negative) sat in trades_2026.jsonl; ohlc5m_2026.jsonl at
+11995 lines; auto-search cron healthy.
+
+KEY WIRING FACT confirmed before deploy: assemble_operational hardcodes decision_entry=True (line 492)
+and applies set_decision_stop_mult(2.5); tothbot.app -> app/runner.py -> assemble_operational. So
+deploying HEAD + restart = the new long-only strategy runs (no env flag needed; the old VPS just ran an
+older commit).
+
+DEPLOY (executed):
+   - Stopped the old organism by EXACT PID (kill -TERM 1052343, confirmed gone; avoided pkill self-
+     match per the gotcha).
+   - git pull --ff-only 8106391 -> 3c67ace (FF-safe, verified ancestor). One snag: an untracked VPS
+     scripts/tb00777_structure_strategy.py blocked the pull (now tracked at HEAD); backed it up to
+     /root/tb00777_structure_strategy.py.vps_untracked_bak, then the FF completed clean.
+   - Archived the old log (tothbot_paper.log -> tothbot_paper_pre_tb00791_<ts>.log).
+   - Relaunched: source /root/.tothbot.env + export PYTHONUNBUFFERED=1 TOTHBOT_MODE=paper
+     TOTHBOT_RECORDS_DIR=/root/tothbot_records TOTHBOT_TOP_N=150 TOTHBOT_VIABILITY_N=50
+     TOTHBOT_SMTP_PASSWORD=$TOTHBOT_SMTP_PASS, then setsid python3 -u -m tothbot.app >> log (detached).
+     GOTCHA learned: the first launch (block-buffered to a file) wrote NOTHING to the log; relaunched
+     with python -u + PYTHONUNBUFFERED=1 so the cold-start is observable. ALSO: pgrep -f "tothbot.app"
+     self-matches the launch-wrapper bash (held the stdout pipe open) - matched the python -u process
+     explicitly and killed the lingering wrapper.
+
+COLD-START - HEALTHY (new organism pid 1066153, python3 -u, paper):
+   - AR-070 universe 735 -> pre-screen top-150 (151) -> viability top-50 by expectancy = 19 VIABLE.
+   - 19/19 WARM_UP_READY, 0 WARM_UP_FAIL; 19 REGIME_CLASSIFIED (the same per-pair 1440 series that
+     SEEDS the DailyDecisionStore in assemble_operational - the decision cache is seeded).
+   - WS_CONNECTED + 39 SUBSCRIPTION_ACK + PING/PONG alive; governor HOLDING (SUBSCRIBE_PACE_WAIT +
+     SUBSCRIBE_PACE_BATCH_COMPLETE pacing the subscriptions flood-free); 0 rate-limit / 0 reject /
+     0 traceback.
+   - 5m system clock TICKING: ohlc5m_2026.jsonl grew 12120 -> 12124 live (continuity preserved across
+     the restart - deploying lost no durable data); the 5 old SHORT trades preserved in trades_2026.
+   - RSS ~54 MB, stable.
+
+NOTABLE DATA (surface for F3): the viability cut yielded 19 pairs this run vs 49 at TB00773. The pre-
+organism viability re-sim (DEC-124 compute_expected_reward over recent daily bars) is more selective in
+the current window. Not a fault - fewer pairs admitted. Watch whether this is window-driven or a
+property of the corpus as F3 accrues.
+
+------------------------------------------------------------
+F3 - OBSERVE REAL PAPER TRADES (baseline established; across-sessions)
+------------------------------------------------------------
+0 new trades this session. BY DESIGN: the new long-only ENTRY fires ONLY on a 24h EMA12/26 bullish
+cross at a Closed24H (the 00:00-UTC daily boundary), so trades are RARE/SLOW vs the old 5m strategy.
+At session close it was 22:10 UTC - the next Closed24H boundary is ~2h out (2026-06-19 00:00 UTC), and a
+trade fires only if a viable pair actually crosses on that bar. The first real 24h-cross entries/exits
+are an across-sessions observation (F3 in TB00792). The honest-forward expectation to check against:
+TB00786 OOS ~+2-3%/trade after fees+slippage, win ~28% (NOT the alt-season-inflated full-period
+number); accumulate toward the 200-trade CIATS floor before decision_atr_stop_mult self-tuning engages.
+
+============================================================
+STATE AT CLOSE
+============================================================
+   - Code HEAD 3c67ace (1230 green) - F1 +4 tests, pushed + DR-010.
+   - Docs HEAD 5ee8ecb (UNCHANGED - no diagram edit; 0500000 dv1_262 / 0521001 dv1_72).
+   - TB00000 v2_102 (UNCHANGED - no new seed).
+   - VPS: NEW organism pid 1066153 (python3 -u, paper), /root/TothBot_V2-Code @ 3c67ace, decision_entry
+     =True, TOP_N=150 / VIABILITY_N=50 (19 viable), unbuffered log /root/tothbot_paper.log, records
+     /root/tothbot_records. The long-only 24h-decision strategy is LIVE IN PAPER. Auto-search cron
+     healthy.
+   - SessionLogs: this SL + the TB00792 NSI + OCS.
+
+THE ONLY BILL-GATED STEP REMAINING: F4 live go-live (real Kraken creds + go). STAY IN PAPER until then.
+The sacred 1:1.5 R:R floor was never lowered.

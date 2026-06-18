@@ -1,0 +1,66 @@
+DocDCN:     TB00792
+DocTitle:   TB00792_Next_Session_Instructions
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00792_Next_Session_Instructions_v1_0.txt
+DocDate:    06-18-2026
+DocTime:    22:12:00 UTC
+
+============================================================
+TB00792 NEXT SESSION INSTRUCTIONS  (F3: OBSERVE THE LIVE-IN-PAPER LONG-ONLY STRATEGY)
+============================================================
+
+WHERE WE ARE. The long-only 24h-decision strategy is BUILT (TB00787-790), VERIFIED end-to-end (TB00791
+F1), and DEPLOYED to the VPS IN PAPER (TB00791 F2). The VPS now runs the NEW strategy (decision_entry=
+True), replacing the old short strategy. The ONLY remaining Bill-gated step is F4 (live go-live).
+
+PRIMARY MISSION = F3: OBSERVE + RECONCILE THE LIVE-IN-PAPER TRADES (yours; across sessions).
+
+CHECK THE VPS FIRST (the organism pid CHANGES on any restart - match the python -u process, NOT the
+wrapper bash; pkill self-match gotcha):
+  ! ssh root@87.99.141.44 'pgrep -af "python3 -u -m tothbot.app"; echo ---; tail -n 50 /root/tothbot_paper.log; echo ---TRADES---; cat /root/tothbot_records/trades_2026.jsonl; echo ---OHLC---; wc -l /root/tothbot_records/ohlc5m_2026.jsonl; echo ---FAULTS---; grep -ci "traceback\|SUBSCRIPTION_REJECTED\|rate.limit\|WARM_UP_FAIL" /root/tothbot_paper.log; echo ---DECISION---; grep -c "HTF_24H\|Closed24H\|DECISION" /root/tothbot_paper.log; echo ---CRON---; tail -n 12 /root/strategy_search_cron.log'
+
+WHAT TO CAPTURE / CONFIRM:
+  - The FIRST real 24h-cross ENTRIES: the new ENTRY fires ONLY on a 24h EMA12/26 BULLISH CROSS at a
+    Closed24H (00:00-UTC daily boundary). Expect trades to be RARE/SLOW (at most one decision per pair
+    per day, only on a cross) - this is the validated slow strategy, NOT the old 5m firehose. The first
+    Closed24H after the TB00791 deploy is 2026-06-19 00:00 UTC.
+  - The first EXITS: reversal (24h bearish cross -> HTF_REGIME_REVERSAL) vs the wide stop
+    (MAE_THRESHOLD_BREACH at 2.5x daily-ATR). Confirm the TRADE_CLOSE carries actual_rr on the ONE
+    basis (1R = decision_atr_stop_mult 2.5 x ATR(14)-daily) + field-19 signal_params (trigger
+    DECISION_24H_BULLISH_CROSS).
+  - Track per-trade $ + win rate against the TB00786 HONEST-FORWARD expectation (~+2-3%/trade OOS after
+    fees+slippage, win ~28% - NOT the alt-season-inflated full-period number). Divergence is DATA -
+    surface it.
+  - Accumulate toward the 200-trade CIATS floor (then decision_atr_stop_mult self-tuning can engage).
+    At ~slow daily cadence over 19 viable pairs this will take a long while - report progress each
+    session.
+  - WATCH the viability cut: it yielded 19 pairs at the TB00791 deploy (vs 49 at TB00773). Note whether
+    that is window-driven or persistent as the corpus accrues.
+
+THE ORGANISM (as left by TB00791 F2):
+  - VPS 87.99.141.44, /root/TothBot_V2-Code @ 3c67ace (master), pid 1066153 at close (WILL change on
+    restart). python3 -u -m tothbot.app, setsid-detached, paper.
+  - Env: source /root/.tothbot.env + PYTHONUNBUFFERED=1 TOTHBOT_MODE=paper
+    TOTHBOT_RECORDS_DIR=/root/tothbot_records TOTHBOT_TOP_N=150 TOTHBOT_VIABILITY_N=50
+    TOTHBOT_SMTP_PASSWORD=$TOTHBOT_SMTP_PASS. Log /root/tothbot_paper.log (UNBUFFERED - keep -u on any
+    relaunch or the log goes silent). Records /root/tothbot_records (continuity: never wipe; old SHORT
+    trades preserved).
+  - If a relaunch is needed: kill the python -u PID exactly, then the same source+export+setsid line.
+
+F4 (the ONLY Bill-gated step) = LIVE GO-LIVE. Wire to the real edge; waits on Bill's real Kraken creds
++ explicit go. STAY IN PAPER until then. Everything up to F4 is yours.
+
+STANDING DIRECTIVES (unchanged): continuous-run across missions, never pause to ask "should I
+proceed"; session-close (SL+NSI+OCS) is the standing close protocol; NEVER ask Bill a HOW (resolve path
+forks with an FP/DP for the overall organism); NEVER a question-box (all choices to Bill as plain
+chat); push to master is permitted (DR-010); NEVER lower the sacred 1:1.5 R:R; LONG-ONLY strategy on a
+Long/Short-CAPABLE machine (don't rip out the short plumbing, don't "correct" long-only back to shorts);
+never disappear the record (append resolutions, preserve questions + Bill's responses verbatim).
+
+DIAGRAM-FIRST only if a code gap forces a 0500000 change (F3 is observation/ops - expect none).
+
+COLD-LOAD: Code 3c67ace (1230 green; py = C:\Users\wstot\AppData\Local\Programs\Python\Python312\
+python.exe, full path only) - Docs 5ee8ecb (0500000 dv1_262 / 0521001 dv1_72) - SessionLogs HEAD =
+TB00791 SL + TB00792 NSI + OCS, TB00000 v2_102. Read from GitHub HEAD: TB00792 NSI -> TB00791 SL ->
+TB00790 SL (the B+C design) -> TB00000.
