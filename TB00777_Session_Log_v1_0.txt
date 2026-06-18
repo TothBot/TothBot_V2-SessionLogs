@@ -1,0 +1,81 @@
+DocDCN:     TB00777
+DocTitle:   TB00777_Session_Log
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00777_Session_Log_v1_0.txt
+DocDate:    06-17-2026
+DocTime:    23:45:00 UTC
+
+============================================================
+TB00777 SESSION LOG  (THE ENTRY HUNT - BILL'S STRUCTURE STRATEGY + SUPERTREND)
+NOTE: this session ran ON from the TB00776 close (same conversation). TB00776's three deliverables had
+just landed (first live trades; auto-search deployed+cronned+hardened; deep research) when Bill opened a
+concrete strategy dialogue. This log captures that dialogue's work.
+MISSION (Bill, live): design + BACKTEST a real strategy. Bill's spec: WIDE structure stop just BEYOND the
+last daily resistance (ABOVE for shorts, BELOW for longs) so noise can't tag it; structural trail; BANK
+HALF at +3R (guaranteed +1.5R); let the runner go to reversal or a tighter trail; both directions. Then,
+on his direction, hunt STRONGER/SLOWER trend-predictor ENTRIES (not the fast 9/21-12/26 MAs).
+OUTCOME: a clean, honest arc. (1) Bill's EXIT structure mechanically DELIVERS 1.5:1+ R:R - validated. But
+with FAST/generic entries it is net-NEGATIVE: win rate 22-34% < the ~37% break-even. The exits cannot
+manufacture an edge from entries that don't predict direction (= the TB00776 research verdict, confirmed
+empirically). (2) Bill's pivot to slower/stronger trend predictors was decisively right. (3) SUPERTREND is
+the FIRST entry in the whole hunt with POSITIVE out-of-sample expectancy meeting 1.5:1 - and BOTH
+directions positive, balanced, NOT a one-sided regime artifact. (4) #1 test Supertrend+ADX does NOT
+robustly help. Plain Supertrend is the lead candidate; the edge is in the STRUCTURE. Code 8106391->
+82814ba, 1194 green. No Docs change. TB00000 v2_101.
+============================================================
+
+1. WHAT WE ENTER WITH TODAY (Bill asked)  [the answer that motivated the pivot]
+   LIVE bot: EMA-9 vs EMA-21 + RSI-14 + a volume spike + an "SSS" score gate - all FAST/twitchy. The
+   TB00776 backtest used a similar fast set (EMA12/26, MACD 12/26, 20-bar momentum, breakouts). Everything
+   we'd tried predicted entries with short, whippy averages - part of why the live bot kept getting chopped.
+
+2. BILL'S STRUCTURE STRATEGY - BACKTEST  [scripts/tb00777_structure_strategy.py, Code b009d13]
+   Daily, ~2yr, 32 pairs. 1R = entry->stop distance (the stop just beyond the last daily resistance, ABOVE
+   for shorts / BELOW for longs); position sized to 1R so a full stop = exactly -1R (pair-size-neutral, R
+   sums cleanly). Structural trail (rolling extreme, ratcheted in our favor; tighter window after scale).
+   Bank HALF at +3R (= +1.5R locked). Runner to EMA/MA reversal or the tighter trail. Conservative intrabar
+   (adverse before favorable). Nested IS(0-0.5)/OOS(0.5-1.0) + per-direction split + 3-way OOS sub-window
+   stability + fees (taker x2 + short open) + per-day short rollover, all in R.
+   RESULT (5 scale/exit configs x 4 fast signals = 20 cells): the structure HITS 1.5-2.7 R:R EVERY time
+   (as designed) but EVERY cell is net-NEGATIVE (ER -0.03 to -0.43R). win 22-34% < ~37% break-even; 55-91%
+   full-stopped pre-scale. CONCLUSION: exits are validated; the GAP is ENTRY QUALITY.
+
+3. THE STRONGER-TREND-PREDICTOR ENTRY HUNT  [Code f9d967b; reversal exit switched to the slow 50/200 flip]
+   Bill: "use the 50/200 MA... I'm looking for indicators that are stronger trend predictors." Added &
+   tested: 50/200 golden/death cross, 50/200 alignment, ADX/DMI strength, SUPERTREND (ATR trend), 55-bar
+   Turtle Donchian, 100-bar momentum. The slow/strong predictors DECISIVELY beat the fast ones.
+   - SUPERTREND = the lead: OOS ER +0.05 to +0.06R/trade after fees, win 39%, RR 2.0-2.2, 2/3 OOS thirds
+     positive, and BOTH directions net positive (L143@+0.01 weak, S141@+0.09 strong) with BALANCED counts -
+     NOT a one-sided regime artifact (unlike the TB00776 1h finding). Flagged "fragile" ONLY because the
+     long side is weakly positive. The FIRST genuinely positive OOS result of the entire hunt.
+   - 50/200 cross: also +OOS (RR 2.7) but only 60 trades - unproven.
+   - ADX/DMI, ma_align, momentum_100: fail (high churn / low RR / chopped).
+
+4. #1 TEST - SUPERTREND + ADX STRENGTH GATE  [Code 82814ba; Bill chose this next step]
+   Two ways. State-gated (hold Supertrend direction while ADX>=25): CHURNS 4000+ trades, RR collapses to
+   ~1.0, net -0.16 to -0.19R - WORSE. Flip-gated (take a Supertrend flip only if ADX>=25): looks good OOS
+   (win 45%, RR 2.0, ER +0.08, both sides +) BUT the IN-SAMPLE half is NEGATIVE (the nested IS-select/
+   OOS-confirm discipline would never have selected it) and only 88 trades - a classic good-recent/
+   bad-earlier overfit tell. VERDICT: ADX does NOT robustly help. Plain Supertrend stays the lead; the edge
+   is in the STRUCTURE. Bolting on indicators churns or overfits.
+
+5. HONEST CAVEATS (carried to next session)
+   Daily-bar, close-fill backtest with a simple structural-level proxy (rolling extreme). The Supertrend
+   edge is MODEST (+0.05R/trade) and EARLY (one 2yr window; weak long side). It is NOT yet proven across
+   multiple market eras or on the intraday timeframe the bot actually trades. Green shoot, not a harvest.
+
+ARTIFACTS THIS SESSION (continues the TB00776 commits in the same Code history)
+   Code (TothBot_V2-Code, master): 8106391 -> b009d13 (structure backtest) -> f9d967b (stronger trend
+     predictors; Supertrend +OOS) -> 82814ba (ADX gate = no robust help). scripts/tb00777_structure_
+     strategy.py is the reusable tool. 1194 green (standalone script, not imported by the package).
+   Docs (TothBot_V2-Docs, master): UNCHANGED at a1c45f9.
+   SessionLogs (this commit): TB00777 SL + TB00778 NSI + TB00778 OCS.
+   Auto-memory: NEW supertrend-structure-candidate; updated phase2-build + MEMORY index.
+   VPS: paper run still RUNNING (49/50, e78a035 live proc, 5 losing SHORTs + AVAX open); auto-search cron
+     daily 06:00 UTC on 82814ba; backtest tooling run from /root/TothBot_V2-Code/scripts.
+   TB00000 stays v2_101 (entry hunt = research/engineering, no new CIATS seed).
+
+============================================================
+END TB00777 SESSION LOG
+============================================================
