@@ -1,0 +1,122 @@
+DocDCN:     TB00790
+DocTitle:   TB00790_Session_Log
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00790_Session_Log_v1_0.txt
+DocDate:    06-18-2026
+DocTime:    19:30:00 UTC
+
+============================================================
+TB00790 SESSION LOG  (ROUTE THE LONG-ONLY ENTRY/EXIT THROUGH THE 24h DECISION)
+============================================================
+
+SESSION SUMMARY. Executed the TB00790 mission as designed in the TB00789 SL: the final, highest-stakes
+sub-slice of the long-only build - ROUTE the validated long-only ENTRY + EXIT through the now-live 24h
+DECISION cache as ONE coupled slice. DELIVERED in the mandated DIAGRAM-FIRST order: the VISUAL diagram
+slice (Image3 + Image9 + Image2 + ar:AR-045), then TB00000 v2_102 (the five decision seeds), then the
+code (B + C across 7 modules) + tests (1219 -> 1226 green), all pushed + DR-010 verified across all
+three repos. STILL IN PAPER - the VPS runs the OLD short strategy; the new build is paper/code-only
+until Bill's go-live + creds.
+
+THE ONE COUPLED BASIS (the key design, faithful to the TB00789 SL): 1R = param:decision_atr_stop_mult
+(2.5) x ATR(14)-on-DAILY, shared by the gate:G8 net_loss, the layer:L2 stop, the layer:L3 emergSL
+basis, and the close actual_rr. The entry stamps the daily ATR onto the position; everything re-anchors
+off it; the sacred 1:1.5 R:R floor is NEVER lowered - only the net_loss BASIS changes.
+
+VPS CHECK (first action). HEALTHY, pid 1052343 (UNCHANGED - the OLD 5m short strategy). 5 live SHORTs
+closed 06-17, ALL stopped out negative (MAE_THRESHOLD_BREACH, actual_rr -1 to -3.1) - the tight-MAE
+bleed this whole build replaces. Auto-search cron HEALTHY: the 06-18 06:01 UTC run found 17 OOS
+survivors of which 3 REGIME-ROBUST, emailed nwoguy56@proton.me. ohlc5m_2026.jsonl at 11556 lines. No
+redeploy (B+C complete but not Bill-go'd; STAY IN PAPER).
+
+============================================================
+WHAT WAS DELIVERED - the coupled slice, DR-010 verified across 3 repos
+============================================================
+
+Docs HEAD 5ee8ecb (0500000 dv1_261 -> dv1_262 / 0521001 dv1_71 -> dv1_72). Code HEAD 6029f61 (1219 ->
+1226 green, +7 tests). SessionLogs: TB00000 v2_101 -> v2_102 + this SL + the TB00791 NSI/OCS.
+
+(1) THE DIAGRAM (diagram-first, the VISUAL slice; ALL edits in-place text inside existing elements, so
+    NO new SVG geometry and every tag class is UNCHANGED from baseline - g 217 / text 957 / desc 126 /
+    svg 10 / title 126 / figcaption 10, open == close verified):
+    - Image3 (Exit Architecture): L1a box "HTF Regime Reversal" -> "24h Decision Reversal", basis
+      "L: 24h EMA12 below EMA26 / S: EMA12 above EMA26" (was 1H EMA20/50); L2 TRIGGER -> "ATR(14)-daily
+      x decision_atr_stop_mult (2.5x)" (was mae_mult 1.5x); L3 + the R:R formula band + emergSL_dist
+      re-based onto ATR(14)-daily; the layer:L1a / layer:L2 / mod:Exit_Controller / rr_formula
+      descriptors + the root governs updated (the legacy 1H reversal RETIRED, the 1H HtfCache stays for
+      gate:G4).
+    - Image9 (Gate-8 detail): g8d_mae "mae_pct = ATR(14)-daily x decision_atr_stop_mult / entry" (the
+      wide 2.5x = the ONE shared basis with L2; the sacred floor re-anchors automatically); g8d_emergsl
+      + the Inputs legend re-based onto ATR(14)-daily; the expected_reward estimator descriptor's
+      run-to-reversal exit updated to the 24h EMA12/26 cross.
+    - Image2 (Trading Pipeline): the Signal Engine element label + the mod:Signal_Pipeline descriptor
+      record the LIVE long-only TRIGGER = the 24h EMA12/26 BULLISH CROSS on each Closed24H (replacing
+      the 5m three-factor SSS as the live trigger; the SSS evaluator passes on the cross; G1-G7 still
+      prefilter; the 5m sweep entry DISABLED; Short mirror DORMANT).
+    - ar:AR-045 <pre> + the Pre-Computation Cache table row: the entry/exit CONSUMER is WIRED by
+      TB00790 (no longer "the subsequent slice").
+
+(2) TB00000 v2_101 -> v2_102: Section 8 gains the "CIATS - 24h DECISION" group - the four derive seeds
+    (decision_bar_interval_min = 1440, decision_ema_fast = 12, decision_ema_slow = 26,
+    decision_atr_period = 14) + the NEW decision_atr_stop_mult = 2.5x ATR(14)-daily (the wide L2/L3
+    stop basis). Only the net 1:1.5 R:R floor stays hardcoded.
+
+(3) THE CODE (B + C, 7 modules, non-breaking - the legacy 5m path + every prior test keep the 1.5x
+    mae_mult default; only the assembled organism flips to the 24h-decision routing):
+    - config/registry.py: +decision_atr_stop_mult (2.5, per-module) + the four derive seeds (universal).
+    - pipeline/sweep.py: assemble_candidate gains atr_override (the daily-ATR override for BOTH
+      inputs.atr_14 AND ctx.atr_14_entry, so the position is stamped with the daily ATR); +DecisionSignal
+      + decision_sss_evaluator (a PASSING verdict carrying the 24h EMA levels as field-19 signal_params).
+    - pipeline/live_driver.py: +decision_entry + decision_stop_mult ctor args; _advance_decision now
+      detects the EMA12/26 BULLISH CROSS on each Closed24H (pre NOT bullish -> post bullish) and runs
+      _drive_decision_entry (assemble_candidate with atr_override + the decision evaluator + a per-cycle
+      params overlay mae_mult = decision_atr_stop_mult -> process_candidate), and drives
+      _drive_decision_reversal (wm.on_htf_ohlc_close with the 24h EMAs) on EVERY Closed24H; on_ohlc_5m
+      SKIPS the 5m sweep entry when decision_entry; _step_htf + _heal_htf RETIRE the 1H reversal drive
+      (the EMA advance for gate:G4 stays).
+    - exchange/paper_exit.py: detect_paper_exit gains a mae_mult param (default the registry seed).
+    - exchange/ws_manager.py: +_decision_stop_mult + set_decision_stop_mult (rebinds BOTH the ticker-bbo
+      L2 detector mult AND each ExitController's actual_rr mult); threaded into the two detect_paper_exit
+      sites (handle_ticker paper + _detect_and_enqueue_live_exit).
+    - execution/exit_controller.py: +set_mae_mult (rebinds the actual_rr risk basis).
+    - ciats/expected_reward.py: +rolling_ema; replay_excursions reversal migrated from the daily
+      EMA20/50 to the 24h EMA(decision_ema_fast)/EMA(decision_ema_slow) cross (the live L1a).
+    - pipeline/operational.py: calls wm.set_decision_stop_mult(decision_atr_stop_mult) + builds the
+      LiveSweepDriver with decision_entry=True + decision_stop_mult.
+
+(4) TESTS (+7, 1219 -> 1226 green): test_live_driver +4 (the 24h bullish-cross entry dispatches a LONG;
+    no-cross does not dispatch; the 24h reversal drives on_htf_ohlc_close with the 24h EMAs; the 1H step
+    retires the 1H reversal drive but keeps the HtfCache for G4); test_paper_exit +1 (the mae_mult
+    override widens the L2 stop); test_exit_controller +1 (set_mae_mult widens the actual_rr basis);
+    test_expected_reward +1 (rolling_ema). UPDATED the 4 capstone smoke tests in test_live_smoke to the
+    new architecture (the 5m close no longer dispatches an entry; the 1H close maintains the HtfCache
+    without the retired reversal drive; the two running-exit tests use the wider 2.5x stop).
+
+(5) PUSH + DR-010. Docs 05ba14c -> 5ee8ecb; Code 4e55d46 -> 6029f61; both pushed, remote == local on a
+    fresh fetch. SessionLogs pushed at close (this SL + the TB00791 NSI/OCS + TB00000 v2_102).
+
+============================================================
+FP/DP RESOLUTIONS (no Bill HOW asked):
+============================================================
+ - The 24h entry REUSES the full gate machinery (assemble_candidate + process_candidate -> run_pipeline
+   G1-G8 + execute_entry) rather than a parallel sizer, so the sacred floor / sizing / MPP / emergSL-
+   from-fill / dispatch all hold unchanged; only the SSS stage is short-circuited (the cross IS the
+   signal) and atr + mae_mult are overridden. Minimal new code, maximum reuse.
+ - The migration is gated behind decision_entry (default False) so EVERY prior test + the legacy 5m path
+   is byte-unchanged; operational.py flips it True for the assembled organism. ONE flag, no scattered
+   conditionals leaking into unit assemblies.
+ - The VISUAL edits are in-place TEXT rewrites of existing <text>/<desc> labels (not new SVG boxes), so
+   the faithful architecture update keeps tag counts at baseline - safer than adding geometry, and still
+   a true visual update (the drawn labels now read the new architecture).
+
+============================================================
+ARCHITECTURE NOTE. Stays Long/Short-CAPABLE (mod:Short_Module plumbing intact); the RATIFIED strategy is
+LONG-ONLY (TB00786). The 24h entry wires the LONG side ONLY; the exit layers stay direction-symmetric in
+description (the machine is symmetric). Do NOT "correct" the long-only strategy back to symmetric shorts
+(long-short-paradigm-standing).
+
+STATE AT CLOSE. Docs HEAD 5ee8ecb (0500000 dv1_262 / 0521001 dv1_72). Code HEAD 6029f61 (1226 green).
+TB00000 v2_102. VPS unchanged (old short strategy, paper, healthy, pid 1052343). All three repos pushed
++ DR-010 verified. The validated long-only strategy is now BUILT END-TO-END in the organism (derive +
+cache + live-wire + entry + exit + re-anchor), non-breaking, fully tested - but NOT yet deployed.
+============================================================

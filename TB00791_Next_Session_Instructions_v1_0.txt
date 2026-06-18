@@ -1,0 +1,65 @@
+DocDCN:     TB00791
+DocTitle:   TB00791_Next_Session_Instructions
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00791_Next_Session_Instructions_v1_0.txt
+DocDate:    06-18-2026
+DocTime:    19:30:00 UTC
+
+============================================================
+TB00791 NEXT SESSION INSTRUCTIONS
+============================================================
+
+WHERE WE ARE. The validated LONG-ONLY 24h-DECISION strategy (TB00786) is now BUILT END-TO-END in the
+organism, non-breaking, fully tested - but NOT deployed. The build arc:
+  TB00787 = the 24h DERIVE layer (OhlcAggregator.fold_hour, the 1H->24h fold).
+  TB00788 = the DailyDecisionCache (EMA12/26 + ATR14 on the derived 24h series).
+  TB00789 = the LIVE wire-in (live_driver folds + advances the cache; seeded from the regime 1440
+            series; Htf24hGap REST self-heal).
+  TB00790 = the ROUTING (THIS session): the LONG ENTRY on the 24h EMA12/26 bullish cross (replacing the
+            5m SSS; G1-G7 prefilter; 5m sweep entry disabled; Short dormant) + the EXIT migration (L1a
+            24h EMA12/26 reversal; L2 wide decision_atr_stop_mult x daily-ATR stop; L3 emergSL at 3.0x
+            the same daily ATR; DEC-124 no-TP) + the sacred-floor re-anchor onto the ONE 1R basis.
+
+Code HEAD 6029f61 (1226 green). Docs HEAD 5ee8ecb (0500000 dv1_262 / 0521001 dv1_72). TB00000 v2_102.
+VPS pid 1052343 STILL the OLD 5m short strategy (paper, healthy, collecting the durable 5m corpus + the
+old-strategy loss evidence) - the new build is dev-machine paper/code-only, NOT deployed.
+
+NON-OBVIOUS CONTEXT FOR NEXT SESSION:
+ - The migration is gated behind live_driver decision_entry (default False -> legacy 5m path byte-
+   unchanged; operational.py flips it True for the assembled organism + calls wm.set_decision_stop_mult).
+   So the WHOLE long-only routing lives behind that one flag; the 5m SSS machine + every prior test still
+   exist and pass.
+ - The ONE shared 1R basis = param:decision_atr_stop_mult (2.5) x ATR(14)-on-DAILY. The entry stamps the
+   DAILY ATR onto the position (assemble_candidate atr_override -> ctx.atr_14_entry); the L2 stop, L3
+   emergSL basis, and the close actual_rr all key off it. The sacred 1:1.5 floor NEVER moves.
+ - The full new-strategy trade lifecycle (a 24h bullish-cross ENTRY -> hold -> a 24h bearish-cross
+   reversal EXIT or a wide-stop EXIT -> TRADE_CLOSE) has NEVER been observed end-to-end (the unit tests
+   cover the pieces; no full-lifecycle paper run yet). The 24h entry path is also UNTESTED in LIVE mode
+   (process_candidate -> _dispatch_entry_live); the unit tests are paper.
+ - A paper REDEPLOY of the new build to the VPS would STOP the old short-strategy run (which is the
+   source of the durable 5m corpus + the live old-strategy loss evidence Bill asked to keep collecting,
+   TB00773 close "leave it running and collecting data"). So switching the VPS to the new build is a
+   WHAT that touches Bill's data-continuity call - tee it up, do NOT unilaterally redeploy.
+
+NEXT SESSION (TB00791) - tee up the post-build options for Bill, data-rich, and drive what's mine:
+ (A) RE-VERIFY the VPS (pid changes; old short strategy; auto-search cron). Capture any new old-strategy
+     trades (more tight-MAE-stop loss evidence the new build replaces).
+ (B) DRIVE THE NEW-STRATEGY FULL LIFECYCLE END-TO-END (the HOW is mine): build/extend a paper sim or a
+     focused integration test that drives a complete 24h trade through the ASSEMBLED organism
+     (decision_entry=True): a bearish-then-bullish 24h series fires the EMA12/26 cross ENTRY, then either
+     a bearish-cross 24h reversal OR a wide 2.5x-daily-ATR adverse move fires the EXIT, and assert the
+     TRADE_CLOSE carries the ONE-basis actual_rr + the field-19 24h signal_params. Prove the coupled
+     basis works through a whole trade (never yet observed). Verify the LIVE-mode entry/exit path too
+     (is_live branch).
+ (C) TEE UP FOR BILL (a WHAT - present as plain chat text, FP/DP for the organism, no question-box):
+     should the VPS paper run SWITCH to the new long-only build now (B+C complete), or KEEP collecting on
+     the old short strategy? Trade-off: switching observes the new strategy live-in-paper (the real point
+     of the build) but loses the old-run continuity + the 5m corpus accrual is unaffected either way
+     (the new build still logs the 5m stream). Recommend, then await Bill.
+ (D) The LIVE go-live tail stays Bill-gated (creds + go). STAY IN PAPER until then. NEVER lower the
+     sacred 1:1.5 R:R.
+
+The organism is now a complete long-only trading machine on paper. The remaining work is VERIFICATION
+(prove a full lifecycle) + the OPERATIONAL deploy decision (Bill's WHAT) + the live go-live tail.
+============================================================

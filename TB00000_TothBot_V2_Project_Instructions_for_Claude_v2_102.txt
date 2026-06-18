@@ -1,10 +1,10 @@
 DocDCN:     TB00000
 DocTitle:   TothBot_V2_Project_Instructions_for_Claude
-DocVersion: v2_101
+DocVersion: v2_102
 DocOwner:   Bill
-DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00000_TothBot_V2_Project_Instructions_for_Claude_v2_101.txt
-DocDate:    06-15-2026
-DocTime:    23:59:30 UTC
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00000_TothBot_V2_Project_Instructions_for_Claude_v2_102.txt
+DocDate:    06-18-2026
+DocTime:    19:30:00 UTC
 
 ============================================================
 TOTHBOT V2 - WORKING INSTRUCTIONS FOR CLAUDE
@@ -14,6 +14,35 @@ This is Bill and Claude's working document. It is NOT a
 controlled document: no DCN, no lifecycle state, no namespace
 governance. It exists to keep us on track and moving forward.
 Keep it lean. Change history lives in git, not in here.
+
+v2_102: the validated LONG-ONLY 24h-DECISION strategy registered as
+five CIATS-owned seeds (TB00786/787/788/790). Section 8 gains the
+"CIATS - 24h DECISION" group: the four derive seeds
+decision_bar_interval_min = 1440 / decision_ema_fast = 12 /
+decision_ema_slow = 26 / decision_atr_period = 14 (the 24h decision
+bar mod:OhlcAggregator folds + the EMA/ATR on that daily series), plus
+the NEW decision_atr_stop_mult = 2.5x ATR(14)-daily (the WIDE layer:L2
+volatility stop that REPLACES the tight 1.5x mae_mult for the long-only
+path; the stop-width sweet spot ~2-2.5x ATR, validated TB00784/786).
+TB00790 routed the entry + exit through the 24h decision as ONE coupled
+slice: the LONG ENTRY = the EMA12/26 BULLISH CROSS on each Closed24H
+(replacing the 5m SSS trigger; the 5m sweep entry disabled; Short
+DORMANT); the EXIT = the layer:L1a 24h EMA12/26 bearish-cross reversal
+(replacing the 1H EMA20/50 drive; the 1H HtfCache stays for gate:G4) OR
+the wide decision_atr_stop_mult x daily-ATR layer:L2 stop, with
+layer:L3 emergSL at emergency_sl_mult x the SAME daily ATR (outermost)
+and DEC-124 no-take-profit STANDING. The ONE shared 1R basis (1R =
+decision_atr_stop_mult x ATR(14)-daily) is keyed by the gate:G8
+net_loss, the layer:L2 stop, and the close actual_rr; the sacred 1:1.5
+R:R floor re-anchors onto it AUTOMATICALLY -- NEVER lowered, only the
+net_loss basis changes. Only the net 1:1.5 R:R floor stays hardcoded.
+Companion: 0500000 dv1_261 -> dv1_262 (Image3 / Image9 / Image2 / the
+ar:AR-045 descriptor, the VISUAL slice, all in-place text, tag classes
+UNCHANGED g 217 / text 957 / desc 126 / svg 10 / title 126 /
+figcaption 10), 0521001 dv1_71 -> dv1_72, Code 4e55d46 -> 6029f61
+(1226 green), TB00790 SL. STILL IN PAPER (the VPS runs the old short
+strategy until Bill's go-live + creds). v2_102 supersedes all prior
+versions.
 
 v2_101: the CIATS stop-loss-width self-tuning step registered as a
 CIATS-owned seed (TB00751, building Bill's TB00750 FORM->TEST->ROUTE
@@ -732,10 +761,52 @@ CIATS - Gate-7 risk limits (per-module)
                          positions). DEC-115.
 
 CIATS - exit controller
-  mae_mult              = 1.5x ATR(14)
+  mae_mult              = 1.5x ATR(14)  (legacy 5m path +
+                          unit tests; the live long-only
+                          24h-decision path uses
+                          decision_atr_stop_mult below)
   emergency_sl_mult     = 3.0x ATR(14)
   cancel_timeout_window = 5.0 s
   mpp_retry_count       = 3
+
+CIATS - 24h DECISION (the validated long-only strategy,
+TB00786/787/788/790)
+  decision_bar_interval_min = 1440 (min). The 24h DECISION-
+                          bar cadence: the validated long-only
+                          strategy decides on the daily candle.
+                          mod:OhlcAggregator folds 24 contiguous
+                          hour-aligned 1H closes (themselves the
+                          5m fold, TB00768) into one exact 24h
+                          DECISION bar (TB00787). Universal.
+  decision_ema_fast     = 12 (bars). Fast EMA on the 24h
+                          decision closes; the BULLISH CROSS
+                          above decision_ema_slow IS the long-
+                          only ENTRY trigger (replacing the 5m
+                          SSS), the bearish cross the layer:L1a
+                          reversal EXIT. Universal.
+  decision_ema_slow     = 26 (bars). Slow EMA on the 24h
+                          decision closes (the entry/exit cross
+                          partner of decision_ema_fast). Universal.
+  decision_atr_period   = 14 (bars). ATR period on the 24h
+                          decision bars -- the wide-stop
+                          volatility basis. Universal.
+  decision_atr_stop_mult = 2.5x ATR(14)-daily. The WIDE layer:L2
+                          volatility stop multiple on the DAILY
+                          decision-bar ATR(14), TB00790 -- REPLACES
+                          the tight 1.5x mae_mult for the 24h-
+                          decision long-only path (the stop-width
+                          sweet spot ~2-2.5x ATR, validated
+                          TB00784/786). The ONE shared 1R basis:
+                          gate:G8 net_loss + layer:L2 stop + the
+                          close actual_rr all key off
+                          decision_atr_stop_mult x ATR(14)-daily;
+                          layer:L3 emergSL at emergency_sl_mult x
+                          the SAME daily ATR stays outermost. The
+                          sacred 1:1.5 R:R floor re-anchors onto
+                          this basis AUTOMATICALLY -- the floor is
+                          NEVER lowered, only the net_loss BASIS
+                          changes. Per-module; CIATS-owned; refined
+                          from paper. NEVER the sacred R:R.
 
 CIATS - self-tuning step (TB00751)
   mae_mult_nudge_pct    = 0.10 (fraction). The conservative
