@@ -1,0 +1,70 @@
+DocDCN:     TB00790
+DocTitle:   TB00790_Next_Session_Instructions
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00790_Next_Session_Instructions_v1_0.txt
+DocDate:    06-18-2026
+DocTime:    17:00:00 UTC
+
+============================================================
+TB00790 NEXT SESSION INSTRUCTIONS - ROUTE THE LONG-ONLY ENTRY/EXIT THROUGH THE 24h DECISION (B+C)
+============================================================
+
+WHERE WE ARE. TB00787-788 built the 24h derive layer + DailyDecisionCache (pure, tested). TB00789 sub-slice A
+WIRED them LIVE: live_driver now folds each Closed1H one timeframe up (fold_hour) and maintains a per-pair
+DailyDecisionCache (held in a new DailyDecisionStore), SEEDED at the daily regime compute as a SECOND consumer
+of the 1440 series (no third REST) and self-healing a day-aligned Htf24hGap from one REST GetOHLCData(1440).
+The cache is now LIVE-maintained per pair but NOTHING consumes it for a trade yet - the organism still trades
+the OLD 5m short strategy. Code HEAD 4e55d46 (1219 green), Docs HEAD 05ba14c (0500000 dv1_261 / 0521001
+dv1_71), TB00000 v2_101.
+
+TB00790 MISSION = route the LONG-ONLY ENTRY/EXIT through the 24h decision (the TB00789 forks 2/3/4/5). This is
+ONE COUPLED SLICE - the entry's gate:G8 net_loss, the layer:L2 exit stop, layer:L3 emergSL, and the close
+actual_rr ALL key off ONE shared basis: 1R = param:decision_atr_stop_mult (~2.5) x ATR(14)-on-DAILY. The
+TB00789 SL has the FULL SEAM-LEVEL DESIGN (every fork resolved, exact file:line seams) - read it first; this
+NSI is the executive summary. Resolve any residual HOW with an FP/DP; do NOT ask Bill.
+
+THE BUILD (diagram-first; STAY IN PAPER until Bill's go-live + creds):
+
+ (B) LONG-ONLY ENTRY on the 24h bullish cross. In live_driver._advance_decision, capture pre = store.get(sym)
+     BEFORE advance + post = advance()'s return; a BULLISH CROSS = (not pre.bullish) and post.bullish. On a
+     cross, LONG side ONLY (Short_Module DORMANT), run the EXISTING G1-G7 + G8 + execute_entry, REPLACING the
+     5m SSS trigger: the Closed24H candle is the trigger; OVERRIDE atr_14 + atr_14_entry to the DAILY ATR
+     (store.get(sym).atr_14_24h - this stamps the daily ATR onto the position via dispatch_entry, re-anchoring
+     everything downstream); the SSS evaluator PASSES (the cross IS the signal, signal_params = the 24h
+     ema12/ema26); pass mae_mult = decision_atr_stop_mult to G8. DISABLE the 5m sweep entry (keep its
+     indicator-step / fold / exit-drive). Respect G5 has_active_same_side_position; skip if store.get is None.
+
+ (C) EXIT migration (Image3) + RE-ANCHOR. L1a = drive wm.on_htf_ohlc_close(sym, ema_fast_24h, ema_slow_24h,
+     bid, ask) from the Closed24H branch (detect_htf_regime_reversal already fires ema_short<ema_long for a
+     LONG) and REMOVE the 1H drive from _step_htf (keep the 1H HtfCache for G4). L2 = the WIDE
+     decision_atr_stop_mult x daily-ATR stop: thread the mult into detect_paper_exit (new param) at the
+     WSManager call sites + rebind each ExitController's mae_mult via a new set_decision_stop_mult(mult)
+     setter called from operational.py (keeps existing 1.5-default tests green). L3 emergSL KEPT (3.0 x daily
+     ATR, stays OUTSIDE the wide L2). Sacred floor re-anchor is AUTOMATIC (the 1:1.5 floor is NEVER touched -
+     only the net_loss BASIS). DEC-124 no-TP STANDS. expected_reward: update the ciats/expected_reward replay
+     reversal condition to the 24h EMA12/26 cross so the run-to-reversal median reflects the new exit.
+
+ (5) SEEDS -> TB00000 v2_102. Enter decision_bar_interval_min=1440, decision_ema_fast=12, decision_ema_slow=26,
+     decision_atr_period=14 + the NEW decision_atr_stop_mult=2.5 (CIATS-owned; only the 1:1.5 R:R floor stays
+     hardcoded). Add decision_atr_stop_mult to config/registry. Enter decision_atr_stop_mult ONLY after its
+     diagram architecture is sited (diagrams govern).
+
+DISCIPLINE. Diagram-first: this is the VISUAL slice - Image3 (L1a 1H->24h, L2 wide stop, L3 daily basis) +
+Image2/Image9 gate:G8 (the 24h-cross scoring + the net_loss basis) WILL change text/g counts. Re-verify
+tag-balance + RECORD the NEW OP RECORD counts (baseline to diff from: g217 / text957 / desc126 / svg10 /
+title126 / figcaption10). Amend the relevant DECs (DEC-124 exits; the 24h-decision basis + wide-stop
+re-anchor). New seeds -> amend DECs -> code in tothbot/ -> tests green (3.12 full path) -> DR-010 (push both,
+fetch, confirm remote==local). STAY IN PAPER. Continuous-run; resolve every HOW with an FP/DP; never a
+question-box; write SL+NSI+OCS at close (standing).
+
+VPS. Re-check first (pid CHANGES; was 1052343): ssh root@87.99.141.44. Still the OLD short strategy (5 live
+shorts 06-17 all stopped negative - the bleed this build replaces); auto-search cron healthy (06-18 06:01 UTC:
+17 OOS survivors, 3 regime-robust). Do NOT redeploy until B+C is complete + Bill's go. GOTCHA: kill BY exact
+interpreter PID. Re-launch sources /root/.tothbot.env + TOTHBOT_MODE=paper TOTHBOT_RECORDS_DIR=
+/root/tothbot_records TOTHBOT_TOP_N=150 TOTHBOT_VIABILITY_N=50.
+
+VALIDATED STRATEGY (the build target, TB00786). Universe = liquid USD/USDC/USDT; 24h decision bars; LONG-ONLY;
+CIATS fixed ~$50 notional/trade; ENTRY = EMA12/26 bullish cross on 24h; EXIT = EMA12/26 reversal OR a wide
+~2.5x ATR(14)-daily fixed stop, no TP; honest forward OOS ~+2-3%/trade, win ~28%, 6/8 eras. All knobs
+CIATS-tunable seeds; only the 1:1.5 R:R floor hardcoded.

@@ -1,0 +1,173 @@
+DocDCN:     TB00789
+DocTitle:   TB00789_Session_Log
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00789_Session_Log_v1_0.txt
+DocDate:    06-18-2026
+DocTime:    17:00:00 UTC
+
+============================================================
+TB00789 SESSION LOG  (WIRE THE 24h DECISION LIVE - SUB-SLICE A OF THE LONG-ONLY ROUTING)
+============================================================
+
+SESSION SUMMARY. Executed the first sub-slice of the TB00789 mission (WIRE the 24h decision LIVE + route the
+LONG-ONLY entry/exit through it). Sub-slice A - the LIVE WIRE-IN of the TB00787-788 derive layer - is BUILT,
+fully tested, pushed, and DR-010 verified. The remaining routing (the long-only entry on the 24h bullish
+cross + the exit migration onto the 24h decision + the sacred-floor re-anchor) is the highest-stakes,
+coupled half; it is fully DESIGNED to the seam level here and handed to the next session as a single coherent
+slice (the NSI anticipated this: "the biggest slice ... may itself split into sub-slices"). Nothing went
+live - the VPS still runs the OLD short strategy (paper, healthy); the new build stays in paper until Bill's
+go-live + creds.
+
+VPS CHECK (first action). The paper run is HEALTHY (pid CHANGED 1052343, still the OLD 5m short strategy).
+5 live SHORTs closed 06-17, ALL stopped out negative (MAE_THRESHOLD_BREACH, actual_rr -1 to -3.1) - the
+known tight-MAE-stop bleed this whole build replaces. Auto-search cron HEALTHY: the 06-18 06:01 UTC run
+found 17 OOS survivors of which 3 REGIME-ROBUST (1h momentum/btc_tide + bb_break/vol), emailed
+nwoguy56@proton.me. ohlc5m_2026.jsonl at 11219 lines (the durable corpus growing). No redeploy (the new
+build is not complete + not Bill-go'd).
+
+============================================================
+WHAT WAS DELIVERED - SUB-SLICE A (the live wire-in), DR-010 verified
+============================================================
+
+Code HEAD 4e55d46 (1209 -> 1219 green, +10 tests). Docs HEAD 05ba14c (0500000 dv1_260 -> dv1_261 /
+0521001 dv1_70 -> dv1_71). NON-BREAKING: the live 5m/1H trading path is byte-unchanged; the decision cache
+is now LIVE-maintained per pair but NOTHING consumes it for a trade yet (no dead rail in the hot path).
+
+THE WIRE (the TB00789 NSI fork (1), resolved). The 24h DECISION series is now maintained live:
+ - tothbot/exchange/daily_decision.py +DailyDecisionStore: the per-pair DailyDecisionCache home + the
+   maintenance seam. seed_from_bars(symbol, bars) = the regime-1440 SECOND-consumer seed + the Htf24hGap
+   REST re-seed (duck-typed on .high/.low/.close, so DailyBar and RestOhlcBar both feed it); advance(symbol,
+   candle) = the live Closed24H step; get(symbol) = the consumer read; too-few-bars leaves a pair ABSENT (a
+   bounded WARM_UP-style skip, ar:AR-068).
+ - tothbot/pipeline/live_driver.py: in on_ohlc_5m, after a Closed1H drives _step_htf, it now also feeds
+   folded.candle into the OhlcAggregator SECOND fold stage (self._agg.fold_hour) via the new
+   _advance_decision: a Closed24H advances the pair's DailyDecisionCache; a day-aligned Htf24hGap is logged
+   (module Regime_Engine) + self-healed by _heal_decision (one REST GetOHLCData(1440) re-seed, the exact
+   mirror of _heal_htf one timeframe up, emits HTF_24H_HEAL on a successful re-seed). New decision_store
+   constructor arg (None -> the second fold stage is not driven, for unit assemblies).
+ - tothbot/pipeline/operational.py: builds the DailyDecisionStore and FANS the DailyRegimeCompute
+   on_daily_bars callback out to BOTH the DEC-124 reward store AND the decision store (one 1440 fetch, two
+   consumers - so ar:AR-049 step 8 "1440 is NOT part of the per-pair warm-up" STANDS, zero added REST);
+   threads the store into the LiveSweepDriver (htf_rest_client reused for the heal) + exposes it on
+   OperationalSystem.
+
+FP/DP RESOLVED (no Bill HOW asked): the per-pair cache lives in a DailyDecisionStore (mirrors the existing
+reward_store / mpp_store seed-store pattern), NOT on PairWarmup - the seed source is the regime 1440 path,
+not warm-up, so the store belongs with the regime/decision consumers; the driver orchestrates advance + heal.
+The 24h gap/heal events are tagged module=Regime_Engine (the decision-series owner).
+
+TESTS (+10, all green): test_daily_decision.py +5 (store seed/get, too-few-bars skip, reseed-replace-and-
+clear, advance == a full reseed Decimal-exact, unseeded-advance noop); test_live_driver.py +5 (advance on a
+complete day via _advance_decision, no-store noop, the 24h day-aligned gap REST-1440 self-heal WITH + WITHOUT
+a client, and the FULL 5m->1H->24h end-to-end advance through on_ohlc_5m over one clean UTC day in a single
+289-element frame).
+
+DIAGRAM (diagram-first, surgical, tag-balanced). 0500000 ar:AR-045 mod:OhlcAggregator descriptor: the DAILY
+DECISION CACHE scope line was amended from "the live-wire + entry/exit consumer is the next slice" to record
+that TB00789 WIRES the live advance (live_driver fold_hour + Closed24H advance + the Htf24hGap REST re-seed,
+the second-consumer seed via the on_daily_bars fan-out). Prose-only inside the existing <pre>; NO geometry /
+NO figure-R change. Tag classes UNCHANGED from baseline and balanced: g 217/217, text 957/957, desc 126/126,
+svg 10/10, title 126/126, figcaption 10/10. 0521001 dv1_71 OP RECORD appended (verbatim forensic entry).
+
+PUSH + DR-010. Code 12cb63f -> 4e55d46; Docs 47a0127 -> 05ba14c. Both pushed to master; remote == local
+verified on a fresh fetch for both repos.
+
+============================================================
+WHAT IS NOT DONE - THE B+C ROUTING (designed; the next session executes it as ONE coupled slice)
+============================================================
+
+WHY ONE SLICE (the key finding): the long-only ENTRY (NSI fork 2), the EXIT migration (fork 3), and the
+sacred-floor RE-ANCHOR (fork 4) are INSEPARABLE - the entry's gate:G8 acceptance net_loss, the layer:L2 exit
+stop, the layer:L3 emergSL, and the close-time actual_rr ALL key off ONE shared basis:
+
+    1R = param:decision_atr_stop_mult (~2.5) x ATR(14)-on-DAILY    (a price distance)
+
+The entry cannot be sized correctly (its R:R floor) without the exit's wide-stop basis, and the exit cannot
+re-anchor without the entry capturing the daily ATR onto the position. So B and C land together.
+
+THE SEAM-LEVEL DESIGN (every fork resolved; the next session implements + tests, no HOW to ask):
+
+ (B) THE LONG-ONLY ENTRY = on each Closed24H (in live_driver._advance_decision, AFTER the advance), capture
+     pre = decision_store.get(sym) BEFORE advancing and post = the advance() return; a BULLISH CROSS =
+     (not pre.bullish) and post.bullish (DailyDecisionCache.bullish = ema_fast > ema_slow, equality is not a
+     cross). On a cross, for the LONG side ONLY (Short_Module DORMANT - do NOT wire short), run the EXISTING
+     gate machinery (G1-G7 prefilters + G8 sizing + execute_entry), REPLACING the 5m SSS entry trigger:
+       - reuse assemble_candidate / process_candidate (sweep.py / driver.py), but for the 24h decision:
+         * the TRIGGER candle = the Closed24H candle (entry_ref_price = its close; entry_timestamp = the
+           00:00-UTC day boundary).
+         * OVERRIDE inputs.atr_14 AND ctx.atr_14_entry to the DAILY ATR (decision_store.get(sym).atr_14_24h)
+           - NOT the 5m indicators.atr_14. THIS is what stamps the daily ATR onto the position (via
+           dispatch_entry's atr_14_entry, which already accepts + stores it - ws_manager.py:1206/1252) so the
+           whole exit/RR math re-anchors automatically.
+         * the SSS evaluator PASSES (the 24h cross IS the signal): inject an evaluator returning a passing
+           verdict (a SssVerdict with passed=True, signal_params carrying the 24h ema12/ema26 levels). The
+           SCORING shifts from the 5m candle to the 24h cross; G1-G7 (status/state/liquidity/regime/HTF-
+           confirm/selection/risk) STILL APPLY as prefilters (NSI fork 2 ruling).
+         * pass mae_mult = decision_atr_stop_mult to G8 (size_candidate already accepts mae_mult as a param,
+           position_sizer.py; run_pipeline reads params.get("mae_mult")) so net_loss = daily_ATR x 2.5 / entry
+           + 2 taker legs. emergency_sl_mult stays 3.0 -> emergSL = 3.0 x daily_ATR (OUTSIDE the wide L2).
+       - DISABLE the 5m sweep entry: sweep_pair must no longer trigger entries (the 5m path keeps stepping
+         indicators + folding + driving exits, but its SSS entry is REPLACED by the 24h decision). Cleanest:
+         gate the sweep's process_candidate entry dispatch off (a flag / the sweep returns without dispatching
+         entries) - keep G-stack reachable for tests but no live 5m entry.
+       - guard: skip if a same-side position is already open (G5 has_active_same_side_position already does
+         this; the 24h entry must respect it) and if decision_store.get(sym) is None (unseeded -> no decision).
+
+ (C) THE EXIT MIGRATION (Image3) + the RE-ANCHOR:
+       - L1a = the 24h EMA12/26 bearish-cross REVERSAL. detect_htf_regime_reversal(position, ema_short,
+         ema_long) ALREADY fires when ema_short < ema_long for a LONG - so DRIVE wm.on_htf_ohlc_close(sym,
+         ema_fast_24h, ema_slow_24h, bid, ask) from the Closed24H branch (after advance) with the 24h EMAs,
+         and REMOVE the 1H drive of on_htf_ohlc_close from _step_htf (the 1H HtfCache advance STAYS - gate:G4
+         HTF confirmation still reads close_1h + ema20_1h). exit_reason HTF_REGIME_REVERSAL still applies
+         (it is the higher-timeframe reversal). DEC-124 no-take-profit STANDS (run to reversal).
+       - L2 = the WIDE fixed stop = decision_atr_stop_mult (~2.5) x ATR(14)-on-daily (NO trail), REPLACING
+         the tight 1.5x-5m-ATR MAE. Mechanism: position.atr_14_entry is now the DAILY ATR (stamped by the B
+         entry), so the L2 check (paper_exit.detect_paper_exit: atr_14_entry x mult) widens once the mult is
+         decision_atr_stop_mult. THREAD the mult: add a mae_mult param to detect_paper_exit (default the
+         registry seed) + pass decision_atr_stop_mult at the WSManager call sites (ws_manager.py:812 live,
+         :1443 paper handle_ticker); construct/rebind each ExitController with mae_mult=decision_atr_stop_mult
+         (ws_manager.py:563 - cleanest via a new set_decision_stop_mult(mult) setter called from
+         operational.py, mirroring set_ciats_exit_sinks, so existing paper_exit/exit_controller tests keep
+         their 1.5 default and only the assembled organism uses 2.5).
+       - L3 emergSL KEPT (Kraken resting brake; fires only on infra failure). Its basis MOVES to the daily
+         ATR automatically (position.atr_14_entry = daily) at emergency_sl_mult=3.0 -> 3.0 x daily > 2.5 x
+         daily = L2, so L3 stays the OUTERMOST layer (never fires in normal operation, sec 7). KEEP the
+         emergency_sl_mult = 3.0 seed.
+       - SACRED FLOOR RE-ANCHOR (fork 4): AUTOMATIC once (a) the entry stamps the daily ATR + sizes G8 with
+         decision_atr_stop_mult and (b) exit_controller actual_rr uses self._mae_mult = decision_atr_stop_mult
+         x position.atr_14_entry(daily). The 1:1.5 floor (position_sizer.SACRED_RR_FLOOR) is NEVER touched -
+         only the net_loss BASIS changes. NEVER lower the sacred 1:1.5 R:R.
+       - expected_reward (fork 4, "model expected_reward for run-to-reversal"): the DEC-124
+         expected_reward_estimator (ciats/expected_reward.py replay_excursions) walks each entry forward to
+         the FIRST L1a reversal; its reversal condition must be the 24h EMA12/26 cross (currently the 1H
+         EMA20/50 + daily downgrade). Update the replay to the 24h-decision reversal so the run-to-reversal
+         favorable-excursion median (the A1 floor numerator) reflects the NEW exit. Per pair/regime, seeded
+         from the historical 1440 series (the same second-consumer series).
+
+ (5) SEEDS -> TB00000 v2_101 -> v2_102. Enter all five (the NSI fork 5): decision_bar_interval_min = 1440,
+     decision_ema_fast = 12, decision_ema_slow = 26, decision_atr_period = 14 (the four derive seeds, already
+     diagram-sited TB00787-788), + the NEW param:decision_atr_stop_mult = 2.5 (CIATS-owned, the wide L2/L3
+     stop basis; only the net 1:1.5 R:R floor stays hardcoded). Add decision_atr_stop_mult to config/registry
+     too. NOTE: enter decision_atr_stop_mult only AFTER its architecture is sited in the diagram (Image3
+     wide stop + Image2/Image9 G8 net_loss basis) - diagrams govern.
+
+ DIAGRAM (the VISUAL slice - WILL change tag counts, re-verify + record the NEW OP RECORD counts). Image3
+ (Exit Architecture L1a/L2/L3): L1a basis 1H -> 24h EMA12/26; L2 tight-MAE -> wide decision_atr_stop_mult x
+ ATR(14)-daily; L3 basis -> daily ATR (stays outermost). Image2/Image9 (gate:G8): the entry trigger SCORING
+ = the 24h EMA12/26 bullish cross (not the 5m SSS); net_loss basis = decision_atr_stop_mult x daily ATR.
+ Baseline to diff from: g 217 / text 957 / desc 126 / svg 10 / title 126 / figcaption 10 (a VISUAL edit WILL
+ move text/g - re-verify balance + record the new counts in the OP RECORD + the commit). Amend the relevant
+ DECs (DEC-124 exits already canon for run-to-reversal; record the 24h-decision basis + the wide-stop
+ re-anchor).
+
+============================================================
+ARCHITECTURE NOTE. Stays Long/Short-CAPABLE (mod:Short_Module plumbing intact); the RATIFIED strategy is
+LONG-ONLY (TB00786). Do NOT wire a short entry; do NOT "correct" the long-only strategy back to symmetric
+shorts (long-short-paradigm-standing).
+
+STATE AT CLOSE. Code HEAD 4e55d46 (1219 green). Docs HEAD 05ba14c (0500000 dv1_261 / 0521001 dv1_71).
+TB00000 v2_101 (no bump this sub-slice; the five seeds are flagged for v2_102 when the B+C consuming slice
+lands - the four derive seeds are diagram-sited, decision_atr_stop_mult lands with its Image3/G8 architecture).
+VPS unchanged (old short strategy, paper, healthy). All pushes + DR-010 verified.
+============================================================
