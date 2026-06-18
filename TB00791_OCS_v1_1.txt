@@ -1,0 +1,96 @@
+DocDCN:     TB00791
+DocTitle:   TB00791_OCS
+DocVersion: v1_1
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00791_OCS_v1_1.txt
+DocDate:    06-18-2026
+DocTime:    20:30:00 UTC
+
+TB00791 OCS  (v1_1 SUPERSEDES v1_0 - Bill directive at TB00790 close: "create a plan to FINISH the
+long-only strategy; the how is yours, do not ask". v1_0 is preserved on disk; this version encodes
+the explicit FINISH plan F1->F4.)
+
+  Auto mode, continuous-run, FINISH the long-only strategy, stop stopping. Concise. NEVER ask Bill a
+  HOW - resolve every path fork with an FP/DP for the OVERALL organism, then proceed (what-how-
+  division). NEVER a question-box; ALL choices to Bill as plain chat text. PUSH to master is permitted
+  (DR-010). NEVER lower the sacred 1:1.5 R:R. The ONLY Bill-gated step is F4 (LIVE real-money go-live +
+  creds) - everything up to that edge is YOURS to execute autonomously, INCLUDING the VPS paper
+  redeploy (still paper, not real money; you cannot finish/verify a trading strategy without running it).
+
+  THE BUILD IS DONE; the STRATEGY IS NOT FINISHED. The validated LONG-ONLY 24h-DECISION strategy is
+  BUILT end-to-end in the organism (TB00787 derive + TB00788 cache + TB00789 live-wire + TB00790 the
+  coupled B+C entry/exit routing + re-anchor). READ THE TB00790 SL FIRST - the full coupled design + the
+  ONE shared basis 1R = param:decision_atr_stop_mult (2.5) x ATR(14)-on-DAILY. "Finished" = the strategy
+  PROVEN through a whole trade (F1), DEPLOYED + OBSERVED in paper (F2/F3), and standing at the live edge
+  (F4, Bill-gated).
+
+  =========================== THE FINISH PLAN (F1 -> F4) ===========================
+
+  F1 - FULL-LIFECYCLE VERIFICATION (paper, dev machine). NEVER yet observed: a whole new-strategy trade.
+       Build a focused integration test/sim over the ASSEMBLED organism (decision_entry=True, the real
+       WSManager - mirror the test_live_smoke _assemble_real_wm harness, NOT the _FakeWM stand-in) that
+       drives a complete trade: a crafted bearish-then-bullish 24h series fires the EMA12/26 BULLISH-
+       CROSS entry (a real opened position in the mirror + the daily-ATR stamped on it), then exit it
+       TWO ways in separate cases - (a) a 24h bearish-cross REVERSAL (drive on_htf_ohlc_close via the
+       Closed24H branch) and (b) a WIDE 2.5x-daily-ATR adverse ticker (the L2 stop) - asserting the
+       TRADE_CLOSE carries the ONE-basis actual_rr (= net_pl / [decision_atr_stop_mult x daily-ATR
+       basis]) + the field-19 24h signal_params + the right exit_reason. ALSO exercise the LIVE-mode
+       branch (is_live=True): the entry dispatches via _dispatch_entry_live and the exit ENQUEUES via
+       _detect_and_enqueue_live_exit on the wide stop. Green + pushed + DR-010. This CLOSES the
+       verification gap before any deploy.
+
+  F2 - DEPLOY THE NEW BUILD TO THE VPS IN PAPER (yours, autonomous - still paper). Check the VPS FIRST:
+       ! ssh root@87.99.141.44 'pgrep -af python3 | grep -i toth; tail -n 40 /root/tothbot_paper.log; cat
+       /root/tothbot_records/trades_2026.jsonl; wc -l /root/tothbot_records/ohlc5m_*.jsonl; tail -n 30
+       /root/strategy_search_cron.log'
+       Then: git pull the new Code (HEAD 6029f61+) on the VPS, KILL the old short-strategy run BY exact
+       interpreter PID (was 1052343, CHANGES - GOTCHA: pkill self-match; match the full interpreter
+       path), re-launch sourcing /root/.tothbot.env + TOTHBOT_MODE=paper TOTHBOT_RECORDS_DIR=
+       /root/tothbot_records TOTHBOT_TOP_N=150 TOTHBOT_VIABILITY_N=50. Confirm cold-start: pairs warm,
+       the regime 1440 series SEEDS the per-pair DailyDecisionCache (decision_store), the 24h fold
+       advances, and the first 00:00-UTC boundary emits a Closed24H (advance + any cross). Health:
+       0 rate-limit / 0 reject / governor holding / the durable 5m corpus still logging. The 5m corpus
+       continuity is PRESERVED (the new build logs the same ohlc5m sink), so deploying loses no durable
+       data; the old short-strategy loss evidence is already well-captured ([[first-live-trades-
+       evidence]]). FP/DP: deploying is REQUIRED to finish - you cannot observe the strategy without
+       running it - and it is still paper, so it is YOURS, not a Bill WHAT.
+
+  F3 - OBSERVE REAL PAPER TRADES + RECONCILE vs the backtest (yours; runs across sessions). Let it run
+       across multiple daily boundaries; capture the FIRST real 24h-cross ENTRIES + their EXITS
+       (reversal vs wide stop); confirm the actual_rr basis, win rate (~28% expected), and per-trade $
+       roughly track the TB00786 HONEST-FORWARD expectation (~+2-3%/trade OOS after fees+slippage, NOT
+       the alt-season-inflated full-period number - [[profitability-research-verdict]] [[position-
+       sizing-fixed-notional]]). Accumulate the corpus toward the 200-trade CIATS floor so
+       decision_atr_stop_mult self-tuning can eventually engage. REPORT each session to Bill (plain
+       text): trades seen, lifecycle captured, economics vs expectation. If the live-in-paper economics
+       diverge materially from the backtest, that is DATA - surface it, do not hide it.
+
+  F4 - LIVE GO-LIVE (the ONLY Bill-gated step). Wire everything to the edge: confirm the live private-WS
+       + REST edges bind, the live exit path uses the wide stop, the live entry dispatches. Then it
+       waits on Bill: real Kraken creds + his explicit go. STAY IN PAPER until then. When Bill provides
+       both, flip TOTHBOT_MODE=live. NEVER lower the sacred 1:1.5 R:R.
+
+  THIS SESSION (TB00791) = execute F1 (verify the full lifecycle) THEN F2 (deploy to VPS paper) THEN
+  begin F3 (watch the first boundary). Diagram-first ONLY if a code gap forces a 0500000 change (the
+  routing is already diagram-sited; F1-F3 are verification/ops, expect NO diagram edit). Session-close
+  STANDING (SL+NSI+OCS) at the real close.
+
+  Read from GitHub HEAD: TB00791 NSI -> TB00790 SL (the B+C design) -> TB00000 (v2_102). Auto-memory:
+  phase2-build + decision-cache-live-wired + position-sizing-fixed-notional + long-short-paradigm-
+  standing + first-live-trades-evidence + profitability-research-verdict + what-how-division + ciats-
+  self-tuning-directive + smtp-reporting-config + continuous-run-directive + no-question-box-tool +
+  session-close-standing + tothbot-commit-rules + never-disappear-content + push-is-permitted +
+  ohlc60m-derived-from-5m.
+
+  Cold-load: Code 6029f61 (1226 green; py = C:\Users\wstot\AppData\Local\Programs\Python\Python312\
+  python.exe, full path only) - Docs 5ee8ecb (0500000 dv1_262 / 0521001 dv1_72) - SessionLogs = TB00790
+  SL + TB00791 NSI/OCS (this v1_1), TB00000 v2_102.
+
+  WHERE WE ARE: the organism is a COMPLETE long-only trading machine on paper (entry = the 24h EMA12/26
+  bullish cross replacing the 5m SSS; exit = the 24h reversal OR the wide decision_atr_stop_mult x
+  daily-ATR stop; L3 emergSL outermost; DEC-124 no-TP; the sacred floor auto-re-anchored onto the ONE
+  1R basis; the whole migration gated behind decision_entry, default False = legacy path byte-
+  unchanged). 1226 green, all 3 repos pushed + DR-010. The VPS STILL runs the OLD short strategy - F2
+  replaces it (paper). FINISH = F1 verify + F2 deploy-paper + F3 observe + F4 live (Bill-gated).
+
+  This is TB00791_OCS_v1_1.txt (supersedes v1_0).
