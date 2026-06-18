@@ -1,0 +1,84 @@
+DocDCN:     TB00786
+DocTitle:   TB00786_Session_Log
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00786_Session_Log_v1_0.txt
+DocDate:    06-18-2026
+DocTime:    00:30:00 UTC
+
+============================================================
+TB00780-786 SESSION LOG  (ONE CONTINUOUS SESSION - THE EXIT/STOP/SPEED/SHORTS RESEARCH ARC -> A VALIDATED,
+STRESS-TESTED LONG-ONLY STRATEGY)
+NOTE: TB00780 through TB00786 all ran in ONE continuous conversation, driven turn-by-turn by Bill. This is
+the consolidated log; per-step detail lives in the Code commit messages (913bd81 -> d519524).
+============================================================
+
+ARC SUMMARY. From TB00779's exit/stop/speed sweep, Bill steered a tight iterative hunt for a real
+1:1.5-or-better edge. OUTCOME: the first PROVEN, stress-tested, statistically-significant strategy of the
+whole program - a SLOW (24h), LONG-ONLY, wide-stop + run-to-reversal trend strategy. Shorts were tested
+exhaustively and REMOVED (Bill's ratified decision). Code 913bd81->d519524, 1194 green throughout (all
+research scripts, no package edits). No Docs change yet (build is next session). TB00000 v2_101.
+
+KEY STEPS
+ TB00780 (tb00780_structure_speed.py): Bill's trailing STRUCTURE stop (support/resistance, ratchet in
+   favor, run-to-reversal) on longer speeds (8h/12h folded from 4h, 24h native). On 120-day Kraken data 8h
+   looked like a sweet spot - but data-limited (one era; bootstrap spanned zero).
+ TB00781 (tb00781_deep_history.py): Bill - "don't rely solely on Kraken." Found data-api.binance.vision
+   (public mirror, native 4h-1d back to 2019 = 7.5yr / 8 eras). REVISED TB00780: the 8h "sweet spot" was a
+   120-day artifact; over 7.5yr SLOWER is monotonically better, 12-24h BEST, bootstrap-SIGNIFICANT + era-
+   stable (6-7/8 incl the 2022 bear) = the FIRST proven edge. Added per-trade %-on-capital reporting.
+   DECISIVE: the edge is LONG-side only - shorts bleed across every speed.
+ TB00782 (tb00782_hybrid_stop.py): Bill's HYBRID (wide floor + trail to supports). Beats pure structure in
+   R but TIES it on % on capital (the R-gap was a tighter-stop artifact - Bill caught this).
+ TB00783 (tb00783_adaptive_stop.py): Bill questioned the tighten-only ratchet + proposed sizing the stop
+   from volatility. FINDING: the tight trailing was HURTING - it cut win rate (~16%) without adding profit;
+   a WIDE/volatility-sized stop wins ~25-30% at equal-or-better profit. "free" (both-ways) == "ratchet".
+   SIMPLER design: wide stop + reversal exit; drop the structure trailing.
+ TB00784 (tb00784_stopwidth_shorts.py): (A) stop-width sweet spot = ~2-2.5x ATR (profit peaks there; below
+   2x falls off a cliff; above converges to no-stop = "disaster insurance dominates" CONFIRMED). (B) trend-
+   filtering shorts (below SMA100/200, death-cross, +neg-mom) does NOT make shorts profitable - still
+   negative, positive only in 1-3/8 (bear) eras. Structural.
+ TB00785 (tb00785_meanrev_shorts.py): the OPPOSITE short mechanism - mean-reversion (short overbought
+   euphoria). FAILS harder: win rate HIGH (40-51%) but small wins vs big losses + borrow fee = net
+   negative, 0/8 eras. BOTH short mechanisms fail -> systematic shorts don't work in crypto.
+ TB00786 (tb00786_stresstest.py): Bill RATIFIED LONG-ONLY ("we remove short trading, it's not profitable")
+   + corrections (universe = USD/USDC/USDT; 24h only; sizing CIATS-owned FIXED ~$50 notional NOT risk-based
+   1R -> report % + $; add slippage). FINAL stress test: 62-pair expanded universe, 24h, $50 notional,
+   EMA-cross long entry, reversal/2-2.5xATR-stop exit, slippage swept 0/5/10bp, 8 eras + OOS bootstrap.
+   PASSES: OOS bootstrap-SIGNIFICANT (~+1..+4.7%/trade), 6/8 eras, ROBUST to slippage, win ~28%, emacross >
+   momentum, stop 2.5x slightly best.
+
+BILL'S RATIFIED DECISIONS THIS SESSION
+ - LONG-ONLY: short trading removed (systematic shorts structurally unprofitable in crypto: upward drift +
+   borrow fee + bear rallies; both trend-following AND mean-reversion fail). ARCHITECTURE stays Long/Short-
+   capable; the STRATEGY is long-only. Auto-memory long-short-paradigm-standing updated - this authorized
+   long-only is NOT the old rogue restriction; do NOT "correct" it back to symmetric.
+ - SIZING: CIATS-owned FIXED ~$50 notional/trade ($50 min to kill splitting/dust; raise per-coin), NOT
+   risk-based. Report % on capital + $; STOP quoting "R". New auto-memory position-sizing-fixed-notional.
+ - UNIVERSE: USD/USDC/USDT. TIMEFRAME: 24h only.
+
+THE VALIDATED STRATEGY (executive - the thing to BUILD next session)
+ Universe: liquid USD/USDC/USDT pairs (+ existing liquidity/viability screen). Timeframe: 24h. LONG-ONLY.
+ Sizing: CIATS fixed ~$50 notional/trade. ENTRY: EMA12/26 bullish cross. EXIT: reversal (EMA12/26 bearish
+ cross) OR a wide ~2.5x ATR disaster stop, whichever first; NO take-profit. Honest forward expectation
+ (OOS): ~+2-3% per trade on the $50 (~+$1-1.50) after fees AND slippage; win ~28%; positive in 6/8 years.
+ CAVEATS: the full-period +17%/trade is alt-season-inflated (NOT forward); params partly tuned on this data
+ (clean OOS evidence = 30 new pairs + era-stability + slippage-robustness).
+
+ARTIFACTS
+ Code (TothBot_V2-Code, master): 913bd81 -> d519524 = scripts/tb00780_structure_speed, tb00781_deep_
+   history, tb00782_hybrid_stop, tb00783_adaptive_stop, tb00784_stopwidth_shorts, tb00785_meanrev_shorts,
+   tb00786_stresstest. 1194 green (standalone scripts, no package edits). All pushed + DR-010. Binance
+   kline caches _binance_cache_*.json are LOCAL-ONLY (not committed).
+ Docs (TothBot_V2-Docs, master): UNCHANGED at a1c45f9 (no diagram change yet - build is next session).
+ SessionLogs (this commit): TB00786 SL + TB00787 NSI + TB00787 OCS.
+ Auto-memory: phase2-build (full arc + validated strategy), long-short-paradigm-standing (long-only
+   ratified), NEW position-sizing-fixed-notional, MEMORY index.
+ VPS: 49/50 paper run RUNNING (pid 1052343); auto-search cron daily 06:00 UTC.
+ TB00000 stays v2_101 (research, no new CIATS seed).
+
+NEXT SESSION = BUILD the validated long-only strategy into the organism, DIAGRAM-FIRST (see TB00787 NSI).
+
+============================================================
+END TB00780-786 SESSION LOG
+============================================================

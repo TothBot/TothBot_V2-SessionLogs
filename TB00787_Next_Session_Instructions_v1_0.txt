@@ -1,0 +1,89 @@
+DocDCN:     TB00787
+DocTitle:   TB00787_Next_Session_Instructions
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00787_Next_Session_Instructions_v1_0.txt
+DocDate:    06-18-2026
+DocTime:    00:30:00 UTC
+
+============================================================
+TB00787 NEXT SESSION INSTRUCTIONS  -  BUILD THE VALIDATED LONG-ONLY STRATEGY INTO THE ORGANISM
+============================================================
+
+THE MISSION (Bill): the research arc is DONE. Next session = BUILD the validated strategy into the real
+TothBot organism. DIAGRAM-FIRST (edit 0500000 in Claude Code, surgical + tag-balance-verified, per TB00000
+v2_99 sec 4.7), register any new seeds + amend the relevant DECs, THEN code, test, DR-010. STAY IN PAPER.
+
+THE VALIDATED STRATEGY TO BUILD (proven TB00780-786, 7.5yr Binance deep history, 8 eras, stress-tested
+with slippage; see TB00786 SL + [[phase2-build]])
+  Universe : liquid USD/USDC/USDT pairs (the existing prescreen + CIATS viability screen pick the set).
+  Timeframe: 24h (daily) decision bars.
+  Direction: LONG-ONLY (Bill ratified - shorts removed; systematic shorts are structurally unprofitable in
+             crypto. Keep the Short_Module CAPABILITY in the architecture but it does not fire. See
+             [[long-short-paradigm-standing]] - do NOT "correct" this back to symmetric.)
+  Sizing   : CIATS-owned FIXED ~$50 notional/trade ($50 min to kill splitting/dust; raise per-coin if the
+             coin's lot/min rules require). NOT risk-based. See [[position-sizing-fixed-notional]].
+  ENTRY    : EMA-12 crosses ABOVE EMA-26 on the 24h bar (bullish trend cross). (Replaces the live bot's
+             fast EMA9/21 + RSI14 + volume + SSS entry - that fast/5m entry is the wrong tool per all the
+             research.)
+  EXIT     : whichever first - (a) REVERSAL: EMA-12 crosses BELOW EMA-26 (run winners to the reversal); or
+             (b) a WIDE ~2.5x ATR disaster stop below entry (fixed, does NOT trail - pure catastrophe
+             insurance). NO take-profit (it tested as a wash and caps winners). (Replaces the tight L2 MAE
+             stop that produced the 5/5 live losers.)
+  Expected : honest forward (OOS) ~+2-3% per trade on the $50 (~+$1-1.50) after fees AND slippage; win
+             ~28%; winners run; positive in 6/8 years. Modest but real + stress-test-survived. (Ignore the
+             +17%/trade full-period figure - alt-season-inflated.)
+
+THE BIG DESIGN DECISIONS FOR THE BUILD (resolve each with an FP/DP for the whole organism - these are HOWs,
+do NOT ask Bill; pick the path that best fits the existing organism and proceed)
+  1. 24h DECISION BARS vs the 5m DATA FEED. The organism streams ohlc_5m and already DERIVES higher frames
+     by folding 5m (TB00768 OhlcAggregator derives 1H from 12x 5m). STRONGLY PREFER: keep the robust 5m
+     liveness/WS infrastructure and DERIVE the 24h decision bar by folding 5m (extend OhlcAggregator to a
+     1440m/24h fold), rather than re-subscribing everything to native daily. The regime classifier, candle
+     clock, sweep cadence currently assume 5m - the decision logic moves to the 24h close while the data
+     layer stays 5m. Diagram + wire this.
+  2. THE SACRED 1:1.5 R:R FLOOR (gate:G8) under a RUN-TO-REVERSAL exit. The new strategy has NO fixed
+     take-profit, so "expected_reward" must be modeled for a run-to-reversal hold (not the old daily-target
+     estimator). The 1.5 floor is SACRED (NEVER lower it) - but HOW expected_reward is estimated for this
+     exit needs design (e.g. the historical median run-to-reversal excursion vs the 2.5x-ATR net_loss).
+     Re-anchor net_loss to the 2.5x-ATR stop basis (this resolves Bill's old paused "re-anchor the sacred-
+     floor net_loss" call - the answer from the data is the 2.5x ATR wide stop). DEC + diagram.
+  3. EXIT CONTROLLER (0500000 Image3 L1a/L2/L3): L1a becomes the EMA12/26 reversal on the 24h close; the
+     tight MAE L2 is REPLACED by the wide 2.5x ATR disaster stop; keep L3 emergency. Drop the daily-target
+     /DEC-124 take-profit question - the data says NO take-profit (so DEC-124 "no take-profit" actually
+     STANDS; do not add one). Diagram + DEC note.
+  4. ENTRY GATE (Image9 / G-series): entry trigger = the 24h EMA12/26 bullish cross; long-only so the short
+     trigger path is dormant. Keep the liquidity + viability + drawdown gates.
+  5. ATR + EMA on 24h: the indicators must compute on the derived 24h series (ATR-14, EMA-12, EMA-26).
+
+BUILD DISCIPLINE
+  Diagram-first (0500000 in Claude Code, surgical, tag-balance verified) -> new seeds (e.g. EMA periods
+  12/26, ATR mult 2.5, 24h decision interval - all CIATS-tunable seeds per the DEC-124/128 pattern, only
+  the 1.5 floor is hardcoded) -> amend DECs -> code in tothbot/ -> tests green -> DR-010 all repos. Scope
+  to a clean slice; this is multi-session. STAY IN PAPER until Bill's explicit go-live + creds.
+
+THE COLD-LOAD TO VERIFY (read from GitHub HEAD)
+  Code        d519524  - 1194 green (py = C:\Users\wstot\AppData\Local\Programs\Python\Python312\
+                         python.exe, full path only). scripts/tb00780..tb00786 are the research tools;
+                         _binance_cache_*.json are local-only (not in the repo).
+  Docs        a1c45f9  - UNCHANGED (0500000 dv1_258 / 0521001 dv1_68) - the build edits it FIRST.
+  SessionLogs (this commit) - TB00786 SL + TB00787 NSI/OCS.
+  Auto-memory: phase2-build + position-sizing-fixed-notional + long-short-paradigm-standing + first-live-
+  trades-evidence + profitability-research-verdict + what-how-division + ciats-self-tuning-directive +
+  smtp-reporting-config + continuous-run-directive + no-question-box-tool + session-close-standing +
+  tothbot-commit-rules + never-disappear-content + push-is-permitted + ohlc60m-derived-from-5m.
+
+CHECK THE VPS FIRST (49/50 paper run, pid 1052343; auto-search cron on HEAD 8106391)
+  ! ssh root@87.99.141.44 'pgrep -af python3 | grep -i toth; tail -n 40 /root/tothbot_paper.log; cat /root/tothbot_records/trades_2026.jsonl; wc -l /root/tothbot_records/ohlc5m_*.jsonl; tail -n 30 /root/strategy_search_cron.log'
+  GOTCHA: kill BY exact interpreter PID. Re-launch sources /root/.tothbot.env + TOTHBOT_MODE=paper
+  TOTHBOT_RECORDS_DIR=/root/tothbot_records TOTHBOT_TOP_N=150 TOTHBOT_VIABILITY_N=50.
+
+STANDING
+  Auto mode, continuous-run, build the organism, stop stopping. Concise. PUSH to master is permitted
+  (DR-010). NEVER ask Bill a HOW (resolve forks by FP/DP). NEVER a question-box (plain text only). Session-
+  close (SL + NSI + OCS) is standing. STAY IN PAPER. TB00000 v2_101. NEVER the sacred 1:1.5 R:R MINIMUM -
+  it is the floor the strategy must clear, never lowered.
+
+============================================================
+END TB00787 NEXT SESSION INSTRUCTIONS
+============================================================
