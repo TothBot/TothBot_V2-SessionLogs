@@ -1,0 +1,83 @@
+DocDCN:     TB00778
+DocTitle:   TB00778_Session_Log
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00778_Session_Log_v1_0.txt
+DocDate:    06-17-2026
+DocTime:    23:59:00 UTC
+
+============================================================
+TB00778 SESSION LOG  (STRESS-TEST THE SUPERTREND CANDIDATE - THE DATA LED AWAY FROM IT)
+MISSION (Bill's WHAT): (1) stress-test plain Supertrend + Bill's structure exit HARDER - walk-forward
+across many eras, regime-robust + bootstrap - durable or lucky? (2) test it on INTRADAY (1h + the 5m
+corpus) - does the daily edge carry to the timeframe the bot trades? (3) IF (1)+(2) hold, design
+ORGANISM-level improvements (Supertrend entry + structure exits), diagram-first.
+OUTCOME: an honest negative. Supertrend+structure is NOT a durable, timeframe-portable edge. Step (1)
+holds only weakly; step (2) FAILS; so step (3)'s precondition is NOT met and NO organism/diagram change
+was made. The data led us away from the candidate - a legitimate, important result. The VALIDATED lever
+remains the EXIT (structure exit delivers RR 2+); the live losses are an EXIT failure. Code 82814ba->
+ef33e66 (pushed + DR-010), 1194 green (research-only script, no package edit). No Docs change. TB00000
+v2_101.
+============================================================
+
+0. VPS CHECK FIRST (per the OCS)
+   Paper run HEALTHY (pid 1052343, 49/50, sourcing /root/.tothbot.env). FIRST OBSERVED LIVE TRADES on this
+   run: 5 closed trades, ALL SHORT, ALL stopped out via MAE_THRESHOLD_BREACH (AVAX -3.15R, AAVE -2.36R,
+   BCH -2.59R, ADA -2.18R, UNI -1.02R actual_rr) on sub-1% adverse moves = first-live-trades-evidence
+   confirmed AGAIN: the tight-MAE-stop exit is the proven bleed. 5m corpus = 3022 total lines (still
+   <200/pair -> not yet usable for the search). Cron last ran 21:18 UTC: [1h] 12 OOS survivors, [4h]/[1d]
+   zero. (That log line used the OLD format - see sec 4.)
+
+1. THE HARNESS  [scripts/tb00778_walkforward.py, Code ef33e66]
+   Reuses tb00777.sim_trade (Bill's structure exit) + _supertrend + auto_strategy_search data/indicators.
+   On each timeframe: (A) WALK-FORWARD across M consecutive eras - the FIXED strategy must earn its keep in
+   EACH era independently, not just net over one contiguous window; per-era n/ER(R)/RR/win + per side.
+   (B) PARAMETER PLATEAU - sweep Supertrend (period,mult) around (10,3); a real edge is a plateau, not a
+   lone spike. (C) BLOCK BOOTSTRAP CI by pair. Structure lookback windows scaled per timeframe so the
+   intraday test is fair (daily L_init=10/L_run=5; 1h 24/8; 5m 48/12).
+
+2. DAILY 1440m (32 pairs, 720 bars ~2yr)
+   (B) PARAMETER PLATEAU = PASSES. Every neighbour of super(10,3) is positive: (7,3) +0.068R, (10,2)
+   +0.021R, (10,3) +0.076R, (10,4) +0.073R, (14,3) +0.088R; RR 2.3-3.1; 4 of 5 bootstrap CI fully > 0.
+   A genuine plateau, not overfit to one parameter point.
+   (A) WALK-FORWARD = FAILS. Across 6 eras @ super(10,3): only 3/6 positive. The whole profit concentrates
+   in ONE era (era 2 +0.59R, RR 8.2, driven by LONG +1.78R); eras 1, 3, 4 lose. Direction ONE-SIDED: all
+   profit is LONG (+0.22R avg); the SHORT side is net NEGATIVE (-0.06R) over the full 2yr. NOTE: TB00777's
+   "both directions positive" was true only of the OOS half - over the full window the short side is
+   underwater. VERDICT: full-window boot SIG(>0) but dir ONE-SIDED + eras 3/6 -> NOT durable.
+
+3. 1H 60m (32 pairs, 720 bars ~30d) = DECISIVELY NEGATIVE
+   ER -0.325R, win 13%, RR 1.34. Every era losing (0/5), every param negative, bootstrap CI fully BELOW
+   zero. The wide structural stops + reversal exits get chopped to death on 1h. The daily edge does NOT
+   carry to the intraday timeframe the bot actually trades.
+
+4. REGIME-ROBUST GATE ON THE CRON'S OWN 1H "SURVIVORS"  [ran the repo HEAD auto_strategy_search.search]
+   The cron's headline 1h survivor (momentum/btc_tide/5x/rev, ~+1.2%/trade) is NOT a Supertrend result.
+   Under the repo's regime-robust gate: of 16 OOS survivors on 1h, only 1 is REGIME-ROBUST. Every headline
+   survivor is REGIME-FRAGILE(1-sided): the edge rides the SHORT side (S +2.39% vs L +0.04%) over a 30-day
+   down-trend window = regime persistence, not an edge. 4h/1d: zero survivors. DEPLOYMENT NOTE: the VPS
+   cron (HEAD 8106391) ALREADY has this gate (grep=7); the old-format SURVIVOR line in the 21:18 log was a
+   stale pre-deploy entry. Next 06:00 run reports honestly - NO redeploy needed.
+
+5. THE DATA-LED PIVOT (carried to TB00779)
+   Mechanical entries keep producing REGIME ARTIFACTS, not edges. The SHORT side is structurally weaker
+   than LONG across timeframes AND methods (live 5/5 short losers; daily ST short negative; 1h short "wins"
+   = down-regime persistence). The VALIDATED lever stays the EXIT (structure exit RR 2+); the live losses
+   are an EXIT failure (tight MAE stop on sub-1% noise). So the next direction is NOT another entry
+   indicator - it is the EXIT/RISK redesign = Bill's 2 PAUSED risk-design WHATs (reverse DEC-124 for the
+   +3R take-profit; re-anchor the sacred-floor net_loss to a structural basis). Those are Bill's calls
+   (paused); TB00779 should tee them up DATA-RICH, not decide them.
+
+ARTIFACTS THIS SESSION
+   Code (TothBot_V2-Code, master): 82814ba -> ef33e66 (scripts/tb00778_walkforward.py). 1194 green
+     (standalone research script, not imported by the package). Pushed + DR-010 (local==remote).
+   Docs (TothBot_V2-Docs, master): UNCHANGED at a1c45f9 (no organism/diagram change justified).
+   SessionLogs (this commit): TB00778 SL + TB00779 NSI + TB00779 OCS.
+   Auto-memory: updated supertrend-structure-candidate (REJECTED), phase2-build (TB00778 state), MEMORY index.
+   VPS: paper run RUNNING (pid 1052343, 49/50, 5 losing SHORTs closed + corpus accruing); auto-search cron
+     daily 06:00 UTC on HEAD 8106391 (has the regime-robust gate).
+   TB00000 stays v2_101 (stress-test = research, no new CIATS seed).
+
+============================================================
+END TB00778 SESSION LOG
+============================================================
