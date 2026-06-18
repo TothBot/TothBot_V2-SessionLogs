@@ -1,0 +1,81 @@
+DocDCN:     TB00779
+DocTitle:   TB00779_Session_Log
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00779_Session_Log_v1_0.txt
+DocDate:    06-17-2026
+DocTime:    23:59:30 UTC
+
+============================================================
+TB00779 SESSION LOG  (THE EXIT / STOP / SPEED SWEEP - BILL'S 3 TESTS)
+NOTE: ran ON from the TB00778 close (same conversation). After I explained the TB00778 result in plain
+language, Bill refined the mission to 3 concrete tests. This log captures them.
+MISSION (Bill, live, plain words): "Test three things. 1. Taking some profit when a trade goes well,
+instead of holding and hoping. 2. Test the bot's stop-loss at various sizes to reflect real price swings
+instead of tiny jitter, so normal noise can't trigger it. 3. Test different speeds the bot trades at to
+find the best speed for the strategy."
+OUTCOME: a clean, decisive answer to all three - and an honest meta. Build the test, hold the ENTRY fixed,
+vary only the exit. The STOP-SIZE result is the strongest, most consistent signal of the whole hunt:
+wider stops are monotonically better everywhere; the live bot's tight stop is THE bleed. SPEED: slower is
+better; the 5m the bot trades is the WORST speed; 4h is the sweet spot. TAKE-PROFIT: a wash - let winners
+run. META: these exit+speed fixes STOP THE BLEED (turn a catastrophic -5R into ~break-even) but do NOT by
+themselves hit 1:1.5 - that still needs entry quality. Code ef33e66->f7fc2cc, 1194 green, no Docs change.
+TB00000 v2_101.
+============================================================
+
+1. THE HARNESS  [scripts/tb00779_exit_sweep.py, Code f7fc2cc]
+   Entry held FIXED = the live-bot-style EMA-12/26 cross (the crossover EVENT), plus a 20-bar momentum
+   cross as a robustness check. Swept: STOP SIZE in ATR multiples [0.5, 1, 1.5, 2, 3, 5] (ATR = the
+   standard "real price swing" measure; 0.5x ~ the jitter-tight stop the live bot uses) x EXIT POLICY
+   {hold = no target, exit on EMA reversal/stop | tp1.5R/tp2R/tp3R = take FULL profit at the target |
+   scale3R = bank HALF at +3R, run the rest = Bill's "take SOME profit"} across SPEEDS {5m,15m,30m,1h,4h,1d}
+   from Kraken (~720 bars each). Everything measured in R (1R = stop distance = "for each $1 risked"), so
+   the 1:1.5 goal is directly readable. Nested IS(0-0.5)/OOS(0.5-1.0) + per-direction + era stability +
+   block-bootstrap + fees (taker x2 + short open) + per-bar short rollover. 12 grids total.
+
+2. Q2 - STOP SIZE  [THE DECISIVE FINDING]
+   On EVERY timeframe and BOTH entries, OOS E[R] improves MONOTONICALLY as the stop WIDENS. Example (5m
+   emacross): 0.5x=-5.32R, 1x=-2.88, 1.5x=-2.00, 2x=-1.51, 3x=-1.02, 5x=-0.63. Same shape on all 12 grids.
+   MECHANISM: a tight stop is tagged constantly by noise (each tag = a full -1R + fees), and when the stop
+   distance R is tiny the fee fraction (fees/R) is huge - so tight stops bleed on both stop-outs and fee
+   churn. CONCLUSION: the tight jitter stop IS the bleed; wider is strictly better. The live bot's ~0.4%
+   stop sits well under 1x ATR = squarely in the WORST zone. This empirically confirms Bill's hypothesis
+   and the TB00774 entry-economics audit.
+
+3. Q3 - SPEED
+   Grids get steadily LESS negative as the speed SLOWS. 5m = disaster (-5R range). 15m/30m bad. 1h better.
+   4h = the FIRST timeframe where positive cells appear (momentum/hold/wide-stop +0.10 to +0.14R; emacross
+   5x +0.04R). 1d = small/mixed. CONCLUSION: slower trades this strategy better; the 5m the live bot runs
+   on is the WORST possible speed; 4h is the sweet spot. CAVEAT: Kraken serves ~720 bars/timeframe, so 5m
+   spans ~2.5 days (one regime) vs 1d ~2 years - shorter speeds are more regime-fragile here; the growing
+   VPS 5m corpus will give a longer 5m window later.
+
+4. Q1 - TAKE PROFIT vs HOLD-AND-HOPE
+   Roughly a WASH. Within a row, "hold" (run to reversal) is generally as good or BETTER than a fixed
+   take-profit, especially at faster speeds (e.g. 4h momentum: hold +0.139R at 1x beats every TP in that
+   row). Fixed TPs cap the winners, which on a trend-following entry costs about what it saves. scale3R
+   (take half, run the rest) is middle-of-pack. CONCLUSION: mechanically "taking some profit" does NOT
+   clearly beat holding/letting winners run; the instinct to run winners is mildly right.
+
+5. THE HONEST META (carried forward)
+   Even at the BEST exit (wide stop) + BEST speed (4h) + best policy, the mechanical EMA-cross/momentum
+   ENTRIES only reach break-even to slightly positive - NOT a robust 1:1.5, and nothing passed the strict
+   both-halves nested-validation gate. So the exit+speed fixes STOP THE BLEED (turn -5R into ~break-even)
+   but do NOT by themselves manufacture the edge. The 1:1.5 edge still needs ENTRY quality, which the whole
+   hunt has not cracked (mechanical entries keep yielding regime artifacts). BUT stopping the bleed is huge:
+   the live bot today is in the -5R zone (tight stop on 5m); two changes (widen the stop, slow the speed)
+   move it to a fair fight.
+
+ARTIFACTS THIS SESSION
+   Code (TothBot_V2-Code, master): ef33e66 -> f7fc2cc (scripts/tb00779_exit_sweep.py). 1194 green
+     (standalone research script, no package edit). Pushed + DR-010 (local==remote).
+   Docs (TothBot_V2-Docs, master): UNCHANGED at a1c45f9 (no organism/diagram change made; the fixes are
+     teed up for Bill's 2 paused risk-design ratifications - see TB00780 NSI).
+   SessionLogs (this commit): TB00779 SL + TB00780 NSI + TB00780 OCS.
+   Auto-memory: updated phase2-build (TB00779 state) + MEMORY index.
+   VPS: paper run RUNNING (pid 1052343, 49/50); auto-search cron daily 06:00 UTC on HEAD 8106391.
+   TB00000 stays v2_101 (sweep = research, no new CIATS seed).
+
+============================================================
+END TB00779 SESSION LOG
+============================================================
