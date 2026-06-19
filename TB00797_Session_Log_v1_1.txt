@@ -1,0 +1,134 @@
+DocDCN:     TB00797
+DocTitle:   TB00797_Session_Log
+DocVersion: v1_1
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00797_Session_Log_v1_1.txt
+DocDate:    06-19-2026
+DocTime:    08:05:00 UTC
+
+============================================================
+TB00797 SESSION LOG  (PERPS: DESIGN SLICES, THEN CONFIRM-ITEM RESEARCH + THE KRAKEN-PRO DECISION)
+============================================================
+
+v1_1 NOTE: v1_0 closed this session prematurely "at the gate" after the 13.5/13.6 design slices.
+Bill then RE-OPENED it and drove a major second half (confirm-item research, the architecture
+decision, the wallet model). This v1_1 preserves the v1_0 record (Part A) and appends the
+continuation (Parts B-E) + the true close. v1_1 supersedes v1_0.
+
+============================================================
+PART A - THE DESIGN SLICES (as recorded in v1_0)
+============================================================
+ - 13.5 FUNDING / MARGIN MODEL (0500000 dv1_270): FCM account; 8h funding folded into Variation
+   Margin (rate exchange-set; cost folds into net_loss like the spot-short margin_borrow_fee, sacred
+   floor absorbs it; 8h cadence an engineering constant, NOT a seed); USDC margin (then assumed,
+   later corrected to USD - see Part B); isolated operator-funded perps wallet (TB00000 sec 7);
+   fixed-notional per_trade_size_usd mapped onto WHOLE contracts. LONG/SHORT equal detail.
+ - 13.6 PROPOSED PERP CIATS PARAMETER REGISTRY (dv1_271): consolidated every perp parameter named
+   as proposed across 13.1-13.5; NOTHING minted (TB00000 v2_102 unchanged). LONG/SHORT equal detail.
+ - Both PROSE-ONLY, element counts held (g 217 / text 957 / desc 126 / svg 10 / title 126 /
+   figcaption 10), html.parser well-formed, pushed + DR-010. Docs HEAD after Part A = 9f4d981.
+ - v1_0 then wrote the close artifacts and stopped, judging graduation + code GATED on the 6
+   Bitnomial confirm items + the Bill go-live gate.
+
+============================================================
+PART B - BILL RE-OPENED: "DO A SEARCH" (the confirm items are mostly PUBLIC)
+============================================================
+ - Bill rejected the v1_0 framing that the 6 confirm items "need a Bitnomial email." Directive:
+   "Do a search to find the information you need for the 6 questions. Find and use at least 10
+   references for each question." This was CORRECT - a CFTC-regulated exchange publishes rulebook,
+   contract specs, CFTC filings, and API docs.
+ - Ran 6 parallel web-research agents (one per item), each fetching primary sources incl. LIVE
+   Bitnomial API pulls; ~90 references total. Deliverable: TB00799_Bitnomial_Confirm_Items_
+   Findings_v1_0.txt (committed + pushed + DR-010; SessionLogs commit 0abe0e8). SCORECARD: 5 of 6
+   answered from public sources; only item 1 (provision a SANDBOX PERP) genuinely needs Bitnomial.
+   Summary:
+    1. Sandbox perp: NONE in the Bitnomial sandbox (dummy ZZZ futures only); perps exist in PROD.
+       The one real remaining gate. (Kraken has no US-perps test env either.) BUT TothBot does NOT
+       need a sandbox to PAPER-trade - paper mode simulates fills locally vs the live feed
+       (TB00000 sec 4.3); a sandbox is only for dry-testing live ORDER code pre-go-live.
+    2. USDC margin: NOT confirmed. USD cash + BTC/ETH/XRP/RLUSD are the confirmed collateral;
+       Kraken-Pro route = USD-only collateral at launch, USD cash-settled. -> 13.5 baseline should
+       be USD, not USDC.
+    3. Specs/margin: BTC perp = 0.01 BTC/contract, ETH 0.5, SOL 5; margin from 2% (<=50x), tiered;
+       no account minimum (~$25 intraday); 8h funding (7pm/3am/11am CT, settled daily 3pm CT).
+    4. Cancel/kill-switch: cancel = BTP Modify-to-zero; no mass-cancel; kill-switch = position-
+       limit-to-zero (liquidating-only, risk-manager control); cancel-on-disconnect is the FORCED
+       DEFAULT but cancels WORKING ORDERS, not a held POSITION.
+    5. Symbols: base_symbol = BTCUC (no "PBTCUC"); Kraken instrument = PBTCUC; full ~18-asset perp
+       universe enumerated.
+    6. US eligibility: CFTC FUTURES (not swaps) -> ordinary RETAIL eligible (no ECP gate); ME/NY
+       excluded on the Kraken route; verified account + suitability questionnaire + risk disclosures.
+ - HEADLINE: "LIMIT-ONLY" is a DIRECT-Bitnomial (BTP/FIX) constraint, NOT the Kraken-Pro route -
+   Kraken Pro exposes native Limit/Market/Stop-Loss/Take-Profit/Trailing-Stop/Iceberg. This REVERSED
+   the TB00795/13.1 premise that built 13.2/13.3.
+
+============================================================
+PART C - THE FP/DP ANALYSIS AND THE KRAKEN-PRO DECISION
+============================================================
+ - Confirmed the linchpin facts (7th agent): Kraken has cross AND isolated margin; isolated-margin
+   liquidation is an EXCHANGE-ENFORCED, crash-proof loss cap; Kraken stops are server-side TRIGGERED
+   but survival-across-a-bot-crash is probable-but-undocumented (Day-only TIF, post-outage inert
+   window, opt-in dead-man's-switch).
+ - Did an FP/DP analysis. IMPORTANT CORRECTION (Bill): FP/DP = FIRST PRINCIPLES / DEMING PHILOSOPHY,
+   NOT "Failure-Point/Decision-Point" (I guessed wrong; saved to auto-memory fp-dp-definition).
+   Re-grounded the analysis: First Principles (the loss cap must be EXCHANGE-resident, not bot-
+   resident; isolation = a funding boundary, not a venue) + Deming (optimize the WHOLE organism;
+   remove the common-cause bot-liveness coupling of synthesized stops; Point 3 "cease dependence on
+   inspection - build quality IN" = exchange-enforced isolated-margin liquidation over a watchdog;
+   PDSA staging). Supporting stats: fault-tree series-reliability, CVaR/expected-shortfall, half-Kelly
+   on the unproven edge; weighted matrix B/G 3.85 > D 3.48 > A 3.16.
+ - DECISION (Bill RATIFIED, verbatim "Kraken Pro is the best choice"): the perps ACCESS MODE flips
+   from direct-Bitnomial-isolated/limit-only to the KRAKEN-PRO route, perps funded only with
+   affordable-to-lose capital, ISOLATED-MARGIN mode (the crash-proof loss cap), native order types.
+   13.3 synthesis machinery + 13.2 crash-inversion DEMOTE to a documented fallback (only if direct-
+   Bitnomial is ever used) - which DELETES the largest chunk of new code (a loss-min win).
+   The original 13.1 "direct-isolated" call was tagged "FP/DP resolved" but was reasoned wrong
+   (optimized the part over the whole; chose inspection over building quality in).
+
+============================================================
+PART D - THE WALLET MODEL (three isolated pools)
+============================================================
+ - Bill's model: three separately-funded, ring-fenced pools - LONG SPOT, LONG PERP, SHORT PERP.
+   He challenged my claim that retail can't have multiple wallets/subaccounts. Two more research
+   agents confirmed he was RIGHT and I was wrong:
+    - My "retail can't have subaccounts" was true ONLY for SPOT subaccounts (institutional-only).
+      DERIVATIVES subaccounts are open to "any eligible client" - own balance/margin/liquidation/
+      API keys/rate limits; one sub's liquidation cannot touch another's (true ring-fence).
+    - The "nephew" memory = a separate FULL account (Kraken permits multiple full accounts and
+      NAMES "conflicting strategies / multiple bots / separating margin" as legitimate uses).
+ - MAPPING: Long Spot = its own full account (confirmed). Long Perp + Short Perp = two LINKED
+   DERIVATIVES SUBACCOUNTS (the US Derivatives Client Agreement FORBIDS multiple UNLINKED derivatives
+   accounts - they MUST be a subaccount structure, so subaccounts are the prescribed, not workaround,
+   mechanism). Fallback if US-perp retail subaccounts are not live: both perp sides in one Futures
+   wallet under ISOLATED margin per position + CIATS accounting.
+ - THE ONE GENUINE KRAKEN-SUPPORT QUESTION (not public-doc-answerable): whether retail derivatives
+   SUBACCOUNTS are wired into the US-Bitnomial perps stack (public docs describe the non-US
+   derivatives subaccounts + a "single shared collateral" US launch; the US ToS clause implies the
+   structure exists for US derivatives, but it is not explicitly published for US retail). A support
+   ticket settles it. Bill may ping Kraken.
+
+============================================================
+PART E - MEMORY + ARTIFACTS THIS SESSION
+============================================================
+ - NEW auto-memory: fp-dp-definition (FP/DP = First Principles / Deming). UPDATED: operator-dashboard
+   (the prod-VPS SSH classifier-denial gotcha for F3). MEMORY.md index updated.
+ - Docs repo: 0500000 dv1_269 -> dv1_271, 0521001 dv1_79 -> dv1_81 (Part A slices). HEAD 9f4d981.
+   NO further Docs edits in Parts B-E - the design FOLD-IN of the Kraken-Pro decision + the wallet
+   model into 0500000 Section 13 is DEFERRED TO TOMORROW (the TB00798 NSI v1_1 mission).
+ - SessionLogs: TB00799 findings (0abe0e8); this SL v1_1 + TB00798 NSI v1_1 + TB00798 OCS v1_1.
+ - Code UNCHANGED (adf1157, 1249 green) - no code this session, diagram-first only.
+
+============================================================
+STATE AT CLOSE (the real one)
+============================================================
+   - Docs HEAD 9f4d981 (0500000 dv1_271 / 0521001 dv1_81; element counts g 217 / text 957 / desc 126
+     / svg 10 / title 126 / figcaption 10, all held). Code adf1157 (1249 green) UNCHANGED.
+   - TB00000 v2_102 UNCHANGED, no new seed (all perp params PROPOSED; first lands at graduation).
+   - DECISION RATIFIED: Kraken-Pro route, three-pool wallet model (Long Spot full account; Long Perp
+     + Short Perp linked derivatives subaccounts; isolated-margin loss cap). NOT yet folded into the
+     0500000 diagram - that is tomorrow's mission.
+   - OPEN (Kraken support): US-Bitnomial retail perps subaccount availability. OPEN (Bitnomial):
+     provision a sandbox perp (pre-go-live order-code testing only; NOT needed to paper-trade).
+   - SPOT F3 continues in the background (not checked - prod-VPS SSH denied by the classifier;
+     0-trade sessions expected). STAY IN PAPER on both spot and perps. Sacred 1:1.5 R:R never lowered;
+     nothing erased; machine stays Long/Short-CAPABLE.
