@@ -1,0 +1,107 @@
+DocDCN:     TB00794
+DocTitle:   TB00794_Session_Log
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00794_Session_Log_v1_0.txt
+DocDate:    06-19-2026
+DocTime:    01:50:00 UTC
+
+============================================================
+TB00794 SESSION LOG  (CRYPTO-PERPS RESEARCH PROBE)
+============================================================
+
+SESSION SUMMARY. A research-only session per the TB00794 OCS: re-run the full spot-arc battery
+(TB00779-786 + auto_strategy_search) on PERPETUAL FUTURES, for BOTH Longs and Shorts, with the ACTUAL
+historical funding series swapped in for the spot borrow fee, to answer: do perps revive the regime-gated
+SHORT (the spot arc killed) and change the best LONG? DELIVERED a self-contained probe + an honest
+plain-text VERDICT. CENTRAL FINDING: shorts REVIVE decisively (40-63 regime-robust, bootstrap-SIG OOS
+survivors per slow tf vs ZERO in all of spot) -- but the load-bearing lever is the perp FEE (0.05% vs the
+spot organism's 0.26%/side), NOT funding; funding is only a small short tailwind and a real long headwind.
+This VALIDATES a perps expansion (the next-next step = design diagram-first). No organism/diagram change
+this session (research only). Code pushed + DR-010. Then an F3 background check on the live-in-paper spot
+organism.
+
+------------------------------------------------------------
+(1) THE PROBE - scripts/tb00794_perps_probe.py (Code 8274807 -> adf1157, +2 files, no test/package change)
+------------------------------------------------------------
+ - DATA (the new variable = real funding). Binance USDT-margined (UM) PERPETUAL futures klines + the REAL
+   fundingRate history, pulled from the public bulk mirror data.binance.vision (monthly CSV-in-ZIP). The
+   fapi/data-api REST endpoints are GEO-BLOCKED (HTTP 451) from here; the bulk vision dump is NOT and
+   serves both futures klines AND fundingRate. 30 liquid UM perps -> BASE/USD keys; native 4h + 1d, with
+   8h/12h FOLDED from 4h (TB00780 method). ~6.4yr of history (2019/20 -> 2025, BTC/ETH 2343 daily bars,
+   7029 funding events; spans 2021 bull / 2022 bear / 2023-25). Funding summed PER EVENT over each trade's
+   actual hold window via a per-bar CUMULATIVE-FUNDING array (lookahead-free: each rate known at its
+   calc_time). Fetch parallelized (24-worker thread pool over months) + per-symbol JSON caches
+   (resumable; gitignored-by-convention, committed only the .py + verdict).
+ - COST MODEL. Perp taker 0.05%/side (Kraken Futures; Binance UM ~0.04%) REPLACES the spot 0.26%/side; the
+   spot short OPEN fee + per-bar BORROW/rollover are REPLACED by funding. Long PAYS funding when rate>0
+   (the crypto-bull norm), short RECEIVES it. Unlevered (leverage = sizing multiplier + liquidation
+   caveat, NOT edge).
+ - ENGINE B (focused carry-forward + funding decomposition). emacross/momentum x {2/2.5/3/5}xATR stop +
+   reversal x slippage {0/5/10/20 bp} x {LONG,SHORT}, per tf {4h,8h,12h,24h}, fixed $50 notional. Reports
+   n, win%, ER (in R), E (%/tr), $/tr, 8-era stability, OOS block-bootstrap CI, AND fund_bp (avg funding
+   charged/trade) + E_noFund (E with funding zeroed) to isolate funding's size and sign.
+ - ENGINE A (full nested search, perp cost). The auto_strategy_search engine (9 signals x 4 filters x 15
+   exits incl wide-ATR stops, fixed targets, chandelier trails) with the perp cost model, run THREE
+   direction lenses (LONG-only / SHORT-only / BOTH) per slow tf {8h,12h,24h}. Nested IS-select /
+   OOS-validate, block-bootstrap CI, regime-robustness (not one-sided, stable across OOS sub-windows).
+
+------------------------------------------------------------
+(2) RESULTS - shorts revive; fee >> funding; best long shifts to breakout
+------------------------------------------------------------
+ - SHORTS REVIVE. Regime-robust, bootstrap-SIG OOS survivors: 8h L=105/S=63, 12h L=96/S=62, 24h L=105/S=40.
+   The entire spot arc (TB00779-786) found ZERO durable shorts. Best shorts: 8h bb_revert/trend100/trail3x
+   +2.69%/tr (rr2.36, win44%, n=545); 12h bb_revert/trend100/trail3x +3.08%; 24h rsi_trend/vol+3xATR-target
+   +2.58%. COMMON THREAD = mean-reversion / filtered entry (bb_revert overbought, rsi_trend, macd) + a
+   TRAILING or fixed-TARGET exit + a regime filter -- the TB00785 high-win-rate (42-46%) short profile that
+   fees had erased. NOT trend-following.
+ - FEE >> FUNDING (the honest decomposition). Short funding credit = only -2..-15 bps/trade; long funding
+   DRAG = +14..+145 bps/trade (grows with hold time; ~115-145 bps on slow 24h longs). The FEE saving vs
+   spot = ~42 bps/trade round-trip, BOTH sides. So the short revival is ~42 bps fee + ~5-15 bps funding =
+   ~50 bps/trade of cost removed -> the previously-killed high-win-rate mean-rev shorts clear zero. PROOF
+   funding alone didn't do it: the BARE trend-following carry-forward short (emacross/momentum + wide stop
+   + reversal, no filter/trail) stays FLAT (~0.0%/tr, ci~0) on perps too.
+ - BEST LONG. The TB00786 carry-forward long TRANSFERS (emacross + wide stop + reversal: 4h +1%/tr, 8h
+   +2.3-3%/tr, 24h +12-15%/tr but bull-INFLATED + n small). But the BEST long now is BREAKOUT: bb_break /
+   donchian + a trend100/vol filter + wide stop + reversal (8h +3.04%/tr SIG, 12h +3.75% SIG). Funding is a
+   NEW non-trivial long headwind on slow tfs.
+ - CAVEATS (TB86-honest). Fee is load-bearing -> the thin short edge (+1.5%/tr, rr<2) flips negative by
+   ~10-20 bp added slippage; longs far more cost-robust. 24h longs alt-season-inflated (honest forward =
+   the 8h/12h +1.5-3%/tr band). Selection risk from a 525-combo search (mitigated by nested IS/OOS +
+   regime-robust + bootstrap AND by 40-63 survivors clustering on ONE coherent mechanism). Perp history
+   ~5-6yr (younger than spot's 7.5yr; some alts ~2.5yr). Short funding tailwind reverses in a sustained
+   negative-funding regime (the fee edge persists regardless).
+
+------------------------------------------------------------
+(3) F3 BACKGROUND - the live-in-paper long-only SPOT organism (no change, observation only)
+------------------------------------------------------------
+SSH (key-based, non-interactive) to root@87.99.141.44. Organism HEALTHY: pid 1069098 (python -u),
+19/19 warm, 0 faults/tracebacks, state_snapshot.json ticking on the 5m clock (ts 01:40 UTC), dashboard
+log present. 0 NEW trades (trades_2026.jsonl = the 5 LEGACY shorts; expected -- the long-only entry fires
+only on a rare 24h EMA12/26 bullish cross at a 00:00-UTC boundary; the 2026-06-19 boundary already passed
+at TB00793 close with no cross). OBSERVATION TO VERIFY NEXT SESSION: the organism RESTARTED since TB00793
+(pid 1067362 -> 1069098; the paper log is post-restart only, ~70KB, clean, cause not visible from the
+current log), and the snapshot's per-pair 24h decision_cache is currently EMPTY (0 pairs) -- it must
+RE-SEED at the daily regime compute / next Closed24H before any entry can fire. Not alarming (expected
+post-restart re-warm; warm_pairs=19 OK), but confirm the decision cache re-seeds so entries remain
+possible.
+
+============================================================
+STATE AT CLOSE
+============================================================
+   - Code HEAD adf1157 (1249 green; only the probe + verdict added, no test/package touch). Docs HEAD
+     9f6a0da UNCHANGED (no diagram change -- research only). TB00000 v2_102 UNCHANGED (no new seed).
+     SessionLogs: this SL + the TB00795 NSI + OCS. All pushed + DR-010.
+   - DELIVERABLE: scripts/tb00794_perps_probe.py + scripts/tb00794_perps_verdict.txt. Per-symbol perp
+     data caches (_perp_cache_*.json) are LOCAL-ONLY (untracked, regenerated by the script).
+   - VERDICT: perps viable BOTH directions (wider margin than spot); SHORTS REVIVED (mechanism = the perp
+     FEE on mean-reversion/filtered + trailing shorts, funding a small tailwind; bare trend shorts stay
+     flat); best LONG = breakout + trend/vol filter + wide stop + reversal. VALIDATES a perps expansion ->
+     next-next = design diagram-first (perps connectivity + Short_Module RE-ACTIVATION; the machine is
+     already Long/Short-symmetric; shorts were ratified OFF at TB00786 on SPOT economics, which this probe
+     overturns FOR PERPS). The two sides want DIFFERENT mechanisms (long=trend-following, short=mean-rev).
+   - VPS (paper, mine): organism pid 1069098 + the read-only dashboard (ssh -L 8787:localhost:8787
+     root@87.99.141.44 -> http://localhost:8787). F3 stands (0 trades by design). F4 (live go-live) is the
+     ONLY Bill-gated step. STAY IN PAPER.
+
+The machine stays Long/Short-symmetric; nothing erased; the sacred 1:1.5 R:R floor never lowered.
