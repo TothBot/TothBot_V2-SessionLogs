@@ -1,0 +1,313 @@
+DocDCN:     TB00799
+DocTitle:   TB00799_Bitnomial_Confirm_Items_Findings
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00799_Bitnomial_Confirm_Items_Findings_v1_0.txt
+DocDate:    06-19-2026
+DocTime:    06:48:00 UTC
+
+================================================================================
+TB00799 - BITNOMIAL / KRAKEN-PRO US PERPS: THE 6 CONFIRM-FIRST ITEMS, RESEARCHED
+  Bill directive (TB00797): "Do a search to find the information you need for the
+  6 questions. Find and use at least 10 references for each question." Six parallel
+  web-research agents ran, each fetching primary sources (Bitnomial API docs +
+  rulebook, CFTC product/rule filings, Kraken support/blog, live Bitnomial API
+  pulls). ~90 references total, 13-17 per item. Current as of 2026-06-19; this
+  space moves weekly, re-verify before any engineering commitment.
+================================================================================
+
+--------------------------------------------------------------------------------
+SCORECARD - the 6 items are now ANSWERED from public sources (5 of 6 substantially;
+1 needs Bitnomial only to PROVISION a sandbox perp). One finding REVERSES a TB00795
+design premise (see the HEADLINE).
+--------------------------------------------------------------------------------
+  1. Sandbox perp listing ....... ANSWERED (No perp in sandbox; genuine gate remains)
+  2. USDC margin ................ ANSWERED (NOT USDC; USD-only on Kraken route)
+  3. Minimums / tick / lot / margin  LARGELY ANSWERED (sizes+margin band; fine ladder partial)
+  4. REST cancel/modify + kill-switch  ANSWERED (+ the headline order-type finding)
+  5. base_symbol naming ......... ANSWERED (BTCUC family; full universe enumerated)
+  6. Eligible-US-client criteria  ANSWERED (retail-eligible CFTC futures; ME/NY out)
+
+--------------------------------------------------------------------------------
+HEADLINE FINDING - "LIMIT-ONLY" IS A DIRECT-BITNOMIAL (BTP/FIX) CONSTRAINT, NOT THE
+KRAKEN-PRO ROUTE. The Kraken Pro US-perps front-end exposes NATIVE order types:
+Limit, MARKET, STOP LOSS / Stop-Limit, TAKE PROFIT / Limit, TRAILING STOP / Limit,
+Iceberg (ref 3-Q3). TB00795 / 0500000 13.1 recorded "Bitnomial is LIMIT-ORDERS-ONLY"
+and built 13.3 (exit synthesis) + the 13.2 crash-protection inversion entirely on
+that premise. That premise is TRUE for the DIRECT-Bitnomial native protocol (BTP has
+only Open/Modify; cancel = Modify-to-zero; no native stop primitive - ref Q4) but
+FALSE for the Kraken-Pro route. This re-opens the 13.1 ACCESS MODE FP/DP: the
+direct-isolated route buys hot-path isolation at the cost of client-synthesized
+stops + gap risk + a naked-position-on-crash hole; the Kraken-Pro route buys native
+server-side stops (which directly attack the loss-tail the mission prioritizes) at
+the cost of the unified-wallet coupling. UNCONFIRMED: whether Kraken's stop/trailing
+types REST server-side on the Bitnomial engine or are Kraken-side synthetic - that
+distinction decides whether they survive a TothBot crash. Flagged to Bill; design
+update in 0500000 13 to follow.
+
+================================================================================
+ITEM 1 - SANDBOX PERP LISTING
+================================================================================
+ANSWER (Confidence HIGH, verified against the live sandbox API):
+  Bitnomial's 24/7 sandbox does NOT list a perpetual. The sandbox carries only dummy
+  "ZZZ" Bitcoin futures + ZZZ-ZZZ calendar spreads (10 active / 194 total products;
+  ZERO type:perpetual, ZERO funding fields). Perps DO exist in PRODUCTION (live pull:
+  type:"perpetual", funding_interval_hours:8). So the data model exists; it is simply
+  not provisioned in sandbox. Kraken Pro provides NO separate US-perps test env
+  (only a legacy non-US Futures Demo, a different product). Sandbox REST base:
+  https://bitnomial.com/exchange/api/v1/sandbox/ ; WS wss://bitnomial.com/exchange/sandbox/ws .
+  THE ONE GENUINE REMAINING GATE: getting Bitnomial to provision a sandbox perp (and
+  issue sandbox API credentials) for pre-live testing - no public self-serve path.
+EVIDENCE:
+  1.  bitnomial.com/exchange/api/v1/sandbox/product/data/?active=true (LIVE: 10 dummy ZZZ products)
+  2.  bitnomial.com/exchange/api/v1/sandbox/product/data/ (LIVE: 194 total, zero perps)
+  3.  bitnomial.com/exchange/api/v1/sandbox/product/spec/1769 (+2527/2569/3611/3635/4882/4906/5246/5292/5293) (LIVE: type future|spread)
+  4.  bitnomial.com/exchange/api/v1/prod/product/spec/5599 (LIVE: type perpetual, 8h funding, PSHBUN...)
+  5.  bitnomial.com/exchange/api/v1/prod/product/spec/5618 (LIVE: PXRPUH... perpetual, 8h funding)
+  6.  bitnomial.com/exchange/docs/api/environments/ (sandbox products = ZZZ futures/spreads only; 24/7)
+  7.  bitnomial.com/exchange/docs/api/rest/overview/ (base-URL structure; funding-rates endpoint; 200/5min limit)
+  8.  bitnomial.com/exchange/docs/api/rest/products/ (product type enum; spec endpoint)
+  9.  bitnomial.com/docs/exchange-http-api/ (HTTP API landing)
+  10. support.kraken.com/articles/us-perpetual-futures (Kraken perps; NO demo/test env)
+  11. blog.kraken.com/product/kraken-derivatives/announcing-cftc-regulated-us-perps (US perps via Bitnomial)
+  12. bitnomial.com/blog/us-perpetual-futures (Bitnomial: first US perpetual futures)
+  13. bitnomial.com/news/2025-04-23/self-certification-perpetual-futures/ (self-cert; retail via Botanical)
+  14. bitnomial.com/exchange/regulatory/cftc/rule-filings/25-021.pdf (+25-020/022/023/025/032/035: perp definition, 8h funding)
+  15. github.com/bitnomial (org; no public API SDK / sandbox client repo)
+  16. prnewswire.com/.../bitnomial-...-botanical-backed-by-25-million-...-ripple-302275815.html (Botanical retail beta)
+  17. coindesk.com/markets/2026/06/15/kraken-debuts-u-s-perpetual-futures-... (2026-06-15 launch)
+STILL NEEDS BITNOMIAL: provisioning a sandbox perp on request; the sandbox API-key
+  onboarding procedure; any Kraken-side non-prod test endpoint for these perps.
+
+================================================================================
+ITEM 2 - USDC MARGIN ACCEPTANCE
+================================================================================
+ANSWER (Confidence HIGH that USDC is NOT a publicly-confirmed live collateral asset):
+  Confirmed first-class collateral: USD cash (regulatory base), BTC, ETH, XRP, and
+  RLUSD (Bitnomial branded its Nov-2025 RLUSD launch the "first-ever stablecoin margin
+  collateral" - language that would be false if USDC were already accepted). USDC is
+  NOT named in any Bitnomial collateral schedule/filing reviewed. TRAP: a "USDC
+  FUTURES contract" exists in Bitnomial's Crypto Complex - that is a tradeable product,
+  NOT USDC-as-collateral; do not conflate. The CFTC's Dec-8-2025 pilot makes USDC
+  ELIGIBLE FCM-wide, and the rulebook keeps an open-ended "Collateral acceptable to
+  the Clearinghouse" clause, so USDC COULD be added quietly - but is not confirmed.
+  KRAKEN-PRO ROUTE: USD-only collateral at launch, USD-margined, USD cash-settled
+  ("broader collateral options over time"). Crypto/RLUSD collateral is a
+  Bitnomial-direct / Botanical feature, not exposed on Kraken Pro US perps.
+  Variation margin settles in USD cash (T+1).
+  DESIGN CONSEQUENCE: 0500000 13.5 should use USD-margin / USD-cash-settled as the
+  CONFIRMED baseline (not USDC). The USDC-margin assumption is dropped to "possible,
+  unconfirmed."
+EVIDENCE:
+  1.  bitnomial.com/news/2025-11-03/rlusd-xrp-margin-collateral/ (RLUSD = first stablecoin collateral; +XRP; BTC/ETH already)
+  2.  prnewswire.com/.../bitnomial-launches-first-ever-stablecoin-margin-collateral-with-rlusd-...-302604112.html
+  3.  coindesk.com/business/2025/11/04/bitnomial-adds-rlusd-and-xrp-as-margin-collateral-...
+  4.  prnewswire.com/.../bitnomial-launches-crypto-margin-deposits-...-302551243.html (Sept 2025: BTC+ETH only at first)
+  5.  bitnomial.com/news/2025-09-17/crypto-margin-collateral-markets-media/ (BTC+ETH; stablecoins "future")
+  6.  bitnomial.com/exchange/rulebook/chapter/8/ (clearing: USD cash; Treasuries w/ haircuts; VM in USD T+1)
+  7.  bitnomial.com/exchange/rulebook/bitnomial-rulebook.pdf (collateral/margin acceptance clauses)
+  8.  cftc.gov/filings/orgrules/rules02102515121.pdf (CFTC-hosted rulebook filing)
+  9.  bitnomial.com/exchange/regulatory/cftc/rule-filings/25-025.pdf (Jul-2025 margin update self-cert)
+  10. coindesk.com/policy/2025/12/08/cftc-launches-digital-assets-pilot-...-usdc-as-collateral
+  11. theblock.co/post/381804/cftc-ether-bitcoin-usdc-collateral-derivatives-markets
+  12. cadwalader.com/.../cftc-opens-the-door-to-digital-asset-collateral-... (legal memo; USDC eligibility)
+  13. kraken.com/features/futures ("All collateral held in USD"; "settles in USD")
+  14. blog.kraken.com/product/kraken-derivatives/announcing-cftc-regulated-us-perps ("broader collateral over time")
+  15. businesswire.com/news/home/20260615010932/en/Kraken-Launches-Perpetual-Futures-for-US-Clients
+  16. bitnomial.com/blog/first-class-crypto-margin/ (FCMs may accept crypto/stablecoins; CFTC tie-in)
+STILL NEEDS BITNOMIAL: whether USDC is live collateral TODAY; the exact per-asset
+  collateral schedule + haircuts; whether/when Kraken Pro adds USDC specifically;
+  retail(Botanical) vs institutional(direct-FCM) collateral differences.
+
+================================================================================
+ITEM 3 - MINIMUMS / TICK / LOT / PER-CONTRACT MARGIN
+================================================================================
+ANSWER (mixed confidence; per-product margin ladder is the weakest field):
+  CONTRACT SIZE (Kraken spec page, HIGH): PBTCUC = 0.01 BTC; PETHUI = 0.5 ETH;
+  PSOLUS = 5 SOL; other 13 sized via the size-code letter in the symbol (C=0.01,
+  I=0.1/deci, S=1, D=10, H=100, K=1k, N=100k).
+  TICK (Bitnomial notation, MED): BTC perp $1/BTC price increment => $0.01/contract
+  tick value (Centi). Per-perp tick value for the alts not individually published;
+  the ETHUSD *spot* sheet shows $0.01/ETH (different product).
+  MARGIN (MED): percentage-tiered, starting from 2% initial+maintenance (=> ~50x max)
+  for the smallest notional tier, scaling DOWN (more margin) as position grows.
+  WARNING: Kraken's headline 100x BTC/ETH (PF_XBTUSD / PF_ETHUSD) is the OFFSHORE
+  product, "Not available to US users" - do NOT apply it to the US Bitnomial perps.
+  ACCOUNT MINIMUM (MED-HIGH): none stated; contracts can need "as little as $25
+  intraday margin"; perps carry a $10/trade liquidation fee. USD-only collateral.
+  FUNDING (HIGH): 8h intervals 7pm / 3am / 11am CT; FR = avg(Premium) +
+  clamp(IR - avg(Premium), -0.05%, +0.05%), IR fixed 0.01%; Kraken cash-settles
+  funding once daily 3pm CT.
+  ORDER TYPES (Kraken Pro, HIGH - the headline): Limit, Market, Stop Loss/Limit,
+  Take Profit/Limit, Trailing Stop/Limit, Iceberg.
+EVIDENCE:
+  1.  bitnomial.com/exchange/docs/market-operations/product-notation/ (size codes; PBTCUC tick $1/BTC=$0.01)
+  2.  support.kraken.com/articles/contract-specifications (PBTCUCZ50=0.01 BTC; PETHIUZ50=0.5 ETH; PSOLUZ50=5 SOL)
+  3.  support.kraken.com/articles/us-perpetual-futures (16 symbols; USD-only collateral; funding 3pm CT; $10 liq fee; ORDER TYPES)
+  4.  bitnomial.com/exchange/regulatory/cftc/product-filings/26-022.pdf (ETHUSD SPOT spec: size/tick/band/position-limit/de-minimis)
+  5.  bitnomial.com/exchange/docs/market-operations/settlements/digital-asset-perpetual-pricing/ (funding formula; IR 0.01%; +/-0.05% clamp)
+  6.  prnewswire.com/.../bitnomial-...self-certifies-first-ever-us-perpetual-futures-302435713.html (8h funding; physically delivered)
+  7.  blog.kraken.com/product/kraken-derivatives/announcing-cftc-regulated-us-perps (markets; 8h funding times; FCM)
+  8.  businesswire.com/news/home/20260615010932/en/Kraken-Launches-Perpetual-Futures-for-US-Clients (launch)
+  9.  support.kraken.com/articles/us-futures-101 (initial vs maintenance vs intraday margin defs)
+  10. kraken.com/features/futures ("$25 intraday margin"; no stated account minimum)
+  11. tradingview.com/news/financemagnates:...kraken-taps-bitnomial-deal-... ("margin from 2% = max 50x, raised by size")
+  12. blog.kraken.com/product/margin/100x-leverage-on-btc-and-eth-perps (100x = OFFSHORE, NOT US - exclusion proof)
+  13. bitnomial.com/exchange/rulebook/product/bitcoin/pbuc/ (perp product in rulebook)
+STILL NEEDS BITNOMIAL/KRAKEN: per-perp tick size+value (alts); min order size / lot
+  increment (likely 1 contract); exact initial+maintenance % per product + the full
+  notional tier ladder; any hard account minimum beyond the $25 intraday figure;
+  per-perp underlying-per-contract for the 13 non-BTC/ETH/SOL contracts.
+
+================================================================================
+ITEM 4 - REST CANCEL/MODIFY + MASS-CANCEL + KILL-SWITCH + CANCEL-ON-DISCONNECT
+================================================================================
+ANSWER (Confidence HIGH on the BTP/COD facts):
+  (a) CANCEL/MODIFY: BTP (the native binary order-entry API) has only Open(O),
+      Attributed-Open(T), Modify(M) send types - NO standalone Cancel. Cancel = a
+      Modify with quantity <= filled quantity (qty 0 cancels). FIX modifies in place
+      (Cancel/Replace -> ExecType=5 Replaced, same ClOrdId/OrigClOrdId). REST
+      documents POST /orders (submit) + GET /orders (query) only; the explicit REST
+      cancel verb is NOT surfaced publicly.
+  (b) MASS-CANCEL: none documented in BTP/FIX/REST.
+  (c) KILL-SWITCH: yes, as a risk-manager control - Position Limits Per Account; "when
+      limits are set to zero, only liquidating orders are permitted." Setting the limit
+      to zero is the de-facto account kill/flatten lever (blocks new exposure, allows
+      only liquidating orders). It is an admin/risk-manager action, not a trader API call.
+  (d) CANCEL-ON-DISCONNECT: YES, and it is the FORCED DEFAULT. "If a connection is
+      dropped, the respective open orders are canceled" (direct + CQG). BTP Logout
+      persistOrders field = "Cancel-on-disconnect is default (unused, reserved)."
+      Heartbeat interval in BTP Login (uint8; <=5s defaults to 30s); FIX uses standard
+      Heartbeat/Test-Request + HeartBtInt(108).
+  CRITICAL CAVEAT for 0500000 13.2/13.3: cancel-on-disconnect cancels OPEN/WORKING
+  ORDERS - it does NOT flatten an existing open POSITION. A crashed TothBot drops its
+  resting exit orders (good) but a NAKED open position is not auto-liquidated by COD.
+  True auto-flatten would rely on the position-limit-to-zero kill-switch (a
+  risk-manager control), and whether THAT auto-liquidates a held position vs only
+  blocking new orders is unconfirmed.
+EVIDENCE:
+  1.  bitnomial.com/exchange/docs/api/btp/order-entry/ (Open/Attributed-Open/Modify; cancel via Modify-to-<=fill; no Cancel/Cancel-All)
+  2.  bitnomial.com/exchange/docs/api/btp/login/ (heartbeat field; Logout persistOrders = COD default reserved)
+  3.  bitnomial.com/exchange/docs/market-operations/order-entry-risk-management/ (COD; position-limit-zero kill-switch; throttle; price bands)
+  4.  bitnomial.com/exchange/docs/api/rest/orders/ (POST /orders, GET /orders; no public DELETE/PATCH/mass-cancel)
+  5.  bitnomial.com/exchange/docs/api/rest/overview/ (REST v1; authenticated orders endpoint)
+  6.  bitnomial.com/exchange/docs/api/fix/overview/ (orders modified in place; Cancel/Replace -> ExecType 5)
+  7.  bitnomial.com/exchange/docs/api/fix/common-messages/ (Logon/Heartbeat/Test-Request/Logout; HeartBtInt 108)
+  8.  bitnomial.com/exchange/docs/api/websocket/overview/ (WS market-data channels; no order-entry cancel)
+  9.  bitnomial.com/docs/gateway-protocol/ (order-entry protocol landing)
+  10. bitnomial.com/docs/bitnomial-transfer-protocol/ (BTP framing; little-endian; monotonic seq)
+  11. github.com/bitnomial (org; protocol tooling; no public order-entry SDK)
+  12. github.com/bitnomial/wireshark-btp (official BTP Wireshark dissector; authoritative on-the-wire msg set)
+  13. github.com/bitnomial/cqg-api-client (CQG connectivity path; CQG honors COD)
+  14. bitnomial.com/exchange/docs/connectivity/fix/dropcopy-protocol (drop-copy; missed-fill discovery after disconnect)
+  15. bitnomial.com/exchange/docs/api/fix/execution-report/ (ExecType cancel/replace codes)
+STILL NEEDS BITNOMIAL: the exact REST cancel/amend verb; exact FIX MsgType tags +
+  whether OrderMassCancelRequest(q) is supported; whether ANY mass-cancel exists;
+  whether COD / position-limit-zero ever FLATTENS a held position vs only cancels
+  working orders; whether opting OUT of COD is/will be possible (persistOrders status).
+
+================================================================================
+ITEM 5 - base_symbol / PERP SYMBOL NAMING
+================================================================================
+ANSWER (Confidence HIGH, resolved against the live API):
+  The BTCUC-vs-PBUC ambiguity = the SAME product in different namespaces; there is NO
+  "PBTCUC" in the Bitnomial API.
+   - Bitnomial API base_symbol (what funding/data calls key off): BTCUC, ETHUI, XRPUH,
+     SOLUS, ... (the live funding-rates endpoint REJECTS PBUC/PBTCUC and accepts BTCUC).
+   - Scheme: [asset root] + [U = USD quote] + [size code]; BTCUC = BTC + U + C(centi
+     0.01). Size codes M/L/C/I/D/H/K/Y/N = SI prefixes.
+   - Bitnomial full "symbol" / rulebook slug: P-prefixed (+ Z50 Dec-2050 expiry
+     modeling), e.g. PBUC / PBTCUCZ50 (P = "Perpetual" product-naming, NOT in base_symbol).
+   - Kraken Pro instrument: PBTCUC, PETHUI, PSOLUS, PXRPUH (P-prefixed, no Z50); UI
+     shows friendly BTC/ETH/SOL/XRP.
+  PERP UNIVERSE (live API base_symbols / Kraken symbols): BTC(BTCUC), ETH(ETHUI),
+  XRP(XRPUH), SOL(SOLUS), BCH(BCHUS), LTC(LTCUS), AAVE(AVEUS), PAXG(PXGUI),
+  AVAX(AVXUD), LINK(LNKUD), DOT(DOTUH), ADA(ADAUK), DOGE(DOGUK), XLM(XLMUK),
+  HBAR(HBRUK), SHIB(SHBUN), XTZ(XTZUK), HYPE(HUP).
+EVIDENCE:
+  1.  bitnomial.com/exchange/docs/api/rest/funding-rates/ (examples key off base_symbol=BTCUC)
+  2.  bitnomial.com/exchange/api/v1/funding-rates/?base_symbol=PBUC (LIVE 400: PBUC rejected, BTCUC valid - the resolver)
+  3.  bitnomial.com/exchange/api/v1/sandbox/product/specs/?active=true (LIVE: base_symbol/symbol/cqg_symbol/type/contract_size schema)
+  4.  bitnomial.com/exchange/docs/market-operations/product-notation/ (size-code table; PBTCUC/Z50 perpetual designator)
+  5.  bitnomial.com/exchange/docs/api/rest/products/ (symbol/base_symbol/type fields)
+  6.  bitnomial.com/exchange/rulebook/product/bitcoin/pbuc/ (slug pbuc = Perpetual Bitcoin US Dollar Centi)
+  7.  bitnomial.com/exchange/rulebook/product/crypto/pdotuh/ (PDOTUH = 500 DOT Hecto perp)
+  8.  bitnomial.com/exchange/rulebook/product/bitcoin/ (BUC dated future / EBUC event / BTCUSD spot roots)
+  9.  bitnomial.com/exchange/rulebook/bitnomial-rulebook.pdf (perp = quarter-century expiry; 8h settle)
+  10. bitnomial.com/exchange/regulatory/cftc/rule-filings/25-020.pdf (perp listing self-cert)
+  11. prnewswire.com/.../bitnomial-...self-certifies-first-ever-us-perpetual-futures-302435713.html
+  12. blog.kraken.com/product/kraken-derivatives/announcing-cftc-regulated-us-perps
+  13. tradingview.com/news/financemagnates:...kraken-taps-bitnomial-deal-... (Kraken UI friendly tickers; asset roster)
+  14. bitnomial.com/market/data/perpetuals/?id=pbuc (public perps data page keyed id=pbuc)
+NOTE - a residual cross-agent discrepancy: Item-1's live PROD spec pull reported
+  P-prefixed full symbols (PSHBUN.../PXRPUH...Z50) while Item-5's funding-rates pull
+  proved the bare base_symbol (BTCUC). Reconciled: base_symbol = BTCUC (no P);
+  full symbol = P-prefixed + Z50; Kraken instrument = P-prefixed no Z50. Operationally
+  the funding/data key is the bare base_symbol.
+STILL NEEDS BITNOMIAL: 1:1 confirmation of a few abbreviated roots (AVEUS/PXGUI/HUP/
+  HBRUK/SHBUN) against a prod product_name; the exact prod "symbol"/cqg_symbol string;
+  Kraken Pro's internal instrument/pair string.
+
+================================================================================
+ITEM 6 - ELIGIBLE-US-CLIENT CRITERIA
+================================================================================
+ANSWER (Confidence MED-HIGH):
+  These are CFTC-regulated FUTURES, NOT swaps - so the ECP gate that bars retail from
+  OFFSHORE perps does NOT apply; access is open to ORDINARY RETAIL. Bitnomial perps
+  launched institutional-only (Apr-28-2025); retail followed via Botanical (Dec-2025,
+  the "first-ever leveraged retail spot crypto exchange," both retail + institutional);
+  Kraken Pro US perps went live ~Jun-14/15-2026 with 16 contracts / 9 assets.
+   - STATES: Kraken route does NOT serve ME or NY at all; beyond that no published
+     per-state perps exclusion list ("certain states may have restrictions; confirmed
+     at sign-up"). Direct-Bitnomial/Botanical publishes no state list ("check with your
+     local regulatory authority and FCM").
+   - REQUIREMENTS (Kraken route): a VERIFIED Kraken account (full KYC) + a short
+     financial-background/experience questionnaire (retail suitability, NOT an ECP /
+     accredited attestation) + accept risk disclosures. Contracts can need as little
+     as $25 intraday margin (no large minimum).
+   - ROUTES: same exchange/clearinghouse (Bitnomial DCM/DCO), different FCM + front-end.
+     Direct = Botanical front-end, FCM = Bitnomial Clearing, LLC. Kraken Pro = FCM
+     "Kraken Derivatives US" (NinjaTrader Clearing, LLC d/b/a); perps share the Kraken
+     Pro account + collateral with spot/margin/futures.
+EVIDENCE:
+  1.  support.kraken.com/articles/where-is-kraken-licensed-or-regulated (ME+NY not served; other state limits)
+  2.  support.kraken.com/articles/us-perpetual-futures (16 contracts via Kraken Derivatives US; auto-unlock)
+  3.  support.kraken.com/articles/360023786632-kraken-derivatives-eligibility (US-only; verified account; FCM = NinjaTrader Clearing)
+  4.  support.kraken.com/articles/unlock-us-derivatives (verified + questionnaire + risk disclosures = retail check, not ECP)
+  5.  kraken.com/features/futures ("certain states may have restrictions"; "$25 intraday margin")
+  6.  blog.kraken.com/product/kraken-derivatives/announcing-cftc-regulated-us-perps (eligible US clients via Kraken Derivatives US)
+  7.  prnewswire.com/.../bitnomial-...self-certifies-first-ever-us-perpetual-futures-302435713.html (institutional first; retail via Botanical to BOTH)
+  8.  bitnomial.com/news/2025-12-04/leveraged-retail-spot-exchange/ (first leveraged RETAIL exchange; Dec-2025)
+  9.  botanical.finance/ ("US traders welcome, no workarounds"; FCM = Bitnomial Clearing, LLC)
+  10. bitnomial.com/news/2026-05-01/payward-completes-acquisition-bitnomial/ (acq closed; perps/options to eligible US clients)
+  11. businesswire.com/news/home/20260615010932/en/Kraken-Launches-Perpetual-Futures-for-US-Clients
+  12. coincentral.com/kraken-launches-u-s-perpetual-futures-through-cftc-licensed-bitnomial/ (~Jun-14; 9 assets)
+  13. crypto.news/kraken-launches-crypto-perpetual-futures-for-eligible-u-s-traders/ (single-account integration)
+  14. leaprate.com/.../kraken-launches-no-expiry-perpetual-futures-for-us-clients/ ("varies by jurisdiction"; shared collateral)
+  15. bitnomial.com/ (subsidiaries = CFTC DCM + DCO + FCM)
+STILL NEEDS BITNOMIAL/KRAKEN: the exact per-state perps list (beyond ME/NY);
+  Botanical's state map; whether the suitability questionnaire ever gates out retail;
+  any direct-route account minimum; whether ME/NY residents can reach perps via the
+  DIRECT FCM route.
+
+================================================================================
+NET / WHAT THIS CHANGES IN 0500000 SECTION 13
+================================================================================
+  - HEADLINE: "limit-only" is a DIRECT-Bitnomial constraint, not the Kraken-Pro route
+    (native Stop/TP/Trailing/Market exist there). Re-opens the 13.1 ACCESS MODE FP/DP
+    (isolation vs native server-side stops); native stops attack the loss-tail the
+    mission prioritizes. UNCONFIRMED: do Kraken's stops rest server-side on Bitnomial?
+  - 13.5: USD-margin / USD-cash-settled is the CONFIRMED baseline; USDC drops to
+    "possible, unconfirmed"; RLUSD/BTC/ETH/XRP are the direct-route crypto collateral.
+  - 13.2/13.3: COD is the forced DEFAULT (protective) but cancels WORKING ORDERS, not
+    a held POSITION - the naked-position-on-crash hole is real and only the
+    position-limit-zero kill-switch (risk-manager control, auto-flatten unconfirmed)
+    could close it. Cancel = Modify-to-zero; no mass-cancel.
+  - 13.6: perp_fee model becomes the Kraken maker/taker schedule (not a flat
+    $0.07-0.10 for the Kraken route) OR the Bitnomial direct schedule - route-dependent;
+    funding 8h (7pm/3am/11am CT, settled daily 3pm CT, +/-0.05% clamp, IR 0.01%).
+  - Symbols (item 5) + universe + eligibility (item 6) + contract sizes (item 3) are
+    now concrete enough to graduate most of Section 13 - GATED ONLY on: a sandbox perp
+    to test against (item 1) and the route decision (direct vs Kraken-Pro), which the
+    native-stops finding re-opens.
+================================================================================
