@@ -1,0 +1,95 @@
+DocDCN:     TB00794
+DocTitle:   TB00794_Next_Session_Instructions
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00794_Next_Session_Instructions_v1_0.txt
+DocDate:    06-19-2026
+DocTime:    01:15:00 UTC
+
+============================================================
+TB00794 NEXT SESSION INSTRUCTIONS  (CRYPTO-PERPS RESEARCH PROBE: FULL LONG+SHORT BATTERY)
+============================================================
+
+THE MISSION (Bill-directed). Run a RESEARCH PROBE for CRYPTO PERPETUAL FUTURES. Re-run ALL the
+variations from the spot research arc (TB00779-786) for BOTH LONGS AND SHORTS to determine (a)
+viability and (b) the best system on perps. This is RESEARCH (a backtest script + an honest verdict,
+like scripts/tb00779..tb00786), NOT an organism/diagram change yet -- if a perps strategy validates,
+designing it into the organism (diagram-first) is a SUBSEQUENT session.
+
+WHY PERPS (the lever, from the TB00793 Kraken-products Q+A). Kraken now offers CFTC-regulated crypto
+perps to eligible US clients (via Bitnomial, launched ~06-15-2026): BTC/ETH/SOL/XRP/ADA/LINK/DOGE/LTC/
+AVAX, 24/7, no expiry. The KEY DIFFERENCE vs spot: shorting is NATIVE (no borrow fee) and the carrying
+cost is the FUNDING RATE (periodic, can be paid OR received), not a spot borrow. The spot verdict was
+LONG-ONLY -- shorts died on drift + borrow fee + bear rallies (TB00784/785). THE CENTRAL QUESTION: does
+removing the borrow fee + modeling funding REVIVE the short side on perps, and does it change the best
+LONG config? Plus leverage is available (a sizing multiplier, NOT an edge -- test unlevered edge first).
+
+REPLICATE THE FULL BATTERY (the same grid the spot arc + the auto-search ran -- do NOT cherry-pick):
+   - ENTRY signals: emacross (the spot winner), momentum, bb_break, donchian, supertrend, + the
+     auto-search signal set (9 signals total in operations/auto_strategy_search.py).
+   - FILTERS: btc_tide (BTC-regime gate), trend100, vol, none (4 filters).
+   - STOP widths: ~2x / 2.5x / 3x / 5x ATR (the spot sweet spot was 2-2.5x; re-confirm on perps).
+   - EXITS: run-to-reversal (the spot winner), structure stop, hybrid (wide floor + trail), chandelier
+     trailing, +/- take-profit (DEC-124 no-TP was the spot call -- re-test on perps).
+   - TIMEFRAMES: 1h / 4h / 8h / 12h / 24h / 1d (the spot edge was SLOW, 12-24h; re-confirm).
+   - DIRECTIONS: LONG and SHORT, separately AND as a regime-gated both-sides system.
+   - VALIDATION (same rigor as TB00786 -- the honest bar): multiple eras (aim 7.5yr / 8 eras incl the
+     2022 bear), OOS block-bootstrap with CIs, REGIME-ROBUSTNESS (profit not one-directional / not
+     front-loaded), a SLIPPAGE sweep (0/5/10/20 bp), and report BOTH R and % per-trade return on capital.
+
+PERPS-SPECIFIC MODELING (the new cost structure -- get this right or the short verdict is meaningless):
+   - FUNDING RATE: model the periodic funding payment (typically 8h on Binance perps; some venues 1h /
+     4h). A LONG pays funding when funding>0 (the usual bull-market state) and RECEIVES it when <0; a
+     SHORT is the mirror. Use the ACTUAL historical funding series (Binance publishes it), not a
+     constant -- funding spikes in euphoria/panic are exactly where the edge/cost lives.
+   - FEES: Kraken perp taker/maker (map to the live read); use a realistic taker for entries/exits.
+   - LEVERAGE: report the UNLEVERED per-trade edge first; note leverage only as a sizing multiplier +
+     a liquidation-risk caveat (NOT a source of edge).
+
+DATA. Use the Binance public mirror the deep-history arc already used (data-api.binance.vision /
+the futures klines + fundingRate endpoints) for depth + funding -- deep, free, 7.5yr. Mirror the
+existing scripts' fetch+cache pattern (scripts/_binance_cache_*.json). Then MAP the result to Kraken's
+actual perp funding/fee economics for the live read (Kraken's 9-asset perp set is the deployable
+universe). Cache caveat: confirm funding history depth per pair; note any gaps.
+
+CARRY-FORWARD HYPOTHESES (from the spot arc -- state them, then let the data rule):
+   - LONG edge likely TRANSFERS (same crypto price dynamics) -- expect SLOW (12-24h) + wide ~2-2.5x ATR
+     stop + run-to-reversal still strong; the new cost is LONG funding (modest drag in bull funding).
+   - SHORT is the OPEN question -- if removing borrow + favorable (negative) funding in down-regimes
+     flips it positive AND regime-robust, perps unlock the regime-gated short the spot side could not.
+     Stay skeptical: the spot shorts failed on DRIFT + bear-rally whipsaw too, which funding does NOT
+     fix. Demand OOS + regime-robust significance before calling shorts viable.
+
+DELIVERABLE: scripts/tb00794_perps_probe.py (+ a clear console verdict), Code pushed + DR-010, tests if
+any pure helpers are added (the probe itself is a script, not package code -- no 1249-green regression).
+A plain-text VERDICT to Bill: perps viability (both directions), the BEST config, and whether shorts are
+revived -- the same honest framing as TB00786 (separate the alt-season-inflated full-period number from
+the OOS forward number). If it validates, NEXT-next = design into the organism diagram-first (a new
+perps connectivity + the Short_Module re-activation if shorts prove out -- the machine is already
+Long/Short-symmetric, so re-enabling shorts is a strategy flip, not a rebuild).
+
+STANDING (unchanged): continuous-run; session-close (SL+NSI+OCS) is the standing close; NEVER ask Bill a
+HOW (resolve path forks with an FP/DP for the overall organism); NEVER a question-box (plain chat only);
+push to master is permitted (DR-010); NEVER lower the sacred 1:1.5 R:R; LONG-ONLY is the live STRATEGY
+on a Long/Short-CAPABLE machine -- this probe TESTS whether perps change that, it does not assume it;
+never disappear the record. Diagram-first ONLY if the probe graduates to an organism change (expect none
+this session -- it is research).
+
+BACKGROUND (continues across sessions, do not drop):
+   - F3 = observe the live-in-paper long-only SPOT organism (pid 1067362 at close, CHANGES on restart;
+     /root/TothBot_V2-Code @ 8274807, paper). The first 24h-cross trade has NOT fired yet (0 long trades;
+     the 06-19 00:00 UTC boundary passed with no cross -- expected, slow strategy). Check it + the
+     dashboard each session; capture the first real entries/exits when they come. See the TB00792 NSI.
+   - The operator DASHBOARD (TB00793) runs on the VPS (pid 1068299 at close, 127.0.0.1:8787, read-only).
+     Reach it: ssh -L 8787:localhost:8787 root@87.99.141.44 then http://localhost:8787. See
+     [[operator-dashboard]].
+   - F4 (live go-live of the spot long-only strategy) stays the only Bill-gated step. STAY IN PAPER.
+
+COLD-LOAD: Code 8274807 (1249 green; py = C:\Users\wstot\AppData\Local\Programs\Python\Python312\
+python.exe, full path only) - Docs 9f6a0da (0500000 dv1_263 / 0521001 dv1_73) - SessionLogs HEAD =
+TB00793 SL + TB00794 NSI + OCS, TB00000 v2_102. Read from GitHub HEAD: TB00794 NSI -> TB00793 SL ->
+the prior research arc scripts (tb00779-786) + operations/auto_strategy_search.py for the exact
+variation grid -> TB00000. Auto-memory: phase2-build + operator-dashboard + kraken-tradeable-products +
+profitability-research-verdict + long-short-paradigm-standing + position-sizing-fixed-notional +
+what-how-division + continuous-run-directive + no-question-box-tool + session-close-standing +
+tothbot-commit-rules + never-disappear-content + push-is-permitted.

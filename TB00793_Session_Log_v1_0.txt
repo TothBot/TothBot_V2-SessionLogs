@@ -1,0 +1,111 @@
+DocDCN:     TB00793
+DocTitle:   TB00793_Session_Log
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00793_Session_Log_v1_0.txt
+DocDate:    06-19-2026
+DocTime:    01:10:00 UTC
+
+============================================================
+TB00793 SESSION LOG  (BUILD THE READ-ONLY OPERATOR DASHBOARD; LONG-ONLY UI; PERPS Q+A)
+============================================================
+
+SESSION SUMMARY. A Bill-directed UI mission (mid-conversation, after the TB00791 F1/F2 close): build a
+read-only operator dashboard to VIEW the live-in-paper organism. Bill chose the VPS-web-via-SSH-tunnel
+option. DELIVERED diagram-first (the snapshot emitter is a new organism output): the 0500000 siting,
+then the emitter + dashboard code + tests, then deployed + test-driven on the VPS. Then Bill caught the
+Shorts showing in the UI -> scoped the dashboard to the LONG-only active strategy. Closed with a verified
+Kraken-products Q+A that set the NEXT mission (a crypto-perps research probe). All repos pushed + DR-010.
+
+------------------------------------------------------------
+(1) DIAGRAM-FIRST - the STATE SNAPSHOT EMITTER sited into 0500000 (Docs 5ee8ecb -> 9f6a0da)
+------------------------------------------------------------
+The emitter is the local-file materialization of the C2 DAILY operational-dashboard VIEW, so it was
+sited BEFORE the code into the mod:Logger operator-reporting surface (q5_logs STATE SNAPSHOT FILE +
+a reporting_hierarchy C2 pointer). PROSE-ONLY, in-place text inside the existing mod:Logger <desc> --
+NO new SVG geometry, NO tag added/removed (g 217 / text 957 / desc 126 / svg 10 / title 126 /
+figcaption 10 UNCHANGED), NO new namespace token (a derived FP8 single-source VIEW, not a ratifiable
+rule). html.parser well-formedness pass. 0500000 dv1_262 -> dv1_263, 0521001 dv1_72 -> dv1_73 (the
+TB00793 OP RECORD). TB00000 UNCHANGED (no new seed - the emit cadence is an engineering constant).
+
+------------------------------------------------------------
+(2) THE CODE - emitter + dashboard (Code 3c67ace -> 22b0890 -> 8274807, 1230 -> 1249 green, +19 tests)
+------------------------------------------------------------
+ - tothbot/recorder/state_snapshot.py = StateSnapshotEmitter: a VIEW over wm.open_positions /
+   wallet_balance / portfolio_baseline + the DailyDecisionStore (per-pair 24h EMA12/26 cross state +
+   signed gap_pct = distance-to-cross + daily ATR) + regime_cache + the CIATS per-module summary.
+   Wired in operational.py as a SECOND fan-out consumer of the OHLC_5m system-clock tick (a new
+   _fan_out_clock_ticks helper, exception-isolated from the pull scheduler). Atomic write (temp file
+   then os.replace), throttled, READ-ONLY + best-effort (NEVER raises into the hot path; rule:HR-PM-009
+   sole-writer preserved). Gated by snapshot_path, which DEFAULTS to <records_dir>/state_snapshot.json
+   when TOTHBOT_RECORDS_DIR is set (so a deployed paper organism emits it automatically; override
+   TOTHBOT_SNAPSHOT_PATH). runner.py threads it through OpsSettings.from_env.
+ - tothbot/recorder/dashboard_data.py = read-only pure functions over the durable artifacts
+   (state_snapshot.json + trades_<YYYY>.jsonl + the log tail): read_snapshot, load_trades,
+   compute_performance (count / win-rate / cumulative + per-trade P/L / avg actual_rr / equity curve /
+   progress-to-200-floor / recent), tail_events, build_payload.
+ - operations/dashboard.py = a SEPARATE stdlib-http.server process (localhost-bound), serves one
+   auto-refreshing HTML page (Health, Performance + equity sparkline, Open positions, Decision board
+   sorted nearest-cross-first, CIATS, Recent trades, Event tail) + a /api/state JSON endpoint. Reads
+   files only -- never the organism, writes nothing. Reached over an SSH tunnel (no public port).
+ - NON-BREAKING: the default assembly wires no emitter (zero regression); the live 5m/decision path is
+   byte-unchanged. Tested over fakes + an assemble-level wiring proof in test_live_smoke.
+
+------------------------------------------------------------
+(3) DEPLOYED + TEST-DRIVEN (paper, mine - still paper)
+------------------------------------------------------------
+Pulled the new Code on the VPS (8106391-era -> 22b0890), stopped the old organism by exact PID,
+relaunched setsid python3 -u (paper). Cold-start HEALTHY: 735 -> top-150 -> 19 VIABLE, 19/19 warm, 0
+faults, governor holding, 5m clock ticking. The emitter auto-wired (TOTHBOT_RECORDS_DIR set) and writes
+/root/tothbot_records/state_snapshot.json (verified live: 19-pair decision board, balances, CIATS
+summary, ~5-min refresh on the clock). Launched the dashboard server detached on 127.0.0.1:8787;
+verified /api/state + the HTML over an SSH tunnel from Bill's machine (I opened the tunnel for him so he
+only had to open http://localhost:8787 -- he was confused by the two-window ssh-tunnel + browser flow,
+so I simplified it + documented the do-it-yourself PowerShell steps).
+
+------------------------------------------------------------
+(4) LONG-ONLY UI SCOPING (Bill's catch; Code -> 8274807)
+------------------------------------------------------------
+Bill asked why Shorts were in the UI when we trade long-only. Correct catch: the snapshot reads the
+machine SYMMETRICALLY (Long/Short-capable, the ratified paradigm), so a dormant SHORT row showed; and
+the performance panel's 5 trades / -$2.66 were the OLD retired short strategy's history in
+trades_2026.jsonl, contaminating the new strategy's stats. FIX (display-only, machine untouched,
+nothing erased): compute_performance gained a `sides` filter defaulting to LONG-only -- the headline
+(count / win-rate / net + per-trade P/L / equity / recent) scopes to the active strategy; the 5 retired
+shorts are EXCLUDED from the headline but summarized under `legacy` (count + net_pl, kept in history).
+The dashboard CIATS panel renders the LONG module only; the performance panel shows scope "LONG-only" +
+a muted legacy footnote. The EMITTER stays symmetric (machine truth -- if shorts re-enable, the UI
+lights up by flipping one default). Verified live: scope LONG, 0 active trades / $0 (honest), legacy =
+5 shorts / -$2.6568.
+
+------------------------------------------------------------
+(5) KRAKEN-PRODUCTS Q+A -> the NEXT mission
+------------------------------------------------------------
+Bill asked if Kraken offers Perpetual Futures, US Stocks/ETFs, and Tokenized Stocks (xStocks).
+VERIFIED (web, June 2026): YES to all three, with one US catch. PERPS: Kraken just launched
+CFTC-regulated crypto perps for eligible US clients (~06-15-2026) via Bitnomial (Payward-owned), 24/7,
+no expiry, BTC/ETH/SOL/XRP/ADA/LINK/DOGE/LTC/AVAX -- native shorting (no borrow), funding rates, leverage.
+US STOCKS/ETFs: yes, commission-free 11,000+ names to select US clients (post-$30M SEC settlement).
+xStocks (tokenized equities, Backed): real + large (100+ names, $25B+ vol) but GEOFENCED OUT of the US
+(and UK/CA/AU) -- NOT accessible to a US person. Relevance flagged: perps are the natural TothBot
+expansion (same crypto price dynamics the strategy was validated on, but cheap native shorts + funding
+instead of borrow -- could revive the short side); stocks/ETFs/xStocks are a different asset class the
+crypto-tuned edge would NOT transfer to without fresh validation. Bill DIRECTED the next session = a
+crypto-perps research probe (see TB00794 NSI/OCS).
+
+============================================================
+STATE AT CLOSE
+============================================================
+   - Code HEAD 8274807 (1249 green). Docs HEAD 9f6a0da (0500000 dv1_263 / 0521001 dv1_73). TB00000
+     v2_102 UNCHANGED. SessionLogs: this SL + the TB00794 NSI + OCS. All pushed + DR-010.
+   - VPS (paper, mine): organism pid 1067362 (python3 -u, /root/TothBot_V2-Code @ 8274807,
+     decision_entry=True, 19 viable, 19/19 warm, 0 faults, snapshot emitter live). Dashboard server pid
+     1068299 on 127.0.0.1:8787 (read-only). Reach it: ssh -L 8787:localhost:8787 root@87.99.141.44 then
+     http://localhost:8787 (the convenience tunnel I opened is session-bound; the dashboard SERVER
+     persists). The first Closed24H boundary (2026-06-19 00:00 UTC) PASSED with no bullish cross on any
+     viable pair -> 0 long entries (expected for the slow strategy); trades_2026.jsonl still the 5
+     legacy shorts.
+   - F3 (observe the live-in-paper long-only trades) remains the standing background mission (no trade
+     yet by design). F4 (live go-live) stays the only Bill-gated step. STAY IN PAPER.
+
+The machine stays Long/Short-symmetric; nothing erased; the sacred 1:1.5 R:R floor never lowered.
