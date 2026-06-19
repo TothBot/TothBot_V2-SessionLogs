@@ -69,14 +69,41 @@ MEMORY + ARTIFACTS THIS SESSION
    collateral; do not re-litigate; one open item). UPDATED: exchange-landscape-verdict (the "limit-only"
    note now flags the Kraken-Pro native-order-types supersession). MEMORY.md index updated.
  - Docs repo: 0500000 dv1_271 -> dv1_276, 0521001 dv1_81 -> dv1_86. HEAD d18c3fc. Five commits A-E.
- - Code UNCHANGED (adf1157, 1249 green) -- diagram-first only, no code this session.
- - SessionLogs: this SL v1_0 + TB00800 NSI v1_0 + TB00800 OCS v1_0 (the close set).
+ - Code 5491760 (was adf1157, 1249 green): the diagram fold-in was no-code, but a CONTINUATION research
+   slice (below) added the TB00798 perps hardening script + verdict. The tothbot/ package + 1249-green
+   test suite are UNCHANGED (research script only, offline, touches nothing live).
+ - SessionLogs: this SL + TB00800 NSI + TB00800 OCS (the close set), refreshed in place to include the
+   continuation (none had been consumed by a downstream session yet).
+
+============================================================
+CONTINUATION - PERPS HARDENING (while awaiting the Kraken support answer)
+============================================================
+ - After the fold-in close, Bill approved using the wait on Kraken to HARDEN the perps strategy. Ran a
+   walk-forward + fee-breakeven pass on the TB00794 survivor mechanisms, offline on the cached perp data,
+   reusing the tb00794_perps_probe engine. Deliverable: scripts/tb00798_perps_harden.py +
+   tb00798_perps_harden_verdict.txt (Code 5491760, pushed + DR-010 PASS).
+ - METHOD (no new selection bias): evaluated the ALREADY-CHOSEN survivor configs (no fresh 525-combo
+   search) two ways -- (1) walk-forward = each fixed config across 6 sequential time folds pooled across
+   the 30-pair universe (a persistence test that catches era-fragility); (2) fee-breakeven = sweep the
+   perp taker 4-25 bp/side to find where the pooled short edge crosses zero (the 13.6 route-dependent
+   fee unknown).
+ - RESULTS: (1) all 8 short survivors PERSIST (E>0 in 5/6 folds; only the OLDEST 2020 fold is weak;
+   pooled +0.85 to +2.68%/tr, rr 1.65-2.09). (2) The TB00794 short fee-fragility caveat (a) is REFINED,
+   not confirmed -- it was about the BARE-TREND short; every mean-rev/filtered SURVIVOR stays E>0 through
+   25 bp/side taker (breakeven >25bp), so the Kraken-fee unknown is NOT a material short-side threat (the
+   decision-relevant result). (3) The breakout LONG is strong but SOFTENS in the most-recent 2025 fold
+   (alt-bull-inflated early folds confirmed) -- honest forward = the middle band; watch in paper.
+ - SEED VALUES (recorded PROPOSED, graduate at slice F): perp_short_entry_meanrev = rsi_trend
+   30-55/EMA12<EMA26 or bb_revert >2 sigma; perp_short_regime_filter = vol ATR-pct 0.20-0.85 or trend100;
+   perp_short_exit_trail = trail 3.0x or target 3.0x ATR; the perp breakout LONG wants a wider 3-5x ATR
+   stop than the spot 2.5x. Nothing minted; TB00000 v2_102 UNCHANGED; STAY IN PAPER.
 
 ============================================================
 STATE AT CLOSE
 ============================================================
  - Docs HEAD d18c3fc (0500000 dv1_276 / 0521001 dv1_86; counts g 217 / text 957 / desc 126 / svg 10 /
-   title 126 / figcaption 10, all held). Code adf1157 (1249 green) UNCHANGED. TB00000 v2_102 UNCHANGED.
+   title 126 / figcaption 10, all held). Code 5491760 (TB00798 perps hardening research added; tothbot/
+   package + 1249-green suite UNCHANGED). TB00000 v2_102 UNCHANGED.
  - The TB00798 Kraken-Pro decision + three-pool wallet model + USD collateral + native stops are FULLY
    FOLDED into 0500000 Section 13.1-13.7. The old direct-Bitnomial/limit-only design is preserved as a
    documented FALLBACK. Nothing erased; sacred 1:1.5 R:R floor never lowered.
