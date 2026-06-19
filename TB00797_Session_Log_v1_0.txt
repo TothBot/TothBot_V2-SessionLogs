@@ -1,0 +1,101 @@
+DocDCN:     TB00797
+DocTitle:   TB00797_Session_Log
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00797_Session_Log_v1_0.txt
+DocDate:    06-19-2026
+DocTime:    06:30:00 UTC
+
+============================================================
+TB00797 SESSION LOG  (CONTINUE THE PERPS EXPANSION DESIGN, DIAGRAM-FIRST)
+============================================================
+
+SESSION SUMMARY. Continued the TB00797 mission: designed the perps expansion (Kraken Derivatives
+US / Bitnomial) into 0500000 Section 13, diagram-first, in clean non-breaking PROSE-ONLY slices,
+LONG and SHORT to EQUAL DETAIL. Added the two NSI-recommended grounded slices -- 13.5 funding /
+margin model and 13.6 proposed perp CIATS parameter registry -- completing the ungated design
+track. The next NSI steps (graduate Section 13 into a formal numbered section + figure; then code)
+are BOTH gated on the six Bitnomial confirm-first items (external, help@exchange.bitnomial.com)
+plus the Bill perps go-live gate, so they correctly did NOT proceed this session. 2 Docs commits,
+both pushed + DR-010 in sync. NO code (diagram-first only). STAY IN PAPER. TB00000 v2_102
+unchanged, no new seed (all perp parameters named PROPOSED only).
+
+------------------------------------------------------------
+(1) THE PERPS DESIGN SLICES (0500000 Section 13, both prose-only, element counts held)
+------------------------------------------------------------
+ - 13.5 FUNDING / MARGIN MODEL (dv1_270): the perps organism is a CFTC FCM account -- margin and
+   funding settle INSIDE the Bitnomial clearing account, NO spot-wallet doorway (unlike the
+   Section 2 Kraken spot-margin short path / param:margin_borrow_fee). FUNDING: 8h cadence
+   (engineering constant, NOT a seed); funding folded into Variation Margin (the 13.2
+   funding-rates pull); the funding RATE is exchange-set; the realized funding cost folds into
+   perp net_loss exactly as the spot-short margin_borrow_fee does, so the sacred 1:1.5 net R:R
+   floor absorbs it AUTOMATICALLY and is never lowered. Long-vs-Short SIGN difference (equal
+   detail): long pays funding when the rate is positive / receives when negative, short the mirror;
+   same mechanism, only the sign differs; this REPLACES the spot-short per-4h margin rollover.
+   MARGIN: USDC collateral (item 2, pending confirmation); the perps organism holds its OWN
+   operator-funded margin wallet (TB00000 sec 7 parallel modules), isolated from the spot module
+   wallets; per-contract initial/maintenance margin exchange-set (item 3); the wallet balance is
+   the SOLE sizing boundary, same rule both sides. SIZING: fixed-notional per_trade_size_usd
+   UNCHANGED, mapped onto WHOLE contracts (floor(target_notional / per_contract_notional) snapped
+   to the lot increment, item 3), with a per-product floor RAISE when one contract notional exceeds
+   $50 (the existing raise-per-product behaviour, NOT a new seed). Sizing mechanism IDENTICAL for
+   long and short.
+ - 13.6 PROPOSED PERP CIATS PARAMETER REGISTRY (dv1_271): CONSOLIDATES every perp parameter NAMED
+   as proposed across 13.1 - 13.5 into ONE place so the formal registration is a single clean
+   graduation step. NOTHING minted (TB00000 v2_102 unchanged; no perp seed in sec 8 or the 13.4
+   figures). Binary-test framing: a parameter's existence + CIATS-ownership is architecture (the
+   diagram), only its numeric starting value is a sec 8 entry. Enumerated to EQUAL DETAIL:
+   SHORT-SIDE proposed seeds (perp_short_entry_meanrev, perp_short_regime_filter,
+   perp_short_exit_trail -- the L2 stop REUSES decision_atr_stop_mult, no new stop seed);
+   LONG-SIDE reuses the EXISTING registered 24h-decision seeds and mints NONE
+   (decision_ema_fast/slow, decision_atr_period, decision_atr_stop_mult, decision_bar_interval_min,
+   per_trade_size_usd); VENUE/EXECUTION (perp_fee_per_contract PROPOSED, analogue of FEE_TAKER_PCT;
+   perp_exit_cross_ticks PROPOSED; plus two design-intent tunables perp_exit_chase_cap +
+   perp_mark_poll_interval, candidate seeds at code time); and NOT-SEEDS (funding rate, 8h cadence,
+   margin, tick/lot -- exchange-set / constants). Registration deferred to graduation.
+
+------------------------------------------------------------
+(2) WHY THE DESIGN TRACK STOPPED HERE (the gate, not a pause)
+------------------------------------------------------------
+ - Section 13 now holds 13.1 scope + 6-item gate, 13.2 connection + crash-inversion, 13.3 exit
+   synthesis + gap-risk, 13.4 long/short mechanisms equal detail, 13.5 funding/margin equal detail,
+   13.6 proposed parameter registry equal detail. This is a complete diagram-first perps design
+   sited entirely in the "Open Items" Section 13, with all formal artifacts (namespace tokens,
+   figures, CIATS seeds) DEFERRED to graduation.
+ - The two remaining NSI steps are externally gated and were correctly NOT done autonomously:
+   (a) GRADUATE Section 13 into a formal numbered section + figure (geometry / R-bump slice) --
+   the NSI says "once the six confirm items clear -- not before"; the items are unconfirmed.
+   (b) CODE -- gated on the same confirm items + the Bill perps go-live gate (mirror of spot F4).
+   Inventing further design slices beyond the grounded set would risk the same drift class Bill
+   corrected in TB00796, so the disciplined move was to close at the gate.
+
+------------------------------------------------------------
+(3) F3 BACKGROUND (spot live-in-paper organism)
+------------------------------------------------------------
+ - NOT checked this session: an SSH read to the prod VPS (root@87.99.141.44) was denied by the
+   auto-mode classifier (no in-session user authorization named that prod target). Did NOT work
+   around it. F3 is a background/optional task and 0-trade sessions are EXPECTED (entry fires only
+   on a rare 24h EMA12/26 bullish cross at a 00:00-UTC boundary). The spot organism continues as
+   deployed (Code adf1157, 1249 green); no evidence of any problem and no mandate to intervene.
+   STAY IN PAPER. If a future session needs the F3 check, Bill can authorize the VPS SSH target
+   in-session (or add a Bash permission rule).
+
+============================================================
+STATE AT CLOSE
+============================================================
+   - Docs HEAD 9f4d981 (0500000 dv1_271 / 0521001 dv1_81). 2 commits this session
+     (dv1_269 -> dv1_270 -> dv1_271), both PROSE-ONLY, element counts UNCHANGED throughout
+     (g 217 / text 957 / desc 126 / svg 10 / title 126 / figcaption 10), both html.parser
+     well-formed, both pushed + DR-010 in sync. Two pushes hit a transient curl-55 transport reset
+     and SUCCEEDED on retry (a network misfire, not a denial).
+   - Code HEAD adf1157 (1249 green) UNCHANGED -- diagram-first only, no code this session.
+   - TB00000 v2_102 UNCHANGED, no new seed (all perp parameters named PROPOSED only; the first perp
+     seed lands formally at the Section 13 graduation slice, after the six confirm items clear).
+   - SessionLogs: this SL + the TB00798 NSI v1_0 + TB00798 OCS v1_0. Pushed + DR-010.
+   - PERPS DESIGN STATUS: Section 13 design COMPLETE for the ungated track (13.1 - 13.6). Remaining:
+     graduate Section 13 into a formal numbered section + figure (gated on the 6 confirm items);
+     then code (gated on the confirm items + the Bill perps go-live gate). STAY IN PAPER.
+   - SPOT F3 continues in the background (not checked this session; 0-trade sessions expected).
+
+The machine stays Long/Short-CAPABLE with the SHORT side documented to EQUAL DETAIL as the LONG
+(NOT symmetric mechanics); nothing erased; the sacred 1:1.5 R:R floor never lowered.
