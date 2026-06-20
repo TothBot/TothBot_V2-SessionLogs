@@ -1,0 +1,122 @@
+DocDCN:     TB00801
+DocTitle:   TB00801_Session_Log
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00801_Session_Log_v1_0.txt
+DocDate:    06-20-2026
+DocTime:    04:30:00 UTC
+
+============================================================
+TB00801 SESSION LOG  (HOW DOES THE HALVING CYCLE ENTER THE STRATEGY? -- FP/DP + stats; Bill's idea TESTED)
+============================================================
+
+MISSION (Bill WHAT, TB00801 NSI): explore how the 4yr halving Bull/Bear cycle enters the strategy. A
+First Principles / Deming analysis + all appropriate stats on the cached perp data -> the BEST of all
+solutions to make more money AND reduce losses. Answer (1) more research? (2) how to use it? Bill's seed
+idea (TEST, do not override): in a BULL a SHORT signal must be INCREDIBLY STRONG + ready for a quick
+reversal; in a BEAR the same for LONGs. Research/design only; propose, fold on Bill's nod. STAY IN PAPER.
+OUTCOME: COMPLETE. Built the analysis, tested Bill's idea honestly, reached a clear recommendation. No
+corpus change (0500000 unchanged dv1_276); one new Code research artifact committed + pushed.
+
+============================================================
+WHAT I BUILT (Code 90ddcd8, pushed): scripts/tb00801a_cycle_strategy.py + _verdict.txt
+============================================================
+Reuses the tb00798b/tb00794 engine (cached klines + REAL funding, offline, 30-pair perp universe, $50
+notional, taker 0.05%/side). THE FLAW IT FIXES FIRST: TB00798b's bull/bear labels were HINDSIGHT
+halving-anchored calendar windows -- you cannot TRADE a hindsight label. So the irreducible sub-problem
+(NSI candidate e) is a CAUSAL / ONLINE regime detector: at entry time t, decide bull vs bear using ONLY
+bars <= t. Three parts: (1) build + validate 5 causal detectors vs the hindsight phases; (2) re-score the
+long/short edge split by WITH-cycle vs COUNTER-cycle under the CAUSAL label (the honest test of Bill's
+idea); (3) score 8 candidate policies on the WHOLE-organism objective -- full-cycle pooled E%, total $
+P&L at $50/trade (money), and a max-drawdown proxy + worst-phase E (losses).
+
+============================================================
+RESULTS
+============================================================
+PART 1 -- CAUSAL DETECTOR (answers "can we know bull/bear online?" = YES):
+  Agreement with the hindsight bull/bear sign, NO lookahead:
+    sma200 (BTC daily close vs its own 200-day SMA)  = 83.4%  <- BEST HONEST detector
+    sma100 77.9% | ret90 77.3% | dd25 69.6% (laggy, misreads recovery)
+    halvclk 98.8% but CIRCULAR (the hindsight phases ARE halving-anchored) AND cycle-TIMED -> DISCARD.
+  -> sma200 reproduces the cycle online with no lookahead and no cycle-timing assumption.
+
+PART 2 -- EDGE SPLIT BY CAUSAL REGIME (with-cycle = LONG in detected-BULL / SHORT in detected-BEAR):
+  Under sma200:  LONG  with +15.4% vs counter +3.1%  |  SHORT  with +3.8% vs counter +2.0%
+  -> with-cycle E cleanly beats counter-cycle on BOTH sides under EVERY honest detector: Bill's intuition
+     is DIRECTIONALLY RIGHT on the EV ORDERING. BUT the counter-cycle trades are NOT money-losers under a
+     causal label -- they are lower-edge POSITIVE, because the per-pair trend100 + vol filters ALREADY
+     screen the cycle drag. The TB00798b -11% / -4.7% counter-cycle longs were UNCONDITIONAL phase cuts;
+     once the causal detector AND the filters apply, survivors print +3%. ONLY the circular halvclk makes
+     counter-cycle longs look catastrophic (-8.4%) -- i.e. Bill's gate only "works" if you cheat with the
+     calendar.
+
+PART 3 -- CANDIDATE-POLICY SCORECARD (primary 24h long+short organism, gate = sma200):
+  P0 no-gate (both sides always-on) [candidate d]:  total $5608 | maxDD $400 | worstPhE +0.20%  <- WINS
+     long-only no-gate: $4257 | maxDD $555 | worstPhE -10.70%
+     short-only no-gate:$1351 | maxDD $580 | worstPhE  -2.58%
+  P1 hard-gate counter off:  $4716 (-16%) | maxDD $559 (WORSE)
+  P2 size-tilt counter x0.5: $5162 | maxDD $432   (least-bad modifier, still < P0 on both)
+  P3 quick-exit on counter:  $4771 | maxDD $539
+  P4 raise-bar counter strict:$5118 | maxDD $490
+  P5 Bill-combo strict+quick:$4654 | maxDD $514
+  P6 asym gate long-in-bear: $5349 | maxDD $515
+  P7 asym + quick short-in-bull:$4779 | maxDD $539
+  -> P0 DOMINATES every gate/raise-bar/tilt/quick-exit variant on money AND drawdown AND worst-phase E.
+
+============================================================
+THE VERDICT (FP/DP) -- the cycle's role is the HEDGE, not a gate
+============================================================
+ - FIRST PRINCIPLES: the cycle is real and causally knowable (sma200). The irreducible edge is NOT
+   regime-gating the entry; it is the phase-ANTI-CORRELATION of the two sides. Running BOTH sides cuts
+   max-drawdown BELOW either side alone ($400 vs $555 / $580) and lifts the worst-phase E from the
+   long-only -10.7% to +0.2% -- the short side literally rescues the long's winter. THAT, quantified, is
+   the cycle edge = candidate (d): both sides at equal detail, no explicit cycle gate, existing filters +
+   anti-correlation self-hedge.
+ - DEMING: Bill's gate optimizes each PHASE (don't fight the cycle) but pessimizes the WHOLE organism
+   (loses the hedge + positive-EV trades). Optimize the whole. The one durable lever -- the EV ordering
+   (with-cycle >> counter-cycle) -- points to SIZE not a gate, but even P2's gentle size-tilt does not
+   beat P0 here, so NOTHING should be built now. Any future cycle mechanism = CIATS-self-tuned, paper-
+   validated, 200-trade floor, NEVER a hard gate / cycle-timing / hand-set Bill knob.
+ - BILL'S TWO QUESTIONS, ANSWERED:
+     Q1 MORE RESEARCH? Core = answered (cycle real, detectable, gate rejected). YES on 3 bounded cuts:
+        (i) low-n bear side -- only ~2 honest bear phases; re-test as C4 winter deepens / calibrate
+        sma200 on longer spot-BTC history; (ii) a CIATS-self-tuned CONTINUOUS size tilt vs the binary
+        gate (the only modifier that nearly held money); (iii) detector robustness -- sma200 OOS + confirm
+        it is not just re-encoding trend100. NO to building any cycle GATE now; NO to halvclk cycle-timing.
+     Q2 HOW TO USE IT? Primary (already ratified, no new code): KEEP the both-sides equal-detail organism
+        -- it IS the cycle hedge. Use the knowledge to (a) NOT judge the breakout long on a bear-phase
+        fold (its softness is the C4 winter; expect reacceleration into Apr-2028) and (b) justify funding
+        the short side (winter harvester). Secondary (propose only, Bill's nod): register a CIATS theory =
+        gentle sma200 size tilt to self-test in paper; do NOT fold into 0500000 until it beats P0 OOS.
+ - NET: do NOT add a cycle gate. The cycle is the ARCHITECTURAL ARGUMENT for the Long/Short organism Bill
+   already ratified, plus at most a future CIATS size-tilt theory. Bill's seed idea was TESTED in full
+   (never-disappear: idea preserved verbatim in TB00801 NSI; result here), not dismissed.
+
+============================================================
+BILL'S SEED IDEA -- preserved verbatim (never-disappear), with the resolution beneath
+============================================================
+ IDEA AS POSED (TB00801 NSI): "during a Bull market the signal for a Short has to be INCREDIBLY STRONG and
+ we have to be prepared for a quick reversal. And in a Bear market the signal for a Long has to be
+ INCREDIBLY STRONG and we have to be prepared for a quick reversal."
+ RESOLUTION (TB00801a): directionally right on the EV ORDERING (with-cycle > counter-cycle, every honest
+ detector) but the REMEDY (gate / strong-signal-only / quick-exit on counter-cycle) is DOMINATED by
+ simply running both sides -- it costs money and ADDS drawdown, because the per-pair filters already
+ neutralize the cycle drag and the two sides self-hedge. Recommendation: keep both sides (no gate); park a
+ gentle sma200 size-tilt as a CIATS theory. PROPOSED only -- nothing folded; awaiting Bill's nod.
+
+============================================================
+STATE AT CLOSE
+============================================================
+ - Docs HEAD d18c3fc (0500000 dv1_276 / 0521001 dv1_86; counts g 217 / text 957 / desc 126 / svg 10 /
+   title 126 / figcaption 10 -- UNCHANGED; correct, the cycle finding stays IN RESEARCH).
+ - Code HEAD 90ddcd8 (TB00801a cycle-strategy analysis + verdict; parent 8a66f09; tothbot/ package +
+   1249-green suite UNCHANGED -- offline research script only). Pushed; 0 ahead / 0 behind origin.
+ - SessionLogs: TB00801 SL v1_0 (this) + TB00802 NSI v1_0 + TB00802 OCS v1_0.
+ - Memory: cycle-strategy-verdict.md NEW; halving-cycle-hedge.md cross-linked; MEMORY.md index updated.
+   TB00000 v2_102 UNCHANGED.
+ - OPEN (carried to TB00802): (a) optional deeper cycle research = the 3 bounded cuts above, ONLY if Bill
+   wants it (the core question is answered + the gate rejected). (b) Kraken-support subaccount item still
+   open (4-Q text preserved in TB00800 SL v1_0; Bill may send). (c) Perps slice F graduation + code still
+   GATED. (d) SPOT F3 background observation of the live-in-paper long-only organism (0-trade sessions
+   EXPECTED; do NOT revert to the 5m firehose). STAY IN PAPER.
+ - Nothing erased; the sacred 1:1.5 R:R floor never lowered.
