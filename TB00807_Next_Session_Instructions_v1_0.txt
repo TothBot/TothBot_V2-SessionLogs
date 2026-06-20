@@ -1,0 +1,105 @@
+DocDCN:     TB00807
+DocTitle:   TB00807_Next_Session_Instructions
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00807_Next_Session_Instructions_v1_0.txt
+DocDate:    06-20-2026
+DocTime:    04:00:00 UTC
+
+============================================================
+TB00807 NEXT SESSION INSTRUCTIONS  (FOLD PERPS + HEDGING INTO 0500000 -- determine the best way, then do it)
+============================================================
+
+THE MISSION (a Bill WHAT, set verbatim at the TB00806 close):
+   "add the perps and hedging to the diagrams and 0500000. Determine the best way to do that. Do we just add
+    it to existing documentation, create new modules, or create new diagrams?"
+
+So 0500000 WILL be edited this session (no longer 'unchanged'). FIRST determine the best documentation
+approach and state the rationale; THEN execute it via the DEC-125 diagram-first slice pattern. The perps work
+is researched end-to-end and validated (TB00794-806); this session GRADUATES it from research into the
+0500000 architecture.
+
+SEEDED HOW-ANALYSIS (mine to determine; this is my recommendation for the next session to confirm per-piece
+by reading the actual diagram structure, then execute). The key fact: the architecture is ALREADY Long/Short-
+CAPABLE and most perps hooks ALREADY EXIST -- so the answer is MOSTLY EXTEND EXISTING, with ONE genuinely-new
+structural diagram, and NO new modules:
+  - Section 13 (sec 13.1-13.7) ALREADY documents the perps DECISION in prose (TB00798 slices A-F: Kraken-Pro
+    access route, three-pool wallet, isolated-margin loss cap, native order types, funding facts, USD
+    collateral). That is PROPOSED prose -> GRADUATE it to the structural architecture, folding the TB00806
+    validation results (mechanics validated, whole-organism findings, the breaker recalibration).
+  - The live SHORT_MODULE ALREADY EXISTS (dormant, long-only). leverage_cap_short=3, the isolated-margin
+    committed model, and the short borrow/funding cost are ALREADY in G7 (risk_guard) + G8 (position_sizer).
+    => RE-GROUND the existing Short module from spot-margin to the perps route. Do NOT create a new 'Perp
+    module' -- it is the same module re-grounded. (EXTEND existing.)
+  - The HEDGE-BREAKER RECALIBRATION (TB00806e: per-module breaker config = short PAUSE on a rolling/
+    exogenous basis, HALT on the frozen deposit) -> EXTEND the existing G7 Risk Guard diagram (Image8) with
+    a per-module breaker-config / baseline-source element. NO new gate; it uses evaluate_risk_guard's
+    existing override params. (EXTEND existing.)
+  - The FUNDING MONITOR (TB00806d: reuses the live EwmaMonitor, signals-only) -> EXTEND the existing CIATS
+    monitoring (the fee_tier_divergence / EwmaMonitor element) with a funding-divergence monitor instance.
+    (EXTEND existing.)
+  - The CIATS SHORT-SIZING (the allocation-frontier 'size the short as a modest hedge' rule) -> EXTEND the
+    CIATS registry/parameter docs (a per-module deposit / sizing-tilt seed). (EXTEND existing.)
+  - The ONE genuinely-NEW STRUCTURE = the THREE-POOL WALLET ISOLATION (sec 13.7): Long-Spot full Kraken
+    account + Long-Perp + Short-Perp linked derivatives subaccounts, each its own balance/margin/liquidation/
+    keys, ring-fenced, the no-same-instrument-collision rule. This is the one piece that likely warrants a
+    NEW diagram element / sub-diagram (the wallet-isolation structure), because it is a NEW structural object
+    not represented in the current module/gate diagrams. (NEW diagram element, targeted.)
+  RECOMMENDATION: mostly EXTEND existing documentation + the existing gate/CIATS diagrams; add ONE targeted
+  NEW diagram for the three-pool wallet; create NO new modules (re-ground the existing Short module). Confirm
+  this per-piece against the real diagrams before cutting slices.
+
+WHAT TO FOLD IN (the validated SOURCE material, all in memory perps-mechanics-verdict + the tb00806 verdict
+txts -- do NOT re-derive):
+  - Mechanics (battery C/A/B): the isolated-margin loss cap is STRUCTURAL + the ring-fence holds; the hedge
+    is DRAWDOWN/REGIME INSURANCE not a Calmar improver (size modestly via the frontier); funding de-risked
+    except a sustained-adverse-flip monitor.
+  - Whole-organism (tb00806d): leverage_cap_short=3 already correct; the funding monitor reuses EwmaMonitor
+    (signals-only); the hedge needs the breaker recalibration to deploy.
+  - Breaker recalibration (tb00806e): short module PAUSE = rolling-window 10% (exogenous re-arm) / HALT =
+    frozen deposit 20% (ruin floor); implemented via evaluate_risk_guard's existing override params; CIATS-
+    ownable; sacred 1:1.5 R:R + the frozen ruin HALT untouched.
+  - HONEST framing to preserve in the docs: the LONG is the profit engine; the perp SHORT is an incremental,
+    ruin-safe, modestly-sized regime hedge -- document it as such, not as a co-equal profit center.
+
+HOW TO EDIT 0500000 (the house rules -- dec125-campaign + the TB00798 slice precedent):
+  - DIAGRAM-FIRST, live-coding-only, PROSE-ONLY in-place edits per slice where possible; NO SVG geometry in a
+    prose slice; new STRUCTURAL diagram elements (the three-pool wallet) are their own slice with the element
+    COUNT updated (g / text / desc / svg / title / figcaption) + well-formed XML re-verified.
+  - One coherent slice at a time; nothing erased (preserve prior prose, append/reframe); keep TB00000 +
+    0521001 element counts reconciled each slice; re-verify well-formed 0 after each.
+  - C:-file mutation of 0500000 is now AUTHORIZED for this mission (Bill's TB00806 WHAT). Sacred 1:1.5 R:R
+    floor NEVER lowered; never disappear the record; EQUAL-DETAIL Long/Short (not symmetric mechanics).
+
+DATA / TOOLS (do not re-derive): Code working tree scripts/tb00806_perp_account_sim.py + tb00806c/a/b/d/e +
+their _verdict.txt + tb00806_perps_mechanics_synthesis.txt (NOW COMMITTED). Live gates already mapped:
+tothbot/pipeline/risk_guard.py (G7) + position_sizer.py (G8) + portfolio.py + config/registry.py
+(leverage_cap_short=3, the breaker seeds, fee_tier_divergence) + tothbot/ciats/ewma_monitor.py (the reusable
+monitor). 0500000 Section 13 = the prose to graduate.
+
+STILL-OPEN / GATED (serve only if Bill raises; the documentation fold is the job): perps live-readiness gates
+on the perps-kraken-pro-decision open items (Kraken retail derivatives SUBACCOUNT availability + pinning the
+real margin specs at code time); real-money go-live is the ONLY Bill-gated step; the short HEDGE SIZING is a
+CIATS/Bill allocation-frontier call. The deployed long-only spot organism stays in PAPER (F3 observation;
+0-trade sessions EXPECTED; do NOT revert to the 5m firehose).
+
+CONTEXT HOMES (point, do NOT duplicate; this NSI is the only self-sufficient handoff):
+  - Perps end-to-end + the whole-organism + breaker work: perps-mechanics-verdict + TB00806 SL + the tb00806
+    verdict txts + perps-revalidation-verdict + perps-kraken-pro-decision + 0500000 Section 13.
+  - Standing rules: what-how-division + continuous-run-directive + no-question-box-tool + session-close-
+    standing + push-is-permitted + tothbot-commit-rules + never-disappear-content + dec125-campaign +
+    long-short-paradigm-standing + long-short-parity-mission + ciats-self-tuning-directive + fp-dp-definition.
+  - Risk/breakers: breaker-validation-verdict + stress-test-verdict + profit-breaker-verdict. Live build:
+    phase2-build + operator-dashboard.
+
+COLD-LOAD: Docs HEAD d18c3fc (0500000 dv1_276 / 0521001 dv1_86; counts g 217 / text 957 / desc 126 / svg 10 /
+title 126 / figcaption 10) -- THIS is what the perps fold edits. Code HEAD = the NEW tb00806 commit (parents
+41b056c; tothbot/ package + 1249-green suite UNCHANGED; py = the Python312 full path). SessionLogs HEAD =
+TB00806 SL v1_0 + TB00807 NSI v1_0 + TB00807 OCS v1_0. TB00000 v2_102. READ FROM HEAD: this NSI -> TB00807 OCS
+-> TB00806 SL -> perps-mechanics-verdict -> tb00806 verdict txts -> 0500000 Section 13 -> TB00000. Auto-memory:
+perps-mechanics-verdict + perps-kraken-pro-decision + perps-revalidation-verdict + dec125-campaign +
+fp-dp-definition + what-how-division + continuous-run-directive + session-close-standing + tothbot-commit-rules
++ never-disappear-content + long-short-paradigm-standing + long-short-parity-mission + ciats-self-tuning-
+directive + phase2-build + breaker-validation-verdict + the rest of the index.
+
+Nothing erased; the sacred 1:1.5 R:R floor never lowered. STAY IN PAPER (spot and perps).

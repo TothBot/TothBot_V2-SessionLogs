@@ -1,0 +1,160 @@
+DocDCN:     TB00806
+DocTitle:   TB00806_Session_Log
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00806_Session_Log_v1_0.txt
+DocDate:    06-20-2026
+DocTime:    03:25:00 UTC
+
+============================================================
+TB00806 SESSION LOG -- PERPS MECHANICS BATTERY (build the unified 3-pool sim, run C -> A -> B)
+============================================================
+
+THE MISSION (the standing NSI carried in memory perps-mechanics-test-plan, planned at the TB00805 close by
+Bill's directive "plan the testing regime for the 3 remaining unknowns, make it very robust"): build ONE
+unified 3-pool perp-account simulator (isolated-margin + funding-shock + gap injector), then run batteries
+C -> A -> B. Pre-register pass bars; >= 2 methods per claim; adversarial + Monte-Carlo + bootstrap + walk-
+forward + sensitivity; no-lookahead. PAPER, propose-only, 0500000 unchanged, CIATS owns any knob.
+
+NUMBERING NOTE: the file-based session logs stalled at TB00803 SL / TB00804 NSI; sessions TB00804 (HWM
+profit breaker -> Bill RULED "add nothing", memory profit-breaker-verdict) and TB00805 (perps re-validation,
+memory perps-revalidation-verdict) ran MEMORY-CAPTURED and did not write file SLs. This TB00806 SL resumes
+the file cadence. Their research scripts (tb00804a/b, tb00805a) sit uncommitted in the Code working tree
+alongside this session's tb00806* (Code HEAD remains 41b056c = TB00803a).
+
+============================================================
+WHAT I BUILT (Code repo scripts/, propose-only, offline on cached data -- 30 perp pairs + 62 spot pairs)
+============================================================
+  tb00806_perp_account_sim.py    PHASE 0 SUBSTRATE. 3 ISOLATED pools (Long-Spot EMA12/26 | Long-Perp
+                                 bb_break+trend100 | Short-Perp rsi_trend+vol), each own balance/margin, NO
+                                 cross-margin, combined equity = sum. Per-position isolated-margin model
+                                 (Margin(lev,mmr): margin_frac=1/lev, liq_frac=1/lev-mmr, liq price). A
+                                 resolver that layers the margin backstop UNDER the native k*ATR stop (the
+                                 native stop fills first in normal conditions; liquidation only on a gap-
+                                 through or if leverage is high enough that liq sits inside the stop). Funding
+                                 = real 8h Binance-UM history x a shock multiplier + a sustained-adverse pin.
+                                 Gap injector (worst-bar / entry / final / cascade). Causal BTC-vs-sma200
+                                 regime. Self-test asserts the margin maths + a RING-FENCE invariant (crash
+                                 one pool 99% -> the others are byte-for-byte unchanged).
+  tb00806c_liquidation_gaps.py   BATTERY C (7 sub-tests + verdict txt).
+  tb00806a_twopool_hedge.py      BATTERY A (8 sub-tests + verdict txt).
+  tb00806b_funding_stress.py     BATTERY B (5 sub-tests + verdict txt).
+  tb00806_perps_mechanics_synthesis.txt   the combined C/A/B scorecard.
+  Reuses (does NOT duplicate): tb00794 perp engine (load_data/make_pairs/precompute_perp/gross_off) +
+  tb00802a (stat/eras/boot_oos/btc_regime/collect_spot) + tb00805a centre configs. All ASCII, all offline.
+
+============================================================
+RESULTS (pre-registered bars; failures kept VISIBLE, not fudged)
+============================================================
+BATTERY C -- ISOLATED-MARGIN LIQUIDATION UNDER GAPS ... 7/7 PASS.
+  The crash-proof loss cap is STRUCTURAL, not statistical: on isolated margin a position's realized POOL
+  loss is bounded by the posted margin BY CONSTRUCTION, even on a gap-through to 50%+ (the overflow beyond
+  margin is the EXCHANGE insurance fund's, not the pool's). Verified by gap sweeps, native-stop-fails (gap-
+  through + a no-stop spec), every pair's worst REAL historical wick, a 40k-draw fat-tailed MC (99.9th-pct
+  AND abs-max loss <= margin), and an all-pairs simultaneous-crash cascade. The 3 pools are BYTE-isolated
+  (crash one -> others bit-for-bit identical = ZERO contagion = the sec-13.7 ring-fence). ONE design
+  constraint (C7): keep leverage LOW (2-3x) so liquidation sits BELOW the 3xATR stop and stays a tail
+  backstop; lev 2-3 preserves the edge byte-for-byte vs the no-margin baseline, lev>=5 liquidation eats the
+  edge, lev 20 goes NEGATIVE. CAVEAT: real Kraken/Bitnomial maint-ratio + contract-mult are NON-PUBLIC --
+  swept here, must be pinned from the rulebook at code time.
+
+BATTERY A -- CONCURRENT TWO-POOL HEDGE DRAWDOWN ... 7/8 (the headline, honestly mixed).
+  The sec-13.7 ring-fenced hedge is DRAWDOWN / REGIME INSURANCE, NOT a risk-adjusted-return improver.
+  HOLDS: at EQUAL capital the combined 3-pool book cuts maxDD ~50% vs long-only ($620 vs $1226); Long vs
+  Short monthly PnL anti-correlated (-0.10 overall, ~0 bear); shuffled MC tail tighter; worst month ~halved
+  (-$175 vs -$452); maxDD lower in 6/6 walk-forward eras incl all 3 bear eras; the no-same-instrument
+  collision rule is FREE (+5.6%, it removes trades fighting an open position). FAILS (honest, pre-registered,
+  kept visible): the combined full-sample CALMAR does NOT beat the pure spot long (13.6 vs 16.1) -- the spot
+  long is the single best risk-adjusted pool; every perp allocation trades some return for safety. => This
+  CONFIRMS 'size the short as a HEDGE, not a profit center' (perps-revalidation-verdict) and the cycle
+  finding that the win shows up in the WORST phase not the full-sample average (cycle-strategy-verdict). The
+  A6 allocation frontier is the CIATS size knob: a light 90/5/5 split keeps ~100% of long-only Calmar while
+  buying the tail insurance; heavier short weight buys more drawdown protection at a Calmar cost.
+
+BATTERY B -- ADVERSE / SUSTAINED-FUNDING STRESS ... 4/5 (one genuine sensitivity).
+  Funding is largely SECOND-ORDER and de-risked: in the historical positive-funding regime the short
+  COLLECTS funding on average (a tailwind), so real or 5x-amplified funding HELPS it (B1); worst single real
+  funding cost ~$5 vs the $16.67 margin (B3); funding cost NOT compounded with price losses (corr -0.04, B4);
+  the bear-hedge role survives 2x funding (B5). THE ONE EXCEPTION (B2, honest FAIL): because the short is a
+  THIN ~2.5% edge, funding pinned hard-adverse SUSTAINED across the whole holding history erases it --
+  break-even ~0.13%/day (0.04%/8h), ABOVE typical funding (4x headroom) but BELOW the exchange clamp ceiling
+  (0.225%/day). A permanent pin is unphysical, but it flags sustained-adverse funding as the short's most
+  material cost -> a CIATS MONITORING knob (trim the short on a sharp sustained funding flip), folding into
+  the 0500000 sec-13.6 tier-divergence monitor. Extends the TB00805a fee-robustness finding: neither per-
+  contract fee NOR typical funding is the lever; the edge is native short ACCESS + the rsi_trend/vol/wide-
+  stop config -- but funding is the one cost worth a live monitor.
+
+ENGINEERING NOTES (gotchas fixed this session, for reuse):
+  - The resolver first wrongly counted an intrabar low crossing the liquidation level as a liquidation even
+    when the shallower native stop would fill first; corrected so the native k*ATR stop fills before liq in
+    no-gap conditions (zero spurious baseline liquidations except where a 3xATR stop on an ultra-high-ATR
+    alt is genuinely WIDER than the liq distance -> liq caps it tighter, not a bug).
+  - Drawdown artifact: the spot stream has 2380 trades but only 916 unique exit days; sorting by texit alone
+    vs (texit,$) gave different maxDD on identical data. Fixed by NETTING all same-timestamp trades before
+    walking the equity curve (order-independent) -- applies to every curve/MC metric in battery A.
+  - Several pre-registered bars were mis-operationalized and CORRECTED transparently (C7 geometric proxy ->
+    edge-preservation; A1 split into same-capital-DD + the honest Calmar bar; A5 abs() -> one-sided cost;
+    B2 clamp-ceiling framing). Where a corrected bar still failed (A1b Calmar, B2 funding), the FAIL is kept
+    VISIBLE -- these are the two honest negatives of the session, not artifacts.
+
+============================================================
+STATE / WHAT CHANGED
+============================================================
+  0500000: UNCHANGED (propose-only). Docs HEAD d18c3fc (0500000 dv1_276 / 0521001 dv1_86). Nothing minted,
+    no new counted element, no namespace token, no new CIATS seed. TB00000 v2_102 unchanged.
+  Code: tb00806* scripts NEW in the working tree (uncommitted, as with tb00804a/b + tb00805a). Code HEAD
+    still 41b056c. The 1249-green suite + tothbot/ package UNCHANGED (no organism code touched).
+  Memory: NEW perps-mechanics-verdict.md (+ MEMORY.md pointer). perps-mechanics-test-plan = now EXECUTED.
+  Sacred 1:1.5 R:R floor untouched. Nothing erased. STAY IN PAPER (spot and perps).
+
+PROPOSED (fold ONLY on Bill's nod, none applied):
+  - a perps leverage constraint (2-3x band, CIATS-ownable) so liquidation stays a backstop under the stop;
+  - a CIATS sustained-adverse-funding monitor for the short (folds into 0500000 sec-13.6);
+  - the A6 allocation frontier as the CIATS short-sizing knob (light hedge weight).
+  All three are CIATS-owned self-tuned items, NOT hand-set Bill knobs.
+
+============================================================
+POST-NSI WORK (Bill pushed in-session: "did you analyze the OVERALL organism or a stovepiped parameter?")
+============================================================
+WHOLE-ORGANISM ANALYSIS -- tb00806d_whole_organism.py. IMPORTS the LIVE gates (tothbot.pipeline.risk_guard
+G7 + position_sizer G8 + config.registry + ciats.ewma_monitor) and runs BOTH modules (Long spot + Short)
+through the REAL per-module wallets / frozen baselines / 5%-10% breakers / leverage-bounded short margin /
+exposure caps. It MATERIALLY CORRECTS the three stovepiped recommendations:
+  #1 LEVERAGE CAP -- ALREADY IN THE MODEL. registry leverage_cap_short=3 already feeds the short's committed
+     margin in G7 CHECK 2/3. Battery C VALIDATES the seed; nothing to add. My earlier 'add a 2-3x band' was
+     redundant -- surfaced only by running the live gate.
+  #2 FUNDING MONITOR -- a cheap SAFE add IF perps go live. Imported the live EwmaMonitor (the exact
+     fee_tier_divergence machinery); a funding monitor is one new instance + one threshold seed, SIGNALS-
+     ONLY (D5: monitors+alert, never self-adjusts -> routes to CIATS PDCA + Bill HR-CI-011), so it CANNOT
+     deadlock (verified: fires at trade 50 = sustained_n on a pinned-adverse regime, silent on real funding).
+  #3 SIZE THE SHORT AS A HEDGE -- OVERTURNED at the organism level. The live 5% frozen-baseline PAUSE
+     breaker STRANGLES a thin-edge hedge module (90/1007 trades, 917 pauses, -$304), and adding short capital
+     DILUTES whole-account Calmar (16.1 -> 15.8) because the long's own breaker already makes ruin impossible
+     (1.3% worst-from-deposit) so the hedge's 'insurance' is largely REDUNDANT with the breaker that already
+     exists. THE PART-VS-WHOLE LAW (Deming): always drive proposed changes through the live gates.
+
+HEDGE-BREAKER RECALIBRATION -- tb00806e_hedge_breaker.py (Bill: "recalibrate the short module's breaker for a
+hedge and test it"). FP/DP: the strangler is the 5% session-PAUSE vs the FROZEN deposit (a hedge sits at a
+drawdown-from-deposit by design; and a paused hedge can't self-equity-recover = the TB00804 deadlock). FIX:
+keep the HALT on the frozen deposit (ruin floor) but move the PAUSE to an EXOGENOUSLY-re-arming basis wide
+enough to clear the hedge's ~7.5% natural drawdown. Tested 5 variants through the LIVE evaluate_risk_guard.
+RESULT: the hedge DEPLOYS (1005-1007/1007 vs 90), stays RUIN-SAFE (HALT never trips; worst 7.5% real / ~15%
+bootstrap-worst, under the 20% halt; 0 halts in 150 resamples), flips -$304 -> +$1353. Every deploying variant
+is OUTCOME-EQUIVALENT, so the pick is PRINCIPLED = V2 rolling-pause 10% / frozen halt 20% (tightest safe ruin
+floor + exogenous deadlock-safe re-arm). Implemented ENTIRELY through evaluate_risk_guard's EXISTING override
+params (baseline + the two thresholds) -- NO new gate code; a per-module breaker config + baseline-source
+policy, CIATS-ownable. HONEST LIMIT: at $5000/$5000 the deployed hedge cuts whole-account BEAR-phase drawdown
+only ~2% ($1212 -> $1185); the recalibration UNBLOCKS the hedge + makes it ruin-safe + return-positive, but
+HOW MUCH protection to buy is the allocation-frontier SIZING call. Confirmed the recalibration adds NOTHING to
+the spot LONG (it already takes 2380/2380 trades, 0 pauses -- its breaker never fires; identical +$19688 under
+any breaker config).
+
+BOTTOM LINE (Bill asked "is it profitable" -- YES): the LONG is the profit engine (+$19688 on $5000/module,
+~5x over 7.5yr, Calmar 16, robust). The perp SHORT hedge is marginally profitable standalone (+$1353 on
+$5000, ~5%/yr) once the breaker is recalibrated; it is ruin-safe but its drawdown protection is small at this
+size. Profitable yes; the short is incremental, the long carries it.
+
+CODE ADDED THIS SESSION (now committed): tb00806_perp_account_sim.py, tb00806c/a/b/d/e + their _verdict.txt,
+tb00806_perps_mechanics_synthesis.txt. All import the live gates where relevant; 0500000 UNCHANGED this
+session; tothbot/ organism UNTOUCHED; 1249-green suite UNCHANGED. Memory perps-mechanics-verdict.md carries
+the whole-organism + breaker addenda.
