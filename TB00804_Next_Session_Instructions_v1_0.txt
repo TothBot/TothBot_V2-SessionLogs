@@ -4,75 +4,94 @@ DocVersion: v1_0
 DocOwner:   Bill
 DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00804_Next_Session_Instructions_v1_0.txt
 DocDate:    06-20-2026
-DocTime:    06:30:00 UTC
+DocTime:    07:00:00 UTC
 
 ============================================================
-TB00804 NEXT SESSION INSTRUCTIONS  (validation done -- serve Bill's go-live-path decisions)
+TB00804 NEXT SESSION INSTRUCTIONS  (DESIGN THE PROFIT-PROTECTING BREAKER -- FP/DP + all appropriate stats)
 ============================================================
 
-WHERE WE ARE. The validation arc Bill asked for is COMPLETE. Three research verdicts are on the table,
-all PROPOSE-ONLY (nothing folded; 0500000 unchanged dv1_276). The next session SERVES Bill's response.
+THE MISSION (a Bill WHAT, set at the TB00803 close). The TB00803a validation showed the live drawdown
+breaker protects the DEPOSIT but NOT trailing PROFIT (frozen baseline; it would let the account give back
+all gains to ~90% of the deposit before HALT). Bill chose to fix this next.
 
-VERDICT 1 -- CYCLE (TB00801a, Code 90ddcd8; memory cycle-strategy-verdict). Do NOT add a halving-cycle
-  gate; the cycle IS the both-sides hedge; at most a future CIATS gentle sma200 size tilt. AWAITING NOD.
+BILL'S WORDS, VERBATIM (preserve, do NOT silently reword; never-disappear):
+   "For the next session I want to test the break that protects profit. Do a First Principals/ Deming
+    Philosophy analysis usig all appropriate statistical methodologies to determine the most profitable
+    strategy for the break."
 
-VERDICT 2 -- RIGOROUS STRESS TEST (TB00802a, Code a035cc3; memory stress-test-verdict). The live long-only
-  strategy passes 6/8 gates; the edge is robust (parameter plateau, survives 3x fees, bootstrap floor >0).
-  The 2 fails (T2 bear-era softness, T6 drawdown) were flagged for validation -> done in Verdict 3.
+DELIVERABLE: a First Principles / Deming (FP/DP) analysis, backed by ALL appropriate statistical methods,
+that determines the MOST PROFITABLE design for a PROFIT-PROTECTING breaker (a high-water-mark / trailing-
+equity guard that protects banked gains, complementing the existing deposit-floor breaker). Research/
+design only: NO live code into the organism, NO go-live, STAY IN PAPER. Propose; fold on Bill's nod.
 
-VERDICT 3 -- BREAKER + SAFETY VALIDATION (TB00803a, Code 41b056c; memory breaker-validation-verdict). The
-  drawdown breakers are VALIDATED: ruin is structurally prevented (the G7 breaker is a capital-preservation
-  floor frozen at the deposit; accumulated trading cannot drop the account below ~90% of deposit without a
-  manual-review HALT; 0 HALTs on the real stream + 300 resamples). The TB00802a T6 'fail' is RESOLVED -- it
-  was a DENOMINATOR ERROR ($518 vs a $500 concurrent-margin base; on the real $5000/module deposit the
-  worst loss is 1.3% and the give-back 4.8% of equity). Also validated: 1:1.5 R:R floor (G8), $50 clip,
-  exposure caps (G7), and the full 1249-test suite GREEN. ONE HONEST CAVEAT surfaced for Bill: the FROZEN
-  baseline protects the DEPOSIT, not trailing PROFIT (in theory the account could give back all gains to
-  ~90% of deposit before HALT). Account sizing answered: >= $5000/module at $50/clip is comfortable.
+WHAT THE FP/DP ANALYSIS MUST COVER (the HOW is mine to design; this frames Bill's WHAT):
+  - FIRST PRINCIPLES: the existing G7 breaker measures drawdown vs a FROZEN deposit baseline -> it cannot
+    protect profit. A profit-protecting breaker measures drawdown vs the EQUITY HIGH-WATER MARK (HWM). The
+    irreducible tradeoff: a TIGHT trailing band protects more profit but WHIPSAWS (halts a normal pullback,
+    then misses the rebound = LESS terminal profit); a LOOSE band rarely fires (keeps trading through
+    rebounds = more profit, but protects less). The "most profitable" breaker is the band that maximizes
+    EXPECTED TERMINAL WEALTH while bounding give-back -- a genuine optimization, not "tighter = safer".
+  - CRITICAL DESIGN POINT: a profit breaker must be a trailing PAUSE that AUTO-RE-ARMS (resume when equity
+    recovers / a new session), NOT a terminal HALT. A terminal halt on a trailing trigger would stop the
+    bot forever on an ordinary pullback -- catastrophic. Model pause-and-resume explicitly.
+  - ENUMERATE CANDIDATE DESIGNS, then score on the cached data:
+      (a) Fixed HWM trailing band: pause when equity <= peak*(1-b); resume when equity recovers above the
+          band / next session. Sweep b (e.g. 3/5/8/10/15/20%).
+      (b) Ratcheting floor: floor = max(deposit, peak - band); steps up as new HWMs print (lock-in milestones).
+      (c) Profit-fraction lock: only arm the trailing guard once up >= Y%; then protect a FRACTION of the
+          gain (give-back Z% of peak-profit). Sweep (Y,Z).
+      (d) Volatility-scaled band: band = k * recent equity-vol (or ATR-proxy) so it doesn't whipsaw in
+          normal noise but tightens the absolute $ as profit grows.
+      (e) HALT vs PAUSE variants + interaction with the existing 5%/10% deposit breaker (do they compose
+          without double-counting?).
+  - STATISTICAL RIGOR: reuse the TB00803a account simulator (faithful chronological replay, real 7.5yr
+    long-only spot stream, $50 clip, $5000/module). Per candidate report TERMINAL EQUITY / total $ (the
+    profitability objective) AND max give-back-from-HWM AND number of pause/resume events AND time halted.
+    Methods: threshold SWEEP; Monte-Carlo trade-order shuffle (sequence risk on the trigger); block
+    bootstrap by pair (CI on terminal wealth); WALK-FORWARD / out-of-sample on the band so the chosen value
+    is not overfit to one path; regime/cycle split (does the optimal band differ bull vs bear -> ties to
+    cycle-strategy-verdict). Watch low-n (few deep give-back episodes). State confidence both ways.
+  - OUTPUT: the single most-profitable design + value (with the whipsaw cost quantified vs the protection
+    benefit), an explicit answer on whether the gain justifies the complexity, and a PROPOSED PATH: this
+    is a CIATS-owned, self-tuned, paper-validated (200-trade floor) breaker -- NEVER a hand-set Bill knob
+    (ciats-self-tuning). Propose a registry seed + a 0500000 slice; fold ONLY on Bill's nod.
 
-THE NEXT SESSION'S JOB (priority order):
-  1. SERVE BILL'S RESPONSE. The live decisions now on his plate:
-     - PROFIT-PROTECTION (Verdict 3 V4): does he want a HIGH-WATER-MARK / trailing-equity breaker added so
-       the system protects banked profit, not just the deposit? If YES -> design it as a PROPOSED, CIATS-
-       owned, paper-tested breaker (note the whipsaw tradeoff: a trailing halt can stop a volatile-but-
-       profitable strategy; it needs its own threshold tuning + the 200-trade floor). Extend tb00803a to
-       score candidate trailing thresholds before proposing a value. Do NOT hand-set it.
-     - CYCLE NOD (Verdict 1): keep both sides / register the size-tilt CIATS theory / deeper research.
-     - GO-LIVE: real-money go-live is the ONLY Bill-gated step. If he moves toward it, the pre-flight
-       checklist is: confirm the Kraken-support subaccount answer (perps), confirm deposit sizing
-       (>=$5000/module), and a small-size live shakedown -- but ONLY on Bill's explicit instruction.
-     - A different WHAT -> serve it (what-how-division: Bill sets WHAT, you resolve the HOW).
-  2. Reuse the engines: Code scripts/tb00803a_breaker_validation.py + tb00802a_stress_battery.py +
-     tb00801a_cycle_strategy.py + tb00794 cached data; tothbot/config/registry.py + pipeline/risk_guard.py
-     for the live breaker logic. Offline, paper, propose-only; fold on Bill's nod.
+THE DATA / TOOLS YOU ALREADY HAVE (do not re-derive): Code 41b056c scripts/tb00803a_breaker_validation.py
+(the chronological account simulator with frozen-baseline breakers + pair-bootstrap -- EXTEND it with the
+HWM trailing logic) + tb00802a_stress_battery.py (the 62-pair 7.5yr stream) + tb00794 cached data. Live
+breaker semantics: tothbot/pipeline/risk_guard.py + config/registry.py (session_pause 5% / full_halt 10%,
+baseline frozen). The deposit-breaker validation + the frozen-baseline limitation: memory
+breaker-validation-verdict + TB00803 SL. FP/DP = First Principles / Deming (fp-dp-definition).
 
-PARALLEL TRACKS (unchanged, still GATED):
-  - PERPS: slice F graduation + connectivity code GATED on the Kraken-support subaccount item (4-question
-    text in TB00800 SL v1_0). Sandbox perp + Bill go-live gate pending.
-  - SPOT F3: background observation of the live-in-paper long-only spot organism (0-trade sessions
-    EXPECTED; do NOT revert to the 5m firehose; prod-VPS SSH root@87.99.141.44 DENIED by the auto-mode
-    classifier unless Bill authorizes the target in-session -- operator-dashboard).
+PARALLEL / STILL-OPEN (serve if Bill raises them, else the profit-breaker is the job):
+  - CYCLE NOD (TB00801a, memory cycle-strategy-verdict): keep both sides / register the size-tilt CIATS
+    theory / deeper research -- STILL PENDING. The profit-breaker's regime split may inform it.
+  - GO-LIVE: real-money go-live is the ONLY Bill-gated step. Pre-flight: Kraken-support subaccount answer
+    (perps, 4-Q text in TB00800 SL), deposit sizing (>=$5000/module, TB00803a), small live shakedown --
+    ONLY on Bill's explicit instruction.
+  - PERPS slice F graduation + code GATED. SPOT F3 = background observation of the live-in-paper long-only
+    organism (0-trade sessions EXPECTED; do NOT revert to the 5m firehose; prod-VPS SSH root@87.99.141.44
+    DENIED by the auto-mode classifier unless Bill authorizes the target in-session -- operator-dashboard).
 
 CONTEXT HOMES (point, do NOT duplicate; this NSI is the only self-sufficient handoff):
   - Standing operating rules (auto mode, never-ask-HOW per what-how-division, no question-box, push +
     DR-010, never lower 1:1.5, never disappear the record, EQUAL-DETAIL not symmetric mechanics, FP/DP =
     First Principles / Deming, CIATS self-tunes don't hand-set knobs): auto-memory + TB00000.
-  - Verdicts: memory breaker-validation-verdict + stress-test-verdict + cycle-strategy-verdict, with their
-    SLs (TB00803 / TB00802 / TB00801) + Code (41b056c / a035cc3 / 90ddcd8). Live risk logic:
-    tothbot/pipeline/risk_guard.py + position_sizer.py + config/registry.py. Strategy build: phase2-build.
+  - Breaker validation + the profit-protection gap: memory breaker-validation-verdict + TB00803 SL + Code
+    41b056c. Stress test: stress-test-verdict + TB00802 SL. Cycle: cycle-strategy-verdict + TB00801 SL.
+    Live risk logic: tothbot/pipeline/risk_guard.py + position_sizer.py + config/registry.py.
 
 COLD-LOAD: Docs HEAD d18c3fc (0500000 dv1_276 / 0521001 dv1_86; counts g 217 / text 957 / desc 126 /
 svg 10 / title 126 / figcaption 10). Code HEAD 41b056c (TB00803a breaker validation; parents a035cc3 =
-TB00802a stress, 90ddcd8 = TB00801a cycle; tothbot/ package + 1249-green suite UNCHANGED and re-confirmed
+TB00802a stress, 90ddcd8 = TB00801a cycle; tothbot/ package + 1249-green suite UNCHANGED + re-confirmed
 GREEN; py = C:\Users\wstot\AppData\Local\Programs\Python\Python312\python.exe full path only). SessionLogs
 HEAD = TB00803 SL v1_0 + TB00804 NSI v1_0 + TB00804 OCS v1_0. TB00000 v2_102. READ FROM HEAD: this NSI ->
-TB00804 OCS v1_0 -> TB00803 SL v1_0 -> TB00802 SL v1_0 -> Code 41b056c + a035cc3 + 90ddcd8 verdicts ->
-0500000 Section 13 -> TB00000. Auto-memory: breaker-validation-verdict + stress-test-verdict +
-cycle-strategy-verdict + halving-cycle-hedge + perps-kraken-pro-decision + perps-probe-verdict +
-fp-dp-definition + phase2-build + long-short-paradigm-standing + long-short-parity-mission +
-position-sizing-fixed-notional + ciats-self-tuning-directive + exchange-landscape-verdict +
-kraken-tradeable-products + operator-dashboard + what-how-division + continuous-run-directive +
-no-question-box-tool + session-close-standing + tothbot-commit-rules + never-disappear-content +
-push-is-permitted.
+TB00804 OCS v1_0 -> TB00803 SL v1_0 -> Code 41b056c verdict (tb00803a) -> TB00802 SL -> 0500000 Section 13
+-> TB00000. Auto-memory: breaker-validation-verdict + stress-test-verdict + cycle-strategy-verdict +
+halving-cycle-hedge + perps-kraken-pro-decision + perps-probe-verdict + fp-dp-definition + phase2-build +
+long-short-paradigm-standing + long-short-parity-mission + position-sizing-fixed-notional +
+ciats-self-tuning-directive + exchange-landscape-verdict + kraken-tradeable-products + operator-dashboard +
+what-how-division + continuous-run-directive + no-question-box-tool + session-close-standing +
+tothbot-commit-rules + never-disappear-content + push-is-permitted.
 
 Nothing erased; the sacred 1:1.5 R:R floor never lowered. STAY IN PAPER (spot and perps).
