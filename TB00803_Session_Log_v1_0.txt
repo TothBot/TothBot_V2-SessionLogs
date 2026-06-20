@@ -1,0 +1,81 @@
+DocDCN:     TB00803
+DocTitle:   TB00803_Session_Log
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00803_Session_Log_v1_0.txt
+DocDate:    06-20-2026
+DocTime:    06:30:00 UTC
+
+============================================================
+TB00803 SESSION LOG  (VALIDATE the drawdown breakers + everything else before real money -- Bill's WHAT)
+============================================================
+
+MISSION (Bill WHAT): "Validate the drawdown breakers and anything else that needs to be validated." This
+session faithfully replayed the LIVE risk-guard breaker logic over the worst 7.5yr trade stream, audited
+the other pre-real-money safety gates, and ran the full test suite. OUTCOME: COMPLETE. Breakers VALIDATED
+(ruin structurally prevented); the TB00802a T6 'fail' RESOLVED as a denominator error; one honest design
+caveat surfaced for Bill (frozen baseline protects deposit, not profit). No corpus change (0500000
+dv1_276). One new Code research artifact committed + pushed.
+
+============================================================
+WHAT I VALIDATED (Code 41b056c: scripts/tb00803a_breaker_validation.py + verdict)
+============================================================
+First MAPPED the real breaker semantics from the code (risk_guard.py / position_sizer.py / registry.py),
+because a faithful replay needs the exact rules:
+ - portfolio_baseline is FROZEN at the account STARTING balance (~$5000/module), NOT a high-water mark,
+   NOT daily-reset. drawdown = (baseline - current)/baseline. Paper mode measures REALIZED wallet equity.
+   => the G7 breaker is a CAPITAL-PRESERVATION FLOOR on the deposit, not a trailing-peak stop.
+ - G7 CHECK1: dd >= 5% -> PAUSE (no new entries until realized equity recovers / next session);
+   dd >= 10% -> HALT (terminal: no new entries until Bill manually ratifies). Open positions run to exit.
+ - G7 CHECK2/3: concentration + exposure = 100% NON-BINDING CIATS seeds (committed/wallet <= 1.0).
+ - G8: sacred 1:1.5 R:R floor (position_sizer.py:53/170-183, rejects rr<1.5); $50 fixed clip (registry:90).
+
+Then built a faithful chronological account simulator and ran 4 checks:
+
+ V1 -- BREAKERS vs THE T6 DRAWDOWN (baseline $5000): worst loss OF THE DEPOSIT on the real stream was $64
+   = 1.3% of capital; HALT never trips. The breakers are identical ON vs OFF here because the account
+   banks an early cushion and never falls near the frozen $5000 line.
+   *** RESOLVES THE TB00802a T6 'FAIL': it was a DENOMINATOR ERROR -- T6's ~$518 was measured against a
+   $500 concurrent-margin base, not the real $5000/module deposit. On the real deposit the worst loss is
+   1.3% and the peak-to-trough give-back is 4.8% of equity. The strategy is well within survivable. ***
+ V2 -- STARTING-BALANCE SWEEP ($1000-$10000): even $1500 survives with 0 HALTs; below ~$1500 the breaker
+   still protects capital but PAUSEs more (undersized for $50 clips). $5000/module is comfortable (0
+   pauses, 1.3% worst). Recommend >= $5000/module or scale the clip to the deposit.
+ V3 -- PAIR-BOOTSTRAP (300 resamples of the 62-pair universe): HALT tripped 0/300; worst deposit loss
+   4.9% (95th 2.8%). Robust, not driven by any one pair.
+ V4 -- HONEST CAVEAT: the FROZEN baseline protects the DEPOSIT, not trailing PROFIT. Largest give-back was
+   $1226 = 4.8% of peak equity (tame), but the breaker does not act on it. STARK consequence: in theory
+   the account could give back all profit (from $24688 down to ~$4500) before HALT fires. So it is a
+   deposit protector, NOT a profit protector. A high-water-mark / trailing-equity breaker is a SEPARATE
+   Bill WHAT (propose only; has its own whipsaw tradeoff; would be CIATS-owned).
+
+============================================================
+VERDICT -- breakers VALIDATED; the two TB00802a must-dos are DONE
+============================================================
+ - RUIN IS STRUCTURALLY PREVENTED: accumulated trading cannot take the account below ~90% of the deposit
+   without a mandatory human-review HALT. Confirmed on the real stream + 300 resamples (0 HALTs).
+ - The TB00802a T6 drawdown 'fail' is RESOLVED (denominator error; real-deposit drawdown is 1.3-4.8%).
+   The bear-era weakness (T2) is the known, designed-for cycle softness (short-side offset; do NOT gate).
+ - ACCOUNT SIZING answered: >= $5000/module at $50/clip (the registry value) is comfortable.
+ - ALSO VALIDATED (code + unit tests, not re-derived): sacred 1:1.5 R:R floor (G8), $50 fixed clip,
+   exposure/concentration caps (G7), and the FULL 1249-TEST SUITE = GREEN (0 failures).
+ - ONE OPEN DESIGN CHOICE for Bill: add a high-water-mark trailing breaker to protect profit? (propose
+   only -- the current frozen-baseline breaker is correct for capital preservation but not profit-locking).
+
+ => The strategy's safety system is validated for capital preservation. The remaining go-live gates are
+    Bill's: (a) the profit-protection question above, (b) the still-pending TB00801 cycle nod, (c) the
+    actual real-money go-live decision (the only Bill-gated step). STAY IN PAPER until Bill rules.
+
+============================================================
+STATE AT CLOSE
+============================================================
+ - Docs HEAD d18c3fc (0500000 dv1_276 / 0521001 dv1_86 -- UNCHANGED; no corpus change this session).
+ - Code HEAD 41b056c (TB00803a breaker validation + verdict; parent a035cc3 = TB00802a stress battery;
+   tothbot/ package + 1249-green suite UNCHANGED and re-confirmed GREEN this session). Pushed; 0 ahead.
+ - SessionLogs: TB00803 SL v1_0 (this) + TB00804 NSI v1_0 + TB00804 OCS v1_0.
+ - Memory: breaker-validation-verdict.md NEW; MEMORY.md index updated. TB00000 v2_102 UNCHANGED.
+ - OPEN (carried to TB00804): (a) Bill's call on the V4 profit-protection question (high-water-mark
+   trailing breaker?). (b) Bill's NOD on the TB00801 cycle verdict (still pending). (c) Kraken-support
+   subaccount item (4-Q text in TB00800 SL). (d) Perps slice F graduation + code GATED. (e) SPOT F3
+   background. (f) real-money go-live = the only Bill-gated step. STAY IN PAPER.
+ - Nothing erased; the sacred 1:1.5 R:R floor never lowered.
