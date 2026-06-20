@@ -1,0 +1,167 @@
+DocDCN:     TB00809
+DocTitle:   TB00809_Next_Session_Instructions
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00809_Next_Session_Instructions_v1_0.txt
+DocDate:    06-20-2026
+DocTime:    18:00:00 UTC
+
+============================================================
+TB00809 NEXT SESSION INSTRUCTIONS  (CODE the perps + hedging, then TEST + STRESS-TEST the actual code
+                                    BEFORE it goes to paper trading)
+============================================================
+
+THE MISSION (a Bill WHAT, verbatim intent at the TB00808 close): "Schedule coding for the next session. Do
+not implement the coding [this session]. I want to test and stress test the actual coding before it goes to
+paper trading." => The next session CODES the perps + hedging into the live tothbot/ organism per the now-
+GRADUATED Section 13 architecture, and then TESTS + STRESS-TESTS the ACTUAL code. The test + stress-test
+PASS is a HARD GATE in front of paper trading: do NOT deploy the perps code to paper this session. Paper
+deployment, and separately real-money go-live, remain Bill-gated steps AFTER the code is proven.
+
+WHY NOW: the perps + hedging is fully DOCUMENTED (0500000 Section 13.1-13.10 GRADUATED, dv1_282; Image10
+"Perps Hedge Organism" R1; TB00000 v2_103 sec 8 "CIATS - perps" seeds minted) but is NOT YET CODED -- only
+the PROPOSE-ONLY research scripts exist (Code repo scripts/tb00806*). This session turns the validated
+design into live-organism code and proves it before any capital (paper or real) touches it.
+
+============================================================
+PART 1 -- WHAT TO CODE (graduate the design into tothbot/; the HOW/sequencing is yours per what/how)
+============================================================
+Source of truth = 0500000 Section 13.1-13.10 + the Image10 figure + TB00000 v2_103 sec 8 + the tb00806
+verdicts. The Section-13 design discipline is BINDING on the code:
+  - NO NEW MODULE / NO NEW GATE (section 13.9 part-vs-whole law). The perps SHORT is the EXISTING dormant
+    Short_Module (tothbot/modules/trading_module.py, TB00000 sec 7) RE-GROUNDED from the spot-margin path
+    to the perps route -- documented, not rebuilt. The perps LONG re-grounds the long capability likewise.
+  - THREE-POOL WALLET (section 13.7): Long_Spot_Pool (the EXISTING live-in-paper spot organism, its own
+    full Kraken account, UNAFFECTED) + Long_Perp_Pool + Short_Perp_Pool (linked derivatives subaccounts,
+    isolated margin, ring-fenced). Code the ring-fence so one pool's liquidation cannot reach another.
+  - ISOLATED-MARGIN LOSS CAP (section 13.7, battery C): model exchange-resident isolated-margin
+    liquidation; realized pool loss bounded by posted margin by construction; keep leverage LOW 2-3x
+    (registry leverage_cap_short=3 ALREADY feeds the short committed margin in G7 -- reuse, do not re-add)
+    so liquidation sits UNDER the wide layer:L2 = decision_atr_stop_mult x ATR stop and stays a tail
+    backstop. PIN the real maint-margin ratio + contract multiplier from the rulebook (section 13.1 item 3,
+    NON-PUBLIC) -- if not yet obtainable, code them as a clearly-flagged config the tests sweep, and STAY
+    IN PAPER until pinned.
+  - HEDGE CONTROLS (section 13.9), both REUSE existing machinery:
+      * perp_funding_divergence_monitor = ONE new instance of the live EwmaMonitor
+        (tothbot/ciats/ewma_monitor.py, the fee_tier_divergence machinery) + one threshold seed. SIGNALS-
+        ONLY (TB00000 D5: monitors/alerts, never self-adjusts; routes to CIATS PDCA + Bill HR-CI-011);
+        CANNOT deadlock.
+      * perp_short_breaker_config = per-MODULE breaker for the Short-Perp pool: PAUSE = rolling-window 10%
+        (exogenous re-arm) / HALT = frozen-deposit 20% (ruin floor). NOT a new gate -- it is
+        tothbot/pipeline/risk_guard.py evaluate_risk_guard's EXISTING override params (baseline-source +
+        the two thresholds), set per-module. The spot LONG keeps its existing 5%/10% frozen-baseline
+        breaker, UNAFFECTED. Frozen-deposit ruin HALT + sacred 1:1.5 R:R floor UNTOUCHED.
+      * perp_short_hedge_weight = the A6 allocation-frontier sizing knob (CIATS-owned, ~90/5/5 light
+        default). Hedge sized as INSURANCE, not a profit center.
+  - SEEDS: wire the TB00000 v2_103 sec 8 "CIATS - perps" seeds through tothbot/config + the CIATS parameter
+    store (perp_short_entry_meanrev / regime_filter / exit_trail / fee_per_contract / hedge_weight /
+    funding_divergence_monitor / breaker_config; leverage_cap_short=3 REUSED). All CIATS-OWNED, per-module
+    (DEC-124/DEC-128 seed-then-correct).
+  - perp_fee_per_contract route-dependent (Kraken-Pro primary schedule; flat ~$0.07-0.10/contract on the
+    section 13.2 direct-Bitnomial fallback). 8h funding into Variation Margin. CIATS-monitored for tier
+    divergence; folds into perp net_loss + the sacred 1:1.5 R:R floor.
+  - The section 13.2/13.3 DIRECT-Bitnomial FALLBACK route + its synthesis tunables (perp_exit_cross_ticks /
+    perp_exit_chase_cap / perp_mark_poll_interval) are fallback-route-only -- do NOT build the fallback
+    this session unless the primary Kraken-Pro subaccount route proves unavailable.
+  - LONG/SHORT paradigm (standing): keep the machine Long/Short-CAPABLE; the ratified TRADING strategy is
+    long-only with the perp SHORT as the dormant-until-sized regime HEDGE. Equal-detail docs, NOT symmetric
+    mechanics.
+
+============================================================
+PART 2 -- THE GATE: TEST + STRESS-TEST THE ACTUAL CODE BEFORE PAPER (Bill's explicit requirement)
+============================================================
+This is the heart of the mission. The tb00806 batteries were run against PROPOSE-ONLY scripts; this session
+must prove the LIVE-CODED path behaves as the research promised. Pre-register pass bars; >=2 methods per
+claim; keep failures VISIBLE (the TB00807/TB00806 honesty discipline). Required coverage:
+  A. UNIT + INTEGRATION TESTS for every new/changed code path; the FULL existing suite stays green (it was
+     1249-green at Code HEAD 7fee138) PLUS the new tests. Red suite = not done.
+  B. RE-RUN THE TB00806 BATTERIES AGAINST THE LIVE CODE (not the offline scripts):
+       C (isolated-margin loss cap under gaps, 7/7): realized pool loss <= posted margin by construction
+         even on a 50%+ gap-through; three pools byte-isolated = zero contagion; leverage 2-3x keeps liq a
+         tail backstop under the L2 stop.
+       A (two-pool hedge drawdown, the headline): equal-capital combined maxDD ~halved; Long vs Short anti-
+         correlated; worst month ~halved; collision rule free; HONEST -- combined Calmar does NOT beat the
+         pure spot long (the win is the worst-phase, the cycle hedge). Confirm the LIVE code reproduces this
+         shape, not just the script.
+       B (funding stress): short collects funding on average; survives 5x; the ONE sensitivity = sustained
+         hard-adverse funding (break-even ~0.13%/day) -> the funding monitor must FIRE on a pinned-adverse
+         regime and stay SILENT on real funding.
+  C. WHOLE-ORGANISM / PART-VS-WHOLE (tb00806d/e): drive both modules through the LIVE gates (risk_guard G7,
+     position_sizer G8, config.registry, ewma_monitor). Prove: the recalibrated per-module breaker lets the
+     hedge DEPLOY (vs strangled under the long's 5% pause) AND stays RUIN-SAFE (HALT never trips; worst
+     ~7.5% real / ~15% bootstrap, under the 20% halt); the funding monitor is signals-only + deadlock-safe
+     (TB00804 deadlock law: resume is exogenous); the spot LONG is UNAFFECTED (identical PnL, 0 pauses);
+     adding short capital must not violate the sacred 1:1.5 floor or the frozen-deposit ruin floor.
+  D. STRESS-TEST (adversarial, beyond the batteries): native-stop-fail (gap-through, no resting stop);
+     all-pairs simultaneous crash cascade; ring-fence isolation (crash one pool, others bit-for-bit
+     unchanged); bootstrap + walk-forward + sensitivity/plateau (no single-point fragility); no-lookahead;
+     deadlock-safety of every breaker/monitor path; the 1:1.5 R:R floor never lowered under any path.
+  PASS BARS: pre-register them before running; a battery that fails its bar is reported as a FAIL with the
+  evidence, not papered over. Code stays PROPOSE-ONLY / test-only; do NOT flip the perps modules on in the
+  live paper organism this session.
+
+DO NOT (the gate): do NOT deploy the perps code to paper trading this session. Testing + stress-testing IS
+the deliverable; paper go-live is the NEXT Bill gate after the proofs pass, and real-money is the one after
+that. The deployed long-only SPOT organism stays in its F3 paper observation, UNAFFECTED.
+
+============================================================
+HOW TO RUN IT (method is yours per what/how; this is the seeded approach)
+============================================================
+  - Code in the Code repo (C:\Users\wstot\GitHub\TothBot\TothBot_V2-Code), TothBot commit rules apply
+    (ASCII-only commit messages, no parens, no Co-Authored-By; DR-010 post-push verify). Reuse the tb00806*
+    scripts as the test oracle / fixtures -- they encode the expected behaviour the live code must match.
+  - Diagram-first stays the discipline for any 0500000 touch, but this session is primarily CODE; 0500000
+    is already graduated and should not need changes unless a coding finding contradicts the design (a NEW
+    Bill WHAT if so -- surface it, do not silently redesign the doc).
+  - Consider a parallel fan-out (Explore / general-purpose agents, or a workflow ONLY if Bill opts in) per
+    subsystem (wallet/isolation, margin/liquidation, breaker, funding monitor, seeds) then synthesize -- but
+    a disciplined single-pass build + test is the default.
+  - PRODUCE: the coded perps organism (propose-only / dormant) + a TB00809 test/stress-test report (each
+    battery: pre-registered bar + method(s) + result + PASS/FAIL + evidence) + the green suite. Then close.
+
+============================================================
+HOUSE RULES (standing)
+============================================================
+  - STAY IN PAPER (spot and perps). Sacred 1:1.5 R:R floor NEVER lowered. Nothing erased (preserve + append;
+    if a question is posed, keep it verbatim + append the resolution).
+  - what/how division: Bill = the WHAT, Claude = the HOW; resolve path forks with an FP/DP analysis for the
+    OVERALL organism, do not ask Bill a how. Plain-text choices only; no question-box tool.
+  - dont-defer-named-deliverables: when Bill names a concrete artifact/action, BUILD it; never defer or
+    rationalize it away (the TB00807/TB00808 lesson).
+  - Continuous-run: run across the build + test in one shot until context runs LOW, then close cleanly
+    (SL + NSI + OCS is the standing protocol, not a pause). Do not pause to ask "should I proceed."
+  - part-vs-whole law: drive proposed changes through the LIVE gates, not a simplified model.
+
+============================================================
+COLD-LOAD
+============================================================
+  Docs HEAD 3ef3c9b -- 0500000 dv1_282 / 0521001 dv1_92 (counts g 231 / text 1022 / desc 137 / svg 11 /
+    title 137 / figcaption 11; the §13 venue sub-headings now correctly name the Kraken-Pro primary route).
+  Code HEAD 7fee138 -- tothbot/ live organism + the propose-only scripts/tb00806* perps research set; the
+    full suite was green at this HEAD. The perps + hedging is documented but NOT YET CODED into tothbot/.
+  SessionLogs HEAD -- TB00808 SL v1_0 + TB00809 NSI v1_0 + TB00809 OCS v1_0 + TB00000 v2_103.
+  READ FROM HEAD (order): this NSI -> TB00809 OCS -> TB00808 SL v1_0 -> 0500000 Section 13.1-13.10 + the
+    Image10 figure -> TB00000 v2_103 sec 8 "CIATS - perps" -> the tb00806 verdict txts (tb00806c/a/b/d/e +
+    the synthesis) -> the live gates (tothbot/pipeline/risk_guard.py + position_sizer.py,
+    tothbot/modules/trading_module.py, tothbot/ciats/ewma_monitor.py, tothbot/config).
+  Auto-memory (MEMORY.md): perps-mechanics-verdict + perps-kraken-pro-decision + perps-revalidation-verdict
+    + perps-mechanics-test-plan + breaker-validation-verdict + profit-breaker-verdict + position-sizing-
+    fixed-notional + long-short-paradigm-standing + long-short-parity-mission + ciats-self-tuning-directive
+    + dont-defer-named-deliverables + what-how-division + continuous-run-directive + session-close-standing
+    + tothbot-commit-rules + never-disappear-content + dec125-campaign + fp-dp-definition + phase2-build +
+    the rest of the index.
+
+============================================================
+OPEN ITEMS / GATES (serve as they arise)
+============================================================
+  - Real Kraken/Bitnomial maint-margin ratio + per-contract multiplier (NON-PUBLIC; section 13.1 item 3):
+    pin from the rulebook at code time, or code as a flagged swept config + STAY IN PAPER until pinned.
+  - Retail derivatives SUBACCOUNT availability (perps-kraken-pro-decision open item): if unavailable, the
+    section 13.7 one-futures-wallet + CIATS-ledger fallback applies. Bill may resolve via a Kraken ticket.
+  - Hedge SIZING (perp_short_hedge_weight on the A6 frontier) is a CIATS / Bill allocation call -- code the
+    knob, do not hand-pick the production weight.
+  - Paper go-live of the coded perps organism = the Bill gate AFTER the test + stress-test pass. Real-money
+    go-live (perps + spot F4) = the Bill gate after that.
+
+Nothing erased; the sacred 1:1.5 R:R floor never lowered. STAY IN PAPER (spot and perps). This NSI is the
+single self-sufficient handoff.
