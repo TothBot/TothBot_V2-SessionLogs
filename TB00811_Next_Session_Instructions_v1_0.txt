@@ -1,0 +1,75 @@
+DocDCN:     TB00811
+DocTitle:   TB00811_Next_Session_Instructions
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00811_Next_Session_Instructions_v1_0.txt
+DocDate:    06-20-2026
+DocTime:    23:30:00 UTC
+
+============================================================
+TB00811 NEXT SESSION INSTRUCTIONS  (await Bill's operating-policy call on the five modes; meanwhile audit
+                                    the perps code -- both behind the unchanged paper / real-money gates)
+============================================================
+
+WHERE WE ARE: the perps + hedging is CODED + GATE-PASSED (TB00809; tothbot/perp/, propose-only/dormant;
+suite 1325-green) and ALL FIVE trading modes have now been tested individually on real 2019-2026 data
+(TB00810 / TB00812). The canonical 5-mode table + reads live in Code scripts/tb00812_all_modes_verdict.txt.
+Key facts the next session must carry (historical backtest, $50/trade, propose-only, no lookahead):
+  - SPOT LONGS are the biggest engine (+$19,688, Calmar 16.1) but SUMMER-only and are BLEEDING in the
+    current winter (-$718). LONG PERPS only +$4,259. A LIGHT 30% opposite-side hedge IMPROVES risk-adjusted
+    return on BOTH sides: LONG+SHORT-HEDGE Calmar 11.8 (> long-only 8.3, higher profit too); SHORT+LONG-HEDGE
+    Calmar 5.3 (> short-only 2.2). SHORT PERPS only +$1,353 and are the side EARNING in the CURRENT winter
+    (+$241, 62% win). Manually flipping a single side on/off UNDERPERFORMS running both with a light hedge
+    (the per-pair filters already time the cycle; TB00811 + TB00801a both confirm).
+
+THE NEXT WHAT IS BILL'S (a decision/policy call -- do NOT pick it for him; what/how division):
+  Bill's open call is the OPERATING POLICY across the five modes -- which modes to run, the HEDGE WEIGHT
+  (the 30% overlay is a CIATS-tunable knob: heavier = more drawdown cut, less return), and the summer/winter
+  on-off policy. Surface the TB00812 evidence; do NOT hand-pick the production policy. If Bill gives a new
+  WHAT (e.g. "test my exact manual timing dates", "sweep the hedge weight", "test spot long/short", "size
+  the modes for go-live"), DO it directly -- it is a named deliverable, never defer it.
+
+AUTONOMOUS DEFAULT (if Bill gives no new WHAT): AUDIT the TB00809 perps code (the TB00810 default Bill
+redirected away from; still valid) -- read-first, evidence-based, three dimensions, fix-in-place clear
+defects, surface design items:
+  1. UNINTENDED ALTERATIONS / BLAST RADIUS: the perps build touched ONLY tothbot/perp/ + registry.py +
+     tests + the tb008xx scripts; the deployed SPOT organism + the 1249 pre-existing tests are UNAFFECTED
+     (diff 7fee138..f7f9e8a). Confirm NO new module / NO new gate (pools re-ground TradingModule, monitor
+     reuses EwmaMonitor, breaker reuses evaluate_risk_guard, none wired into run_pipeline).
+  2. CORRECTNESS: re-derive the loss-cap / breaker / funding / collision arithmetic vs section 13 + the
+     TB00806 oracle; Decimal-only; sacred 1:1.5 floor never touched; leverage_cap_short=3 REUSED; the
+     NON-PUBLIC margin specs stay flagged SWEPT placeholders.
+  3. COMPLETENESS: both sides + hedging present to equal detail; every TB00000 v2_103 perp seed wired.
+
+DO NOT (the gates, unchanged):
+  - Do NOT deploy the perps code to paper (the Bill gate AFTER the code is proven + the margin specs pinned).
+  - Do NOT go real-money (the gate after paper) on perps or the spot F4.
+  - Do NOT build the section 13.2/13.3 DIRECT-Bitnomial FALLBACK route (fallback-only).
+  - Do NOT hand-pick the operating policy / hedge weight / on-off timing -- that is Bill's call.
+
+OPEN ITEMS / GATES (serve as they arise):
+  - PIN before the perps leave paper: the real Kraken/Bitnomial maintenance-margin ratio + per-contract
+    multiplier (NON-PUBLIC, section 13.1 item 3; coded as flagged SWEPT placeholders) + retail derivatives
+    SUBACCOUNT availability (else the section 13.7 one-wallet + CIATS-ledger fallback). A Kraken ticket settles it.
+  - Timing context for any go-live decision: per TB00812 the deployed SPOT LONG is the strategy currently
+    BLEEDING in the winter (-$718), while the perp SHORT is the side earning (+$241) -- relevant to WHEN/HOW
+    Bill turns capital on.
+  - The perp ENTRY/EXIT strategy SIGNAL layer (live trade-generation) is still NOT built -- TB00809 coded +
+    proved the MECHANICS; live trade-gen is part of the paper-integration step, behind the paper gate.
+
+COLD-LOAD:
+  Code HEAD f7f9e8a -- tothbot/ + tothbot/perp/ (propose-only/dormant) + tests/test_perp_*.py +
+    scripts/tb00809_live_verification.py (+ verdict) + scripts/tb00811_regime_segmented.py +
+    scripts/tb00812_all_modes.py (+ verdict). Suite 1325-green. Perps CODED + GATE-PASSED, NOT in paper.
+  Docs HEAD 3ef3c9b -- 0500000 dv1_282 / 0521001 dv1_92 (section 13 graduated). TB00000 v2_103.
+  SessionLogs HEAD -- TB00810 SL v1_0 + TB00811 NSI v1_0 + TB00811 OCS v1_0 (plus the prior TB00809 SL +
+    TB00810 NSI/OCS, the latter's audit default carried forward here after Bill's in-session redirect).
+  READ FROM HEAD (order): this NSI -> TB00811 OCS -> TB00810 SL v1_0 ->
+    Code scripts/tb00812_all_modes_verdict.txt -> scripts/tb00809_live_verification_verdict.txt ->
+    the tothbot/perp/ package -> 0500000 section 13.1-13.10 -> TB00000 v2_103 sec 8 "CIATS - perps".
+  Auto-memory (MEMORY.md): five-mode-analysis (NEW) + perps-coding-done + cycle-strategy-verdict +
+    perps-mechanics-verdict + perps-kraken-pro-decision + dont-defer-named-deliverables + what-how-division
+    + tothbot-commit-rules + session-close-standing + the standing-rules index.
+
+Nothing erased; the sacred 1:1.5 R:R floor never lowered. STAY IN PAPER (spot and perps). This NSI is the
+single self-sufficient handoff.

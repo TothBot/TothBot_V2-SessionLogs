@@ -1,0 +1,81 @@
+DocDCN:     TB00810
+DocTitle:   TB00810_Session_Log
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00810_Session_Log_v1_0.txt
+DocDate:    06-20-2026
+DocTime:    23:30:00 UTC
+
+============================================================
+TB00810 SESSION LOG -- post-TB00809 continuation: validate ALL FIVE trading modes (Bill redirect)
+============================================================
+
+CONTEXT: this session continued directly after the TB00809 close (perps + hedging CODED + GATE-PASSED,
+see TB00809 SL). The TB00810 NSI default was an AUDIT of the perps code; Bill REDIRECTED in-session to
+a trading-strategy validation question, so the audit default is SUPERSEDED (carried forward to TB00811
+NSI, not erased). Nothing erased; STAY IN PAPER; sacred 1:1.5 R:R floor never lowered.
+
+============================================================
+THE MISSION (a Bill WHAT, as it evolved this session)
+============================================================
+Bill asked, in order: (1) when "PASS" was reported, did the modes make a PROFIT and how much; (2) validate
+an operator-timed cycle strategy -- longs only in crypto summer (bull), shorts only in crypto winter
+(bear), Bill flips the switch -- noting we are now in a winter consolidation/chop where "neither longs nor
+shorts will do well"; (3) after the first cut was perps-only and not credible, the FINAL WHAT: "Do the test
+on ALL of the modes we will be trading ... Spot Longs, Long Perps only, Long Perps with Short Hedges, Short
+Perps only, Short Perps with Long Hedges. Report the results individually."
+
+============================================================
+WHAT I DID (full evidence in the Code repo verdict, not re-narrated here)
+============================================================
+  - Clarified that "PASS" = a pre-registered bar met (mostly SAFETY/behaviour, e.g. loss <= posted margin),
+    NOT a profit claim. Gave the profit honestly: the LONG is the engine; the perp SHORT is a thin,
+    ruin-safe hedge that slightly LOWERS risk-adjusted return (insurance, not a profit centre).
+  - TB00811 (scripts/tb00811_regime_segmented.py): a FIRST cut on the cycle question -- PERPS-ONLY both
+    sides, no spot, no breaker. Finding: cycle-timing (long-summer + short-winter) made LESS than running
+    BOTH sides always (+$4,748 vs +$5,928, Calmar 8.3 vs 9.5) -- the filtered strategies do not bleed on
+    the counter-cycle, so switching a side off throws away profit (confirms TB00801a). PARTIAL / not
+    credible for a full decision (perps-only, no spot) -- documented as such, superseded by TB00812.
+  - TB00812 (scripts/tb00812_all_modes.py + _verdict.txt): the COMPLETE test of all FIVE modes, reported
+    individually, full-sample + by cycle phase (BULL / BEAR / CURRENT-winter), on the TB00806 substrate
+    (real spot + 30-pair perp universe + funding, daily 2019-2026) with the causal BTC 200d-SMA regime
+    (no lookahead). The full table + reads are the canonical record in scripts/tb00812_all_modes_verdict.txt.
+    HEADLINES (historical backtest, $50/trade, propose-only, STAY IN PAPER):
+      M1 SPOT LONGS      +$19,688  Calmar 16.1  -- the biggest engine, but SUMMER-only; CURRENT winter -$718.
+      M2 LONG PERPS only +$4,259   Calmar  8.3  -- current winter -$98.
+      M3 LONG+SHORT HEDGE +$4,760  Calmar 11.8  -- beats long-only on BOTH return and risk; winter -$25.
+      M4 SHORT PERPS only +$1,353  Calmar  2.2  -- CURRENT winter +$241 (62% win): the side WORKING now.
+      M5 SHORT+LONG HEDGE +$2,541  Calmar  5.3  -- nearly doubles the short book's risk-adjusted return.
+    READS: spot long is the engine but bleeds worst in the current winter; a LIGHT (30%) opposite-side
+    hedge IMPROVES risk-adjusted return on both sides; RIGHT NOW longs lose, the SHORT earns, hedged books
+    are protected -- so Bill's "don't be long-only now" is CORRECT, but "neither does well" is only HALF
+    right (the short does). Manually flipping the switch underperforms running both sides with a light
+    hedge (the per-pair filters already time the cycle; confirms TB00811 + TB00801a).
+
+============================================================
+STATE / WHAT CHANGED
+============================================================
+  Code: HEAD 3d475a6 -> f7f9e8a (committed + pushed; DR-010 PASS). New: scripts/tb00811_regime_segmented.py
+    + scripts/tb00812_all_modes.py + scripts/tb00812_all_modes_verdict.txt. tothbot/ package UNCHANGED
+    (these are propose-only analysis scripts; no live code touched). Suite still 1325-green.
+  Docs: UNCHANGED. TB00000 v2_103 UNCHANGED.
+  All results are HISTORICAL BACKTEST, propose-only, no realized money, no lookahead. STAY IN PAPER (spot
+    and perps). Sacred 1:1.5 R:R floor untouched. Nothing erased.
+
+============================================================
+STILL-OPEN / GATED (handed to the next session via TB00811 NSI)
+============================================================
+  - DEFERRED (Bill's call, a WHAT): the OPERATING POLICY across the five modes -- which modes to run, the
+    hedge weight (the 30% overlay is a CIATS-tunable knob; heavier = more drawdown cut, less return), and
+    the summer/winter on-off policy (the data favours running BOTH sides with a light hedge over a manual
+    single-side switch, but the call is Bill's). Plus any deeper analysis Bill wants (e.g. his EXACT manual
+    timing dates instead of the 200d-SMA proxy; a hedge-weight sweep; spot long/short).
+  - CARRIED FORWARD (the TB00810 NSI default Bill redirected away from): AUDIT the TB00809 perps code for
+    correctness + completeness + unintended alterations (mirror the TB00808 doc audit).
+  - GATES unchanged: PIN the NON-PUBLIC Kraken/Bitnomial maint-margin ratio + per-contract multiplier +
+    retail subaccount availability -> PAPER go-live of the coded perps (Bill gate) -> real-money (Bill gate).
+    The perps code is PROPOSE-ONLY / DORMANT, NOT in paper. The deployed long-only SPOT organism is
+    UNAFFECTED (F3 paper observation) -- and per TB00812 it is the strategy currently BLEEDING in the winter,
+    which is context for any go-live timing decision.
+
+Nothing erased; the sacred 1:1.5 R:R floor never lowered. STAY IN PAPER (spot and perps).
