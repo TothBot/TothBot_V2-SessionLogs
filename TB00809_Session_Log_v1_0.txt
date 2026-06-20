@@ -1,0 +1,89 @@
+DocDCN:     TB00809
+DocTitle:   TB00809_Session_Log
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00809_Session_Log_v1_0.txt
+DocDate:    06-20-2026
+DocTime:    22:00:00 UTC
+
+============================================================
+TB00809 SESSION LOG -- CODE the perps + hedging into tothbot/, then TEST + STRESS-TEST it (the HARD GATE)
+============================================================
+
+THE MISSION (a Bill WHAT, from the TB00809 NSI): CODE the perps + hedging into the live tothbot/
+organism per the GRADUATED 0500000 section 13 + Image10 + TB00000 v2_103 seeds (NO new module / NO
+new gate), THEN TEST + STRESS-TEST the ACTUAL code. The test + stress-test PASS is a HARD GATE in
+front of paper trading: do NOT deploy the perps code to paper this session. STAY IN PAPER; sacred
+1:1.5 R:R floor never lowered.
+
+============================================================
+WHAT I DID -- coded the perps organism + proved it (full evidence in the Code repo, not re-narrated here)
+============================================================
+CODED (tothbot/perp/, PROPOSE-ONLY / DORMANT -- NOT wired into run_pipeline; each piece RE-GROUNDS an
+existing live primitive, no new module / no new gate per the section 13.9 part-vs-whole law):
+  - registry.py: +7 CIATS-owned perp seeds (perp_short_entry_meanrev / regime_filter / exit_trail /
+    fee_per_contract / hedge_weight / funding_divergence_monitor / breaker_config); leverage_cap_short=3
+    REUSED. SACRED stays 1, OPERATOR stays 2 (partition test green).
+  - perp/margin.py = rule:Perp_Isolated_Margin_Loss_Cap (evaluate_loss_cap: realized pool loss <= posted
+    margin BY CONSTRUCTION; PerpContractSpec maint-margin ratio + multiplier are NON-PUBLIC SWEPT
+    placeholders, flagged -> STAY IN PAPER until pinned; whole-contract sizing).
+  - perp/pools.py = mod:Long_Spot_Pool / Long_Perp_Pool / Short_Perp_Pool (re-groundings of the sec-7
+    modules, the dormant Short_Module re-pointed; each its own isolated wallet = the structural RING-FENCE).
+  - perp/funding.py = mod:Perp_Funding_Divergence_Monitor (ONE new live-EwmaMonitor instance, lambda=0.2 /
+    baseline=0 / threshold seed / sustained_n=50, SIGNALS-ONLY, cannot deadlock) + the 8h funding mirror.
+  - perp/breaker.py = param:perp_short_breaker_config (PAUSE rolling 10% / HALT frozen 20%, V2) via
+    evaluate_risk_guard's EXISTING override params -- NO new gate -- + a RollingPeakTracker (exogenous re-arm).
+  - perp/collision.py = rule:No_Same_Instrument_Collision.
+
+TESTED: baseline 1249-green at Code HEAD 7fee138 -> 1325-green after the build (1249 + 76 NEW perp unit
+tests). STRESS-TESTED: scripts/tb00809_live_verification.py drives the NEW LIVE code through the tb00806
+data substrate (real 30-pair perp + spot universe + causal BTC regime) so a PASS proves the live-coded
+PATH reproduces the research, not just the offline scripts. RESULT: 23/23 GATING PASS + 3 pre-registered
+HONEST non-gating characterizations kept VISIBLE. Full per-battery evidence (pre-registered bar + method +
+result) is in scripts/tb00809_live_verification_verdict.txt -- the canonical record, not duplicated here.
+Headlines: Battery C loss cap STRUCTURAL (11865 live evaluations real+gap-swept, 0 breaches; 40k fat-tail
+MC 99.9pct=max=posted; ring-fence byte-isolated); Battery A combined maxDD $602 < long-only $1226 (51%
+lower, equal capital) via the LIVE collision rule; Battery B funding monitor SILENT on real / FIRES on a
+pinned 0.13%/day pin; whole-organism V0 frozen-5% STRANGLES the hedge (90/1007) vs V2 DEPLOYS (1005/1007),
+0 HALTs, spot LONG unaffected (2380/2380); stress: deadlock-safe re-arm, no-lookahead, sacred 1:1.5 floor
+intact. The 3 honest results (A1b combined Calmar < spot; B2 sustained-adverse funding erases the thin
+edge; W3 short dilutes whole-account Calmar) confirm the hedge is bear/cooling INSURANCE, sized via the
+A6 frontier -- exactly the design intent.
+
+============================================================
+STATE / WHAT CHANGED
+============================================================
+  Code: HEAD 7fee138 -> 3d475a6 (committed + pushed to origin/master; DR-010 post-push verify PASSED,
+    local==origin/master==3d475a6). New: tothbot/perp/ (6 files) + 5 tests/test_perp_*.py +
+    scripts/tb00809_live_verification.py + verdict; tothbot/config/registry.py edited. Suite 1325-green.
+    NOT committed (pre-existing untracked / data, not this session's work): scripts/_perp_cache_*.json,
+    _binance_cache_*.json, scripts/tb00804*/tb00805a*.
+  Docs: UNCHANGED (0500000 dv1_282 already graduated TB00807/808; no coding finding contradicted the
+    design, so no doc touch was needed). TB00000 v2_103 UNCHANGED (seeds were minted TB00807; this session
+    WIRED them into code, no new mint).
+  The perps code is PROPOSE-ONLY / DORMANT -- NOT deployed to paper (Bill's gate). The deployed long-only
+    SPOT organism is UNAFFECTED, still in F3 paper observation. Sacred 1:1.5 R:R floor untouched. Nothing
+    erased. STAY IN PAPER (spot and perps).
+
+============================================================
+VERDICT (the bottom line)
+============================================================
+The perps + hedging is now CODED into tothbot/ and PROVEN: the live-coded path reproduces the TB00806
+batteries C/A/B + the whole-organism + breaker analysis and survives the adversarial stress (23/23 gating
+PASS). The HARD GATE Bill set in front of paper is PASSED. The code stays PROPOSE-ONLY / DORMANT.
+
+============================================================
+STILL-OPEN / GATED (handed to the next session via TB00810 NSI)
+============================================================
+  - Paper go-live of the coded perps organism = the NEXT Bill gate (AFTER this gate-pass). Real-money
+    go-live (perps + spot F4) is the Bill gate after that. Both remain Bill-gated; do NOT auto-deploy.
+  - Live-readiness items to PIN before the perps leave paper (perps-kraken-pro-decision): the real
+    Kraken/Bitnomial maintenance-margin ratio + per-contract multiplier (NON-PUBLIC, section 13.1 item 3;
+    coded as flagged SWEPT placeholders) + retail derivatives SUBACCOUNT availability (else the section
+    13.7 one-wallet + CIATS-ledger fallback). A Kraken support ticket settles the subaccount item.
+  - The section 13.2/13.3 DIRECT-Bitnomial FALLBACK route is intentionally NOT built (fallback-only; build
+    only if the primary Kraken-Pro subaccount route proves unavailable).
+  - Autonomous next-step default (no new Bill WHAT yet): AUDIT the TB00809 perps code for correctness +
+    completeness + unintended alterations (mirror the TB00808 doc audit), holding at the paper-go-live gate.
+
+Nothing erased; the sacred 1:1.5 R:R floor never lowered. STAY IN PAPER (spot and perps).
