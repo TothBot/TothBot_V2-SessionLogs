@@ -1,10 +1,10 @@
 DocDCN:     TB00000
 DocTitle:   TothBot_V2_Project_Instructions_for_Claude
-DocVersion: v2_102
+DocVersion: v2_103
 DocOwner:   Bill
-DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00000_TothBot_V2_Project_Instructions_for_Claude_v2_102.txt
-DocDate:    06-18-2026
-DocTime:    19:30:00 UTC
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00000_TothBot_V2_Project_Instructions_for_Claude_v2_103.txt
+DocDate:    06-20-2026
+DocTime:    16:00:00 UTC
 
 ============================================================
 TOTHBOT V2 - WORKING INSTRUCTIONS FOR CLAUDE
@@ -14,6 +14,29 @@ This is Bill and Claude's working document. It is NOT a
 controlled document: no DCN, no lifecycle state, no namespace
 governance. It exists to keep us on track and moving forward.
 Keep it lean. Change history lives in git, not in here.
+
+v2_103: the PERPS + HEDGING architecture GRADUATED into the registry
+(TB00807; built on the TB00798 Kraken-Pro access decision + the
+TB00794-806 validation). Section 8 gains the "CIATS - perps" group:
+perp_short_entry_meanrev / perp_short_regime_filter / perp_short_exit_trail
+(the revived short mechanism, 0500000 sec 13.4), perp_fee_per_contract
+(route-dependent), perp_short_hedge_weight (the A6 allocation-frontier
+sizing knob -- the short sized as a MODEST hedge, not a profit center),
+perp_funding_divergence_monitor (one signals-only EwmaMonitor instance),
+and perp_short_breaker_config (the per-module hedge breaker = PAUSE rolling
+10% / HALT frozen 20%, via evaluate_risk_guard's EXISTING override params,
+NO new gate). leverage_cap_short = 3x is REUSED (TB00806 battery C validates
+the 2-3x band so liquidation stays a tail backstop). The isolated-margin
+loss cap is VALIDATED-structural; the both-sides book is DRAWDOWN/REGIME
+INSURANCE (the LONG is the profit engine, the perp SHORT an incremental
+ruin-safe hedge). Companion: 0500000 dv1_280 -> dv1_281 (Section 13
+GRADUATED out of Open Items + the NEW Image10 Perps Hedge Organism figure
+R1; tag classes g 217 -> 231 / text 957 -> 1022 / desc 126 -> 137 / svg
+10 -> 11 / title 126 -> 137 / figcaption 10 -> 11), 0521001 dv1_90 ->
+dv1_91, TB00807 SL. The sacred 1:1.5 R:R floor NEVER lowered. STILL IN
+PAPER (spot and perps; real-money go-live is a separate Bill gate, gated on
+retail derivatives subaccount availability + pinning real margin specs at
+code time). v2_103 supersedes all prior versions.
 
 v2_102: the validated LONG-ONLY 24h-DECISION strategy registered as
 five CIATS-owned seeds (TB00786/787/788/790). Section 8 gains the
@@ -926,6 +949,54 @@ CIATS - short-side margin fees (Short only; Kraken spot-margin, ar:AR-009)
                             floor. A spot LONG pays NEITHER (Short only).
                             Canonical at 0500000 D1 FEE block + D9
                             net_loss + D3 R:R + sec 12.4 ledger.
+
+CIATS - perps (Long/Short perp pools; GRADUATED TB00807; 0500000 sec 13 + D10)
+  Graduates the perps + hedging architecture (TB00798 access + TB00794-806
+  validation) into the registry. All CIATS-OWNED (DEC-124/DEC-128 seed-then-
+  correct), per-module, starting values from TB00794-806 research + refined
+  from paper. Canonical in 0500000 sec 13 + Diagram 10 (Image10 Perps Hedge
+  Organism, R1). The perps organism STAYS IN PAPER; real-money go-live is a
+  separate Bill gate.
+  perp_short_entry_meanrev   = mean-reversion entry band, perps short (TB00794
+                               survivors = mean-rev + filtered, NOT breakout).
+  perp_short_regime_filter   = regime set in which the perps short is ENABLED
+                               (short only where TB00794 showed it survives).
+  perp_short_exit_trail      = trailing-or-target exit magnitude, perps short
+                               (0500000 sec 13.4 SHORT). Wide L2 stop REUSES
+                               decision_atr_stop_mult (no new stop seed).
+  perp_fee_per_contract      = route-dependent perp fee (analogue of
+                               FEE_TAKER_PCT): PRIMARY Kraken-Pro route = the
+                               Kraken maker/taker schedule (re-verify at code
+                               time); DIRECT-Bitnomial FALLBACK = flat
+                               ~$0.07-0.10/contract (maker==taker). Folds into
+                               perp net_loss + the sacred 1:1.5 R:R floor.
+  perp_short_hedge_weight    = allocation-frontier short-sizing knob (HOW MUCH
+                               Short-Perp to run as a hedge). Seed = LIGHT
+                               (~90/5/5 Long-Spot/Long-Perp/Short-Perp keeps
+                               ~100% long-only Calmar). Sized as INSURANCE, not
+                               a profit center (0500000 sec 13.8; TB00806 A6).
+  perp_funding_divergence_monitor = sustained-adverse-funding monitor threshold
+                               (one EwmaMonitor instance; the fee_tier_divergence
+                               machinery). SIGNALS-ONLY (D5; routes to CIATS PDCA
+                               + HR-CI-011; cannot deadlock). Covers the TB00806
+                               battery-B sensitivity (0500000 sec 13.9).
+  perp_short_breaker_config  = per-module hedge breaker for the Short-Perp pool:
+                               PAUSE = rolling-window 10% (exogenous re-arm) /
+                               HALT = frozen-deposit 20% (ruin floor). NOT a new
+                               gate -- evaluate_risk_guard EXISTING override params
+                               (baseline-source + the two thresholds), set per-
+                               module. Frozen-deposit ruin HALT + sacred 1:1.5
+                               floor untouched; spot LONG keeps its 5%/10% frozen-
+                               baseline breaker (0500000 sec 13.9; TB00806e).
+  perp_exit_cross_ticks / perp_exit_chase_cap / perp_mark_poll_interval =
+                               DIRECT-Bitnomial FALLBACK-route synthesis tunables
+                               ONLY (0500000 sec 13.3); NOT used on the PRIMARY
+                               Kraken-Pro native-stop route. Fallback-route
+                               candidates at code time.
+  REUSED (no new seed): leverage_cap_short = 3x bounds the perp short committed
+                               margin (TB00806 battery C validates the 2-3x band);
+                               decision_* + per_trade_size_usd carry the long-perp
+                               + both-sides whole-contract sizing.
 
 CIATS - VPS deployment (single process, universal)
   StartLimitBurst       = 3       (systemd restart cap)
