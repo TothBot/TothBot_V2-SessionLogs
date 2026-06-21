@@ -1,0 +1,103 @@
+DocDCN:     TB00813
+DocTitle:   TB00813_Session_Log
+DocVersion: v1_0
+DocOwner:   Bill
+DocPath:    C:\Users\wstot\GitHub\TothBot\TothBot_V2-SessionLogs\TB00813_Session_Log_v1_0.txt
+DocDate:    06-21-2026
+DocTime:    18:00:00 UTC
+
+============================================================
+TB00813 SESSION LOG -- legal-landscape DEEP DIVE (Part A) + FP/DP STATISTICAL edge-transfer RANKING (Part B)
+============================================================
+
+CONTEXT: ran from the TB00813 NSI v1_1 (Bill WHAT): things changed a lot since Kraken was picked; deep-dive
+what is now LEGALLY available to a US-person API bot across crypto/perps/futures/stocks/bonds, THEN an FP/DP
+(First-Principles / Deming) analysis using all appropriate statistical methodologies to rank which classes
+fit a TothBot-organism-style system. Each class may need its own strategy. Propose-only, STAY IN PAPER,
+sacred 1:1.5 floor never lowered, nothing erased, no code/0500000 edits unless Bill makes a finding a WHAT.
+
+============================================================
+PART A -- LEGAL-AVAILABILITY MATRIX (5 parallel primary-source passes, re-verified, lead with the killer)
+============================================================
+  - CRYPTO SPOT: mature/legal. Kraken = cheapest legal API (25/40bp->0/5bp, only NY+ME excluded) for prod;
+    Gemini = only all-50-state venue + the only real fill SANDBOX (but 60/120bp). NEW: Robinhood + tastytrade
+    now have crypto APIs (spread-priced, economically poor for a bot).
+  - CRYPTO PERPS: REOPENED May-June 2026. Coinbase CFM = cleanest VERIFIED perp-style API (Advanced Trade
+    REST /orders, 0.03% taker, 10x USDC, hourly funding); IBKR lists the same product (free paper). Kalshi
+    (true perp) + Kraken/Bitnomial retail order-entry APIs remain UNVERIFIED. CME dated Micro BTC/ETH = the
+    legal-risk-free fallback.
+  - DATED FUTURES: clean APIs = IBKR / tastytrade / TradeStation / Tradovate-NinjaTrader. Schwab, E*TRADE,
+    Tradier = futures GUI-only (NO futures order-entry API) -- the retail dividing line is the API not the
+    broker. Cheapest micros = Rithmic/CQG behind a discount FCM (~$1.2-1.9 all-in RT).
+  - STOCKS/ETFs: trivially open now. PDT $25k floor ELIMINATED 2026-06-04 (FINRA RN 26-10). Cleanest small-cap
+    API = Alpaca / Public.com (fractional) or tastytrade ($0 commission + $0 data). Robinhood has no equity API.
+  - BONDS: IBKR is the ONLY true retail bond-by-API (CUSIP, SecType=BOND); everyone else desk/GUI-only or
+    B2B. Realistic bond exposure for a bot = bond ETFs (TLT/IEF/AGG) + rate futures (ZB/ZN).
+  - REGULATORY OVERHANG: CME sued the CFTC 2026-06-18 (Case 1:26-cv-02157, D.D.C.) on a "perps = Dodd-Frank
+    swaps" theory, seeking vacatur of the Kalshi approval + perp Policy Statement. NO injunction -> trading
+    continues, but a CME win removes the whole onshore-perp category. Full detail: auto-memory venue-api-matrix.
+
+============================================================
+PART B -- FP/DP + STATISTICAL EDGE-TRANSFER (the heart; new artifact scripts/tb00813_edge_transfer.py)
+============================================================
+Ran the EXACT validated organism (daily EMA12/26 cross LONG + wide 2.5xATR/bearish-reversal exit, 1:1.5
+honored, no-lookahead) across all 5 classes on 20y Yahoo daily data (urllib, range=20y), class-pooled with
+a deterministic bootstrap CI + 4-era walk-forward + a mean-reversion counter-test. CRYPTO baseline SELF-
+VALIDATES (reproduces the known edge) = the harness is trustworthy. Class-pooled meanE/trade (bootstrap 5-95):
+  - CRYPTO (BTC/ETH): +16.21% (+7.9..+25.9), PF 4.7, 2/2 BEAT buy&hold (BTC strat +52,096% vs B&H +13,923%,
+    Calmar 1252), +ve all 4 walk-fwd eras. The ONLY class where active trend-following beats passive holding.
+  - Equity index +1.60% (0/4 beat B&H); sector +1.11% (0/4); single +7.54% (0/3, e.g. NVDA +5,664% strat vs
+    B&H +60,068%); commodity/fut +1.94% (1/3 -- only oil, which bleeds via contango); BONDS +0.12% (bootstrap
+    floor NEGATIVE = no edge).
+THE DECISIVE FINDINGS: (1) the crypto trend edge is ~10x larger per-trade and the only class beating passive.
+(2) On equities the organism is positive per-trade but LOSES to buy&hold (sits out ~35% of a relentless bull);
+AND the mean-reversion counter-test is POSITIVE on equities (60-67% win, DIA/XLF Calmar 2.5-2.9) but NEGATIVE
+on crypto -- crypto TRENDS, equities MEAN-REVERT, opposite microstructure. The organism's trend DNA does NOT
+transfer; equities would need a from-scratch mean-reversion strategy (confirms "each class may need its own").
+(3) Bonds dead; commodities marginal. Full numbers: auto-memory edge-transfer-verdict.
+
+============================================================
+RANKED RECOMMENDATION (the deliverable)
+============================================================
+  1. CRYPTO SPOT -- KEEP (the proven live-in-paper engine; incumbent Kraken). Unchanged.
+  2. CRYPTO PERPS -- REVIVE as the expansion (highest-value new option): the ONLY class with PROVEN edge-
+     transfer (same underlying as the +16%/trade baseline) AND it unlocks the native SHORT the mean-rev hedge
+     needs. Venue: Coinbase CFM primary (verified API) or via IBKR (free paper); Kalshi/Kraken on watch.
+  3. COMMODITY micro-futures -- OPTIONAL/low-priority (thin edge; uncorrelated overlay at most).
+  4. EQUITIES/ETFs -- SKIP the organism (access trivial post-PDT-repeal, edge is not; 0/11 beat passive).
+     A separate mean-reversion strategy if ever pursued -- a new build, not a port.
+  5. BONDS -- SKIP (no trend edge, no retail API but IBKR; passive TLT ballast at most).
+FOLDED-IN OUTPUTS (per NSI): revive-perps decision = YES on Coinbase CFM / IBKR. Section-13 doc-correction is
+now scoped = an UPDATE (multi-venue picture + isolated-margin loss cap moves CLIENT-SIDE) -- still a Bill WHAT.
+
+============================================================
+TWO DESIGN CORRECTIONS vs the graduated section 13 (for the doc-UPDATE, when Bill greenlights)
+============================================================
+  - NO US-retail venue gives an exchange-resident ISOLATED-margin loss cap (Coinbase CFM + IBKR = PORTFOLIO
+    margin) -> the battery-C loss cap must be enforced CLIENT-SIDE like the spot breakers.
+  - Keep CME dated Micro BTC/ETH as the legal-risk-free fallback to the perp-category litigation.
+
+============================================================
+STATE / WHAT CHANGED
+============================================================
+  Code: +scripts/tb00813_edge_transfer.py (research artifact, propose-only; local cache _tb813_yahoo_cache.json
+    is gitignored-class/not committed). tothbot/ production + perp/ shelf-ware UNCHANGED. Suite still 1325-green
+    (no production touch).
+  Docs: UNCHANGED (0500000 dv1_282; the section-13 UPDATE remains a Bill WHAT, now fully scoped).
+  Auto-memory: +edge-transfer-verdict; venue-api-matrix refreshed with the TB00813 re-verification (lawsuit
+    filed, PDT repealed, no isolated margin, futures-API dividing line, bonds=IBKR-only); MEMORY.md index updated.
+  STAY IN PAPER. Sacred 1:1.5 floor untouched. Nothing erased.
+
+============================================================
+STILL-OPEN / GATED (handed forward via TB00814 NSI)
+============================================================
+  - DECISION (Bill WHAT): greenlight the perps revival on Coinbase CFM / IBKR? If yes -> the section-13 doc
+    UPDATE + the perps-mechanics re-verification per the chosen venue become the next builds.
+  - Section-13 doc-UPDATE owed (Bill WHAT): multi-venue picture + client-side loss cap. Do NOT silently rewrite.
+  - Perps mechanics still to pin before any code: Coinbase CFM margin/funding/order-types + retail eligibility
+    + state list; isolated-margin is confirmed NOT exchange-resident (client-side).
+  - Carried lower-priority, not erased: the TB00809 perps-code audit; the optional commodity-micro overlay would
+    need its own validation; an equity mean-reversion sleeve is a separate from-scratch build if ever wanted.
+  - Spot organism remains live-in-paper (F3); F4 real-money go-live is the standing Bill gate.
+
+Nothing erased; sacred 1:1.5 R:R floor never lowered. STAY IN PAPER (spot and perps).
